@@ -1009,16 +1009,6 @@ EnterpriseCAFor: types.#Kind & {
 	schema: "active_directory"
 }
 
-CanAbuseUPNCertMapping: types.#Kind & {
-	symbol: "CanAbuseUPNCertMapping"
-	schema: "active_directory"
-}
-
-CanAbuseWeakCertBinding: types.#Kind & {
-	symbol: "CanAbuseWeakCertBinding"
-	schema: "active_directory"
-}
-
 IssuedSignedBy: types.#Kind & {
 	symbol: "IssuedSignedBy"
 	schema: "active_directory"
@@ -1166,8 +1156,6 @@ RelationshipKinds: [
 	NTAuthStoreFor,
 	TrustedForNTAuth,
 	EnterpriseCAFor,
-	CanAbuseUPNCertMapping,
-	CanAbuseWeakCertBinding,
 	IssuedSignedBy,
 	GoldenCert,
 	EnrollOnBehalfOf,

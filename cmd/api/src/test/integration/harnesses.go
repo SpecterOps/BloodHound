@@ -1670,74 +1670,6 @@ func (s *ADCSGoldenCertHarness) Setup(graphTestContext *GraphTestContext) {
 
 }
 
-type WeakCertBindingAndUPNCertMappingHarness struct {
-	EnterpriseCA1 *graph.Node
-	EnterpriseCA2 *graph.Node
-	Computer1     *graph.Node
-	Computer2     *graph.Node
-	Computer3     *graph.Node
-	Computer4     *graph.Node
-	Computer5     *graph.Node
-	Domain1       *graph.Node
-	Domain2       *graph.Node
-	Domain3       *graph.Node
-}
-
-func (s *WeakCertBindingAndUPNCertMappingHarness) Setup(graphTestContext *GraphTestContext) {
-	domainSid1 := "S-1-5-21-2697957641-2271029196-387917394"
-	domainSid2 := "S-1-5-21-2697957641-2271029196-387917395"
-	domainSid3 := "S-1-5-21-2697957641-2271029196-387917396"
-
-	// Set up ECA nodes
-	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("EnterpriseCA1", domainSid1, "a")
-	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("EnterpriseCA2", domainSid3, "b")
-
-	// Set up Domain nodes
-	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
-	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid2, false, true)
-	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domainSid3, false, true)
-
-	// Set up Computer nodes
-	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid1)
-	s.Computer1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "4")
-	graphTestContext.UpdateNode(s.Computer1)
-
-	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domainSid2)
-	s.Computer2.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "11")
-	graphTestContext.UpdateNode(s.Computer2)
-
-	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domainSid2)
-	s.Computer3.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
-	graphTestContext.UpdateNode(s.Computer3)
-
-	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domainSid2)
-	s.Computer4.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "-1")
-	graphTestContext.UpdateNode(s.Computer4)
-
-	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domainSid3)
-	s.Computer5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "15")
-	graphTestContext.UpdateNode(s.Computer5)
-
-	// Set up edges from ECA nodes
-	graphTestContext.NewRelationship(s.EnterpriseCA1, s.Computer1, ad.CanAbuseUPNCertMapping)
-	graphTestContext.NewRelationship(s.EnterpriseCA1, s.Computer1, ad.CanAbuseWeakCertBinding)
-	graphTestContext.NewRelationship(s.EnterpriseCA1, s.Computer2, ad.CanAbuseWeakCertBinding)
-	graphTestContext.NewRelationship(s.EnterpriseCA1, s.Computer3, ad.CanAbuseUPNCertMapping)
-
-	graphTestContext.NewRelationship(s.EnterpriseCA2, s.Computer5, ad.CanAbuseUPNCertMapping)
-
-	// Set up edges from Computer nodes
-	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
-	graphTestContext.NewRelationship(s.Computer2, s.Domain2, ad.DCFor)
-	graphTestContext.NewRelationship(s.Computer3, s.Domain2, ad.DCFor)
-	graphTestContext.NewRelationship(s.Computer4, s.Domain2, ad.DCFor)
-	graphTestContext.NewRelationship(s.Computer5, s.Domain3, ad.DCFor)
-
-	// Set up edges from Domain nodes
-	graphTestContext.NewRelationship(s.Domain1, s.Domain2, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain2, s.Domain3, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "External"}))
-}
-
 type IssuedSignedByHarness struct {
 	RootCA1       *graph.Node
 	RootCA2       *graph.Node
@@ -2143,7 +2075,7 @@ func (s *ESC9aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 		SubjectAltRequireUPN:    true,
 	})
 	s.DC = graphTestContext.NewActiveDirectoryComputer("DC", domainSid)
-	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("DomainESC9aPrincipalHarness", domainSid, false, true)
 	s.EnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA", domainSid)
 	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid)
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid)
@@ -2160,7 +2092,6 @@ func (s *ESC9aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.CertTemplate, s.EnterpriseCA, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
@@ -2174,6 +2105,9 @@ func (s *ESC9aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.User2, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group0, s.CertTemplate, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
+
+	s.DC.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC9aHarness1 struct {
@@ -2342,7 +2276,6 @@ func (s *ESC9aHarness1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.User3, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate3, s.EnterpriseCA, ad.PublishedTo)
@@ -2376,6 +2309,9 @@ func (s *ESC9aHarness1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group3, s.User3, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group2, s.User2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
+
+	s.DC.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC9aHarness2 struct {
@@ -2483,7 +2419,6 @@ func (s *ESC9aHarness2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
@@ -2516,6 +2451,9 @@ func (s *ESC9aHarness2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group6, s.User1, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group5, s.Computer1, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.Group1, ad.GenericAll)
+
+	s.DC.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC9aHarnessVictim struct {
@@ -2569,7 +2507,6 @@ func (s *ESC9aHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
@@ -2584,46 +2521,41 @@ func (s *ESC9aHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group2, s.User2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group3, s.User3, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.User4, ad.GenericAll)
+
+	s.DC.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC9aHarnessECA struct {
 	CertTemplate1 *graph.Node
-	CertTemplate2 *graph.Node
 	CertTemplate3 *graph.Node
 	CertTemplate4 *graph.Node
 	CertTemplate5 *graph.Node
 	DC1           *graph.Node
-	DC2           *graph.Node
 	DC3           *graph.Node
 	DC4           *graph.Node
 	DC5           *graph.Node
 	Domain1       *graph.Node
-	Domain2       *graph.Node
 	Domain3       *graph.Node
 	Domain4       *graph.Node
 	Domain5       *graph.Node
 	EnterpriseCA1 *graph.Node
-	EnterpriseCA2 *graph.Node
 	EnterpriseCA3 *graph.Node
 	EnterpriseCA4 *graph.Node
 	EnterpriseCA5 *graph.Node
 	Group1        *graph.Node
-	Group2        *graph.Node
 	Group3        *graph.Node
 	Group4        *graph.Node
 	Group5        *graph.Node
 	NTAuthStore1  *graph.Node
-	NTAuthStore2  *graph.Node
 	NTAuthStore3  *graph.Node
 	NTAuthStore4  *graph.Node
 	NTAuthStore5  *graph.Node
 	RootCA1       *graph.Node
-	RootCA2       *graph.Node
 	RootCA3       *graph.Node
 	RootCA4       *graph.Node
 	RootCA5       *graph.Node
 	User1         *graph.Node
-	User2         *graph.Node
 	User3         *graph.Node
 	User4         *graph.Node
 	User5         *graph.Node
@@ -2631,24 +2563,10 @@ type ESC9aHarnessECA struct {
 
 func (s *ESC9aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	domainSid1 := RandomDomainSID()
-	domainSid2 := RandomDomainSID()
 	domainSid3 := RandomDomainSID()
 	domainSid4 := RandomDomainSID()
 	domainSid5 := RandomDomainSID()
 	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
-		ApplicationPolicies:     []string{},
-		AuthenticationEnabled:   true,
-		AuthorizedSignatures:    0,
-		EffectiveEKUs:           []string{},
-		EnrolleeSuppliesSubject: false,
-		NoSecurityExtension:     true,
-		RequiresManagerApproval: false,
-		SchemaVersion:           1,
-		SubjectAltRequireEmail:  false,
-		SubjectAltRequireSPN:    false,
-		SubjectAltRequireUPN:    true,
-	})
-	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", domainSid2, CertTemplateData{
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
@@ -2701,37 +2619,30 @@ func (s *ESC9aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		SubjectAltRequireUPN:    true,
 	})
 	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid1)
-	s.DC2 = graphTestContext.NewActiveDirectoryComputer("DC2", domainSid2)
 	s.DC3 = graphTestContext.NewActiveDirectoryComputer("DC3", domainSid3)
 	s.DC4 = graphTestContext.NewActiveDirectoryComputer("DC4", domainSid4)
 	s.DC5 = graphTestContext.NewActiveDirectoryComputer("DC5", domainSid5)
 	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
-	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid2, false, true)
 	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domainSid3, false, true)
 	s.Domain4 = graphTestContext.NewActiveDirectoryDomain("Domain4", domainSid4, false, true)
 	s.Domain5 = graphTestContext.NewActiveDirectoryDomain("Domain5", domainSid5, false, true)
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
-	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", domainSid2)
 	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA3", domainSid3)
 	s.EnterpriseCA4 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA4", domainSid4)
 	s.EnterpriseCA5 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA5", domainSid5)
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
-	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid2)
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSid3)
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid4)
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid5)
 	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
-	s.NTAuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore2", domainSid2)
 	s.NTAuthStore3 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore3", domainSid3)
 	s.NTAuthStore4 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore4", domainSid4)
 	s.NTAuthStore5 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore5", domainSid5)
 	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
-	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("RootCA2", domainSid2)
 	s.RootCA3 = graphTestContext.NewActiveDirectoryRootCA("RootCA3", domainSid3)
 	s.RootCA4 = graphTestContext.NewActiveDirectoryRootCA("RootCA4", domainSid4)
 	s.RootCA5 = graphTestContext.NewActiveDirectoryRootCA("RootCA5", domainSid5)
 	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid1)
-	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", domainSid2)
 	s.User3 = graphTestContext.NewActiveDirectoryUser("User3", domainSid3)
 	s.User4 = graphTestContext.NewActiveDirectoryUser("User4", domainSid4)
 	s.User5 = graphTestContext.NewActiveDirectoryUser("User5", domainSid5)
@@ -2742,23 +2653,13 @@ func (s *ESC9aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.User1, s.EnterpriseCA1, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA1, s.DC1, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.User1, s.CertTemplate1, ad.Enroll)
-	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
-	graphTestContext.NewRelationship(s.NTAuthStore2, s.Domain2, ad.NTAuthStoreFor)
-	graphTestContext.NewRelationship(s.DC2, s.Domain2, ad.DCFor)
-	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA2, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.EnterpriseCA2, s.RootCA2, ad.IssuedSignedBy)
-	graphTestContext.NewRelationship(s.EnterpriseCA2, s.NTAuthStore2, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.User2, s.EnterpriseCA2, ad.Enroll)
-	graphTestContext.NewRelationship(s.User2, s.CertTemplate2, ad.Enroll)
 	graphTestContext.NewRelationship(s.RootCA3, s.Domain3, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore3, s.Domain3, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.DC3, s.Domain3, ad.DCFor)
 	graphTestContext.NewRelationship(s.CertTemplate3, s.EnterpriseCA3, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.EnterpriseCA3, s.RootCA3, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.User3, s.EnterpriseCA3, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA3, s.DC3, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.User3, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.RootCA4, s.Domain4, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore4, s.Domain4, ad.NTAuthStoreFor)
@@ -2766,7 +2667,6 @@ func (s *ESC9aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.CertTemplate4, s.EnterpriseCA4, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.EnterpriseCA4, s.NTAuthStore4, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.User4, s.EnterpriseCA4, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA4, s.DC4, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.User4, s.CertTemplate4, ad.Enroll)
 	graphTestContext.NewRelationship(s.RootCA5, s.Domain5, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore5, s.Domain5, ad.NTAuthStoreFor)
@@ -2774,13 +2674,20 @@ func (s *ESC9aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA5, s.RootCA5, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA5, s.NTAuthStore5, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.User5, s.EnterpriseCA5, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA5, s.DC5, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.User5, s.CertTemplate5, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group2, s.User2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group5, s.User5, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.User4, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group3, s.User3, ad.GenericAll)
+
+	s.DC1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC1)
+	s.DC3.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC3)
+	s.DC4.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC4)
+	s.DC5.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC5)
 }
 
 type ESC9bPrincipalHarness struct {
@@ -2835,7 +2742,6 @@ func (s *ESC9bPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.CertTemplate, s.EnterpriseCA, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
@@ -2849,6 +2755,9 @@ func (s *ESC9bPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer2, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group0, s.CertTemplate, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
+
+	s.DC.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC9bHarness1 struct {
@@ -3006,7 +2915,6 @@ func (s *ESC9bHarness1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.Computer3, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate3, s.EnterpriseCA, ad.PublishedTo)
@@ -3036,6 +2944,9 @@ func (s *ESC9bHarness1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group3, s.Computer3, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group2, s.Computer2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
+
+	s.DC.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC9bHarness2 struct {
@@ -3143,7 +3054,6 @@ func (s *ESC9bHarness2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
@@ -3176,6 +3086,9 @@ func (s *ESC9bHarness2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group6, s.User1, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group5, s.Computer1, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.Group1, ad.GenericAll)
+
+	s.DC.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC9bHarnessVictim struct {
@@ -3230,7 +3143,6 @@ func (s *ESC9bHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
@@ -3245,46 +3157,41 @@ func (s *ESC9bHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group2, s.Computer2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group3, s.Computer3, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.Computer4, ad.GenericAll)
+
+	s.DC.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC9bHarnessECA struct {
 	CertTemplate1 *graph.Node
-	CertTemplate2 *graph.Node
 	CertTemplate3 *graph.Node
 	CertTemplate4 *graph.Node
 	CertTemplate5 *graph.Node
 	Computer1     *graph.Node
-	Computer2     *graph.Node
 	Computer3     *graph.Node
 	Computer4     *graph.Node
 	Computer5     *graph.Node
 	DC1           *graph.Node
-	DC2           *graph.Node
 	DC3           *graph.Node
 	DC4           *graph.Node
 	DC5           *graph.Node
 	Domain1       *graph.Node
-	Domain2       *graph.Node
 	Domain3       *graph.Node
 	Domain4       *graph.Node
 	Domain5       *graph.Node
 	EnterpriseCA1 *graph.Node
-	EnterpriseCA2 *graph.Node
 	EnterpriseCA3 *graph.Node
 	EnterpriseCA4 *graph.Node
 	EnterpriseCA5 *graph.Node
 	Group1        *graph.Node
-	Group2        *graph.Node
 	Group3        *graph.Node
 	Group4        *graph.Node
 	Group5        *graph.Node
 	NTAuthStore1  *graph.Node
-	NTAuthStore2  *graph.Node
 	NTAuthStore3  *graph.Node
 	NTAuthStore4  *graph.Node
 	NTAuthStore5  *graph.Node
 	RootCA1       *graph.Node
-	RootCA2       *graph.Node
 	RootCA3       *graph.Node
 	RootCA4       *graph.Node
 	RootCA5       *graph.Node
@@ -3292,25 +3199,10 @@ type ESC9bHarnessECA struct {
 
 func (s *ESC9bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	domainSid1 := RandomDomainSID()
-	domainSid2 := RandomDomainSID()
 	domainSid3 := RandomDomainSID()
 	domainSid4 := RandomDomainSID()
 	domainSid5 := RandomDomainSID()
 	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
-		ApplicationPolicies:     []string{},
-		AuthenticationEnabled:   true,
-		AuthorizedSignatures:    0,
-		EffectiveEKUs:           []string{},
-		EnrolleeSuppliesSubject: false,
-		NoSecurityExtension:     true,
-		RequiresManagerApproval: false,
-		SchemaVersion:           1,
-		SubjectAltRequireDNS:    true,
-		SubjectAltRequireEmail:  false,
-		SubjectAltRequireSPN:    false,
-		SubjectAltRequireUPN:    false,
-	})
-	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", domainSid2, CertTemplateData{
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
@@ -3367,37 +3259,30 @@ func (s *ESC9bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		SubjectAltRequireUPN:    false,
 	})
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid1)
-	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domainSid2)
 	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domainSid3)
 	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domainSid4)
 	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domainSid5)
 	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid1)
-	s.DC2 = graphTestContext.NewActiveDirectoryComputer("DC2", domainSid2)
 	s.DC3 = graphTestContext.NewActiveDirectoryComputer("DC3", domainSid3)
 	s.DC4 = graphTestContext.NewActiveDirectoryComputer("DC4", domainSid4)
 	s.DC5 = graphTestContext.NewActiveDirectoryComputer("DC5", domainSid5)
 	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
-	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid2, false, true)
 	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domainSid3, false, true)
 	s.Domain4 = graphTestContext.NewActiveDirectoryDomain("Domain4", domainSid4, false, true)
 	s.Domain5 = graphTestContext.NewActiveDirectoryDomain("Domain5", domainSid5, false, true)
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
-	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", domainSid2)
 	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA3", domainSid3)
 	s.EnterpriseCA4 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA4", domainSid4)
 	s.EnterpriseCA5 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA5", domainSid5)
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
-	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid2)
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSid3)
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid4)
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid5)
 	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
-	s.NTAuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore2", domainSid2)
 	s.NTAuthStore3 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore3", domainSid3)
 	s.NTAuthStore4 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore4", domainSid4)
 	s.NTAuthStore5 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore5", domainSid5)
 	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
-	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("RootCA2", domainSid2)
 	s.RootCA3 = graphTestContext.NewActiveDirectoryRootCA("RootCA3", domainSid3)
 	s.RootCA4 = graphTestContext.NewActiveDirectoryRootCA("RootCA4", domainSid4)
 	s.RootCA5 = graphTestContext.NewActiveDirectoryRootCA("RootCA5", domainSid5)
@@ -3408,23 +3293,13 @@ func (s *ESC9bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.Computer1, s.EnterpriseCA1, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA1, s.DC1, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.Computer1, s.CertTemplate1, ad.Enroll)
-	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
-	graphTestContext.NewRelationship(s.NTAuthStore2, s.Domain2, ad.NTAuthStoreFor)
-	graphTestContext.NewRelationship(s.DC2, s.Domain2, ad.DCFor)
-	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA2, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.EnterpriseCA2, s.RootCA2, ad.IssuedSignedBy)
-	graphTestContext.NewRelationship(s.EnterpriseCA2, s.NTAuthStore2, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.Computer2, s.EnterpriseCA2, ad.Enroll)
-	graphTestContext.NewRelationship(s.Computer2, s.CertTemplate2, ad.Enroll)
 	graphTestContext.NewRelationship(s.RootCA3, s.Domain3, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore3, s.Domain3, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.DC3, s.Domain3, ad.DCFor)
 	graphTestContext.NewRelationship(s.CertTemplate3, s.EnterpriseCA3, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.EnterpriseCA3, s.RootCA3, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.Computer3, s.EnterpriseCA3, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA3, s.DC3, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.Computer3, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.RootCA4, s.Domain4, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore4, s.Domain4, ad.NTAuthStoreFor)
@@ -3432,7 +3307,6 @@ func (s *ESC9bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.CertTemplate4, s.EnterpriseCA4, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.EnterpriseCA4, s.NTAuthStore4, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.Computer4, s.EnterpriseCA4, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA4, s.DC4, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.Computer4, s.CertTemplate4, ad.Enroll)
 	graphTestContext.NewRelationship(s.RootCA5, s.Domain5, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore5, s.Domain5, ad.NTAuthStoreFor)
@@ -3440,13 +3314,20 @@ func (s *ESC9bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA5, s.RootCA5, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA5, s.NTAuthStore5, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.Computer5, s.EnterpriseCA5, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA5, s.DC5, ad.CanAbuseWeakCertBinding)
 	graphTestContext.NewRelationship(s.Computer5, s.CertTemplate5, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group2, s.Computer2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group5, s.Computer5, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.Computer4, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group3, s.Computer3, ad.GenericAll)
+
+	s.DC1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC1)
+	s.DC3.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC3)
+	s.DC4.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC4)
+	s.DC5.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC5)
 }
 
 type ESC6aHarnessPrincipalEdges struct {
@@ -3504,7 +3385,6 @@ func (s *ESC6aHarnessPrincipalEdges) Setup(c *GraphTestContext) {
 
 	c.NewRelationship(s.EnterpriseCA1, s.NTAuthStore, ad.TrustedForNTAuth)
 	c.NewRelationship(s.EnterpriseCA1, s.RootCA, ad.IssuedSignedBy)
-	c.NewRelationship(s.EnterpriseCA1, s.DC, ad.CanAbuseWeakCertBinding)
 
 	c.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	c.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
@@ -3512,6 +3392,9 @@ func (s *ESC6aHarnessPrincipalEdges) Setup(c *GraphTestContext) {
 
 	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	c.UpdateNode(s.EnterpriseCA1)
+
+	s.DC.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	c.UpdateNode(s.DC)
 }
 
 // This function relies on having the "kind" property set for nodes in the json from arrows.app
@@ -3684,7 +3567,6 @@ func (s *ESC10aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.CertTemplate, s.EnterpriseCA, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
@@ -3698,6 +3580,9 @@ func (s *ESC10aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.User2, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group0, s.CertTemplate, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
+
+	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC10aHarness1 struct {
@@ -3841,7 +3726,6 @@ func (s *ESC10aHarness1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.User3, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate3, s.EnterpriseCA, ad.PublishedTo)
@@ -3871,6 +3755,9 @@ func (s *ESC10aHarness1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group3, s.User3, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group2, s.User2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
+
+	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC10aHarness2 struct {
@@ -3978,7 +3865,6 @@ func (s *ESC10aHarness2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
@@ -4011,46 +3897,41 @@ func (s *ESC10aHarness2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group6, s.User1, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group5, s.Computer1, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.Group1, ad.GenericAll)
+
+	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC10aHarnessECA struct {
 	CertTemplate1 *graph.Node
-	CertTemplate2 *graph.Node
 	CertTemplate3 *graph.Node
 	CertTemplate4 *graph.Node
 	CertTemplate5 *graph.Node
 	DC1           *graph.Node
-	DC2           *graph.Node
 	DC3           *graph.Node
 	DC4           *graph.Node
 	DC5           *graph.Node
 	Domain1       *graph.Node
-	Domain2       *graph.Node
 	Domain3       *graph.Node
 	Domain4       *graph.Node
 	Domain5       *graph.Node
 	EnterpriseCA1 *graph.Node
-	EnterpriseCA2 *graph.Node
 	EnterpriseCA3 *graph.Node
 	EnterpriseCA4 *graph.Node
 	EnterpriseCA5 *graph.Node
 	Group1        *graph.Node
-	Group2        *graph.Node
 	Group3        *graph.Node
 	Group4        *graph.Node
 	Group5        *graph.Node
 	NTAuthStore1  *graph.Node
-	NTAuthStore2  *graph.Node
 	NTAuthStore3  *graph.Node
 	NTAuthStore4  *graph.Node
 	NTAuthStore5  *graph.Node
 	RootCA1       *graph.Node
-	RootCA2       *graph.Node
 	RootCA3       *graph.Node
 	RootCA4       *graph.Node
 	RootCA5       *graph.Node
 	User1         *graph.Node
-	User2         *graph.Node
 	User3         *graph.Node
 	User4         *graph.Node
 	User5         *graph.Node
@@ -4058,24 +3939,10 @@ type ESC10aHarnessECA struct {
 
 func (s *ESC10aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	domainSid1 := RandomDomainSID()
-	domainSid2 := RandomDomainSID()
 	domainSid3 := RandomDomainSID()
 	domainSid4 := RandomDomainSID()
 	domainSid5 := RandomDomainSID()
 	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
-		ApplicationPolicies:     []string{},
-		AuthenticationEnabled:   true,
-		AuthorizedSignatures:    0,
-		EffectiveEKUs:           []string{},
-		EnrolleeSuppliesSubject: false,
-		NoSecurityExtension:     false,
-		RequiresManagerApproval: false,
-		SchemaVersion:           1,
-		SubjectAltRequireEmail:  false,
-		SubjectAltRequireSPN:    false,
-		SubjectAltRequireUPN:    true,
-	})
-	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", domainSid2, CertTemplateData{
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
@@ -4128,37 +3995,30 @@ func (s *ESC10aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		SubjectAltRequireUPN:    true,
 	})
 	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid1)
-	s.DC2 = graphTestContext.NewActiveDirectoryComputer("DC2", domainSid2)
 	s.DC3 = graphTestContext.NewActiveDirectoryComputer("DC3", domainSid3)
 	s.DC4 = graphTestContext.NewActiveDirectoryComputer("DC4", domainSid4)
 	s.DC5 = graphTestContext.NewActiveDirectoryComputer("DC5", domainSid5)
 	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
-	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid2, false, true)
 	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domainSid3, false, true)
 	s.Domain4 = graphTestContext.NewActiveDirectoryDomain("Domain4", domainSid4, false, true)
 	s.Domain5 = graphTestContext.NewActiveDirectoryDomain("Domain5", domainSid5, false, true)
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
-	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", domainSid2)
 	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA3", domainSid3)
 	s.EnterpriseCA4 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA4", domainSid4)
 	s.EnterpriseCA5 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA5", domainSid5)
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
-	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid2)
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSid3)
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid4)
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid5)
 	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
-	s.NTAuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore2", domainSid2)
 	s.NTAuthStore3 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore3", domainSid3)
 	s.NTAuthStore4 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore4", domainSid4)
 	s.NTAuthStore5 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore5", domainSid5)
 	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
-	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("RootCA2", domainSid2)
 	s.RootCA3 = graphTestContext.NewActiveDirectoryRootCA("RootCA3", domainSid3)
 	s.RootCA4 = graphTestContext.NewActiveDirectoryRootCA("RootCA4", domainSid4)
 	s.RootCA5 = graphTestContext.NewActiveDirectoryRootCA("RootCA5", domainSid5)
 	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid1)
-	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", domainSid2)
 	s.User3 = graphTestContext.NewActiveDirectoryUser("User3", domainSid3)
 	s.User4 = graphTestContext.NewActiveDirectoryUser("User4", domainSid4)
 	s.User5 = graphTestContext.NewActiveDirectoryUser("User5", domainSid5)
@@ -4169,23 +4029,13 @@ func (s *ESC10aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.User1, s.EnterpriseCA1, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA1, s.DC1, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.User1, s.CertTemplate1, ad.Enroll)
-	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
-	graphTestContext.NewRelationship(s.NTAuthStore2, s.Domain2, ad.NTAuthStoreFor)
-	graphTestContext.NewRelationship(s.DC2, s.Domain2, ad.DCFor)
-	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA2, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.EnterpriseCA2, s.RootCA2, ad.IssuedSignedBy)
-	graphTestContext.NewRelationship(s.EnterpriseCA2, s.NTAuthStore2, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.User2, s.EnterpriseCA2, ad.Enroll)
-	graphTestContext.NewRelationship(s.User2, s.CertTemplate2, ad.Enroll)
 	graphTestContext.NewRelationship(s.RootCA3, s.Domain3, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore3, s.Domain3, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.DC3, s.Domain3, ad.DCFor)
 	graphTestContext.NewRelationship(s.CertTemplate3, s.EnterpriseCA3, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.EnterpriseCA3, s.RootCA3, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.User3, s.EnterpriseCA3, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA3, s.DC3, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.User3, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.RootCA4, s.Domain4, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore4, s.Domain4, ad.NTAuthStoreFor)
@@ -4193,7 +4043,6 @@ func (s *ESC10aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.CertTemplate4, s.EnterpriseCA4, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.EnterpriseCA4, s.NTAuthStore4, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.User4, s.EnterpriseCA4, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA4, s.DC4, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.User4, s.CertTemplate4, ad.Enroll)
 	graphTestContext.NewRelationship(s.RootCA5, s.Domain5, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore5, s.Domain5, ad.NTAuthStoreFor)
@@ -4201,13 +4050,20 @@ func (s *ESC10aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA5, s.RootCA5, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA5, s.NTAuthStore5, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.User5, s.EnterpriseCA5, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA5, s.DC5, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.User5, s.CertTemplate5, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group2, s.User2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group5, s.User5, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.User4, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group3, s.User3, ad.GenericAll)
+
+	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC1)
+	s.DC3.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC3)
+	s.DC4.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC4)
+	s.DC5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC5)
 }
 
 type ESC10aHarnessVictim struct {
@@ -4261,7 +4117,6 @@ func (s *ESC10aHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
@@ -4276,6 +4131,9 @@ func (s *ESC10aHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group2, s.User2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group3, s.User3, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.User4, ad.GenericAll)
+
+	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC10bHarness1 struct {
@@ -4414,7 +4272,6 @@ func (s *ESC10bHarness1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.ComputerDC, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.ComputerDC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.Computer3, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate3, s.EnterpriseCA, ad.PublishedTo)
@@ -4440,6 +4297,9 @@ func (s *ESC10bHarness1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group3, s.Computer3, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group2, s.Computer2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
+
+	s.ComputerDC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.ComputerDC)
 }
 
 type ESC10bHarness2 struct {
@@ -4547,7 +4407,6 @@ func (s *ESC10bHarness2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.ComputerDC, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.ComputerDC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
@@ -4580,46 +4439,41 @@ func (s *ESC10bHarness2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group6, s.User1, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group5, s.Computer1, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.Group1, ad.GenericAll)
+
+	s.ComputerDC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.ComputerDC)
 }
 
 type ESC10bHarnessECA struct {
 	CertTemplate1 *graph.Node
-	CertTemplate2 *graph.Node
 	CertTemplate3 *graph.Node
 	CertTemplate4 *graph.Node
 	CertTemplate5 *graph.Node
 	Computer1     *graph.Node
-	Computer2     *graph.Node
 	Computer3     *graph.Node
 	Computer4     *graph.Node
 	Computer5     *graph.Node
 	ComputerDC1   *graph.Node
-	ComputerDC2   *graph.Node
 	ComputerDC3   *graph.Node
 	ComputerDC4   *graph.Node
 	ComputerDC5   *graph.Node
 	Domain1       *graph.Node
-	Domain2       *graph.Node
 	Domain3       *graph.Node
 	Domain4       *graph.Node
 	Domain5       *graph.Node
 	EnterpriseCA1 *graph.Node
-	EnterpriseCA2 *graph.Node
 	EnterpriseCA3 *graph.Node
 	EnterpriseCA4 *graph.Node
 	EnterpriseCA5 *graph.Node
 	Group1        *graph.Node
-	Group2        *graph.Node
 	Group3        *graph.Node
 	Group4        *graph.Node
 	Group5        *graph.Node
 	NTAuthStore1  *graph.Node
-	NTAuthStore2  *graph.Node
 	NTAuthStore3  *graph.Node
 	NTAuthStore4  *graph.Node
 	NTAuthStore5  *graph.Node
 	RootCA1       *graph.Node
-	RootCA2       *graph.Node
 	RootCA3       *graph.Node
 	RootCA4       *graph.Node
 	RootCA5       *graph.Node
@@ -4627,25 +4481,10 @@ type ESC10bHarnessECA struct {
 
 func (s *ESC10bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	domainSid1 := RandomDomainSID()
-	domainSid2 := RandomDomainSID()
 	domainSid3 := RandomDomainSID()
 	domainSid4 := RandomDomainSID()
 	domainSid5 := RandomDomainSID()
 	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
-		ApplicationPolicies:     []string{},
-		AuthenticationEnabled:   true,
-		AuthorizedSignatures:    0,
-		EffectiveEKUs:           []string{},
-		EnrolleeSuppliesSubject: false,
-		NoSecurityExtension:     false,
-		RequiresManagerApproval: false,
-		SchemaVersion:           1,
-		SubjectAltRequireDNS:    true,
-		SubjectAltRequireEmail:  false,
-		SubjectAltRequireSPN:    false,
-		SubjectAltRequireUPN:    false,
-	})
-	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", domainSid2, CertTemplateData{
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
@@ -4702,37 +4541,30 @@ func (s *ESC10bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		SubjectAltRequireUPN:    false,
 	})
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid1)
-	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domainSid2)
 	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domainSid3)
 	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domainSid4)
 	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domainSid5)
 	s.ComputerDC1 = graphTestContext.NewActiveDirectoryComputer("ComputerDC1", domainSid1)
-	s.ComputerDC2 = graphTestContext.NewActiveDirectoryComputer("ComputerDC2", domainSid2)
 	s.ComputerDC3 = graphTestContext.NewActiveDirectoryComputer("ComputerDC3", domainSid3)
 	s.ComputerDC4 = graphTestContext.NewActiveDirectoryComputer("ComputerDC4", domainSid4)
 	s.ComputerDC5 = graphTestContext.NewActiveDirectoryComputer("ComputerDC5", domainSid5)
 	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
-	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid2, false, true)
 	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domainSid3, false, true)
 	s.Domain4 = graphTestContext.NewActiveDirectoryDomain("Domain4", domainSid4, false, true)
 	s.Domain5 = graphTestContext.NewActiveDirectoryDomain("Domain5", domainSid5, false, true)
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
-	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", domainSid2)
 	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA3", domainSid3)
 	s.EnterpriseCA4 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA4", domainSid4)
 	s.EnterpriseCA5 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA5", domainSid5)
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
-	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid2)
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSid3)
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid4)
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid5)
 	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
-	s.NTAuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore2", domainSid2)
 	s.NTAuthStore3 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore3", domainSid3)
 	s.NTAuthStore4 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore4", domainSid4)
 	s.NTAuthStore5 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore5", domainSid5)
 	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
-	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("RootCA2", domainSid2)
 	s.RootCA3 = graphTestContext.NewActiveDirectoryRootCA("RootCA3", domainSid3)
 	s.RootCA4 = graphTestContext.NewActiveDirectoryRootCA("RootCA4", domainSid4)
 	s.RootCA5 = graphTestContext.NewActiveDirectoryRootCA("RootCA5", domainSid5)
@@ -4743,23 +4575,13 @@ func (s *ESC10bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.Computer1, s.EnterpriseCA1, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA1, s.ComputerDC1, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.Computer1, s.CertTemplate1, ad.Enroll)
-	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
-	graphTestContext.NewRelationship(s.NTAuthStore2, s.Domain2, ad.NTAuthStoreFor)
-	graphTestContext.NewRelationship(s.ComputerDC2, s.Domain2, ad.DCFor)
-	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA2, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.EnterpriseCA2, s.RootCA2, ad.IssuedSignedBy)
-	graphTestContext.NewRelationship(s.EnterpriseCA2, s.NTAuthStore2, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.Computer2, s.EnterpriseCA2, ad.Enroll)
-	graphTestContext.NewRelationship(s.Computer2, s.CertTemplate2, ad.Enroll)
 	graphTestContext.NewRelationship(s.RootCA3, s.Domain3, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore3, s.Domain3, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.ComputerDC3, s.Domain3, ad.DCFor)
 	graphTestContext.NewRelationship(s.CertTemplate3, s.EnterpriseCA3, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.EnterpriseCA3, s.RootCA3, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.Computer3, s.EnterpriseCA3, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA3, s.ComputerDC3, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.Computer3, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.RootCA4, s.Domain4, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore4, s.Domain4, ad.NTAuthStoreFor)
@@ -4767,7 +4589,6 @@ func (s *ESC10bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.CertTemplate4, s.EnterpriseCA4, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.EnterpriseCA4, s.NTAuthStore4, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.Computer4, s.EnterpriseCA4, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA4, s.ComputerDC4, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.Computer4, s.CertTemplate4, ad.Enroll)
 	graphTestContext.NewRelationship(s.RootCA5, s.Domain5, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore5, s.Domain5, ad.NTAuthStoreFor)
@@ -4775,13 +4596,20 @@ func (s *ESC10bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA5, s.RootCA5, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA5, s.NTAuthStore5, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.Computer5, s.EnterpriseCA5, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA5, s.ComputerDC5, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.Computer5, s.CertTemplate5, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
-	graphTestContext.NewRelationship(s.Group2, s.Computer2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group5, s.Computer5, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.Computer4, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group3, s.Computer3, ad.GenericAll)
+
+	s.ComputerDC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.ComputerDC1)
+	s.ComputerDC3.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.ComputerDC3)
+	s.ComputerDC4.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.ComputerDC4)
+	s.ComputerDC5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.ComputerDC5)
 }
 
 type ESC10bHarnessVictim struct {
@@ -4836,7 +4664,6 @@ func (s *ESC10bHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.ComputerDC, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.ComputerDC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
@@ -4851,6 +4678,9 @@ func (s *ESC10bHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group2, s.Computer2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group3, s.Computer3, ad.GenericAll)
 	graphTestContext.NewRelationship(s.Group4, s.Computer4, ad.GenericAll)
+
+	s.ComputerDC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.ComputerDC)
 }
 
 type ESC10bPrincipalHarness struct {
@@ -4905,7 +4735,6 @@ func (s *ESC10bPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.ComputerDC, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.ComputerDC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.CertTemplate, s.EnterpriseCA, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
@@ -4919,6 +4748,9 @@ func (s *ESC10bPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer2, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group0, s.CertTemplate, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
+
+	s.ComputerDC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.ComputerDC)
 }
 
 type ESC6bHarnessTemplate1 struct{}
@@ -5032,7 +4864,6 @@ func (s *ESC6bTemplate1Harness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.Group3, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate3, s.EnterpriseCA, ad.PublishedTo)
@@ -5049,6 +4880,9 @@ func (s *ESC6bTemplate1Harness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.Group1, s.CertTemplate1, ad.Enroll)
 	graphTestContext.NewRelationship(s.Group1, s.Group0, ad.MemberOf)
+
+	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC6bTemplate2Harness struct {
@@ -5151,7 +4985,6 @@ func (s *ESC6bTemplate2Harness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
@@ -5175,48 +5008,44 @@ func (s *ESC6bTemplate2Harness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group3, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.Computer3, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.User3, s.CertTemplate3, ad.Enroll)
+
+	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ESC6bECAHarness struct {
 	CertTemplate0 *graph.Node
 	CertTemplate1 *graph.Node
-	CertTemplate2 *graph.Node
 	CertTemplate3 *graph.Node
 	CertTemplate4 *graph.Node
 	CertTemplate5 *graph.Node
 	DC0           *graph.Node
 	DC1           *graph.Node
-	DC2           *graph.Node
 	DC3           *graph.Node
 	DC4           *graph.Node
 	DC5           *graph.Node
 	Domain0       *graph.Node
 	Domain1       *graph.Node
-	Domain2       *graph.Node
 	Domain3       *graph.Node
 	Domain4       *graph.Node
 	Domain5       *graph.Node
 	EnterpriseCA0 *graph.Node
 	EnterpriseCA1 *graph.Node
-	EnterpriseCA2 *graph.Node
 	EnterpriseCA3 *graph.Node
 	EnterpriseCA4 *graph.Node
 	EnterpriseCA5 *graph.Node
 	Group0        *graph.Node
 	Group1        *graph.Node
-	Group2        *graph.Node
 	Group3        *graph.Node
 	Group4        *graph.Node
 	Group5        *graph.Node
 	NTAuthStore0  *graph.Node
 	NTAuthStore1  *graph.Node
-	NTAuthStore2  *graph.Node
 	NTAuthStore3  *graph.Node
 	NTAuthStore4  *graph.Node
 	NTAuthStore5  *graph.Node
 	RootCA0       *graph.Node
 	RootCA1       *graph.Node
-	RootCA2       *graph.Node
 	RootCA3       *graph.Node
 	RootCA4       *graph.Node
 	RootCA5       *graph.Node
@@ -5225,7 +5054,6 @@ type ESC6bECAHarness struct {
 func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 	domainSid0 := RandomDomainSID()
 	domainSid1 := RandomDomainSID()
-	domainSid2 := RandomDomainSID()
 	domainSid3 := RandomDomainSID()
 	domainSid4 := RandomDomainSID()
 	domainSid5 := RandomDomainSID()
@@ -5243,18 +5071,6 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 		SubjectAltRequireUPN:    false,
 	})
 	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
-		ApplicationPolicies:     []string{},
-		AuthenticationEnabled:   true,
-		AuthorizedSignatures:    0,
-		EffectiveEKUs:           []string{},
-		EnrolleeSuppliesSubject: false,
-		NoSecurityExtension:     false,
-		RequiresManagerApproval: false,
-		SchemaVersion:           1,
-		SubjectAltRequireSPN:    false,
-		SubjectAltRequireUPN:    false,
-	})
-	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", domainSid2, CertTemplateData{
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
@@ -5304,13 +5120,11 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 	})
 	s.DC0 = graphTestContext.NewActiveDirectoryComputer("DC0", domainSid0)
 	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid1)
-	s.DC2 = graphTestContext.NewActiveDirectoryComputer("DC2", domainSid2)
 	s.DC3 = graphTestContext.NewActiveDirectoryComputer("DC3", domainSid3)
 	s.DC4 = graphTestContext.NewActiveDirectoryComputer("DC4", domainSid4)
 	s.DC5 = graphTestContext.NewActiveDirectoryComputer("DC5", domainSid5)
 	s.Domain0 = graphTestContext.NewActiveDirectoryDomain("Domain0", domainSid0, false, true)
 	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
-	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid2, false, true)
 	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domainSid3, false, true)
 	s.Domain4 = graphTestContext.NewActiveDirectoryDomain("Domain4", domainSid4, false, true)
 	s.Domain5 = graphTestContext.NewActiveDirectoryDomain("Domain5", domainSid5, false, true)
@@ -5323,10 +5137,6 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
 	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), false)
 	graphTestContext.UpdateNode(s.EnterpriseCA1)
-
-	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", domainSid2)
-	s.EnterpriseCA2.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
-	graphTestContext.UpdateNode(s.EnterpriseCA2)
 
 	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA3", domainSid3)
 	s.EnterpriseCA3.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
@@ -5342,19 +5152,16 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 
 	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid0)
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
-	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid2)
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSid3)
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid4)
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid5)
 	s.NTAuthStore0 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore0", domainSid0)
 	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
-	s.NTAuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore2", domainSid2)
 	s.NTAuthStore3 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore3", domainSid3)
 	s.NTAuthStore4 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore4", domainSid4)
 	s.NTAuthStore5 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore5", domainSid5)
 	s.RootCA0 = graphTestContext.NewActiveDirectoryRootCA("RootCA0", domainSid0)
 	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
-	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("RootCA2", domainSid2)
 	s.RootCA3 = graphTestContext.NewActiveDirectoryRootCA("RootCA3", domainSid3)
 	s.RootCA4 = graphTestContext.NewActiveDirectoryRootCA("RootCA4", domainSid4)
 	s.RootCA5 = graphTestContext.NewActiveDirectoryRootCA("RootCA5", domainSid5)
@@ -5366,7 +5173,6 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA0, s.RootCA0, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA0, s.NTAuthStore0, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA0, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA0, s.DC0, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.Group0, s.CertTemplate0, ad.Enroll)
 
 	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
@@ -5376,17 +5182,7 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.Group1, s.EnterpriseCA1, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA1, s.DC1, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.Group1, s.CertTemplate1, ad.Enroll)
-
-	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
-	graphTestContext.NewRelationship(s.NTAuthStore2, s.Domain2, ad.NTAuthStoreFor)
-	graphTestContext.NewRelationship(s.DC2, s.Domain2, ad.DCFor)
-	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA2, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.EnterpriseCA2, s.RootCA2, ad.IssuedSignedBy)
-	graphTestContext.NewRelationship(s.EnterpriseCA2, s.NTAuthStore2, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.Group2, s.EnterpriseCA2, ad.Enroll)
-	graphTestContext.NewRelationship(s.Group2, s.CertTemplate2, ad.Enroll)
 
 	graphTestContext.NewRelationship(s.RootCA3, s.Domain3, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.NTAuthStore3, s.Domain3, ad.NTAuthStoreFor)
@@ -5394,7 +5190,6 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.CertTemplate3, s.EnterpriseCA3, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.EnterpriseCA3, s.RootCA3, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.Group3, s.EnterpriseCA3, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA3, s.DC3, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.Group3, s.CertTemplate3, ad.Enroll)
 
 	graphTestContext.NewRelationship(s.RootCA4, s.Domain4, ad.RootCAFor)
@@ -5403,7 +5198,6 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.CertTemplate4, s.EnterpriseCA4, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.EnterpriseCA4, s.NTAuthStore4, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.Group4, s.EnterpriseCA4, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA4, s.DC4, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.Group4, s.CertTemplate4, ad.Enroll)
 
 	graphTestContext.NewRelationship(s.RootCA5, s.Domain5, ad.RootCAFor)
@@ -5412,8 +5206,18 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA5, s.RootCA5, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA5, s.NTAuthStore5, ad.TrustedForNTAuth)
 	graphTestContext.NewRelationship(s.Group5, s.EnterpriseCA5, ad.Enroll)
-	graphTestContext.NewRelationship(s.EnterpriseCA5, s.DC5, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.Group5, s.CertTemplate5, ad.Enroll)
+
+	s.DC0.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC0)
+	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC1)
+	s.DC3.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC3)
+	s.DC4.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC4)
+	s.DC5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC5)
 }
 
 type ESC6bPrincipalEdgesHarness struct {
@@ -5462,7 +5266,6 @@ func (s *ESC6bPrincipalEdgesHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.EnterpriseCA, s.DC, ad.CanAbuseUPNCertMapping)
 	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
 	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
@@ -5473,6 +5276,9 @@ func (s *ESC6bPrincipalEdgesHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group3, s.CertTemplate1, ad.GenericWrite)
 	graphTestContext.NewRelationship(s.Group3, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group4, s.CertTemplate1, ad.Enroll)
+
+	s.DC.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC)
 }
 
 type ShortcutHarness struct {
@@ -6945,6 +6751,1531 @@ func (s *DCSyncHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group2, s.Domain1, ad.GetChangesAll)
 }
 
+type ESC6aHarnessDC1 struct {
+	CertTemplate0 *graph.Node
+	CertTemplate1 *graph.Node
+	CertTemplate2 *graph.Node
+	DC0           *graph.Node
+	DC1           *graph.Node
+	DC2           *graph.Node
+	DC3           *graph.Node
+	DC4           *graph.Node
+	DC5           *graph.Node
+	Domain0       *graph.Node
+	Domain1       *graph.Node
+	Domain2       *graph.Node
+	EnterpriseCA0 *graph.Node
+	EnterpriseCA1 *graph.Node
+	EnterpriseCA2 *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	Group2        *graph.Node
+	NTAuthStore0  *graph.Node
+	NTAuthStore1  *graph.Node
+	NTAuthStore2  *graph.Node
+	RootCA0       *graph.Node
+	RootCA1       *graph.Node
+	RootCA2       *graph.Node
+}
+
+func (s *ESC6aHarnessDC1) Setup(graphTestContext *GraphTestContext) {
+	domainSid0 := RandomDomainSID()
+	domainSid1 := RandomDomainSID()
+	domainSid2 := RandomDomainSID()
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", domainSid0, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", domainSid2, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.DC0 = graphTestContext.NewActiveDirectoryComputer("DC0", domainSid0)
+	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid1)
+	s.DC2 = graphTestContext.NewActiveDirectoryComputer("DC2", domainSid2)
+	s.DC3 = graphTestContext.NewActiveDirectoryComputer("DC3", domainSid2)
+	s.DC4 = graphTestContext.NewActiveDirectoryComputer("DC4", domainSid2)
+	s.DC5 = graphTestContext.NewActiveDirectoryComputer("DC5", domainSid2)
+	s.Domain0 = graphTestContext.NewActiveDirectoryDomain("Domain0", domainSid0, false, true)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid2, false, true)
+	s.EnterpriseCA0 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA0", domainSid0)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", domainSid2)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid0)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid2)
+	s.NTAuthStore0 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore0", domainSid0)
+	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
+	s.NTAuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore2", domainSid2)
+	s.RootCA0 = graphTestContext.NewActiveDirectoryRootCA("RootCA0", domainSid0)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
+	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("RootCA2", domainSid2)
+	graphTestContext.NewRelationship(s.RootCA0, s.Domain0, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore0, s.Domain0, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC0, s.Domain0, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.EnterpriseCA0, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.RootCA0, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.NTAuthStore0, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA0, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group0, s.CertTemplate0, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC1, s.Domain1, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Group1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group1, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore2, s.Domain2, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC2, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA2, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA2, s.RootCA2, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA2, s.NTAuthStore2, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Group2, s.EnterpriseCA2, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group2, s.CertTemplate2, ad.Enroll)
+	graphTestContext.NewRelationship(s.DC3, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC4, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC5, s.Domain2, ad.DCFor)
+
+	s.EnterpriseCA0.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	s.EnterpriseCA2.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	graphTestContext.UpdateNode(s.EnterpriseCA0)
+	graphTestContext.UpdateNode(s.EnterpriseCA1)
+	graphTestContext.UpdateNode(s.EnterpriseCA2)
+
+	s.DC0.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "0")
+	s.DC1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	s.DC2.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "-1")
+	s.DC2.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "-1")
+	s.DC4.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "2")
+	s.DC4.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "0")
+	s.DC5.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "3")
+	s.DC5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC0)
+	graphTestContext.UpdateNode(s.DC1)
+	graphTestContext.UpdateNode(s.DC2)
+	graphTestContext.UpdateNode(s.DC4)
+	graphTestContext.UpdateNode(s.DC5)
+}
+
+type ESC6aHarnessDC2 struct {
+	CertTemplate0 *graph.Node
+	CertTemplate1 *graph.Node
+	DC0           *graph.Node
+	DC1           *graph.Node
+	Domain0       *graph.Node
+	Domain01      *graph.Node
+	Domain02      *graph.Node
+	Domain1       *graph.Node
+	Domain11      *graph.Node
+	Domain12      *graph.Node
+	EnterpriseCA0 *graph.Node
+	EnterpriseCA1 *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	NTAuthStore0  *graph.Node
+	NTAuthStore1  *graph.Node
+	RootCA0       *graph.Node
+	RootCA1       *graph.Node
+}
+
+func (s *ESC6aHarnessDC2) Setup(graphTestContext *GraphTestContext) {
+	domainSid0 := RandomDomainSID()
+	domainSid01 := RandomDomainSID()
+	domainSid02 := RandomDomainSID()
+	domainSid1 := RandomDomainSID()
+	domainSid11 := RandomDomainSID()
+	domainSid12 := RandomDomainSID()
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", domainSid0, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.DC0 = graphTestContext.NewActiveDirectoryComputer("DC0", domainSid02)
+	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid12)
+	s.Domain0 = graphTestContext.NewActiveDirectoryDomain("Domain0", domainSid0, false, true)
+	s.Domain01 = graphTestContext.NewActiveDirectoryDomain("Domain01", domainSid01, false, true)
+	s.Domain02 = graphTestContext.NewActiveDirectoryDomain("Domain02", domainSid02, false, true)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
+	s.Domain11 = graphTestContext.NewActiveDirectoryDomain("Domain11", domainSid11, false, true)
+	s.Domain12 = graphTestContext.NewActiveDirectoryDomain("Domain12", domainSid12, false, true)
+	s.EnterpriseCA0 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA0", domainSid0)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid0)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
+	s.NTAuthStore0 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore0", domainSid0)
+	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
+	s.RootCA0 = graphTestContext.NewActiveDirectoryRootCA("RootCA0", domainSid0)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
+	graphTestContext.NewRelationship(s.RootCA0, s.Domain0, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore0, s.Domain0, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.EnterpriseCA0, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.RootCA0, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.NTAuthStore0, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA0, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group0, s.CertTemplate0, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Group1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group1, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.DC0, s.Domain02, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC1, s.Domain12, ad.DCFor)
+
+	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.TrustedBy)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.TrustedBy)
+
+	s.EnterpriseCA0.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	graphTestContext.UpdateNode(s.EnterpriseCA0)
+	graphTestContext.UpdateNode(s.EnterpriseCA1)
+
+	s.DC0.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "0")
+	s.DC1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC0)
+	graphTestContext.UpdateNode(s.DC1)
+}
+
+type ESC6bHarnessDC1 struct {
+	CertTemplate0 *graph.Node
+	CertTemplate1 *graph.Node
+	CertTemplate2 *graph.Node
+	DC0           *graph.Node
+	DC1           *graph.Node
+	DC2           *graph.Node
+	DC3           *graph.Node
+	DC4           *graph.Node
+	DC5           *graph.Node
+	DC6           *graph.Node
+	Domain0       *graph.Node
+	Domain1       *graph.Node
+	Domain2       *graph.Node
+	EnterpriseCA0 *graph.Node
+	EnterpriseCA1 *graph.Node
+	EnterpriseCA2 *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	Group2        *graph.Node
+	NTAuthStore0  *graph.Node
+	NTAuthStore1  *graph.Node
+	NTAuthStore2  *graph.Node
+	RootCA0       *graph.Node
+	RootCA1       *graph.Node
+	RootCA2       *graph.Node
+}
+
+func (s *ESC6bHarnessDC1) Setup(graphTestContext *GraphTestContext) {
+	domainSid0 := RandomDomainSID()
+	domainSid1 := RandomDomainSID()
+	domainSid2 := RandomDomainSID()
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", domainSid0, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", domainSid2, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.DC0 = graphTestContext.NewActiveDirectoryComputer("DC0", domainSid0)
+	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid1)
+	s.DC2 = graphTestContext.NewActiveDirectoryComputer("DC2", domainSid2)
+	s.DC3 = graphTestContext.NewActiveDirectoryComputer("DC3", domainSid2)
+	s.DC4 = graphTestContext.NewActiveDirectoryComputer("DC4", domainSid2)
+	s.DC5 = graphTestContext.NewActiveDirectoryComputer("DC5", domainSid2)
+	s.DC6 = graphTestContext.NewActiveDirectoryComputer("DC6", domainSid2)
+	s.Domain0 = graphTestContext.NewActiveDirectoryDomain("Domain0", domainSid0, false, true)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid2, false, true)
+	s.EnterpriseCA0 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA0", domainSid0)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", domainSid2)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid0)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid2)
+	s.NTAuthStore0 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore0", domainSid0)
+	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
+	s.NTAuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore2", domainSid2)
+	s.RootCA0 = graphTestContext.NewActiveDirectoryRootCA("RootCA0", domainSid0)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
+	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("RootCA2", domainSid2)
+	graphTestContext.NewRelationship(s.RootCA0, s.Domain0, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore0, s.Domain0, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC0, s.Domain0, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.EnterpriseCA0, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.RootCA0, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.NTAuthStore0, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA0, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group0, s.CertTemplate0, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC1, s.Domain1, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Group1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group1, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore2, s.Domain2, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC2, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA2, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA2, s.RootCA2, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA2, s.NTAuthStore2, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Group2, s.EnterpriseCA2, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group2, s.CertTemplate2, ad.Enroll)
+	graphTestContext.NewRelationship(s.DC3, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC4, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC5, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC6, s.Domain2, ad.DCFor)
+
+	s.EnterpriseCA0.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	s.EnterpriseCA2.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	graphTestContext.UpdateNode(s.EnterpriseCA0)
+	graphTestContext.UpdateNode(s.EnterpriseCA1)
+	graphTestContext.UpdateNode(s.EnterpriseCA2)
+
+	s.DC0.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "4")
+	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	s.DC2.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "0")
+	s.DC2.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "-1")
+	s.DC4.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	s.DC4.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "0")
+	s.DC5.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "2")
+	s.DC5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "3")
+	s.DC6.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "27")
+	graphTestContext.UpdateNode(s.DC0)
+	graphTestContext.UpdateNode(s.DC1)
+	graphTestContext.UpdateNode(s.DC2)
+	graphTestContext.UpdateNode(s.DC4)
+	graphTestContext.UpdateNode(s.DC5)
+	graphTestContext.UpdateNode(s.DC6)
+}
+
+type ESC6bHarnessDC2 struct {
+	CertTemplate0 *graph.Node
+	CertTemplate1 *graph.Node
+	DC0           *graph.Node
+	DC1           *graph.Node
+	Domain0       *graph.Node
+	Domain01      *graph.Node
+	Domain02      *graph.Node
+	Domain1       *graph.Node
+	Domain11      *graph.Node
+	Domain12      *graph.Node
+	EnterpriseCA0 *graph.Node
+	EnterpriseCA1 *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	NTAuthStore0  *graph.Node
+	NTAuthStore1  *graph.Node
+	RootCA0       *graph.Node
+	RootCA1       *graph.Node
+}
+
+func (s *ESC6bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
+	domainSid0 := RandomDomainSID()
+	domainSid01 := RandomDomainSID()
+	domainSid02 := RandomDomainSID()
+	domainSid1 := RandomDomainSID()
+	domainSid11 := RandomDomainSID()
+	domainSid12 := RandomDomainSID()
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", domainSid0, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.DC0 = graphTestContext.NewActiveDirectoryComputer("DC0", domainSid02)
+	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid12)
+	s.Domain0 = graphTestContext.NewActiveDirectoryDomain("Domain0", domainSid0, false, true)
+	s.Domain01 = graphTestContext.NewActiveDirectoryDomain("Domain01", domainSid01, false, true)
+	s.Domain02 = graphTestContext.NewActiveDirectoryDomain("Domain02", domainSid02, false, true)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
+	s.Domain11 = graphTestContext.NewActiveDirectoryDomain("Domain11", domainSid11, false, true)
+	s.Domain12 = graphTestContext.NewActiveDirectoryDomain("Domain12", domainSid12, false, true)
+	s.EnterpriseCA0 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA0", domainSid0)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid0)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
+	s.NTAuthStore0 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore0", domainSid0)
+	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
+	s.RootCA0 = graphTestContext.NewActiveDirectoryRootCA("RootCA0", domainSid0)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
+	graphTestContext.NewRelationship(s.RootCA0, s.Domain0, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore0, s.Domain0, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.EnterpriseCA0, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.RootCA0, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.NTAuthStore0, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA0, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group0, s.CertTemplate0, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Group1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group1, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.DC0, s.Domain02, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC1, s.Domain12, ad.DCFor)
+
+	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.TrustedBy)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.TrustedBy)
+
+	s.EnterpriseCA0.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	graphTestContext.UpdateNode(s.EnterpriseCA0)
+	graphTestContext.UpdateNode(s.EnterpriseCA1)
+
+	s.DC0.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "4")
+	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC0)
+	graphTestContext.UpdateNode(s.DC1)
+}
+
+type ESC9aHarnessDC1 struct {
+	CertTemplate0 *graph.Node
+	CertTemplate1 *graph.Node
+	CertTemplate2 *graph.Node
+	DC0           *graph.Node
+	DC1           *graph.Node
+	DC2           *graph.Node
+	DC3           *graph.Node
+	DC4           *graph.Node
+	DC5           *graph.Node
+	Domain0       *graph.Node
+	Domain1       *graph.Node
+	Domain2       *graph.Node
+	EnterpriseCA0 *graph.Node
+	EnterpriseCA1 *graph.Node
+	EnterpriseCA2 *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	Group2        *graph.Node
+	NTAuthStore0  *graph.Node
+	NTAuthStore1  *graph.Node
+	NTAuthStore2  *graph.Node
+	RootCA0       *graph.Node
+	RootCA1       *graph.Node
+	RootCA2       *graph.Node
+	User0         *graph.Node
+	User1         *graph.Node
+	User2         *graph.Node
+}
+
+func (s *ESC9aHarnessDC1) Setup(graphTestContext *GraphTestContext) {
+	domainSid0 := RandomDomainSID()
+	domainSid1 := RandomDomainSID()
+	domainSid2 := RandomDomainSID()
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", domainSid0, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    true,
+	})
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    true,
+	})
+	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", domainSid2, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    true,
+	})
+	s.DC0 = graphTestContext.NewActiveDirectoryComputer("DC0", domainSid0)
+	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid1)
+	s.DC2 = graphTestContext.NewActiveDirectoryComputer("DC2", domainSid2)
+	s.DC3 = graphTestContext.NewActiveDirectoryComputer("DC3", domainSid2)
+	s.DC4 = graphTestContext.NewActiveDirectoryComputer("DC4", domainSid2)
+	s.DC5 = graphTestContext.NewActiveDirectoryComputer("DC5", domainSid2)
+	s.Domain0 = graphTestContext.NewActiveDirectoryDomain("Domain0", domainSid0, false, true)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid2, false, true)
+	s.EnterpriseCA0 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA0", domainSid0)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", domainSid2)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid0)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid2)
+	s.NTAuthStore0 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore0", domainSid0)
+	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
+	s.NTAuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore2", domainSid2)
+	s.RootCA0 = graphTestContext.NewActiveDirectoryRootCA("RootCA0", domainSid0)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
+	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("RootCA2", domainSid2)
+	s.User0 = graphTestContext.NewActiveDirectoryUser("User0", domainSid0)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid1)
+	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", domainSid2)
+	graphTestContext.NewRelationship(s.RootCA0, s.Domain0, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore0, s.Domain0, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC0, s.Domain0, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.EnterpriseCA0, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.RootCA0, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.NTAuthStore0, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.User0, s.EnterpriseCA0, ad.Enroll)
+	graphTestContext.NewRelationship(s.User0, s.CertTemplate0, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC1, s.Domain1, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.User1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.User1, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore2, s.Domain2, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC2, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA2, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA2, s.RootCA2, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA2, s.NTAuthStore2, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.User2, s.EnterpriseCA2, ad.Enroll)
+	graphTestContext.NewRelationship(s.User2, s.CertTemplate2, ad.Enroll)
+	graphTestContext.NewRelationship(s.DC3, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC4, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC5, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.Group0, s.User0, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group2, s.User2, ad.GenericAll)
+
+	s.DC0.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "0")
+	s.DC1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	s.DC2.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "-1")
+	s.DC2.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "-1")
+	s.DC4.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "2")
+	s.DC4.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "0")
+	s.DC5.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "3")
+	s.DC5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC0)
+	graphTestContext.UpdateNode(s.DC1)
+	graphTestContext.UpdateNode(s.DC2)
+	graphTestContext.UpdateNode(s.DC4)
+	graphTestContext.UpdateNode(s.DC5)
+}
+
+type ESC9aHarnessDC2 struct {
+	CertTemplate0 *graph.Node
+	CertTemplate1 *graph.Node
+	DC0           *graph.Node
+	DC1           *graph.Node
+	Domain0       *graph.Node
+	Domain01      *graph.Node
+	Domain02      *graph.Node
+	Domain1       *graph.Node
+	Domain11      *graph.Node
+	Domain12      *graph.Node
+	EnterpriseCA0 *graph.Node
+	EnterpriseCA1 *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	NTAuthStore0  *graph.Node
+	NTAuthStore1  *graph.Node
+	RootCA0       *graph.Node
+	RootCA1       *graph.Node
+	User0         *graph.Node
+	User1         *graph.Node
+}
+
+func (s *ESC9aHarnessDC2) Setup(graphTestContext *GraphTestContext) {
+	domainSid0 := RandomDomainSID()
+	domainSid01 := RandomDomainSID()
+	domainSid02 := RandomDomainSID()
+	domainSid1 := RandomDomainSID()
+	domainSid11 := RandomDomainSID()
+	domainSid12 := RandomDomainSID()
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", domainSid0, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    true,
+	})
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    true,
+	})
+	s.DC0 = graphTestContext.NewActiveDirectoryComputer("DC0", domainSid02)
+	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid12)
+	s.Domain0 = graphTestContext.NewActiveDirectoryDomain("Domain0", domainSid0, false, true)
+	s.Domain01 = graphTestContext.NewActiveDirectoryDomain("Domain01", domainSid01, false, true)
+	s.Domain02 = graphTestContext.NewActiveDirectoryDomain("Domain02", domainSid02, false, true)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
+	s.Domain11 = graphTestContext.NewActiveDirectoryDomain("Domain11", domainSid11, false, true)
+	s.Domain12 = graphTestContext.NewActiveDirectoryDomain("Domain12", domainSid12, false, true)
+	s.EnterpriseCA0 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA0", domainSid0)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid0)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
+	s.NTAuthStore0 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore0", domainSid0)
+	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
+	s.RootCA0 = graphTestContext.NewActiveDirectoryRootCA("RootCA0", domainSid0)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
+	s.User0 = graphTestContext.NewActiveDirectoryUser("User0", domainSid0)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid1)
+	graphTestContext.NewRelationship(s.RootCA0, s.Domain0, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore0, s.Domain0, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.EnterpriseCA0, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.RootCA0, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.NTAuthStore0, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.User0, s.EnterpriseCA0, ad.Enroll)
+	graphTestContext.NewRelationship(s.User0, s.CertTemplate0, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.User1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.User1, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group0, s.User0, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
+	graphTestContext.NewRelationship(s.DC0, s.Domain02, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC1, s.Domain12, ad.DCFor)
+
+	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.TrustedBy)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.TrustedBy)
+
+	s.DC0.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "0")
+	s.DC1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC0)
+	graphTestContext.UpdateNode(s.DC1)
+}
+
+type ESC9bHarnessDC1 struct {
+	CertTemplate0 *graph.Node
+	CertTemplate1 *graph.Node
+	CertTemplate2 *graph.Node
+	Computer0     *graph.Node
+	Computer1     *graph.Node
+	Computer2     *graph.Node
+	DC0           *graph.Node
+	DC1           *graph.Node
+	DC2           *graph.Node
+	DC3           *graph.Node
+	DC4           *graph.Node
+	DC5           *graph.Node
+	Domain0       *graph.Node
+	Domain1       *graph.Node
+	Domain2       *graph.Node
+	EnterpriseCA0 *graph.Node
+	EnterpriseCA1 *graph.Node
+	EnterpriseCA2 *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	Group2        *graph.Node
+	NTAuthStore0  *graph.Node
+	NTAuthStore1  *graph.Node
+	NTAuthStore2  *graph.Node
+	RootCA0       *graph.Node
+	RootCA1       *graph.Node
+	RootCA2       *graph.Node
+}
+
+func (s *ESC9bHarnessDC1) Setup(graphTestContext *GraphTestContext) {
+	domainSid0 := RandomDomainSID()
+	domainSid1 := RandomDomainSID()
+	domainSid2 := RandomDomainSID()
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", domainSid0, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireDNS:    true,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireDNS:    true,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", domainSid2, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireDNS:    true,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.Computer0 = graphTestContext.NewActiveDirectoryComputer("Computer0", domainSid0)
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid1)
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domainSid2)
+	s.DC0 = graphTestContext.NewActiveDirectoryComputer("DC0", domainSid0)
+	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid1)
+	s.DC2 = graphTestContext.NewActiveDirectoryComputer("DC2", domainSid2)
+	s.DC3 = graphTestContext.NewActiveDirectoryComputer("DC3", domainSid2)
+	s.DC4 = graphTestContext.NewActiveDirectoryComputer("DC4", domainSid2)
+	s.DC5 = graphTestContext.NewActiveDirectoryComputer("DC5", domainSid2)
+	s.Domain0 = graphTestContext.NewActiveDirectoryDomain("Domain0", domainSid0, false, true)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid2, false, true)
+	s.EnterpriseCA0 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA0", domainSid0)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", domainSid2)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid0)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid2)
+	s.NTAuthStore0 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore0", domainSid0)
+	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
+	s.NTAuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore2", domainSid2)
+	s.RootCA0 = graphTestContext.NewActiveDirectoryRootCA("RootCA0", domainSid0)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
+	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("RootCA2", domainSid2)
+	graphTestContext.NewRelationship(s.RootCA0, s.Domain0, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore0, s.Domain0, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC0, s.Domain0, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.EnterpriseCA0, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.RootCA0, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.NTAuthStore0, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Computer0, s.EnterpriseCA0, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer0, s.CertTemplate0, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC1, s.Domain1, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Computer1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer1, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore2, s.Domain2, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC2, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA2, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA2, s.RootCA2, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA2, s.NTAuthStore2, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Computer2, s.EnterpriseCA2, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer2, s.CertTemplate2, ad.Enroll)
+	graphTestContext.NewRelationship(s.DC3, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC4, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC5, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.Group0, s.Computer0, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group2, s.Computer2, ad.GenericAll)
+
+	s.DC0.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "0")
+	s.DC1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	s.DC2.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "-1")
+	s.DC2.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "-1")
+	s.DC4.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "2")
+	s.DC4.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "0")
+	s.DC5.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "3")
+	s.DC5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC0)
+	graphTestContext.UpdateNode(s.DC1)
+	graphTestContext.UpdateNode(s.DC2)
+	graphTestContext.UpdateNode(s.DC4)
+	graphTestContext.UpdateNode(s.DC5)
+}
+
+type ESC9bHarnessDC2 struct {
+	CertTemplate0 *graph.Node
+	CertTemplate1 *graph.Node
+	Computer0     *graph.Node
+	Computer1     *graph.Node
+	DC0           *graph.Node
+	DC1           *graph.Node
+	Domain0       *graph.Node
+	Domain01      *graph.Node
+	Domain02      *graph.Node
+	Domain1       *graph.Node
+	Domain11      *graph.Node
+	Domain12      *graph.Node
+	EnterpriseCA0 *graph.Node
+	EnterpriseCA1 *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	NTAuthStore0  *graph.Node
+	NTAuthStore1  *graph.Node
+	RootCA0       *graph.Node
+	RootCA1       *graph.Node
+}
+
+func (s *ESC9bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
+	domainSid0 := RandomDomainSID()
+	domainSid01 := RandomDomainSID()
+	domainSid02 := RandomDomainSID()
+	domainSid1 := RandomDomainSID()
+	domainSid11 := RandomDomainSID()
+	domainSid12 := RandomDomainSID()
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", domainSid0, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireDNS:    true,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireDNS:    true,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.Computer0 = graphTestContext.NewActiveDirectoryComputer("Computer0", domainSid0)
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid1)
+	s.DC0 = graphTestContext.NewActiveDirectoryComputer("DC0", domainSid02)
+	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid12)
+	s.Domain0 = graphTestContext.NewActiveDirectoryDomain("Domain0", domainSid0, false, true)
+	s.Domain01 = graphTestContext.NewActiveDirectoryDomain("Domain01", domainSid01, false, true)
+	s.Domain02 = graphTestContext.NewActiveDirectoryDomain("Domain02", domainSid02, false, true)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
+	s.Domain11 = graphTestContext.NewActiveDirectoryDomain("Domain11", domainSid11, false, true)
+	s.Domain12 = graphTestContext.NewActiveDirectoryDomain("Domain12", domainSid12, false, true)
+	s.EnterpriseCA0 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA0", domainSid0)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid0)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
+	s.NTAuthStore0 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore0", domainSid0)
+	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
+	s.RootCA0 = graphTestContext.NewActiveDirectoryRootCA("RootCA0", domainSid0)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
+	graphTestContext.NewRelationship(s.RootCA0, s.Domain0, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore0, s.Domain0, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.EnterpriseCA0, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.RootCA0, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.NTAuthStore0, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Computer0, s.EnterpriseCA0, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer0, s.CertTemplate0, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Computer1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer1, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group0, s.Computer0, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
+	graphTestContext.NewRelationship(s.DC0, s.Domain02, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC1, s.Domain12, ad.DCFor)
+
+	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.TrustedBy)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.TrustedBy)
+
+	s.DC0.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "0")
+	s.DC1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC0)
+	graphTestContext.UpdateNode(s.DC1)
+}
+
+type ESC10aHarnessDC1 struct {
+	CertTemplate0 *graph.Node
+	CertTemplate1 *graph.Node
+	CertTemplate2 *graph.Node
+	DC0           *graph.Node
+	DC1           *graph.Node
+	DC2           *graph.Node
+	DC3           *graph.Node
+	DC4           *graph.Node
+	DC5           *graph.Node
+	DC6           *graph.Node
+	Domain0       *graph.Node
+	Domain1       *graph.Node
+	Domain2       *graph.Node
+	EnterpriseCA0 *graph.Node
+	EnterpriseCA1 *graph.Node
+	EnterpriseCA2 *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	Group2        *graph.Node
+	NTAuthStore0  *graph.Node
+	NTAuthStore1  *graph.Node
+	NTAuthStore2  *graph.Node
+	RootCA0       *graph.Node
+	RootCA1       *graph.Node
+	RootCA2       *graph.Node
+	User0         *graph.Node
+	User1         *graph.Node
+	User2         *graph.Node
+}
+
+func (s *ESC10aHarnessDC1) Setup(graphTestContext *GraphTestContext) {
+	domainSid0 := RandomDomainSID()
+	domainSid1 := RandomDomainSID()
+	domainSid2 := RandomDomainSID()
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", domainSid0, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    true,
+	})
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    true,
+	})
+	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", domainSid2, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    true,
+	})
+	s.DC0 = graphTestContext.NewActiveDirectoryComputer("DC0", domainSid0)
+	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid1)
+	s.DC2 = graphTestContext.NewActiveDirectoryComputer("DC2", domainSid2)
+	s.DC3 = graphTestContext.NewActiveDirectoryComputer("DC3", domainSid2)
+	s.DC4 = graphTestContext.NewActiveDirectoryComputer("DC4", domainSid2)
+	s.DC5 = graphTestContext.NewActiveDirectoryComputer("DC5", domainSid2)
+	s.DC6 = graphTestContext.NewActiveDirectoryComputer("DC6", domainSid2)
+	s.Domain0 = graphTestContext.NewActiveDirectoryDomain("Domain0", domainSid0, false, true)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid2, false, true)
+	s.EnterpriseCA0 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA0", domainSid0)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", domainSid2)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid0)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid2)
+	s.NTAuthStore0 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore0", domainSid0)
+	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
+	s.NTAuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore2", domainSid2)
+	s.RootCA0 = graphTestContext.NewActiveDirectoryRootCA("RootCA0", domainSid0)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
+	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("RootCA2", domainSid2)
+	s.User0 = graphTestContext.NewActiveDirectoryUser("User0", domainSid0)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid1)
+	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", domainSid2)
+	graphTestContext.NewRelationship(s.RootCA0, s.Domain0, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore0, s.Domain0, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC0, s.Domain0, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.EnterpriseCA0, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.RootCA0, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.NTAuthStore0, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.User0, s.EnterpriseCA0, ad.Enroll)
+	graphTestContext.NewRelationship(s.User0, s.CertTemplate0, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC1, s.Domain1, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.User1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.User1, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore2, s.Domain2, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA2, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA2, s.RootCA2, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA2, s.NTAuthStore2, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.User2, s.EnterpriseCA2, ad.Enroll)
+	graphTestContext.NewRelationship(s.User2, s.CertTemplate2, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group0, s.User0, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group2, s.User2, ad.GenericAll)
+	graphTestContext.NewRelationship(s.DC2, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC3, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC4, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC5, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC6, s.Domain2, ad.DCFor)
+
+	s.DC0.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "4")
+	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	s.DC2.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "0")
+	s.DC2.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "-1")
+	s.DC4.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	s.DC4.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "0")
+	s.DC5.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "2")
+	s.DC5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "3")
+	s.DC6.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "27")
+	graphTestContext.UpdateNode(s.DC0)
+	graphTestContext.UpdateNode(s.DC1)
+	graphTestContext.UpdateNode(s.DC2)
+	graphTestContext.UpdateNode(s.DC4)
+	graphTestContext.UpdateNode(s.DC5)
+	graphTestContext.UpdateNode(s.DC6)
+}
+
+type ESC10aHarnessDC2 struct {
+	CertTemplate0 *graph.Node
+	CertTemplate1 *graph.Node
+	DC0           *graph.Node
+	DC1           *graph.Node
+	Domain0       *graph.Node
+	Domain01      *graph.Node
+	Domain02      *graph.Node
+	Domain1       *graph.Node
+	Domain11      *graph.Node
+	Domain12      *graph.Node
+	EnterpriseCA0 *graph.Node
+	EnterpriseCA1 *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	NTAuthStore0  *graph.Node
+	NTAuthStore1  *graph.Node
+	RootCA0       *graph.Node
+	RootCA1       *graph.Node
+	User0         *graph.Node
+	User1         *graph.Node
+}
+
+func (s *ESC10aHarnessDC2) Setup(graphTestContext *GraphTestContext) {
+	domainSid0 := RandomDomainSID()
+	domainSid01 := RandomDomainSID()
+	domainSid02 := RandomDomainSID()
+	domainSid1 := RandomDomainSID()
+	domainSid11 := RandomDomainSID()
+	domainSid12 := RandomDomainSID()
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", domainSid0, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    true,
+	})
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    true,
+	})
+	s.DC0 = graphTestContext.NewActiveDirectoryComputer("DC0", domainSid02)
+	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid12)
+	s.Domain0 = graphTestContext.NewActiveDirectoryDomain("Domain0", domainSid0, false, true)
+	s.Domain01 = graphTestContext.NewActiveDirectoryDomain("Domain01", domainSid01, false, true)
+	s.Domain02 = graphTestContext.NewActiveDirectoryDomain("Domain02", domainSid02, false, true)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
+	s.Domain11 = graphTestContext.NewActiveDirectoryDomain("Domain11", domainSid11, false, true)
+	s.Domain12 = graphTestContext.NewActiveDirectoryDomain("Domain12", domainSid12, false, true)
+	s.EnterpriseCA0 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA0", domainSid0)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid0)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
+	s.NTAuthStore0 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore0", domainSid0)
+	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
+	s.RootCA0 = graphTestContext.NewActiveDirectoryRootCA("RootCA0", domainSid0)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
+	s.User0 = graphTestContext.NewActiveDirectoryUser("User0", domainSid0)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid1)
+	graphTestContext.NewRelationship(s.RootCA0, s.Domain0, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore0, s.Domain0, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.EnterpriseCA0, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.RootCA0, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.NTAuthStore0, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.User0, s.EnterpriseCA0, ad.Enroll)
+	graphTestContext.NewRelationship(s.User0, s.CertTemplate0, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.User1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.User1, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group0, s.User0, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
+	graphTestContext.NewRelationship(s.DC0, s.Domain02, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC1, s.Domain12, ad.DCFor)
+
+	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.TrustedBy)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.TrustedBy)
+
+	s.DC0.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "4")
+	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC0)
+	graphTestContext.UpdateNode(s.DC1)
+}
+
+type ESC10bHarnessDC1 struct {
+	CertTemplate0 *graph.Node
+	CertTemplate1 *graph.Node
+	CertTemplate2 *graph.Node
+	Computer0     *graph.Node
+	Computer1     *graph.Node
+	Computer2     *graph.Node
+	DC0           *graph.Node
+	DC1           *graph.Node
+	DC2           *graph.Node
+	DC3           *graph.Node
+	DC4           *graph.Node
+	DC5           *graph.Node
+	DC6           *graph.Node
+	Domain0       *graph.Node
+	Domain1       *graph.Node
+	Domain2       *graph.Node
+	EnterpriseCA0 *graph.Node
+	EnterpriseCA1 *graph.Node
+	EnterpriseCA2 *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	Group2        *graph.Node
+	NTAuthStore0  *graph.Node
+	NTAuthStore1  *graph.Node
+	NTAuthStore2  *graph.Node
+	RootCA0       *graph.Node
+	RootCA1       *graph.Node
+	RootCA2       *graph.Node
+}
+
+func (s *ESC10bHarnessDC1) Setup(graphTestContext *GraphTestContext) {
+	domainSid0 := RandomDomainSID()
+	domainSid1 := RandomDomainSID()
+	domainSid2 := RandomDomainSID()
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", domainSid0, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireDNS:    true,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireDNS:    true,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", domainSid2, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireDNS:    true,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.Computer0 = graphTestContext.NewActiveDirectoryComputer("Computer0", domainSid0)
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid1)
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domainSid2)
+	s.DC0 = graphTestContext.NewActiveDirectoryComputer("DC0", domainSid0)
+	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid1)
+	s.DC2 = graphTestContext.NewActiveDirectoryComputer("DC2", domainSid2)
+	s.DC3 = graphTestContext.NewActiveDirectoryComputer("DC3", domainSid2)
+	s.DC4 = graphTestContext.NewActiveDirectoryComputer("DC4", domainSid2)
+	s.DC5 = graphTestContext.NewActiveDirectoryComputer("DC5", domainSid2)
+	s.DC6 = graphTestContext.NewActiveDirectoryComputer("DC6", domainSid2)
+	s.Domain0 = graphTestContext.NewActiveDirectoryDomain("Domain0", domainSid0, false, true)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid2, false, true)
+	s.EnterpriseCA0 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA0", domainSid0)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA2", domainSid2)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid0)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid2)
+	s.NTAuthStore0 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore0", domainSid0)
+	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
+	s.NTAuthStore2 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore2", domainSid2)
+	s.RootCA0 = graphTestContext.NewActiveDirectoryRootCA("RootCA0", domainSid0)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
+	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("RootCA2", domainSid2)
+	graphTestContext.NewRelationship(s.RootCA0, s.Domain0, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore0, s.Domain0, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC0, s.Domain0, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.EnterpriseCA0, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.RootCA0, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.NTAuthStore0, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Computer0, s.EnterpriseCA0, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer0, s.CertTemplate0, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.DC1, s.Domain1, ad.DCFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Computer1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer1, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore2, s.Domain2, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA2, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA2, s.RootCA2, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA2, s.NTAuthStore2, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Computer2, s.EnterpriseCA2, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer2, s.CertTemplate2, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group0, s.Computer0, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group2, s.Computer2, ad.GenericAll)
+	graphTestContext.NewRelationship(s.DC2, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC3, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC4, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC5, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC6, s.Domain2, ad.DCFor)
+
+	s.DC0.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "4")
+	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	s.DC2.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "0")
+	s.DC2.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "-1")
+	s.DC4.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	s.DC4.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "0")
+	s.DC5.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "2")
+	s.DC5.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "3")
+	s.DC6.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "27")
+	graphTestContext.UpdateNode(s.DC0)
+	graphTestContext.UpdateNode(s.DC1)
+	graphTestContext.UpdateNode(s.DC2)
+	graphTestContext.UpdateNode(s.DC4)
+	graphTestContext.UpdateNode(s.DC5)
+	graphTestContext.UpdateNode(s.DC6)
+}
+
+type ESC10bHarnessDC2 struct {
+	CertTemplate0 *graph.Node
+	CertTemplate1 *graph.Node
+	Computer0     *graph.Node
+	Computer1     *graph.Node
+	DC0           *graph.Node
+	DC1           *graph.Node
+	Domain0       *graph.Node
+	Domain01      *graph.Node
+	Domain02      *graph.Node
+	Domain1       *graph.Node
+	Domain11      *graph.Node
+	Domain12      *graph.Node
+	EnterpriseCA0 *graph.Node
+	EnterpriseCA1 *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	NTAuthStore0  *graph.Node
+	NTAuthStore1  *graph.Node
+	RootCA0       *graph.Node
+	RootCA1       *graph.Node
+}
+
+func (s *ESC10bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
+	domainSid0 := RandomDomainSID()
+	domainSid01 := RandomDomainSID()
+	domainSid02 := RandomDomainSID()
+	domainSid1 := RandomDomainSID()
+	domainSid11 := RandomDomainSID()
+	domainSid12 := RandomDomainSID()
+	s.CertTemplate0 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate0", domainSid0, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireDNS:    true,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid1, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     false,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireDNS:    true,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    false,
+	})
+	s.Computer0 = graphTestContext.NewActiveDirectoryComputer("Computer0", domainSid0)
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid1)
+	s.DC0 = graphTestContext.NewActiveDirectoryComputer("DC0", domainSid02)
+	s.DC1 = graphTestContext.NewActiveDirectoryComputer("DC1", domainSid12)
+	s.Domain0 = graphTestContext.NewActiveDirectoryDomain("Domain0", domainSid0, false, true)
+	s.Domain01 = graphTestContext.NewActiveDirectoryDomain("Domain01", domainSid01, false, true)
+	s.Domain02 = graphTestContext.NewActiveDirectoryDomain("Domain02", domainSid02, false, true)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid1, false, true)
+	s.Domain11 = graphTestContext.NewActiveDirectoryDomain("Domain11", domainSid11, false, true)
+	s.Domain12 = graphTestContext.NewActiveDirectoryDomain("Domain12", domainSid12, false, true)
+	s.EnterpriseCA0 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA0", domainSid0)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid0)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid1)
+	s.NTAuthStore0 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore0", domainSid0)
+	s.NTAuthStore1 = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore1", domainSid1)
+	s.RootCA0 = graphTestContext.NewActiveDirectoryRootCA("RootCA0", domainSid0)
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("RootCA1", domainSid1)
+	graphTestContext.NewRelationship(s.RootCA0, s.Domain0, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore0, s.Domain0, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate0, s.EnterpriseCA0, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.RootCA0, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA0, s.NTAuthStore0, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Computer0, s.EnterpriseCA0, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer0, s.CertTemplate0, ad.Enroll)
+	graphTestContext.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.NTAuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore1, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.Computer1, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer1, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group0, s.Computer0, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll)
+	graphTestContext.NewRelationship(s.DC0, s.Domain02, ad.DCFor)
+	graphTestContext.NewRelationship(s.DC1, s.Domain12, ad.DCFor)
+
+	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.TrustedBy)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.TrustedBy)
+
+	s.DC0.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "4")
+	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	graphTestContext.UpdateNode(s.DC0)
+	graphTestContext.UpdateNode(s.DC1)
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -6980,7 +8311,6 @@ type HarnessDetails struct {
 	ADCSGoldenCertHarness                           ADCSGoldenCertHarness
 	IssuedSignedByHarness                           IssuedSignedByHarness
 	EnterpriseCAForHarness                          EnterpriseCAForHarness
-	WeakCertBindingAndUPNCertMappingHarness         WeakCertBindingAndUPNCertMappingHarness
 	TrustedForNTAuthHarness                         TrustedForNTAuthHarness
 	NumCollectedActiveDirectoryDomains              int
 	AZInboundControlHarness                         AZInboundControlHarness
@@ -6994,29 +8324,41 @@ type HarnessDetails struct {
 	ESC6aHarnessTemplate1                           ESC6aHarnessTemplate1
 	ESC6aHarnessTemplate2                           ESC6aHarnessTemplate2
 	ESC9aPrincipalHarness                           ESC9aPrincipalHarness
+	ESC6aHarnessDC1                                 ESC6aHarnessDC1
+	ESC6aHarnessDC2                                 ESC6aHarnessDC2
 	ESC9aHarness1                                   ESC9aHarness1
 	ESC9aHarness2                                   ESC9aHarness2
+	ESC9aHarnessDC1                                 ESC9aHarnessDC1
+	ESC9aHarnessDC2                                 ESC9aHarnessDC2
 	ESC9aHarnessVictim                              ESC9aHarnessVictim
 	ESC9aHarnessECA                                 ESC9aHarnessECA
 	ESC9bPrincipalHarness                           ESC9bPrincipalHarness
 	ESC9bHarness1                                   ESC9bHarness1
 	ESC9bHarness2                                   ESC9bHarness2
+	ESC9bHarnessDC1                                 ESC9bHarnessDC1
+	ESC9bHarnessDC2                                 ESC9bHarnessDC2
 	ESC9bHarnessVictim                              ESC9bHarnessVictim
 	ESC9bHarnessECA                                 ESC9bHarnessECA
 	ESC10aPrincipalHarness                          ESC10aPrincipalHarness
 	ESC10aHarness1                                  ESC10aHarness1
 	ESC10aHarness2                                  ESC10aHarness2
+	ESC10aHarnessDC1                                ESC10aHarnessDC1
+	ESC10aHarnessDC2                                ESC10aHarnessDC2
 	ESC10aHarnessECA                                ESC10aHarnessECA
 	ESC10aHarnessVictim                             ESC10aHarnessVictim
 	ESC10bPrincipalHarness                          ESC10bPrincipalHarness
 	ESC10bHarness1                                  ESC10bHarness1
 	ESC10bHarness2                                  ESC10bHarness2
+	ESC10bHarnessDC1                                ESC10bHarnessDC1
+	ESC10bHarnessDC2                                ESC10bHarnessDC2
 	ESC10bHarnessECA                                ESC10bHarnessECA
 	ESC10bHarnessVictim                             ESC10bHarnessVictim
 	ESC6bTemplate1Harness                           ESC6bTemplate1Harness
 	ESC6bECAHarness                                 ESC6bECAHarness
 	ESC6bPrincipalEdgesHarness                      ESC6bPrincipalEdgesHarness
 	ESC6bTemplate2Harness                           ESC6bTemplate2Harness
+	ESC6bHarnessDC1                                 ESC6bHarnessDC1
+	ESC6bHarnessDC2                                 ESC6bHarnessDC2
 	ESC4Template1                                   ESC4Template1
 	ESC4Template2                                   ESC4Template2
 	ESC4Template3                                   ESC4Template3
