@@ -46,3 +46,40 @@ delete:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+put:
+  operationId: UpdateSavedQuery
+  summary: Update a saved query
+  description: Update an existing saved query by ID
+  tags:
+    - Cypher
+    - Community
+    - Enterprise
+  requestBody:
+    description: The request body for updating a saved query
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: './../schemas/model.saved-query.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../schemas/model.saved-query.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
