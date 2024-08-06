@@ -84,7 +84,6 @@ export const useFetchEntity: (param: FetchEntityParams) => FetchEntityExport = (
         [cacheId, nodeType, objectId],
         ({ signal }) =>
             requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
-                console.log('res.data.data.nodes', res.data.data);
                 if (validatedKind) return res.data.data.props;
                 else if (databaseId) return Object.values(res.data.data.nodes as Record<string, any>)[0].properties;
                 else return {};
