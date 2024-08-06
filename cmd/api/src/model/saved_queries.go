@@ -87,7 +87,6 @@ func (s SavedQueries) GetValidFilterPredicatesAsStrings(column string) ([]string
 	}
 }
 
-// scope added here
 func (s SavedQueries) IsString(column string) bool {
 	switch column {
 	case "name",
