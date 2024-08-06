@@ -43,7 +43,7 @@ func TestHybridAttackPaths(t *testing.T) {
 		func(harness *integration.HarnessDetails) error {
 			adUserObjectID := integration.RandomObjectID(t)
 			azUserOnPremID := adUserObjectID
-			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, true)
+			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, true, false)
 			return nil
 		},
 		func(harness integration.HarnessDetails, db graph.Database) {
@@ -64,7 +64,7 @@ func TestHybridAttackPaths(t *testing.T) {
 		func(harness *integration.HarnessDetails) error {
 			adUserObjectID := integration.RandomObjectID(t)
 			azUserOnPremID := ""
-			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, false, true)
+			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, false, true, false)
 			return nil
 		},
 		func(harness integration.HarnessDetails, db graph.Database) {
@@ -85,7 +85,7 @@ func TestHybridAttackPaths(t *testing.T) {
 		func(harness *integration.HarnessDetails) error {
 			adUserObjectID := integration.RandomObjectID(t)
 			azUserOnPremID := adUserObjectID
-			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, false, true)
+			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, false, true, false)
 			return nil
 		},
 		func(harness integration.HarnessDetails, db graph.Database) {
@@ -106,7 +106,29 @@ func TestHybridAttackPaths(t *testing.T) {
 		func(harness *integration.HarnessDetails) error {
 			adUserObjectID := ""
 			azUserOnPremID := integration.RandomObjectID(t)
-			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, false)
+			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, false, false)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+
+			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
+			}
+			operation.Done()
+
+			verifyHybridPaths(t, db, harness, true)
+		},
+	)
+
+	// ADUser does not exist, but the objectid from a selected AZUser exists in the graph. Selected AZUser has OnPremID and
+	// OnPremSyncEnabled=true
+	// The existing node should be used to create SyncedToADUser and SyncedToEntraUser edges.
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			adUserObjectID := ""
+			azUserOnPremID := integration.RandomObjectID(t)
+			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, false, true)
 			return nil
 		},
 		func(harness integration.HarnessDetails, db graph.Database) {
@@ -127,7 +149,7 @@ func TestHybridAttackPaths(t *testing.T) {
 		func(harness *integration.HarnessDetails) error {
 			adUserObjectID := integration.RandomObjectID(t)
 			azUserOnPremID := integration.RandomObjectID(t)
-			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, true)
+			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, true, false)
 			return nil
 		},
 		func(harness integration.HarnessDetails, db graph.Database) {
@@ -179,7 +201,7 @@ func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.Harn
 
 			// Ensure we got the correct node types
 			assert.True(t, start.Kinds.ContainsOneOf(azure.User))
-			assert.True(t, end.Kinds.ContainsOneOf(ad.User))
+			assert.True(t, end.Kinds.ContainsOneOf(ad.User, ad.Entity))
 
 			// Verify the AZUser is the first node
 			assert.Equal(t, harness.HybridAttackPaths.AZUserObjectID, startObjectID)
@@ -226,7 +248,7 @@ func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.Harn
 			assert.Nil(t, err)
 
 			// Ensure we got the correct node types
-			assert.True(t, start.Kinds.ContainsOneOf(ad.User))
+			assert.True(t, start.Kinds.ContainsOneOf(ad.User, ad.Entity))
 			assert.True(t, end.Kinds.ContainsOneOf(azure.User))
 
 			// Verify the ADUser, but we have to handle the case where the ADUser node is created by the post-processing logic
