@@ -21,8 +21,8 @@ import {
     EdgeSections,
     SelectedEdge,
     apiClient,
-    useFetchGraphItem,
-    GraphItemQueryCacheId,
+    useFetchEntity,
+    FetchEntityCacheId,
 } from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import { Dispatch, FC, Fragment } from 'react';
@@ -70,8 +70,8 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
     const { objectId, type } = targetNode;
-    const { graphItemProperties } = useFetchGraphItem({
-        cacheId: GraphItemQueryCacheId.Edge,
+    const { entityProperties: targetNodeProperties } = useFetchEntity({
+        cacheId: FetchEntityCacheId,
         objectId,
         nodeType: type,
     });
@@ -113,7 +113,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                         targetName={targetNode.name}
                                         targetType={targetNode.type}
                                         targetId={targetNode.objectId}
-                                        haslaps={!!graphItemProperties?.haslaps}
+                                        haslaps={!!targetNodeProperties?.haslaps}
                                     />
                                 </EdgeInfoCollapsibleSection>
                             </Fragment>

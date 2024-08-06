@@ -20,8 +20,8 @@ import {
     FieldsContainer,
     ObjectInfoFields,
     formatObjectInfoFields,
-    useFetchGraphItem,
-    GraphItemQueryCacheId,
+    useFetchEntity,
+    FetchEntityCacheId,
 } from 'bh-shared-ui';
 import React from 'react';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
@@ -29,8 +29,8 @@ import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
-    const { graphItemProperties, informationAvailable, isLoading, isError } = useFetchGraphItem({
-        cacheId: GraphItemQueryCacheId.Node,
+    const { entityProperties, informationAvailable, isLoading, isError } = useFetchEntity({
+        cacheId: FetchEntityCacheId,
         objectId: id,
         nodeType,
         databaseId,
@@ -47,12 +47,12 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
             </EntityInfoCollapsibleSection>
         );
 
-    const formattedObjectFields: EntityField[] = formatObjectInfoFields(graphItemProperties);
+    const formattedObjectFields: EntityField[] = formatObjectInfoFields(entityProperties);
 
     return (
         <EntityInfoCollapsibleSection label='Object Information'>
             <FieldsContainer>
-                <BasicObjectInfoFields {...graphItemProperties} />
+                <BasicObjectInfoFields {...entityProperties} />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>
         </EntityInfoCollapsibleSection>
