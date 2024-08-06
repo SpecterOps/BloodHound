@@ -123,8 +123,7 @@ func TestHybridAttackPaths(t *testing.T) {
 
 	// ADUser does not exist, but the objectid from a selected AZUser exists in the graph. Selected AZUser has OnPremID and
 	// OnPremSyncEnabled=true
-	// The existing node should be upgraded to a user node and used for the path. SyncedToADUser and SyncedToEntraUser
-	// edges should be created and linked to new ADUser node.
+	// The existing node should be used to create SyncedToADUser and SyncedToEntraUser edges.
 	testContext.DatabaseTestWithSetup(
 		func(harness *integration.HarnessDetails) error {
 			adUserObjectID := ""
@@ -202,7 +201,7 @@ func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.Harn
 
 			// Ensure we got the correct node types
 			assert.True(t, start.Kinds.ContainsOneOf(azure.User))
-			assert.True(t, end.Kinds.ContainsOneOf(ad.User))
+			assert.True(t, end.Kinds.ContainsOneOf(ad.User, ad.Entity))
 
 			// Verify the AZUser is the first node
 			assert.Equal(t, harness.HybridAttackPaths.AZUserObjectID, startObjectID)
@@ -249,7 +248,7 @@ func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.Harn
 			assert.Nil(t, err)
 
 			// Ensure we got the correct node types
-			assert.True(t, start.Kinds.ContainsOneOf(ad.User))
+			assert.True(t, start.Kinds.ContainsOneOf(ad.User, ad.Entity))
 			assert.True(t, end.Kinds.ContainsOneOf(azure.User))
 
 			// Verify the ADUser, but we have to handle the case where the ADUser node is created by the post-processing logic
