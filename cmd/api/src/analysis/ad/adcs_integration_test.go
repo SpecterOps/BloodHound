@@ -431,7 +431,7 @@ func TestEnterpriseCAFor(t *testing.T) {
 		}
 
 		operation.Done()
-		
+
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 				return query.Kind(query.Relationship(), ad.EnterpriseCAFor)

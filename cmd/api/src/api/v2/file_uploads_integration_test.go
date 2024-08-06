@@ -23,11 +23,12 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
-	"github.com/specterops/bloodhound/mediatypes"
-	"github.com/specterops/bloodhound/src/services/fileupload"
 	"io"
 	"net/http"
 	"testing"
+
+	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/src/services/fileupload"
 
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/src/api/v2/integration"

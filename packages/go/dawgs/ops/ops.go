@@ -20,8 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"sync"
+
+	"github.com/specterops/bloodhound/dawgs/util/channels"
 
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"

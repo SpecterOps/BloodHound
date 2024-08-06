@@ -4225,20 +4225,6 @@
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
             }
-          },
-          {
-            "name": "description",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
-            }
-          },
-          {
-            "name": "scope",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
-            }
           }
         ],
         "responses": {
@@ -4261,9 +4247,6 @@
                           }
                         }
                       }
-                    },
-                    {
-                      "$ref": "#/components/schemas/null.string"
                     }
                   ]
                 }
