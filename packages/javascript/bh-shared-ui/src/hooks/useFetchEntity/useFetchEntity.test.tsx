@@ -51,7 +51,7 @@ const entityGraphIdRequest = () => {
 const EntityNodeType = 'User' as const;
 const EntityApiPathType = 'users' as const;
 const EntityGraphId = '5223' as const;
-const EntityUnmatchedType = '' as const;
+const EntityCustomNodeType = 'Custom' as const;
 const EntityProperties: EntityProperties = {
     displayname: 'Steve Draper',
     domain: 'TESTLAB.LOCAL',
@@ -74,7 +74,7 @@ describe('useFetchEntity', () => {
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
-    it('Search for Node without databaseId returns Node properties', async () => {
+    it('Searching for existing node type returns node properties', async () => {
         const initialProps = {
             cacheId: FetchEntityCacheId,
             objectId: EntityProperties.objectid,
@@ -92,11 +92,11 @@ describe('useFetchEntity', () => {
 
         expect(result.current.entityProperties).toEqual(EntityProperties);
     });
-    it('Search for Node with no matching node type and databaseId returns Node properties', async () => {
+    it('Searching for custom node type with databaseId returns node properties', async () => {
         const initialProps = {
             cacheId: FetchEntityCacheId,
             objectId: EntityProperties.objectid,
-            nodeType: EntityUnmatchedType,
+            nodeType: EntityCustomNodeType,
             databaseId: EntityGraphId,
         };
 
