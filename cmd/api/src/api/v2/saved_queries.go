@@ -19,7 +19,9 @@ package v2
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -31,11 +33,6 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm/utils"
 )
-
-type SavedQueryResponse struct {
-	model.SavedQuery
-	Scope string `json:"scope"`
-}
 
 func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.Request) {
 	var (
@@ -86,6 +83,12 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			}
 		}
 
+		// needed to remove scope query param since we currently
+		// dont support query params that arent filterable
+		maps.DeleteFunc(queryFilters, func(s string, filters model.QueryParameterFilters) bool {
+			return slices.Contains(savedQueries.IgnoreFilters(), s)
+		})
+
 		if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 		} else if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
@@ -101,9 +104,9 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 				api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
 			}
 		} else {
-			var queries model.SavedQueries
+			var queries []model.SavedQueryResponse
 			var count int
-			for _, scope := range scopes {
+			for _, scope := range strings.Split(scopes[0], ",") {
 				var scopedQueries model.SavedQueries
 				var scopedCount int
 
@@ -123,7 +126,12 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 					return
 				}
 
-				queries = append(queries, scopedQueries...)
+				for _, query := range scopedQueries {
+					queries = append(queries, model.SavedQueryResponse{
+						SavedQuery: query,
+						Scope:      scope,
+					})
+				}
 				count += scopedCount
 
 			}

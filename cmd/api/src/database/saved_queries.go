@@ -40,7 +40,7 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, o
 		count   int64
 		cursor  = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where("user_id = ?", userID)
 	)
-	// change result to query permissions. check if one from hackathon fufills the requirements. probably need to add scope?
+
 	if filter.SQLString != "" {
 		cursor = cursor.Where(filter.SQLString, filter.Params)
 		result = s.db.Model(&queries).WithContext(ctx).Where("user_id = ?", userID).Where(filter.SQLString, filter.Params).Count(&count)
@@ -101,6 +101,6 @@ func (s *BloodhoundDB) GetPublicSavedQueries(ctx context.Context) (model.SavedQu
 	savedQueries := model.SavedQueries{}
 
 	result := s.db.WithContext(ctx).Select("sqp.*").Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id").Where("sqp.public = true").Find(&savedQueries)
-	// result := s.db.WithContext(ctx).Where("public = true").Find(&savedQueries)
+
 	return savedQueries, CheckError(result)
 }

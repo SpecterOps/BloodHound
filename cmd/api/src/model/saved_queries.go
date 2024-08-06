@@ -18,7 +18,6 @@ package model
 
 import (
 	"fmt"
-	"slices"
 )
 
 type SavedQuery struct {
@@ -31,6 +30,11 @@ type SavedQuery struct {
 }
 
 type SavedQueries []SavedQuery
+
+type SavedQueryResponse struct {
+	SavedQuery
+	Scope string `json:"scope"`
+}
 
 func (s SavedQueries) IsSortable(column string) bool {
 	switch column {
@@ -57,6 +61,12 @@ func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 	}
 }
 
+func (s SavedQueries) IgnoreFilters() []string {
+	return []string{
+		"scope",
+	}
+}
+
 func (s SavedQueries) GetFilterableColumns() []string {
 	var columns = make([]string, 0)
 	for column := range s.ValidFilters() {
@@ -66,9 +76,6 @@ func (s SavedQueries) GetFilterableColumns() []string {
 }
 
 func (s SavedQueries) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
-	if !slices.Contains(s.GetFilterableColumns(), column) {
-		return []string{}, nil
-	}
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
 	} else {
@@ -85,8 +92,7 @@ func (s SavedQueries) IsString(column string) bool {
 	switch column {
 	case "name",
 		"query",
-		"description",
-		"scope":
+		"description":
 		return true
 	default:
 		return false

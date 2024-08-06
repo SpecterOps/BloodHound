@@ -18,6 +18,7 @@ package v2_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -259,6 +260,291 @@ func TestResources_ListSavedQueries(t *testing.T) {
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
 		require.Equal(t, http.StatusOK, response.Code)
+	}
+}
+
+func TestResources_ListSavedQueries_OwnedQueries(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	mockDB.EXPECT().ListSavedQueries(gomock.Any(), userId, gomock.Any(), gomock.Any(), 1, 10).Return(model.SavedQueries{
+		{
+			UserID:      userId.String(),
+			Name:        "myQuery",
+			Query:       "Match(n) return n;",
+			Description: "Public query description",
+		},
+	}, 1, nil)
+
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
+		t.Fatal(err)
+	} else {
+		q := url.Values{}
+		q.Add("sort_by", "-name")
+		q.Add("name", "eq:myQuery")
+		q.Add("skip", "1")
+		q.Add("limit", "10")
+		q.Add("scope", "owned")
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req.URL.RawQuery = q.Encode()
+
+		router := mux.NewRouter()
+		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, req)
+		require.Equal(t, http.StatusOK, response.Code)
+	}
+}
+
+func TestResources_ListSavedQueries_PublicQueries(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	mockDB.EXPECT().GetPublicSavedQueries(gomock.Any()).Return(model.SavedQueries{
+		{
+			UserID:      userId.String(),
+			Name:        "myQuery",
+			Query:       "Match(n) return n",
+			Description: "Public query description",
+		},
+	}, nil)
+
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
+		t.Fatal(err)
+	} else {
+		q := url.Values{}
+		q.Add("sort_by", "-name")
+		q.Add("name", "eq:myQuery")
+		q.Add("scope", "public")
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req.URL.RawQuery = q.Encode()
+
+		// Set up the router and serve the request
+		router := mux.NewRouter()
+		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusOK, response.Code)
+
+		var actualResponse struct {
+			Data []model.SavedQueryResponse `json:"data"`
+		}
+
+		err = json.NewDecoder(response.Body).Decode(&actualResponse)
+		require.Nil(t, err)
+
+		expectedResponse := []model.SavedQueryResponse{
+			{
+				SavedQuery: model.SavedQuery{
+					UserID:      userId.String(),
+					Name:        "myQuery",
+					Query:       "Match(n) return n",
+					Description: "Public query description",
+				},
+				Scope: "public",
+			},
+		}
+
+		require.Equal(t, expectedResponse, actualResponse.Data)
+	}
+}
+
+func TestResources_ListSavedQueries_SharedQueries(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	mockDB.EXPECT().GetSharedSavedQueries(gomock.Any(), userId).Return(model.SavedQueries{
+		{
+			UserID:      userId.String(),
+			Name:        "myQuery",
+			Query:       "Match(n) return n",
+			Description: "Shared query description",
+		},
+	}, nil)
+
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
+		t.Fatal(err)
+	} else {
+		q := url.Values{}
+		q.Add("sort_by", "-name")
+		q.Add("name", "eq:myQuery")
+		q.Add("scope", "shared")
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req.URL.RawQuery = q.Encode()
+
+		// Set up the router and serve the request
+		router := mux.NewRouter()
+		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusOK, response.Code)
+
+		var actualResponse struct {
+			Data []model.SavedQueryResponse `json:"data"`
+		}
+
+		err = json.NewDecoder(response.Body).Decode(&actualResponse)
+		require.Nil(t, err)
+
+		expectedResponse := []model.SavedQueryResponse{
+			{
+				SavedQuery: model.SavedQuery{
+					UserID:      userId.String(),
+					Name:        "myQuery",
+					Query:       "Match(n) return n",
+					Description: "Shared query description",
+				},
+				Scope: "shared",
+			},
+		}
+
+		require.Equal(t, expectedResponse, actualResponse.Data)
+	}
+}
+
+func TestResources_ListSavedQueries_MulitpleScopeQueries(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	mockDB.EXPECT().GetSharedSavedQueries(gomock.Any(), userId).Return(model.SavedQueries{
+		{
+			UserID:      userId.String(),
+			Name:        "myQuery",
+			Query:       "Match(n) return n",
+			Description: "Shared query description",
+		},
+	}, nil)
+
+	mockDB.EXPECT().GetPublicSavedQueries(gomock.Any()).Return(model.SavedQueries{
+		{
+			UserID:      userId.String(),
+			Name:        "myQuery",
+			Query:       "Match(n) return n",
+			Description: "Public query description",
+		},
+	}, nil)
+
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
+		t.Fatal(err)
+	} else {
+		q := url.Values{}
+		q.Add("sort_by", "-name")
+		q.Add("name", "eq:myQuery")
+		q.Add("scope", "shared,public")
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req.URL.RawQuery = q.Encode()
+
+		// Set up the router and serve the request
+		router := mux.NewRouter()
+		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusOK, response.Code)
+
+		var actualResponse struct {
+			Data []model.SavedQueryResponse `json:"data"`
+		}
+
+		err = json.NewDecoder(response.Body).Decode(&actualResponse)
+		require.Nil(t, err)
+
+		expectedResponse := []model.SavedQueryResponse{
+			{
+				SavedQuery: model.SavedQuery{
+					UserID:      userId.String(),
+					Name:        "myQuery",
+					Query:       "Match(n) return n",
+					Description: "Shared query description",
+				},
+				Scope: "shared",
+			},
+			{
+				SavedQuery: model.SavedQuery{
+					UserID:      userId.String(),
+					Name:        "myQuery",
+					Query:       "Match(n) return n",
+					Description: "Public query description",
+				},
+				Scope: "public",
+			},
+		}
+
+		require.Equal(t, expectedResponse, actualResponse.Data)
+	}
+}
+
+func TestResources_ListSavedQueries_ScopeDBError(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	mockDB.EXPECT().ListSavedQueries(gomock.Any(), userId, "", model.SQLFilter{}, 0, 10000).Return(model.SavedQueries{}, 0, fmt.Errorf("foo"))
+
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
+		t.Fatal(err)
+	} else {
+		q := url.Values{}
+		q.Add("scope", "owned")
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req.URL.RawQuery = q.Encode()
+
+		router := mux.NewRouter()
+		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, req)
+		require.Equal(t, http.StatusInternalServerError, response.Code)
+		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
 	}
 }
 
