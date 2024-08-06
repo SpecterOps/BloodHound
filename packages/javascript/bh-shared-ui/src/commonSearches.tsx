@@ -41,11 +41,11 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All Domain Admins',
-                cypher: `MATCH p=(n:Group)<-[:MemberOf*1..]-(m)\nWHERE n.objectid ENDS WITH "-512"\nRETURN p`,
+                cypher: `MATCH p=(n:Group)<-[:MemberOf*1..]-(m:Base)\nWHERE n.objectid ENDS WITH "-512"\nRETURN p`,
             },
             {
                 description: 'Map domain trusts',
-                cypher: `MATCH p=(n:Domain)-[]->(m:Domain)\nRETURN p`,
+                cypher: `MATCH p=(n:Domain)-[:TrustedBy]->(m:Domain)\nRETURN p`,
             },
             {
                 description: 'Locations of Tier Zero / High Value objects',
@@ -59,15 +59,11 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Principals with DCSync privileges',
-                cypher: `MATCH p=()-[:DCSync|AllExtendedRights|GenericAll]->(:Domain)\nRETURN p`,
+                cypher: `MATCH p=(:Base)-[:DCSync|AllExtendedRights|GenericAll]->(:Domain)\nRETURN p`,
             },
             {
-                description: 'Users with foreign domain group membership',
-                cypher: `MATCH p=(n:User)-[:MemberOf]->(m:Group)\nWHERE m.domainsid<>n.domainsid\nRETURN p`,
-            },
-            {
-                description: 'Groups with foreign domain group membership',
-                cypher: `MATCH p=(n:Group)-[:MemberOf]->(m:Group)\nWHERE m.domainsid<>n.domainsid AND n.name<>m.name\nRETURN p`,
+                description: 'Principals with foreign domain group membership',
+                cypher: `MATCH p=(n:Base)-[:MemberOf]->(m:Group)\nWHERE m.domainsid<>n.domainsid\nRETURN p`,
             },
             {
                 description: 'Computers where Domain Users are local administrators',
@@ -91,7 +87,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Dangerous privileges for Domain Users groups',
-                cypher: `MATCH p=(m:Group)-[:Owns|WriteDacl|GenericAll|WriteOwner|ExecuteDCOM|GenericWrite|AllowedToDelegate|ForceChangePassword]->(n:Computer)\nWHERE m.objectid ENDS WITH "-513"\nRETURN p`,
+                cypher: `MATCH p=(m:Group)-[:${adTransitEdgeTypes}]->(n:Base)\nWHERE m.objectid ENDS WITH "-513"\nRETURN p`,
             },
             {
                 description: 'Domain Admins logons to non-Domain Controllers',
@@ -153,57 +149,56 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'PKI hierarchy',
-                cypher: `MATCH p=()-[:HostsCAService|IssuedSignedBy|EnterpriseCAFor|RootCAFor|TrustedForNTAuth|NTAuthStoreFor*..]->()\nRETURN p`,
+                cypher: `MATCH p=(:Domain)<-[:HostsCAService|IssuedSignedBy|EnterpriseCAFor|RootCAFor|TrustedForNTAuth|NTAuthStoreFor*..]-()\nRETURN p`,
             },
             {
                 description: 'Public Key Services container',
-                cypher: `MATCH p = (c:Container)-[:Contains*..]->()\nWHERE c.distinguishedname starts with "CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC="\nRETURN p`,
+                cypher: `MATCH p = (c:Container)-[:Contains*..]->(:Base)\nWHERE c.distinguishedname starts with "CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC="\nRETURN p`,
             },
             {
                 description: 'Enrollment rights on published certificate templates',
-                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nRETURN p`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nRETURN p`,
             },
             {
                 description: 'Enrollment rights on published ESC1 certificate templates',
-                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.enrolleesuppliessubject = True\nAND ct.authenticationenabled = True\nAND ct.requiresmanagerapproval = False\nAND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1)\nRETURN p`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.enrolleesuppliessubject = True\nAND ct.authenticationenabled = True\nAND ct.requiresmanagerapproval = False\nAND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1)\nRETURN p`,
             },
             {
                 description: 'Enrollment rights on published ESC2 certificate templates',
-                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.requiresmanagerapproval = False\nAND (ct.effectiveekus = [] OR "2.5.29.37.0" IN ct.effectiveekus)\nAND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1)\nRETURN p`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.requiresmanagerapproval = False\nAND (ct.effectiveekus = [] OR "2.5.29.37.0" IN ct.effectiveekus)\nAND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1)\nRETURN p`,
             },
             {
                 description: 'Enrollment rights on published enrollment agent certificate templates',
-                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE "1.3.6.1.4.1.311.20.2.1" IN ct.effectiveekus\nOR "2.5.29.37.0" IN ct.effectiveekus\nOR SIZE(ct.effectiveekus) = 0\nRETURN p`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE "1.3.6.1.4.1.311.20.2.1" IN ct.effectiveekus\nOR "2.5.29.37.0" IN ct.effectiveekus\nOR SIZE(ct.effectiveekus) = 0\nRETURN p`,
             },
             {
                 description: 'Enrollment rights on published certificate templates with no security extension',
-                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.nosecurityextension = true\nRETURN p`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.nosecurityextension = true\nRETURN p`,
             },
             {
                 description:
                     'Enrollment rights on certificate templates published to Enterprise CA with User Specified SAN enabled',
-                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nRETURN p`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nRETURN p`,
             },
             {
                 description: 'CA administrators and CA managers',
-                cypher: `MATCH p = ()-[:ManageCertificates|ManageCA]->(:EnterpriseCA)\nRETURN p`,
+                cypher: `MATCH p = (:Base)-[:ManageCertificates|ManageCA]->(:EnterpriseCA)\nRETURN p`,
             },
             {
                 description: 'Domain controllers with weak certificate binding enabled',
-                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d)\nWHERE dc.strongcertificatebindingenforcementraw = 0 OR dc.strongcertificatebindingenforcementraw = 1\nRETURN p`,
+                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d:Domain)\nWHERE dc.strongcertificatebindingenforcementraw = 0 OR dc.strongcertificatebindingenforcementraw = 1\nRETURN p`,
             },
             {
                 description: 'Domain controllers with UPN certificate mapping enabled',
-                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d)\nWHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p`,
+                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d:Domain)\nWHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p`,
             },
             {
                 description: 'Non-default permissions on IssuancePolicy nodes',
-                cypher: `MATCH p = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(:IssuancePolicy)\nWHERE NOT n.objectid ENDS WITH "-512" AND NOT n.objectid ENDS WITH "-519"\nRETURN p`,
+                cypher: `MATCH p = (n:Base)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(:IssuancePolicy)\nWHERE NOT n.objectid ENDS WITH "-512" AND NOT n.objectid ENDS WITH "-519"\nRETURN p`,
             },
             {
                 description: 'Enrollment rights on CertTemplates with OIDGroupLink',
-                cypher: `MATCH p = ()-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:ExtendedByPolicy]->(:IssuancePolicy)-[:OIDGroupLink]->(g)
-                RETURN p`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:ExtendedByPolicy]->(:IssuancePolicy)-[:OIDGroupLink]->(g:Group)\nRETURN p`,
             },
         ],
     },
@@ -212,8 +207,8 @@ export const CommonSearches: CommonSearchType[] = [
         category: categoryAD,
         queries: [
             {
-                description: 'Inactive enabled Tier Zero principals',
-                cypher: `MATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = true\nAND n.lastlogontimestamp < (datetime().epochseconds - (60 * 86400)) // Replicated value\nAND n.lastlogon < (datetime().epochseconds - (60 * 86400)) // Non-replicated value\nAND n.whencreated < (datetime().epochseconds - (60 * 86400)) // Exclude recently created principals\nAND NOT n.name STARTS WITH "AZUREADKERBEROS." // Removes false positive, Azure KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nAND NOT n.name STARTS WITH "AZUREADSSOACC." // Removes false positive, Entra Seamless SSO\nRETURN n`,
+                description: 'Enabled Tier Zero / High Value principals inactive for 60 days',
+                cypher: `WITH 60 as inactive_days\nMATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = true\nAND n.lastlogontimestamp < (datetime().epochseconds - (inactive_days * 86400)) // Replicated value\nAND n.lastlogon < (datetime().epochseconds - (inactive_days * 86400)) // Non-replicated value\nAND n.whencreated < (datetime().epochseconds - (inactive_days * 86400)) // Exclude recently created principals\nAND NOT n.name STARTS WITH "AZUREADKERBEROS." // Removes false positive, Azure KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nAND NOT n.name STARTS WITH "AZUREADSSOACC." // Removes false positive, Entra Seamless SSO\nRETURN n`,
             },
             {
                 description: 'Computers with unsupported operating systems',
@@ -224,20 +219,20 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH (u:User)\nWHERE u.passwordnotreqd = true\nRETURN u`,
             },
             {
-                description: 'Users with passwords not rotated in over 1 year',
-                cypher: `MATCH (u:User)\nWHERE u.pwdlastset < (datetime().epochseconds - (365 * 86400))\nAND NOT u.pwdlastset IN [-1.0, 0.0]\nRETURN u LIMIT 100`,
+                description: 'Users with passwords not rotated in over 1 year (limited to 100 results)',
+                cypher: `WITH 365 as days_since_change\nMATCH (u:User)\nWHERE u.pwdlastset < (datetime().epochseconds - (days_since_change * 86400))\nAND NOT u.pwdlastset IN [-1.0, 0.0]\nRETURN u LIMIT 100`,
             },
             {
                 description: 'Nested groups within Tier Zero / High Value',
-                cypher: `MATCH p=(n:Group)-[:MemberOf*..]->(t:Group)\nWHERE n.domainsid <> t.domainsid\nAND coalesce(t.system_tags,"") CONTAINS ('tier_0')\nAND NOT n.objectid ENDS WITH "-512" // Domain Admins\nAND NOT n.objectid ENDS WITH "-519" // Enterprise Admins\nRETURN p`,
+                cypher: `MATCH p=(n:Group)-[:MemberOf*..]->(t:Group)\nWHERE coalesce(t.system_tags,"") CONTAINS ('tier_0')\nAND NOT n.objectid ENDS WITH "-512" // Domain Admins\nAND NOT n.objectid ENDS WITH "-519" // Enterprise Admins\nRETURN p`,
             },
             {
                 description: 'Disabled Tier Zero / High Value principals',
-                cypher: `MATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH "-502" // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nRETURN n`,
+                cypher: `MATCH (n:Base)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH "-502" // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nRETURN n`,
             },
             {
                 description: 'Tier Zero / High Value users with non-expiring passwords',
-                cypher: `MATCH (u:User)\nWHERE  u.enabled=TRUE\nAND u.pwdneverexpires = TRUE\nand u.system_tags CONTAINS "admin_tier_0"\nRETURN u`,
+                cypher: `MATCH (u:User)\nWHERE u.enabled = true\nAND u.pwdneverexpires = true\nand u.system_tags CONTAINS "admin_tier_0"\nRETURN u`,
             },
         ],
     },
@@ -247,11 +242,11 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All Global Administrators',
-                cypher: 'MATCH p = (n)-[r:AZGlobalAdmin*1..]->(m)\nRETURN p',
+                cypher: 'MATCH p = (n:AZBase)-[r:AZGlobalAdmin*1..]->(m:AZTenant)\nRETURN p',
             },
             {
                 description: 'All members of high privileged roles',
-                cypher: `MATCH p=(n)-[:AZHasRole|AZMemberOf*1..2]->(r:AZRole)\nWHERE r.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}'\nRETURN p`,
+                cypher: `MATCH p=(n:AZBase)-[:AZHasRole|AZMemberOf*1..2]->(r:AZRole)\nWHERE r.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}'\nRETURN p`,
             },
         ],
     },
@@ -260,20 +255,20 @@ export const CommonSearches: CommonSearchType[] = [
         category: categoryAzure,
         queries: [
             {
-                description: 'Shortest paths to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
+                description: 'Shortest paths from Entra Users to Tier Zero / High Value targets',
+                cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n:AZBase))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths to privileged roles',
-                cypher: `MATCH p=shortestPath((m)-[r:${azureTransitEdgeTypes}*1..]->(n:AZRole))\nWHERE n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m:AZBase)-[r:${azureTransitEdgeTypes}*1..]->(n:AZRole))\nWHERE n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths from Azure Applications to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((m:AZApp)-[r:${azureTransitEdgeTypes}*1..]->(n))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND m<>n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m:AZApp)-[r:${azureTransitEdgeTypes}*1..]->(n:AZBase))\nWHERE "admin_tier_0" IN split(n.system_tags, ' ') AND m<>n\nRETURN p`,
             },
             {
                 description: 'Shortest paths to Azure Subscriptions',
-                cypher: `MATCH p=shortestPath((m)-[r:${azureTransitEdgeTypes}*1..]->(n:AZSubscription))\nWHERE m<>n\nRETURN p`,
+                cypher: `MATCH p=shortestPath((m:AZBase)-[r:${azureTransitEdgeTypes}*1..]->(n:AZSubscription))\nWHERE m<>n\nRETURN p`,
             },
         ],
     },
@@ -283,7 +278,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All service principals with Microsoft Graph privilege to grant arbitrary App Roles',
-                cypher: 'MATCH p=(n)-[r:AZMGGrantAppRoles]->(o:AZTenant)\nRETURN p',
+                cypher: 'MATCH p=(n:AZServicePrincipal)-[r:AZMGGrantAppRoles]->(o:AZTenant)\nRETURN p',
             },
             {
                 description: 'All service principals with Microsoft Graph App Role assignments',
@@ -306,6 +301,14 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 description: 'Tier Zero / High Value external Entra ID users',
                 cypher: `MATCH (n:AZUser)\nWHERE n.system_tags contains 'admin_tier_0'\nAND n.name CONTAINS '#EXT#@'\nRETURN n`,
+            },
+            {
+                description: 'Disabled Tier Zero / High Value principals',
+                cypher: `MATCH (n:AZBase)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nRETURN n`,
+            },
+            {
+                description: 'Devices with unsupported operating systems',
+                cypher: `MATCH (n:AZDevice)\nWHERE n.operatingsystem CONTAINS 'WINDOWS'\nAND n.operatingsystemversion =~ '(10.0.19044|10.0.22000|10.0.19043|10.0.19042|10.0.19041|10.0.18363|10.0.18362|10.0.17763|10.0.17134|10.0.16299|10.0.15063|10.0.14393|10.0.10586|10.0.10240|6.3.9600|6.2.9200|6.1.7601|6.0.6200|5.1.2600|6.0.6003|5.2.3790|5.0.2195).?.*'\nRETURN n`,
             },
         ],
     },

@@ -41,6 +41,7 @@ const GroupManagementContent: FC<{
     onShowNodeInExplore: () => void;
     onClickMember: (member: AssetGroupMember) => void;
     mapAssetGroups: (assetGroups: AssetGroup[]) => DropdownOption[];
+    userHasEditPermissions: boolean;
 }> = ({
     globalDomain,
     showExplorePageLink,
@@ -51,6 +52,7 @@ const GroupManagementContent: FC<{
     onShowNodeInExplore,
     onClickMember,
     mapAssetGroups,
+    userHasEditPermissions,
 }) => {
     const theme = useTheme();
 
@@ -171,6 +173,7 @@ const GroupManagementContent: FC<{
                             assetGroup={selectedAssetGroup}
                             filter={filterParams}
                             memberCounts={memberCounts}
+                            isEditable={userHasEditPermissions}
                         />
                     )}
                 </Grid>

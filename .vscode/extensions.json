@@ -32,6 +32,8 @@
         "prisma.prisma",
         "kokakiwi.vscode-just",
         "github.vscode-github-actions",
-        "mike-lischke.vscode-antlr4"
+        "mike-lischke.vscode-antlr4",
+        "redocly.openapi-vs-code",
+        "zoellner.openapi-preview"
     ]
 }

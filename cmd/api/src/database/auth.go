@@ -410,14 +410,7 @@ func (s *BloodhoundDB) GetUserToken(ctx context.Context, userId, tokenId uuid.UU
 // DeleteAuthToken deletes the provided AuthToken row
 // DELETE FROM auth_tokens WHERE id = ...
 func (s *BloodhoundDB) DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error {
-	auditEntry := model.AuditEntry{
-		Action: model.AuditLogActionDeleteAuthToken,
-		Model:  &authToken,
-	}
-
-	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Where("id = ?", authToken.ID).Delete(&authToken))
-	})
+	return CheckError(s.db.WithContext(ctx).Where("id = ?", authToken.ID).Delete(&authToken))
 }
 
 // CreateAuthSecret creates a new AuthSecret row

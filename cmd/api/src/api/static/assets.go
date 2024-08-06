@@ -2,6 +2,7 @@ package static
 
 import (
 	"embed"
+
 	"github.com/specterops/bloodhound/src/api"
 )
 
@@ -14,8 +15,8 @@ const (
 var assets embed.FS
 
 var AssetHandler = MakeAssetHandler(AssetConfig{
-	FS: assets,
-	BasePath: assetBasePath,
-	IndexPath: indexAssetPath,
+	FS:         assets,
+	BasePath:   assetBasePath,
+	IndexPath:  indexAssetPath,
 	PrefixPath: api.UserInterfacePath,
 })

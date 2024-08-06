@@ -19,6 +19,7 @@ package query
 import (
 	_ "embed"
 	"fmt"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
