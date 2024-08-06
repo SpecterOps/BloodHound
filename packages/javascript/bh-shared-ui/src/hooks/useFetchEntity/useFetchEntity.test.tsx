@@ -14,26 +14,26 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useFetchGraphItem, GraphItemQueryCacheId, GraphItemData, GraphItemProperties } from './useFetchGraphItem';
+import { useFetchEntity, FetchEntityCacheId, FetchEntityParams, EntityProperties } from './useFetchEntity';
 import { renderHook, waitFor, queryClientProvider } from '../../test-utils';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 
-const graphItemRequest = (apiItemPath: string, expectedPropsResponse: GraphItemProperties) => {
+const entityRequest = (apiItemPath: string, expectedResponse: EntityProperties) => {
     return rest.get(`/api/v2/${apiItemPath}/:id`, async (_req, res, ctx) => {
         return res(
             ctx.json({
                 data: {
-                    props: expectedPropsResponse,
+                    props: expectedResponse,
                 },
             })
         );
     });
 };
 
-const graphItemRequestData = {
-    // Todo: better name for property keys
-    validateKind: {
+const entityRequestData = {
+    // To do: confirm name for property keys
+    objectIdNode: {
         type: 'Computer',
         endpoint: 'computers',
         properties: {
@@ -41,11 +41,12 @@ const graphItemRequestData = {
             objectid: 'testing-id-3456',
         },
     },
+    graphIdNode: {},
 };
 
-describe('useFetchGraphItem', () => {
+describe('useFetchEntity', () => {
     const server = setupServer(
-        graphItemRequest(graphItemRequestData.validateKind.endpoint, graphItemRequestData.validateKind.properties)
+        entityRequest(entityRequestData.objectIdNode.endpoint, entityRequestData.objectIdNode.properties)
     );
 
     beforeAll(() => server.listen());
@@ -53,23 +54,23 @@ describe('useFetchGraphItem', () => {
     afterAll(() => server.close());
 
     it('Search for Node without databaseId returns Node properties', async () => {
-        const hookInitialProps = {
-            cacheId: GraphItemQueryCacheId.Node,
-            objectId: graphItemRequestData.validateKind.properties.objectid,
-            nodeType: graphItemRequestData.validateKind.type,
+        const initialProps = {
+            cacheId: FetchEntityCacheId,
+            objectId: entityRequestData.objectIdNode.properties.objectid,
+            nodeType: entityRequestData.objectIdNode.type,
         };
 
-        const { result } = renderHook((nodeItemParams: GraphItemData) => useFetchGraphItem(nodeItemParams), {
+        const { result } = renderHook((nodeItemParams: FetchEntityParams) => useFetchEntity(nodeItemParams), {
             wrapper: queryClientProvider(),
-            initialProps: hookInitialProps,
+            initialProps,
         });
 
         await waitFor(() => {
             expect(result.current.isSuccess).toBe(true);
         });
 
-        expect(result.current.graphItemProperties).toEqual(graphItemRequestData.validateKind.properties);
+        expect(result.current.entityProperties).toEqual(entityRequestData.objectIdNode.properties);
     });
     it.todo('Search for Node with databaseId returns Node properties', () => {});
-    it.todo('Search for Edge returns Edge properties', () => {});
+    it.todo('Search for Node with no Id returns error', () => {});
 });
