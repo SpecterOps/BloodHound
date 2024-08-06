@@ -21,33 +21,29 @@ import { getNodeByDatabaseIdCypher } from '../../utils/entityInfoDisplay';
 import { validateNodeType } from '../useSearch/useSearch';
 import { useQuery } from 'react-query';
 
-export type GraphItemData = {
-    cacheId: GraphItemQueryCacheId;
+export type FetchEntityParams = {
+    cacheId: typeof FetchEntityCacheId;
     objectId: string;
     nodeType: string;
     databaseId?: string;
 };
 
-export type GraphItemProperties = {
+export type EntityProperties = {
     [k: string]: any;
     objectid: string;
 };
 
-type GraphItemExport = {
-    graphItemProperties: GraphItemProperties;
+type FetchEntityExport = {
+    entityProperties: EntityProperties;
     informationAvailable: boolean;
     isLoading: boolean;
     isError: boolean;
     isSuccess: boolean;
 };
 
-// To do: Add these enums to the use of this hook in the other components
-export enum GraphItemQueryCacheId {
-    Edge = 'edge-properties',
-    Node = 'node-properties',
-}
+export const FetchEntityCacheId = 'entity-properties' as const;
 
-export const useFetchGraphItem: (param: GraphItemData) => GraphItemExport = ({
+export const useFetchEntity: (param: FetchEntityParams) => FetchEntityExport = ({
     cacheId,
     objectId,
     nodeType,
@@ -80,7 +76,7 @@ export const useFetchGraphItem: (param: GraphItemData) => GraphItemExport = ({
     const informationAvailable = !!validatedKind || !!databaseId;
 
     const {
-        data: graphItemProperties,
+        data: entityProperties,
         isLoading,
         isError,
         isSuccess,
@@ -88,6 +84,7 @@ export const useFetchGraphItem: (param: GraphItemData) => GraphItemExport = ({
         [cacheId, nodeType, objectId],
         ({ signal }) =>
             requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
+                console.log('res.data.data.nodes', res.data.data);
                 if (validatedKind) return res.data.data.props;
                 else if (databaseId) return Object.values(res.data.data.nodes as Record<string, any>)[0].properties;
                 else return {};
@@ -100,7 +97,7 @@ export const useFetchGraphItem: (param: GraphItemData) => GraphItemExport = ({
     );
 
     return {
-        graphItemProperties,
+        entityProperties,
         informationAvailable,
         isLoading,
         isError,
