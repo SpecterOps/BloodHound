@@ -548,6 +548,36 @@ func TestResources_ListSavedQueries_ScopeDBError(t *testing.T) {
 	}
 }
 
+func TestResources_ListSavedQueries_InvalidScope(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
+		t.Fatal(err)
+	} else {
+		q := url.Values{}
+		q.Add("scope", "foo")
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req.URL.RawQuery = q.Encode()
+
+		router := mux.NewRouter()
+		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, req)
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, response.Body.String(), "invalid scope param")
+	}
+}
+
 func TestResources_CreateSavedQuery_InvalidBody(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)

@@ -119,6 +119,8 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 					scopedCount = len(scopedQueries)
 				case "owned":
 					scopedQueries, scopedCount, err = s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit)
+				default:
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid scope param", request), response)
 				}
 
 				if err != nil {
