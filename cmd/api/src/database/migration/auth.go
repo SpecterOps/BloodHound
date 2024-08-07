@@ -42,26 +42,6 @@ func getAllRoles(tx *gorm.DB) (model.Roles, error) {
 	return roles, preload(tx, model.RoleAssociations()).Find(&roles).Error
 }
 
-func (s *Migrator) updatePermissions() error {
-	return s.DB.Transaction(func(tx *gorm.DB) error {
-		if existingPermissions, err := getAllPermissions(tx); err != nil {
-			return err
-		} else {
-			for _, expectedPermission := range auth.Permissions().All() {
-				if !existingPermissions.Has(expectedPermission) {
-					if result := tx.Create(&expectedPermission); result.Error != nil {
-						return result.Error
-					}
-
-					log.Infof("Permission %s created during migration", expectedPermission)
-				}
-			}
-		}
-
-		return nil
-	})
-}
-
 func (s *Migrator) updateRoles() error {
 	return s.DB.Transaction(func(tx *gorm.DB) error {
 		if permissions, err := getAllPermissions(tx); err != nil {

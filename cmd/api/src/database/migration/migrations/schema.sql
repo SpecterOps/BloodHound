@@ -587,3 +587,23 @@ ALTER TABLE ONLY users_roles
     ADD CONSTRAINT fk_users_roles_user FOREIGN KEY (user_id) REFERENCES users(id);
 ALTER TABLE ONLY users
     ADD CONSTRAINT fk_users_saml_provider FOREIGN KEY (saml_provider_id) REFERENCES saml_providers(id);
+
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('app', 'ReadAppConfig', 1, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('app', 'WriteAppConfig', 2, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('risks', 'GenerateReport', 3, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('risks', 'ManageRisks', 4, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('auth', 'CreateToken', 5, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('auth', 'ManageAppConfig', 6, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('auth', 'ManageProviders', 7, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('auth', 'ManageSelf', 8, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('auth', 'ManageUsers', 9, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('clients', 'Manage', 10, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('clients', 'Read', 11, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('clients', 'Tasking', 12, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('collection', 'ManageJobs', 13, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('graphdb', 'Mutate', 14, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('graphdb', 'Read', 15, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('graphdb', 'Write', 16, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('saved_queries', 'Read', 17, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('saved_queries', 'Write', 18, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('db', 'Wipe', 19, current_timestamp, current_timestamp);
