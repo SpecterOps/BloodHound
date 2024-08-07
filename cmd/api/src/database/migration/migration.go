@@ -18,7 +18,6 @@ package migration
 
 import (
 	"embed"
-	"fmt"
 	"io/fs"
 
 	"github.com/specterops/bloodhound/src/version"
@@ -55,12 +54,4 @@ func NewMigrator(db *gorm.DB) *Migrator {
 		},
 		DB: db,
 	}
-}
-
-func (s *Migrator) Migrate() error {
-	if err := s.executeStepwiseMigrations(); err != nil {
-		return fmt.Errorf("failed to execute stepwise migrations: %w", err)
-	}
-
-	return nil
 }

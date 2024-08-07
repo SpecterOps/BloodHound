@@ -286,7 +286,7 @@ func TestMigrator_Migrate(t *testing.T) {
 	manifest, err := migrator.GenerateManifest()
 	require.Nil(t, err)
 
-	assert.Nil(t, migrator.Migrate())
+	assert.Nil(t, migrator.ExecuteStepwiseMigrations())
 
 	lastVersionInManifest := manifest.VersionTable[len(manifest.VersionTable)-1]
 	latestMigration, err := migrator.LatestMigration()
