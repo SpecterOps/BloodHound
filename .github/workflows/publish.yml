@@ -15,7 +15,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: Publish
-run-name: Publish ${{ github.ref_name }}
 
 on:
   push:
@@ -83,3 +82,4 @@ jobs:
             checkout_hash=$GITHUB_SHA
           provenance: false
           push: true
+
