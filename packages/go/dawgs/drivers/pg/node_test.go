@@ -18,12 +18,13 @@ package pg
 
 import (
 	"context"
+	"testing"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	graph_mocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"testing"
 )
 
 type testKindMapper struct {

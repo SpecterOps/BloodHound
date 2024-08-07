@@ -39,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
 	queriesMocks "github.com/specterops/bloodhound/src/queries/mocks"
@@ -405,8 +406,46 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		Require().
 		ResponseStatusCode(http.StatusBadRequest)
 
+	// Empty asset group name
+	jsonBody, err := json.Marshal(v2.CreateAssetGroupRequest{Name: "", Tag: "valid_tag"})
+	require.Nil(t, err)
+
+	requestTemplate.
+		WithContext(&ctx.Context{
+			Host: &url.URL{},
+		}).
+		WithBody(jsonBody).
+		OnHandlerFunc(resources.CreateAssetGroup).
+		Require().
+		ResponseStatusCode(http.StatusBadRequest).
+		ResponseJSONBody(api.ErrorWrapper{
+			HTTPStatus: http.StatusBadRequest,
+			Errors: []api.ErrorDetails{{
+				Message: api.ErrorResponseAGNameTagEmpty,
+			}},
+		})
+
+	// Empty asset group tag
+	jsonBody, err = json.Marshal(v2.CreateAssetGroupRequest{Name: "Valid Name", Tag: ""})
+	require.Nil(t, err)
+
+	requestTemplate.
+		WithContext(&ctx.Context{
+			Host: &url.URL{},
+		}).
+		WithBody(jsonBody).
+		OnHandlerFunc(resources.CreateAssetGroup).
+		Require().
+		ResponseStatusCode(http.StatusBadRequest).
+		ResponseJSONBody(api.ErrorWrapper{
+			HTTPStatus: http.StatusBadRequest,
+			Errors: []api.ErrorDetails{{
+				Message: api.ErrorResponseAGNameTagEmpty,
+			}},
+		})
+
 	// Whitespace in asset group tag must error
-	jsonBody, err := json.Marshal(v2.CreateAssetGroupRequest{Tag: "one space"})
+	jsonBody, err = json.Marshal(v2.CreateAssetGroupRequest{Tag: "one space"})
 	require.Nil(t, err)
 
 	requestTemplate.
@@ -446,10 +485,40 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroup{}, fmt.Errorf("exploded"))
 
 	requestTemplate.
-		WithBody(v2.CreateAssetGroupRequest{}).
+		WithBody(v2.CreateAssetGroupRequest{Name: "valid_name", Tag: "valid_tag"}).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
 		ResponseStatusCode(http.StatusInternalServerError)
+
+	// Test duplicate name
+	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), "DuplicateName", gomock.Any(), false).Return(model.AssetGroup{}, fmt.Errorf("%w: %v", database.ErrDuplicateAGName, errors.New("ERROR: duplicate key value violates unique constraint \"asset_groups_name_key\" (SQLSTATE 23505)")))
+
+	requestTemplate.
+		WithBody(v2.CreateAssetGroupRequest{Name: "DuplicateName", Tag: "UniqueTag"}).
+		OnHandlerFunc(resources.CreateAssetGroup).
+		Require().
+		ResponseStatusCode(http.StatusConflict).
+		ResponseJSONBody(api.ErrorWrapper{
+			HTTPStatus: http.StatusConflict,
+			Errors: []api.ErrorDetails{{
+				Message: api.ErrorResponseAGDuplicateName,
+			}},
+		})
+
+	// Test duplicate tag
+	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), "DuplicateTag", false).Return(model.AssetGroup{}, fmt.Errorf("%w: %v", database.ErrDuplicateAGTag, errors.New("ERROR: duplicate key value violates unique constraint \"asset_groups_tag_key\" (SQLSTATE 23505)")))
+
+	requestTemplate.
+		WithBody(v2.CreateAssetGroupRequest{Name: "UniqueName", Tag: "DuplicateTag"}).
+		OnHandlerFunc(resources.CreateAssetGroup).
+		Require().
+		ResponseStatusCode(http.StatusConflict).
+		ResponseJSONBody(api.ErrorWrapper{
+			HTTPStatus: http.StatusConflict,
+			Errors: []api.ErrorDetails{{
+				Message: api.ErrorResponseAGDuplicateTag,
+			}},
+		})
 
 	// Success
 	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroup{}, nil)
@@ -458,7 +527,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		WithContext(&ctx.Context{
 			Host: &url.URL{},
 		}).
-		WithBody(v2.CreateAssetGroupRequest{}).
+		WithBody(v2.CreateAssetGroupRequest{Name: "valid_name", Tag: "valid_tag"}).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
 		ResponseStatusCode(http.StatusCreated)
@@ -1028,6 +1097,40 @@ func TestResources_ListAssetGroupCollections(t *testing.T) {
 					apitest.StatusCode(output, http.StatusOK)
 				},
 			},
+			{
+				Name: "Parse Query Param Filters Error",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "object_id", "invalidPredicate:foo")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "there are errors in the query parameter filters specified")
+				},
+			},
+			{
+				Name: "Invalid Filter Predicates",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "invalidFilter", "eq:foo")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "the specified column cannot be filtered")
+				},
+			},
+			{
+				Name: "Invalid Operator",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "object_id", "eq:foo")
+					apitest.AddQueryParam(input, "name", "lte:name")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "the specified column cannot be filtered")
+				},
+			},
 		})
 }
 
@@ -1355,6 +1458,40 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 
 					require.Equal(t, 1, len(result.Members))
 					require.Equal(t, "a", result.Members[0].ObjectID)
+				},
+			},
+			{
+				Name: "Parse Query Param Filters Error",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "object_id", "invalidPredicate:foo")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "there are errors in the query parameter filters specified")
+				},
+			},
+			{
+				Name: "Invalid Filter Predicates",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "invalidFilter", "eq:foo")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "the specified column cannot be filtered")
+				},
+			},
+			{
+				Name: "Invalid Operator",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "object_id", "eq:foo")
+					apitest.AddQueryParam(input, "name", "lte:name")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "the specified filter predicate is not supported for this column")
 				},
 			},
 		})

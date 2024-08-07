@@ -1,7 +1,6 @@
 _default:
 	@just --list --unsorted
 
-golangci-lint-version := "v1.53.3"
 host_os := if os() == "macos" { "darwin" } else { os() }
 host_arch := if arch() == "x86" { "386" } else { if arch() == "x86_64" { "amd64" } else { if arch() == "aarch64" { "arm64" } else { arch() } } }
 
@@ -57,11 +56,16 @@ _prep-steps:
   @just ensure-deps
   @just modsync
   @just generate
+  @just goimports
   @just show > tmp/repo-status.txt
   @just analyze > tmp/analysis-report.txt
   @just build > tmp/build-output.txt
   @just test -y > tmp/yarn-test-output.txt
   @just test -g -i > tmp/go-test-output.txt
+
+goimports:
+  @ echo "Running goimports, check for file drift"
+  @ find . -name \*.go -exec goimports -w {} \;
 
 # check license is applied to source files
 check-license:
@@ -87,7 +91,6 @@ build-js-client *ARGS="":
 build-shared-ui *ARGS="":
   @cd packages/javascript/bh-shared-ui && yarn build
 
-
 # updates favicon.ico, logo192.png and logo512.png from logo.svg
 update-favicon:
   @just imagemagick convert -background none ./cmd/ui/public/logo-light.svg -define icon:auto-resize ./cmd/ui/public/favicon-light.ico
@@ -101,9 +104,9 @@ update-favicon:
 imagemagick *ARGS:
   @docker run -it --rm -v {{justfile_directory()}}:/workdir -w /workdir --entrypoint magick cblunt/imagemagick {{ARGS}}
 
-# generates the openapi json doc from the yaml source (requires `redocly` cli)
+# generates the openapi json doc from the yaml source
 gen-spec:
-  @cd packages/go/openapi && redocly bundle src/openapi.yaml --output doc/openapi.json
+  @npx @redocly/cli@1.18.1 bundle {{absolute_path('./packages/go/openapi/src/openapi.yaml')}} --output {{absolute_path('packages/go/openapi/doc/openapi.json')}}
 
 # run git pruning on merged branches to clean up local workspace (run with `nuclear` to clean up orphaned branches)
 prune-my-branches nuclear='no':
@@ -193,11 +196,11 @@ init wipe="":
     mv ./.env ./.env.bak
   fi
 
-  echo "Install additional Go tools"
-  go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
-
   echo "Run modsync to ensure workspace is up to date"
   just modsync
+
+  echo "Ensure dependencies"
+  just stbernard deps
 
   echo "Ensure containers have been rebuilt"
   if [[ "{{wipe}}" != "clean" ]]; then

@@ -20,11 +20,11 @@ import {
     GraphButtonProps,
     GraphProgress,
     NoDataAlert,
+    WebGLDisabledAlert,
+    isWebGLEnabled,
     setEdgeInfoOpen,
     setSelectedEdge,
     useAvailableDomains,
-    isWebGLEnabled,
-    WebGLDisabledAlert,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
@@ -51,7 +51,7 @@ import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
-import { initGraphEdges, initGraphNodes } from 'src/views/Explore/utils';
+import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 
 const GraphView: FC = () => {
@@ -62,6 +62,7 @@ const GraphView: FC = () => {
     const graphState: GraphState = useAppSelector((state) => state.explore);
     const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
     const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
@@ -78,10 +79,8 @@ const GraphView: FC = () => {
         if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
-        const nodeSize = 25;
 
-        initGraphNodes(graph, items.nodes, nodeSize);
-        initGraphEdges(graph, items.edges);
+        initGraph(graph, items, theme, darkMode);
 
         setCurrentNodes(items.nodes);
 
@@ -95,7 +94,7 @@ const GraphView: FC = () => {
             },
         });
         setGraphologyGraph(graph);
-    }, [graphState.chartProps.items]);
+    }, [graphState.chartProps.items, theme, darkMode]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {
@@ -138,7 +137,7 @@ const GraphView: FC = () => {
     );
 
     const sampleDataLink = (
-        <Link target='_blank' href={'https://github.com/SpecterOps/BloodHound/tree/main/examples/sample-data'}>
+        <Link target='_blank' href={'https://github.com/SpecterOps/BloodHound/wiki/Example-Data'}>
             GitHub Sample Collection
         </Link>
     );

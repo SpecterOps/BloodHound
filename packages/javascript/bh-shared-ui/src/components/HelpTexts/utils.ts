@@ -44,10 +44,10 @@ export const typeFormat = (type: string | undefined): string => {
     }
 };
 
-export const useHelpTextStyles = makeStyles(() => ({
+export const useHelpTextStyles = makeStyles((theme) => ({
     containsCodeEl: {
         '& code': {
-            backgroundColor: 'darkgrey',
+            backgroundColor: theme.palette.neutral.tertiary,
             padding: '2px .5ch',
             fontWeight: 'normal',
             fontSize: '.875em',

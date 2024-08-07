@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Button, Paper, Typography } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Box, Paper, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
@@ -266,9 +267,6 @@ const Users = () => {
                 }>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                     <Button
-                        color='primary'
-                        variant='contained'
-                        disableElevation
                         onClick={() => {
                             setSelectedUserId(null);
                             toggleCreateUserDialog();

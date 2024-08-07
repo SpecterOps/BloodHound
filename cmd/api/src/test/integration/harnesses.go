@@ -1226,7 +1226,7 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.Group11 = graphTestContext.NewActiveDirectoryGroup("group1-1", sid)
@@ -1274,7 +1274,7 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 
@@ -1308,7 +1308,7 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 
@@ -1345,7 +1345,7 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           2,
 		AuthorizedSignatures:    1,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.CertTemplate42 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-2", sid, CertTemplateData{
@@ -1357,7 +1357,7 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           2,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.CertTemplate43 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-3", sid, CertTemplateData{
@@ -1369,7 +1369,7 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.CertTemplate44 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-4", sid, CertTemplateData{
@@ -1381,7 +1381,7 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.CertTemplate45 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-5", sid, CertTemplateData{
@@ -1393,7 +1393,7 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.CertTemplate46 = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate 4-6", sid, CertTemplateData{
@@ -1405,7 +1405,7 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 
@@ -1467,7 +1467,7 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    certRequestAgentEKU,
+		EffectiveEKUs:           certRequestAgentEKU,
 		ApplicationPolicies:     emptyAppPolicies,
 	})
 	s.CertTemplate22 = gt.NewActiveDirectoryCertTemplate("certtemplate2-2", sid, CertTemplateData{
@@ -1479,7 +1479,7 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{adAnalysis.EkuCertRequestAgent, adAnalysis.EkuAnyPurpose},
+		EffectiveEKUs:           []string{adAnalysis.EkuCertRequestAgent, adAnalysis.EkuAnyPurpose},
 		ApplicationPolicies:     emptyAppPolicies,
 	})
 	s.CertTemplate23 = gt.NewActiveDirectoryCertTemplate("certtemplate2-3", sid, CertTemplateData{
@@ -1491,7 +1491,7 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           2,
 		AuthorizedSignatures:    1,
-		EKUS:                    certRequestAgentEKU,
+		EffectiveEKUs:           certRequestAgentEKU,
 		ApplicationPolicies:     []string{adAnalysis.EkuCertRequestAgent},
 	})
 	s.CertTemplate24 = gt.NewActiveDirectoryCertTemplate("certtemplate2-4", sid, CertTemplateData{
@@ -1503,7 +1503,7 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           2,
 		AuthorizedSignatures:    1,
-		EKUS:                    emptyAppPolicies,
+		EffectiveEKUs:           emptyAppPolicies,
 		ApplicationPolicies:     emptyAppPolicies,
 	})
 	s.CertTemplate25 = gt.NewActiveDirectoryCertTemplate("certtemplate2-5", sid, CertTemplateData{
@@ -1515,7 +1515,7 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    1,
-		EKUS:                    emptyAppPolicies,
+		EffectiveEKUs:           emptyAppPolicies,
 		ApplicationPolicies:     emptyAppPolicies,
 	})
 
@@ -1558,7 +1558,7 @@ func (s *EnrollOnBehalfOfHarnessOne) Setup(gt *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           2,
 		AuthorizedSignatures:    0,
-		EKUS:                    anyPurposeEkus,
+		EffectiveEKUs:           anyPurposeEkus,
 		ApplicationPolicies:     emptyAppPolicies,
 	})
 	s.CertTemplate12 = gt.NewActiveDirectoryCertTemplate("certtemplate1-2", sid, CertTemplateData{
@@ -1570,7 +1570,7 @@ func (s *EnrollOnBehalfOfHarnessOne) Setup(gt *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    anyPurposeEkus,
+		EffectiveEKUs:           anyPurposeEkus,
 		ApplicationPolicies:     emptyAppPolicies,
 	})
 	s.CertTemplate13 = gt.NewActiveDirectoryCertTemplate("certtemplate1-3", sid, CertTemplateData{
@@ -1582,7 +1582,7 @@ func (s *EnrollOnBehalfOfHarnessOne) Setup(gt *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           2,
 		AuthorizedSignatures:    0,
-		EKUS:                    anyPurposeEkus,
+		EffectiveEKUs:           anyPurposeEkus,
 		ApplicationPolicies:     emptyAppPolicies,
 	})
 
@@ -1744,6 +1744,11 @@ type IssuedSignedByHarness struct {
 	EnterpriseCA1 *graph.Node
 	EnterpriseCA2 *graph.Node
 	EnterpriseCA3 *graph.Node
+	AIACA1_1      *graph.Node
+	AIACA1_2      *graph.Node
+	AIACA2_1      *graph.Node
+	AIACA2_2      *graph.Node
+	AIACA2_3      *graph.Node
 }
 
 func (s *IssuedSignedByHarness) Setup(graphTestContext *GraphTestContext) {
@@ -1753,6 +1758,11 @@ func (s *IssuedSignedByHarness) Setup(graphTestContext *GraphTestContext) {
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca1", sid, "c")
 	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca2", sid, "d")
 	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca2", sid, "e")
+	s.AIACA1_1 = graphTestContext.NewActiveDirectoryAIACA("aiaca1_1", sid, "a", []string{"a"})
+	s.AIACA1_2 = graphTestContext.NewActiveDirectoryAIACA("aiaca1_2", sid, "b", []string{"b", "a"})
+	s.AIACA2_1 = graphTestContext.NewActiveDirectoryAIACA("aiaca2_1", sid, "c", []string{"c", "b", "a"})
+	s.AIACA2_2 = graphTestContext.NewActiveDirectoryAIACA("aiaca2_2", sid, "d", []string{"d", "c", "b", "a"})
+	s.AIACA2_3 = graphTestContext.NewActiveDirectoryAIACA("aiaca2_3", sid, "e", []string{"e"})
 
 	s.RootCA1.Properties.Set(ad.CertChain.String(), []string{"a"})
 	s.RootCA2.Properties.Set(ad.CertChain.String(), []string{"b", "a"})
@@ -1765,6 +1775,37 @@ func (s *IssuedSignedByHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.EnterpriseCA1)
 	graphTestContext.UpdateNode(s.EnterpriseCA2)
 	graphTestContext.UpdateNode(s.EnterpriseCA3)
+}
+
+type EnterpriseCAForHarness struct {
+	RootCA1       *graph.Node
+	RootCA2       *graph.Node
+	EnterpriseCA1 *graph.Node
+	EnterpriseCA2 *graph.Node
+	AIACA1_1      *graph.Node
+	AIACA1_2      *graph.Node
+	AIACA2_1      *graph.Node
+}
+
+func (s *EnterpriseCAForHarness) Setup(graphTestContext *GraphTestContext) {
+	sid := RandomDomainSID()
+	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCAWithThumbprint("rca1", sid, "a")
+	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCAWithThumbprint("rca2", sid, "b")
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca1", sid, "a")
+	s.EnterpriseCA2 = graphTestContext.NewActiveDirectoryEnterpriseCAWithThumbprint("eca2", sid, "c")
+	s.AIACA1_1 = graphTestContext.NewActiveDirectoryAIACA("aiaca1_1", sid, "a", []string{"a"})
+	s.AIACA1_2 = graphTestContext.NewActiveDirectoryAIACA("aiaca1_2", sid, "b", []string{"b"})
+	s.AIACA2_1 = graphTestContext.NewActiveDirectoryAIACA("aiaca2_1", sid, "c", []string{"c", "a"})
+
+	s.RootCA1.Properties.Set(ad.CertChain.String(), []string{"a"})
+	s.RootCA2.Properties.Set(ad.CertChain.String(), []string{"b"})
+	s.EnterpriseCA1.Properties.Set(ad.CertChain.String(), []string{"a"})
+	s.EnterpriseCA2.Properties.Set(ad.CertChain.String(), []string{"c", "a"})
+
+	graphTestContext.UpdateNode(s.RootCA1)
+	graphTestContext.UpdateNode(s.RootCA2)
+	graphTestContext.UpdateNode(s.EnterpriseCA1)
+	graphTestContext.UpdateNode(s.EnterpriseCA2)
 }
 
 type TrustedForNTAuthHarness struct {
@@ -1829,7 +1870,7 @@ func (s *ESC3Harness1) Setup(graphTestContext *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", sid, CertTemplateData{
@@ -1841,7 +1882,7 @@ func (s *ESC3Harness1) Setup(graphTestContext *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           2,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.CertTemplate2 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate2", sid, CertTemplateData{
@@ -1853,7 +1894,7 @@ func (s *ESC3Harness1) Setup(graphTestContext *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.CertTemplate3 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate3", sid, CertTemplateData{
@@ -1865,7 +1906,7 @@ func (s *ESC3Harness1) Setup(graphTestContext *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", sid)
@@ -1935,7 +1976,7 @@ func (s *ESC3Harness2) Setup(c *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           2,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.CertTemplate2 = c.NewActiveDirectoryCertTemplate("CertTemplate2", sid, CertTemplateData{
@@ -1947,7 +1988,7 @@ func (s *ESC3Harness2) Setup(c *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.CertTemplate3 = c.NewActiveDirectoryCertTemplate("CertTemplate3", sid, CertTemplateData{
@@ -1960,7 +2001,7 @@ func (s *ESC3Harness2) Setup(c *GraphTestContext) {
 		SubjectAltRequireDNS:    true,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.CertTemplate4 = c.NewActiveDirectoryCertTemplate("CertTemplate4", sid, CertTemplateData{
@@ -1972,7 +2013,7 @@ func (s *ESC3Harness2) Setup(c *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.EnterpriseCA1 = c.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", sid)
@@ -2032,7 +2073,7 @@ func (s *ESC3Harness3) Setup(c *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           2,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.CertTemplate2 = c.NewActiveDirectoryCertTemplate("CertTemplate2", sid, CertTemplateData{
@@ -2044,7 +2085,7 @@ func (s *ESC3Harness3) Setup(c *GraphTestContext) {
 		NoSecurityExtension:     false,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    emptyEkus,
+		EffectiveEKUs:           emptyEkus,
 		ApplicationPolicies:     emptyEkus,
 	})
 	s.EnterpriseCA1 = c.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", sid)
@@ -2092,7 +2133,7 @@ func (s *ESC9aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2174,7 +2215,7 @@ func (s *ESC9aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2187,7 +2228,7 @@ func (s *ESC9aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2200,7 +2241,7 @@ func (s *ESC9aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2213,7 +2254,7 @@ func (s *ESC9aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: true,
@@ -2226,7 +2267,7 @@ func (s *ESC9aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   false,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2239,7 +2280,7 @@ func (s *ESC9aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    1,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2252,7 +2293,7 @@ func (s *ESC9aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2265,7 +2306,7 @@ func (s *ESC9aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -2373,7 +2414,7 @@ func (s *ESC9aHarness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        true,
 		RequiresManagerApproval:    false,
@@ -2388,7 +2429,7 @@ func (s *ESC9aHarness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        true,
 		RequiresManagerApproval:    false,
@@ -2403,7 +2444,7 @@ func (s *ESC9aHarness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        true,
 		RequiresManagerApproval:    false,
@@ -2501,7 +2542,7 @@ func (s *ESC9aHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2598,7 +2639,7 @@ func (s *ESC9aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2611,7 +2652,7 @@ func (s *ESC9aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2624,7 +2665,7 @@ func (s *ESC9aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2637,7 +2678,7 @@ func (s *ESC9aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2650,7 +2691,7 @@ func (s *ESC9aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2766,7 +2807,7 @@ func (s *ESC9bPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2846,7 +2887,7 @@ func (s *ESC9bHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2860,7 +2901,7 @@ func (s *ESC9bHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2874,7 +2915,7 @@ func (s *ESC9bHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -2888,7 +2929,7 @@ func (s *ESC9bHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: true,
@@ -2902,7 +2943,7 @@ func (s *ESC9bHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   false,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2916,7 +2957,7 @@ func (s *ESC9bHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    1,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -2930,7 +2971,7 @@ func (s *ESC9bHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -3033,7 +3074,7 @@ func (s *ESC9bHarness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        true,
 		RequiresManagerApproval:    false,
@@ -3048,7 +3089,7 @@ func (s *ESC9bHarness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        true,
 		RequiresManagerApproval:    false,
@@ -3063,7 +3104,7 @@ func (s *ESC9bHarness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        true,
 		RequiresManagerApproval:    false,
@@ -3161,7 +3202,7 @@ func (s *ESC9bHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -3259,7 +3300,7 @@ func (s *ESC9bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -3273,7 +3314,7 @@ func (s *ESC9bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -3287,7 +3328,7 @@ func (s *ESC9bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -3301,7 +3342,7 @@ func (s *ESC9bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -3315,7 +3356,7 @@ func (s *ESC9bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -3440,7 +3481,7 @@ func (s *ESC6aHarnessPrincipalEdges) Setup(c *GraphTestContext) {
 		NoSecurityExtension:     true,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		ApplicationPolicies:     []string{},
 	})
 	s.EnterpriseCA1 = c.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", sid)
@@ -3498,7 +3539,7 @@ func initHarnessNodes(c *GraphTestContext, nodes []harnesses.Node, sid string) m
 		NoSecurityExtension:     true,
 		SchemaVersion:           1,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		ApplicationPolicies:     []string{},
 	}
 
@@ -3622,7 +3663,7 @@ func (s *ESC10aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -3695,7 +3736,7 @@ func (s *ESC10aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -3707,7 +3748,7 @@ func (s *ESC10aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     true,
 		RequiresManagerApproval: false,
@@ -3719,7 +3760,7 @@ func (s *ESC10aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -3731,7 +3772,7 @@ func (s *ESC10aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: true,
@@ -3743,7 +3784,7 @@ func (s *ESC10aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   false,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -3755,7 +3796,7 @@ func (s *ESC10aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    1,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -3767,7 +3808,7 @@ func (s *ESC10aHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -3868,7 +3909,7 @@ func (s *ESC10aHarness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        false,
 		RequiresManagerApproval:    false,
@@ -3883,7 +3924,7 @@ func (s *ESC10aHarness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        false,
 		RequiresManagerApproval:    false,
@@ -3898,7 +3939,7 @@ func (s *ESC10aHarness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        false,
 		RequiresManagerApproval:    false,
@@ -4025,7 +4066,7 @@ func (s *ESC10aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4038,7 +4079,7 @@ func (s *ESC10aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4051,7 +4092,7 @@ func (s *ESC10aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4064,7 +4105,7 @@ func (s *ESC10aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4077,7 +4118,7 @@ func (s *ESC10aHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4193,7 +4234,7 @@ func (s *ESC10aHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4270,7 +4311,7 @@ func (s *ESC10bHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4284,7 +4325,7 @@ func (s *ESC10bHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4298,7 +4339,7 @@ func (s *ESC10bHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4312,7 +4353,7 @@ func (s *ESC10bHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: true,
@@ -4326,7 +4367,7 @@ func (s *ESC10bHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   false,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4340,7 +4381,7 @@ func (s *ESC10bHarness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    1,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4437,7 +4478,7 @@ func (s *ESC10bHarness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        false,
 		RequiresManagerApproval:    false,
@@ -4452,7 +4493,7 @@ func (s *ESC10bHarness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        false,
 		RequiresManagerApproval:    false,
@@ -4467,7 +4508,7 @@ func (s *ESC10bHarness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        false,
 		RequiresManagerApproval:    false,
@@ -4594,7 +4635,7 @@ func (s *ESC10bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4608,7 +4649,7 @@ func (s *ESC10bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4622,7 +4663,7 @@ func (s *ESC10bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4636,7 +4677,7 @@ func (s *ESC10bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4650,7 +4691,7 @@ func (s *ESC10bHarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4767,7 +4808,7 @@ func (s *ESC10bHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4836,7 +4877,7 @@ func (s *ESC10bPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4913,7 +4954,7 @@ func (s *ESC6bTemplate1Harness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4925,7 +4966,7 @@ func (s *ESC6bTemplate1Harness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4937,7 +4978,7 @@ func (s *ESC6bTemplate1Harness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   false,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -4949,7 +4990,7 @@ func (s *ESC6bTemplate1Harness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: true,
@@ -4961,7 +5002,7 @@ func (s *ESC6bTemplate1Harness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    1,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -5014,15 +5055,9 @@ type ESC6bTemplate2Harness struct {
 	CertTemplate1 *graph.Node
 	CertTemplate2 *graph.Node
 	CertTemplate3 *graph.Node
-	CertTemplate4 *graph.Node
-	CertTemplate5 *graph.Node
-	CertTemplate6 *graph.Node
 	Computer1     *graph.Node
 	Computer2     *graph.Node
 	Computer3     *graph.Node
-	Computer4     *graph.Node
-	Computer5     *graph.Node
-	Computer6     *graph.Node
 	DC            *graph.Node
 	Domain        *graph.Node
 	EnterpriseCA  *graph.Node
@@ -5030,17 +5065,11 @@ type ESC6bTemplate2Harness struct {
 	Group1        *graph.Node
 	Group2        *graph.Node
 	Group3        *graph.Node
-	Group4        *graph.Node
-	Group5        *graph.Node
-	Group6        *graph.Node
 	NTAuthStore   *graph.Node
 	RootCA        *graph.Node
 	User1         *graph.Node
 	User2         *graph.Node
 	User3         *graph.Node
-	User4         *graph.Node
-	User5         *graph.Node
-	User6         *graph.Node
 }
 
 func (s *ESC6bTemplate2Harness) Setup(graphTestContext *GraphTestContext) {
@@ -5049,7 +5078,7 @@ func (s *ESC6bTemplate2Harness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        false,
 		RequiresManagerApproval:    false,
@@ -5067,7 +5096,7 @@ func (s *ESC6bTemplate2Harness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        false,
 		RequiresManagerApproval:    false,
@@ -5085,7 +5114,7 @@ func (s *ESC6bTemplate2Harness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        false,
 		RequiresManagerApproval:    false,
@@ -5099,60 +5128,6 @@ func (s *ESC6bTemplate2Harness) Setup(graphTestContext *GraphTestContext) {
 	s.CertTemplate3.Properties.Set(ad.SubjectRequireEmail.String(), false)
 	graphTestContext.UpdateNode(s.CertTemplate3)
 
-	s.CertTemplate4 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate4", domainSid, CertTemplateData{
-		ApplicationPolicies:        []string{},
-		AuthenticationEnabled:      true,
-		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
-		EnrolleeSuppliesSubject:    false,
-		NoSecurityExtension:        false,
-		RequiresManagerApproval:    false,
-		SchemaVersion:              1,
-		SubjectAltRequireDNS:       false,
-		SubjectAltRequireDomainDNS: false,
-		SubjectAltRequireSPN:       false,
-		SubjectAltRequireUPN:       false,
-	})
-	s.CertTemplate4.Properties.Set(ad.SubjectAltRequireEmail.String(), true)
-	s.CertTemplate4.Properties.Set(ad.SubjectRequireEmail.String(), true)
-	graphTestContext.UpdateNode(s.CertTemplate4)
-
-	s.CertTemplate5 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate5", domainSid, CertTemplateData{
-		ApplicationPolicies:        []string{},
-		AuthenticationEnabled:      true,
-		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
-		EnrolleeSuppliesSubject:    false,
-		NoSecurityExtension:        false,
-		RequiresManagerApproval:    false,
-		SchemaVersion:              2,
-		SubjectAltRequireDNS:       false,
-		SubjectAltRequireDomainDNS: false,
-		SubjectAltRequireSPN:       false,
-		SubjectAltRequireUPN:       false,
-	})
-	s.CertTemplate5.Properties.Set(ad.SubjectAltRequireEmail.String(), true)
-	s.CertTemplate5.Properties.Set(ad.SubjectRequireEmail.String(), false)
-	graphTestContext.UpdateNode(s.CertTemplate5)
-
-	s.CertTemplate6 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate6", domainSid, CertTemplateData{
-		ApplicationPolicies:        []string{},
-		AuthenticationEnabled:      true,
-		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
-		EnrolleeSuppliesSubject:    false,
-		NoSecurityExtension:        false,
-		RequiresManagerApproval:    false,
-		SchemaVersion:              2,
-		SubjectAltRequireDNS:       false,
-		SubjectAltRequireDomainDNS: false,
-		SubjectAltRequireSPN:       false,
-		SubjectAltRequireUPN:       false,
-	})
-	s.CertTemplate6.Properties.Set(ad.SubjectAltRequireEmail.String(), false)
-	s.CertTemplate6.Properties.Set(ad.SubjectRequireEmail.String(), true)
-	graphTestContext.UpdateNode(s.CertTemplate6)
-
 	s.EnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA", domainSid)
 	s.EnterpriseCA.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA)
@@ -5160,9 +5135,6 @@ func (s *ESC6bTemplate2Harness) Setup(graphTestContext *GraphTestContext) {
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid)
 	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domainSid)
 	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domainSid)
-	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domainSid)
-	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domainSid)
-	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domainSid)
 	s.DC = graphTestContext.NewActiveDirectoryComputer("DC", domainSid)
 	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
 
@@ -5170,17 +5142,11 @@ func (s *ESC6bTemplate2Harness) Setup(graphTestContext *GraphTestContext) {
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid)
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid)
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSid)
-	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid)
-	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid)
-	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domainSid)
 	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
 	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
 	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid)
 	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", domainSid)
 	s.User3 = graphTestContext.NewActiveDirectoryUser("User3", domainSid)
-	s.User4 = graphTestContext.NewActiveDirectoryUser("User4", domainSid)
-	s.User5 = graphTestContext.NewActiveDirectoryUser("User5", domainSid)
-	s.User6 = graphTestContext.NewActiveDirectoryUser("User6", domainSid)
 	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
 	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
@@ -5193,9 +5159,6 @@ func (s *ESC6bTemplate2Harness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group1, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.CertTemplate2, s.EnterpriseCA, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.CertTemplate3, s.EnterpriseCA, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.CertTemplate4, s.EnterpriseCA, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.CertTemplate5, s.EnterpriseCA, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.CertTemplate6, s.EnterpriseCA, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.Computer1, s.CertTemplate1, ad.Enroll)
 	graphTestContext.NewRelationship(s.Computer1, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.User1, s.CertTemplate1, ad.Enroll)
@@ -5212,25 +5175,6 @@ func (s *ESC6bTemplate2Harness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group3, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.Computer3, s.CertTemplate3, ad.Enroll)
 	graphTestContext.NewRelationship(s.User3, s.CertTemplate3, ad.Enroll)
-	graphTestContext.NewRelationship(s.Group4, s.Group0, ad.MemberOf)
-	graphTestContext.NewRelationship(s.Computer4, s.Group0, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User4, s.Group0, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User4, s.CertTemplate4, ad.Enroll)
-	graphTestContext.NewRelationship(s.Computer4, s.CertTemplate4, ad.Enroll)
-	graphTestContext.NewRelationship(s.Group4, s.CertTemplate4, ad.Enroll)
-	graphTestContext.NewRelationship(s.Group5, s.Group0, ad.MemberOf)
-	graphTestContext.NewRelationship(s.Computer5, s.Group0, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User5, s.Group0, ad.MemberOf)
-	graphTestContext.NewRelationship(s.Group6, s.Group0, ad.MemberOf)
-	graphTestContext.NewRelationship(s.Computer6, s.Group0, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User6, s.Group0, ad.MemberOf)
-	graphTestContext.NewRelationship(s.User6, s.CertTemplate6, ad.Enroll)
-	graphTestContext.NewRelationship(s.Computer6, s.CertTemplate6, ad.Enroll)
-	graphTestContext.NewRelationship(s.Group6, s.CertTemplate6, ad.Enroll)
-	graphTestContext.NewRelationship(s.User5, s.CertTemplate5, ad.Enroll)
-	graphTestContext.NewRelationship(s.Computer5, s.CertTemplate5, ad.Enroll)
-	graphTestContext.NewRelationship(s.Group5, s.CertTemplate5, ad.Enroll)
-
 }
 
 type ESC6bECAHarness struct {
@@ -5290,7 +5234,7 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -5302,7 +5246,7 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -5314,7 +5258,7 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -5326,7 +5270,7 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -5338,7 +5282,7 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -5350,7 +5294,7 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -5492,7 +5436,7 @@ func (s *ESC6bPrincipalEdgesHarness) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -5627,7 +5571,7 @@ func (s *ESC4Template1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    1,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: true,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -5639,7 +5583,7 @@ func (s *ESC4Template1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   false,
 		AuthorizedSignatures:    1,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: true,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -5651,7 +5595,7 @@ func (s *ESC4Template1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    1,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: true,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -5663,7 +5607,7 @@ func (s *ESC4Template1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: true,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -5818,7 +5762,7 @@ func (s *ESC4Template2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   false,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: true,
@@ -5830,7 +5774,7 @@ func (s *ESC4Template2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: true,
@@ -5842,7 +5786,7 @@ func (s *ESC4Template2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -5854,7 +5798,7 @@ func (s *ESC4Template2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: true,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: true,
@@ -5866,7 +5810,7 @@ func (s *ESC4Template2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: true,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6015,7 +5959,7 @@ func (s *ESC4Template3) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    1,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: true,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6083,7 +6027,7 @@ func (s *ESC4Template4) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: true,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6171,7 +6115,7 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6183,7 +6127,7 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6195,7 +6139,7 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6207,7 +6151,7 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6219,7 +6163,7 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6231,7 +6175,7 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6243,7 +6187,7 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6351,7 +6295,7 @@ func (s *ESC13Harness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6364,7 +6308,7 @@ func (s *ESC13Harness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6377,7 +6321,7 @@ func (s *ESC13Harness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    1,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6390,7 +6334,7 @@ func (s *ESC13Harness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: true,
@@ -6403,7 +6347,7 @@ func (s *ESC13Harness1) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   false,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6482,7 +6426,7 @@ func (s *ESC13Harness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        false,
 		RequiresManagerApproval:    false,
@@ -6497,7 +6441,7 @@ func (s *ESC13Harness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        false,
 		RequiresManagerApproval:    false,
@@ -6512,7 +6456,7 @@ func (s *ESC13Harness2) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:        []string{},
 		AuthenticationEnabled:      true,
 		AuthorizedSignatures:       0,
-		EKUS:                       []string{},
+		EffectiveEKUs:              []string{},
 		EnrolleeSuppliesSubject:    false,
 		NoSecurityExtension:        false,
 		RequiresManagerApproval:    false,
@@ -6619,7 +6563,7 @@ func (s *ESC13HarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6632,7 +6576,7 @@ func (s *ESC13HarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6645,7 +6589,7 @@ func (s *ESC13HarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6658,7 +6602,7 @@ func (s *ESC13HarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6671,7 +6615,7 @@ func (s *ESC13HarnessECA) Setup(graphTestContext *GraphTestContext) {
 		ApplicationPolicies:     []string{},
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: false,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6809,7 +6753,7 @@ func (s *ExtendedByPolicyHarness) Setup(graphTestContext *GraphTestContext) {
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    1,
 		CertificatePolicy:       []string{certTemplateOIDs[0], certTemplateOIDs[1]},
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: true,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6822,7 +6766,7 @@ func (s *ExtendedByPolicyHarness) Setup(graphTestContext *GraphTestContext) {
 		AuthenticationEnabled:   false,
 		AuthorizedSignatures:    1,
 		CertificatePolicy:       []string{certTemplateOIDs[0], certTemplateOIDs[2]},
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: true,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6835,7 +6779,7 @@ func (s *ExtendedByPolicyHarness) Setup(graphTestContext *GraphTestContext) {
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    1,
 		CertificatePolicy:       []string{certTemplateOIDs[3]},
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: true,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6848,7 +6792,7 @@ func (s *ExtendedByPolicyHarness) Setup(graphTestContext *GraphTestContext) {
 		AuthenticationEnabled:   true,
 		AuthorizedSignatures:    0,
 		CertificatePolicy:       []string{certTemplateOIDs[4]},
-		EKUS:                    []string{},
+		EffectiveEKUs:           []string{},
 		EnrolleeSuppliesSubject: true,
 		NoSecurityExtension:     false,
 		RequiresManagerApproval: false,
@@ -6919,6 +6863,52 @@ func (s *SyncLAPSPasswordHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.User5, s.Group2, ad.MemberOf)
 	graphTestContext.NewRelationship(s.User5, s.Domain1, ad.GetChangesInFilteredSet)
 	graphTestContext.NewRelationship(s.User6, s.Group4, ad.MemberOf)
+}
+
+type HybridAttackPaths struct {
+	AZTenant       *graph.Node
+	ADUser         *graph.Node
+	ADUserObjectID string
+	AZUser         *graph.Node
+	AZUserObjectID string
+	UnknownNode    *graph.Node
+}
+
+func (s *HybridAttackPaths) Setup(graphTestContext *GraphTestContext, adUserObjectID string, azUserOnPremID string, onPremSyncEnabled bool, createADUser bool, createUnknownNode bool) {
+	s.ADUserObjectID = adUserObjectID
+	tenantID := RandomObjectID(graphTestContext.testCtx)
+	domainSid := RandomDomainSID()
+	azureUserProps := graph.AsProperties(graph.PropertyMap{
+		common.Name:             HarnessUserName,
+		azure.UserPrincipalName: HarnessUserName,
+		common.Description:      HarnessUserDescription,
+		common.ObjectID:         s.AZUserObjectID,
+		azure.Licenses:          HarnessUserLicenses,
+		azure.MFAEnabled:        HarnessUserMFAEnabled,
+		azure.TenantID:          tenantID,
+		azure.OnPremSyncEnabled: onPremSyncEnabled,
+		azure.OnPremID:          azUserOnPremID,
+	})
+
+	s.AZTenant = graphTestContext.NewAzureTenant(tenantID)
+	s.AZUser = graphTestContext.NewCustomAzureUser(azureUserProps)
+	graphTestContext.NewRelationship(s.AZTenant, s.AZUser, azure.Contains)
+
+	if createADUser {
+		adUserProperties := graph.AsProperties(graph.PropertyMap{
+			common.Name:     HarnessUserName,
+			common.ObjectID: s.ADUserObjectID,
+			ad.DomainSID:    domainSid,
+		})
+
+		s.ADUser = graphTestContext.NewCustomActiveDirectoryUser(adUserProperties)
+	} else if createUnknownNode {
+		unknownNodeProperties := graph.AsProperties(graph.PropertyMap{
+			common.ObjectID: azUserOnPremID,
+		})
+
+		s.UnknownNode = graphTestContext.NewNode(unknownNodeProperties, ad.Entity)
+	}
 }
 
 type DCSyncHarness struct {
@@ -6996,6 +6986,7 @@ type HarnessDetails struct {
 	EnrollOnBehalfOfHarnessTwo                      EnrollOnBehalfOfHarnessTwo
 	ADCSGoldenCertHarness                           ADCSGoldenCertHarness
 	IssuedSignedByHarness                           IssuedSignedByHarness
+	EnterpriseCAForHarness                          EnterpriseCAForHarness
 	WeakCertBindingAndUPNCertMappingHarness         WeakCertBindingAndUPNCertMappingHarness
 	TrustedForNTAuthHarness                         TrustedForNTAuthHarness
 	NumCollectedActiveDirectoryDomains              int
@@ -7043,4 +7034,5 @@ type HarnessDetails struct {
 	ESC13HarnessECA                                 ESC13HarnessECA
 	DCSyncHarness                                   DCSyncHarness
 	SyncLAPSPasswordHarness                         SyncLAPSPasswordHarness
+	HybridAttackPaths                               HybridAttackPaths
 }

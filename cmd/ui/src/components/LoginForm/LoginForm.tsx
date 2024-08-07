@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Grid, TextField } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Grid, TextField } from '@mui/material';
 import React, { useState } from 'react';
 
 interface LoginFormProps {
@@ -63,27 +64,18 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onLoginViaSAML, loading
                     />
                 </Grid>
                 <Grid item xs={8}>
-                    <Button
-                        variant='contained'
-                        color='primary'
-                        size='large'
-                        type='submit'
-                        fullWidth
-                        disableElevation
-                        disabled={loading}>
+                    <Button size='large' type='submit' className='w-full' disabled={loading}>
                         {loading ? 'LOGGING IN' : 'LOGIN'}
                     </Button>
                 </Grid>
                 {onLoginViaSAML !== undefined && (
                     <Grid item xs={8}>
                         <Button
-                            variant='contained'
-                            color='neutral'
                             size='large'
                             type='button'
-                            fullWidth
-                            disableElevation
+                            variant={'secondary'}
                             onClick={onLoginViaSAML}
+                            className='w-full'
                             disabled={loading}>
                             LOGIN VIA SSO
                         </Button>

@@ -21,6 +21,6 @@ properties:
     minimum: 0
     description: The total number of results.
   skip:
-    $ref: './../parameters/query.skip.yaml'
+    $ref: './api.params.query.skip.yaml'
   limit:
-    $ref: './../parameters/query.limit.yaml'
+    $ref: './api.params.query.limit.yaml'

@@ -37,35 +37,24 @@ const SearchCurrentNodes: FC<{
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const [flatNodeList, setFlatNodeList] = useState<FlatNode[]>([]);
     const [items, setItems] = useState<FlatNode[]>([]);
     const [selectedNode, setSelectedNode] = useState<FlatNode | null | undefined>(null);
-    const [virtualizationHeight, setVirtualizationHeight] = useState<number>(0);
 
     // Node data is a lot easier to work with in the combobox if we transform to an array of flat objects
-    useEffect(() => {
-        const flatNodeList: FlatNode[] = Object.entries(currentNodes).map(([key, value]) => {
-            return { id: key, ...value };
-        });
-        setFlatNodeList(flatNodeList);
-    }, [currentNodes]);
+    const flatNodeList: FlatNode[] = Object.entries(currentNodes).map(([key, value]) => {
+        return { id: key, ...value };
+    });
 
     useEffect(() => inputRef.current?.focus(), []);
 
-    useEffect(() => {
-        if (selectedNode) onSelect(selectedNode);
-    }, [selectedNode, onSelect]);
+    if (selectedNode) onSelect(selectedNode);
 
     // Since we are using a virtualized results container, we need to calculate the height for shorter
     // lists to avoid whitespace
-    useEffect(() => {
-        const resultsHeight = LIST_ITEM_HEIGHT * items.length;
-        if (resultsHeight > MAX_CONTAINER_HEIGHT) {
-            setVirtualizationHeight(MAX_CONTAINER_HEIGHT - 10);
-        } else {
-            setVirtualizationHeight(resultsHeight);
-        }
-    }, [items]);
+    let virtualizationHeight = LIST_ITEM_HEIGHT * items.length;
+    if (virtualizationHeight > MAX_CONTAINER_HEIGHT) {
+        virtualizationHeight = MAX_CONTAINER_HEIGHT - 10;
+    }
 
     useOnClickOutside(containerRef, () => onClose && onClose());
 
@@ -101,7 +90,6 @@ const SearchCurrentNodes: FC<{
                     item={items[index]}
                     index={index}
                     key={index}
-                    highlightedIndex={0}
                     keyword={inputValue}
                     getItemProps={getItemProps}
                 />

@@ -17,9 +17,10 @@
 package frontend
 
 import (
+	"strings"
+
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/parser"
-	"strings"
 )
 
 type IDInCollectionVisitor struct {

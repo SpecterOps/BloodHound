@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Box,
-    Button,
     Checkbox,
     Collapse,
     Dialog,
@@ -75,7 +75,9 @@ const EdgeFilteringDialog = ({ isOpen, handleCancel, handleApply }: EdgeFilterin
             </DialogContent>
 
             <DialogActions>
-                <Button onClick={onCancel}>Cancel</Button>
+                <Button variant='tertiary' onClick={onCancel}>
+                    Cancel
+                </Button>
                 <Button onClick={onApply}>Apply</Button>
             </DialogActions>
         </Dialog>
@@ -192,7 +194,7 @@ const EdgesView = ({ edgeTypes, checked, setChecked }: EdgesViewProps) => {
     };
 
     return (
-        <Box bgcolor={theme.palette.grey[200]} p={1} borderRadius={1}>
+        <Box bgcolor={theme.palette.neutral.tertiary} p={1} borderRadius={1}>
             <Grid container spacing={2}>
                 {edgeTypes.map((edgeType, index) => {
                     return (

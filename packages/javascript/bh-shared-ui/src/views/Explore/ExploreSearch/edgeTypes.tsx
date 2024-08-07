@@ -109,6 +109,10 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.ADCSESC13,
                 ],
             },
+            {
+                name: 'Cross Platform',
+                edgeTypes: [ActiveDirectoryRelationshipKind.SyncedToEntraUser],
+            },
         ],
     },
     {
@@ -181,6 +185,10 @@ export const AllEdgeTypes: Category[] = [
                     AzureRelationshipKind.LogicAppContributor,
                     AzureRelationshipKind.WebsiteContributor,
                 ],
+            },
+            {
+                name: 'Cross Platform',
+                edgeTypes: [AzureRelationshipKind.SyncedToADUser],
             },
         ],
     },

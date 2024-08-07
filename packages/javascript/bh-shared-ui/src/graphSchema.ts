@@ -140,6 +140,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC10a = 'ADCSESC10a',
     ADCSESC10b = 'ADCSESC10b',
     ADCSESC13 = 'ADCSESC13',
+    SyncedToEntraUser = 'SyncedToEntraUser',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -281,6 +282,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC10b';
         case ActiveDirectoryRelationshipKind.ADCSESC13:
             return 'ADCSESC13';
+        case ActiveDirectoryRelationshipKind.SyncedToEntraUser:
+            return 'SyncedToEntraUser';
         default:
             return undefined;
     }
@@ -442,7 +445,7 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.HighValue:
             return 'High Value';
         case ActiveDirectoryKindProperties.BlocksInheritance:
-            return 'Blocks Inheritance';
+            return 'Blocks GPO Inheritance';
         case ActiveDirectoryKindProperties.IsACL:
             return 'Is ACL';
         case ActiveDirectoryKindProperties.IsACLProtected:
@@ -630,6 +633,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.ADCSESC13,
         ActiveDirectoryRelationshipKind.DCFor,
+        ActiveDirectoryRelationshipKind.SyncedToEntraUser,
     ];
 }
 export enum AzureNodeKind {
@@ -747,6 +751,7 @@ export enum AzureRelationshipKind {
     AZMGAddSecret = 'AZMGAddSecret',
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
+    SyncedToADUser = 'SyncedToADUser',
 }
 export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): string | undefined {
     switch (value) {
@@ -842,6 +847,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantAppRoles';
         case AzureRelationshipKind.AZMGGrantRole:
             return 'AZMGGrantRole';
+        case AzureRelationshipKind.SyncedToADUser:
+            return 'SyncedToADUser';
         default:
             return undefined;
     }
@@ -988,6 +995,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGAddSecret,
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
+        AzureRelationshipKind.SyncedToADUser,
     ];
 }
 export enum CommonNodeKind {

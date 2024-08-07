@@ -19,10 +19,10 @@ package neo4j
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/log"
 	"strings"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/log"
 )
 
 const (

@@ -43,6 +43,11 @@ const (
 	ErrNotFound = errors.Error("entity not found")
 )
 
+var (
+	ErrDuplicateAGName = errors.New("duplicate asset group name")
+	ErrDuplicateAGTag  = errors.New("duplicate asset group tag")
+)
+
 func IsUnexpectedDatabaseError(err error) bool {
 	return err != nil && err != ErrNotFound
 }
@@ -76,6 +81,7 @@ type Database interface {
 	GetAssetGroupSelector(ctx context.Context, id int32) (model.AssetGroupSelector, error)
 	DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
 	UpdateAssetGroupSelectors(ctx context.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
+	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
 
 	Wipe(ctx context.Context) error
 	Migrate(ctx context.Context) error
@@ -148,11 +154,10 @@ type Database interface {
 	fileupload.FileUploadData
 
 	// Saved Queries
-	ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
-	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string) (model.SavedQuery, error)
-	DeleteSavedQuery(ctx context.Context, id int) error
-	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
-	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
+	SavedQueriesData
+
+	// Saved Queries Permissions
+	SavedQueriesPermissionsData
 
 	// Analysis Request
 	AnalysisRequestData

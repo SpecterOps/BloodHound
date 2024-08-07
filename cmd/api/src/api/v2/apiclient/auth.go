@@ -480,7 +480,7 @@ func (s Client) CreateUserToken(userID uuid.UUID, tokenName string) (model.AuthT
 	}
 }
 
-func (s Client) DeleteUserToken(userID, tokenID uuid.UUID) error {
+func (s Client) DeleteUserToken(tokenID uuid.UUID) error {
 	if response, err := s.Request(http.MethodDelete, fmt.Sprintf("api/v2/tokens/%s", tokenID.String()), nil, nil); err != nil {
 		return err
 	} else {

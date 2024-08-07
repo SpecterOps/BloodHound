@@ -33,6 +33,7 @@ export default {
         del({ targets: 'dist/*' }),
     ],
     external: [
+        '@bloodhoundenterprise/doodleui',
         '@emotion/react',
         '@emotion/styled',
         '@fortawesome/free-solid-svg-icons',

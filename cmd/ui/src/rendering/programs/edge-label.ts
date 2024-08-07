@@ -24,11 +24,7 @@
 import { Settings } from 'sigma/settings';
 import { Coordinates, NodeDisplayData, PartialButFor } from 'sigma/types';
 import { bezier } from 'src/rendering/utils/bezier';
-import {
-    HIGHLIGHTED_LABEL_BACKGROUND_COLOR,
-    HIGHLIGHTED_LABEL_FONT_COLOR,
-    calculateLabelOpacity,
-} from 'src/rendering/utils/utils';
+import { calculateLabelOpacity } from 'src/rendering/utils/utils';
 import { getEdgeLabelTextLength, calculateEdgeDistanceForLabel, EdgeDistanceProperties } from 'src/ducks/graph/utils';
 import { Attributes } from 'graphology-types';
 import { getControlPointsFromGroupSize } from './edge.self';
@@ -48,10 +44,10 @@ const drawBackground = (
 ) => {
     const inverseSqrtZoomRatio = edgeData.inverseSqrtZoomRatio || 1;
     if (edgeData.selected) {
-        context.fillStyle = HIGHLIGHTED_LABEL_BACKGROUND_COLOR;
+        context.fillStyle = edgeData.highlightedBackground;
         context.globalAlpha = fadeAlphaFromZoom;
     } else {
-        context.fillStyle = '#FFF';
+        context.fillStyle = edgeData.backgroundColor;
         context.globalAlpha = fadeAlphaFromZoom * 0.8;
     }
 
@@ -91,7 +87,7 @@ const drawText = (
 
     // Text should always be completely opaque, before factoring in fade from zoom level
     context.globalAlpha = fadeAlphaFromZoom;
-    context.fillStyle = edgeData.selected ? HIGHLIGHTED_LABEL_FONT_COLOR : edgeData.color || '#000';
+    context.fillStyle = edgeData.selected ? edgeData.highlightedText : edgeData.labelColor;
 
     context.fillText(label, -textLength / 2, (edgeData.size / 2) * (edgeData.inverseSqrtZoomRatio || 1));
 };

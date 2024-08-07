@@ -25,13 +25,16 @@ import { AzureNodeKind } from '../../graphSchema';
 import { useAzureDataQualityStatsQuery, useAzurePlatformsDataQualityStatsQuery } from '../../hooks';
 import LoadContainer from './LoadContainer';
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
     print: {
         '@media print': {
             display: 'none',
         },
     },
-});
+    container: {
+        backgroundColor: theme.palette.neutral.secondary,
+    },
+}));
 
 export const TenantMap = {
     users: { displayText: 'Users', kind: AzureNodeKind.User },
@@ -128,7 +131,7 @@ const Layout: React.FC<{
     const classes = useStyles();
     return (
         <Box position='relative'>
-            <TableContainer component={Paper}>
+            <TableContainer className={classes.container}>
                 <Table>
                     {headers && (
                         <TableHead className={classes.print}>
@@ -158,7 +161,7 @@ const Layout: React.FC<{
                     </TableBody>
                 </Table>
             </TableContainer>
-            <TableContainer style={{ marginTop: '16px' }} component={Paper}>
+            <TableContainer style={{ marginTop: '16px' }} component={Paper} className={classes.container}>
                 <Table>
                     <TableBody>
                         <LoadContainer

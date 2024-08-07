@@ -33,7 +33,7 @@ import drawLabel from 'src/rendering/programs/node-label';
 import getNodeCombinedProgram from 'src/rendering/programs/node.combined';
 import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
 import GraphEdgeEvents from './GraphEdgeEvents';
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { GraphNodes } from 'js-client-library';
 import { GraphButtonProps, SearchCurrentNodes } from 'bh-shared-ui';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
@@ -69,6 +69,7 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
     edgeReducer,
     handleContextMenu,
 }) => {
+    const theme = useTheme();
     return (
         <div
             // prevent browser's default right-click behavior
@@ -81,7 +82,7 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
                     left: 0,
                     height: '100%',
                     width: '100%',
-                    background: 'linear-gradient(rgb(228, 233, 235) 0%, rgb(228, 233, 235) 100%)',
+                    background: theme.palette.neutral.primary,
                 }}
                 graph={graph || MultiDirectedGraph}
                 settings={{

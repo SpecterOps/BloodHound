@@ -19,6 +19,7 @@ package query
 import (
 	"errors"
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
