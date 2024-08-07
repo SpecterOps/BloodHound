@@ -790,6 +790,7 @@ func TestResources_ShareSavedQueries_PublicSuccess(t *testing.T) {
 		},
 		Public: true,
 	}, nil)
+	mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), gomock.Any()).Return(nil)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 	require.Nil(t, err)

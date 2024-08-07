@@ -4405,7 +4405,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/model.saved-queries-permissions-request"
+                "properties": {
+                  "user_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "public": {
+                    "type": "boolean"
+                  }
+                }
               }
             }
           }
@@ -4421,7 +4432,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/model.saved-queries-permissions-response"
+                        "$ref": "#/components/schemas/model.saved-queries-permissions"
                       }
                     }
                   }
@@ -14683,36 +14694,7 @@
           }
         ]
       },
-      "model.saved-queries-permissions-request": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.components.int64.id"
-          },
-          {
-            "$ref": "#/components/schemas/model.components.timestamps"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "query_id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "user_ids": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "public": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
-      },
-      "model.saved-queries-permissions-response": {
+      "model.saved-queries-permissions": {
         "allOf": [
           {
             "$ref": "#/components/schemas/model.components.int64.id"

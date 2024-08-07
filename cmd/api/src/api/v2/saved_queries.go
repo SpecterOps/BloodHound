@@ -187,9 +187,11 @@ func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http
 		if createRequest.Public {
 			if len(createRequest.UserIDs) > 0 {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "SavedQueryScopePublic cannot be true while user_ids is populated", request), response)
-			} else if scopeForSavedQuery[database.SavedQueryScopePublic] == true {
+			} else if scopeForSavedQuery[database.SavedQueryScopePublic] {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "User cannot make a query public that's already public", request), response)
 			} else if savedPermission, err := s.DB.CreateSavedQueryPermissionToPublic(request.Context(), int64(savedQueryID)); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else if err := s.DB.DeleteSavedQueryPermissionsForUsers(request.Context(), int64(savedQueryID)); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else {
 				api.WriteBasicResponse(request.Context(), ShareSavedQueriesResponse{savedPermission}, http.StatusCreated, response)

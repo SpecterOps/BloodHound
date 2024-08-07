@@ -37,7 +37,15 @@ put:
     content:
       application/json:
         schema:
-          $ref: './../schemas/model.saved-queries-permissions-request.yaml'
+          properties: 
+            user_ids:
+              type: array
+              items: 
+                type: string
+                format: uuid
+            public:
+              type: boolean
+
   responses:
     201:
       description: Created
@@ -49,7 +57,7 @@ put:
               data:
                 type: array
                 items:
-                  $ref: './../schemas/model.saved-queries-permissions-response.yaml'
+                  $ref: './../schemas/model.saved-queries-permissions.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
