@@ -54,7 +54,7 @@ func TestHybridAttackPaths(t *testing.T) {
 			}
 			operation.Done()
 
-			verifyHybridPaths(t, db, harness, true)
+			verifyHybridPaths(t, db, harness, true, true)
 		},
 	)
 
@@ -75,7 +75,7 @@ func TestHybridAttackPaths(t *testing.T) {
 			}
 			operation.Done()
 
-			verifyHybridPaths(t, db, harness, false)
+			verifyHybridPaths(t, db, harness, false, true)
 		},
 	)
 
@@ -96,7 +96,7 @@ func TestHybridAttackPaths(t *testing.T) {
 			}
 			operation.Done()
 
-			verifyHybridPaths(t, db, harness, false)
+			verifyHybridPaths(t, db, harness, false, true)
 		},
 	)
 
@@ -117,7 +117,7 @@ func TestHybridAttackPaths(t *testing.T) {
 			}
 			operation.Done()
 
-			verifyHybridPaths(t, db, harness, true)
+			verifyHybridPaths(t, db, harness, true, true)
 		},
 	)
 
@@ -139,7 +139,7 @@ func TestHybridAttackPaths(t *testing.T) {
 			}
 			operation.Done()
 
-			verifyHybridPaths(t, db, harness, true)
+			verifyHybridPaths(t, db, harness, true, false)
 		},
 	)
 
@@ -160,12 +160,12 @@ func TestHybridAttackPaths(t *testing.T) {
 			}
 			operation.Done()
 
-			verifyHybridPaths(t, db, harness, true)
+			verifyHybridPaths(t, db, harness, true, true)
 		},
 	)
 }
 
-func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.HarnessDetails, shouldHaveEdges bool) {
+func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.HarnessDetails, shouldHaveEdges bool, shouldHaveUserNode bool) {
 	expectedEdgeCount := 1
 	if !shouldHaveEdges {
 		expectedEdgeCount = 0
@@ -200,8 +200,12 @@ func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.Harn
 			assert.Nil(t, err)
 
 			// Ensure we got the correct node types
+			if shouldHaveUserNode {
+				assert.True(t, end.Kinds.ContainsOneOf(ad.User))
+			} else {
+				assert.True(t, end.Kinds.ContainsOneOf(ad.Entity))
+			}
 			assert.True(t, start.Kinds.ContainsOneOf(azure.User))
-			assert.True(t, end.Kinds.ContainsOneOf(ad.User, ad.Entity))
 
 			// Verify the AZUser is the first node
 			assert.Equal(t, harness.HybridAttackPaths.AZUserObjectID, startObjectID)
@@ -248,7 +252,11 @@ func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.Harn
 			assert.Nil(t, err)
 
 			// Ensure we got the correct node types
-			assert.True(t, start.Kinds.ContainsOneOf(ad.User, ad.Entity))
+			if shouldHaveUserNode {
+				assert.True(t, start.Kinds.ContainsOneOf(ad.User))
+			} else {
+				assert.True(t, start.Kinds.ContainsOneOf(ad.Entity))
+			}
 			assert.True(t, end.Kinds.ContainsOneOf(azure.User))
 
 			// Verify the ADUser, but we have to handle the case where the ADUser node is created by the post-processing logic
