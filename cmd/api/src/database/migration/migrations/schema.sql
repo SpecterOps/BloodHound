@@ -588,8 +588,11 @@ ALTER TABLE ONLY users_roles
 ALTER TABLE ONLY users
     ADD CONSTRAINT fk_users_saml_provider FOREIGN KEY (saml_provider_id) REFERENCES saml_providers(id);
 
--- Populate permissions table
+-- Populate asset group table
+INSERT INTO asset_groups (name, tag, system_group, created_at, updated_at) VALUES ('Owned', 'owned', true, current_timestamp, current_timestamp);
+INSERT INTO asset_groups (name, tag, system_group, created_at, updated_at) VALUES ('Admin Tier Zero', 'admin_tier_0', true, current_timestamp, current_timestamp);
 
+-- Populate permissions table
 INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('app', 'ReadAppConfig', 1, current_timestamp, current_timestamp);
 INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('app', 'WriteAppConfig', 2, current_timestamp, current_timestamp);
 INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('risks', 'GenerateReport', 3, current_timestamp, current_timestamp);
@@ -611,7 +614,6 @@ INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('s
 INSERT INTO permissions (authority, name, id, created_at, updated_at) VALUES ('db', 'Wipe', 19, current_timestamp, current_timestamp);
 
 -- Populate roles table
-
 INSERT INTO roles (name, description, id, created_at, updated_at) VALUES ('Administrator', 'Can manage users, clients, and application configuration', 1,current_timestamp, current_timestamp);
 INSERT INTO roles (name, description, id, created_at, updated_at) VALUES ('Power User', 'Can upload data, manage clients, and perform any action a User can', 2, current_timestamp, current_timestamp);
 INSERT INTO roles (name, description, id, created_at, updated_at) VALUES ('User', 'Can read data, modify asset group memberships', 3, current_timestamp, current_timestamp);
@@ -619,7 +621,6 @@ INSERT INTO roles (name, description, id, created_at, updated_at) VALUES ('Read-
 INSERT INTO roles (name, description, id, created_at, updated_at) VALUES ('Upload-Only', 'Used for data collection clients, can post data but cannot read data', 5, current_timestamp, current_timestamp);
 
 -- Populate roles_permissions table
-
 INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'app'  and permissions.name = 'ReadAppConfig'));
 INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'app'  and permissions.name = 'WriteAppConfig'));
 INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'risks'  and permissions.name = 'GenerateReport'));
