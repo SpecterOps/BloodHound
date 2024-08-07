@@ -88,4 +88,5 @@ const (
 	ContributorRole                             = "b24988ac-6180-42a0-ab88-20f7382dd24c"
 	AKSContributorRole                          = "ed7f3fbd-7b88-4dd4-9017-9adb7ce333f8"
 	UsageSummaryReportsReaderRole               = "75934031-6c7e-415a-99d7-48dbd49e875e"
+	HybridIdentityAdministratorRole             = "8ac3fc64-6eca-42ea-9e69-59f4c7b60eb2"
 )
