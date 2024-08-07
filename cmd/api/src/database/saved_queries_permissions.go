@@ -37,16 +37,16 @@ type SavedQueriesPermissionsData interface {
 	DeleteSavedQueryPermissionsForUsers(ctx context.Context, queryID int64) error
 }
 
-type savedQueryScope string
+type SavedQueryScope string
 
 const (
-	SavedQueryScopeOwned  savedQueryScope = "Owned"
-	SavedQueryScopeShared savedQueryScope = "Shared"
-	SavedQueryScopePublic savedQueryScope = "Public"
+	SavedQueryScopeOwned  SavedQueryScope = "Owned"
+	SavedQueryScopeShared SavedQueryScope = "Shared"
+	SavedQueryScopePublic SavedQueryScope = "Public"
 )
 
 // SavedQueryScopeMap holds the information of a saved query's scope [IE: owned, shared, public]
-type SavedQueryScopeMap map[savedQueryScope]bool
+type SavedQueryScopeMap map[SavedQueryScope]bool
 
 // CreateSavedQueryPermissionToUser creates a new entry to the SavedQueriesPermissions table granting a provided user id to access a provided query
 func (s *BloodhoundDB) CreateSavedQueryPermissionToUser(ctx context.Context, queryID int64, userID uuid.UUID) (model.SavedQueriesPermissions, error) {
