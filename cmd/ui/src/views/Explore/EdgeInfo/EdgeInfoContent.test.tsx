@@ -19,6 +19,7 @@ import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from 'src/test-utils';
+import userEvent from '@testing-library/user-event';
 
 const server = setupServer(
     rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
@@ -42,6 +43,29 @@ const server = setupServer(
                 },
             })
         );
+    }),
+    rest.get(`/api/v2/users/:id`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    props: {
+                        objectid: '2',
+                    },
+                },
+            })
+        );
+    }),
+    rest.get(`/api/v2/computers/:id`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    props: {
+                        haslaps: true,
+                        objectid: 'testing-node-123',
+                    },
+                },
+            })
+        );
     })
 );
 
@@ -56,6 +80,19 @@ const selectedEdge: SelectedEdge = {
         type: 'User',
     },
     targetNode: { name: 'target node', id: '2', objectId: '2', type: 'User' },
+};
+
+const selectedEdgeHasLapsTest: SelectedEdge = {
+    id: '2',
+    name: 'GenericAll',
+    data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
+    sourceNode: {
+        name: 'source node',
+        id: '1',
+        objectId: '1',
+        type: 'User',
+    },
+    targetNode: { name: 'target node', id: '3', objectId: 'testing-node-123', type: 'Computer' },
 };
 
 beforeAll(() => server.listen());
@@ -86,5 +123,15 @@ describe('EdgeInfoContent', () => {
         expect(
             screen.queryByText('An unexpected error has occurred. Please refresh the page and try again.')
         ).not.toBeInTheDocument();
+    });
+    test('Selecting an edge with a Computer target node that haslaps is enabled shows correct Windows Abuse text', async () => {
+        render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsTest} />);
+
+        const user = userEvent.setup();
+        const windowAbuseAccordion = screen.getByTestId('windowsabuse-accordion');
+        await user.click(windowAbuseAccordion);
+        const windowsAbuseText = await screen.getByTestId('windowsabuse-computer-has-laps-text');
+
+        expect(windowsAbuseText).toBeInTheDocument();
     });
 });

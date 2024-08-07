@@ -212,7 +212,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
             if (haslaps) {
                 return (
                     <>
-                        <Typography variant='body2'>
+                        <Typography data-testid='windowsabuse-computer-has-laps-text' variant='body2'>
                             The GenericAll permission grants {sourceName} the ability to obtain the LAPS (RID 500
                             administrator) password of {targetName}. {sourceName} can do so by listing a computer
                             object's AD properties with PowerView using Get-DomainComputer {targetName}. The value of
