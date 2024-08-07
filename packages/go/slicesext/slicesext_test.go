@@ -57,6 +57,24 @@ func TestUnique(t *testing.T) {
 	require.Equal(t, []int{1, 2, 3}, slicesext.Unique([]int{1, 1, 2, 2, 3}))
 }
 
+func BenchmarkSliceExtMap(b *testing.B) {
+	const sliceSize = 1024 * 1024
+
+	var (
+		anySlice = make([]any, sliceSize)
+	)
+
+	for idx := 0; idx < sliceSize; idx++ {
+		anySlice[idx] = idx
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		slicesext.MapWithErr(anySlice, slicesext.ConvertType[any, int]())
+	}
+}
+
 func BenchmarkHead(b *testing.B) {
 	for i := 10; i < 1000000; i = i * 10 {
 		list := make([]int, i)

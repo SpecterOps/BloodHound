@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	cypherModel "github.com/specterops/bloodhound/cypher/model"
+	cypherModel "github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -152,14 +152,8 @@ func Kind(reference graph.Criteria, kinds ...graph.Kind) *cypherModel.KindMatche
 	}
 }
 
-func KindIn(reference graph.Criteria, kinds ...graph.Kind) *cypherModel.Parenthetical {
-	expressions := make([]graph.Criteria, len(kinds))
-
-	for idx, kind := range kinds {
-		expressions[idx] = Kind(reference, kind)
-	}
-
-	return Or(expressions...)
+func KindIn(reference graph.Criteria, kinds ...graph.Kind) *cypherModel.KindMatcher {
+	return cypherModel.NewKindMatcher(reference, kinds)
 }
 
 func NodeProperty(name string) *cypherModel.PropertyLookup {
@@ -534,7 +528,9 @@ func Size(expression graph.Criteria) *cypherModel.FunctionInvocation {
 
 func Not(expression graph.Criteria) *cypherModel.Negation {
 	return &cypherModel.Negation{
-		Expression: expression,
+		Expression: &cypherModel.Parenthetical{
+			Expression: expression,
+		},
 	}
 }
 

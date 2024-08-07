@@ -17,7 +17,7 @@
 package frontend
 
 import (
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/parser"
 )
 
@@ -34,12 +34,12 @@ func (s *NamespaceVisitor) EnterOC_SymbolicName(ctx *parser.OC_SymbolicNameConte
 type FunctionInvocationVisitor struct {
 	BaseVisitor
 
-	FunctionInvocation *model.FunctionInvocation
+	FunctionInvocation *cypher.FunctionInvocation
 }
 
 func NewFunctionInvocationVisitor(ctx *parser.OC_FunctionInvocationContext) *FunctionInvocationVisitor {
 	return &FunctionInvocationVisitor{
-		FunctionInvocation: &model.FunctionInvocation{
+		FunctionInvocation: &cypher.FunctionInvocation{
 			Distinct: HasTokens(ctx, parser.CypherLexerDISTINCT),
 		},
 	}

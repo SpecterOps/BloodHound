@@ -33,9 +33,7 @@ import (
 
 	"github.com/specterops/bloodhound/dawgs/util"
 
-	"github.com/specterops/bloodhound/cypher/backend/cypher"
-	"github.com/specterops/bloodhound/cypher/backend/pgsql"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg"
+	"github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/services/agi"
 
@@ -156,9 +154,9 @@ type GraphQuery struct {
 	Cache                        cache.Cache
 	SlowQueryThreshold           int64 // Threshold in milliseconds
 	DisableCypherComplexityLimit bool
-	EnableCypherMutations        bool
-	cypherEmitter                cypher.Emitter
-	strippedCypherEmitter        cypher.Emitter
+	EnableCypherMutations bool
+	cypherEmitter         format.Emitter
+	strippedCypherEmitter format.Emitter
 }
 
 func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configuration) *GraphQuery {
@@ -168,8 +166,8 @@ func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configu
 		SlowQueryThreshold:           cfg.SlowQueryThreshold,
 		DisableCypherComplexityLimit: cfg.DisableCypherComplexityLimit,
 		EnableCypherMutations:        cfg.EnableCypherMutations,
-		cypherEmitter:                cypher.NewCypherEmitter(false),
-		strippedCypherEmitter:        cypher.NewCypherEmitter(true),
+		cypherEmitter:                format.NewCypherEmitter(false),
+		strippedCypherEmitter:        format.NewCypherEmitter(true),
 	}
 }
 
@@ -365,7 +363,6 @@ func (s *GraphQuery) SearchNodesByName(ctx context.Context, nodeKinds graph.Kind
 		if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(SearchNodeByKindAndEqualsNameCriteria(kind, formattedName))); err != nil {
 				return err
-
 			} else {
 				exactResults = append(exactResults, nodesToSearchResult(exactMatchNodes...)...)
 			}
@@ -432,27 +429,13 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		return graphQuery, ErrCypherQueryTooComplex
 	}
 
-	if pgDB, isPG := s.Graph.(*pg.Driver); isPG {
-		if _, err = pgsql.Translate(queryModel, pgDB.KindMapper()); err != nil {
-			return graphQuery, err
-		}
+	graphQuery.StrippedQuery = strippedQueryBuffer.String()
+	graphQuery.complexity = complexityMeasure
 
-		if err = pgsql.NewEmitter(false, pgDB.KindMapper()).Write(queryModel, queryBuffer); err != nil {
-			return graphQuery, err
-		} else {
-			graphQuery.query = queryBuffer.String()
-		}
-
-		return graphQuery, nil
+	if err = s.cypherEmitter.Write(queryModel, queryBuffer); err != nil {
+		return graphQuery, err
 	} else {
-		graphQuery.StrippedQuery = strippedQueryBuffer.String()
-		graphQuery.complexity = complexityMeasure
-
-		if err = s.cypherEmitter.Write(queryModel, queryBuffer); err != nil {
-			return graphQuery, err
-		} else {
-			graphQuery.query = queryBuffer.String()
-		}
+		graphQuery.query = queryBuffer.String()
 	}
 
 	return graphQuery, nil

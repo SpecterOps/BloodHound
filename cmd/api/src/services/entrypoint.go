@@ -106,7 +106,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		// Trigger analysis on first start
 		if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
-			return nil, fmt.Errorf("failed to request analysis: %w", err)
+			log.Warnf("failed to request init analysis: %v", err)
 		}
 
 		return []daemons.Daemon{

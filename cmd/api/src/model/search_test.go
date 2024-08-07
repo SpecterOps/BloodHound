@@ -21,7 +21,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/models/cypher"
+
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
@@ -74,10 +75,10 @@ func TestDomainSelectors_GetOrderCriteria_Success(t *testing.T) {
 	orderCriteria, err := domains.GetOrderCriteria(params)
 	require.Nil(t, err)
 	require.Equal(t, orderCriteria[0].Property, "objectid")
-	require.True(t, orderCriteria[0].Order.(model.SortOrder) == query.Ascending())
+	require.True(t, orderCriteria[0].Order.(cypher.SortOrder) == query.Ascending())
 
 	require.Equal(t, orderCriteria[1].Property, "name")
-	require.True(t, orderCriteria[0].Order.(model.SortOrder) == query.Ascending())
+	require.True(t, orderCriteria[0].Order.(cypher.SortOrder) == query.Ascending())
 }
 
 func TestDomainSelectors_GetFilterCriteria_InvalidFilterColumn(t *testing.T) {
