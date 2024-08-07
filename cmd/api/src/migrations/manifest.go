@@ -18,6 +18,7 @@ package migrations
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/specterops/bloodhound/analysis"
 	"strings"
@@ -35,7 +36,7 @@ import (
 
 func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	if currentMigration, err := GetMigrationData(ctx, db); err != nil {
-		if graph.IsErrNotFound(err) {
+		if errors.Is(err, graph.ErrNoResultsFound) || errors.Is(err, ErrNoMigrationData) {
 			return true, nil
 		} else {
 			return false, fmt.Errorf("unable to get graph db migration data: %w", err)

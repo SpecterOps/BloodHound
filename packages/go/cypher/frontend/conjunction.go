@@ -17,14 +17,14 @@
 package frontend
 
 import (
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/parser"
 )
 
 type ParenthesizedExpressionVisitor struct {
 	BaseVisitor
 
-	Parenthetical *model.Parenthetical
+	Parenthetical *cypher.Parenthetical
 }
 
 func NewParenthesizedExpressionVisitor() *ParenthesizedExpressionVisitor {
@@ -36,7 +36,7 @@ func (s *ParenthesizedExpressionVisitor) EnterOC_Expression(ctx *parser.OC_Expre
 }
 
 func (s *ParenthesizedExpressionVisitor) ExitOC_Expression(ctx *parser.OC_ExpressionContext) {
-	s.Parenthetical = &model.Parenthetical{
+	s.Parenthetical = &cypher.Parenthetical{
 		Expression: s.ctx.Exit().(*ExpressionVisitor).Expression,
 	}
 }
@@ -44,7 +44,7 @@ func (s *ParenthesizedExpressionVisitor) ExitOC_Expression(ctx *parser.OC_Expres
 type NegationVisitor struct {
 	BaseVisitor
 
-	Negation *model.Negation
+	Negation *cypher.Negation
 }
 
 func (s *NegationVisitor) EnterOC_ComparisonExpression(ctx *parser.OC_ComparisonExpressionContext) {
@@ -72,13 +72,13 @@ func (s *NegationVisitor) ExitOC_StringListNullPredicateExpression(ctx *parser.O
 type JoiningVisitor struct {
 	BaseVisitor
 
-	Joined model.ExpressionList
+	Joined cypher.ExpressionList
 }
 
 func (s *JoiningVisitor) EnterOC_NotExpression(ctx *parser.OC_NotExpressionContext) {
 	if len(ctx.AllNOT()) > 0 {
 		s.ctx.Enter(&NegationVisitor{
-			Negation: &model.Negation{},
+			Negation: &cypher.Negation{},
 		})
 	}
 }
@@ -93,7 +93,7 @@ func (s *JoiningVisitor) ExitOC_NotExpression(ctx *parser.OC_NotExpressionContex
 func (s *JoiningVisitor) EnterOC_OrExpression(ctx *parser.OC_OrExpressionContext) {
 	if len(ctx.AllOR()) > 0 {
 		s.ctx.Enter(&JoiningVisitor{
-			Joined: &model.Disjunction{},
+			Joined: &cypher.Disjunction{},
 		})
 	}
 }
@@ -108,7 +108,7 @@ func (s *JoiningVisitor) ExitOC_OrExpression(ctx *parser.OC_OrExpressionContext)
 func (s *JoiningVisitor) EnterOC_XorExpression(ctx *parser.OC_XorExpressionContext) {
 	if len(ctx.AllXOR()) > 0 {
 		s.ctx.Enter(&JoiningVisitor{
-			Joined: &model.ExclusiveDisjunction{},
+			Joined: &cypher.ExclusiveDisjunction{},
 		})
 	}
 }
@@ -123,7 +123,7 @@ func (s *JoiningVisitor) ExitOC_XorExpression(ctx *parser.OC_XorExpressionContex
 func (s *JoiningVisitor) EnterOC_AndExpression(ctx *parser.OC_AndExpressionContext) {
 	if len(ctx.AllAND()) > 0 {
 		s.ctx.Enter(&JoiningVisitor{
-			Joined: &model.Conjunction{},
+			Joined: &cypher.Conjunction{},
 		})
 	}
 }
