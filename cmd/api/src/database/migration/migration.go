@@ -62,10 +62,6 @@ func (s *Migrator) Migrate() error {
 		return fmt.Errorf("failed to execute stepwise migrations: %w", err)
 	}
 
-	if err := s.cleanupIngest(); err != nil {
-		return err
-	}
-
 	if err := s.updatePermissions(); err != nil {
 		return err
 	}
@@ -79,10 +75,6 @@ func (s *Migrator) Migrate() error {
 	}
 
 	if err := s.setAppConfigDefaults(); err != nil {
-		return err
-	}
-
-	if err := s.checkUserEmailAddresses(); err != nil {
 		return err
 	}
 

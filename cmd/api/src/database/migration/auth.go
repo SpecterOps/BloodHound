@@ -17,8 +17,6 @@
 package migration
 
 import (
-	"strings"
-
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/model"
@@ -56,38 +54,6 @@ func (s *Migrator) updatePermissions() error {
 					}
 
 					log.Infof("Permission %s created during migration", expectedPermission)
-				}
-			}
-		}
-
-		return nil
-	})
-}
-
-func (s *Migrator) checkUserEmailAddresses() error {
-	return s.DB.Transaction(func(tx *gorm.DB) error {
-		var users model.Users
-
-		for _, userAssociation := range model.UserAssociations() {
-			tx.Preload(userAssociation)
-		}
-
-		if result := tx.Find(&users); result.Error != nil {
-			return result.Error
-		} else {
-			seenAddresses := make(map[string]struct{})
-
-			for _, user := range users {
-				if !user.EmailAddress.Valid || len(user.EmailAddress.String) == 0 {
-					log.Errorf("UPNTE Error: user %s is missing a valid email address.", user.ID)
-				} else {
-					emailAddress := strings.ToLower(user.EmailAddress.String)
-
-					if _, alreadySawAddress := seenAddresses[emailAddress]; alreadySawAddress {
-						log.Errorf("UPNTE Error: user %s contains a non-unique email address.", user.ID)
-					}
-
-					seenAddresses[emailAddress] = struct{}{}
 				}
 			}
 		}
