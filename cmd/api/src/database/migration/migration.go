@@ -62,9 +62,5 @@ func (s *Migrator) Migrate() error {
 		return fmt.Errorf("failed to execute stepwise migrations: %w", err)
 	}
 
-	if err := s.setAppConfigDefaults(); err != nil {
-		return err
-	}
-
 	return nil
 }
