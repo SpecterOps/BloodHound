@@ -31,6 +31,8 @@ type SavedQueriesPermissionsData interface {
 	CheckUserHasPermissionToSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error)
 	GetPermissionsForSavedQuery(ctx context.Context, queryID int64) ([]model.SavedQueriesPermissions, error)
 	GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (SavedQueryScopeMap, error)
+	DeleteSavedQueryPermission(ctx context.Context, permissionID int64) error
+	DeleteSavedQueryPermissionsForUser(ctx context.Context, queryID int64, userID uuid.UUID) error
 }
 
 type savedQueryScope string
@@ -121,4 +123,14 @@ func (s *BloodhoundDB) GetScopeForSavedQuery(ctx context.Context, queryID int64,
 	}
 
 	return scopes, nil
+}
+
+// DeleteSavedQueryPermission deletes the saved query permission associated with the passed in permission id
+func (s *BloodhoundDB) DeleteSavedQueryPermission(ctx context.Context, permissionID int64) error {
+	return CheckError(s.db.WithContext(ctx).Table("saved_queries_permissions").Delete(&model.SavedQueriesPermissions{}, permissionID))
+}
+
+// DeleteSavedQueryPermissionsForUser deletes all permissions associated with the passed in query id and user id
+func (s *BloodhoundDB) DeleteSavedQueryPermissionsForUser(ctx context.Context, queryID int64, userID uuid.UUID) error {
+	return CheckError(s.db.Table("saved_queries_permissions").Where("query_id = ? AND shared_to_user_id = ?", queryID, userID).Delete(&model.SavedQueriesPermissions{}))
 }
