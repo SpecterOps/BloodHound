@@ -23,9 +23,6 @@ import (
 	"strconv"
 	"strings"
 
-	bhErrors "github.com/specterops/bloodhound/errors"
-	"github.com/specterops/bloodhound/log"
-
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
@@ -169,8 +166,6 @@ func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http
 	var (
 		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
 		createRequest   SavedQueryPermissionRequest
-		apiResponse     ShareSavedQueriesResponse
-		errCollector    bhErrors.ErrorCollector
 	)
 
 	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
@@ -185,16 +180,16 @@ func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http
 		api.HandleDatabaseError(request, response, err)
 	} else if !savedQueryBelongsToUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid saved_query_id supplied", request), response)
-	} else if permissionsForSavedQuery, err := s.DB.GetPermissionsForSavedQuery(request.Context(), int64(savedQueryID)); err != nil {
+	} else if scopeForSavedQuery, err := s.DB.GetScopeForSavedQuery(request.Context(), int64(savedQueryID), user.ID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		// Sharing a query as public
 		if createRequest.Public {
 			if len(createRequest.UserIDs) > 0 {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Public cannot be true while user_ids is populated", request), response)
-			} else if permissionsForSavedQuery.Public {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "SavedQueryScopePublic cannot be true while user_ids is populated", request), response)
+			} else if scopeForSavedQuery[database.SavedQueryScopePublic] == true {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "User cannot make a query public that's already public", request), response)
-			} else if savedPermission, err := s.DB.CreateSavedQueryPermissionToPublic(request.Context(), permissionsForSavedQuery.QueryID); err != nil {
+			} else if savedPermission, err := s.DB.CreateSavedQueryPermissionToPublic(request.Context(), int64(savedQueryID)); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else {
 				api.WriteBasicResponse(request.Context(), ShareSavedQueriesResponse{savedPermission}, http.StatusCreated, response)
@@ -217,19 +212,23 @@ func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http
 				}
 			}
 
-			// Saving query permission to one or more users
-			for _, sharedUserID := range newlySharedUserIDs {
-				if savedPermission, err := s.DB.CreateSavedQueryPermissionToUser(request.Context(), permissionsForSavedQuery.QueryID, sharedUserID); err != nil {
-					errCollector.Collect(err)
-				} else {
-					apiResponse = append(apiResponse, savedPermission)
+			// Create permission objects for each user that we're attempting to share to
+			newPermissions := make([]model.SavedQueriesPermissions, len(newlySharedUserIDs))
+			for i, id := range newlySharedUserIDs {
+				newPermissions[i] = model.SavedQueriesPermissions{
+					QueryID:        int64(savedQueryID),
+					Public:         false,
+					SharedToUserID: database.NullUUID(id),
 				}
 			}
-			if errCollector.HasErrors() {
-				log.Error().Msg(errCollector.Error())
+
+			// Save the permissions to the database
+			if savedPermissions, err := s.DB.CreateSavedQueryPermissionsBatch(request.Context(), newPermissions); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				api.WriteBasicResponse(request.Context(), savedPermissions, http.StatusCreated, response)
 			}
 
-			api.WriteBasicResponse(request.Context(), apiResponse, http.StatusCreated, response)
 		}
 	}
 }
