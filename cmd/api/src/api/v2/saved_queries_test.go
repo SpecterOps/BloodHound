@@ -20,7 +20,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -676,17 +675,30 @@ func TestResources_ShareSavedQueries_Success(t *testing.T) {
 		database.SavedQueryScopeShared: false,
 	}, nil)
 	mockDB.EXPECT().CheckUserHasPermissionToSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil).Times(2)
-	mockDB.EXPECT().CreateSavedQueryPermissionToUser(gomock.Any(), int64(1), gomock.Any()).Return(model.SavedQueriesPermissions{
-		ID:             1,
-		QueryID:        1,
-		SharedToUserID: database.NullUUID(userId2),
-		Public:         false,
-	}, nil)
-	mockDB.EXPECT().CreateSavedQueryPermissionToUser(gomock.Any(), int64(1), gomock.Any()).Return(model.SavedQueriesPermissions{
-		ID:             2,
-		QueryID:        1,
-		SharedToUserID: database.NullUUID(userId3),
-		Public:         false,
+	mockDB.EXPECT().CreateSavedQueryPermissionsBatch(gomock.Any(), []model.SavedQueriesPermissions{
+		{
+			QueryID:        int64(1),
+			Public:         false,
+			SharedToUserID: database.NullUUID(userId2),
+		},
+		{
+			QueryID:        int64(1),
+			Public:         false,
+			SharedToUserID: database.NullUUID(userId3),
+		},
+	}).Return([]model.SavedQueriesPermissions{
+		{
+			ID:             1,
+			QueryID:        int64(1),
+			Public:         false,
+			SharedToUserID: database.NullUUID(userId2),
+		},
+		{
+			ID:             2,
+			QueryID:        int64(1),
+			Public:         false,
+			SharedToUserID: database.NullUUID(userId3),
+		},
 	}, nil)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
@@ -934,11 +946,19 @@ func TestResources_ShareSavedQueries_UserAlreadySharedTo(t *testing.T) {
 	}, nil)
 	mockDB.EXPECT().CheckUserHasPermissionToSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 	mockDB.EXPECT().CheckUserHasPermissionToSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)
-	mockDB.EXPECT().CreateSavedQueryPermissionToUser(gomock.Any(), int64(1), gomock.Any()).Return(model.SavedQueriesPermissions{
-		ID:             1,
-		QueryID:        1,
-		SharedToUserID: database.NullUUID(userId3),
-		Public:         false,
+	mockDB.EXPECT().CreateSavedQueryPermissionsBatch(gomock.Any(), []model.SavedQueriesPermissions{
+		{
+			QueryID:        int64(1),
+			Public:         false,
+			SharedToUserID: database.NullUUID(userId3),
+		},
+	}).Return([]model.SavedQueriesPermissions{
+		{
+			ID:             1,
+			QueryID:        int64(1),
+			Public:         false,
+			SharedToUserID: database.NullUUID(userId3),
+		},
 	}, nil)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
@@ -1052,13 +1072,18 @@ func TestResources_ShareSavedQueries_SavingPermissionsErrors(t *testing.T) {
 	}, nil)
 	mockDB.EXPECT().CheckUserHasPermissionToSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)
 	mockDB.EXPECT().CheckUserHasPermissionToSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)
-	mockDB.EXPECT().CreateSavedQueryPermissionToUser(gomock.Any(), int64(1), gomock.Any()).Return(model.SavedQueriesPermissions{}, errors.New("Test Error"))
-	mockDB.EXPECT().CreateSavedQueryPermissionToUser(gomock.Any(), int64(1), gomock.Any()).Return(model.SavedQueriesPermissions{
-		ID:             1,
-		QueryID:        1,
-		SharedToUserID: database.NullUUID(userId3),
-		Public:         false,
-	}, nil)
+	mockDB.EXPECT().CreateSavedQueryPermissionsBatch(gomock.Any(), []model.SavedQueriesPermissions{
+		{
+			QueryID:        int64(1),
+			Public:         false,
+			SharedToUserID: database.NullUUID(userId2),
+		},
+		{
+			QueryID:        int64(1),
+			Public:         false,
+			SharedToUserID: database.NullUUID(userId3),
+		},
+	}).Return(nil, fmt.Errorf("Error!"))
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 	require.Nil(t, err)
@@ -1070,34 +1095,5 @@ func TestResources_ShareSavedQueries_SavingPermissionsErrors(t *testing.T) {
 
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, req)
-	require.Equal(t, http.StatusCreated, response.Code)
-
-	bodyBytes, err := io.ReadAll(response.Body)
-	require.Nil(t, err)
-
-	var temp struct {
-		Data v2.ShareSavedQueriesResponse `json:"data"`
-	}
-	err = json.Unmarshal(bodyBytes, &temp)
-	require.Nil(t, err)
-
-	parsedTime, err := time.Parse(time.RFC3339, "0001-01-01T00:00:00Z")
-	require.Nil(t, err)
-
-	require.Equal(t, v2.ShareSavedQueriesResponse{
-		{
-			ID:             1,
-			SharedToUserID: database.NullUUID(userId3),
-			QueryID:        1,
-			Public:         false,
-			Basic: model.Basic{
-				CreatedAt: parsedTime,
-				UpdatedAt: parsedTime,
-				DeletedAt: sql.NullTime{
-					Time:  parsedTime,
-					Valid: false,
-				},
-			},
-		},
-	}, temp.Data)
+	require.Equal(t, http.StatusInternalServerError, response.Code)
 }

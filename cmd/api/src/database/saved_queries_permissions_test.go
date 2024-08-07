@@ -142,7 +142,7 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsBatch(t *testing.T) 
 		})
 	}
 
-	err = dbInst.CreateSavedQueryPermissionsBatch(testCtx, permissions)
+	permissions, err = dbInst.CreateSavedQueryPermissionsBatch(testCtx, permissions)
 	require.NoError(t, err)
 
 	permissions, err = dbInst.GetPermissionsForSavedQuery(testCtx, query.ID)
@@ -184,7 +184,7 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsBatchBadDataError(t 
 	invalidUUID, _ := uuid2.NewV4()
 	permissions[3].SharedToUserID = database.NullUUID(invalidUUID)
 
-	err = dbInst.CreateSavedQueryPermissionsBatch(testCtx, permissions)
+	_, err = dbInst.CreateSavedQueryPermissionsBatch(testCtx, permissions)
 	require.Error(t, err)
 
 	permissions, err = dbInst.GetPermissionsForSavedQuery(testCtx, query.ID)
@@ -306,10 +306,14 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermission(t *testing.T) {
 	_, err = dbInst.CreateSavedQueryPermissionToPublic(testCtx, query.ID)
 	require.NoError(t, err)
 
+	permissions, err := dbInst.GetPermissionsForSavedQuery(testCtx, query.ID)
+	require.NoError(t, err)
+	assert.Len(t, permissions, 1)
+
 	err = dbInst.DeleteSavedQueryPermission(testCtx, query.ID)
 	require.NoError(t, err)
 
-	permissions, err := dbInst.GetPermissionsForSavedQuery(testCtx, query.ID)
+	permissions, err = dbInst.GetPermissionsForSavedQuery(testCtx, query.ID)
 	require.NoError(t, err)
 	assert.Len(t, permissions, 0)
 }
@@ -336,10 +340,48 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUser(t *testing.T
 	_, err = dbInst.CreateSavedQueryPermissionToUser(testCtx, query.ID, user2.ID)
 	require.NoError(t, err)
 
+	hasPermission, err := dbInst.CheckUserHasPermissionToSavedQuery(testCtx, query.ID, user2.ID)
+	require.NoError(t, err)
+	require.True(t, hasPermission)
+
 	err = dbInst.DeleteSavedQueryPermissionsForUser(testCtx, query.ID, user2.ID)
 	require.NoError(t, err)
 
-	hasPermission, err := dbInst.CheckUserHasPermissionToSavedQuery(testCtx, query.ID, user2.ID)
+	hasPermission, err = dbInst.CheckUserHasPermissionToSavedQuery(testCtx, query.ID, user2.ID)
 	require.NoError(t, err)
-	require.False(t, hasPermission)
+	assert.False(t, hasPermission)
+}
+
+func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+
+	user1, err := dbInst.CreateUser(testCtx, model.User{
+		PrincipalName: userPrincipal,
+	})
+	require.NoError(t, err)
+
+	user2, err := dbInst.CreateUser(testCtx, model.User{
+		PrincipalName: user2Principal,
+	})
+	require.NoError(t, err)
+
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	require.NoError(t, err)
+
+	_, err = dbInst.CreateSavedQueryPermissionToUser(testCtx, query.ID, user2.ID)
+	require.NoError(t, err)
+
+	permissions, err := dbInst.GetPermissionsForSavedQuery(testCtx, query.ID)
+	require.NoError(t, err)
+	require.Len(t, permissions, 1)
+
+	err = dbInst.DeleteSavedQueryPermissionsForUsers(testCtx, query.ID)
+	require.NoError(t, err)
+
+	permissions, err = dbInst.GetPermissionsForSavedQuery(testCtx, query.ID)
+	require.NoError(t, err)
+	assert.Len(t, permissions, 0)
 }

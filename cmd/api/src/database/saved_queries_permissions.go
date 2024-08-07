@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+	"gorm.io/gorm/clause"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/model"
@@ -27,12 +28,13 @@ import (
 type SavedQueriesPermissionsData interface {
 	CreateSavedQueryPermissionToUser(ctx context.Context, queryID int64, userID uuid.UUID) (model.SavedQueriesPermissions, error)
 	CreateSavedQueryPermissionToPublic(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error)
-	CreateSavedQueryPermissionsBatch(ctx context.Context, savedQueryPermissions []model.SavedQueriesPermissions) error
+	CreateSavedQueryPermissionsBatch(ctx context.Context, savedQueryPermissions []model.SavedQueriesPermissions) ([]model.SavedQueriesPermissions, error)
 	CheckUserHasPermissionToSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error)
 	GetPermissionsForSavedQuery(ctx context.Context, queryID int64) ([]model.SavedQueriesPermissions, error)
 	GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (SavedQueryScopeMap, error)
 	DeleteSavedQueryPermission(ctx context.Context, permissionID int64) error
 	DeleteSavedQueryPermissionsForUser(ctx context.Context, queryID int64, userID uuid.UUID) error
+	DeleteSavedQueryPermissionsForUsers(ctx context.Context, queryID int64) error
 }
 
 type savedQueryScope string
@@ -68,10 +70,12 @@ func (s *BloodhoundDB) CreateSavedQueryPermissionToPublic(ctx context.Context, q
 }
 
 // CreateSavedQueryPermissionsBatch attempts to save the given saved query permissions in batches of 100 in a transaction
-func (s *BloodhoundDB) CreateSavedQueryPermissionsBatch(ctx context.Context, savedQueryPermissions []model.SavedQueriesPermissions) error {
-	result := s.db.WithContext(ctx).CreateInBatches(savedQueryPermissions, 100)
+func (s *BloodhoundDB) CreateSavedQueryPermissionsBatch(ctx context.Context, savedQueryPermissions []model.SavedQueriesPermissions) ([]model.SavedQueriesPermissions, error) {
+	result := s.db.WithContext(ctx).Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).CreateInBatches(&savedQueryPermissions, 100)
 
-	return CheckError(result)
+	return savedQueryPermissions, CheckError(result)
 }
 
 // CheckUserHasPermissionToSavedQuery returns true or false depending on if the given userID has permission to read the given queryID
@@ -132,5 +136,10 @@ func (s *BloodhoundDB) DeleteSavedQueryPermission(ctx context.Context, permissio
 
 // DeleteSavedQueryPermissionsForUser deletes all permissions associated with the passed in query id and user id
 func (s *BloodhoundDB) DeleteSavedQueryPermissionsForUser(ctx context.Context, queryID int64, userID uuid.UUID) error {
-	return CheckError(s.db.Table("saved_queries_permissions").Where("query_id = ? AND shared_to_user_id = ?", queryID, userID).Delete(&model.SavedQueriesPermissions{}))
+	return CheckError(s.db.WithContext(ctx).Table("saved_queries_permissions").Where("query_id = ? AND shared_to_user_id = ?", queryID, userID).Delete(&model.SavedQueriesPermissions{}))
+}
+
+// DeleteSavedQueryPermissionsForUsers deletes all permissions for a query id that are shared to users, ignoring publicly shared permissions
+func (s *BloodhoundDB) DeleteSavedQueryPermissionsForUsers(ctx context.Context, queryID int64) error {
+	return CheckError(s.db.WithContext(ctx).Table("saved_queries_permissions").Where("query_id = ? AND public = false", queryID).Delete(&model.SavedQueriesPermissions{}))
 }
