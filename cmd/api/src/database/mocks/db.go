@@ -1579,18 +1579,18 @@ func (mr *MockDatabaseMockRecorder) UpdateSAMLIdentityProvider(arg0, arg1 interf
 }
 
 // UpdateSavedQuery mocks base method.
-func (m *MockDatabase) UpdateSavedQuery(arg0 context.Context, arg1 int, arg2, arg3, arg4 string) (model.SavedQuery, error) {
+func (m *MockDatabase) UpdateSavedQuery(arg0 context.Context, arg1 model.SavedQuery) (model.SavedQuery, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSavedQuery", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "UpdateSavedQuery", arg0, arg1)
 	ret0, _ := ret[0].(model.SavedQuery)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateSavedQuery indicates an expected call of UpdateSavedQuery.
-func (mr *MockDatabaseMockRecorder) UpdateSavedQuery(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateSavedQuery(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).UpdateSavedQuery), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).UpdateSavedQuery), arg0, arg1)
 }
 
 // UpdateUser mocks base method.

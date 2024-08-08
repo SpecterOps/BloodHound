@@ -882,7 +882,7 @@ func TestResources_UpdateSavedQuery_UpdateFailed(t *testing.T) {
 	}
 
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
-	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("random error"))
+	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("random error"))
 
 	payload := v2.CreateSavedQueryRequest{Name: "notFoo", Query: "notBar", Description: "notBaz"}
 
@@ -924,7 +924,7 @@ func TestResources_UpdateSavedQuery(t *testing.T) {
 	}
 
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
-	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(savedQuery, nil)
+	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 
 	payload := v2.CreateSavedQueryRequest{Name: "notFoo", Query: "notBar", Description: "notBaz"}
 

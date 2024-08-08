@@ -178,10 +178,22 @@ func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if savedQuery, err := s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil || savedQuery.UserID != user.ID.String() {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
-	} else if savedQuery, err = s.DB.UpdateSavedQuery(request.Context(), savedQueryID, updateRequest.Name, updateRequest.Query, updateRequest.Description); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
-		api.WriteBasicResponse(request.Context(), savedQuery, http.StatusOK, response)
+		if updateRequest.Query != "" {
+			savedQuery.Query = updateRequest.Query
+		}
+		if updateRequest.Name != "" {
+			savedQuery.Name = updateRequest.Name
+		}
+
+		// description should be nullable, so we will not perform an empty check for it
+		savedQuery.Description = updateRequest.Description
+
+		if savedQuery, err = s.DB.UpdateSavedQuery(request.Context(), savedQuery); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteBasicResponse(request.Context(), savedQuery, http.StatusOK, response)
+		}
 	}
 }
 

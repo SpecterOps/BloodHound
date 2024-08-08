@@ -27,7 +27,7 @@ type SavedQueriesData interface {
 	GetSavedQuery(ctx context.Context, queryID int) (model.SavedQuery, error)
 	ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
 	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error)
-	UpdateSavedQuery(ctx context.Context, savedQueryID int, name string, query string, description string) (model.SavedQuery, error)
+	UpdateSavedQuery(ctx context.Context, savedQuery model.SavedQuery) (model.SavedQuery, error)
 	DeleteSavedQuery(ctx context.Context, id int) error
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
 	GetSharedSavedQueries(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error)
@@ -79,22 +79,8 @@ func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, n
 	return savedQuery, CheckError(s.db.WithContext(ctx).Create(&savedQuery))
 }
 
-func (s *BloodhoundDB) UpdateSavedQuery(ctx context.Context, savedQueryID int, name, query, description string) (model.SavedQuery, error) {
-	if savedQuery, err := s.GetSavedQuery(ctx, savedQueryID); err != nil {
-		return model.SavedQuery{}, err
-	} else {
-		if name != "" {
-			savedQuery.Name = name
-		}
-		if query != "" {
-			savedQuery.Query = query
-		}
-		if description != "" {
-			savedQuery.Description = description
-		}
-
-		return savedQuery, CheckError(s.db.WithContext(ctx).Save(&savedQuery))
-	}
+func (s *BloodhoundDB) UpdateSavedQuery(ctx context.Context, savedQuery model.SavedQuery) (model.SavedQuery, error) {
+	return savedQuery, CheckError(s.db.WithContext(ctx).Save(&savedQuery))
 }
 
 func (s *BloodhoundDB) DeleteSavedQuery(ctx context.Context, id int) error {
