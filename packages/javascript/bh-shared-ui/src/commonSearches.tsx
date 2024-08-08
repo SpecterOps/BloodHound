@@ -296,7 +296,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Tier Zero AD principals synchronized with Entra ID',
-                cypher: `MATCH (ENTRA:AZBase)\nMATCH (AD:Base)\nWHERE ENTRA.onpremsyncenabled = true\nAND ENTRA.onpremid = AD.objectid\nAND AD.system_tags CONTAINS "admin_tier_0"\nRETURN ENTRA\n// Replace "RETURN ENTRA" with "RETURN AD" to see the corresponding AD principals\nLIMIT 1000`,
+                cypher: `MATCH (ENTRA:AZBase)\nMATCH (AD:Base)\nWHERE ENTRA.onpremsyncenabled = true\nAND ENTRA.onpremid = AD.objectid\nAND AD.system_tags CONTAINS "admin_tier_0"\nRETURN ENTRA\n// Replace "RETURN ENTRA" with "RETURN AD" to see the corresponding AD principals\nLIMIT 100`,
             },
             {
                 description: 'Tier Zero / High Value external Entra ID users',
