@@ -42,7 +42,7 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
                 { signal },
                 true
             )
-            .then((result) => {
+            .then((result: any) => {
                 if (!result.data.data) return { nodes: {}, edges: [] };
                 return result.data.data;
             });
