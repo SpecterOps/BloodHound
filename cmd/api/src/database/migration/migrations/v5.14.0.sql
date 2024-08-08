@@ -14,13 +14,5 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
-CREATE TABLE IF NOT EXISTS analysis_request_switch (
-   singleton bool PRIMARY KEY DEFAULT true,
-   request_type text NOT NULL,
-   requested_by text NOT NULL,
-   requested_at timestamp with time zone NOT NULL
-   CONSTRAINT singleton_uni CHECK (singleton)
-);
-
--- add fedramp eula FF
-INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 'fedramp_eula', 'FedRAMP EULA', 'Enables showing the FedRAMP EULA on every login. (Enterprise only)', false, false) ON CONFLICT DO NOTHING;
+-- Add PG dual ingest FF
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 'pg_migration_dual_ingest', 'PostgreSQL Migration Dual Ingest', 'Enables dual ingest pathing for both Neo4j and PostgreSQL.', false, false);

@@ -32,4 +32,6 @@ ADD COLUMN IF NOT EXISTS certtemplates BIGINT DEFAULT 0;
 DELETE FROM
     saved_queries
 WHERE
-    user_id = '00000000-0000-0000-0000-000000000000'
+    user_id = '00000000-0000-0000-0000-000000000000';
+
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 'adcs', 'Enable collection and processing of Active Directory Certificate Services Data', 'Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.', false, true) ON CONFLICT DO NOTHING;

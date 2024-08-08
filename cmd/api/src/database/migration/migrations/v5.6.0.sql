@@ -30,3 +30,25 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_email ON audit_logs USING btree 
 CREATE INDEX IF NOT EXISTS idx_audit_logs_source_ip_address ON audit_logs USING btree (source_ip_address);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_status ON audit_logs USING btree (status);
 UPDATE feature_flags SET enabled = false, user_updatable = false WHERE key = 'adcs';
+
+-- Fix read-only missing create token
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Read-Only'), (SELECT id FROM permissions WHERE permissions.authority  = 'auth'  and permissions.name = 'CreateToken')) ON CONFLICT DO NOTHING;
+
+-- Add role Power User
+INSERT INTO roles (name, description,  created_at, updated_at) VALUES ('Power User', 'Can upload data, manage clients, and perform any action a User can', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+
+-- Populate power user permissions
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'app'  and permissions.name = 'ReadAppConfig')) ON CONFLICT DO NOTHING;
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'app'  and permissions.name = 'WriteAppConfig')) ON CONFLICT DO NOTHING;
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'risks'  and permissions.name = 'GenerateReport')) ON CONFLICT DO NOTHING;
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'risks'  and permissions.name = 'ManageRisks')) ON CONFLICT DO NOTHING;
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'auth'  and permissions.name = 'CreateToken')) ON CONFLICT DO NOTHING;
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'auth'  and permissions.name = 'ManageSelf')) ON CONFLICT DO NOTHING;
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'clients'  and permissions.name = 'Manage')) ON CONFLICT DO NOTHING;
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'clients'  and permissions.name = 'Read')) ON CONFLICT DO NOTHING;
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'clients'  and permissions.name = 'Tasking')) ON CONFLICT DO NOTHING;
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'collection'  and permissions.name = 'ManageJobs')) ON CONFLICT DO NOTHING;
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'graphdb'  and permissions.name = 'Write')) ON CONFLICT DO NOTHING;
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'graphdb'  and permissions.name = 'Read')) ON CONFLICT DO NOTHING;
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'saved_queries'  and permissions.name = 'Read')) ON CONFLICT DO NOTHING;
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'saved_queries'  and permissions.name = 'Write')) ON CONFLICT DO NOTHING;

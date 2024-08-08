@@ -43,3 +43,6 @@ ADD COLUMN IF NOT EXISTS logic_apps BIGINT DEFAULT 0,
 ADD COLUMN IF NOT EXISTS managed_clusters BIGINT DEFAULT 0,
 ADD COLUMN IF NOT EXISTS vm_scale_sets BIGINT DEFAULT 0,
 ADD COLUMN IF NOT EXISTS web_apps BIGINT DEFAULT 0;
+
+-- Add new risk exposure calc FF
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 'risk_exposure_new_calculation', 'Use new tier zero risk exposure calculation', 'Enables the use of new tier zero risk exposure metatree metrics.', false, false) ON CONFLICT DO NOTHING;
