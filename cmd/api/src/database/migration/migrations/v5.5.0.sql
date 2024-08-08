@@ -23,13 +23,3 @@ ADD COLUMN IF NOT EXISTS status VARCHAR(15) CHECK (status IN ('success', 'failur
 -- Populate actor_email for existing records by looking up the email address from the users table
 UPDATE audit_logs
 SET actor_email = COALESCE((SELECT email_address FROM users WHERE audit_logs.actor_id = users.id), 'unknown');
-
--- Add clients read permission
-INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('clients', 'Read', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
-
--- Grant administrator client read
-INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'clients'  and permissions.name = 'Read'));
-
--- Swap user clients manage for clients read permission
-DELETE FROM roles_permissions WHERE role_id = (SELECT id FROM roles WHERE roles.name  = 'User') AND permission_id = (SELECT id FROM permissions WHERE permissions.authority  = 'clients'  and permissions.name = 'Manage');
-INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'User'), (SELECT id FROM permissions WHERE permissions.authority  = 'clients'  and permissions.name = 'Read')) ON CONFLICT DO NOTHING;

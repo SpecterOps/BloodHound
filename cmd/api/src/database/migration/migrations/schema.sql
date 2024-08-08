@@ -589,7 +589,6 @@ ALTER TABLE ONLY users
     ADD CONSTRAINT fk_users_saml_provider FOREIGN KEY (saml_provider_id) REFERENCES saml_providers(id);
 
 -- Populate asset group table
-INSERT INTO asset_groups (name, tag, system_group, created_at, updated_at) VALUES ('Owned', 'owned', true, current_timestamp, current_timestamp);
 INSERT INTO asset_groups (name, tag, system_group, created_at, updated_at) VALUES ('Admin Tier Zero', 'admin_tier_0', true, current_timestamp, current_timestamp);
 
 -- Populate permissions table

@@ -31,6 +31,16 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_source_ip_address ON audit_logs USING 
 CREATE INDEX IF NOT EXISTS idx_audit_logs_status ON audit_logs USING btree (status);
 UPDATE feature_flags SET enabled = false, user_updatable = false WHERE key = 'adcs';
 
+-- Add clients read permission
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('clients', 'Read', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+
+-- Grant administrator client read
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'clients'  and permissions.name = 'Read')) ON CONFLICT DO NOTHING;
+
+-- Swap user clients manage for clients read permission
+DELETE FROM roles_permissions WHERE role_id = (SELECT id FROM roles WHERE roles.name  = 'User') AND permission_id = (SELECT id FROM permissions WHERE permissions.authority  = 'clients'  and permissions.name = 'Manage');
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'User'), (SELECT id FROM permissions WHERE permissions.authority  = 'clients'  and permissions.name = 'Read')) ON CONFLICT DO NOTHING;
+
 -- Fix read-only missing create token
 INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Read-Only'), (SELECT id FROM permissions WHERE permissions.authority  = 'auth'  and permissions.name = 'CreateToken')) ON CONFLICT DO NOTHING;
 
