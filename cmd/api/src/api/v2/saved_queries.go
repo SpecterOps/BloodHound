@@ -141,14 +141,31 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if !savedQueryBelongsToUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid saved_query_id supplied", request), response)
-	} else if err := s.DB.DeleteSavedQuery(request.Context(), savedQueryID); errors.Is(err, database.ErrNotFound) {
-		// This is an edge case and can only occur if the database has a concurrent operation that deletes the saved query
-		// after the check at s.DB.SavedQueryBelongsToUser but before getting here.
-		// Still, adding in the same check for good measure.
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
-	} else if err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
-		response.WriteHeader(http.StatusNoContent)
+		hasAdmin := user.Roles.Has(model.Role{Name: "Administrator"})
+		if publicQueries, err := s.DB.GetPublicSavedQueries(request.Context()); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		} else {
+			isPublic := false
+			for _, query := range publicQueries {
+				if query.ID == int64(savedQueryID) {
+					isPublic = true
+					break
+				}
+			}
+
+			if !isPublic && !hasAdmin {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "user does not have permission to delete this query", request), response)
+			} else if err := s.DB.DeleteSavedQuery(request.Context(), savedQueryID); errors.Is(err, database.ErrNotFound) {
+				// This is an edge case and can only occur if the database has a concurrent operation that deletes the saved query
+				// after the check at s.DB.SavedQueryBelongsToUser but before getting here.
+				// Still, adding in the same check for good measure.
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
+			} else if err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+			} else {
+				response.WriteHeader(http.StatusNoContent)
+			}
+		}
 	}
 }
