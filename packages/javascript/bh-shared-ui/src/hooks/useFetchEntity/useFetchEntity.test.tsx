@@ -15,9 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useFetchEntity, FetchEntityParams, EntityProperties } from './useFetchEntity';
-import { renderHook, waitFor, queryClientProvider } from '../../test-utils';
+import { renderHook, waitFor } from '../../test-utils';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { QueryClient, QueryClientProvider } from 'react-query';
+
+const queryClient = new QueryClient();
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+);
 
 const entityObjectIdRequest = () => {
     return rest.get(`/api/v2/${EntityApiPathType}/:id`, async (_req, res, ctx) => {
@@ -81,7 +87,7 @@ describe('useFetchEntity', () => {
         };
 
         const { result } = renderHook((nodeItemParams: FetchEntityParams) => useFetchEntity(nodeItemParams), {
-            wrapper: queryClientProvider(),
+            wrapper,
             initialProps,
         });
 
@@ -99,7 +105,7 @@ describe('useFetchEntity', () => {
         };
 
         const { result } = renderHook((nodeItemParams: FetchEntityParams) => useFetchEntity(nodeItemParams), {
-            wrapper: queryClientProvider(),
+            wrapper,
             initialProps,
         });
 
