@@ -1,4 +1,4 @@
-# BloodHound Cypher Parser and Query Model
+# BloodHound Cypher Library
 
 This project contains a golang parser implementation that for the [openCypher](https://opencypher.org/) project. The
 primary goal of this implementation is to be lightweight and compatible with cypher dialect used by
@@ -9,14 +9,6 @@ legacy openCypher features is planned.
 
 * [Generating the ANTLR Grammar](#generating-the-antlr-grammar)
 * [Regenerating the ANTLR Parser Implementation](#regenerating-the-antlr-parser-implementation)
-* [Structure](#structure)
-    * [Packages](#packages)
-        * [analyzer](#analyzer)
-        * [frontend](#frontend)
-        * [grammar](#grammar)
-        * [model](#model)
-        * [parser](#parser)
-        * [test](#test)
 * [Language Features](#language-features)
     * [Query Cost Model](#query-cost-model)
         * [Caveats](#caveats)
@@ -45,40 +37,12 @@ installed. The command below can be used to generate a new version of the openCy
 java -jar ./antlr-4.13.0-complete.jar -Dlanguage=Go -o parser grammar/Cypher.g4
 ```
 
-## Structure
-
-### Packages
-
-#### analyzer
-
-This package contains query analysis and rewriting tools built for the openCypher query model.
-
-#### frontend
-
-This package contains the frontend implementation of the BloodHound cypher parser. This includes the AST visitor
-implementations as well as formatting utilities for the query model.
-
-#### grammar
-
-This folder is not a golang package. Instead, it exists to contain the openCypher grammar that was used to generate the
-`parser` package.
-
-#### model
-
-This package contains the query model that the openCypher grammar AST is first translated to. This model is not
-intended to be a 1:1 representation of the openCypher grammar. It attempts to walk a fine line between accuracy of the
-formal language model of openCypher and developer usability.
-
-#### parser
-
-This package is generated from the ANTLR grammar in the `grammar` folder.
-
-#### test
-
-This package contains testing tools for the parser along with a corpus of test cases for validating parser
-functionality.
-
 ## Language Features
+
+### PostgreSQL Translation
+
+The `models` package contains two implementations: `cypher` and `pgsql`. The `pgsql` package contains a translation
+implementation that attempts a best-effort match of cypher semantics using vanilla pgsql syntax.
 
 ### Query Cost Model
 

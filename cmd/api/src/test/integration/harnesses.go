@@ -6871,9 +6871,10 @@ type HybridAttackPaths struct {
 	ADUserObjectID string
 	AZUser         *graph.Node
 	AZUserObjectID string
+	UnknownNode    *graph.Node
 }
 
-func (s *HybridAttackPaths) Setup(graphTestContext *GraphTestContext, adUserObjectID string, azUserOnPremID string, onPremSyncEnabled bool, createADUser bool) {
+func (s *HybridAttackPaths) Setup(graphTestContext *GraphTestContext, adUserObjectID string, azUserOnPremID string, onPremSyncEnabled bool, createADUser bool, createUnknownNode bool) {
 	s.ADUserObjectID = adUserObjectID
 	tenantID := RandomObjectID(graphTestContext.testCtx)
 	domainSid := RandomDomainSID()
@@ -6901,6 +6902,12 @@ func (s *HybridAttackPaths) Setup(graphTestContext *GraphTestContext, adUserObje
 		})
 
 		s.ADUser = graphTestContext.NewCustomActiveDirectoryUser(adUserProperties)
+	} else if createUnknownNode {
+		unknownNodeProperties := graph.AsProperties(graph.PropertyMap{
+			common.ObjectID: azUserOnPremID,
+		})
+
+		s.UnknownNode = graphTestContext.NewNode(unknownNodeProperties, ad.Entity)
 	}
 }
 
