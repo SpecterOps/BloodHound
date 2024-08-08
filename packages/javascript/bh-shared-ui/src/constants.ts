@@ -133,6 +133,14 @@ export const typography: Partial<Theme['typography']> = {
     },
 };
 
+const disablePortalDefaultProp = {
+    // Forces all MUI components that leveraging Modal props to render within the part of the component tree which receives a "dark" class.
+    // If not for this, any tailwind based components inside a Modal type component will not respect the current theme.
+    // Controlling doodle components. https://tailwindcss.com/docs/dark-mode#toggling-dark-mode-manually
+    // Modal construct: https://mui.com/material-ui/api/modal/
+    disablePortal: true,
+}
+
 export const components = (theme: Theme): Partial<Theme['components']> => ({
     MuiButton: {
         styleOverrides: {
@@ -193,10 +201,7 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
     },
     MuiDialog: {
         defaultProps: {
-            // Forces all MUI dialogs to render within the part of the component tree which recieves a "dark" class.
-            // If not for this, any tailwind based components inside a dialog will not respect the current theme.
-            // https://tailwindcss.com/docs/dark-mode#toggling-dark-mode-manually
-            disablePortal: true,
+            ...disablePortalDefaultProp
         },
         styleOverrides: {
             root: {
@@ -207,6 +212,21 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
             },
         },
     },
+    MuiMenu: {
+        defaultProps: {
+            ...disablePortalDefaultProp
+        }
+    },
+    MuiDrawer: {
+        defaultProps: {
+            ...disablePortalDefaultProp
+        }
+    },
+    MuiAutocomplete: {
+        defaultProps: {
+            ...disablePortalDefaultProp
+        }
+    },
     MuiDialogActions: {
         styleOverrides: {
             root: {
@@ -215,6 +235,9 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
         },
     },
     MuiPopover: {
+        defaultProps: {
+            ...disablePortalDefaultProp
+        },
         styleOverrides: {
             root: {
                 '& .MuiPaper-root': {
