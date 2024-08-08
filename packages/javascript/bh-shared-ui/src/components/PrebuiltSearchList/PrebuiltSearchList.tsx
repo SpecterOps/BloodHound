@@ -76,48 +76,46 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
 
     return (
         <>
-            <Box maxHeight={'300px'} overflow={'auto'}>
-                <List dense disablePadding sx={{ mt: '8px' }}>
-                    {listSections.map((section) => {
-                        const { subheader, lineItems } = section;
+            <List dense disablePadding>
+                {listSections.map((section) => {
+                    const { subheader, lineItems } = section;
 
-                        return (
-                            <Box key={subheader}>
-                                <ListSubheader className={styles.subheader}>{subheader} </ListSubheader>
+                    return (
+                        <Box key={subheader}>
+                            <ListSubheader className={styles.subheader}>{subheader} </ListSubheader>
 
-                                {lineItems?.map((lineItem, idx) => {
-                                    const { id, description, cypher, canEdit = false } = lineItem;
+                            {lineItems?.map((lineItem, idx) => {
+                                const { id, description, cypher, canEdit = false } = lineItem;
 
-                                    return (
-                                        <ListItem
-                                            disablePadding
-                                            key={`${id}-${idx}`}
-                                            sx={{ borderRadius: '8px', py: '4px' }}
-                                            secondaryAction={
-                                                canEdit && (
-                                                    <Button
-                                                        aria-label='Delete Query'
-                                                        size='small'
-                                                        variant='secondary'
-                                                        onClick={() => {
-                                                            setQueryId(id);
-                                                            handleOpen();
-                                                        }}>
-                                                        <FontAwesomeIcon icon={faTrash} />
-                                                    </Button>
-                                                )
-                                            }>
-                                            <ListItemButton onClick={() => clickHandler(cypher)}>
-                                                <ListItemText primary={description} />
-                                            </ListItemButton>
-                                        </ListItem>
-                                    );
-                                })}
-                            </Box>
-                        );
-                    })}
-                </List>
-            </Box>
+                                return (
+                                    <ListItem
+                                        disablePadding
+                                        key={`${id}-${idx}`}
+                                        sx={{ borderRadius: '8px', py: '4px' }}
+                                        secondaryAction={
+                                            canEdit && (
+                                                <Button
+                                                    aria-label='Delete Query'
+                                                    size='small'
+                                                    variant='secondary'
+                                                    onClick={() => {
+                                                        setQueryId(id);
+                                                        handleOpen();
+                                                    }}>
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                </Button>
+                                            )
+                                        }>
+                                        <ListItemButton onClick={() => clickHandler(cypher)}>
+                                            <ListItemText primary={description} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                );
+                            })}
+                        </Box>
+                    );
+                })}
+            </List>
 
             <Dialog open={open} onClose={handleClose} maxWidth={'xs'} fullWidth>
                 <DialogTitle>Delete Query</DialogTitle>

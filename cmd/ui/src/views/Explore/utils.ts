@@ -21,6 +21,8 @@ import { GraphData, GraphEdges, GraphNodes } from 'js-client-library';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
 import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
+import { random } from 'graphology-layout';
+import forceAtlas2 from 'graphology-layout-forceatlas2';
 
 export const initGraph = (graph: MultiDirectedGraph, items: GraphData, theme: Theme, darkMode: boolean) => {
     const { nodes, edges } = items;
@@ -44,6 +46,16 @@ export const initGraph = (graph: MultiDirectedGraph, items: GraphData, theme: Th
 
     initGraphNodes(graph, nodes, themedOptions);
     initGraphEdges(graph, edges, themedOptions);
+
+    random.assign(graph, { scale: 1000 });
+
+    forceAtlas2.assign(graph, {
+        iterations: 128,
+        settings: {
+            scalingRatio: 1000,
+            barnesHutOptimize: true,
+        },
+    });
 };
 
 const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, themedOptions: ThemedOptions) => {
