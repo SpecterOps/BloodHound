@@ -663,7 +663,7 @@ components:
       description: >
         `Authorization: Bearer $JWT_TOKEN`
       type: http
-      scheme: Bearer
+      scheme: bearer
       bearerFormat: JWT
     # BHE Signature
     SignedRequest:

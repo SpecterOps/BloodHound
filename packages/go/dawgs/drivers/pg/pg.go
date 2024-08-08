@@ -23,7 +23,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/specterops/bloodhound/cypher/model/pg"
+	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
@@ -38,9 +38,7 @@ const (
 )
 
 func afterPooledConnectionEstablished(ctx context.Context, conn *pgx.Conn) error {
-	log.Debugf("Established a new database connection.")
-
-	for _, dataType := range pg.CompositeTypes {
+	for _, dataType := range pgsql.CompositeTypes {
 		if definition, err := conn.LoadType(ctx, dataType.String()); err != nil {
 			if !StateObjectDoesNotExist.ErrorMatches(err) {
 				return fmt.Errorf("failed to match composite type %s to database: %w", dataType, err)
@@ -54,7 +52,7 @@ func afterPooledConnectionEstablished(ctx context.Context, conn *pgx.Conn) error
 }
 
 func afterPooledConnectionRelease(conn *pgx.Conn) bool {
-	for _, dataType := range pg.CompositeTypes {
+	for _, dataType := range pgsql.CompositeTypes {
 		if _, hasType := conn.TypeMap().TypeForName(dataType.String()); !hasType {
 			// This connection should be destroyed since it does not contain information regarding the schema's
 			// composite types

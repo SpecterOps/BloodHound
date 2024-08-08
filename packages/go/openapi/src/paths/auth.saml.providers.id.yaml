@@ -57,7 +57,7 @@ delete:
   summary: Delete a SAML Provider
   description: Deletes an existing BloodHound SAML provider.
   tags:
-    - Auth API
+    - Auth
     - Community
     - Enterprise
   responses:
