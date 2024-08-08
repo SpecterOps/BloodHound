@@ -61,7 +61,7 @@ func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 	}
 }
 
-func (s SavedQueries) IgnoreFilters() []string {
+func IgnoreFilters() []string {
 	return []string{
 		"scope",
 	}

@@ -19,9 +19,7 @@ package v2
 import (
 	"errors"
 	"fmt"
-	"maps"
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -83,12 +81,6 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			}
 		}
 
-		// needed to remove scope query param since we currently
-		// dont support query params that arent filterable
-		maps.DeleteFunc(queryFilters, func(s string, filters model.QueryParameterFilters) bool {
-			return slices.Contains(savedQueries.IgnoreFilters(), s)
-		})
-
 		if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 		} else if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
@@ -121,6 +113,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 					scopedQueries, scopedCount, err = s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit)
 				default:
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid scope param", request), response)
+					return
 				}
 
 				if err != nil {

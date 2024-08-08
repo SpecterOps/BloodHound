@@ -37,6 +37,7 @@ import (
 	"github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/must"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -242,25 +243,25 @@ func TestResources_ListSavedQueries(t *testing.T) {
 		},
 	}, 1, nil)
 
-	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "-name")
-		q.Add("name", "eq:myQuery")
-		q.Add("skip", "1")
-		q.Add("limit", "10")
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil)
+	require.Nil(t, err)
 
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
+	q := url.Values{}
+	q.Add("sort_by", "-name")
+	q.Add("name", "eq:myQuery")
+	q.Add("skip", "1")
+	q.Add("limit", "10")
 
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req.URL.RawQuery = q.Encode()
 
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusOK, response.Code)
-	}
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+	require.Equal(t, http.StatusOK, response.Code)
+
 }
 
 func TestResources_ListSavedQueries_OwnedQueries(t *testing.T) {
@@ -284,26 +285,26 @@ func TestResources_ListSavedQueries_OwnedQueries(t *testing.T) {
 		},
 	}, 1, nil)
 
-	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "-name")
-		q.Add("name", "eq:myQuery")
-		q.Add("skip", "1")
-		q.Add("limit", "10")
-		q.Add("scope", "owned")
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil)
+	require.Nil(t, err)
 
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
+	q := url.Values{}
+	q.Add("sort_by", "-name")
+	q.Add("name", "eq:myQuery")
+	q.Add("skip", "1")
+	q.Add("limit", "10")
+	q.Add("scope", "owned")
 
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req.URL.RawQuery = q.Encode()
 
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusOK, response.Code)
-	}
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+	assert.Equal(t, http.StatusOK, response.Code)
+
 }
 
 func TestResources_ListSavedQueries_PublicQueries(t *testing.T) {
@@ -327,47 +328,47 @@ func TestResources_ListSavedQueries_PublicQueries(t *testing.T) {
 		},
 	}, nil)
 
-	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "-name")
-		q.Add("name", "eq:myQuery")
-		q.Add("scope", "public")
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil)
+	require.Nil(t, err)
 
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
+	q := url.Values{}
+	q.Add("sort_by", "-name")
+	q.Add("name", "eq:myQuery")
+	q.Add("scope", "public")
 
-		// Set up the router and serve the request
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req.URL.RawQuery = q.Encode()
 
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
+	// Set up the router and serve the request
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
 
-		require.Equal(t, http.StatusOK, response.Code)
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
 
-		var actualResponse struct {
-			Data []model.SavedQueryResponse `json:"data"`
-		}
+	require.Equal(t, http.StatusOK, response.Code)
 
-		err = json.NewDecoder(response.Body).Decode(&actualResponse)
-		require.Nil(t, err)
-
-		expectedResponse := []model.SavedQueryResponse{
-			{
-				SavedQuery: model.SavedQuery{
-					UserID:      userId.String(),
-					Name:        "myQuery",
-					Query:       "Match(n) return n",
-					Description: "Public query description",
-				},
-				Scope: "public",
-			},
-		}
-
-		require.Equal(t, expectedResponse, actualResponse.Data)
+	var actualResponse struct {
+		Data []model.SavedQueryResponse `json:"data"`
 	}
+
+	err = json.NewDecoder(response.Body).Decode(&actualResponse)
+	require.Nil(t, err)
+
+	expectedResponse := []model.SavedQueryResponse{
+		{
+			SavedQuery: model.SavedQuery{
+				UserID:      userId.String(),
+				Name:        "myQuery",
+				Query:       "Match(n) return n",
+				Description: "Public query description",
+			},
+			Scope: "public",
+		},
+	}
+
+	assert.Equal(t, expectedResponse, actualResponse.Data)
+
 }
 
 func TestResources_ListSavedQueries_SharedQueries(t *testing.T) {
@@ -391,47 +392,47 @@ func TestResources_ListSavedQueries_SharedQueries(t *testing.T) {
 		},
 	}, nil)
 
-	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "-name")
-		q.Add("name", "eq:myQuery")
-		q.Add("scope", "shared")
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil)
+	require.Nil(t, err)
 
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
+	q := url.Values{}
+	q.Add("sort_by", "-name")
+	q.Add("name", "eq:myQuery")
+	q.Add("scope", "shared")
 
-		// Set up the router and serve the request
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req.URL.RawQuery = q.Encode()
 
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
+	// Set up the router and serve the request
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
 
-		require.Equal(t, http.StatusOK, response.Code)
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
 
-		var actualResponse struct {
-			Data []model.SavedQueryResponse `json:"data"`
-		}
+	require.Equal(t, http.StatusOK, response.Code)
 
-		err = json.NewDecoder(response.Body).Decode(&actualResponse)
-		require.Nil(t, err)
-
-		expectedResponse := []model.SavedQueryResponse{
-			{
-				SavedQuery: model.SavedQuery{
-					UserID:      userId.String(),
-					Name:        "myQuery",
-					Query:       "Match(n) return n",
-					Description: "Shared query description",
-				},
-				Scope: "shared",
-			},
-		}
-
-		require.Equal(t, expectedResponse, actualResponse.Data)
+	var actualResponse struct {
+		Data []model.SavedQueryResponse `json:"data"`
 	}
+
+	err = json.NewDecoder(response.Body).Decode(&actualResponse)
+	require.Nil(t, err)
+
+	expectedResponse := []model.SavedQueryResponse{
+		{
+			SavedQuery: model.SavedQuery{
+				UserID:      userId.String(),
+				Name:        "myQuery",
+				Query:       "Match(n) return n",
+				Description: "Shared query description",
+			},
+			Scope: "shared",
+		},
+	}
+
+	assert.Equal(t, expectedResponse, actualResponse.Data)
+
 }
 
 func TestResources_ListSavedQueries_MulitpleScopeQueries(t *testing.T) {
@@ -464,56 +465,56 @@ func TestResources_ListSavedQueries_MulitpleScopeQueries(t *testing.T) {
 		},
 	}, nil)
 
-	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "-name")
-		q.Add("name", "eq:myQuery")
-		q.Add("scope", "shared,public")
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil)
+	require.Nil(t, err)
 
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
+	q := url.Values{}
+	q.Add("sort_by", "-name")
+	q.Add("name", "eq:myQuery")
+	q.Add("scope", "shared,public")
 
-		// Set up the router and serve the request
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req.URL.RawQuery = q.Encode()
 
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
+	// Set up the router and serve the request
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
 
-		require.Equal(t, http.StatusOK, response.Code)
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
 
-		var actualResponse struct {
-			Data []model.SavedQueryResponse `json:"data"`
-		}
+	require.Equal(t, http.StatusOK, response.Code)
 
-		err = json.NewDecoder(response.Body).Decode(&actualResponse)
-		require.Nil(t, err)
-
-		expectedResponse := []model.SavedQueryResponse{
-			{
-				SavedQuery: model.SavedQuery{
-					UserID:      userId.String(),
-					Name:        "myQuery",
-					Query:       "Match(n) return n",
-					Description: "Shared query description",
-				},
-				Scope: "shared",
-			},
-			{
-				SavedQuery: model.SavedQuery{
-					UserID:      userId.String(),
-					Name:        "myQuery",
-					Query:       "Match(n) return n",
-					Description: "Public query description",
-				},
-				Scope: "public",
-			},
-		}
-
-		require.Equal(t, expectedResponse, actualResponse.Data)
+	var actualResponse struct {
+		Data []model.SavedQueryResponse `json:"data"`
 	}
+
+	err = json.NewDecoder(response.Body).Decode(&actualResponse)
+	require.Nil(t, err)
+
+	expectedResponse := []model.SavedQueryResponse{
+		{
+			SavedQuery: model.SavedQuery{
+				UserID:      userId.String(),
+				Name:        "myQuery",
+				Query:       "Match(n) return n",
+				Description: "Shared query description",
+			},
+			Scope: "shared",
+		},
+		{
+			SavedQuery: model.SavedQuery{
+				UserID:      userId.String(),
+				Name:        "myQuery",
+				Query:       "Match(n) return n",
+				Description: "Public query description",
+			},
+			Scope: "public",
+		},
+	}
+
+	assert.Equal(t, expectedResponse, actualResponse.Data)
+
 }
 
 func TestResources_ListSavedQueries_ScopeDBError(t *testing.T) {
@@ -530,22 +531,22 @@ func TestResources_ListSavedQueries_ScopeDBError(t *testing.T) {
 
 	mockDB.EXPECT().ListSavedQueries(gomock.Any(), userId, "", model.SQLFilter{}, 0, 10000).Return(model.SavedQueries{}, 0, fmt.Errorf("foo"))
 
-	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("scope", "owned")
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil)
+	require.Nil(t, err)
 
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+	q := url.Values{}
+	q.Add("scope", "owned")
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req.URL.RawQuery = q.Encode()
 
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusInternalServerError, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
-	}
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+	assert.Equal(t, http.StatusInternalServerError, response.Code)
+	assert.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
+
 }
 
 func TestResources_ListSavedQueries_InvalidScope(t *testing.T) {
@@ -560,22 +561,22 @@ func TestResources_ListSavedQueries_InvalidScope(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	if req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("scope", "foo")
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil)
+	require.Nil(t, err)
 
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+	q := url.Values{}
+	q.Add("scope", "foo")
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req.URL.RawQuery = q.Encode()
 
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), "invalid scope param")
-	}
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	assert.Contains(t, response.Body.String(), "invalid scope param")
+
 }
 
 func TestResources_CreateSavedQuery_InvalidBody(t *testing.T) {
