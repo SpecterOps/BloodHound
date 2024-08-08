@@ -22,7 +22,6 @@ import {
     SelectedEdge,
     apiClient,
     useFetchEntity,
-    FetchEntityCacheId,
 } from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import { Dispatch, FC, Fragment } from 'react';
@@ -70,11 +69,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
     const { objectId, type } = targetNode;
-    const { entityProperties: targetNodeProperties } = useFetchEntity({
-        cacheId: FetchEntityCacheId,
-        objectId,
-        nodeType: type,
-    });
+    const { entityProperties: targetNodeProperties } = useFetchEntity({ objectId, nodeType: type });
 
     return (
         <Box>

@@ -22,7 +22,6 @@ import { validateNodeType } from '../useSearch/useSearch';
 import { useQuery } from 'react-query';
 
 export type FetchEntityParams = {
-    cacheId: typeof FetchEntityCacheId;
     objectId: string;
     nodeType: string;
     databaseId?: string;
@@ -43,12 +42,7 @@ type FetchEntityExport = {
 
 export const FetchEntityCacheId = 'entity-properties' as const;
 
-export const useFetchEntity: (param: FetchEntityParams) => FetchEntityExport = ({
-    cacheId,
-    objectId,
-    nodeType,
-    databaseId,
-}) => {
+export const useFetchEntity: (param: FetchEntityParams) => FetchEntityExport = ({ objectId, nodeType, databaseId }) => {
     const requestDetails: {
         endpoint: (
             params: string,
@@ -81,7 +75,7 @@ export const useFetchEntity: (param: FetchEntityParams) => FetchEntityExport = (
         isError,
         isSuccess,
     } = useQuery(
-        [cacheId, nodeType, objectId],
+        [FetchEntityCacheId, nodeType, objectId],
         ({ signal }) =>
             requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
                 if (validatedKind) return res.data.data.props;

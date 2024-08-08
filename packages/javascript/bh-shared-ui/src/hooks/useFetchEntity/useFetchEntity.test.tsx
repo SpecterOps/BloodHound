@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useFetchEntity, FetchEntityCacheId, FetchEntityParams, EntityProperties } from './useFetchEntity';
+import { useFetchEntity, FetchEntityParams, EntityProperties } from './useFetchEntity';
 import { renderHook, waitFor, queryClientProvider } from '../../test-utils';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -76,7 +76,6 @@ describe('useFetchEntity', () => {
 
     it('Searching for existing node type returns node properties', async () => {
         const initialProps = {
-            cacheId: FetchEntityCacheId,
             objectId: EntityProperties.objectid,
             nodeType: EntityNodeType,
         };
@@ -94,7 +93,6 @@ describe('useFetchEntity', () => {
     });
     it('Searching for custom node type with databaseId returns node properties', async () => {
         const initialProps = {
-            cacheId: FetchEntityCacheId,
             objectId: EntityProperties.objectid,
             nodeType: EntityCustomNodeType,
             databaseId: EntityGraphId,
