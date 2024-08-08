@@ -102,14 +102,14 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 				var scopedQueries model.SavedQueries
 				var scopedCount int
 
-				switch scope {
-				case "public":
+				switch strings.ToLower(scope) {
+				case strings.ToLower(string(model.SavedQueryScopePublic)):
 					scopedQueries, err = s.DB.GetPublicSavedQueries(request.Context())
 					scopedCount = len(scopedQueries)
-				case "shared":
+				case strings.ToLower(string(model.SavedQueryScopeShared)):
 					scopedQueries, err = s.DB.GetSharedSavedQueries(request.Context(), user.ID)
 					scopedCount = len(scopedQueries)
-				case "owned":
+				case strings.ToLower(string(model.SavedQueryScopeOwned)):
 					scopedQueries, scopedCount, err = s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit)
 				default:
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid scope param", request), response)
