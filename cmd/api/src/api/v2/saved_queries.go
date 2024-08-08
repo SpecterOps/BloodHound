@@ -98,11 +98,11 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		} else {
 			var queries []model.SavedQueryResponse
 			var count int
-			for _, scope := range strings.Split(strings.ToLower(scopes[0]), ",") {
+			for _, scope := range strings.Split(scopes[0], ",") {
 				var scopedQueries model.SavedQueries
 				var scopedCount int
 
-				switch scope {
+				switch strings.ToLower(scope) {
 				case string(model.SavedQueryScopePublic):
 					scopedQueries, err = s.DB.GetPublicSavedQueries(request.Context())
 					scopedCount = len(scopedQueries)
