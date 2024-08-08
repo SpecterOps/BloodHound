@@ -18,12 +18,13 @@ package fileupload
 
 import (
 	"bytes"
-	"github.com/specterops/bloodhound/src/model/ingest"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/specterops/bloodhound/src/model/ingest"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteAndValidateJSON(t *testing.T) {

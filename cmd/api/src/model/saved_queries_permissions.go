@@ -21,6 +21,14 @@ import (
 	"github.com/gofrs/uuid"
 )
 
+type SavedQueryScope string
+
+const (
+	SavedQueryScopeOwned  SavedQueryScope = "owned"
+	SavedQueryScopeShared SavedQueryScope = "shared"
+	SavedQueryScopePublic SavedQueryScope = "public"
+)
+
 // SavedQueriesPermissions represents the database model which allows users to share saved cypher queries
 type SavedQueriesPermissions struct {
 	ID             int64         `json:"id"`
