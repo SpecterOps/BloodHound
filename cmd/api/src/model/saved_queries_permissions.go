@@ -24,9 +24,9 @@ import (
 type SavedQueryScope string
 
 const (
-	SavedQueryScopeOwned  SavedQueryScope = "Owned"
-	SavedQueryScopeShared SavedQueryScope = "Shared"
-	SavedQueryScopePublic SavedQueryScope = "Public"
+	SavedQueryScopeOwned  SavedQueryScope = "owned"
+	SavedQueryScopeShared SavedQueryScope = "shared"
+	SavedQueryScopePublic SavedQueryScope = "public"
 )
 
 // SavedQueriesPermissions represents the database model which allows users to share saved cypher queries
