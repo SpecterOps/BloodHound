@@ -208,10 +208,18 @@ const (
 	DSHeuristics                            Property = "dsheuristics"
 	UserAccountControl                      Property = "useraccountcontrol"
 	TrustAttributes                         Property = "trustattributes"
+	MinPwdLength                            Property = "minpwdlength"
+	PwdProperties                           Property = "pwdproperties"
+	PwdHistoryLength                        Property = "pwdhistorylength"
+	LockoutThreshold                        Property = "lockoutthreshold"
+	MinPwdAge                               Property = "minpwdage"
+	MaxPwdAge                               Property = "maxpwdage"
+	LockoutDuration                         Property = "lockoutduration"
+	LockoutObservationWindow                Property = "lockoutobservationwindow"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationEnabled, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributes}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationEnabled, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributes, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -399,6 +407,22 @@ func ParseProperty(source string) (Property, error) {
 		return UserAccountControl, nil
 	case "trustattributes":
 		return TrustAttributes, nil
+	case "minpwdlength":
+		return MinPwdLength, nil
+	case "pwdproperties":
+		return PwdProperties, nil
+	case "pwdhistorylength":
+		return PwdHistoryLength, nil
+	case "lockoutthreshold":
+		return LockoutThreshold, nil
+	case "minpwdage":
+		return MinPwdAge, nil
+	case "maxpwdage":
+		return MaxPwdAge, nil
+	case "lockoutduration":
+		return LockoutDuration, nil
+	case "lockoutobservationwindow":
+		return LockoutObservationWindow, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -589,6 +613,22 @@ func (s Property) String() string {
 		return string(UserAccountControl)
 	case TrustAttributes:
 		return string(TrustAttributes)
+	case MinPwdLength:
+		return string(MinPwdLength)
+	case PwdProperties:
+		return string(PwdProperties)
+	case PwdHistoryLength:
+		return string(PwdHistoryLength)
+	case LockoutThreshold:
+		return string(LockoutThreshold)
+	case MinPwdAge:
+		return string(MinPwdAge)
+	case MaxPwdAge:
+		return string(MaxPwdAge)
+	case LockoutDuration:
+		return string(LockoutDuration)
+	case LockoutObservationWindow:
+		return string(LockoutObservationWindow)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -779,6 +819,22 @@ func (s Property) Name() string {
 		return "User Account Control"
 	case TrustAttributes:
 		return "Trust Attributes"
+	case MinPwdLength:
+		return "Minimum password length"
+	case PwdProperties:
+		return "Password Properties"
+	case PwdHistoryLength:
+		return "Password History Length"
+	case LockoutThreshold:
+		return "Lockout Threshold"
+	case MinPwdAge:
+		return "Minimum Password Age"
+	case MaxPwdAge:
+		return "Maximum Password Age"
+	case LockoutDuration:
+		return "Lockout Duration"
+	case LockoutObservationWindow:
+		return "Lockout Observation Window"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}

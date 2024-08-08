@@ -270,6 +270,10 @@ export const CommonSearches: CommonSearchType[] = [
                 description: 'Accounts with DES-only Kerberos authentication',
                 cypher: `MATCH (n:Base)\nWHERE n.enabled = true\nAND n.usedeskeyonly = true\nRETURN n`,
             },
+            {
+                description: 'Accounts with weak supported Kerberos encryption types',
+                cypher: `MATCH (n:Base)\nWHERE ANY(keyword IN n.supportedencryptiontypes WHERE keyword IN ['DES-CBC-CRC', 'DES-CBC-MD5', 'RC4-HMAC-MD5'])\nRETURN n`,
+            },
         ],
     },
     {

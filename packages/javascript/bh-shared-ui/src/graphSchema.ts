@@ -395,6 +395,14 @@ export enum ActiveDirectoryKindProperties {
     DSHeuristics = 'dsheuristics',
     UserAccountControl = 'useraccountcontrol',
     TrustAttributes = 'trustattributes',
+    MinPwdLength = 'minpwdlength',
+    PwdProperties = 'pwdproperties',
+    PwdHistoryLength = 'pwdhistorylength',
+    LockoutThreshold = 'lockoutthreshold',
+    MinPwdAge = 'minpwdage',
+    MaxPwdAge = 'maxpwdage',
+    LockoutDuration = 'lockoutduration',
+    LockoutObservationWindow = 'lockoutobservationwindow',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -582,6 +590,22 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'User Account Control';
         case ActiveDirectoryKindProperties.TrustAttributes:
             return 'Trust Attributes';
+        case ActiveDirectoryKindProperties.MinPwdLength:
+            return 'Minimum password length';
+        case ActiveDirectoryKindProperties.PwdProperties:
+            return 'Password Properties';
+        case ActiveDirectoryKindProperties.PwdHistoryLength:
+            return 'Password History Length';
+        case ActiveDirectoryKindProperties.LockoutThreshold:
+            return 'Lockout Threshold';
+        case ActiveDirectoryKindProperties.MinPwdAge:
+            return 'Minimum Password Age';
+        case ActiveDirectoryKindProperties.MaxPwdAge:
+            return 'Maximum Password Age';
+        case ActiveDirectoryKindProperties.LockoutDuration:
+            return 'Lockout Duration';
+        case ActiveDirectoryKindProperties.LockoutObservationWindow:
+            return 'Lockout Observation Window';
         default:
             return undefined;
     }

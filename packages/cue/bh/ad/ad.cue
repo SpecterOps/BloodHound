@@ -672,6 +672,62 @@ TrustAttributes: types.#StringEnum & {
 	representation: "trustattributes"
 }
 
+LockoutDuration: types.#StringEnum & {
+	symbol: "LockoutDuration"
+	schema: "ad"
+	name: "Lockout Duration"
+	representation: "lockoutduration"
+}
+
+LockoutObservationWindow: types.#StringEnum & {
+	symbol: "LockoutObservationWindow"
+	schema: "ad"
+	name: "Lockout Observation Window"
+	representation: "lockoutobservationwindow"
+}
+
+MaxPwdAge: types.#StringEnum & {
+	symbol: "MaxPwdAge"
+	schema: "ad"
+	name: "Maximum Password Age"
+	representation: "maxpwdage"
+}
+
+MinPwdAge: types.#StringEnum & {
+	symbol: "MinPwdAge"
+	schema: "ad"
+	name: "Minimum Password Age"
+	representation: "minpwdage"
+}
+
+LockoutThreshold: types.#StringEnum & {
+	symbol: "LockoutThreshold"
+	schema: "ad"
+	name: "Lockout Threshold"
+	representation: "lockoutthreshold"
+}
+
+PwdHistoryLength: types.#StringEnum & {
+	symbol: "PwdHistoryLength"
+	schema: "ad"
+	name: "Password History Length"
+	representation: "pwdhistorylength"
+}
+
+PwdProperties: types.#StringEnum & {
+	symbol: "PwdProperties"
+	schema: "ad"
+	name: "Password Properties"
+	representation: "pwdproperties"
+}
+
+MinPwdLength: types.#StringEnum & {
+	symbol: "MinPwdLength"
+	schema: "ad"
+	name: "Minimum password length"
+	representation: "minpwdlength"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -764,7 +820,15 @@ Properties: [
 	PasswordExpired,
 	DSHeuristics,
 	UserAccountControl,
-	TrustAttributes
+	TrustAttributes,
+	MinPwdLength,
+	PwdProperties,
+	PwdHistoryLength,
+	LockoutThreshold,
+	MinPwdAge,
+	MaxPwdAge,
+	LockoutDuration,
+	LockoutObservationWindow
 ]
 
 // Kinds
