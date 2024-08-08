@@ -17,10 +17,11 @@
 import { Box, Grid, Link, useTheme } from '@mui/material';
 import {
     EdgeInfoState,
-    GraphButtonProps,
     GraphProgress,
     NoDataAlert,
+    SearchCurrentNodes,
     WebGLDisabledAlert,
+    exportToJson,
     isWebGLEnabled,
     setEdgeInfoOpen,
     setSelectedEdge,
@@ -32,10 +33,10 @@ import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
-import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
+import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
 import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { GraphState } from 'src/ducks/explore/types';
@@ -43,7 +44,6 @@ import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { ROUTE_ADMINISTRATION_FILE_INGEST } from 'src/ducks/global/routes';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
-import { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import useToggle from 'src/hooks/useToggle';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { transformFlatGraphResponse } from 'src/utils';
@@ -71,6 +71,10 @@ const GraphView: FC = () => {
     const { data, isLoading, isError } = useAvailableDomains();
 
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+
+    const exportableGraphState = useAppSelector((state) => state.explore.export);
+
+    const sigmaChartRef = useRef<any>(null);
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;
@@ -159,16 +163,6 @@ const GraphView: FC = () => {
             </Box>
         );
 
-    const options: GraphButtonOptions = { standard: true, sequential: true };
-
-    const nonLayoutButtons: GraphButtonProps[] = [
-        {
-            displayText: 'Search Current Results',
-            onClick: toggleCurrentSearch,
-            disabled: currentSearchOpen,
-        },
-    ];
-
     const findNodeAndSelect = (id: string) => {
         const selectedItem = graphState.chartProps.items?.[id];
         if (selectedItem?.data?.nodetype) {
@@ -204,19 +198,44 @@ const GraphView: FC = () => {
         setContextMenu(null);
     };
 
+    const handleExportJson = () => exportToJson(exportableGraphState);
+
     return (
         <Box sx={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
             <SigmaChart
-                rankDirection={RankDirection.LEFT_RIGHT}
-                options={options}
                 graph={graphologyGraph}
-                currentNodes={currentNodes}
                 onClickNode={onClickNode}
-                nonLayoutButtons={nonLayoutButtons}
-                isCurrentSearchOpen={currentSearchOpen}
-                toggleCurrentSearch={toggleCurrentSearch}
                 handleContextMenu={handleContextMenu}
+                ref={sigmaChartRef}
             />
+
+            <Box position={'absolute'} bottom={16} zIndex={1}>
+                {currentSearchOpen && (
+                    <SearchCurrentNodes
+                        sx={{ marginLeft: 2, padding: 1 }}
+                        currentNodes={currentNodes || {}}
+                        onSelect={(node) => {
+                            onClickNode?.(node.id);
+                            toggleCurrentSearch?.();
+                        }}
+                        onClose={toggleCurrentSearch}
+                    />
+                )}
+                <GraphButtons
+                    onExportJson={handleExportJson}
+                    onReset={() => {
+                        sigmaChartRef.current?.resetCamera();
+                    }}
+                    onRunSequentialLayout={() => {
+                        sigmaChartRef.current?.runSequentialLayout();
+                    }}
+                    onRunStandardLayout={() => {
+                        sigmaChartRef.current?.runStandardLayout();
+                    }}
+                    onSearchCurrentResults={() => {}}
+                    isCurrentSearchOpen={false}
+                />
+            </Box>
 
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
 

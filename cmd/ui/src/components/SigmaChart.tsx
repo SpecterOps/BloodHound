@@ -18,12 +18,9 @@ import { SigmaContainer } from '@react-sigma/core';
 import '@react-sigma/core/lib/react-sigma.min.css';
 import Graph, { MultiDirectedGraph } from 'graphology';
 import { AbstractGraph, Attributes } from 'graphology-types';
-import { FC } from 'react';
-import GraphButtons from 'src/components/GraphButtons';
-import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
+import { forwardRef } from 'react';
 import { GraphEvents } from 'src/components/GraphEvents';
 import { MAX_CAMERA_RATIO, MIN_CAMERA_RATIO } from 'src/ducks/graph/utils';
-import { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import drawEdgeLabel from 'src/rendering/programs/edge-label';
 import EdgeArrowProgram from 'src/rendering/programs/edge.arrow';
 import CurvedEdgeArrowProgram from 'src/rendering/programs/edge.curvedArrow';
@@ -33,19 +30,11 @@ import drawLabel from 'src/rendering/programs/node-label';
 import getNodeCombinedProgram from 'src/rendering/programs/node.combined';
 import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
 import GraphEdgeEvents from './GraphEdgeEvents';
-import { Box, useTheme } from '@mui/material';
-import { GraphNodes } from 'js-client-library';
-import { GraphButtonProps, SearchCurrentNodes } from 'bh-shared-ui';
+import { useTheme } from '@mui/material';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 
 interface SigmaChartProps {
-    rankDirection: RankDirection;
-    options: GraphButtonOptions;
-    nonLayoutButtons: GraphButtonProps[];
-    isCurrentSearchOpen: boolean;
     graph: Graph<Attributes, Attributes, Attributes>;
-    currentNodes: GraphNodes;
-    toggleCurrentSearch: () => void;
     onDoubleClickNode: (id: string) => void;
     onClickNode: (id: string) => void;
     onClickEdge: (id: string, relatedFindingType?: string | null) => void;
@@ -54,22 +43,20 @@ interface SigmaChartProps {
     handleContextMenu: (event: SigmaNodeEventPayload) => void;
 }
 
-const SigmaChart: FC<Partial<SigmaChartProps>> = ({
-    rankDirection,
-    options,
-    nonLayoutButtons,
-    isCurrentSearchOpen,
-    graph,
-    currentNodes,
-    toggleCurrentSearch,
-    onDoubleClickNode,
-    onClickNode,
-    onClickEdge,
-    onClickStage,
-    edgeReducer,
-    handleContextMenu,
-}) => {
+const SigmaChart = forwardRef(function SigmaChart(
+    {
+        graph,
+        onDoubleClickNode,
+        onClickNode,
+        onClickEdge,
+        onClickStage,
+        edgeReducer,
+        handleContextMenu,
+    }: Partial<SigmaChartProps>,
+    ref
+) {
     const theme = useTheme();
+
     return (
         <div
             // prevent browser's default right-click behavior
@@ -113,24 +100,11 @@ const SigmaChart: FC<Partial<SigmaChartProps>> = ({
                     onClickStage={onClickStage}
                     edgeReducer={edgeReducer}
                     onRightClickNode={handleContextMenu}
+                    ref={ref}
                 />
-                <Box position={'absolute'} bottom={16}>
-                    {isCurrentSearchOpen && (
-                        <SearchCurrentNodes
-                            sx={{ marginLeft: 2, padding: 1 }}
-                            currentNodes={currentNodes || {}}
-                            onSelect={(node) => {
-                                onClickNode?.(node.id);
-                                toggleCurrentSearch?.();
-                            }}
-                            onClose={toggleCurrentSearch}
-                        />
-                    )}
-                    <GraphButtons rankDirection={rankDirection} options={options} nonLayoutButtons={nonLayoutButtons} />
-                </Box>
             </SigmaContainer>
         </div>
     );
-};
+});
 
 export default SigmaChart;
