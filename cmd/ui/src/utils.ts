@@ -25,7 +25,7 @@ import { isLink, isNode } from 'src/ducks/graph/utils';
 import { Glyph } from 'src/rendering/programs/node.glyphs';
 import { store } from 'src/store';
 
-const IGNORE_401_LOGOUT = ['/api/v2/login', '/api/v2/logout', '/api/v2/features']
+const IGNORE_401_LOGOUT = ['/api/v2/login', '/api/v2/logout', '/api/v2/features'];
 
 export const getDatesInRange = (startDate: Date, endDate: Date) => {
     const date = new Date(startDate.getTime());

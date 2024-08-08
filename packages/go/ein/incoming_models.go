@@ -201,12 +201,14 @@ type Container struct {
 }
 
 type Trust struct {
-	TargetDomainSid     string
-	IsTransitive        bool
-	TrustDirection      string
-	TrustType           string
-	SidFilteringEnabled bool
-	TargetDomainName    string
+	TargetDomainSid      string
+	IsTransitive         bool
+	TrustDirection       string
+	TrustType            string
+	SidFilteringEnabled  bool
+	TargetDomainName     string
+	TGTDelegationEnabled bool
+	TrustAttributes      string
 }
 
 type GPLink struct {
