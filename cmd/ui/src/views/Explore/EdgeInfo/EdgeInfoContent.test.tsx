@@ -154,9 +154,15 @@ describe('EdgeInfoContent', () => {
         const user = userEvent.setup();
         const windowAbuseAccordion = screen.getByTestId('windowsabuse-accordion');
         await user.click(windowAbuseAccordion);
-        const windowsAbuseText = await screen.getByTestId('windowsabuse-computer-has-laps-enabled-text');
+        const windowsAbuseHasLapsEnabledText = await screen.queryByTestId(
+            'windowsabuse-computer-has-laps-enabled-text'
+        );
+        const windowsAbuseHasLapsDisabledText = await screen.queryByTestId(
+            'windowsabuse-computer-has-laps-disabled-text'
+        );
 
-        expect(windowsAbuseText).toBeInTheDocument();
+        expect(windowsAbuseHasLapsEnabledText).toBeInTheDocument();
+        expect(windowsAbuseHasLapsDisabledText).not.toBeInTheDocument();
     });
     test('Selecting an edge with a Computer target node that does not have haslaps enabled shows correct Windows Abuse text', async () => {
         render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsDisabled} />);
@@ -164,8 +170,14 @@ describe('EdgeInfoContent', () => {
         const user = userEvent.setup();
         const windowAbuseAccordion = screen.getByTestId('windowsabuse-accordion');
         await user.click(windowAbuseAccordion);
-        const windowsAbuseText = await screen.getByTestId('windowsabuse-computer-has-laps-disabled-text');
+        const windowsAbuseHasLapsEnabledText = await screen.queryByTestId(
+            'windowsabuse-computer-has-laps-enabled-text'
+        );
+        const windowsAbuseHasLapsDisabledText = await screen.queryByTestId(
+            'windowsabuse-computer-has-laps-disabled-text'
+        );
 
-        expect(windowsAbuseText).toBeInTheDocument();
+        expect(windowsAbuseHasLapsEnabledText).not.toBeInTheDocument();
+        expect(windowsAbuseHasLapsDisabledText).toBeInTheDocument();
     });
 });
