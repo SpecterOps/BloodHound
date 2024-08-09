@@ -19,64 +19,20 @@ import {
     EntityField,
     FieldsContainer,
     ObjectInfoFields,
-    apiClient,
-    entityInformationEndpoints,
     formatObjectInfoFields,
-    getNodeByDatabaseIdCypher,
-    validateNodeType,
+    useFetchEntityProperties,
 } from 'bh-shared-ui';
-import { RequestOptions } from 'js-client-library';
 import React from 'react';
-import { useQuery } from 'react-query';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
-    const requestDetails: {
-        endpoint: (
-            params: string,
-            options?: RequestOptions,
-            includeProperties?: boolean
-        ) => Promise<Record<string, any>>;
-        param: string;
-    } = {
-        endpoint: async function () {
-            return {};
-        },
-        param: '',
-    };
-
-    const validatedKind = validateNodeType(nodeType);
-
-    if (validatedKind) {
-        requestDetails.endpoint = entityInformationEndpoints[validatedKind];
-        requestDetails.param = id;
-    } else if (databaseId) {
-        requestDetails.endpoint = apiClient.cypherSearch;
-        requestDetails.param = getNodeByDatabaseIdCypher(databaseId);
-    }
-
-    const informationAvailable = !!validatedKind || !!databaseId;
-
-    const {
-        data: objectInformation,
-        isLoading,
-        isError,
-    } = useQuery(
-        ['entity', nodeType, id],
-        ({ signal }) =>
-            requestDetails.endpoint(requestDetails.param, { signal }, true).then((res) => {
-                if (validatedKind) return res.data.data.props;
-                else if (databaseId) return Object.values(res.data.data.nodes as Record<string, any>)[0].properties;
-                else return {};
-            }),
-        {
-            refetchOnWindowFocus: false,
-            retry: false,
-            enabled: informationAvailable,
-        }
-    );
+    const { entityProperties, informationAvailable, isLoading, isError } = useFetchEntityProperties({
+        objectId: id,
+        nodeType,
+        databaseId,
+    });
 
     if (isLoading) return <Skeleton data-testid='entity-object-information-skeleton' variant='text' />;
 
@@ -89,12 +45,12 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
             </EntityInfoCollapsibleSection>
         );
 
-    const formattedObjectFields: EntityField[] = formatObjectInfoFields(objectInformation);
+    const formattedObjectFields: EntityField[] = formatObjectInfoFields(entityProperties);
 
     return (
         <EntityInfoCollapsibleSection label='Object Information'>
             <FieldsContainer>
-                <BasicObjectInfoFields {...objectInformation} />
+                <BasicObjectInfoFields {...entityProperties} />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>
         </EntityInfoCollapsibleSection>
