@@ -340,6 +340,10 @@ func (s QueryParameterFilterParser) ParseQueryParameterFilters(request *http.Req
 			continue
 		}
 
+		if slices.Contains(IgnoreFilters(), name) {
+			continue
+		}
+
 		for _, value := range values {
 			if filter, err := s.ParseQueryParameterFilter(name, value); err != nil {
 				if !errors.Is(err, ErrNotFiltered) {
