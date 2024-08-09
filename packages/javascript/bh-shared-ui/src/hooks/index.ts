@@ -28,4 +28,4 @@ export * from './useSavedQueries';
 
 export * from './useFileIngest';
 
-export * from './useFetchEntity';
+export * from './useFetchEntityProperties';

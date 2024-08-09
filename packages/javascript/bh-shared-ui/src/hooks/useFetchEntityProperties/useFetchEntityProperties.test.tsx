@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useFetchEntity, FetchEntityParams, EntityProperties } from './useFetchEntity';
+import { useFetchEntityProperties, FetchEntityPropertiesParams, EntityProperties } from './useFetchEntityProperties';
 import { renderHook, waitFor } from '../../test-utils';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -73,7 +73,7 @@ const EntityProperties: EntityProperties = {
     system_tags: 'admin_tier_0',
 };
 
-describe('useFetchEntity', () => {
+describe('useFetchEntityProperties', () => {
     const server = setupServer(entityObjectIdRequest(), entityGraphIdRequest());
 
     beforeAll(() => server.listen());
@@ -86,10 +86,13 @@ describe('useFetchEntity', () => {
             nodeType: EntityNodeType,
         };
 
-        const { result } = renderHook((nodeItemParams: FetchEntityParams) => useFetchEntity(nodeItemParams), {
-            wrapper,
-            initialProps,
-        });
+        const { result } = renderHook(
+            (nodeItemParams: FetchEntityPropertiesParams) => useFetchEntityProperties(nodeItemParams),
+            {
+                wrapper,
+                initialProps,
+            }
+        );
 
         await waitFor(() => {
             expect(result.current.isSuccess).toBe(true);
@@ -104,10 +107,13 @@ describe('useFetchEntity', () => {
             databaseId: EntityGraphId,
         };
 
-        const { result } = renderHook((nodeItemParams: FetchEntityParams) => useFetchEntity(nodeItemParams), {
-            wrapper,
-            initialProps,
-        });
+        const { result } = renderHook(
+            (nodeItemParams: FetchEntityPropertiesParams) => useFetchEntityProperties(nodeItemParams),
+            {
+                wrapper,
+                initialProps,
+            }
+        );
 
         await waitFor(() => {
             expect(result.current.isSuccess).toBe(true);

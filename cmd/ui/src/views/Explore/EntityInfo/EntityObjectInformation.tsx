@@ -15,14 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, Skeleton } from '@mui/material';
-import { EntityField, FieldsContainer, ObjectInfoFields, formatObjectInfoFields, useFetchEntity } from 'bh-shared-ui';
+import {
+    EntityField,
+    FieldsContainer,
+    ObjectInfoFields,
+    formatObjectInfoFields,
+    useFetchEntityProperties,
+} from 'bh-shared-ui';
 import React from 'react';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
-    const { entityProperties, informationAvailable, isLoading, isError } = useFetchEntity({
+    const { entityProperties, informationAvailable, isLoading, isError } = useFetchEntityProperties({
         objectId: id,
         nodeType,
         databaseId,
