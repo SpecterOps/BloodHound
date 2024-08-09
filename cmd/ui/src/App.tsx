@@ -142,20 +142,18 @@ const Inner: React.FC = () => {
     const showHeader = !['', '/', ROUTE_LOGIN, ROUTE_EXPIRED_PASSWORD, ROUTE_USER_DISABLED].includes(location.pathname);
 
     return (
-        <>
-            <Box className={`${classes.applicationContainer} ${darkMode ? 'dark' : 'light'}`}>
-                {showHeader && (
-                    <Box className={classes.applicationHeader}>
-                        <Header />
-                    </Box>
-                )}
-                <Box className={classes.applicationContent}>
-                    <Content />
+        <Box className={`${classes.applicationContainer} ${darkMode ? 'dark' : 'light'}`} id='app-root'>
+            {showHeader && (
+                <Box className={classes.applicationHeader}>
+                    <Header />
                 </Box>
-                <AppNotifications />
-                <Notifier />
+            )}
+            <Box className={classes.applicationContent}>
+                <Content />
             </Box>
-        </>
+            <AppNotifications />
+            <Notifier />
+        </Box>
     );
 };
 
