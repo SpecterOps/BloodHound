@@ -145,7 +145,7 @@ func (s *Migrator) RequiresMigration() (bool, error) {
 	}
 }
 
-// executeStepwiseMigrations will run all necessary migrations for a deployment.
+// ExecuteStepwiseMigrations will run all necessary migrations for a deployment.
 // It begins by checking if migration schema exists. If it does not, we assume the
 // deployment is a new installation, otherwise we assume it may have migration updates.
 //
@@ -156,7 +156,7 @@ func (s *Migrator) RequiresMigration() (bool, error) {
 // and then build a manifest starting after the last successful version
 //
 // Once schema is verified and a manifest is created, we run ExecuteMigrations.
-func (s *Migrator) executeStepwiseMigrations() error {
+func (s *Migrator) ExecuteStepwiseMigrations() error {
 	var (
 		manifest      Manifest
 		lastMigration model.Migration
