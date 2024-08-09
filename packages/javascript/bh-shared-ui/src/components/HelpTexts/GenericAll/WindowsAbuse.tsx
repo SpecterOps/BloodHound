@@ -212,7 +212,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
             if (haslaps) {
                 return (
                     <>
-                        <Typography data-testid='windowsabuse-computer-has-laps-text' variant='body2'>
+                        <Typography data-testid='windowsabuse-computer-has-laps-enabled-text' variant='body2'>
                             The GenericAll permission grants {sourceName} the ability to obtain the LAPS (RID 500
                             administrator) password of {targetName}. {sourceName} can do so by listing a computer
                             object's AD properties with PowerView using Get-DomainComputer {targetName}. The value of
@@ -321,7 +321,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
             } else {
                 return (
                     <>
-                        <Typography variant='body2'>
+                        <Typography data-testid='windowsabuse-computer-has-laps-disabled-text' variant='body2'>
                             The GenericAll grants {sourceName} the permission to write to the "msds-KeyCredentialLink"
                             attribute of {targetName}. Writing to this property allows an attacker to create "Shadow
                             Credentials" on the object and authenticate as the principal using kerberos PKINIT. This is

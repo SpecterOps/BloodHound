@@ -55,13 +55,24 @@ const server = setupServer(
             })
         );
     }),
-    rest.get(`/api/v2/computers/:id`, async (req, res, ctx) => {
+    rest.get(`/api/v2/computers/testing-node-123`, async (req, res, ctx) => {
         return res(
             ctx.json({
                 data: {
                     props: {
                         haslaps: true,
                         objectid: 'testing-node-123',
+                    },
+                },
+            })
+        );
+    }),
+    rest.get(`/api/v2/computers/testing-node-456`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    props: {
+                        objectid: 'testing-node-456',
                     },
                 },
             })
@@ -82,7 +93,7 @@ const selectedEdge: SelectedEdge = {
     targetNode: { name: 'target node', id: '2', objectId: '2', type: 'User' },
 };
 
-const selectedEdgeHasLapsTest: SelectedEdge = {
+const selectedEdgeHasLapsEnabled: SelectedEdge = {
     id: '2',
     name: 'GenericAll',
     data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
@@ -93,6 +104,19 @@ const selectedEdgeHasLapsTest: SelectedEdge = {
         type: 'User',
     },
     targetNode: { name: 'target node', id: '3', objectId: 'testing-node-123', type: 'Computer' },
+};
+
+const selectedEdgeHasLapsDisabled: SelectedEdge = {
+    id: '3',
+    name: 'GenericAll',
+    data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
+    sourceNode: {
+        name: 'source node',
+        id: '1',
+        objectId: '1',
+        type: 'User',
+    },
+    targetNode: { name: 'target node', id: '4', objectId: 'testing-node-456', type: 'Computer' },
 };
 
 beforeAll(() => server.listen());
@@ -125,12 +149,22 @@ describe('EdgeInfoContent', () => {
         ).not.toBeInTheDocument();
     });
     test('Selecting an edge with a Computer target node that haslaps is enabled shows correct Windows Abuse text', async () => {
-        render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsTest} />);
+        render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsEnabled} />);
 
         const user = userEvent.setup();
         const windowAbuseAccordion = screen.getByTestId('windowsabuse-accordion');
         await user.click(windowAbuseAccordion);
-        const windowsAbuseText = await screen.getByTestId('windowsabuse-computer-has-laps-text');
+        const windowsAbuseText = await screen.getByTestId('windowsabuse-computer-has-laps-enabled-text');
+
+        expect(windowsAbuseText).toBeInTheDocument();
+    });
+    test('Selecting an edge with a Computer target node that does not have haslaps enabled shows correct Windows Abuse text', async () => {
+        render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsDisabled} />);
+
+        const user = userEvent.setup();
+        const windowAbuseAccordion = screen.getByTestId('windowsabuse-accordion');
+        await user.click(windowAbuseAccordion);
+        const windowsAbuseText = await screen.getByTestId('windowsabuse-computer-has-laps-disabled-text');
 
         expect(windowsAbuseText).toBeInTheDocument();
     });
