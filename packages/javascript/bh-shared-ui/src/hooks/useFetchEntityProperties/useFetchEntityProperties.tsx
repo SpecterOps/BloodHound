@@ -21,7 +21,7 @@ import { getNodeByDatabaseIdCypher } from '../../utils/entityInfoDisplay';
 import { validateNodeType } from '../useSearch/useSearch';
 import { useQuery } from 'react-query';
 
-export type FetchEntityParams = {
+export type FetchEntityPropertiesParams = {
     objectId: string;
     nodeType: string;
     databaseId?: string;
@@ -32,7 +32,7 @@ export type EntityProperties = {
     objectid: string;
 };
 
-type FetchEntityExport = {
+type FetchEntityPropertiesExport = {
     entityProperties: EntityProperties;
     informationAvailable: boolean;
     isLoading: boolean;
@@ -42,7 +42,11 @@ type FetchEntityExport = {
 
 export const FetchEntityCacheId = 'entity-properties' as const;
 
-export const useFetchEntity: (param: FetchEntityParams) => FetchEntityExport = ({ objectId, nodeType, databaseId }) => {
+export const useFetchEntityProperties: (param: FetchEntityPropertiesParams) => FetchEntityPropertiesExport = ({
+    objectId,
+    nodeType,
+    databaseId,
+}) => {
     const requestDetails: {
         endpoint: (
             params: string,
