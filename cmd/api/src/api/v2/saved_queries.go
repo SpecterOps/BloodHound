@@ -164,6 +164,39 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 	}
 }
 
+func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.Request) {
+	var (
+		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
+		updateRequest   CreateSavedQueryRequest
+	)
+
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+	} else if err := api.ReadJSONRequestPayloadLimited(&updateRequest, request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if savedQueryID, err := strconv.Atoi(rawSavedQueryID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if savedQuery, err := s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil || savedQuery.UserID != user.ID.String() {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
+	} else {
+		if updateRequest.Query != "" {
+			savedQuery.Query = updateRequest.Query
+		}
+		if updateRequest.Name != "" {
+			savedQuery.Name = updateRequest.Name
+		}
+
+		// description should be nullable, so we will not perform an empty check for it
+		savedQuery.Description = updateRequest.Description
+
+		if savedQuery, err = s.DB.UpdateSavedQuery(request.Context(), savedQuery); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteBasicResponse(request.Context(), savedQuery, http.StatusOK, response)
+		}
+	}
+}
+
 func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]

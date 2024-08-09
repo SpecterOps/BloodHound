@@ -18,19 +18,26 @@ package database
 
 import (
 	"context"
-
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
 )
 
 type SavedQueriesData interface {
+	GetSavedQuery(ctx context.Context, queryID int) (model.SavedQuery, error)
 	ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
 	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error)
+	UpdateSavedQuery(ctx context.Context, savedQuery model.SavedQuery) (model.SavedQuery, error)
 	DeleteSavedQuery(ctx context.Context, id int) error
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
 	GetSharedSavedQueries(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error)
 	GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error)
+}
+
+func (s *BloodhoundDB) GetSavedQuery(ctx context.Context, queryID int) (model.SavedQuery, error) {
+	savedQuery := model.SavedQuery{}
+	result := s.db.WithContext(ctx).First(&savedQuery, queryID)
+	return savedQuery, CheckError(result)
 }
 
 func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error) {
@@ -70,6 +77,10 @@ func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, n
 	}
 
 	return savedQuery, CheckError(s.db.WithContext(ctx).Create(&savedQuery))
+}
+
+func (s *BloodhoundDB) UpdateSavedQuery(ctx context.Context, savedQuery model.SavedQuery) (model.SavedQuery, error) {
+	return savedQuery, CheckError(s.db.WithContext(ctx).Save(&savedQuery))
 }
 
 func (s *BloodhoundDB) DeleteSavedQuery(ctx context.Context, id int) error {
