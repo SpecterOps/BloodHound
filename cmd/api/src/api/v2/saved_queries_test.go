@@ -738,31 +738,6 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 	require.Equal(t, http.StatusCreated, response.Code)
 }
 
-// func TestResources_DeleteSavedQuery_NoUserError(t *testing.T) {
-// 	var (
-// 		mockCtrl  = gomock.NewController(t)
-// 		mockDB    = mocks.NewMockDatabase(mockCtrl)
-// 		resources = v2.Resources{DB: mockDB}
-// 	)
-// 	defer mockCtrl.Finish()
-
-// 	userId, err := uuid2.NewV4()
-// 	require.Nil(t, err)
-
-// 	req, err := http.NewRequestWithContext(, "DELETE", "/api/v2/saved-queries/-1", nil)
-// 	require.Nil(t, err)
-
-// 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-
-// 	router := mux.NewRouter()
-// 	router.HandleFunc("/api/v2/saved-queries/-1", resources.DeleteSavedQuery).Methods("DELETE")
-
-// 	response := httptest.NewRecorder()
-// 	router.ServeHTTP(response, req)
-// 	assert.Equal(t, http.StatusBadRequest, response.Code)
-// 	assert.Contains(t, response.Body.String(), api.ErrorResponseDetailsIDMalformed)
-// }
-
 func TestResources_DeleteSavedQuery_IDMalformed(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)

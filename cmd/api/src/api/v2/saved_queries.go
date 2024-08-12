@@ -178,7 +178,7 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if !savedQueryBelongsToUser {
-		hasAdmin := user.Roles.Has(model.Role{Name: "Administrator"})
+		_, isAdmin := user.Roles.FindByName(auth.RoleAdministrator)
 		if publicQueries, err := s.DB.GetPublicSavedQueries(request.Context()); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		} else {
@@ -190,7 +190,7 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 				}
 			}
 
-			if !isPublic && !hasAdmin {
+			if !isPublic && !isAdmin {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to delete this query", request), response)
 			} else if err := s.DB.DeleteSavedQuery(request.Context(), savedQueryID); errors.Is(err, database.ErrNotFound) {
 				// This is an edge case and can only occur if the database has a concurrent operation that deletes the saved query
