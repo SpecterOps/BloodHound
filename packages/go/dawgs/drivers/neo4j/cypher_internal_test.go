@@ -17,9 +17,10 @@
 package neo4j
 
 import (
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"strings"
 	"testing"
+
+	"github.com/specterops/bloodhound/dawgs/graph"
 
 	"github.com/stretchr/testify/require"
 )
