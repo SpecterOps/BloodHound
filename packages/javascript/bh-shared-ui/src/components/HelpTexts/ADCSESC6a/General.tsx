@@ -34,7 +34,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
                 specify a Subject Alternate Name (SAN) identifying another principal during certificate enrollment of
                 any published certificate template. This setup allow an attacker principal to obtain a malicious
                 certificate as any AD forest user or computer and use it for authentication and impersonation without
-                knowning their credentials.
+                knowing their credentials.
             </Typography>
         </>
     );
