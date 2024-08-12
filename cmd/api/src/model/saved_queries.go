@@ -31,6 +31,11 @@ type SavedQuery struct {
 
 type SavedQueries []SavedQuery
 
+type SavedQueryResponse struct {
+	SavedQuery
+	Scope string `json:"scope"`
+}
+
 func (s SavedQueries) IsSortable(column string) bool {
 	switch column {
 	case "user_id",
@@ -53,6 +58,12 @@ func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 		"name":        {Equals, NotEquals},
 		"query":       {Equals, NotEquals},
 		"description": {Equals, NotEquals, Contains},
+	}
+}
+
+func IgnoreFilters() []string {
+	return []string{
+		"scope",
 	}
 }
 

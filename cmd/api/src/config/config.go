@@ -125,11 +125,6 @@ type SAMLConfiguration struct {
 	ServiceProviderCertificateCAChain string `json:"sp_ca_chain"`
 }
 
-type SpecterAuthConfiguration struct {
-	InstanceUUID string `json:"instance_uuid"`
-	Token        string `json:"token"`
-}
-
 type DefaultAdminConfiguration struct {
 	PrincipalName string `json:"principal_name"`
 	Password      string `json:"password"`
@@ -156,7 +151,6 @@ type Configuration struct {
 	Neo4J                        DatabaseConfiguration     `json:"neo4j"`
 	Crypto                       CryptoConfiguration       `json:"crypto"`
 	SAML                         SAMLConfiguration         `json:"saml"`
-	SpecterAuth                  SpecterAuthConfiguration  `json:"specter_auth"`
 	DefaultAdmin                 DefaultAdminConfiguration `json:"default_admin"`
 	CollectorsBasePath           string                    `json:"collectors_base_path"`
 	DatapipeInterval             int                       `json:"datapipe_interval"`

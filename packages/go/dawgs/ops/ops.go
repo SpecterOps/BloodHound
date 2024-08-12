@@ -20,8 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"sync"
+
+	"github.com/specterops/bloodhound/dawgs/util/channels"
 
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -536,6 +537,10 @@ func parallelFetchNodes(ctx context.Context, db graph.Database, maxID graph.ID, 
 // range of node database identifiers to avoid parallel worker collisions.
 func ParallelFetchNodes(ctx context.Context, db graph.Database, criteria graph.Criteria, numWorkers int) (graph.NodeSet, error) {
 	if largestNodeID, err := FetchLargestNodeID(ctx, db); err != nil {
+		if graph.IsErrNotFound(err) {
+			return graph.NodeSet{}, nil
+		}
+
 		return nil, err
 	} else {
 		return parallelFetchNodes(ctx, db, largestNodeID, criteria, numWorkers)

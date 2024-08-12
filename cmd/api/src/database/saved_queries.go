@@ -29,7 +29,7 @@ type SavedQueriesData interface {
 	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error)
 	DeleteSavedQuery(ctx context.Context, id int) error
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
-	GetSharedSavedQueries(ctx context.Context, userID int64) (model.SavedQueries, error)
+	GetSharedSavedQueries(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error)
 	GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error)
 }
 
@@ -55,6 +55,7 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, o
 	if order != "" {
 		cursor = cursor.Order(order)
 	}
+
 	result = cursor.Find(&queries)
 
 	return queries, int(count), CheckError(result)
@@ -87,10 +88,10 @@ func (s *BloodhoundDB) SavedQueryBelongsToUser(ctx context.Context, userID uuid.
 }
 
 // GetSharedSavedQueries returns all the saved queries that the given userID has access to, including global queries
-func (s *BloodhoundDB) GetSharedSavedQueries(ctx context.Context, userID int64) (model.SavedQueries, error) {
+func (s *BloodhoundDB) GetSharedSavedQueries(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
 	savedQueries := model.SavedQueries{}
 
-	result := s.db.WithContext(ctx).Where("shared_to_user_id = ?", userID).Find(&savedQueries)
+	result := s.db.WithContext(ctx).Select("saved_queries.*").Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id").Where("sqp.shared_to_user_id = ? ", userID).Find(&savedQueries)
 
 	return savedQueries, CheckError(result)
 }
@@ -99,6 +100,7 @@ func (s *BloodhoundDB) GetSharedSavedQueries(ctx context.Context, userID int64) 
 func (s *BloodhoundDB) GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error) {
 	savedQueries := model.SavedQueries{}
 
-	result := s.db.WithContext(ctx).Where("public = true").Find(&savedQueries)
+	result := s.db.WithContext(ctx).Select("sqp.*").Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id").Where("sqp.public = true").Find(&savedQueries)
+
 	return savedQueries, CheckError(result)
 }

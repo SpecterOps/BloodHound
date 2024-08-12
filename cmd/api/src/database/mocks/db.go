@@ -1117,7 +1117,7 @@ func (mr *MockDatabaseMockRecorder) GetSAMLProviderUsers(arg0, arg1 interface{})
 }
 
 // GetSharedSavedQueries mocks base method.
-func (m *MockDatabase) GetSharedSavedQueries(arg0 context.Context, arg1 int64) (model.SavedQueries, error) {
+func (m *MockDatabase) GetSharedSavedQueries(arg0 context.Context, arg1 uuid.UUID) (model.SavedQueries, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSharedSavedQueries", arg0, arg1)
 	ret0, _ := ret[0].(model.SavedQueries)
