@@ -40,11 +40,6 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return err
 	} else if !isUserSpecifiesSanEnabled {
 		return nil
-	} else if weakBinding, err := HasWeakCertBindingInForest(tx, domain); err != nil {
-		log.Warnf("Error checking HasWeakCertBindingInForest for Domain %d: %v", domain.ID, err)
-		return nil
-	} else if !weakBinding {
-		return nil
 	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[enterpriseCA.ID]; !ok {
 		return nil
 	} else {
@@ -212,36 +207,33 @@ func isCertTemplateValidForESC6(ct *graph.Node, scenarioB bool) (bool, error) {
 
 func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
-	MATCH p1 = (n {objectid:'S-1-5-21-2697957641-2271029196-387917394-2227'})-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d {objectid:'S-1-5-21-2697957641-2271029196-387917394'})
-	WHERE ca.isuserspecifiessanenabled = true
+		MATCH p1 = (n {objectid:'S-1-5-21-2697957641-2271029196-387917394-2227'})-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d {objectid:'S-1-5-21-2697957641-2271029196-387917394'})
+		WHERE ca.isuserspecifiessanenabled = true
 
-	MATCH p2 = (d:Domain)-[r:TrustedBy*0..]->()<-[:DCFor]-(dc:Computer)
-	WITH *, relationships(p2) AS r
-	WHERE ALL(rel IN r WHERE type(rel) = "DCFor" OR rel.trusttype = "ParentChild")
-	AND (
-		// ESC6a only
-		dc.strongcertificatebindingenforcementraw = 0 OR dc.strongcertificatebindingenforcementraw = 1
-
-		// ESC6b only
-		dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]
-	) 
-
-	MATCH p3 = (n)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d:Domain)
-	WHERE ct.nosecurityextension = true                                                  <- ESC6a only
-		AND ct.authenticationenabled = true
-		AND ct.requiresmanagerapproval = false
-		AND (ct.schemaversion = 1 OR ct.authorizedsignatures = 0)
+		MATCH p2 = (d:Domain)-[r:TrustedBy*0..]->()<-[:DCFor]-(dc:Computer)
+		WITH *, relationships(p2) AS r
+		WHERE ALL(rel IN r WHERE type(rel) = "DCFor" OR rel.trusttype = "ParentChild")
 		AND (
-			n:Group
-			OR n:Computer
-			OR (
-				n:User
-				AND ct.subjectaltrequiredns = false
-				AND ct.subjectaltrequiredomaindns = false
-			)
+			// ESC6b only
+			dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]
 		)
 
-	RETURN p1,p2,p3
+		MATCH p3 = (n)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d:Domain)
+		WHERE ct.nosecurityextension = true                                                  <- ESC6a only
+			AND ct.authenticationenabled = true
+			AND ct.requiresmanagerapproval = false
+			AND (ct.schemaversion = 1 OR ct.authorizedsignatures = 0)
+			AND (
+				n:Group
+				OR n:Computer
+				OR (
+					n:User
+					AND ct.subjectaltrequiredns = false
+					AND ct.subjectaltrequiredomaindns = false
+				)
+			)
+
+		RETURN p1,p2,p3
 	*/
 
 	var (
@@ -292,34 +284,24 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	// P2
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: endNode,
-		Driver: ADCSESC6Path2Pattern(edge.EndID).Do(func(terminal *graph.PathSegment) error {
-			terminalNode := terminal.Node
-			if terminalNode.Kinds.ContainsOneOf(ad.Computer) {
-				dcGood := false
-				if edge.Kind == ad.ADCSESC6a {
-					strongBinding, err := terminalNode.Properties.Get(ad.StrongCertificateBindingEnforcementRaw.String()).Float64()
-					if err == nil && (strongBinding == 1 || strongBinding == 0) {
-						dcGood = true
-					}
-				} else if edge.Kind == ad.ADCSESC6b {
+	if edge.Kind == ad.ADCSESC6b {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: endNode,
+			Driver: ADCSESC6Path2Pattern(edge.EndID).Do(func(terminal *graph.PathSegment) error {
+				terminalNode := terminal.Node
+				if terminalNode.Kinds.ContainsOneOf(ad.Computer) {
 					cmmrProperty, err := terminalNode.Properties.Get(ad.CertificateMappingMethodsRaw.String()).Int()
 					if err == nil && cmmrProperty != ein.RegistryValueDoesNotExist && cmmrProperty&int(ein.CertificateMappingUserPrincipalName) == int(ein.CertificateMappingUserPrincipalName) {
-						dcGood = true
+						lock.Lock()
+						path2Segments = append(path2Segments, terminal)
+						lock.Unlock()
 					}
 				}
-				
-				if (dcGood) {
-					lock.Lock()
-					path2Segments = append(path2Segments, terminal)
-					lock.Unlock()
-				}
-			}
-			return nil
-		}),
-	}); err != nil {
-		return nil, err
+				return nil
+			}),
+		}); err != nil {
+			return nil, err
+		}
 	}
 
 	// P3
@@ -414,7 +396,7 @@ func ADCSESC6Path2Pattern(domainId graph.ID) traversal.PatternContinuation {
 				query.Kind(query.Relationship(), ad.TrustedBy),
 				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
 				query.Kind(query.Start(), ad.Domain),
-		)).
+			)).
 		Inbound(query.And(
 			query.Kind(query.Relationship(), ad.DCFor),
 			query.Kind(query.Start(), ad.Computer),

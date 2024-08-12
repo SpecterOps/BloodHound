@@ -138,25 +138,6 @@
       }
     },
     {
-      "id": "n5",
-      "position": {
-        "x": 2002.0698231155707,
-        "y": 633.939819491855
-      },
-      "caption": "DC",
-      "labels": [],
-      "properties": {
-        "kind": "Computer",
-        "StrongCertificateBindingEnforcementRaw": "1"
-      },
-      "style": {
-        "node-color": "#f44e3b",
-        "caption-position": "inside",
-        "property-alignment": "colon",
-        "property-position": "outside"
-      }
-    },
-    {
       "id": "n6",
       "position": {
         "x": 409.61809824447937,
@@ -417,17 +398,6 @@
       "type": "TrustedForNTAuth",
       "properties": {},
       "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n5",
-      "fromId": "n5",
-      "toId": "n0",
-      "type": "DCFor",
-      "properties": {},
-      "style": {
-        "type-color": "#000000",
         "arrow-color": "#000000"
       }
     },

