@@ -208,19 +208,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Enabled Tier Zero / High Value principals inactive for 60 days',
-                cypher: `WITH 60 as inactive_days\nMATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = true\nAND n.lastlogontimestamp < (datetime().epochseconds - (inactive_days * 86400)) // Replicated value\nAND n.lastlogon < (datetime().epochseconds - (inactive_days * 86400)) // Non-replicated value\nAND n.whencreated < (datetime().epochseconds - (inactive_days * 86400)) // Exclude recently created principals\nAND NOT n.name STARTS WITH "AZUREADKERBEROS." // Removes false positive, Azure KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nAND NOT n.name STARTS WITH "AZUREADSSOACC." // Removes false positive, Entra Seamless SSO\nRETURN n`,
-            },
-            {
-                description: 'Disabled Tier Zero / High Value principals',
-                cypher: `MATCH (n)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH "-502" // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nRETURN n`,
-            },
-            {
-                description: 'Tier Zero / High Value users with non-expiring passwords',
-                cypher: `MATCH (u:User)\nWHERE  u.enabled=TRUE\nAND u.pwdneverexpires = TRUE\nand u.system_tags CONTAINS "admin_tier_0"\nRETURN u`,
-            },
-            {
-                description: 'Nested groups within Tier Zero / High Value',
-                cypher: `MATCH p=(n:Group)-[:MemberOf*..]->(t:Group)\nWHERE n.domainsid <> t.domainsid\nAND coalesce(t.system_tags,"") CONTAINS ('tier_0')\nAND NOT n.objectid ENDS WITH "-512" // Domain Admins\nAND NOT n.objectid ENDS WITH "-519" // Enterprise Admins\nRETURN p`,
+                cypher: `WITH 60 as inactive_days\nMATCH (n:Base)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = true\nAND n.lastlogontimestamp < (datetime().epochseconds - (inactive_days * 86400)) // Replicated value\nAND n.lastlogon < (datetime().epochseconds - (inactive_days * 86400)) // Non-replicated value\nAND n.whencreated < (datetime().epochseconds - (inactive_days * 86400)) // Exclude recently created principals\nAND NOT n.name STARTS WITH "AZUREADKERBEROS." // Removes false positive, Azure KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nAND NOT n.name STARTS WITH "AZUREADSSOACC." // Removes false positive, Entra Seamless SSO\nRETURN n`,
             },
             {
                 description: 'Tier Zero / High Value enabled users not requiring smart card authentication',
@@ -259,19 +247,15 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH (n:Base)\nWHERE n.system_tags CONTAINS "admin_tier_0"\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH "-502" // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH "-500" // Removes false positive, built-in Administrator\nRETURN n`,
             },
             {
-                description: 'Tier Zero / High Value users with non-expiring passwords',
-                cypher: `MATCH (u:User)\nWHERE u.enabled = true\nAND u.pwdneverexpires = true\nand u.system_tags CONTAINS "admin_tier_0"\nRETURN u`,
-            },
-            {
-                description: 'Accounts with passwords stored using reversible encryption',
+                description: 'Principals with passwords stored using reversible encryption',
                 cypher: `MATCH (n:Base)\nWHERE n.encryptedtextpwdallowed = true\nRETURN n`,
             },
             {
-                description: 'Accounts with DES-only Kerberos authentication',
+                description: 'Principals with DES-only Kerberos authentication',
                 cypher: `MATCH (n:Base)\nWHERE n.enabled = true\nAND n.usedeskeyonly = true\nRETURN n`,
             },
             {
-                description: 'Accounts with weak supported Kerberos encryption types',
+                description: 'Principals with weak supported Kerberos encryption types',
                 cypher: `MATCH (n:Base)\nWHERE ANY(keyword IN n.supportedencryptiontypes WHERE keyword IN ['DES-CBC-CRC', 'DES-CBC-MD5', 'RC4-HMAC-MD5'])\nRETURN n`,
             },
         ],
