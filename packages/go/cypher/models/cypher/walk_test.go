@@ -17,8 +17,9 @@
 package cypher_test
 
 import (
-	model2 "github.com/specterops/bloodhound/cypher/models/cypher"
 	"testing"
+
+	model2 "github.com/specterops/bloodhound/cypher/models/cypher"
 
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/cypher/test"

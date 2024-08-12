@@ -18,6 +18,7 @@ package pg
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/cypher/models/pgsql/translate"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -62,7 +63,6 @@ func (s *liveQuery) Query(delegate func(results graph.Result) error, finalCriter
 		return delegate(result)
 	}
 }
-
 
 func (s *liveQuery) QueryAllShortestPaths(delegate func(results graph.Result) error, finalCriteria ...graph.Criteria) error {
 	for _, criteria := range finalCriteria {
