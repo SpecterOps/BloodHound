@@ -131,12 +131,11 @@ func (s ADCSCache) DoesCAChainProperlyToDomain(enterpriseCA, domain *graph.Node)
 
 func HasUPNCertMappingInForest(tx graph.Transaction, domain *graph.Node) (bool, error) {
 	if trustedByNodes, err := FetchNodesWithTrustedByParentChildRelationship(tx, domain); err != nil {
-		log.Errorf("error in HasUPNCertMappingInForest: unable to fetch TrustedBy nodes: %v", err)
 		return false, err
 	} else {
 		for _, trustedByDomain := range trustedByNodes {
 			if dcForNodes, err := FetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
-				log.Errorf("error in HasUPNCertMappingInForest: unable to fetch DCFor nodes: %v", err)
+				log.Warnf("unable to fetch DCFor nodes in HasUPNCertMappingInForest: %v", err)
 				continue
 			} else {
 				for _, dcForNode := range dcForNodes {
@@ -157,12 +156,11 @@ func HasUPNCertMappingInForest(tx graph.Transaction, domain *graph.Node) (bool, 
 
 func HasWeakCertBindingInForest(tx graph.Transaction, domain *graph.Node) (bool, error) {
 	if trustedByNodes, err := FetchNodesWithTrustedByParentChildRelationship(tx, domain); err != nil {
-		log.Errorf("error in HasWeakCertBindingInForest: unable to fetch TrustedBy nodes: %v", err)
 		return false, err
 	} else {
 		for _, trustedByDomain := range trustedByNodes {
 			if dcForNodes, err := FetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
-				log.Errorf("error in HasWeakCertBindingInForest: unable to fetch DCFor nodes: %v", err)
+				log.Warnf("unable to fetch DCFor nodes in HasWeakCertBindingInForest: %v", err)
 				continue
 			} else {
 				for _, dcForNode := range dcForNodes {
