@@ -1,4 +1,4 @@
-module github.com/SpecterOps/BloodHound/packages/go/bomenc
+module github.com/specterops/bloodhound/bomenc
 
 go 1.21.3
 
