@@ -1249,6 +1249,21 @@ func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1, arg2 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSecretAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSecretAuth), arg0, arg1, arg2)
 }
 
+// IsPublicSavedQuery mocks base method.
+func (m *MockDatabase) IsPublicSavedQuery(arg0 context.Context, arg1 int) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsPublicSavedQuery", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsPublicSavedQuery indicates an expected call of IsPublicSavedQuery.
+func (mr *MockDatabaseMockRecorder) IsPublicSavedQuery(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsPublicSavedQuery", reflect.TypeOf((*MockDatabase)(nil).IsPublicSavedQuery), arg0, arg1)
+}
+
 // ListAuditLogs mocks base method.
 func (m *MockDatabase) ListAuditLogs(arg0 context.Context, arg1, arg2 time.Time, arg3, arg4 int, arg5 string, arg6 model.SQLFilter) (model.AuditLogs, int, error) {
 	m.ctrl.T.Helper()
