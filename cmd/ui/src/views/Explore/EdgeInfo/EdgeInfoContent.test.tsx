@@ -119,6 +119,19 @@ const selectedEdgeHasLapsDisabled: SelectedEdge = {
     targetNode: { name: 'target node', id: '4', objectId: 'testing-node-456', type: 'Computer' },
 };
 
+const windowsAbuseHasLapsText = (sourceName: string, targetName: string) => {
+    return `The GenericAll permission grants ${sourceName} the ability to obtain the LAPS (RID 500 administrator) password of ${targetName}.`;
+};
+
+const hasLapsEnabledTestText = windowsAbuseHasLapsText(
+    selectedEdgeHasLapsEnabled.sourceNode.name,
+    selectedEdgeHasLapsEnabled.targetNode.name
+);
+const hasLapsDisabledTestText = windowsAbuseHasLapsText(
+    selectedEdgeHasLapsDisabled.sourceNode.name,
+    selectedEdgeHasLapsDisabled.targetNode.name
+);
+
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
@@ -154,15 +167,8 @@ describe('EdgeInfoContent', () => {
         const user = userEvent.setup();
         const windowAbuseAccordion = screen.getByTestId('windowsabuse-accordion');
         await user.click(windowAbuseAccordion);
-        const windowsAbuseHasLapsEnabledText = await screen.queryByTestId(
-            'windowsabuse-computer-has-laps-enabled-text'
-        );
-        const windowsAbuseHasLapsDisabledText = await screen.queryByTestId(
-            'windowsabuse-computer-has-laps-disabled-text'
-        );
 
-        expect(windowsAbuseHasLapsEnabledText).toBeInTheDocument();
-        expect(windowsAbuseHasLapsDisabledText).not.toBeInTheDocument();
+        expect(screen.getByText(hasLapsEnabledTestText, { exact: false })).toBeInTheDocument();
     });
     test('Selecting an edge with a Computer target node that does not have haslaps enabled shows correct Windows Abuse text', async () => {
         render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsDisabled} />);
@@ -170,14 +176,7 @@ describe('EdgeInfoContent', () => {
         const user = userEvent.setup();
         const windowAbuseAccordion = screen.getByTestId('windowsabuse-accordion');
         await user.click(windowAbuseAccordion);
-        const windowsAbuseHasLapsEnabledText = await screen.queryByTestId(
-            'windowsabuse-computer-has-laps-enabled-text'
-        );
-        const windowsAbuseHasLapsDisabledText = await screen.queryByTestId(
-            'windowsabuse-computer-has-laps-disabled-text'
-        );
 
-        expect(windowsAbuseHasLapsEnabledText).not.toBeInTheDocument();
-        expect(windowsAbuseHasLapsDisabledText).toBeInTheDocument();
+        expect(screen.queryByText(hasLapsDisabledTestText, { exact: false })).not.toBeInTheDocument();
     });
 });
