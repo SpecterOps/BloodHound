@@ -35,10 +35,7 @@ import (
 func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
 	results := cardinality.NewBitmap32()
 
-	if weakBinding, err := HasWeakCertBindingInForest(tx, domain); err != nil {
-		log.Warnf("Error checking HasWeakCertBindingInForest for Domain %d: %v", domain.ID, err)
-		return nil
-	} else if !weakBinding {
+	if _, ok := cache.HasWeakCertBindingInForest[domain.ID]; !ok {
 		return nil
 	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
 		return nil
@@ -84,10 +81,7 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
 	results := cardinality.NewBitmap32()
 
-	if weakBinding, err := HasWeakCertBindingInForest(tx, domain); err != nil {
-		log.Warnf("Error checking HasWeakCertBindingInForest for Domain %d: %v", domain.ID, err)
-		return nil
-	} else if !weakBinding {
+	if _, ok := cache.HasWeakCertBindingInForest[domain.ID]; !ok {
 		return nil
 	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
 		return nil
@@ -420,7 +414,7 @@ func adcsESC9APath3Pattern() traversal.PatternContinuation {
 				query.Kind(query.Relationship(), ad.TrustedBy),
 				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
 				query.Kind(query.Start(), ad.Domain),
-		)).
+			)).
 		Inbound(query.And(
 			query.Kind(query.Relationship(), ad.DCFor),
 			query.Kind(query.Start(), ad.Computer),
@@ -506,7 +500,7 @@ func adcsESC9bPath3Pattern() traversal.PatternContinuation {
 				query.Kind(query.Relationship(), ad.TrustedBy),
 				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
 				query.Kind(query.Start(), ad.Domain),
-		)).
+			)).
 		Inbound(query.And(
 			query.Kind(query.Relationship(), ad.DCFor),
 			query.Kind(query.Start(), ad.Computer),

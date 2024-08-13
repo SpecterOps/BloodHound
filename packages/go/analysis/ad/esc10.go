@@ -20,7 +20,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -29,15 +28,13 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
+	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
 )
 
 func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	if upnMapping, err := HasUPNCertMappingInForest(tx, domain); err != nil {
-		log.Warnf("Error checking HasUPNCertMappingInForest for domain %d: %v", domain.ID, err)
-		return nil
-	} else if !upnMapping {
+	if _, ok := cache.HasUPNCertMappingInForest[domain.ID]; !ok {
 		return nil
 	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
 		return nil
@@ -83,10 +80,7 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 }
 
 func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
-	if upnMapping, err := HasUPNCertMappingInForest(tx, domain); err != nil {
-		log.Warnf("Error checking HasUPNCertMappingInForest for domain %d: %v", domain.ID, err)
-		return nil
-	} else if !upnMapping {
+	if _, ok := cache.HasUPNCertMappingInForest[domain.ID]; !ok {
 		return nil
 	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[enterpriseCA.ID]; !ok {
 		return nil
@@ -243,7 +237,7 @@ func adcsESC10APath3Pattern() traversal.PatternContinuation {
 				query.Kind(query.Relationship(), ad.TrustedBy),
 				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
 				query.Kind(query.Start(), ad.Domain),
-		)).
+			)).
 		Inbound(query.And(
 			query.Kind(query.Relationship(), ad.DCFor),
 			query.Kind(query.Start(), ad.Computer),
@@ -391,7 +385,7 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 					if err == nil && cmmrProperty != ein.RegistryValueDoesNotExist && cmmrProperty&int(ein.CertificateMappingUserPrincipalName) == int(ein.CertificateMappingUserPrincipalName) {
 						lock.Lock()
 						path3CandidateSegments = append(path3CandidateSegments, terminal)
-						lock.Unlock()	
+						lock.Unlock()
 					}
 				}
 				return nil

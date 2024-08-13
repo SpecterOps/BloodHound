@@ -21,6 +21,7 @@ import (
 
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
 )
@@ -33,6 +34,8 @@ type ADCSCache struct {
 	CertTemplateControllers         map[graph.ID][]*graph.Node // principals that have privileges on a cert template via `owner`, `generic all`, `write dacl`, `write owner` edges
 	EnterpriseCAEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment rights on an enterprise ca via `enroll` edge
 	PublishedTemplateCache          map[graph.ID][]*graph.Node // cert templates that are published to an enterprise ca
+	HasUPNCertMappingInForest       map[graph.ID]struct{}      // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
+	HasWeakCertBindingInForest      map[graph.ID]struct{}      // domains where at least one DC in the forest has Kerberos weak cert binding enabled
 }
 
 func NewADCSCache() ADCSCache {
@@ -44,6 +47,8 @@ func NewADCSCache() ADCSCache {
 		CertTemplateControllers:         make(map[graph.ID][]*graph.Node),
 		EnterpriseCAEnrollers:           make(map[graph.ID][]*graph.Node),
 		PublishedTemplateCache:          make(map[graph.ID][]*graph.Node),
+		HasUPNCertMappingInForest:       make(map[graph.ID]struct{}),
+		HasWeakCertBindingInForest:      make(map[graph.ID]struct{}),
 	}
 }
 
@@ -89,6 +94,20 @@ func (s ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterprise
 				s.AuthStoreForChainValid[domain.ID] = cardinality.NodeSetToDuplex(authStoreForNodes)
 				s.RootCAForChainValid[domain.ID] = cardinality.NodeSetToDuplex(rootCaForNodes)
 			}
+
+			// Check for weak cert config on DCs
+			if upnMapping, err := HasUPNCertMappingInForest(tx, domain); err != nil {
+				log.Warnf("Error checking HasUPNCertMappingInForest for domain %d: %v", domain.ID, err)
+				return nil
+			} else if upnMapping {
+				s.HasUPNCertMappingInForest[domain.ID] = struct{}{}
+			}
+			if weakCertBinding, err := HasWeakCertBindingInForest(tx, domain); err != nil {
+				log.Warnf("Error checking HasWeakCertBindingInForest for domain %d: %v", domain.ID, err)
+				return nil
+			} else if weakCertBinding {
+				s.HasWeakCertBindingInForest[domain.ID] = struct{}{}
+			}
 		}
 
 		return nil
@@ -108,4 +127,54 @@ func (s ADCSCache) DoesCAChainProperlyToDomain(enterpriseCA, domain *graph.Node)
 	} else {
 		return s.RootCAForChainValid[domainID].Contains(caID) && s.AuthStoreForChainValid[domainID].Contains(caID)
 	}
+}
+
+func HasUPNCertMappingInForest(tx graph.Transaction, domain *graph.Node) (bool, error) {
+	if trustedByNodes, err := FetchNodesWithTrustedByParentChildRelationship(tx, domain); err != nil {
+		log.Errorf("error in HasUPNCertMappingInForest: unable to fetch TrustedBy nodes: %v", err)
+		return false, err
+	} else {
+		for _, trustedByDomain := range trustedByNodes {
+			if dcForNodes, err := FetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
+				log.Errorf("error in HasUPNCertMappingInForest: unable to fetch DCFor nodes: %v", err)
+				continue
+			} else {
+				for _, dcForNode := range dcForNodes {
+					if cmmrProperty, err := dcForNode.Properties.Get(ad.CertificateMappingMethodsRaw.String()).Int(); err != nil {
+						// We do not want to throw an error here as this property only exists if privileged collection has been performed
+						continue
+					} else if cmmrProperty == ein.RegistryValueDoesNotExist {
+						continue
+					} else if cmmrProperty&int(ein.CertificateMappingUserPrincipalName) == int(ein.CertificateMappingUserPrincipalName) {
+						return true, nil
+					}
+				}
+			}
+		}
+	}
+	return false, nil
+}
+
+func HasWeakCertBindingInForest(tx graph.Transaction, domain *graph.Node) (bool, error) {
+	if trustedByNodes, err := FetchNodesWithTrustedByParentChildRelationship(tx, domain); err != nil {
+		log.Errorf("error in HasWeakCertBindingInForest: unable to fetch TrustedBy nodes: %v", err)
+		return false, err
+	} else {
+		for _, trustedByDomain := range trustedByNodes {
+			if dcForNodes, err := FetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
+				log.Errorf("error in HasWeakCertBindingInForest: unable to fetch DCFor nodes: %v", err)
+				continue
+			} else {
+				for _, dcForNode := range dcForNodes {
+					if strongCertBindingEnforcement, err := dcForNode.Properties.Get(ad.StrongCertificateBindingEnforcementRaw.String()).Int(); err != nil {
+						// We do not want to throw an error here as this property only exists if privileged collection has been performed
+						continue
+					} else if strongCertBindingEnforcement == 0 || strongCertBindingEnforcement == 1 {
+						return true, nil
+					}
+				}
+			}
+		}
+	}
+	return false, nil
 }

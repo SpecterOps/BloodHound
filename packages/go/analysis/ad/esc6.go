@@ -80,10 +80,7 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return err
 	} else if !isUserSpecifiesSanEnabled {
 		return nil
-	} else if upnMapping, err := HasUPNCertMappingInForest(tx, domain); err != nil {
-		log.Warnf("Error checking HasUPNCertMappingInForest for domain %d: %v", domain.ID, err)
-		return nil
-	} else if !upnMapping {
+	} else if _, ok := cache.HasUPNCertMappingInForest[domain.ID]; !ok {
 		return nil
 	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[enterpriseCA.ID]; !ok {
 		return nil
