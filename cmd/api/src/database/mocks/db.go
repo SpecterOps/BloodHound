@@ -1116,6 +1116,21 @@ func (mr *MockDatabaseMockRecorder) GetSAMLProviderUsers(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSAMLProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSAMLProviderUsers), arg0, arg1)
 }
 
+// GetSavedQuery mocks base method.
+func (m *MockDatabase) GetSavedQuery(arg0 context.Context, arg1 int) (model.SavedQuery, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSavedQuery", arg0, arg1)
+	ret0, _ := ret[0].(model.SavedQuery)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSavedQuery indicates an expected call of GetSavedQuery.
+func (mr *MockDatabaseMockRecorder) GetSavedQuery(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQuery", reflect.TypeOf((*MockDatabase)(nil).GetSavedQuery), arg0, arg1)
+}
+
 // GetSharedSavedQueries mocks base method.
 func (m *MockDatabase) GetSharedSavedQueries(arg0 context.Context, arg1 uuid.UUID) (model.SavedQueries, error) {
 	m.ctrl.T.Helper()
@@ -1247,6 +1262,21 @@ func (m *MockDatabase) InitializeSecretAuth(arg0 context.Context, arg1 model.Use
 func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSecretAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSecretAuth), arg0, arg1, arg2)
+}
+
+// IsSavedQueryPublic mocks base method.
+func (m *MockDatabase) IsSavedQueryPublic(arg0 context.Context, arg1 int64) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsSavedQueryPublic", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsSavedQueryPublic indicates an expected call of IsSavedQueryPublic.
+func (mr *MockDatabaseMockRecorder) IsSavedQueryPublic(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSavedQueryPublic", reflect.TypeOf((*MockDatabase)(nil).IsSavedQueryPublic), arg0, arg1)
 }
 
 // ListAuditLogs mocks base method.
@@ -1561,6 +1591,21 @@ func (m *MockDatabase) UpdateSAMLIdentityProvider(arg0 context.Context, arg1 mod
 func (mr *MockDatabaseMockRecorder) UpdateSAMLIdentityProvider(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).UpdateSAMLIdentityProvider), arg0, arg1)
+}
+
+// UpdateSavedQuery mocks base method.
+func (m *MockDatabase) UpdateSavedQuery(arg0 context.Context, arg1 model.SavedQuery) (model.SavedQuery, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSavedQuery", arg0, arg1)
+	ret0, _ := ret[0].(model.SavedQuery)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateSavedQuery indicates an expected call of UpdateSavedQuery.
+func (mr *MockDatabaseMockRecorder) UpdateSavedQuery(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).UpdateSavedQuery), arg0, arg1)
 }
 
 // UpdateUser mocks base method.
