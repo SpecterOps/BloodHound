@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Paper } from '@mui/material';
+import { Box, Paper, useTheme } from '@mui/material';
 import {
     AssetGroup,
     AssetGroupMemberParams,
@@ -34,11 +34,13 @@ const AssetGroupEdit: FC<{
     assetGroup: AssetGroup;
     filter: AssetGroupMemberParams;
     memberCounts: AssetGroupMemberCounts | undefined;
-}> = ({ assetGroup, filter, memberCounts }) => {
+    isEditable: boolean;
+}> = ({ assetGroup, filter, memberCounts, isEditable }) => {
     const [changelog, setChangelog] = useState<AssetGroupChangelog>([]);
     const addRows = changelog.filter((entry) => entry.action === ChangelogAction.ADD);
     const removeRows = changelog.filter((entry) => entry.action === ChangelogAction.REMOVE);
     const { addNotification } = useNotifications();
+    const theme = useTheme();
     const queryClient = useQueryClient();
 
     const handleUpdateAssetGroupChangelog = (_event: any, changelogEntry: AssetGroupChangelogEntry) => {
@@ -91,21 +93,25 @@ const AssetGroupEdit: FC<{
     };
 
     return (
-        <Box component={Paper} elevation={0} padding={1}>
+        <Box component={Paper} elevation={0} padding={1} bgcolor={theme.palette.neutral.secondary}>
             <SubHeader label='Total Count' count={memberCounts?.total_count} />
-            <AssetGroupAutocomplete
-                assetGroup={assetGroup}
-                changelog={changelog}
-                onChange={handleUpdateAssetGroupChangelog}
-            />
-            {changelog.length > 0 && (
-                <AssetGroupChangelogTable
-                    addRows={addRows}
-                    removeRows={removeRows}
-                    onRemove={handleRemoveEntryFromChangelog}
-                    onCancel={() => setChangelog([])}
-                    onSubmit={() => mutation.mutate()}
-                />
+            {isEditable && (
+                <>
+                    <AssetGroupAutocomplete
+                        assetGroup={assetGroup}
+                        changelog={changelog}
+                        onChange={handleUpdateAssetGroupChangelog}
+                    />
+                    {changelog.length > 0 && (
+                        <AssetGroupChangelogTable
+                            addRows={addRows}
+                            removeRows={removeRows}
+                            onRemove={handleRemoveEntryFromChangelog}
+                            onCancel={() => setChangelog([])}
+                            onSubmit={() => mutation.mutate()}
+                        />
+                    )}
+                </>
             )}
             {Object.entries(memberCounts?.counts ?? {}).map(([kind, count]) => {
                 return <SubHeader key={kind} label={kind} count={count} />;

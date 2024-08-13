@@ -17,9 +17,10 @@
 package frontend
 
 import (
+	"strings"
+
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/specterops/bloodhound/cypher/parser"
-	"strings"
 )
 
 type TokenProvider interface {

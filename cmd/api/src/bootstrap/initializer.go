@@ -19,6 +19,7 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/config"

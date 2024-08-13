@@ -17,6 +17,7 @@
 package integration
 
 import (
+	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apiclient"
 	"github.com/stretchr/testify/require"
 )
@@ -25,6 +26,7 @@ const (
 	AdminPrincipal     = "admin"
 	AdminInitialSecret = "admin"
 	AdminUpdatedSecret = "adminAdmin123***"
+	UserInitialSecret  = "userUser123***"
 )
 
 func (s *Context) newAPIClient() apiclient.Client {
@@ -54,7 +56,7 @@ func (s *Context) initAdminClient() {
 
 	if user, err := authClient.GetSelf(); err != nil {
 		s.TestCtrl.Fatalf("Failed looking up user details: %v", err)
-	} else if err := authClient.SetUserSecret(user.ID, AdminUpdatedSecret, false); err != nil {
+	} else if err := authClient.SetUserSecretWithCurrentPassword(user.ID, v2.SetUserSecretRequest{CurrentSecret: AdminInitialSecret, Secret: AdminUpdatedSecret}); err != nil {
 		s.TestCtrl.Fatalf("Failed resetting expired user password: %v", err)
 	}
 

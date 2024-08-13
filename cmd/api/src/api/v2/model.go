@@ -23,7 +23,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
@@ -79,6 +78,7 @@ type DeleteSAMLProviderResponse struct {
 }
 
 type SetUserSecretRequest struct {
+	CurrentSecret      string `json:"current_secret"`
 	Secret             string `json:"secret" validate:"password,length=12,lower=1,upper=1,special=1,numeric=1"`
 	NeedsPasswordReset bool   `json:"needs_password_reset"`
 }
@@ -141,7 +141,6 @@ type Resources struct {
 	QueryParameterFilterParser model.QueryParameterFilterParser
 	Cache                      cache.Cache
 	CollectorManifests         config.CollectorManifests
-	TaskNotifier               datapipe.Tasker
 	Authorizer                 auth.Authorizer
 }
 
@@ -152,7 +151,6 @@ func NewResources(
 	apiCache cache.Cache,
 	graphQuery queries.Graph,
 	collectorManifests config.CollectorManifests,
-	taskNotifier datapipe.Tasker,
 	authorizer auth.Authorizer,
 ) Resources {
 	return Resources{
@@ -164,7 +162,6 @@ func NewResources(
 		QueryParameterFilterParser: model.NewQueryParameterFilterParser(),
 		Cache:                      apiCache,
 		CollectorManifests:         collectorManifests,
-		TaskNotifier:               taskNotifier,
 		Authorizer:                 authorizer,
 	}
 }

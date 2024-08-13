@@ -139,7 +139,6 @@ func (s DomainSelectors) GetFilterCriteria(request *http.Request) (graph.Criteri
 			if valid := slices.Contains(s.GetFilterableColumns(), name); !valid {
 				return nil, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
 			}
-
 			if validPredicates, err := s.GetValidFilterPredicatesAsStrings(name); err != nil {
 				return nil, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
 			} else {
@@ -147,14 +146,12 @@ func (s DomainSelectors) GetFilterCriteria(request *http.Request) (graph.Criteri
 					if !slices.Contains(validPredicates, string(filter.Operator)) {
 						return nil, fmt.Errorf(ErrorResponseDetailsFilterPredicateNotSupported)
 					}
-
 					queryFilters[name][i].IsStringData = s.IsString(filter.Name)
 				}
 			}
 		}
 		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
 		criteria = query.And(queryFilters.BuildGDBNodeFilter(), query.KindIn(query.Node(), ad.Domain, azure.Tenant))
-
 		return criteria, nil
 	}
 }

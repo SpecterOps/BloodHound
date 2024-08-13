@@ -39,11 +39,13 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
 	} else if rootCertAuthorities, err := FetchNodesByKind(ctx, db, ad.RootCA); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching rootCA nodes: %w", err)
+	} else if aiaCertAuthorities, err := FetchNodesByKind(ctx, db, ad.AIACA); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching AIACA nodes: %w", err)
 	} else if certTemplates, err := FetchNodesByKind(ctx, db, ad.CertTemplate); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching cert template nodes: %w", err)
 	} else if domains, err := FetchNodesByKind(ctx, db, ad.Domain); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching domain nodes: %w", err)
-	} else if step1Stats, err := postADCSPreProcessStep1(ctx, db, enterpriseCertAuthorities, rootCertAuthorities, certTemplates); err != nil {
+	} else if step1Stats, err := postADCSPreProcessStep1(ctx, db, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities, certTemplates); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 1: %w", err)
 	} else if step2Stats, err := postADCSPreProcessStep2(ctx, db, certTemplates); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 2: %w", err)
@@ -63,7 +65,7 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 				innerEnterpriseCA := enterpriseCA
 
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
-					processEnterpriseCAWithValidCertChainToDomain(innerEnterpriseCA, innerDomain, groupExpansions, cache, operation, adcsEnabled)
+					processEnterpriseCAWithValidCertChainToDomain(innerEnterpriseCA, innerDomain, groupExpansions, cache, operation)
 				}
 			}
 		}
@@ -73,14 +75,14 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 }
 
 // postADCSPreProcessStep1 processes the edges that are not dependent on any other post-processed edges
-func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities, certTemplates []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
+func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities, certTemplates []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
 	// TODO clean up the operation.Done() calls below
 
 	if err := PostTrustedForNTAuth(ctx, db, operation); err != nil {
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.TrustedForNTAuth.String(), err)
-	} else if err := PostIssuedSignedBy(operation, enterpriseCertAuthorities, rootCertAuthorities); err != nil {
+	} else if err := PostIssuedSignedBy(operation, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities); err != nil {
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
 	} else if err := PostEnterpriseCAFor(operation, enterpriseCertAuthorities); err != nil {
@@ -112,7 +114,7 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, certTemplat
 	}
 }
 
-func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], adcsEnabled bool) {
+func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostGoldenCert(ctx, tx, outC, domain, enterpriseCA); err != nil {

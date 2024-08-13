@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/src/model"
 )
 

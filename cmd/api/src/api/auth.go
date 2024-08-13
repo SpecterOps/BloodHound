@@ -269,7 +269,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 			}
 		}
 
-		if digestNow, err := NewRequestSignature(sha256.New, authToken.Key, requestDate.Format(time.RFC3339), request.Method, request.RequestURI, teeReader); err != nil {
+		if digestNow, err := NewRequestSignature(request.Context(), sha256.New, authToken.Key, requestDate.Format(time.RFC3339), request.Method, request.RequestURI, teeReader); err != nil {
 			if readCloser != nil {
 				readCloser.Close()
 			}

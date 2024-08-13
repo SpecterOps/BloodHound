@@ -31,8 +31,15 @@ const useStyles = makeStyles((theme) => ({
         '&:hover': {
             borderBottom: `3px solid #a7adb0`,
         },
-        '& svg': {
-            color: '#a7adb0',
+        '&.active': {
+            color: theme.palette.color.links,
+            borderBottom: `3px solid ${theme.palette.color.links}`,
+            '&:hover': {
+                borderBottom: `3px solid ${theme.palette.color.links}`,
+            },
+            '& svg': {
+                color: theme.palette.color.links,
+            },
         },
     },
     icon: {
@@ -45,16 +52,6 @@ const useStyles = makeStyles((theme) => ({
         fontWeight: 500,
         letterSpacing: '0.0075em',
     },
-    active: {
-        color: '#406f8e',
-        borderBottom: `3px solid #6798B9`,
-        '&:hover': {
-            borderBottom: `3px solid #6798B9`,
-        },
-        '& svg': {
-            color: '#6798B9',
-        },
-    },
 }));
 
 interface MenuItemProps extends DataHTMLAttributes<HTMLDivElement> {
@@ -64,13 +61,13 @@ interface MenuItemProps extends DataHTMLAttributes<HTMLDivElement> {
     onClick: () => void;
 }
 
-const MenuItem: React.FC<MenuItemProps> = ({ title, active, icon, onClick, ...rest }) => {
+const MenuItem: React.FC<MenuItemProps> = ({ title, active, icon, onClick, className, ...rest }) => {
     const classes = useStyles();
 
     return (
-        <div className={clsx(classes.container, active ? classes.active : null)} onClick={onClick} {...rest}>
+        <div className={clsx(classes.container, { active }, className)} onClick={onClick} {...rest}>
             {icon && <Box className={classes.icon}>{icon}</Box>}
-            <Box className={clsx(classes.title, 'noselect')}>{title}</Box>
+            <Box className={clsx(classes.title, 'noselect menu-item-title')}>{title}</Box>
         </div>
     );
 };

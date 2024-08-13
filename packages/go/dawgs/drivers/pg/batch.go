@@ -20,16 +20,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/specterops/bloodhound/cypher/backend/pgsql"
+	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	sql "github.com/specterops/bloodhound/dawgs/drivers/pg/query"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
-	"strconv"
-	"strings"
-	"sync/atomic"
 )
 
 type Int2ArrayEncoder struct {
@@ -366,8 +366,6 @@ func (s *RelationshipUpdateByParameters) AppendAll(updates *sql.RelationshipUpda
 	return nil
 }
 
-var numRels = &atomic.Int64{}
-
 func (s *batch) flushRelationshipUpdateByBuffer(updates *sql.RelationshipUpdateBatch) error {
 	if err := s.flushNodeUpsertBatch(updates.NodeUpdates); err != nil {
 		return err
@@ -378,8 +376,6 @@ func (s *batch) flushRelationshipUpdateByBuffer(updates *sql.RelationshipUpdateB
 	if err := parameters.AppendAll(updates, s.schemaManager); err != nil {
 		return err
 	}
-
-	numRels.Add(int64(len(parameters.Properties)))
 
 	if graphTarget, err := s.innerTransaction.getTargetGraph(); err != nil {
 		return err

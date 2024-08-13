@@ -100,6 +100,8 @@ import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
 import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
 import RootCAFor from './RootCAFor/RootCAFor';
 import SQLAdmin from './SQLAdmin/SQLAdmin';
+import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
+import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
 import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import TrustedBy from './TrustedBy/TrustedBy';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
@@ -238,6 +240,8 @@ const EdgeInfoComponents = {
     DCFor: DCFor,
     OIDGroupLink: OIDGroupLink,
     ExtendedByPolicy: ExtendedByPolicy,
+    SyncedToADUser: SyncedToADUser,
+    SyncedToEntraUser: SyncedToEntraUser,
 };
 
 export default EdgeInfoComponents;

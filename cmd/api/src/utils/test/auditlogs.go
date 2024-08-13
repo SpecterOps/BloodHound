@@ -19,9 +19,10 @@ package test
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
-	"time"
 )
 
 func findRelevantAuditLogs(auditLogs model.AuditLogs, expectedAction model.AuditLogAction, expectedResultStatus model.AuditLogEntryStatus, expectedData model.AuditData) (intentAuditLog, resultAuditLog model.AuditLog) {

@@ -18,12 +18,12 @@ package integration
 
 import (
 	"encoding/json"
-	"github.com/specterops/bloodhound/src/model/appcfg"
 	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/fixtures"
 	"github.com/specterops/bloodhound/src/test/integration"

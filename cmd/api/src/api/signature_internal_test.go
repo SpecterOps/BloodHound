@@ -18,6 +18,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"io"
 	"strings"
@@ -33,7 +34,7 @@ func TestTeeNilBody(t *testing.T) {
 	reader := io.Reader(nil)
 	outA, outB := &bytes.Buffer{}, &bytes.Buffer{}
 
-	err := tee(reader, outA, outB)
+	err := tee(context.Background(), reader, outA, outB)
 	require.Nil(t, err)
 	require.Nil(t, outA.Bytes())
 	require.Nil(t, outB.Bytes())
@@ -43,15 +44,28 @@ func TestTeeReadError(t *testing.T) {
 	reader := iotest.ErrReader(errors.New("custom error"))
 	outA, outB := &bytes.Buffer{}, &bytes.Buffer{}
 
-	err := tee(reader, outA, outB)
+	err := tee(context.Background(), reader, outA, outB)
 	require.Error(t, err)
+}
+
+func TestTeeContextTimeout(t *testing.T) {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Microsecond))
+	defer cancel()
+	time.Sleep(2 * time.Microsecond)
+
+	reader := strings.NewReader("Hello world")
+	outA, outB := &bytes.Buffer{}, &bytes.Buffer{}
+
+	err := tee(ctx, reader, outA, outB)
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "context deadline exceeded")
 }
 
 func TestTeeSuccess(t *testing.T) {
 	reader := strings.NewReader("Hello world")
 	outA, outB := &bytes.Buffer{}, &bytes.Buffer{}
 
-	err := tee(reader, outA, outB)
+	err := tee(context.Background(), reader, outA, outB)
 	require.Nil(t, err)
 
 	expected := "Hello world"
@@ -63,7 +77,7 @@ func TestSignRequestValuesUnsupportedHMACMethod(t *testing.T) {
 	datetime := time.Now().Format(time.RFC3339)
 	reader := strings.NewReader("Hello world")
 
-	_, err := NewRequestSignature(nil, "token", datetime, "GET", "www.foo.bar", reader)
+	_, err := NewRequestSignature(context.Background(), nil, "token", datetime, "GET", "www.foo.bar", reader)
 	require.Error(t, err)
 	require.ErrorContains(t, err, "hasher must not be nil")
 }
@@ -73,7 +87,7 @@ func TestSignRequestTeeFailure(t *testing.T) {
 	reader := iotest.ErrReader(errors.New(testFailure))
 	datetime := time.Now().Format(time.RFC3339)
 
-	_, err := NewRequestSignature(sha256.New, "token", datetime, "GET", "www.foo.bar", reader)
+	_, err := NewRequestSignature(context.Background(), sha256.New, "token", datetime, "GET", "www.foo.bar", reader)
 	require.Error(t, err)
 	require.ErrorContains(t, err, testFailure)
 }
@@ -82,7 +96,7 @@ func TestSignRequestValuesSuccess(t *testing.T) {
 	datetime := time.Now().Format(time.RFC3339)
 	reader := strings.NewReader("Hello world")
 
-	signature, err := NewRequestSignature(sha256.New, "token", datetime, "GET", "www.foo.bar", reader)
+	signature, err := NewRequestSignature(context.Background(), sha256.New, "token", datetime, "GET", "www.foo.bar", reader)
 	require.Nil(t, err)
 	require.NotNil(t, signature)
 }

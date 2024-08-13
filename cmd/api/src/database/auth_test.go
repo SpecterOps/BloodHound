@@ -21,8 +21,6 @@ package database_test
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/src/test/integration"
-	"github.com/specterops/bloodhound/src/utils/test"
 	"testing"
 	"time"
 
@@ -30,6 +28,8 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -239,8 +239,6 @@ func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 		t.Fatalf("Expected auth token to have name %s but saw %v", expectedName, newToken.Name.String)
 	} else if err = dbInst.DeleteAuthToken(ctx, newToken); err != nil {
 		t.Fatalf("Failed to delete auth token: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteAuthToken, "id", newToken.ID.String()); err != nil {
-		t.Fatalf("Failed to validate DeleteAuthToken audit logs:\n%v", err)
 	}
 
 	if updatedUser, err := dbInst.GetUser(ctx, user.ID); err != nil {
@@ -389,4 +387,26 @@ func TestDatabase_CreateUserSession(t *testing.T) {
 	} else {
 		assert.Equal(t, user, newUserSession.User)
 	}
+}
+
+func TestDatabase_SetUserSessionFlag(t *testing.T) {
+	var (
+		testCtx      = context.Background()
+		dbInst, user = initAndCreateUser(t)
+		userSession  = model.UserSession{
+			User:      user,
+			UserID:    user.ID,
+			ExpiresAt: time.Now().UTC().Add(time.Hour),
+		}
+	)
+
+	newUserSession, err := dbInst.CreateUserSession(testCtx, userSession)
+	assert.Nil(t, err)
+
+	err = dbInst.SetUserSessionFlag(testCtx, &newUserSession, model.SessionFlagFedEULAAccepted, true)
+	assert.Nil(t, err)
+
+	dbSess, err := dbInst.GetUserSession(testCtx, newUserSession.ID)
+	assert.Nil(t, err)
+	assert.True(t, dbSess.Flags[string(model.SessionFlagFedEULAAccepted)])
 }

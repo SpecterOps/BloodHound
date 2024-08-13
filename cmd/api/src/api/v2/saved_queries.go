@@ -38,6 +38,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		queryParams   = request.URL.Query()
 		sortByColumns = queryParams[api.QueryParameterSortBy]
 		savedQueries  model.SavedQueries
+		scopes        = queryParams[api.QueryParameterScope]
 	)
 
 	for _, column := range sortByColumns {
@@ -75,7 +76,6 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
-
 					queryFilters[name][i].IsStringData = savedQueries.IsString(filter.Name)
 				}
 			}
@@ -89,9 +89,47 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 10000); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if queries, count, err := s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
-			api.HandleDatabaseError(request, response, err)
+		} else if len(scopes) == 0 {
+			if queries, count, err := s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
+			}
 		} else {
+			var queries []model.SavedQueryResponse
+			var count int
+			for _, scope := range strings.Split(scopes[0], ",") {
+				var scopedQueries model.SavedQueries
+				var scopedCount int
+
+				switch strings.ToLower(scope) {
+				case string(model.SavedQueryScopePublic):
+					scopedQueries, err = s.DB.GetPublicSavedQueries(request.Context())
+					scopedCount = len(scopedQueries)
+				case string(model.SavedQueryScopeShared):
+					scopedQueries, err = s.DB.GetSharedSavedQueries(request.Context(), user.ID)
+					scopedCount = len(scopedQueries)
+				case string(model.SavedQueryScopeOwned):
+					scopedQueries, scopedCount, err = s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit)
+				default:
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid scope param", request), response)
+					return
+				}
+
+				if err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
+
+				for _, query := range scopedQueries {
+					queries = append(queries, model.SavedQueryResponse{
+						SavedQuery: query,
+						Scope:      scope,
+					})
+				}
+				count += scopedCount
+
+			}
 			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
 		}
 	}
@@ -99,8 +137,9 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 }
 
 type CreateSavedQueryRequest struct {
-	Query string `json:"query"`
-	Name  string `json:"name"`
+	Query       string `json:"query"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
 }
 
 func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.Request) {
@@ -114,7 +153,7 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if createRequest.Name == "" || createRequest.Query == "" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "the name and/or query field is empty", request), response)
-	} else if savedQuery, err := s.DB.CreateSavedQuery(request.Context(), user.ID, createRequest.Name, createRequest.Query); err != nil {
+	} else if savedQuery, err := s.DB.CreateSavedQuery(request.Context(), user.ID, createRequest.Name, createRequest.Query, createRequest.Description); err != nil {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
 		} else {

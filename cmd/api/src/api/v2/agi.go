@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -34,7 +35,9 @@ import (
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
 )
@@ -201,12 +204,20 @@ func (s Resources) CreateAssetGroup(response http.ResponseWriter, request *http.
 
 	if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if strings.TrimSpace(createRequest.Name) == "" || strings.TrimSpace(createRequest.Tag) == "" {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAGNameTagEmpty, request), response)
 	} else if hasSpace, err := regexp.MatchString(`\s`, createRequest.Tag); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else if hasSpace {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAGTagWhiteSpace, request), response)
 	} else if newAssetGroup, err := s.DB.CreateAssetGroup(request.Context(), createRequest.Name, createRequest.Tag, false); err != nil {
-		api.HandleDatabaseError(request, response, err)
+		if errors.Is(err, database.ErrDuplicateAGName) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAGDuplicateName, request), response)
+		} else if errors.Is(err, database.ErrDuplicateAGTag) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAGDuplicateTag, request), response)
+		} else {
+			api.HandleDatabaseError(request, response, err)
+		}
 	} else {
 		assetGroupURL := *ctx.Get(request.Context()).Host
 		assetGroupURL.Path = fmt.Sprintf("/api/v2/asset-groups/%d", newAssetGroup.ID)
@@ -265,7 +276,18 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 
 			if assetGroup.Tag == model.TierZeroAssetGroupTag {
 				// When T0 asset group selectors are modified, entire analysis must be re-run
-				s.TaskNotifier.RequestAnalysis()
+				var userId string
+				if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+					log.Warnf("encountered request analysis for unknown user, this shouldn't happen")
+					userId = "unknown-user-update-asset-group-selectors"
+				} else {
+					userId = user.ID.String()
+				}
+
+				if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
 			}
 
 			api.WriteBasicResponse(request.Context(), result, http.StatusCreated, response)

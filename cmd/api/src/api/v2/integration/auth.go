@@ -37,7 +37,7 @@ func (s *Context) ListUserTokens(userID uuid.UUID) model.AuthTokens {
 }
 
 func (s *Context) DeleteAuthToken(userID, tokenID uuid.UUID) {
-	err := s.AdminClient().DeleteUserToken(userID, tokenID)
+	err := s.AdminClient().DeleteUserToken(tokenID)
 	require.Nilf(s.TestCtrl, err, "Failed to delete auth token %s for user %s: %v", tokenID.String(), userID.String(), err)
 }
 

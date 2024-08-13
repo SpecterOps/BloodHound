@@ -38,8 +38,8 @@ export const abortEntitySectionRequest = () => {
     controller.abort();
     controller = new AbortController();
 };
-
-export type EntityKinds = ActiveDirectoryNodeKind | AzureNodeKind | 'Meta';
+export const MetaNodeKind = 'Meta' as const;
+export type EntityKinds = ActiveDirectoryNodeKind | AzureNodeKind | typeof MetaNodeKind;
 
 export const entityInformationEndpoints: Record<EntityKinds, (id: string, options?: RequestOptions) => Promise<any>> = {
     [AzureNodeKind.Entity]: (id: string, options?: RequestOptions) =>

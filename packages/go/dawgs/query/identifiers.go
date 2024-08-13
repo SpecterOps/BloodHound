@@ -17,19 +17,19 @@
 package query
 
 import (
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 )
 
-func Variable(name string) *model.Variable {
-	return &model.Variable{
+func Variable(name string) *cypher.Variable {
+	return &cypher.Variable{
 		Symbol: name,
 	}
 }
 
-func Identity(entity model.Expression) *model.FunctionInvocation {
-	return &model.FunctionInvocation{
+func Identity(entity cypher.Expression) *cypher.FunctionInvocation {
+	return &cypher.FunctionInvocation{
 		Name:      "id",
-		Arguments: []model.Expression{entity},
+		Arguments: []cypher.Expression{entity},
 	}
 }
 
@@ -41,38 +41,38 @@ const (
 	EdgeEndSymbol   = "e"
 )
 
-func Node() *model.Variable {
+func Node() *cypher.Variable {
 	return Variable(NodeSymbol)
 }
 
-func NodeID() *model.FunctionInvocation {
+func NodeID() *cypher.FunctionInvocation {
 	return Identity(Node())
 }
 
-func Relationship() *model.Variable {
+func Relationship() *cypher.Variable {
 	return Variable(EdgeSymbol)
 }
 
-func RelationshipID() *model.FunctionInvocation {
+func RelationshipID() *cypher.FunctionInvocation {
 	return Identity(Relationship())
 }
 
-func Start() *model.Variable {
+func Start() *cypher.Variable {
 	return Variable(EdgeStartSymbol)
 }
 
-func StartID() *model.FunctionInvocation {
+func StartID() *cypher.FunctionInvocation {
 	return Identity(Start())
 }
 
-func End() *model.Variable {
+func End() *cypher.Variable {
 	return Variable(EdgeEndSymbol)
 }
 
-func EndID() *model.FunctionInvocation {
+func EndID() *cypher.FunctionInvocation {
 	return Identity(End())
 }
 
-func Path() *model.Variable {
+func Path() *cypher.Variable {
 	return Variable(PathSymbol)
 }

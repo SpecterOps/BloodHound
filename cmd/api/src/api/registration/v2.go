@@ -40,7 +40,7 @@ func samlWriteAPIErrorResponse(request *http.Request, response http.ResponseWrit
 func registerV2Auth(cfg config.Configuration, db database.Database, permissions auth.PermissionSet, routerInst *router.Router, authenticator api.Authenticator) {
 	var (
 		loginResource      = authapi.NewLoginResource(cfg, authenticator, db)
-		managementResource = authapi.NewManagementResource(cfg, db, auth.NewAuthorizer(db))
+		managementResource = authapi.NewManagementResource(cfg, db, auth.NewAuthorizer(db), authenticator)
 		samlResource       = saml.NewSAMLRootResource(cfg, db, samlWriteAPIErrorResponse)
 	)
 
@@ -114,7 +114,7 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		routerInst.GET("/api/version", v2.GetVersion).RequireAuth(),
 
 		// API Spec
-		routerInst.PathPrefix("/api/v2/swagger", v2.SwaggerHandler()),
+		routerInst.PathPrefix("/api/v2/swagger", http.HandlerFunc(openapi.HttpHandler)),
 		routerInst.GET("/api/v2/spec", openapi.HttpHandler),
 
 		// Search API
@@ -286,6 +286,7 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		// Datapipe API
 		routerInst.GET("/api/v2/datapipe/status", resources.GetDatapipeStatus).RequireAuth(),
 		//TODO: Update the permission on this once we get something more concrete
+		routerInst.GET("/api/v2/analysis/status", resources.GetAnalysisRequest).RequirePermissions(permissions.GraphDBRead),
 		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
 	)
 }

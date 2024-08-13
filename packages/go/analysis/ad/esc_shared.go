@@ -75,7 +75,7 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation anal
 	return nil
 }
 
-func PostIssuedSignedBy(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node) error {
+func PostIssuedSignedBy(operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node, aiaCertAuthorities []*graph.Node) error {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, node := range enterpriseCertAuthorities {
 			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
@@ -96,6 +96,24 @@ func PostIssuedSignedBy(operation analysis.StatTrackedOperation[analysis.CreateP
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		for _, node := range rootCertAuthorities {
+			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
+				return err
+			} else if errors.Is(err, ErrNoCertParent) {
+				continue
+			} else {
+				for _, rel := range postRels {
+					if !channels.Submit(ctx, outC, rel) {
+						return nil
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		for _, node := range aiaCertAuthorities {
 			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
 			} else if errors.Is(err, ErrNoCertParent) {
@@ -137,6 +155,19 @@ func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.Create
 						}
 					}
 				}
+				if aiaCAIDs, err := findNodesByCertThumbprint(thumbprint, tx, ad.AIACA); err != nil {
+					return err
+				} else {
+					for _, aiaCANodeID := range aiaCAIDs {
+						if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+							FromID: ecaNode.ID,
+							ToID:   aiaCANodeID,
+							Kind:   ad.EnterpriseCAFor,
+						}) {
+							return fmt.Errorf("context timed out while creating EnterpriseCAFor edge")
+						}
+					}
+				}
 			}
 		}
 		return nil
@@ -164,7 +195,7 @@ func PostExtendedByPolicyBinding(operation analysis.StatTrackedOperation[analysi
 		if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {
 			return err
 		} else {
-			// Get an O(1) lookup of Issuance Policies keyed by CertificatePolicyOID
+			// Get an O(1) lookup of Issuance Policies Required keyed by CertificatePolicyOID
 			certTemplateOIDToIssuancePolicyMap := getIssuancePolicyCertOIDMap(allIssuancePolicies)
 
 			// For each certTemplate, find all issuance policies within its CertificatePolicy property array
@@ -238,7 +269,7 @@ func processCertChainParent(node *graph.Node, tx graph.Transaction) ([]analysis.
 		return []analysis.CreatePostRelationshipJob{}, err
 	} else if len(certChain) > 1 {
 		parentCert := certChain[1]
-		if targetNodes, err := findNodesByCertThumbprint(parentCert, tx, ad.EnterpriseCA, ad.RootCA); err != nil {
+		if targetNodes, err := findNodesByCertThumbprint(parentCert, tx, ad.EnterpriseCA, ad.RootCA, ad.AIACA); err != nil {
 			return []analysis.CreatePostRelationshipJob{}, err
 		} else {
 			return slicesext.Map(targetNodes, func(nodeId graph.ID) analysis.CreatePostRelationshipJob {

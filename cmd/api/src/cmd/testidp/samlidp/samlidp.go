@@ -27,14 +27,14 @@ type Options struct {
 
 // Server represents an IDP server. The server provides the following URLs:
 //
-//     /metadata     - the SAML metadata
-//     /sso          - the SAML endpoint to initiate an authentication flow
-//     /login        - prompt for a username and password if no session established
-//     /login/:shortcut - kick off an IDP-initiated authentication flow
-//     /services     - RESTful interface to Service objects
-//     /users        - RESTful interface to User objects
-//     /sessions     - RESTful interface to Session objects
-//     /shortcuts    - RESTful interface to Shortcut objects
+//	/metadata     - the SAML metadata
+//	/sso          - the SAML endpoint to initiate an authentication flow
+//	/login        - prompt for a username and password if no session established
+//	/login/:shortcut - kick off an IDP-initiated authentication flow
+//	/services     - RESTful interface to Service objects
+//	/users        - RESTful interface to User objects
+//	/sessions     - RESTful interface to Session objects
+//	/shortcuts    - RESTful interface to Shortcut objects
 type Server struct {
 	http.Handler
 	idpConfigMu      sync.RWMutex // protects calls into the IDP
