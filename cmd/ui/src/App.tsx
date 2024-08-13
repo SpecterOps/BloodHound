@@ -41,7 +41,7 @@ import Content from 'src/views/Content';
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
 
-const Inner: React.FC = () => {
+export const Inner: React.FC = () => {
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const queryClient = useQueryClient();
