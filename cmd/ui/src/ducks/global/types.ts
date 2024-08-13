@@ -23,6 +23,7 @@ const GLOBAL_FETCH_ASSET_GROUPS = 'app/global/GLOBALFETCHASSETGROUPS';
 const GLOBAL_SET_ASSET_GROUPS = 'app/global/GLOBALSETASSETGROUPS';
 const GLOBAL_SET_ASSET_GROUP_INDEX = 'app/global/GLOBALSETASSETGROUPINDEX';
 const GLOBAL_SET_ASSET_GROUP_EDIT = 'app/global/GLOBALSETASSETGROUPEDIT';
+const GLOBAL_SET_DARK_MODE = 'app/global/GLOBALSETDARKMODE';
 
 export {
     GLOBAL_ADD_SNACKBAR,
@@ -34,12 +35,12 @@ export {
     GLOBAL_SET_ASSET_GROUPS,
     GLOBAL_SET_ASSET_GROUP_INDEX,
     GLOBAL_SET_ASSET_GROUP_EDIT,
+    GLOBAL_SET_DARK_MODE,
 };
 
 export interface GlobalViewState {
-    drawerOpen: boolean;
-    pageTitle: string;
     notifications: Notification[];
+    darkMode: boolean;
 }
 
 export interface Notification {
@@ -47,12 +48,6 @@ export interface Notification {
     key: string;
     dismissed: boolean;
     options: any;
-}
-
-export interface DatapipeStatus {
-    status: 'idle' | 'ingesting' | 'analyzing';
-    updated_at: string;
-    last_complete_analysis_at: string;
 }
 
 export interface GlobalOptionsState {
@@ -81,7 +76,12 @@ interface CloseSnackbarAction {
     key: string;
 }
 
-export type GlobalViewActionTypes = AddSnackbarAction | RemoveSnackbarAction | CloseSnackbarAction;
+export interface SetDarkModeAction {
+    type: typeof GLOBAL_SET_DARK_MODE;
+    darkMode: boolean;
+}
+
+export type GlobalViewActionTypes = AddSnackbarAction | RemoveSnackbarAction | CloseSnackbarAction | SetDarkModeAction;
 
 export interface SetDomainAction {
     type: typeof GLOBAL_SET_DOMAIN;

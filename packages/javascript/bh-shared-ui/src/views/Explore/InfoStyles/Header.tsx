@@ -36,7 +36,7 @@ const useHeaderStyles = makeStyles((theme: Theme) => ({
         boxSizing: 'border-box',
         padding: theme.spacing(2),
         fontSize: theme.typography.fontSize,
-        color: theme.palette.common.black,
+        color: theme.palette.color.primary,
     },
 }));
 

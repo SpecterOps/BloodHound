@@ -74,11 +74,7 @@ const LinuxAbuse: FC = () => {
     );
 
     const step3 = (
-        <Box
-            sx={{
-                borderRadius: '4px',
-                backgroundColor: '#eee',
-            }}>
+        <Box>
             <Typography variant='body2' sx={{ marginBottom: '-8px' }}>
                 <b>Step 3: </b>Obtain the credentials of victim.
                 <br />

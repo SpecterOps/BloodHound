@@ -179,7 +179,7 @@ func (s *SchemaManager) SetDefaultGraph(tx graph.Transaction, schema graph.Graph
 		return err
 	} else {
 		s.graphs[schema.Name] = definition
-		
+
 		s.defaultGraph = definition
 		s.hasDefaultGraph = true
 	}

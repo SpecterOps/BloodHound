@@ -19,12 +19,12 @@ package azure
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/log"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/log"
 )
 
 func NewTenantEntityDetails(node *graph.Node) TenantDetails {

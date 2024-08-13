@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/errors"
+	"github.com/specterops/bloodhound/graphschema/common"
 )
 
 type FilterOperator string
@@ -38,6 +39,7 @@ const (
 	LessThanOrEquals    FilterOperator = "lte"
 	Equals              FilterOperator = "eq"
 	NotEquals           FilterOperator = "neq"
+	Contains            FilterOperator = "in"
 
 	GreaterThanSymbol         string = ">"
 	GreaterThanOrEqualsSymbol string = ">="
@@ -45,6 +47,7 @@ const (
 	LessThanOrEqualsSymbol    string = "<="
 	EqualsSymbol              string = "="
 	NotEqualsSymbol           string = "<>"
+	ContainsSymbol            string = "like"
 
 	TrueString     = "true"
 	FalseString    = "false"
@@ -78,6 +81,9 @@ func ParseFilterOperator(raw string) (FilterOperator, error) {
 	case NotEquals:
 		return NotEquals, nil
 
+	case Contains:
+		return Contains, nil
+
 	default:
 		return "", fmt.Errorf("unknown query parameter filter predicate: %s", raw)
 	}
@@ -96,6 +102,45 @@ type QueryParameterFilter struct {
 }
 
 type QueryParameterFilters []QueryParameterFilter
+
+func (s QueryParameterFilter) BuildGDBNodeFilter() graph.Criteria {
+	var (
+		propertyRef = query.NodeProperty(s.Name)
+		value       = guessFilterValueType(s.Value)
+	)
+
+	// TODO: Investigate whether we can set the collected property for domains that originate from trusts in ParseDomainTrusts
+	switch {
+	case s.Name == common.Collected.String() && s.Operator == Equals:
+		switch s.Value {
+		case FalseString:
+			return query.Or(
+				query.Equals(propertyRef, false),
+				query.Not(query.Exists(propertyRef)),
+			)
+		case TrueString:
+			return query.Equals(propertyRef, true)
+		}
+	}
+
+	switch s.Operator {
+	case GreaterThan:
+		return query.GreaterThan(propertyRef, value)
+	case GreaterThanOrEquals:
+		return query.GreaterThanOrEquals(propertyRef, value)
+	case LessThan:
+		return query.LessThan(propertyRef, value)
+	case LessThanOrEquals:
+		return query.LessThanOrEquals(propertyRef, value)
+	case Equals:
+		return query.Equals(propertyRef, value)
+	case NotEquals:
+		return query.Not(query.Equals(propertyRef, value))
+	default:
+		return nil
+	}
+}
+
 type QueryParameterFilterMap map[string]QueryParameterFilters
 
 func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
@@ -125,14 +170,26 @@ func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 				predicate = EqualsSymbol
 			case NotEquals:
 				predicate = NotEqualsSymbol
+			case Contains:
+				predicate = ContainsSymbol
 			default:
 				return SQLFilter{}, fmt.Errorf("invalid filter predicate specified")
 			}
 
-			result.WriteString(filter.Name)
-			result.WriteString(" ")
-			result.WriteString(predicate)
-			result.WriteString(" ?")
+			switch predicate {
+			case ContainsSymbol:
+				result.WriteString(filter.Name)
+				result.WriteString(" ")
+				result.WriteString(predicate)
+				filter.Value = fmt.Sprintf("%%%s%%", filter.Value)
+				result.WriteString(" lower(?)")
+			default:
+				result.WriteString(filter.Name)
+				result.WriteString(" ")
+				result.WriteString(predicate)
+				result.WriteString(" ?")
+			}
+
 			params = append(params, filter.Value)
 			firstFilter = false
 		}
@@ -166,25 +223,7 @@ func (s QueryParameterFilterMap) BuildGDBNodeFilter() graph.Criteria {
 
 	for _, filters := range s {
 		for _, filter := range filters {
-			switch filter.Operator {
-			case GreaterThan:
-				criteria = append(criteria, query.GreaterThan(query.NodeProperty(filter.Name), guessFilterValueType(filter.Value)))
-
-			case GreaterThanOrEquals:
-				criteria = append(criteria, query.GreaterThanOrEquals(query.NodeProperty(filter.Name), guessFilterValueType(filter.Value)))
-
-			case LessThan:
-				criteria = append(criteria, query.LessThan(query.NodeProperty(filter.Name), guessFilterValueType(filter.Value)))
-
-			case LessThanOrEquals:
-				criteria = append(criteria, query.LessThanOrEquals(query.NodeProperty(filter.Name), guessFilterValueType(filter.Value)))
-
-			case Equals:
-				criteria = append(criteria, query.Equals(query.NodeProperty(filter.Name), guessFilterValueType(filter.Value)))
-
-			case NotEquals:
-				criteria = append(criteria, query.Not(query.Equals(query.NodeProperty(filter.Name), guessFilterValueType(filter.Value))))
-			}
+			criteria = append(criteria, filter.BuildGDBNodeFilter())
 		}
 	}
 
@@ -298,6 +337,10 @@ func (s QueryParameterFilterParser) ParseQueryParameterFilters(request *http.Req
 	for name, values := range request.URL.Query() {
 		// ignore pagination query params
 		if slices.Contains(AllPaginationQueryParameters(), name) {
+			continue
+		}
+
+		if slices.Contains(IgnoreFilters(), name) {
 			continue
 		}
 

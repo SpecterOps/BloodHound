@@ -28,7 +28,6 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/queries"
 )
@@ -40,7 +39,7 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 
 	// Set up logging. This must be done after ContextMiddleware is initialized so the context can be accessed in the log logic
 	if cfg.EnableAPILogging {
-		routerInst.UsePrerouting(middleware.LoggingMiddleware(cfg, identityResolver, db))
+		routerInst.UsePrerouting(middleware.LoggingMiddleware(identityResolver))
 	}
 
 	routerInst.UsePostrouting(
@@ -59,7 +58,6 @@ func RegisterFossRoutes(
 	apiCache cache.Cache,
 	collectorManifests config.CollectorManifests,
 	authenticator api.Authenticator,
-	taskNotifier datapipe.Tasker,
 	authorizer auth.Authorizer,
 ) {
 	router.With(middleware.DefaultRateLimitMiddleware,
@@ -74,9 +72,9 @@ func RegisterFossRoutes(
 		}),
 
 		// Static asset handling for the UI
-		routerInst.PathPrefix("/ui", static.Handler()),
+		routerInst.PathPrefix("/ui", static.AssetHandler),
 	)
 
-	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, taskNotifier, authorizer)
+	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer)
 	NewV2API(cfg, resources, routerInst, authenticator)
 }

@@ -30,8 +30,11 @@ const (
 	FeatureReconciliation             = "reconciliation"
 	FeatureEntityPanelCaching         = "entity_panel_cache"
 	FeatureAdcs                       = "adcs"
+	FeaturePGMigrationDualIngest      = "pg_migration_dual_ingest"
 	FeatureClearGraphData             = "clear_graph_data"
 	FeatureRiskExposureNewCalculation = "risk_exposure_new_calculation"
+	FeatureFedRAMPEULA                = "fedramp_eula"
+	FeatureDarkMode                   = "dark_mode"
 	FeatureAutoTagT0ADMembers         = "auto_tag_t0_ad_members"
 )
 
@@ -43,6 +46,13 @@ func AvailableFlags() FeatureFlagSet {
 			Key:           FeatureButterflyAnalysis,
 			Name:          "Enhanced Asset Inbound-Outbound Exposure Analysis",
 			Description:   "Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.",
+			Enabled:       false,
+			UserUpdatable: false,
+		},
+		FeaturePGMigrationDualIngest: {
+			Key:           FeaturePGMigrationDualIngest,
+			Name:          "PostgreSQL Migration Dual Ingest",
+			Description:   "Enables dual ingest pathing for both Neo4j and PostgreSQL.",
 			Enabled:       false,
 			UserUpdatable: false,
 		},
@@ -101,6 +111,20 @@ func AvailableFlags() FeatureFlagSet {
 			Description:   "Enables the use of new tier zero risk exposure metatree metrics.",
 			Enabled:       false,
 			UserUpdatable: false,
+		},
+		FeatureFedRAMPEULA: {
+			Key:           FeatureFedRAMPEULA,
+			Name:          "FedRAMP EULA",
+			Description:   "Enables showing the FedRAMP EULA on every login. (Enterprise only)",
+			Enabled:       false,
+			UserUpdatable: false,
+		},
+		FeatureDarkMode: {
+			Key:           FeatureDarkMode,
+			Name:          "Dark Mode",
+			Description:   "Allows users to enable or disable dark mode via a toggle in the settings menu",
+			Enabled:       false,
+			UserUpdatable: true,
 		},
 		FeatureAutoTagT0ADMembers: {
 			Key:           FeatureAutoTagT0ADMembers,

@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package types
@@ -21,9 +21,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/specterops/bloodhound/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
-	"github.com/specterops/bloodhound/errors"
 )
 
 type JSONBObject struct {
@@ -125,17 +125,44 @@ func (s *JSONUntypedObject) Scan(value any) error {
 	}
 }
 
-func (s JSONUntypedObject) Map(value any) error {
-	return nil
-}
-
 // Value returns the json-marshaled value of the receiver
 func (s JSONUntypedObject) Value() (driver.Value, error) {
 	return json.Marshal(s)
 }
 
 // GormDBDataType returns JSONB if postgres, otherwise panics due to lack of DB type support
-func (s JSONUntypedObject) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+func (s JSONUntypedObject) GormDBDataType(db *gorm.DB, _ *schema.Field) string {
+	switch dbDialect := db.Dialector.Name(); dbDialect {
+	case "postgres":
+		return "JSONB"
+
+	default:
+		panic(fmt.Sprintf("Unsupported database dialect for JSON datatype: %s", dbDialect))
+	}
+}
+
+type JSONBBoolObject map[string]bool
+
+// Scan parses the input value (expected to be JSON) to []byte and then attempts to unmarshal it into the receiver
+func (s *JSONBBoolObject) Scan(value any) error {
+	if bytes, ok := value.([]byte); !ok {
+		return fmt.Errorf("failed to unmarshal JSONB value: %v", value)
+	} else {
+		if err := json.Unmarshal(bytes, s); err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+// Value returns the json-marshaled value of the receiver
+func (s JSONBBoolObject) Value() (driver.Value, error) {
+	return json.Marshal(s)
+}
+
+// GormDBDataType returns JSONB if postgres, otherwise panics due to lack of DB type support
+func (s JSONBBoolObject) GormDBDataType(db *gorm.DB, _ *schema.Field) string {
 	switch dbDialect := db.Dialector.Name(); dbDialect {
 	case "postgres":
 		return "JSONB"

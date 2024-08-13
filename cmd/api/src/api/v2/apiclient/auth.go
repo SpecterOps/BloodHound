@@ -441,13 +441,8 @@ func (s Client) GetSelf() (model.User, error) {
 	}
 }
 
-func (s Client) SetUserSecret(userID uuid.UUID, secret string, needsPasswordReset bool) error {
-	setUserSecret := v2.SetUserSecretRequest{
-		Secret:             secret,
-		NeedsPasswordReset: needsPasswordReset,
-	}
-
-	if response, err := s.Request(http.MethodPut, fmt.Sprintf("api/v2/bloodhound-users/%s/secret", userID), nil, setUserSecret); err != nil {
+func (s Client) SetUserSecretWithCurrentPassword(userID uuid.UUID, payload v2.SetUserSecretRequest) error {
+	if response, err := s.Request(http.MethodPut, fmt.Sprintf("api/v2/bloodhound-users/%s/secret", userID), nil, payload); err != nil {
 		return err
 	} else {
 		defer response.Body.Close()
@@ -458,6 +453,13 @@ func (s Client) SetUserSecret(userID uuid.UUID, secret string, needsPasswordRese
 
 		return nil
 	}
+}
+
+func (s Client) SetUserSecret(userID uuid.UUID, secret string, needsPasswordReset bool) error {
+	return s.SetUserSecretWithCurrentPassword(userID, v2.SetUserSecretRequest{
+		Secret:             secret,
+		NeedsPasswordReset: needsPasswordReset,
+	})
 }
 
 func (s Client) CreateUserToken(userID uuid.UUID, tokenName string) (model.AuthToken, error) {
@@ -478,7 +480,7 @@ func (s Client) CreateUserToken(userID uuid.UUID, tokenName string) (model.AuthT
 	}
 }
 
-func (s Client) DeleteUserToken(userID, tokenID uuid.UUID) error {
+func (s Client) DeleteUserToken(tokenID uuid.UUID) error {
 	if response, err := s.Request(http.MethodDelete, fmt.Sprintf("api/v2/tokens/%s", tokenID.String()), nil, nil); err != nil {
 		return err
 	} else {

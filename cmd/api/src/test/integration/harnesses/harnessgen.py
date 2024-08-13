@@ -87,7 +87,7 @@ class CertTemplateData:
         self.NoSecurityExtension = False
         self.SchemaVersion = 1
         self.AuthorizedSignatures = 0
-        self.EKUS = []
+        self.EffectiveEKUs = []
         self.ApplicationPolicies = []
         self.SubjectAltRequireEmail = False
 

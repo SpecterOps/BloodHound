@@ -33,15 +33,21 @@ import (
 // BuildMainPackages builds all main packages for a list of module paths
 func BuildMainPackages(workRoot string, modPaths []string, env environment.Environment) error {
 	var (
+		err      error
 		errs     []error
 		wg       sync.WaitGroup
 		mu       sync.Mutex
+		version  semver.Version
 		buildDir = filepath.Join(workRoot, "dist") + string(filepath.Separator)
 	)
 
-	version, err := git.ParseLatestVersionFromTags(workRoot, env)
-	if err != nil {
-		return fmt.Errorf("parse latest version from git tags: %w", err)
+	if version, err = git.ParseLatestVersionFromTags(workRoot, env); err != nil {
+		log.Warnf("Failed to parse version from git tags, falling back to environment variable: %v", err)
+		parsedVersion, err := semver.NewVersion(env[environment.VersionVarName])
+		if err != nil {
+			return fmt.Errorf("error parsing version from environment variable: %w", err)
+		}
+		version = *parsedVersion
 	}
 
 	log.Infof("Building for version %s", version.Original())

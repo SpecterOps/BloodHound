@@ -17,6 +17,8 @@
 package v2
 
 import (
+	"net/http"
+
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
@@ -25,7 +27,6 @@ import (
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
-	"net/http"
 )
 
 const (

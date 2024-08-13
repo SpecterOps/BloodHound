@@ -1,13 +1,13 @@
 {
   "style": {
     "font-family": "sans-serif",
-    "background-color": "#FAFCFF",
+    "background-color": "#ffffff",
     "background-image": "",
     "background-size": "100%",
-    "node-color": "#4C8EDA",
-    "border-width": 2,
-    "border-color": "#2870c2",
-    "radius": 25,
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
     "node-padding": 5,
     "node-margin": 2,
     "outside-position": "auto",
@@ -17,25 +17,25 @@
     "icon-size": 64,
     "caption-position": "inside",
     "caption-max-width": 200,
-    "caption-color": "#ffffff",
-    "caption-font-size": 10,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
     "caption-font-weight": "normal",
-    "label-position": "outside",
-    "label-display": "bare",
-    "label-color": "#ffffff",
-    "label-background-color": "#4C8EDA",
-    "label-border-color": "#4C8EDA",
-    "label-border-width": 0,
-    "label-font-size": 10,
-    "label-padding": 2,
-    "label-margin": 2,
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
     "directionality": "directed",
     "detail-position": "inline",
     "detail-orientation": "parallel",
-    "arrow-width": 1,
-    "arrow-color": "#A5ABB6",
-    "margin-start": 0,
-    "margin-end": 0,
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
     "margin-peer": 20,
     "attachment-start": "normal",
     "attachment-end": "normal",
@@ -44,111 +44,280 @@
     "type-background-color": "#ffffff",
     "type-border-color": "#000000",
     "type-border-width": 0,
-    "type-font-size": 10,
-    "type-padding": 2,
+    "type-font-size": 16,
+    "type-padding": 5,
     "property-position": "outside",
     "property-alignment": "colon",
     "property-color": "#000000",
-    "property-font-size": 10,
+    "property-font-size": 16,
     "property-font-weight": "normal"
   },
   "nodes": [
     {
-      "id": "n3",
+      "id": "n0",
       "position": {
-        "x": -839.5,
-        "y": -425.9378115548395
+        "x": 377.2907441872262,
+        "y": 275.3171258073137
       },
       "caption": "EnterpriseCA2",
+      "labels": [],
+      "properties": {
+        "CertChain": "[d,c,b,a]"
+      },
       "style": {
         "node-color": "#f44e3b",
-        "border-color": "#d33115",
+        "border-color": "#000000",
         "radius": 35
+      }
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 184.40236148448412,
+        "y": -134.2190514795972
       },
+      "caption": "EnterpriseCA3",
       "labels": [],
-      "properties": {}
+      "properties": {
+        "CertChain": "[e]"
+      },
+      "style": {
+        "node-color": "#f44e3b",
+        "border-color": "#000000",
+        "radius": 35
+      }
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 552,
+        "y": 51.484829094809754
+      },
+      "caption": "EnterpriseCA1",
+      "labels": [],
+      "properties": {
+        "CertChain": "[c,b,a]"
+      },
+      "style": {
+        "node-color": "#f44e3b",
+        "border-color": "#000000",
+        "radius": 35
+      }
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 726.7092558127738,
+        "y": -172.3474676176942
+      },
+      "caption": "RootCA2",
+      "labels": [],
+      "properties": {
+        "CertChain": "[b,a]"
+      },
+      "style": {
+        "radius": 35,
+        "border-color": "#000000"
+      }
     },
     {
       "id": "n4",
       "position": {
-        "x": -1076.6726114290689,
-        "y": -425.9378115548395
+        "x": 726.7092558127738,
+        "y": -474.5607264014693
       },
-      "caption": "EnterpriseCA3",
-      "style": {
-        "node-color": "#f44e3b",
-        "border-color": "#d33115",
-        "radius": 35
-      },
+      "caption": "RootCA1",
       "labels": [],
-      "properties": {}
+      "properties": {
+        "CertChain": "[a]"
+      },
+      "style": {
+        "radius": 35,
+        "border-color": "#000000"
+      }
     },
     {
       "id": "n5",
       "position": {
-        "x": -599.6726114290689,
-        "y": -426.6802090032857
+        "x": 843.0975421638292,
+        "y": 275.3171258073137
       },
-      "caption": "EnterpriseCA1",
-      "style": {
-        "node-color": "#f44e3b",
-        "border-color": "#d33115",
-        "radius": 35
-      },
+      "caption": "AIACA2_2",
       "labels": [],
-      "properties": {}
+      "properties": {
+        "CertChain": "[d,c,b,a]"
+      },
+      "style": {
+        "node-color": "#aea1ff",
+        "border-color": "#000000",
+        "radius": 35
+      }
     },
     {
       "id": "n6",
       "position": {
-        "x": -359.84522285813773,
-        "y": -427.42260645173195
+        "x": 184.40236148448412,
+        "y": -284.7965347965783
       },
-      "caption": "RootCA2",
-      "style": {
-        "radius": 35
-      },
+      "caption": "AIACA2_3",
       "labels": [],
-      "properties": {}
+      "properties": {
+        "CertChain": "[e]"
+      },
+      "style": {
+        "node-color": "#aea1ff",
+        "border-color": "#000000",
+        "radius": 35
+      }
     },
     {
       "id": "n7",
       "position": {
-        "x": -120.01783538279034,
-        "y": -428.16503809809547
+        "x": 1017.8067979766029,
+        "y": 51.48482909480981
       },
-      "caption": "RootCA1",
-      "style": {
-        "radius": 35
-      },
+      "caption": "AIACA2_1",
       "labels": [],
-      "properties": {}
+      "properties": {
+        "CertChain": "[c,b,a]"
+      },
+      "style": {
+        "node-color": "#aea1ff",
+        "border-color": "#000000",
+        "radius": 35
+      }
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 1192.5160537893767,
+        "y": -172.34746761769418
+      },
+      "caption": "AIACA1_2",
+      "labels": [],
+      "properties": {
+        "CertChain": "[b,a]"
+      },
+      "style": {
+        "radius": 35,
+        "node-color": "#aea1ff",
+        "border-color": "#000000"
+      }
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 1192.5160537893767,
+        "y": -474.5607264014693
+      },
+      "caption": "AIACA1_1",
+      "labels": [],
+      "properties": {
+        "CertChain": "[a]"
+      },
+      "style": {
+        "radius": 35,
+        "node-color": "#aea1ff",
+        "border-color": "#000000"
+      }
     }
   ],
   "relationships": [
     {
       "id": "n0",
+      "fromId": "n0",
+      "toId": "n2",
       "type": "IssuedSignedBy",
-      "style": {},
       "properties": {},
-      "fromId": "n3",
-      "toId": "n5"
+      "style": {}
     },
     {
       "id": "n1",
+      "fromId": "n2",
+      "toId": "n3",
+      "type": "IssuedSignedBy",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n2",
+      "fromId": "n3",
+      "toId": "n4",
+      "type": "IssuedSignedBy",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n3",
+      "fromId": "n5",
+      "toId": "n7",
+      "type": "IssuedSignedBy",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n4",
+      "fromId": "n7",
+      "toId": "n8",
+      "type": "IssuedSignedBy",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n5",
+      "fromId": "n8",
+      "toId": "n9",
+      "type": "IssuedSignedBy",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n6",
+      "type": "IssuedSignedBy",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n7"
+    },
+    {
+      "id": "n7",
       "type": "IssuedSignedBy",
       "style": {},
       "properties": {},
       "fromId": "n5",
-      "toId": "n6"
+      "toId": "n2"
     },
     {
-      "id": "n2",
+      "id": "n8",
       "type": "IssuedSignedBy",
       "style": {},
       "properties": {},
-      "fromId": "n6",
-      "toId": "n7"
+      "fromId": "n2",
+      "toId": "n8"
+    },
+    {
+      "id": "n9",
+      "type": "IssuedSignedBy",
+      "style": {},
+      "properties": {},
+      "fromId": "n7",
+      "toId": "n3"
+    },
+    {
+      "id": "n10",
+      "type": "IssuedSignedBy",
+      "style": {},
+      "properties": {},
+      "fromId": "n8",
+      "toId": "n4"
+    },
+    {
+      "id": "n11",
+      "type": "IssuedSignedBy",
+      "style": {},
+      "properties": {},
+      "fromId": "n3",
+      "toId": "n9"
     }
   ]
 }

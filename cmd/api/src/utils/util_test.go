@@ -19,17 +19,16 @@ package utils_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/mediatypes"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/utils"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsValidClientVersion(t *testing.T) {

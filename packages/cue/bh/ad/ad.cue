@@ -178,7 +178,7 @@ HighValue: types.#StringEnum & {
 BlocksInheritance: types.#StringEnum & {
 	symbol:         "BlocksInheritance"
 	schema:         "ad"
-	name:           "Blocks Inheritance"
+	name:           "Blocks GPO Inheritance"
 	representation: "blocksinheritance"
 }
 
@@ -444,14 +444,14 @@ AuthorizedSignatures: types.#StringEnum & {
 ApplicationPolicies: types.#StringEnum & {
 	symbol: "ApplicationPolicies"
 	schema: "ad"
-	name: "Application Policies"
+	name: "Application Policies Required"
 	representation: "applicationpolicies"
 }
 
 IssuancePolicies: types.#StringEnum & {
 	symbol: "IssuancePolicies"
 	schema: "ad"
-	name: "Issuance Policies"
+	name: "Issuance Policies Required"
 	representation: "issuancepolicies"
 }
 
@@ -486,7 +486,7 @@ EnrolleeSuppliesSubject: types.#StringEnum & {
 CertificateApplicationPolicy: types.#StringEnum & {
 	symbol: "CertificateApplicationPolicy"
 	schema: "ad"
-	name: "Certificate Application Policies"
+	name: "Application Policy Extensions"
 	representation: "certificateapplicationpolicy"
 }
 
@@ -1109,6 +1109,11 @@ ADCSESC13: types.#Kind & {
 	schema: "active_directory"
 }
 
+SyncedToEntraUser: types.#Kind & {
+	symbol: "SyncedToEntraUser"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1179,7 +1184,8 @@ RelationshipKinds: [
 	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
-	ADCSESC13
+	ADCSESC13,
+	SyncedToEntraUser,
 ]
 
 // ACL Relationships
@@ -1257,7 +1263,8 @@ PathfindingRelationships: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
-	DCFor
+	DCFor,
+	SyncedToEntraUser,
 ]
 
 EdgeCompositionRelationships: [

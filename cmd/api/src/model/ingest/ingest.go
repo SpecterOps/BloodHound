@@ -18,6 +18,7 @@ package ingest
 
 import (
 	"encoding/json"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/ad"

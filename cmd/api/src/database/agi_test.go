@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCreateGetUpdateDeleteAssetGroup(t *testing.T) {
@@ -70,4 +71,48 @@ func TestCreateGetUpdateDeleteAssetGroup(t *testing.T) {
 	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteAssetGroup, "asset_group_name", "updated asset group"); err != nil {
 		t.Fatalf("Error veriying DeleteAssetGroup audit logs:\n%v", err)
 	}
+}
+
+func TestAssetGroupMemberCount(t *testing.T) {
+	var (
+		dbInst  = integration.SetupDB(t)
+		testCtx = context.Background()
+	)
+
+	assetGroup, err := dbInst.CreateAssetGroup(testCtx, "member count test group", "mctest", false)
+	require.Nil(t, err)
+
+	collection := model.AssetGroupCollection{
+		AssetGroupID: assetGroup.ID,
+	}
+	entries := model.AssetGroupCollectionEntries{
+		{ObjectID: "obj1", NodeLabel: "TestNode1"},
+		{ObjectID: "obj2", NodeLabel: "TestNode2"},
+		{ObjectID: "obj3", NodeLabel: "TestNode3"},
+		{ObjectID: "obj4", NodeLabel: "TestNode4"},
+	}
+	err = dbInst.CreateAssetGroupCollection(testCtx, collection, entries)
+	require.Nil(t, err)
+
+	t.Run("GetAssetGroup", func(t *testing.T) {
+		fetchedGroup, err := dbInst.GetAssetGroup(testCtx, assetGroup.ID)
+		require.Nil(t, err)
+		require.Equal(t, 4, fetchedGroup.MemberCount)
+	})
+
+	t.Run("GetAllAssetGroups", func(t *testing.T) {
+		allGroups, err := dbInst.GetAllAssetGroups(testCtx, "", model.SQLFilter{})
+		require.Nil(t, err)
+		found := false
+		for _, g := range allGroups {
+			if g.ID == assetGroup.ID {
+				found = true
+				require.Equal(t, 4, g.MemberCount)
+				break
+			}
+		}
+		if !found {
+			t.Errorf("Asset group not found in GetAllAssetGroups result")
+		}
+	})
 }

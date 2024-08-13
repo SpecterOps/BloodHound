@@ -24,8 +24,8 @@ const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
     <Tooltip {...props} classes={{ popper: className }} />
 ))(({ theme }) => ({
     [`& .${tooltipClasses.tooltip}`]: {
-        color: 'black',
-        backgroundColor: theme.palette.common.white,
+        color: theme.palette.text.primary,
+        backgroundColor: theme.palette.background.paper,
         padding: 0,
         paddingTop: '0.5rem',
         paddingBottom: '0.5rem',

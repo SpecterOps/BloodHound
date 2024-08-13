@@ -14,12 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Button } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Box, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import FileUploadDialog from '../FileUploadDialog';
 import { useListFileIngestJobs } from '../../hooks';
-import ContentPage from '../ContentPage';
 import FinishedIngestLog from '../FinishedIngestLog';
+import PageWithTitle from '../PageWithTitle';
+import DocumentationLinks from '../DocumentationLinks';
 
 const FileIngest = () => {
     const [fileUploadDialogOpen, setFileUploadDialogOpen] = useState<boolean>(false);
@@ -47,31 +49,31 @@ const FileIngest = () => {
 
     return (
         <>
-            <ContentPage title='Manual File Ingest' data-testid='manual-file-ingest'>
-                <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
-                    <Button
-                        color='primary'
-                        variant='contained'
-                        disableElevation
-                        onClick={() => toggleFileUploadDialog()}
-                        data-testid='file-ingest_button-upload-files'>
-                        Upload File(s)
-                    </Button>
-                </Box>
-            </ContentPage>
+            <PageWithTitle
+                title='File Ingest'
+                data-testid='manual-file-ingest'
+                pageDescription={
+                    <Typography variant='body2'>
+                        Upload data from SharpHound or AzureHound offline collectors. Check out our{' '}
+                        {DocumentationLinks.fileIngestLink} documentation for more information.
+                    </Typography>
+                }></PageWithTitle>
 
-            <ContentPage title='Finished Ingest Log' data-testid='finished-ingest-log'>
-                <FinishedIngestLog
-                    ingestJobs={listFileIngestJobsData?.data || []}
-                    paginationProps={{
-                        page,
-                        rowsPerPage,
-                        count: totalCount,
-                        onPageChange: handlePageChange,
-                        onRowsPerPageChange: handleRowsPerPageChange,
-                    }}
-                />
-            </ContentPage>
+            <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' my={2}>
+                <Button onClick={() => toggleFileUploadDialog()} data-testid='file-ingest_button-upload-files'>
+                    Upload File(s)
+                </Button>
+            </Box>
+            <FinishedIngestLog
+                ingestJobs={listFileIngestJobsData?.data || []}
+                paginationProps={{
+                    page,
+                    rowsPerPage,
+                    count: totalCount,
+                    onPageChange: handlePageChange,
+                    onRowsPerPageChange: handleRowsPerPageChange,
+                }}
+            />
 
             <FileUploadDialog open={fileUploadDialogOpen} onClose={toggleFileUploadDialog} />
         </>

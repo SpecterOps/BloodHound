@@ -20,7 +20,7 @@ import { Typography } from '@mui/material';
 const General: FC = () => {
     return (
         <Typography variant='body2'>
-            The User Access Administrator role can manage user access to Azure resources, assign roles in Azure RBAC, 
+            The User Access Administrator role can manage user access to Azure resources, assign roles in Azure RBAC,
             and assign the Owner role to themselves or others.
         </Typography>
     );

@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package bloodhoundgraph
@@ -29,20 +29,6 @@ import (
 // We ignore the property lookup errors here since there's no clear path for a caller to handle it. Logging is also
 // restricted to debug verbosity as anything more permissive could potentially flood centralized infrastructure in
 // production
-
-func getNodeName(target *graph.Node) string {
-	const noNameOrObjectID = "NO NAME OR ID"
-
-	props := target.Properties
-
-	if name, err := props.Get(common.Name.String()).String(); err == nil {
-		return name
-	} else if objectID, err := props.Get(common.ObjectID.String()).String(); err == nil {
-		return objectID
-	}
-
-	return noNameOrObjectID
-}
 
 func getNodeLevel(target *graph.Node) (int, bool) {
 	if startSystemTags, err := target.Properties.Get(common.SystemTags.String()).String(); err == nil {

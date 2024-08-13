@@ -82,6 +82,21 @@ func (mr *MockDatabaseMockRecorder) CancelAllFileUploads(arg0 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelAllFileUploads", reflect.TypeOf((*MockDatabase)(nil).CancelAllFileUploads), arg0)
 }
 
+// CheckUserHasPermissionToSavedQuery mocks base method.
+func (m *MockDatabase) CheckUserHasPermissionToSavedQuery(arg0 context.Context, arg1 int64, arg2 uuid.UUID) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckUserHasPermissionToSavedQuery", arg0, arg1, arg2)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckUserHasPermissionToSavedQuery indicates an expected call of CheckUserHasPermissionToSavedQuery.
+func (mr *MockDatabaseMockRecorder) CheckUserHasPermissionToSavedQuery(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckUserHasPermissionToSavedQuery", reflect.TypeOf((*MockDatabase)(nil).CheckUserHasPermissionToSavedQuery), arg0, arg1, arg2)
+}
+
 // Close mocks base method.
 func (m *MockDatabase) Close(arg0 context.Context) {
 	m.ctrl.T.Helper()
@@ -288,18 +303,48 @@ func (mr *MockDatabaseMockRecorder) CreateSAMLIdentityProvider(arg0, arg1 interf
 }
 
 // CreateSavedQuery mocks base method.
-func (m *MockDatabase) CreateSavedQuery(arg0 context.Context, arg1 uuid.UUID, arg2, arg3 string) (model.SavedQuery, error) {
+func (m *MockDatabase) CreateSavedQuery(arg0 context.Context, arg1 uuid.UUID, arg2, arg3, arg4 string) (model.SavedQuery, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSavedQuery", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "CreateSavedQuery", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(model.SavedQuery)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSavedQuery indicates an expected call of CreateSavedQuery.
-func (mr *MockDatabaseMockRecorder) CreateSavedQuery(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateSavedQuery(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQuery), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQuery), arg0, arg1, arg2, arg3, arg4)
+}
+
+// CreateSavedQueryPermissionToPublic mocks base method.
+func (m *MockDatabase) CreateSavedQueryPermissionToPublic(arg0 context.Context, arg1 int64) (model.SavedQueriesPermissions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSavedQueryPermissionToPublic", arg0, arg1)
+	ret0, _ := ret[0].(model.SavedQueriesPermissions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSavedQueryPermissionToPublic indicates an expected call of CreateSavedQueryPermissionToPublic.
+func (mr *MockDatabaseMockRecorder) CreateSavedQueryPermissionToPublic(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQueryPermissionToPublic", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQueryPermissionToPublic), arg0, arg1)
+}
+
+// CreateSavedQueryPermissionToUser mocks base method.
+func (m *MockDatabase) CreateSavedQueryPermissionToUser(arg0 context.Context, arg1 int64, arg2 uuid.UUID) (model.SavedQueriesPermissions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSavedQueryPermissionToUser", arg0, arg1, arg2)
+	ret0, _ := ret[0].(model.SavedQueriesPermissions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSavedQueryPermissionToUser indicates an expected call of CreateSavedQueryPermissionToUser.
+func (mr *MockDatabaseMockRecorder) CreateSavedQueryPermissionToUser(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQueryPermissionToUser", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQueryPermissionToUser), arg0, arg1, arg2)
 }
 
 // CreateUser mocks base method.
@@ -372,6 +417,20 @@ func (m *MockDatabase) DeleteAllIngestTasks(arg0 context.Context) error {
 func (mr *MockDatabaseMockRecorder) DeleteAllIngestTasks(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllIngestTasks", reflect.TypeOf((*MockDatabase)(nil).DeleteAllIngestTasks), arg0)
+}
+
+// DeleteAnalysisRequest mocks base method.
+func (m *MockDatabase) DeleteAnalysisRequest(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAnalysisRequest", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAnalysisRequest indicates an expected call of DeleteAnalysisRequest.
+func (mr *MockDatabaseMockRecorder) DeleteAnalysisRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAnalysisRequest", reflect.TypeOf((*MockDatabase)(nil).DeleteAnalysisRequest), arg0)
 }
 
 // DeleteAssetGroup mocks base method.
@@ -695,6 +754,21 @@ func (mr *MockDatabaseMockRecorder) GetAllUsers(arg0, arg1, arg2 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsers", reflect.TypeOf((*MockDatabase)(nil).GetAllUsers), arg0, arg1, arg2)
 }
 
+// GetAnalysisRequest mocks base method.
+func (m *MockDatabase) GetAnalysisRequest(arg0 context.Context) (model.AnalysisRequest, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAnalysisRequest", arg0)
+	ret0, _ := ret[0].(model.AnalysisRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAnalysisRequest indicates an expected call of GetAnalysisRequest.
+func (mr *MockDatabaseMockRecorder) GetAnalysisRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAnalysisRequest", reflect.TypeOf((*MockDatabase)(nil).GetAnalysisRequest), arg0)
+}
+
 // GetAssetGroup mocks base method.
 func (m *MockDatabase) GetAssetGroup(arg0 context.Context, arg1 int32) (model.AssetGroup, error) {
 	m.ctrl.T.Helper()
@@ -817,6 +891,21 @@ func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(arg0, arg1 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParameter), arg0, arg1)
 }
 
+// GetDatapipeStatus mocks base method.
+func (m *MockDatabase) GetDatapipeStatus(arg0 context.Context) (model.DatapipeStatusWrapper, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDatapipeStatus", arg0)
+	ret0, _ := ret[0].(model.DatapipeStatusWrapper)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDatapipeStatus indicates an expected call of GetDatapipeStatus.
+func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).GetDatapipeStatus), arg0)
+}
+
 // GetFileUploadJob mocks base method.
 func (m *MockDatabase) GetFileUploadJob(arg0 context.Context, arg1 int64) (model.FileUploadJob, error) {
 	m.ctrl.T.Helper()
@@ -937,6 +1026,36 @@ func (mr *MockDatabaseMockRecorder) GetPermission(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermission", reflect.TypeOf((*MockDatabase)(nil).GetPermission), arg0, arg1)
 }
 
+// GetPermissionsForSavedQuery mocks base method.
+func (m *MockDatabase) GetPermissionsForSavedQuery(arg0 context.Context, arg1 int64) (model.SavedQueriesPermissions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPermissionsForSavedQuery", arg0, arg1)
+	ret0, _ := ret[0].(model.SavedQueriesPermissions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPermissionsForSavedQuery indicates an expected call of GetPermissionsForSavedQuery.
+func (mr *MockDatabaseMockRecorder) GetPermissionsForSavedQuery(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsForSavedQuery", reflect.TypeOf((*MockDatabase)(nil).GetPermissionsForSavedQuery), arg0, arg1)
+}
+
+// GetPublicSavedQueries mocks base method.
+func (m *MockDatabase) GetPublicSavedQueries(arg0 context.Context) (model.SavedQueries, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPublicSavedQueries", arg0)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPublicSavedQueries indicates an expected call of GetPublicSavedQueries.
+func (mr *MockDatabaseMockRecorder) GetPublicSavedQueries(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPublicSavedQueries", reflect.TypeOf((*MockDatabase)(nil).GetPublicSavedQueries), arg0)
+}
+
 // GetRole mocks base method.
 func (m *MockDatabase) GetRole(arg0 context.Context, arg1 int32) (model.Role, error) {
 	m.ctrl.T.Helper()
@@ -997,6 +1116,21 @@ func (mr *MockDatabaseMockRecorder) GetSAMLProviderUsers(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSAMLProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSAMLProviderUsers), arg0, arg1)
 }
 
+// GetSharedSavedQueries mocks base method.
+func (m *MockDatabase) GetSharedSavedQueries(arg0 context.Context, arg1 uuid.UUID) (model.SavedQueries, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSharedSavedQueries", arg0, arg1)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSharedSavedQueries indicates an expected call of GetSharedSavedQueries.
+func (mr *MockDatabaseMockRecorder) GetSharedSavedQueries(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSharedSavedQueries", reflect.TypeOf((*MockDatabase)(nil).GetSharedSavedQueries), arg0, arg1)
+}
+
 // GetTimeRangedAssetGroupCollections mocks base method.
 func (m *MockDatabase) GetTimeRangedAssetGroupCollections(arg0 context.Context, arg1 int32, arg2, arg3 int64, arg4 string) (model.AssetGroupCollections, error) {
 	m.ctrl.T.Helper()
@@ -1055,6 +1189,34 @@ func (m *MockDatabase) GetUserToken(arg0 context.Context, arg1, arg2 uuid.UUID) 
 func (mr *MockDatabaseMockRecorder) GetUserToken(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserToken", reflect.TypeOf((*MockDatabase)(nil).GetUserToken), arg0, arg1, arg2)
+}
+
+// HasAnalysisRequest mocks base method.
+func (m *MockDatabase) HasAnalysisRequest(arg0 context.Context) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasAnalysisRequest", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// HasAnalysisRequest indicates an expected call of HasAnalysisRequest.
+func (mr *MockDatabaseMockRecorder) HasAnalysisRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasAnalysisRequest", reflect.TypeOf((*MockDatabase)(nil).HasAnalysisRequest), arg0)
+}
+
+// HasCollectedGraphDataDeletionRequest mocks base method.
+func (m *MockDatabase) HasCollectedGraphDataDeletionRequest(arg0 context.Context) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasCollectedGraphDataDeletionRequest", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// HasCollectedGraphDataDeletionRequest indicates an expected call of HasCollectedGraphDataDeletionRequest.
+func (mr *MockDatabaseMockRecorder) HasCollectedGraphDataDeletionRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasCollectedGraphDataDeletionRequest", reflect.TypeOf((*MockDatabase)(nil).HasCollectedGraphDataDeletionRequest), arg0)
 }
 
 // HasInstallation mocks base method.
@@ -1178,6 +1340,34 @@ func (mr *MockDatabaseMockRecorder) Migrate(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate), arg0)
 }
 
+// RequestAnalysis mocks base method.
+func (m *MockDatabase) RequestAnalysis(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RequestAnalysis", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RequestAnalysis indicates an expected call of RequestAnalysis.
+func (mr *MockDatabaseMockRecorder) RequestAnalysis(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestAnalysis", reflect.TypeOf((*MockDatabase)(nil).RequestAnalysis), arg0, arg1)
+}
+
+// RequestCollectedGraphDataDeletion mocks base method.
+func (m *MockDatabase) RequestCollectedGraphDataDeletion(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RequestCollectedGraphDataDeletion", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RequestCollectedGraphDataDeletion indicates an expected call of RequestCollectedGraphDataDeletion.
+func (mr *MockDatabaseMockRecorder) RequestCollectedGraphDataDeletion(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestCollectedGraphDataDeletion", reflect.TypeOf((*MockDatabase)(nil).RequestCollectedGraphDataDeletion), arg0, arg1)
+}
+
 // RequiresMigration mocks base method.
 func (m *MockDatabase) RequiresMigration(arg0 context.Context) (bool, error) {
 	m.ctrl.T.Helper()
@@ -1222,6 +1412,20 @@ func (mr *MockDatabaseMockRecorder) SetConfigurationParameter(arg0, arg1 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).SetConfigurationParameter), arg0, arg1)
 }
 
+// SetDatapipeStatus mocks base method.
+func (m *MockDatabase) SetDatapipeStatus(arg0 context.Context, arg1 model.DatapipeStatus, arg2 bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetDatapipeStatus", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetDatapipeStatus indicates an expected call of SetDatapipeStatus.
+func (mr *MockDatabaseMockRecorder) SetDatapipeStatus(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).SetDatapipeStatus), arg0, arg1, arg2)
+}
+
 // SetFlag mocks base method.
 func (m *MockDatabase) SetFlag(arg0 context.Context, arg1 appcfg.FeatureFlag) error {
 	m.ctrl.T.Helper()
@@ -1234,6 +1438,20 @@ func (m *MockDatabase) SetFlag(arg0 context.Context, arg1 appcfg.FeatureFlag) er
 func (mr *MockDatabaseMockRecorder) SetFlag(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFlag", reflect.TypeOf((*MockDatabase)(nil).SetFlag), arg0, arg1)
+}
+
+// SetUserSessionFlag mocks base method.
+func (m *MockDatabase) SetUserSessionFlag(arg0 context.Context, arg1 *model.UserSession, arg2 model.SessionFlagKey, arg3 bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetUserSessionFlag", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetUserSessionFlag indicates an expected call of SetUserSessionFlag.
+func (mr *MockDatabaseMockRecorder) SetUserSessionFlag(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserSessionFlag", reflect.TypeOf((*MockDatabase)(nil).SetUserSessionFlag), arg0, arg1, arg2, arg3)
 }
 
 // SweepAssetGroupCollections mocks base method.

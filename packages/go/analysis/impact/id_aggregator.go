@@ -17,10 +17,11 @@
 package impact
 
 import (
+	"sync"
+
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
-	"sync"
 )
 
 type PathAggregator interface {
