@@ -793,7 +793,7 @@ func TestResources_UpdateSavedQuery_InvalidID(t *testing.T) {
 	require.Contains(t, response.Body.String(), api.ErrorResponseDetailsIDMalformed)
 }
 
-func TestResources_UpdateSavedQuery_NoUserMatch(t *testing.T) {
+func TestResources_UpdateSavedQuery_GetSavedQueryError(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -807,11 +807,82 @@ func TestResources_UpdateSavedQuery_NoUserMatch(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
 
+	// query belongs to another user
+	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("foo"))
+
+	payload := v2.CreateSavedQueryRequest{}
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.UpdateSavedQuery)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusInternalServerError, response.Code)
+	require.Contains(t, response.Body.String(), "foo")
+}
+
+func TestResources_UpdateSavedQuery_QueryBelongsToAnotherUser(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries/{%s}"
+	savedQueryId := "1"
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	// query belongs to another user
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "notThisUser"}, nil)
 
 	payload := v2.CreateSavedQueryRequest{}
 
+	// context owner is not an admin
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.UpdateSavedQuery)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusNotFound, response.Code)
+	require.Contains(t, response.Body.String(), "query does not exist")
+}
+
+func TestResources_UpdateSavedQuery_Admin_NonPublicQuery(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries/{%s}"
+	savedQueryId := "1"
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	// query belongs to another user
+	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "notThisUser"}, nil)
+
+	// query is not public
+	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(false, nil)
+
+	payload := v2.CreateSavedQueryRequest{}
+
+	// context owner is an admin
+	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -836,7 +907,7 @@ func TestResources_UpdateSavedQuery_NoQueryMatch(t *testing.T) {
 	endpoint := "/api/v2/saved-queries/{%s}"
 	savedQueryId := "1"
 
-	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, nil)
 
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
@@ -855,6 +926,43 @@ func TestResources_UpdateSavedQuery_NoQueryMatch(t *testing.T) {
 	handler.ServeHTTP(response, req)
 	require.Equal(t, http.StatusNotFound, response.Code)
 	require.Contains(t, response.Body.String(), "query does not exist")
+}
+
+func TestResources_UpdateSavedQuery_ErrorFetchingPublicStatus(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries/{%s}"
+	savedQueryId := "1"
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	// query belongs to another user
+	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "notThisUser"}, nil)
+
+	// query is public
+	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(false, fmt.Errorf("foo"))
+
+	payload := v2.CreateSavedQueryRequest{}
+
+	// context owner is an admin
+	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.UpdateSavedQuery)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusInternalServerError, response.Code)
+	require.Contains(t, response.Body.String(), "foo")
 }
 
 func TestResources_UpdateSavedQuery_UpdateFailed(t *testing.T) {
@@ -899,7 +1007,7 @@ func TestResources_UpdateSavedQuery_UpdateFailed(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, response.Code)
 }
 
-func TestResources_UpdateSavedQuery(t *testing.T) {
+func TestResources_UpdateSavedQuery_OwnPrivateQuery_Success(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -929,6 +1037,139 @@ func TestResources_UpdateSavedQuery(t *testing.T) {
 	payload := v2.CreateSavedQueryRequest{Name: "notFoo", Query: "notBar", Description: "notBaz"}
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.UpdateSavedQuery)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusOK, response.Code)
+}
+
+func TestResources_UpdateSavedQuery_AdminPrivateQuery_Success(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries/{%s}"
+	savedQueryId := "1"
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	savedQuery := model.SavedQuery{
+		UserID:      userId.String(),
+		Name:        "foo",
+		Query:       "bar",
+		Description: "baz",
+		BigSerial: model.BigSerial{
+			ID: int64(1),
+		},
+	}
+
+	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
+	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
+
+	payload := v2.CreateSavedQueryRequest{Name: "notFoo", Query: "notBar", Description: "notBaz"}
+
+	// user is an admin
+	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.UpdateSavedQuery)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusOK, response.Code)
+}
+
+func TestResources_UpdateSavedQuery_OwnPublicQuery_Success(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries/{%s}"
+	savedQueryId := "1"
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	savedQuery := model.SavedQuery{
+		UserID:      userId.String(),
+		Name:        "foo",
+		Query:       "bar",
+		Description: "baz",
+		BigSerial: model.BigSerial{
+			ID: int64(1),
+		},
+	}
+
+	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
+	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
+
+	payload := v2.CreateSavedQueryRequest{Name: "notFoo", Query: "notBar", Description: "notBaz"}
+
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.UpdateSavedQuery)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusOK, response.Code)
+}
+
+func TestResources_UpdateSavedQuery_AdminPublicQuery_Success(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries/{%s}"
+	savedQueryId := "1"
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	savedQuery := model.SavedQuery{
+		UserID:      userId.String(),
+		Name:        "foo",
+		Query:       "bar",
+		Description: "baz",
+		BigSerial: model.BigSerial{
+			ID: int64(1),
+		},
+	}
+
+	// query belongs to another user
+	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "notThisUser"}, nil)
+
+	// query is public
+	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(true, nil)
+
+	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
+
+	payload := v2.CreateSavedQueryRequest{Name: "notFoo", Query: "notBar", Description: "notBaz"}
+
+	// context owner is an admin
+	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
 	require.Nil(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -1155,6 +1396,25 @@ func createContextWithOwnerId(id uuid2.UUID) context.Context {
 				Unique: model.Unique{
 					ID: id,
 				},
+			},
+		},
+		Host: nil,
+	}
+	return bhCtx.ConstructGoContext()
+}
+
+func createContextWithAdminOwnerId(id uuid2.UUID) context.Context {
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: id,
+				},
+				Roles: []model.Role{{
+					Name:        auth.RoleAdministrator,
+					Description: "Can manage users, clients, and application configuration",
+				}},
 			},
 		},
 		Host: nil,
