@@ -1265,7 +1265,7 @@ func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1, arg2 interf
 }
 
 // IsSavedQueryPublic mocks base method.
-func (m *MockDatabase) IsSavedQueryPublic(arg0 context.Context, arg1 model.SavedQuery) (bool, error) {
+func (m *MockDatabase) IsSavedQueryPublic(arg0 context.Context, arg1 int64) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsSavedQueryPublic", arg0, arg1)
 	ret0, _ := ret[0].(bool)

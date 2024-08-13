@@ -32,7 +32,7 @@ type SavedQueriesData interface {
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
 	GetSharedSavedQueries(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error)
 	GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error)
-	IsSavedQueryPublic(ctx context.Context, savedQuery model.SavedQuery) (bool, error)
+	IsSavedQueryPublic(ctx context.Context, savedQueryID int64) (bool, error)
 }
 
 func (s *BloodhoundDB) GetSavedQuery(ctx context.Context, queryID int) (model.SavedQuery, error) {
@@ -117,12 +117,12 @@ func (s *BloodhoundDB) GetPublicSavedQueries(ctx context.Context) (model.SavedQu
 	return savedQueries, CheckError(result)
 }
 
-func (s *BloodhoundDB) IsSavedQueryPublic(ctx context.Context, savedQuery model.SavedQuery) (bool, error) {
+func (s *BloodhoundDB) IsSavedQueryPublic(ctx context.Context, savedQueryID int64) (bool, error) {
 	if publicQueries, err := s.GetPublicSavedQueries(ctx); err != nil {
 		return false, err
 	} else {
 		for _, publicQuery := range publicQueries {
-			if publicQuery.ID == savedQuery.ID {
+			if publicQuery.ID == savedQueryID {
 				return true, nil
 			}
 		}

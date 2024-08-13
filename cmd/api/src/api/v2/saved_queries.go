@@ -189,7 +189,7 @@ func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
 			return
 		} else {
-			if isPublic, err := s.DB.IsSavedQueryPublic(request.Context(), savedQuery); err != nil {
+			if isPublic, err := s.DB.IsSavedQueryPublic(request.Context(), savedQuery.ID); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 				return
 			} else if !isPublic {
