@@ -28,7 +28,7 @@ import { useQuery } from 'react-query';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 
 const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | number, edgeKind: string): string =>
-    `MATCH (s)-[r:${edgeKind}]-(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN r LIMIT 1`;
+    `MATCH (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN r LIMIT 1`;
 
 const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
     const {
@@ -42,7 +42,7 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
                 { signal },
                 true
             )
-            .then((result) => {
+            .then((result: any) => {
                 if (!result.data.data) return { nodes: {}, edges: [] };
                 return result.data.data;
             });
