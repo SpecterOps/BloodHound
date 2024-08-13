@@ -199,7 +199,7 @@ func TestNormalizeToUTF8_LargeInput(t *testing.T) {
 	}
 
 	// Generate a large data set with 1000 Unicode code points
-	// NOTE: We don't want to begin the payload with a NULL character because it would then be impossible to discern between UTF16LE and
+	// NOTE: We don't want to begin the payload with a NULL character because it would then be impossible to discern between UTF16LE and UTF32LE
 	var runes []rune
 	for i := 0; i <= 1000; i++ {
 		runes = append(runes, rune(i%0x10FFFF))
