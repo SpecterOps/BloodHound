@@ -205,16 +205,15 @@ func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.
 	if updateRequest.Name != "" {
 		savedQuery.Name = updateRequest.Name
 	}
-
-	// description should be nullable, so we will not perform an empty check for it
-	savedQuery.Description = updateRequest.Description
+	if updateRequest.Description != "" {
+		savedQuery.Description = updateRequest.Description
+	}
 
 	if savedQuery, err = s.DB.UpdateSavedQuery(request.Context(), savedQuery); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), savedQuery, http.StatusOK, response)
 	}
-
 }
 
 func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.Request) {
