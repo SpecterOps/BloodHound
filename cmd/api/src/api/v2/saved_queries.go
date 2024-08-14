@@ -277,6 +277,6 @@ func (s Resources) UnshareSavedQuery(response http.ResponseWriter, request *http
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "user does not have sufficient privileges to unshare query", request), response)
 		}
 
-		api.WriteBasicResponse(request.Context(), savedQueryBelongsToUser, http.StatusOK, response)
+		response.WriteHeader(http.StatusOK)
 	}
 }
