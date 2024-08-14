@@ -17,8 +17,10 @@
 package v2
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gofrs/uuid"
 	"net/http"
 	"strconv"
 	"strings"
@@ -240,5 +242,41 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
 		response.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// UnshareSavedQuery allows an owner of a shared query, a user that has a saved query shared to them, or an admin, to remove sharing privileges.
+// A user who owns a query may unshare a query from anyone they have shared to
+// A user who had a query shared to them may unshare that query
+// And admins may unshare queries that have been shared to other users
+func (s Resources) UnshareSavedQuery(response http.ResponseWriter, request *http.Request) {
+	var (
+		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
+		usersIDs        = make([]uuid.UUID, 0)
+	)
+
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsFromMalformed, request), response)
+	} else if savedQueryBelongsToUser, err := s.DB.SavedQueryBelongsToUser(request.Context(), user.ID, savedQueryID); errors.Is(err, database.ErrNotFound) {
+		api.HandleDatabaseError(request, response, err)
+	} else if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseCodeInternalServerError, request), response)
+	} else if err := json.NewDecoder(request.Body).Decode(&usersIDs); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else {
+		isAdmin := user.Roles.Has(model.Role{Name: auth.RoleAdministrator})
+		if isAdmin || savedQueryBelongsToUser {
+			for _, userID := range usersIDs {
+				if err := s.DB.DeleteSavedQueryPermissionsForUser(request.Context(), int64(savedQueryID), userID); err != nil {
+					api.HandleDatabaseError(request, response, err)
+				}
+			}
+		} else {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "user does not have sufficient privileges to unshare query", request), response)
+		}
+
+		api.WriteBasicResponse(request.Context(), savedQueryBelongsToUser, http.StatusOK, response)
 	}
 }

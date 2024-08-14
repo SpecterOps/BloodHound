@@ -77,3 +77,37 @@ func TestSavedQueriesPermissions_SharingToGlobal(t *testing.T) {
 	assert.Equal(t, true, permissions.Public)
 	assert.Equal(t, query.ID, permissions.QueryID)
 }
+
+func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUser(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+
+	user1, err := dbInst.CreateUser(testCtx, model.User{
+		PrincipalName: userPrincipal,
+	})
+	require.NoError(t, err)
+
+	user2, err := dbInst.CreateUser(testCtx, model.User{
+		PrincipalName: user2Principal,
+	})
+	require.NoError(t, err)
+
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	require.NoError(t, err)
+
+	_, err = dbInst.CreateSavedQueryPermissionToUser(testCtx, query.ID, user2.ID)
+	require.NoError(t, err)
+
+	hasPermission, err := dbInst.CheckUserHasPermissionToSavedQuery(testCtx, query.ID, user2.ID)
+	require.NoError(t, err)
+	require.True(t, hasPermission)
+
+	err = dbInst.DeleteSavedQueryPermissionsForUser(testCtx, query.ID, user2.ID)
+	require.NoError(t, err)
+
+	hasPermission, err = dbInst.CheckUserHasPermissionToSavedQuery(testCtx, query.ID, user2.ID)
+	require.NoError(t, err)
+	assert.False(t, hasPermission)
+}

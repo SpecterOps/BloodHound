@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -1386,6 +1387,90 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 
 	handler.ServeHTTP(response, req)
 	require.Equal(t, http.StatusNoContent, response.Code)
+}
+
+func TestResources_UnshareSavedQuery(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	endpoint := "/api/v2/saved-queries/{%s}"
+	savedQueryId := "1"
+
+	t.Run("user can unshare their owned saved query", func(t *testing.T) {
+		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), userId, int64(1)).Return(true, nil)
+
+		userIds := []uuid.UUID{
+			uuid.New(),
+			uuid.New(),
+			uuid.New(),
+		}
+
+		for range userIds {
+			mockDB.EXPECT().DeleteSavedQueryPermissionsForUser(gomock.Any(), int64(1), gomock.Any()).Return(nil)
+		}
+
+		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(userIds))
+		require.Nil(t, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+		response := httptest.NewRecorder()
+		handler := http.HandlerFunc(resources.UnshareSavedQuery)
+
+		handler.ServeHTTP(response, req)
+		require.Equal(t, http.StatusOK, response.Code)
+	})
+
+	t.Run("user can unshare queries they do not own as an admin", func(t *testing.T) {
+		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), userId, int64(1)).Return(false, nil)
+
+		userIds := []uuid.UUID{
+			uuid.New(),
+			uuid.New(),
+			uuid.New(),
+		}
+
+		for range userIds {
+			mockDB.EXPECT().DeleteSavedQueryPermissionsForUser(gomock.Any(), int64(1), gomock.Any()).Return(nil)
+		}
+
+		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(userIds))
+		require.Nil(t, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+		response := httptest.NewRecorder()
+		handler := http.HandlerFunc(resources.UnshareSavedQuery)
+
+		handler.ServeHTTP(response, req)
+		require.Equal(t, http.StatusOK, response.Code)
+	})
+
+	t.Run("error user sharing saved query that does not belong to them", func(t *testing.T) {
+		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), userId, int64(1)).Return(false, nil)
+
+		var userIds []uuid.UUID
+		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(userIds))
+		require.Nil(t, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+		response := httptest.NewRecorder()
+		handler := http.HandlerFunc(resources.UnshareSavedQuery)
+
+		handler.ServeHTTP(response, req)
+		require.Equal(t, http.StatusUnauthorized, response.Code)
+	})
 }
 
 func createContextWithOwnerId(id uuid2.UUID) context.Context {

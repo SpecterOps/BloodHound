@@ -545,6 +545,20 @@ func (mr *MockDatabaseMockRecorder) DeleteSavedQuery(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQuery", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQuery), arg0, arg1)
 }
 
+// DeleteSavedQueryPermissionsForUser mocks base method.
+func (m *MockDatabase) DeleteSavedQueryPermissionsForUser(arg0 context.Context, arg1 int64, arg2 uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSavedQueryPermissionsForUser", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSavedQueryPermissionsForUser indicates an expected call of DeleteSavedQueryPermissionsForUser.
+func (mr *MockDatabaseMockRecorder) DeleteSavedQueryPermissionsForUser(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQueryPermissionsForUser", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQueryPermissionsForUser), arg0, arg1, arg2)
+}
+
 // DeleteUser mocks base method.
 func (m *MockDatabase) DeleteUser(arg0 context.Context, arg1 model.User) error {
 	m.ctrl.T.Helper()
