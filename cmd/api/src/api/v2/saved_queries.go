@@ -164,6 +164,58 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 	}
 }
 
+func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.Request) {
+	var (
+		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
+		updateRequest   CreateSavedQueryRequest
+		savedQuery      model.SavedQuery
+		err             error
+	)
+
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+		return
+	} else if err := api.ReadJSONRequestPayloadLimited(&updateRequest, request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	} else if savedQueryID, err := strconv.Atoi(rawSavedQueryID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+		return
+	} else if savedQuery, err = s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		return
+	} else if savedQuery.UserID != user.ID.String() {
+		if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
+			return
+		} else {
+			if isPublic, err := s.DB.IsSavedQueryPublic(request.Context(), savedQuery.ID); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+				return
+			} else if !isPublic {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
+				return
+			}
+		}
+	}
+
+	if updateRequest.Query != "" {
+		savedQuery.Query = updateRequest.Query
+	}
+	if updateRequest.Name != "" {
+		savedQuery.Name = updateRequest.Name
+	}
+	if updateRequest.Description != "" {
+		savedQuery.Description = updateRequest.Description
+	}
+
+	if savedQuery, err = s.DB.UpdateSavedQuery(request.Context(), savedQuery); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		api.WriteBasicResponse(request.Context(), savedQuery, http.StatusOK, response)
+	}
+}
+
 func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
@@ -182,7 +234,7 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 			if _, isAdmin := user.Roles.FindByName(auth.RoleAdministrator); !isAdmin {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to delete this query", request), response)
 				return
-			} else if isPublicQuery, err := s.DB.IsPublicSavedQuery(request.Context(), savedQueryID); err != nil {
+			} else if isPublicQuery, err := s.DB.IsSavedQueryPublic(request.Context(), int64(savedQueryID)); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else if !isPublicQuery {

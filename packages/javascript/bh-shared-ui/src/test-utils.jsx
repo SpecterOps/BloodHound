@@ -63,4 +63,4 @@ const customRender = (
 // re-export everything
 export * from '@testing-library/react';
 // override render method
-export { customRender as render };
+export { customRender as render};

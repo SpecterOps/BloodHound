@@ -18,20 +18,27 @@ package database
 
 import (
 	"context"
-
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
 )
 
 type SavedQueriesData interface {
+	GetSavedQuery(ctx context.Context, queryID int) (model.SavedQuery, error)
 	ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error)
 	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error)
+	UpdateSavedQuery(ctx context.Context, savedQuery model.SavedQuery) (model.SavedQuery, error)
 	DeleteSavedQuery(ctx context.Context, id int) error
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int) (bool, error)
 	GetSharedSavedQueries(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error)
 	GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error)
-	IsPublicSavedQuery(ctx context.Context, id int) (bool, error)
+	IsSavedQueryPublic(ctx context.Context, savedQueryID int64) (bool, error)
+}
+
+func (s *BloodhoundDB) GetSavedQuery(ctx context.Context, queryID int) (model.SavedQuery, error) {
+	savedQuery := model.SavedQuery{}
+	result := s.db.WithContext(ctx).First(&savedQuery, queryID)
+	return savedQuery, CheckError(result)
 }
 
 func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error) {
@@ -73,6 +80,10 @@ func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, n
 	return savedQuery, CheckError(s.db.WithContext(ctx).Create(&savedQuery))
 }
 
+func (s *BloodhoundDB) UpdateSavedQuery(ctx context.Context, savedQuery model.SavedQuery) (model.SavedQuery, error) {
+	return savedQuery, CheckError(s.db.WithContext(ctx).Save(&savedQuery))
+}
+
 func (s *BloodhoundDB) DeleteSavedQuery(ctx context.Context, id int) error {
 	return CheckError(s.db.WithContext(ctx).Delete(&model.SavedQuery{}, id))
 }
@@ -106,15 +117,15 @@ func (s *BloodhoundDB) GetPublicSavedQueries(ctx context.Context) (model.SavedQu
 	return savedQueries, CheckError(result)
 }
 
-// IsPublicSavedQuery returns all the queries that were shared publicly
-func (s *BloodhoundDB) IsPublicSavedQuery(ctx context.Context, queryID int) (bool, error) {
-	var sqp model.SavedQueriesPermissions
-
-	if result := s.db.WithContext(ctx).Where("query_id = ?", queryID).First(&sqp); result.Error != nil {
-		return false, CheckError(result)
-	} else if sqp.Public {
-		return true, nil
+func (s *BloodhoundDB) IsSavedQueryPublic(ctx context.Context, savedQueryID int64) (bool, error) {
+	if publicQueries, err := s.GetPublicSavedQueries(ctx); err != nil {
+		return false, err
 	} else {
+		for _, publicQuery := range publicQueries {
+			if publicQuery.ID == savedQueryID {
+				return true, nil
+			}
+		}
 		return false, nil
 	}
 }
