@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faGem } from '@fortawesome/free-solid-svg-icons';
+import { faGem, faSkull } from '@fortawesome/free-solid-svg-icons';
 import {
     DropdownOption,
     EntityKinds,
@@ -23,6 +23,7 @@ import {
     searchbarActions,
     TIER_ZERO_LABEL,
     TIER_ZERO_TAG,
+    OWNED_OBJECT_TAG,
 } from 'bh-shared-ui';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { useState } from 'react';

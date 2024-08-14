@@ -18,8 +18,8 @@ import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mu
 import { apiClient, useNotifications } from 'bh-shared-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
-import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { toggleTierZeroNode } from 'src/ducks/explore/actions';
+import { selectTierZeroAssetGroupId, selectOwnedAssetGroupId } from 'src/ducks/assetgroups/reducer';
+import { toggleTierZeroNode, toggleOwnedObjectNode } from 'src/ducks/explore/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { Button } from '@bloodhoundenterprise/doodleui';
 
@@ -31,8 +31,10 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
 
     const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
+    const ownedObjectAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
 
     const isMenuItemForTierZero = assetGroupId === tierZeroAssetGroupId;
+    const isMenuItemForOwnedObject = assetGroupId === ownedObjectAssetGroupId;
 
     const mutation = useMutation({
         mutationFn: ({ nodeId, action }: { nodeId: string; action: 'add' | 'remove' }) => {
@@ -45,8 +47,12 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
             ]);
         },
         onSuccess: () => {
-            if (selectedNode?.graphId && isMenuItemForTierZero) {
-                dispatch(toggleTierZeroNode(selectedNode.graphId));
+            if (selectedNode?.graphId) {
+                if(isMenuItemForTierZero) {
+                    dispatch(toggleTierZeroNode(selectedNode.graphId));
+                } else if (isMenuItemForOwnedObject) {
+                    dispatch(toggleOwnedObjectNode(selectedNode.graphId));
+                }
             }
 
             addNotification('Update successful.', 'AssetGroupUpdateSuccess');
@@ -108,6 +114,8 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
                         dialogContent={`Are you sure you want to add this node to ${assetGroupName}? This action will initiate an analysis run to update group membership.`}
                     />
                 ) : null}
+
+                {isMenuItemForOwnedObject ? handleAddToAssetGroup : null}
             </>
         );
     }
@@ -127,6 +135,8 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
                         dialogContent={`Are you sure you want to remove this node from ${assetGroupName}? This action will initiate an analysis run to update group membership.`}
                     />
                 ) : null}
+
+                {isMenuItemForOwnedObject ? handleAddToAssetGroup : null}
             </>
         );
     }

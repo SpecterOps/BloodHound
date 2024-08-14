@@ -105,6 +105,7 @@ type ThemedGlyph = {
         color: string;
     };
     tierZeroGlyph: GlyphIconInfo;
+    ownedObjectGlyph: GlyphIconInfo;
 };
 
 export type ThemedOptions = {
@@ -176,6 +177,7 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
                 kind: node.data.nodetype,
                 objectId: node.data.objectid,
                 isTierZero: !!(node.data.system_tags && node.data.system_tags.indexOf('admin_tier_0') !== -1),
+                isOwnedObject: !!(node.data.system_tags && node.data.system_tags.indexOf('owned') !== -1),
                 lastSeen: lastSeen,
             };
         } else if (isLink(item)) {
