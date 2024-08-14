@@ -532,7 +532,7 @@ func (mr *MockDatabaseMockRecorder) DeleteSAMLProvider(arg0, arg1 interface{}) *
 }
 
 // DeleteSavedQuery mocks base method.
-func (m *MockDatabase) DeleteSavedQuery(arg0 context.Context, arg1 int) error {
+func (m *MockDatabase) DeleteSavedQuery(arg0 context.Context, arg1 int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteSavedQuery", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -1117,7 +1117,7 @@ func (mr *MockDatabaseMockRecorder) GetSAMLProviderUsers(arg0, arg1 interface{})
 }
 
 // GetSavedQuery mocks base method.
-func (m *MockDatabase) GetSavedQuery(arg0 context.Context, arg1 int) (model.SavedQuery, error) {
+func (m *MockDatabase) GetSavedQuery(arg0 context.Context, arg1 int64) (model.SavedQuery, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSavedQuery", arg0, arg1)
 	ret0, _ := ret[0].(model.SavedQuery)
@@ -1414,7 +1414,7 @@ func (mr *MockDatabaseMockRecorder) RequiresMigration(arg0 interface{}) *gomock.
 }
 
 // SavedQueryBelongsToUser mocks base method.
-func (m *MockDatabase) SavedQueryBelongsToUser(arg0 context.Context, arg1 uuid.UUID, arg2 int) (bool, error) {
+func (m *MockDatabase) SavedQueryBelongsToUser(arg0 context.Context, arg1 uuid.UUID, arg2 int64) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SavedQueryBelongsToUser", arg0, arg1, arg2)
 	ret0, _ := ret[0].(bool)
