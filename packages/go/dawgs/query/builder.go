@@ -32,8 +32,8 @@ type Cache struct {
 }
 
 type Builder struct {
-	regularQuery     *cypher.RegularQuery
-	cache            *Cache
+	regularQuery *cypher.RegularQuery
+	cache        *Cache
 }
 
 func NewBuilder(cache *Cache) *Builder {

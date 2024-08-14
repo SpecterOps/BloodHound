@@ -18,10 +18,11 @@ package translate_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/cypher/models/pgsql/test"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"testing"
 )
 
 var (

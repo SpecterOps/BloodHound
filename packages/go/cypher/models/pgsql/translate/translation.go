@@ -18,10 +18,11 @@ package translate
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/specterops/bloodhound/cypher/models"
 	cypher "github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
-	"strings"
 )
 
 func translateCypherAssignmentOperator(operator cypher.AssignmentOperator) (pgsql.Operator, error) {

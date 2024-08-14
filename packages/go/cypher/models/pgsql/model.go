@@ -17,8 +17,9 @@
 package pgsql
 
 import (
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"strings"
+
+	"github.com/specterops/bloodhound/dawgs/graph"
 
 	"github.com/specterops/bloodhound/cypher/models"
 )

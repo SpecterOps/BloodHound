@@ -18,8 +18,9 @@ package format_test
 
 import (
 	"bytes"
-	"github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"testing"
+
+	"github.com/specterops/bloodhound/cypher/models/cypher/format"
 
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/stretchr/testify/require"

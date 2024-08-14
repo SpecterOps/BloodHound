@@ -17,9 +17,10 @@
 package walk_test
 
 import (
+	"testing"
+
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/walk"
-	"testing"
 
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/cypher/test"

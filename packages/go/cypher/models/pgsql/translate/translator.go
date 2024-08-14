@@ -18,12 +18,13 @@ package translate
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/cypher/models/walk"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"strings"
 )
 
 type State int
