@@ -269,7 +269,7 @@ func (s Resources) UnshareSavedQuery(response http.ResponseWriter, request *http
 		isAdmin := user.Roles.Has(model.Role{Name: auth.RoleAdministrator})
 		if isAdmin || savedQueryBelongsToUser {
 			for _, userID := range usersIDs {
-				if err := s.DB.DeleteSavedQueryPermissionsForUser(request.Context(), int64(savedQueryID), userID); err != nil {
+				if err := s.DB.DeleteSavedQueryPermissionsForUser(request.Context(), savedQueryID, userID); err != nil {
 					api.HandleDatabaseError(request, response, err)
 				}
 			}
