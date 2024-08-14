@@ -18,6 +18,7 @@ package translate
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/cypher/models/walk"
 )
@@ -284,7 +285,6 @@ func applyBinaryExpressionTypeHints(expression *pgsql.BinaryExpression) error {
 		return rewritePropertyLookupOperands(expression, expressionTypeHint)
 	}
 }
-
 
 type Builder struct {
 	stack []pgsql.Expression
@@ -558,7 +558,7 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(operator pgsql.Operat
 					return fmt.Errorf("expected string but found %T as right operand for operator %s", typedROperand.Value, operator)
 				} else {
 					newExpression.Operator = pgsql.OperatorLike
-					newExpression.ROperand = pgsql.NewLiteral("%" + stringValue + "%", rOperandDataType)
+					newExpression.ROperand = pgsql.NewLiteral("%"+stringValue+"%", rOperandDataType)
 				}
 
 			case *pgsql.BinaryExpression:
@@ -614,7 +614,7 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(operator pgsql.Operat
 						return fmt.Errorf("expected string but found %T as right operand for operator %s", typedROperand.Value, operator)
 					} else {
 						newExpression.Operator = pgsql.OperatorLike
-						newExpression.ROperand = pgsql.NewLiteral(stringValue + "%", rOperandDataType)
+						newExpression.ROperand = pgsql.NewLiteral(stringValue+"%", rOperandDataType)
 					}
 
 				case *pgsql.BinaryExpression:
@@ -667,7 +667,7 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(operator pgsql.Operat
 						return fmt.Errorf("expected string but found %T as right operand for operator %s", typedROperand.Value, operator)
 					} else {
 						newExpression.Operator = pgsql.OperatorLike
-						newExpression.ROperand = pgsql.NewLiteral("%" + stringValue, rOperandDataType)
+						newExpression.ROperand = pgsql.NewLiteral("%"+stringValue, rOperandDataType)
 					}
 
 				case *pgsql.BinaryExpression:

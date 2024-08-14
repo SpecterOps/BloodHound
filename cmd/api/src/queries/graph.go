@@ -154,9 +154,9 @@ type GraphQuery struct {
 	Cache                        cache.Cache
 	SlowQueryThreshold           int64 // Threshold in milliseconds
 	DisableCypherComplexityLimit bool
-	EnableCypherMutations bool
-	cypherEmitter         format.Emitter
-	strippedCypherEmitter format.Emitter
+	EnableCypherMutations        bool
+	cypherEmitter                format.Emitter
+	strippedCypherEmitter        format.Emitter
 }
 
 func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configuration) *GraphQuery {

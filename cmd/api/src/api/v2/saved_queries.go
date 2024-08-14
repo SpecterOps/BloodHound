@@ -178,7 +178,7 @@ func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.
 	} else if err := api.ReadJSONRequestPayloadLimited(&updateRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
-	} else if savedQueryID, err := strconv.Atoi(rawSavedQueryID); err != nil {
+	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 		return
 	} else if savedQuery, err = s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
@@ -223,22 +223,36 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 
 	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
-	} else if savedQueryID, err := strconv.Atoi(rawSavedQueryID); err != nil {
+	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if savedQueryBelongsToUser, err := s.DB.SavedQueryBelongsToUser(request.Context(), user.ID, savedQueryID); errors.Is(err, database.ErrNotFound) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-	} else if !savedQueryBelongsToUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid saved_query_id supplied", request), response)
-	} else if err := s.DB.DeleteSavedQuery(request.Context(), savedQueryID); errors.Is(err, database.ErrNotFound) {
-		// This is an edge case and can only occur if the database has a concurrent operation that deletes the saved query
-		// after the check at s.DB.SavedQueryBelongsToUser but before getting here.
-		// Still, adding in the same check for good measure.
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
-	} else if err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
-		response.WriteHeader(http.StatusNoContent)
+		if !savedQueryBelongsToUser {
+			if _, isAdmin := user.Roles.FindByName(auth.RoleAdministrator); !isAdmin {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to delete this query", request), response)
+				return
+			} else if isPublicQuery, err := s.DB.IsSavedQueryPublic(request.Context(), int64(savedQueryID)); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else if !isPublicQuery {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to delete this query", request), response)
+				return
+			}
+		}
+
+		if err := s.DB.DeleteSavedQuery(request.Context(), savedQueryID); errors.Is(err, database.ErrNotFound) {
+			// This is an edge case and can only occur if the database has a concurrent operation that deletes the saved query
+			// after the check at s.DB.SavedQueryBelongsToUser but before getting here.
+			// Still, adding in the same check for good measure.
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
+		} else if err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		} else {
+			response.WriteHeader(http.StatusNoContent)
+		}
+
 	}
 }

@@ -21,6 +21,8 @@ package pg_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -28,7 +30,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/test/integration/utils"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 const murderDB = `

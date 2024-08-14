@@ -18,9 +18,10 @@ package visualization
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/cypher/models/walk"
 	"strconv"
 	"strings"
+
+	"github.com/specterops/bloodhound/cypher/models/walk"
 
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/cypher/models/pgsql/format"
