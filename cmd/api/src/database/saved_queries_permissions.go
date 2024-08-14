@@ -54,10 +54,12 @@ func (s *BloodhoundDB) CreateSavedQueryPermissionToPublic(ctx context.Context, q
 }
 
 // CheckUserHasPermissionToSavedQuery returns true or false depending on if the given userID has permission to read the given queryID
+// This does not check for ownership
 func (s *BloodhoundDB) CheckUserHasPermissionToSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error) {
-	result := s.db.WithContext(ctx).Where("query_id = ? AND user_id = ?", queryID, userID).Or("query_id = ? AND public = true", queryID).Limit(1)
+	rows := int64(0)
+	result := s.db.WithContext(ctx).Table("saved_queries_permissions").Select("*").Where("query_id = ? AND shared_to_user_id = ?", queryID, userID).Or("query_id = ? AND public = true", queryID).Limit(1).Count(&rows)
 
-	return result.RowsAffected > 0, CheckError(result)
+	return rows > 0, CheckError(result)
 }
 
 // GetPermissionsForSavedQuery gets all permissions associated with the provided query ID
