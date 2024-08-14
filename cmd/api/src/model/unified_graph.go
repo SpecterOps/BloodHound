@@ -17,6 +17,7 @@
 package model
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -42,12 +43,13 @@ func NewUnifiedGraph() UnifiedGraph {
 
 // UnifiedNode represents a single node in a graph containing a minimal set of attributes for graph rendering
 type UnifiedNode struct {
-	Label      string         `json:"label"`
-	Kind       string         `json:"kind"`
-	ObjectId   string         `json:"objectId"`
-	IsTierZero bool           `json:"isTierZero"`
-	LastSeen   time.Time      `json:"lastSeen"`
-	Properties map[string]any `json:"properties,omitempty"`
+	Label			string			`json:"label"`
+	Kind       		string         	`json:"kind"`
+	ObjectId   		string         	`json:"objectId"`
+	IsTierZero 		bool           	`json:"isTierZero"`
+	IsOwnedObject	bool			`json:"isOwnedObject"`
+	LastSeen		time.Time		`json:"lastSeen"`
+	Properties 		map[string]any	`json:"properties,omitempty"`
 }
 
 // UnifiedEdge represents a single path segment in a graph containing a minimal set of attributes for graph rendering
@@ -78,6 +80,7 @@ func FromDAWGSNode(node *graph.Node, includeProperties bool) UnifiedNode {
 		Kind:       analysis.GetNodeKind(node).String(),
 		ObjectId:   objectId,
 		IsTierZero: strings.Contains(systemTags, ad.AdminTierZero),
+		IsOwnedObject: strings.Contains(systemTags, "owned"),
 		LastSeen:   lastSeen,
 		Properties: properties,
 	}
