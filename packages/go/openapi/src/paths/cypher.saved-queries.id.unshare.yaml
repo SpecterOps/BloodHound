@@ -46,7 +46,7 @@ delete:
             self:
               type: boolean
   responses:
-    200:
+    204:
       $ref: './../responses/no-content.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
