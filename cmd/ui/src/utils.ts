@@ -203,8 +203,10 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
     const result: any = {};
     for (const [key, value] of Object.entries(graph.data.nodes)) {
         const lastSeen = getLastSeenValue(value);
-        let tags = (value.isTierZero ? 'admin_tier_0' : undefined) + " "
-            + (value.isOwnedObject ? 'owned' : undefined);
+        // Check and add needed system_tags to node
+        let tags = []
+        { value.isTierZero ? tags.push('admin_tier_0') : null }
+        { value.isOwnedObject? tags.push('owned') : null }
         result[key] = {
             label: {
                 text: value.label,

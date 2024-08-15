@@ -80,7 +80,6 @@ const graphDataReducer = (state = initialGraphDataState, action: types.GraphActi
                     draft.chartProps.items[action.nodeId].data.system_tags = 'owned'
                 }
             }
-            console.log(draft.chartProps.items[action.nodeId].data.system_tags);
         }
         return draft;
     });
