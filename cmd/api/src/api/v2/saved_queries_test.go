@@ -1390,12 +1390,6 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 }
 
 func TestResources_UnshareSavedQuery(t *testing.T) {
-	var (
-		mockCtrl  = gomock.NewController(t)
-		mockDB    = mocks.NewMockDatabase(mockCtrl)
-		resources = v2.Resources{DB: mockDB}
-	)
-	defer mockCtrl.Finish()
 
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
@@ -1408,15 +1402,20 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 	savedQueryId := "1"
 
 	t.Run("user can unshare their owned saved query", func(t *testing.T) {
+		var (
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB}
+		)
+		defer mockCtrl.Finish()
+
 		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), userId, int64(1)).Return(true, nil)
 
 		payload := v2.UnshareSavedQueryRequest{
 			UserIds: []uuid2.UUID{userId2, userId3},
 		}
 
-		for range payload.UserIds {
-			mockDB.EXPECT().DeleteSavedQueryPermissionsForUser(gomock.Any(), int64(1), gomock.Any()).Return(nil)
-		}
+		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), gomock.Any()).Return(nil)
 
 		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPut, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
@@ -1432,15 +1431,18 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 	})
 
 	t.Run("user can unshare queries they do not own as an admin", func(t *testing.T) {
-		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), userId, int64(1)).Return(false, nil)
+		var (
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB}
+		)
+		defer mockCtrl.Finish()
 
 		payload := v2.UnshareSavedQueryRequest{
 			UserIds: []uuid2.UUID{userId2, userId3},
 		}
 
-		for range payload.UserIds {
-			mockDB.EXPECT().DeleteSavedQueryPermissionsForUser(gomock.Any(), int64(1), gomock.Any()).Return(nil)
-		}
+		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), gomock.Any()).Return(nil)
 
 		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodPut, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
@@ -1456,6 +1458,13 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 	})
 
 	t.Run("user errors unsharing query from themselves", func(t *testing.T) {
+		var (
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB}
+		)
+		defer mockCtrl.Finish()
+
 		payload := v2.UnshareSavedQueryRequest{
 			Self: true,
 		}
@@ -1476,6 +1485,13 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 	})
 
 	t.Run("user can unshare queries shared to them", func(t *testing.T) {
+		var (
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB}
+		)
+		defer mockCtrl.Finish()
+
 		payload := v2.UnshareSavedQueryRequest{
 			Self: true,
 		}
@@ -1495,7 +1511,14 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 		assert.Equal(t, http.StatusNoContent, response.Code)
 	})
 
-	t.Run("error user sharing saved query that does not belong to them", func(t *testing.T) {
+	t.Run("error user unsharing saved query that does not belong to them", func(t *testing.T) {
+		var (
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB}
+		)
+		defer mockCtrl.Finish()
+
 		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), userId, int64(1)).Return(false, nil)
 
 		var userIds []uuid.UUID
@@ -1512,14 +1535,19 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, response.Code)
 	})
 
-	t.Run("error database fails while sharing to users", func(t *testing.T) {
-		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), userId, int64(1)).Return(false, nil)
+	t.Run("error database fails while unsharing to users", func(t *testing.T) {
+		var (
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB}
+		)
+		defer mockCtrl.Finish()
 
 		payload := v2.UnshareSavedQueryRequest{
 			UserIds: []uuid2.UUID{userId2, userId3},
 		}
 
-		mockDB.EXPECT().DeleteSavedQueryPermissionsForUser(gomock.Any(), int64(1), gomock.Any()).Return(fmt.Errorf("an error"))
+		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), gomock.Any()).Return(fmt.Errorf("an error"))
 
 		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodPut, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
@@ -1535,13 +1563,20 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 	})
 
 	t.Run("error database fails while checking saved query ownership", func(t *testing.T) {
+		var (
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB}
+		)
+		defer mockCtrl.Finish()
+
 		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), userId, int64(1)).Return(false, fmt.Errorf("an error"))
 
 		payload := v2.UnshareSavedQueryRequest{
 			UserIds: []uuid2.UUID{userId2, userId3},
 		}
 
-		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodPut, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPut, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
 
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
