@@ -1398,7 +1398,7 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 	userId3, err := uuid2.NewV4()
 	require.Nil(t, err)
 
-	endpoint := "/api/v2/saved-queries/{%s}/unshare"
+	endpoint := "/api/v2/saved-queries/{%s}/permissions"
 	savedQueryId := "1"
 
 	t.Run("user can unshare their owned saved query", func(t *testing.T) {
@@ -1417,14 +1417,14 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 
 		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), gomock.Any()).Return(nil)
 
-		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPut, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
 
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
 
 		response := httptest.NewRecorder()
-		handler := http.HandlerFunc(resources.UnshareSavedQuery)
+		handler := http.HandlerFunc(resources.DeleteSavedQueryPermissions)
 
 		handler.ServeHTTP(response, req)
 		assert.Equal(t, http.StatusNoContent, response.Code)
@@ -1444,14 +1444,14 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 
 		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), gomock.Any()).Return(nil)
 
-		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodPut, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
 
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
 
 		response := httptest.NewRecorder()
-		handler := http.HandlerFunc(resources.UnshareSavedQuery)
+		handler := http.HandlerFunc(resources.DeleteSavedQueryPermissions)
 
 		handler.ServeHTTP(response, req)
 		assert.Equal(t, http.StatusNoContent, response.Code)
@@ -1471,14 +1471,14 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 
 		mockDB.EXPECT().DeleteSavedQueryPermissionsForUser(gomock.Any(), int64(1), userId).Return(fmt.Errorf("an error"))
 
-		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodPut, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
 
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
 
 		response := httptest.NewRecorder()
-		handler := http.HandlerFunc(resources.UnshareSavedQuery)
+		handler := http.HandlerFunc(resources.DeleteSavedQueryPermissions)
 
 		handler.ServeHTTP(response, req)
 		assert.Equal(t, http.StatusInternalServerError, response.Code)
@@ -1498,14 +1498,14 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 
 		mockDB.EXPECT().DeleteSavedQueryPermissionsForUser(gomock.Any(), int64(1), userId).Return(nil)
 
-		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodPut, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
 
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
 
 		response := httptest.NewRecorder()
-		handler := http.HandlerFunc(resources.UnshareSavedQuery)
+		handler := http.HandlerFunc(resources.DeleteSavedQueryPermissions)
 
 		handler.ServeHTTP(response, req)
 		assert.Equal(t, http.StatusNoContent, response.Code)
@@ -1522,14 +1522,14 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), userId, int64(1)).Return(false, nil)
 
 		var userIds []uuid.UUID
-		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPut, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(userIds))
+		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(userIds))
 		require.Nil(t, err)
 
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
 
 		response := httptest.NewRecorder()
-		handler := http.HandlerFunc(resources.UnshareSavedQuery)
+		handler := http.HandlerFunc(resources.DeleteSavedQueryPermissions)
 
 		handler.ServeHTTP(response, req)
 		assert.Equal(t, http.StatusUnauthorized, response.Code)
@@ -1549,14 +1549,14 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 
 		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), gomock.Any()).Return(fmt.Errorf("an error"))
 
-		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodPut, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
 
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
 
 		response := httptest.NewRecorder()
-		handler := http.HandlerFunc(resources.UnshareSavedQuery)
+		handler := http.HandlerFunc(resources.DeleteSavedQueryPermissions)
 
 		handler.ServeHTTP(response, req)
 		assert.Equal(t, http.StatusInternalServerError, response.Code)
@@ -1576,14 +1576,14 @@ func TestResources_UnshareSavedQuery(t *testing.T) {
 			UserIds: []uuid2.UUID{userId2, userId3},
 		}
 
-		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPut, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
 
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
 
 		response := httptest.NewRecorder()
-		handler := http.HandlerFunc(resources.UnshareSavedQuery)
+		handler := http.HandlerFunc(resources.DeleteSavedQueryPermissions)
 
 		handler.ServeHTTP(response, req)
 		assert.Equal(t, http.StatusInternalServerError, response.Code)

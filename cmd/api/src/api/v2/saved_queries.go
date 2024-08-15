@@ -251,11 +251,11 @@ type UnshareSavedQueryRequest struct {
 	Self    bool        `json:"self"`
 }
 
-// UnshareSavedQuery allows an owner of a shared query, a user that has a saved query shared to them, or an admin, to remove sharing privileges.
+// DeleteSavedQueryPermissions allows an owner of a shared query, a user that has a saved query shared to them, or an admin, to remove sharing privileges.
 // A user who owns a query may unshare a query from anyone they have shared to
 // A user who had a query shared to them may unshare that query from themselves
 // And admins may unshare queries that have been shared to other users
-func (s Resources) UnshareSavedQuery(response http.ResponseWriter, request *http.Request) {
+func (s Resources) DeleteSavedQueryPermissions(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
 		unshareRequest  UnshareSavedQueryRequest
