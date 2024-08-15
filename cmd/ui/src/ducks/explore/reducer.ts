@@ -58,7 +58,6 @@ const graphDataReducer = (state = initialGraphDataState, action: types.GraphActi
                     draft.chartProps.items[action.nodeId].data.system_tags = '';
                 }
             } else {
-                draft.chartProps.items[action.nodeId].data.system_tags = 'admin_tier_0';
                 if (systemTags.includes('owned')) {
                     draft.chartProps.items[action.nodeId].data.system_tags = 'admin_tier_0 owned';
                 } else {
