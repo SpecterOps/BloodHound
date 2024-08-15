@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -132,7 +131,7 @@ func BuildEntityQueryParams(request *http.Request, queryName string, pathDelegat
 
 type Graph interface {
 	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string) (map[string]any, error)
-	GetAssetGroupNodes(ctx context.Context, assetGroupTag string) (graph.NodeSet, error)
+	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	SearchNodesByName(ctx context.Context, nodeKinds graph.Kinds, nameQuery string, skip int, limit int) ([]model.SearchResult, error)
 	SearchByNameOrObjectID(ctx context.Context, searchValue string, searchType string) (graph.NodeSet, error)
@@ -154,9 +153,9 @@ type GraphQuery struct {
 	Cache                        cache.Cache
 	SlowQueryThreshold           int64 // Threshold in milliseconds
 	DisableCypherComplexityLimit bool
-	EnableCypherMutations bool
-	cypherEmitter         format.Emitter
-	strippedCypherEmitter format.Emitter
+	EnableCypherMutations        bool
+	cypherEmitter                format.Emitter
+	strippedCypherEmitter        format.Emitter
 }
 
 func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configuration) *GraphQuery {
@@ -223,42 +222,20 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 	})
 }
 
-func (s *GraphQuery) GetAssetGroupNodes(ctx context.Context, assetGroupTag string) (graph.NodeSet, error) {
+func (s *GraphQuery) GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error) {
 	var (
 		assetGroupNodes graph.NodeSet
 		err             error
 	)
-	return assetGroupNodes, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if assetGroupNodes, err = ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
-			filters := []graph.Criteria{
-				query.KindIn(query.Node(), azure.Entity, ad.Entity),
-				query.Or(
-					query.StringContains(query.NodeProperty(common.SystemTags.String()), assetGroupTag),
-					query.StringContains(query.NodeProperty(common.UserTags.String()), assetGroupTag),
-				),
-			}
 
-			return query.And(filters...)
-		})); err != nil {
+	err = s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if assetGroupNodes, err = agi.FetchAssetGroupNodes(tx, assetGroupTag, isSystemGroup); err != nil {
 			return err
-		} else {
-			for _, node := range assetGroupNodes {
-				// We need to filter out nodes that do not contain an exact tag match
-				var (
-					systemTags, _ = node.Properties.Get(common.SystemTags.String()).String()
-					userTags, _   = node.Properties.Get(common.UserTags.String()).String()
-					allTags       = append(strings.Split(systemTags, " "), strings.Split(userTags, " ")...)
-				)
-
-				if !slices.Contains(allTags, assetGroupTag) {
-					assetGroupNodes.Remove(node.ID)
-				} else {
-					node.Properties.Set("type", analysis.GetNodeKindDisplayLabel(node))
-				}
-			}
-			return nil
 		}
+		return nil
 	})
+
+	return assetGroupNodes, err
 }
 
 func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {

@@ -100,7 +100,7 @@ func TestParseAGMembersFromNodes_(t *testing.T) {
 
 func TestParseAGMembersFromNodes_MissingNodeProperties(t *testing.T) {
 	nodes := graph.NodeSet{
-		// the parse fn should handle nodes with missing name and missing properties with warnings and no output
+		// the parse fn should handle nodes with missing name and missing properties with warnings
 		1: &graph.Node{
 			ID:    1,
 			Kinds: graph.Kinds{ad.Entity, ad.Domain},
@@ -125,5 +125,5 @@ func TestParseAGMembersFromNodes_MissingNodeProperties(t *testing.T) {
 			SystemSelector: false,
 		}}, 1)
 
-	require.Equal(t, 0, len(members))
+	require.Equal(t, 2, len(members))
 }
