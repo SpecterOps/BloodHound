@@ -52,34 +52,35 @@ const graphDataReducer = (state = initialGraphDataState, action: types.GraphActi
             const systemTags = state.chartProps.items[action.nodeId].data.system_tags;
             // remove the tier zero tag from the node
             if (systemTags.includes('admin_tier_0')) {
-                if (systemTags.includes('owned')) {
-                    draft.chartProps.items[action.nodeId].data.system_tags = 'owned';
-                } else {
-                    draft.chartProps.items[action.nodeId].data.system_tags = '';
+                // check if node is marked as owned or not
+                { systemTags.includes('owned') ?
+                    draft.chartProps.items[action.nodeId].data.system_tags = 'owned' :
+                    draft.chartProps.items[action.nodeId].data.system_tags = ''
                 }
             } else {
-                if (systemTags.includes('owned')) {
-                    draft.chartProps.items[action.nodeId].data.system_tags = 'admin_tier_0 owned';
-                } else {
-                    draft.chartProps.items[action.nodeId].data.system_tags = 'admin_tier_0';
+                // check if node is marked as owned or not
+                { systemTags.includes('owned') ?
+                    draft.chartProps.items[action.nodeId].data.system_tags = 'admin_tier_0 owned' :
+                    draft.chartProps.items[action.nodeId].data.system_tags = 'admin_tier_0'
                 }
             }
         } else if (action.type === types.TOGGLE_OWNED_OBJECT_NODE) {
             const systemTags = state.chartProps.items[action.nodeId].data.system_tags;
             // remove the owned object tag from the node
             if (systemTags.includes('owned')) {
-                if (systemTags.includes('admin_tier_0')) {
-                    draft.chartProps.items[action.nodeId].data.system_tags = 'admin_tier_0';
-                } else {
-                    draft.chartProps.items[action.nodeId].data.system_tags = '';
+                // check if node is marked as tier zero
+                { systemTags.includes('admin_tier_0') ?
+                    draft.chartProps.items[action.nodeId].data.system_tags = 'admin_tier_0' :
+                    draft.chartProps.items[action.nodeId].data.system_tags = ''
                 }
             } else {
-                if (systemTags.includes('admin_tier_0')) {
-                    draft.chartProps.items[action.nodeId].data.system_tags = 'admin_tier_0 owned';
-                } else {
-                    draft.chartProps.items[action.nodeId].data.system_tags = 'owned';
+                // check if node is marked as tier zero
+                { systemTags.includes('admin_tier_0') ?
+                    draft.chartProps.items[action.nodeId].data.system_tags = 'admin_tier_0 owned' :
+                    draft.chartProps.items[action.nodeId].data.system_tags = 'owned'
                 }
             }
+            console.log(draft.chartProps.items[action.nodeId].data.system_tags);
         }
         return draft;
     });
