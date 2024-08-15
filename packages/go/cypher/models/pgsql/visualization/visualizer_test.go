@@ -18,8 +18,9 @@ package visualization
 
 import (
 	"bytes"
-	"github.com/specterops/bloodhound/cypher/models/pgsql/test"
 	"testing"
+
+	"github.com/specterops/bloodhound/cypher/models/pgsql/test"
 
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/cypher/models/pgsql/translate"

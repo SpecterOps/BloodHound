@@ -20,9 +20,10 @@ import (
 	"bytes"
 	"encoding/json"
 
+	"reflect"
+
 	"github.com/jackc/pgtype"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"reflect"
 )
 
 func ValueToJSONB(value any) (pgtype.JSONB, error) {

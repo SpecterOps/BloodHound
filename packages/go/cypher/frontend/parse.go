@@ -19,8 +19,9 @@ package frontend
 import (
 	"bytes"
 	"errors"
-	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"strings"
+
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/specterops/bloodhound/cypher/parser"

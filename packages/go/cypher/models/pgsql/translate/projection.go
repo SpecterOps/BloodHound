@@ -18,6 +18,7 @@ package translate
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )

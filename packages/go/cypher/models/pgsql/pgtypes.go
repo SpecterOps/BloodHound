@@ -19,8 +19,9 @@ package pgsql
 import (
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"time"
+
+	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 var (

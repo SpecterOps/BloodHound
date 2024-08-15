@@ -18,6 +18,7 @@ package frontend
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 
 	"github.com/antlr4-go/antlr/v4"

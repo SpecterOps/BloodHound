@@ -18,10 +18,11 @@ package format
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"io"
 	"strconv"
 	"strings"
+
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -843,7 +844,6 @@ func (s Emitter) formatRemove(output io.Writer, remove *cypher.Remove) error {
 				return err
 			}
 		}
-
 
 		if removeItem.KindMatcher != nil {
 			if err := s.WriteExpression(output, removeItem.KindMatcher.Reference); err != nil {
