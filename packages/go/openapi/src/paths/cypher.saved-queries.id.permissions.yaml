@@ -24,7 +24,7 @@ parameters:
       type: integer
       format: int32
 delete:
-  operationId: UnshareSavedQuery
+  operationId: DeleteSavedQueryPermissions
   summary: Revokes permission of a saved query from users
   description: Revokes permission of a saved query from a given set of users
   tags:
@@ -32,7 +32,7 @@ delete:
     - Community
     - Enterprise
   requestBody:
-    description: The request body for unsharing a saved query from users
+    description: The request body for revoking permission a saved query from users
     required: true
     content:
       application/json:
