@@ -79,7 +79,7 @@ func FromDAWGSNode(node *graph.Node, includeProperties bool) UnifiedNode {
 		Kind:       analysis.GetNodeKind(node).String(),
 		ObjectId:   objectId,
 		IsTierZero: strings.Contains(systemTags, ad.AdminTierZero),
-		IsOwnedObject: strings.Contains(systemTags, "owned"),
+		IsOwnedObject: strings.Contains(systemTags, OwnedAssetGroupTag),
 		LastSeen:   lastSeen,
 		Properties: properties,
 	}
