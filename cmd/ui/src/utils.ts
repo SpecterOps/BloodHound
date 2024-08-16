@@ -215,7 +215,7 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 nodetype: value.kind,
                 name: value.label,
                 objectid: value.objectId,
-                system_tags: tags,
+                system_tags: tags.join(' '),
                 lastseen: lastSeen,
             },
         };
