@@ -32,7 +32,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { useQueryClient } from 'react-query';
 import { unstable_HistoryRouter as BrowserRouter, useLocation } from 'react-router-dom';
 import Header from 'src/components/Header';
-import { initialize } from 'src/ducks/auth/authSlice';
+import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN, ROUTE_USER_DISABLED } from 'src/ducks/global/routes';
 import { useFeatureFlags } from 'src/hooks/useFeatureFlags';
 import { useAppDispatch, useAppSelector } from 'src/store';
@@ -41,12 +41,13 @@ import Content from 'src/views/Content';
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
 
-const Inner: React.FC = () => {
+export const Inner: React.FC = () => {
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const queryClient = useQueryClient();
     const location = useLocation();
-    const featureFlagsRes = useFeatureFlags({ retry: false });
+    const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const featureFlagsRes = useFeatureFlags({ retry: false, enabled: !!authState.isInitialized && fullyAuthenticated });
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
