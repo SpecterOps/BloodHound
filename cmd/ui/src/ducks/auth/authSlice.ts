@@ -80,7 +80,7 @@ export const login = createAsyncThunk(
 );
 
 export const logout = createAsyncThunk('auth/logout', async () => {
-    return await apiClient.logout().catch(() => {});
+    return await apiClient.logout().catch(() => { });
 });
 
 export const initialize = createAsyncThunk<
@@ -233,7 +233,7 @@ export const fullyAuthenticatedSelector = createSelector(
         }
 
         const authExpired =
-            authState.user?.AuthSecret?.expires_at &&
+            authState.user.AuthSecret?.expires_at &&
             DateTime.fromISO(authState.user.AuthSecret.expires_at) < DateTime.local();
 
         return !authExpired;
