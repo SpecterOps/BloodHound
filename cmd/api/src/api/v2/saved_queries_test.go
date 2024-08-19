@@ -1237,7 +1237,7 @@ func TestResources_DeleteSavedQuery_DBError(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, response.Code)
 }
 
-func TestResources_DeleteSavedQuery_QueryDoesNotBelongToUser(t *testing.T) {
+func TestResources_DeleteSavedQuery_UserNotAdmin(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -1263,8 +1263,69 @@ func TestResources_DeleteSavedQuery_QueryDoesNotBelongToUser(t *testing.T) {
 	handler := http.HandlerFunc(resources.DeleteSavedQuery)
 
 	handler.ServeHTTP(response, req)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.Contains(t, response.Body.String(), api.URIPathVariableSavedQueryID)
+	assert.Equal(t, http.StatusForbidden, response.Code)
+	assert.Contains(t, response.Body.String(), "User does not have permission to delete this query")
+}
+
+func TestResources_DeleteSavedQuery_IsPublicSavedQueryDBError(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	endpoint := "/api/v2/saved-queries/%s"
+	savedQueryId := "1"
+
+	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)
+	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(false, fmt.Errorf("error"))
+
+	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteSavedQuery)
+
+	handler.ServeHTTP(response, req)
+	assert.Equal(t, http.StatusInternalServerError, response.Code)
+}
+
+func TestResources_DeleteSavedQuery_NotPublicQueryAndUserIsAdmin(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	endpoint := "/api/v2/saved-queries/%s"
+	savedQueryId := "1"
+
+	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)
+	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(false, nil)
+
+	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteSavedQuery)
+
+	handler.ServeHTTP(response, req)
+	assert.Equal(t, http.StatusForbidden, response.Code)
+	assert.Contains(t, response.Body.String(), "User does not have permission to delete this query")
 }
 
 func TestResources_DeleteSavedQuery_RecordNotFound(t *testing.T) {
@@ -1357,6 +1418,37 @@ func TestResources_DeleteSavedQuery_DeleteError(t *testing.T) {
 	handler.ServeHTTP(response, req)
 	require.Equal(t, http.StatusInternalServerError, response.Code)
 	require.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
+}
+
+func TestResources_DeleteSavedQuery_PublicQueryAndUserIsAdmin(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	endpoint := "/api/v2/saved-queries/%s"
+	savedQueryId := "1"
+
+	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)
+	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(true, nil)
+	mockDB.EXPECT().DeleteSavedQuery(gomock.Any(), gomock.Any()).Return(nil)
+
+	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	require.Nil(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteSavedQuery)
+
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusNoContent, response.Code)
 }
 
 func TestResources_DeleteSavedQuery(t *testing.T) {

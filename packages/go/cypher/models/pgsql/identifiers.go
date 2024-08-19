@@ -17,9 +17,10 @@
 package pgsql
 
 import (
-	"github.com/specterops/bloodhound/cypher/models"
 	"slices"
 	"strings"
+
+	"github.com/specterops/bloodhound/cypher/models"
 )
 
 const (
