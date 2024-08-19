@@ -50,17 +50,33 @@ const graphDataReducer = (state = initialGraphDataState, action: types.GraphActi
         } else if (action.type === types.SAVE_RESPONSE_FOR_EXPORT) {
             draft.export = action.payload;
         } else if (action.type === types.TOGGLE_TIER_ZERO_NODE) {
-            const systemTags = state.chartProps.items[action.nodeId].data.system_tags;
+            let systemTags = []
+            // Check if system_tags contains tags then split, else leave empty
+            { state.chartProps.items[action.nodeId].data.system_tags ?
+                systemTags = state.chartProps.items[action.nodeId].data.system_tags.split(" ") : null }
             if (systemTags.includes(TIER_ZERO_TAG)) {
-                // Regex to remove multiple spaces in case of more system tags in the future
-                draft.chartProps.items[action.nodeId].data.system_tags = systemTags.replace(TIER_ZERO_TAG, '').trim().replace(/ {2,}/g, " ");
-            } else draft.chartProps.items[action.nodeId].data.system_tags = `${systemTags} ${TIER_ZERO_TAG}`;
+                // Remove tag
+                systemTags.splice(systemTags.indexOf(TIER_ZERO_TAG), 1);
+                draft.chartProps.items[action.nodeId].data.system_tags = systemTags.join(' ');
+            } else {
+                // Add tag
+                systemTags.push(TIER_ZERO_TAG);
+                draft.chartProps.items[action.nodeId].data.system_tags = systemTags.join(' ');
+            }
         } else if (action.type === types.TOGGLE_OWNED_OBJECT_NODE) {
-           const systemTags = state.chartProps.items[action.nodeId].data.system_tags;
+            let systemTags = []
+            // Check if system_tags contains tags then split, else leave empty
+            { state.chartProps.items[action.nodeId].data.system_tags ?
+                systemTags = state.chartProps.items[action.nodeId].data.system_tags.split(" ") : null }
             if (systemTags.includes(OWNED_OBJECT_TAG)) {
-                // Regex to remove multiple spaces in case of more system tags in the future
-                draft.chartProps.items[action.nodeId].data.system_tags = systemTags.replace(OWNED_OBJECT_TAG, '').trim().replace(/ {2,}/g, " ");
-            } else draft.chartProps.items[action.nodeId].data.system_tags = `${systemTags} ${OWNED_OBJECT_TAG}`;
+                // Remove tag
+                systemTags.splice(systemTags.indexOf(OWNED_OBJECT_TAG), 1);
+                draft.chartProps.items[action.nodeId].data.system_tags = systemTags.join(' ');
+            } else {
+                // Add tag
+                systemTags.push(OWNED_OBJECT_TAG);
+                draft.chartProps.items[action.nodeId].data.system_tags = systemTags.join(' ');
+            }
         }
         return draft;
     });
