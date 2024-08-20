@@ -324,6 +324,8 @@ paths:
     $ref: './paths/cypher.saved-queries.yaml'
   /api/v2/saved-queries/{saved_query_id}:
     $ref: './paths/cypher.saved-queries.id.yaml'
+  /api/v2/saved-queries/{saved_query_id}/share:
+    $ref: './paths/cypher.saved-queries.id.share.yaml'
   /api/v2/graphs/cypher:
     $ref: './paths/cypher.graphs.cypher.yaml'
 

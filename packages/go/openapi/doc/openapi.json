@@ -4437,6 +4437,93 @@
         }
       }
     },
+    "/api/v2/saved-queries/{saved_query_id}/share": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "saved_query_id",
+          "description": "ID of the saved query",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "put": {
+        "operationId": "ShareSavedQuery",
+        "summary": "Share a saved query or set it to public",
+        "description": "Shares an existing saved query or makes it public",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for sharing a saved query",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "user_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "public": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.saved-queries-permissions"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graphs/cypher": {
       "parameters": [
         {
@@ -14665,6 +14752,42 @@
               },
               "description": {
                 "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "model.saved-queries-permissions": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int64.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "shared_to_user_id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.uuid"
+                  },
+                  {
+                    "readOnly": true
+                  }
+                ]
+              },
+              "query_id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "public": {
+                "type": "boolean"
               }
             }
           }
