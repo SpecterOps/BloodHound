@@ -60,15 +60,16 @@ func (s Resources) DeleteSavedQueryPermissions(response http.ResponseWriter, req
 			if isShared, err := s.DB.IsSavedQuerySharedToUser(request.Context(), savedQueryID, user.ID); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
-			} else if isShared {
+			} else if !isShared {
+				// The user cannot unshare a saved query if a saved query permission does not exist for them. This means a user cannot unshare a query they own or have not been shared
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "User cannot unshare a query from themselves that is not shared to them", request), response)
+				return
+			} else {
 				// User is trying to unshare from themselves
 				if err := s.DB.DeleteSavedQueryPermissionsForUser(request.Context(), savedQueryID, user.ID); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
-			} else {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "User cannot unshare a query from themselves that is not shared to them", request), response)
-				return
 			}
 		} else {
 			isAdmin := user.Roles.Has(model.Role{Name: auth.RoleAdministrator})
@@ -83,6 +84,7 @@ func (s Resources) DeleteSavedQueryPermissions(response http.ResponseWriter, req
 				}
 			}
 
+			// Unshare the queries
 			if err := s.DB.DeleteSavedQueryPermissionsForUsers(request.Context(), savedQueryID, deleteRequest.UserIds); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
