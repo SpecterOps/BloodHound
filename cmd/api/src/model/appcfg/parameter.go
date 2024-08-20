@@ -36,6 +36,10 @@ const (
 	Neo4jConfigsName                    = "Neo4j Configuration Parameters"
 	PasswordExpirationWindowDescription = "This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601."
 	Neo4jConfigsDescription             = "This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J."
+
+	CitrixRDPSupportKey         = "analysis.citrix_rdp_support"
+	CitrixRDPSupportName        = "Citrix RDP Support"
+	CitrixRDPSupportDescription = "This configuration parameter toggles Citrix support during post-processing. When on, CanRDP edges will come from the `Direct Access Users` group instead of the builtin `Remote Desktop Users` group."
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -95,6 +99,10 @@ func AvailableParameters() (ParameterSet, error) {
 		WriteFlushSize: neo4j.DefaultWriteFlushSize,
 	}); err != nil {
 		return ParameterSet{}, fmt.Errorf("error creating neo4jExpirationValue parameter: %w", err)
+	} else if citrixRDPSupportValue, err := types.NewJSONBObject(CitrixRDPSupport{
+		Enabled: false,
+	}); err != nil {
+		return ParameterSet{}, fmt.Errorf("error creating CitrixRDPSupport parameter: %w", err)
 	} else {
 		return ParameterSet{
 			PasswordExpirationWindow: {
@@ -109,6 +117,12 @@ func AvailableParameters() (ParameterSet, error) {
 				Name:        Neo4jConfigsName,
 				Description: Neo4jConfigsDescription,
 				Value:       neo4jExpirationValue,
+			},
+			CitrixRDPSupportKey: {
+				Key:         CitrixRDPSupportKey,
+				Name:        CitrixRDPSupportName,
+				Description: CitrixRDPSupportDescription,
+				Value:       citrixRDPSupportValue,
 			},
 		}, nil
 	}
@@ -161,4 +175,8 @@ func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jPara
 	}
 
 	return result
+}
+
+type CitrixRDPSupport struct {
+	Enabled bool `json:"enabled,omitempty"`
 }
