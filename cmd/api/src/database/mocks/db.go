@@ -1307,6 +1307,21 @@ func (mr *MockDatabaseMockRecorder) IsSavedQueryPublic(arg0, arg1 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSavedQueryPublic", reflect.TypeOf((*MockDatabase)(nil).IsSavedQueryPublic), arg0, arg1)
 }
 
+// IsSavedQuerySharedToUser mocks base method.
+func (m *MockDatabase) IsSavedQuerySharedToUser(arg0 context.Context, arg1 int64, arg2 uuid.UUID) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsSavedQuerySharedToUser", arg0, arg1, arg2)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsSavedQuerySharedToUser indicates an expected call of IsSavedQuerySharedToUser.
+func (mr *MockDatabaseMockRecorder) IsSavedQuerySharedToUser(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSavedQuerySharedToUser", reflect.TypeOf((*MockDatabase)(nil).IsSavedQuerySharedToUser), arg0, arg1, arg2)
+}
+
 // ListAuditLogs mocks base method.
 func (m *MockDatabase) ListAuditLogs(arg0 context.Context, arg1, arg2 time.Time, arg3, arg4 int, arg5 string, arg6 model.SQLFilter) (model.AuditLogs, int, error) {
 	m.ctrl.T.Helper()
