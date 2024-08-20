@@ -28,6 +28,7 @@ use (
 	./packages/go/errors
 	./packages/go/graphschema
 	./packages/go/headers
+	./packages/go/jsonpointer
 	./packages/go/lab
 	./packages/go/log
 	./packages/go/mediatypes
