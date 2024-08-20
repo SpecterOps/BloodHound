@@ -48,25 +48,23 @@ func (s Resources) DeleteSavedQueryPermissions(response http.ResponseWriter, req
 
 	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
-		return
 	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsFromMalformed, request), response)
-		return
-	} else if err := json.NewDecoder(request.Body).Decode(&deleteRequest); err != nil {
+	} else if err = json.NewDecoder(request.Body).Decode(&deleteRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		return
 	} else {
 		if deleteRequest.Self {
 			if isShared, err := s.DB.IsSavedQuerySharedToUser(request.Context(), savedQueryID, user.ID); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else if !isShared {
-				// The user cannot unshare a saved query if a saved query permission does not exist for them. This means a user cannot unshare a query they own or have not been shared
+
+				// The user cannot unshare a saved query if a saved query permission does not exist for them. This means a user cannot unshare a query that they don't own, or hasn't been shared with them
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "User cannot unshare a query from themselves that is not shared to them", request), response)
 				return
 			} else {
 				// User is trying to unshare from themselves
-				if err := s.DB.DeleteSavedQueryPermissionsForUser(request.Context(), savedQueryID, user.ID); err != nil {
+				if err = s.DB.DeleteSavedQueryPermissionsForUser(request.Context(), savedQueryID, user.ID); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
@@ -85,7 +83,7 @@ func (s Resources) DeleteSavedQueryPermissions(response http.ResponseWriter, req
 			}
 
 			// Unshare the queries
-			if err := s.DB.DeleteSavedQueryPermissionsForUsers(request.Context(), savedQueryID, deleteRequest.UserIds); err != nil {
+			if err = s.DB.DeleteSavedQueryPermissionsForUsers(request.Context(), savedQueryID, deleteRequest.UserIds); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			}

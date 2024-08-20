@@ -188,6 +188,33 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, response.Code)
 	})
 
+	t.Run("error checking if query is shared with user", func(t *testing.T) {
+		var (
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB}
+		)
+		defer mockCtrl.Finish()
+
+		payload := v2.DeleteSavedQueryPermissionsRequest{
+			Self: true,
+		}
+
+		mockDB.EXPECT().IsSavedQuerySharedToUser(gomock.Any(), int64(1), userId).Return(false, fmt.Errorf("an error"))
+
+		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		require.Nil(t, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+		response := httptest.NewRecorder()
+		handler := http.HandlerFunc(resources.DeleteSavedQueryPermissions)
+
+		handler.ServeHTTP(response, req)
+		assert.Equal(t, http.StatusInternalServerError, response.Code)
+	})
+
 	t.Run("error user unsharing saved query that does not belong to them", func(t *testing.T) {
 		var (
 			mockCtrl  = gomock.NewController(t)
