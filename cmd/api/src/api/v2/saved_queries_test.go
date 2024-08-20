@@ -1690,7 +1690,6 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 			},
 		}).Return([]model.SavedQueriesPermissions{
 			{
-				ID:             1,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(userId2),
@@ -1734,13 +1733,11 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 			},
 		}).Return([]model.SavedQueriesPermissions{
 			{
-				ID:             1,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(userId2),
 			},
 			{
-				ID:             2,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(userId3),
@@ -1770,30 +1767,34 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 
 		require.Equal(t, v2.ShareSavedQueriesResponse{
 			{
-				ID:             1,
 				SharedToUserID: database.NullUUID(userId2),
 				QueryID:        1,
 				Public:         false,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
 			{
-				ID:             2,
 				SharedToUserID: database.NullUUID(userId3),
 				QueryID:        1,
 				Public:         false,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
@@ -1821,7 +1822,6 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 			},
 		}).Return([]model.SavedQueriesPermissions{
 			{
-				ID:             1,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(userId2),
@@ -1854,16 +1854,18 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 
 		require.Equal(t, v2.ShareSavedQueriesResponse{
 			{
-				ID:             1,
 				SharedToUserID: database.NullUUID(userId2),
 				QueryID:        1,
 				Public:         false,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
@@ -1884,7 +1886,6 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		}, nil)
 		mockDB.EXPECT().IsSavedQueryShared(gomock.Any(), gomock.Any()).Return(true, nil)
 		mockDB.EXPECT().CreateSavedQueryPermissionToPublic(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
-			ID:      1,
 			QueryID: 1,
 			SharedToUserID: uuid2.NullUUID{
 				UUID:  uuid2.UUID{},
@@ -1894,13 +1895,11 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		}, nil)
 		mockDB.EXPECT().GetPermissionsForSavedQuery(gomock.Any(), gomock.Any()).Return([]model.SavedQueriesPermissions{
 			{
-				ID:             1,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(userId2),
 			},
 			{
-				ID:             2,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(userId3),
@@ -1934,19 +1933,21 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 
 		require.Equal(t, v2.ShareSavedQueriesResponse{
 			{
-				ID: 1,
 				SharedToUserID: uuid2.NullUUID{
 					UUID:  uuid2.UUID{},
 					Valid: false,
 				},
 				QueryID: 1,
 				Public:  true,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
@@ -1968,13 +1969,11 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		mockDB.EXPECT().IsSavedQueryShared(gomock.Any(), gomock.Any()).Return(true, nil)
 		mockDB.EXPECT().GetPermissionsForSavedQuery(gomock.Any(), gomock.Any()).Return([]model.SavedQueriesPermissions{
 			{
-				ID:             1,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(userId2),
 			},
 			{
-				ID:             2,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(userId3),
@@ -2024,13 +2023,11 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 			},
 		}).Return([]model.SavedQueriesPermissions{
 			{
-				ID:             1,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(userId2),
 			},
 			{
-				ID:             2,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(userId3),
@@ -2063,30 +2060,34 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 
 		require.Equal(t, v2.ShareSavedQueriesResponse{
 			{
-				ID:             1,
 				SharedToUserID: database.NullUUID(userId2),
 				QueryID:        1,
 				Public:         false,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
 			{
-				ID:             2,
 				SharedToUserID: database.NullUUID(userId3),
 				QueryID:        1,
 				Public:         false,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
@@ -2107,7 +2108,6 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		}, nil)
 		mockDB.EXPECT().IsSavedQueryShared(gomock.Any(), gomock.Any()).Return(false, nil)
 		mockDB.EXPECT().CreateSavedQueryPermissionToPublic(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
-			ID:      1,
 			QueryID: 1,
 			SharedToUserID: uuid2.NullUUID{
 				UUID:  uuid2.UUID{},
@@ -2142,19 +2142,21 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 
 		require.Equal(t, v2.ShareSavedQueriesResponse{
 			{
-				ID: 1,
 				SharedToUserID: uuid2.NullUUID{
 					UUID:  uuid2.UUID{},
 					Valid: false,
 				},
 				QueryID: 1,
 				Public:  true,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
@@ -2600,7 +2602,6 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 			},
 		}).Return([]model.SavedQueriesPermissions{
 			{
-				ID:             1,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(nonAdminUserId),
@@ -2644,13 +2645,11 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 			},
 		}).Return([]model.SavedQueriesPermissions{
 			{
-				ID:             1,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(nonAdminUserId),
 			},
 			{
-				ID:             2,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(nonAdminUserId2),
@@ -2680,30 +2679,34 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 
 		require.Equal(t, v2.ShareSavedQueriesResponse{
 			{
-				ID:             1,
 				SharedToUserID: database.NullUUID(nonAdminUserId),
 				QueryID:        1,
 				Public:         false,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
 			{
-				ID:             2,
 				SharedToUserID: database.NullUUID(nonAdminUserId2),
 				QueryID:        1,
 				Public:         false,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
@@ -2731,7 +2734,6 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 			},
 		}).Return([]model.SavedQueriesPermissions{
 			{
-				ID:             1,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(nonAdminUserId),
@@ -2764,16 +2766,18 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 
 		require.Equal(t, v2.ShareSavedQueriesResponse{
 			{
-				ID:             1,
 				SharedToUserID: database.NullUUID(nonAdminUserId),
 				QueryID:        1,
 				Public:         false,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
@@ -2794,7 +2798,6 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		}, nil)
 		mockDB.EXPECT().IsSavedQueryShared(gomock.Any(), gomock.Any()).Return(true, nil)
 		mockDB.EXPECT().CreateSavedQueryPermissionToPublic(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
-			ID:      1,
 			QueryID: 1,
 			SharedToUserID: uuid2.NullUUID{
 				UUID:  uuid2.UUID{},
@@ -2804,13 +2807,11 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		}, nil)
 		mockDB.EXPECT().GetPermissionsForSavedQuery(gomock.Any(), gomock.Any()).Return([]model.SavedQueriesPermissions{
 			{
-				ID:             1,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(nonAdminUserId),
 			},
 			{
-				ID:             2,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(nonAdminUserId2),
@@ -2844,19 +2845,21 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 
 		require.Equal(t, v2.ShareSavedQueriesResponse{
 			{
-				ID: 1,
 				SharedToUserID: uuid2.NullUUID{
 					UUID:  uuid2.UUID{},
 					Valid: false,
 				},
 				QueryID: 1,
 				Public:  true,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
@@ -2878,13 +2881,11 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		mockDB.EXPECT().IsSavedQueryShared(gomock.Any(), gomock.Any()).Return(true, nil)
 		mockDB.EXPECT().GetPermissionsForSavedQuery(gomock.Any(), gomock.Any()).Return([]model.SavedQueriesPermissions{
 			{
-				ID:             1,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(nonAdminUserId),
 			},
 			{
-				ID:             2,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(nonAdminUserId2),
@@ -2934,13 +2935,11 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 			},
 		}).Return([]model.SavedQueriesPermissions{
 			{
-				ID:             1,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(nonAdminUserId),
 			},
 			{
-				ID:             2,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(nonAdminUserId2),
@@ -2973,30 +2972,34 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 
 		require.Equal(t, v2.ShareSavedQueriesResponse{
 			{
-				ID:             1,
 				SharedToUserID: database.NullUUID(nonAdminUserId),
 				QueryID:        1,
 				Public:         false,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
 			{
-				ID:             2,
 				SharedToUserID: database.NullUUID(nonAdminUserId2),
 				QueryID:        1,
 				Public:         false,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
@@ -3017,7 +3020,6 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		}, nil)
 		mockDB.EXPECT().IsSavedQueryShared(gomock.Any(), gomock.Any()).Return(false, nil)
 		mockDB.EXPECT().CreateSavedQueryPermissionToPublic(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
-			ID:      1,
 			QueryID: 1,
 			SharedToUserID: uuid2.NullUUID{
 				UUID:  uuid2.UUID{},
@@ -3052,19 +3054,21 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 
 		require.Equal(t, v2.ShareSavedQueriesResponse{
 			{
-				ID: 1,
 				SharedToUserID: uuid2.NullUUID{
 					UUID:  uuid2.UUID{},
 					Valid: false,
 				},
 				QueryID: 1,
 				Public:  true,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
@@ -3177,13 +3181,11 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 			},
 		}).Return([]model.SavedQueriesPermissions{
 			{
-				ID:             1,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(nonAdminUserId),
 			},
 			{
-				ID:             2,
 				QueryID:        int64(1),
 				Public:         false,
 				SharedToUserID: database.NullUUID(nonAdminUserId2),
@@ -3213,30 +3215,34 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 
 		require.Equal(t, v2.ShareSavedQueriesResponse{
 			{
-				ID:             1,
 				SharedToUserID: database.NullUUID(nonAdminUserId),
 				QueryID:        1,
 				Public:         false,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
 			{
-				ID:             2,
 				SharedToUserID: database.NullUUID(nonAdminUserId2),
 				QueryID:        1,
 				Public:         false,
-				Basic: model.Basic{
-					CreatedAt: parsedTime,
-					UpdatedAt: parsedTime,
-					DeletedAt: sql.NullTime{
-						Time:  parsedTime,
-						Valid: false,
+				BigSerial: model.BigSerial{
+					ID: 0,
+					Basic: model.Basic{
+						CreatedAt: parsedTime,
+						UpdatedAt: parsedTime,
+						DeletedAt: sql.NullTime{
+							Time:  parsedTime,
+							Valid: false,
+						},
 					},
 				},
 			},
