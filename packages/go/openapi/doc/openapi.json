@@ -4463,7 +4463,7 @@
           "Enterprise"
         ],
         "requestBody": {
-          "description": "The request body for sharing a saved query",
+          "description": "The request body for sharing a saved query or making it public",
           "required": true,
           "content": {
             "application/json": {
@@ -4502,6 +4502,9 @@
                 }
               }
             }
+          },
+          "204": {
+            "$ref": "#/components/responses/no-content"
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
@@ -14768,10 +14771,6 @@
           {
             "type": "object",
             "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
               "shared_to_user_id": {
                 "allOf": [
                   {

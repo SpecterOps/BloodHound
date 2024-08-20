@@ -32,7 +32,7 @@ put:
     - Community
     - Enterprise
   requestBody:
-    description: The request body for sharing a saved query
+    description: The request body for sharing a saved query or making it public
     required: true
     content:
       application/json:
@@ -58,6 +58,8 @@ put:
                 type: array
                 items:
                   $ref: './../schemas/model.saved-queries-permissions.yaml'
+    204:
+      $ref: './../responses/no-content.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
