@@ -18,9 +18,10 @@ package translate
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
-	"strconv"
 )
 
 type IdentifierGenerator map[pgsql.DataType]int

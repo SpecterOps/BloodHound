@@ -17,10 +17,11 @@
 package translate
 
 import (
+	"strings"
+
 	"github.com/specterops/bloodhound/cypher/models"
 	cypher "github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
-	"strings"
 )
 
 func (s *Translator) translateRelationshipPattern(scope *Scope, relationshipPattern *cypher.RelationshipPattern, part *PatternPart) error {

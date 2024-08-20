@@ -20,11 +20,12 @@ import (
 	"bytes"
 	"embed"
 	"encoding/json"
-	"github.com/specterops/bloodhound/cypher/models/cypher"
-	format2 "github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"io"
 	"regexp"
 	"testing"
+
+	"github.com/specterops/bloodhound/cypher/models/cypher"
+	format2 "github.com/specterops/bloodhound/cypher/models/cypher/format"
 
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/stretchr/testify/require"
