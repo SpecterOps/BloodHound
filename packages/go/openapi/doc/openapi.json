@@ -4437,7 +4437,7 @@
         }
       }
     },
-    "/api/v2/saved-queries/{saved_query_id}/share": {
+    "/api/v2/saved-queries/{saved_query_id}/permissions": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"

@@ -1526,7 +1526,7 @@ func TestResources_ShareSavedQueries_SavingPermissionsErrors(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/saved-queries/%s/share"
+	endpoint := "/api/v2/saved-queries/%s/permissions"
 	savedQueryId := "1"
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
@@ -1566,7 +1566,7 @@ func TestResources_ShareSavedQueries_SavingPermissionsErrors(t *testing.T) {
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+	router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, req)
@@ -1583,7 +1583,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/saved-queries/%s/share"
+	endpoint := "/api/v2/saved-queries/%s/permissions"
 	savedQueryId := "1"
 	userId, err := uuid2.NewV4()
 	require.Nil(t, err)
@@ -1612,7 +1612,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -1639,7 +1639,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -1659,7 +1659,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 
@@ -1701,7 +1701,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -1834,7 +1834,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -1913,7 +1913,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -1989,7 +1989,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2040,7 +2040,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2122,7 +2122,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2183,7 +2183,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2210,7 +2210,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2236,7 +2236,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2262,7 +2262,7 @@ func TestResources_SharedSavedQueries_NonAdmin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2280,7 +2280,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/saved-queries/%s/share"
+	endpoint := "/api/v2/saved-queries/%s/permissions"
 	savedQueryId := "1"
 	adminUserId, err := uuid2.NewV4()
 	require.Nil(t, err)
@@ -2303,7 +2303,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 
@@ -2331,7 +2331,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2358,7 +2358,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2385,7 +2385,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2412,7 +2412,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2438,7 +2438,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2464,7 +2464,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2490,7 +2490,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2516,7 +2516,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2543,7 +2543,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2571,7 +2571,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 
@@ -2613,7 +2613,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2746,7 +2746,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2825,7 +2825,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2901,7 +2901,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -2952,7 +2952,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -3034,7 +3034,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -3095,7 +3095,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -3121,7 +3121,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -3149,7 +3149,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -3269,7 +3269,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -3295,7 +3295,7 @@ func TestResources_SharedSavedQueries_Admin(t *testing.T) {
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/share", resources.ShareSavedQueries).Methods("PUT")
+		router.HandleFunc("/api/v2/saved-queries/{saved_query_id}/permissions", resources.ShareSavedQueries).Methods("PUT")
 
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
