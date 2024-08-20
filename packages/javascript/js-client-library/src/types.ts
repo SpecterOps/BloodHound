@@ -271,3 +271,20 @@ export interface UpdateUserRequest {
     SAMLProviderId?: string;
     is_disabled?: boolean;
 }
+
+export type PasswordExpirationConfiguration = {
+    duration: string;
+};
+
+export type Neo4jConfiguration = {
+    batch_write_size: number;
+    write_flush_size: number;
+};
+
+// Add additional types here depending on contract from backend work
+export type ConfigurationValue = PasswordExpirationConfiguration | Neo4jConfiguration;
+
+export type UpdateConfigurationRequest = {
+    key: string;
+    value: ConfigurationValue;
+};

@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { ConfigurationValue } from './types';
+
 export type BasicResponse<T> = {
     data: T;
 };
@@ -188,3 +190,20 @@ export type StartFileIngestResponse = BasicResponse<FileIngestJob>;
 export type UploadFileToIngestResponse = null;
 
 export type EndFileIngestResponse = null;
+
+export type ConfigurationEntry = TimestampFields & {
+    key: string;
+    name: string;
+    description: string;
+    value: ConfigurationValue;
+    id: number;
+};
+
+export type UpdatedConfigurationEntry = {
+    key: string;
+    value: ConfigurationValue;
+};
+
+export type GetConfigurationResponse = BasicResponse<ConfigurationEntry[]>;
+
+export type UpdateConfigurationResponse = BasicResponse<ConfigurationValue>;

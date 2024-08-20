@@ -25,6 +25,7 @@ import {
     CreateAuthTokenResponse,
     DatapipeStatusResponse,
     EndFileIngestResponse,
+    GetConfigurationResponse,
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
     ListFileTypesForIngestResponse,
@@ -32,6 +33,7 @@ import {
     PostureResponse,
     SavedQuery,
     StartFileIngestResponse,
+    UpdateConfigurationResponse,
     UploadFileToIngestResponse,
 } from './responses';
 import * as types from './types';
@@ -2317,6 +2319,15 @@ class BHEAPIClient {
     /* remote assets */
     getRemoteAsset = (assetPath: string, options?: types.RequestOptions) =>
         this.baseClient.get(`/api/v2/assets/${assetPath}`, options);
+
+    /* configuration */
+    getConfiguration = (options?: types.RequestOptions) => {
+        this.baseClient.get<GetConfigurationResponse>('/api/v2/config', options);
+    };
+
+    updateConfiguration = (payload: types.UpdateConfigurationRequest, options?: types.RequestOptions) => {
+        this.baseClient.put<UpdateConfigurationResponse>('/api/v2/config', payload, options);
+    };
 }
 
 export default BHEAPIClient;
