@@ -31,4 +31,5 @@ export const ROUTE_ADMINISTRATION_DB_MANAGEMENT = '/administration/database-mana
 export const ROUTE_ADMINISTRATION_MANAGE_USERS = '/administration/manage-users';
 export const ROUTE_ADMINISTRATION_SAML_CONFIGURATION = '/administration/saml-configuration';
 export const ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES = '/administration/early-access-features';
+export const ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION = '/administration/bloodhound-configuration';
 export const ROUTE_API_EXPLORER = '/api-explorer';
