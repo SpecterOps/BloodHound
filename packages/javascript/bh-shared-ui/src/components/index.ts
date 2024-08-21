@@ -20,6 +20,9 @@ export { default as AppNotifications } from './AppNotifications';
 export * from './CheckboxGroup';
 export { default as CheckboxGroup } from './CheckboxGroup';
 
+export * from './CitrixRDPConfiguration';
+export { default as CitrixRDPConfiguration } from './CitrixRDPConfiguration';
+
 export * from './CollectorCard';
 export { default as CollectorCard } from './CollectorCard';
 
