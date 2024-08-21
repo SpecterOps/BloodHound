@@ -4463,7 +4463,7 @@
           "Enterprise"
         ],
         "requestBody": {
-          "description": "The request body for revoking permission a saved query from users",
+          "description": "The request body for revoking permissions of a saved query from users",
           "required": true,
           "content": {
             "application/json": {
@@ -4472,12 +4472,15 @@
                 "properties": {
                   "user_ids": {
                     "type": "array",
+                    "description": "A list of user ids that will have their permission revoked from the given saved query",
                     "items": {
-                      "$ref": "#/components/schemas/model.components.uuid"
+                      "type": "string",
+                      "format": "uuid"
                     }
                   },
                   "self": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Whether or not the request is attempting to revoke permissions from the given saved query from the currently logged in user"
                   }
                 }
               }
