@@ -4449,7 +4449,7 @@
           "required": true,
           "schema": {
             "type": "integer",
-            "format": "int64"
+            "format": "int32"
           }
         }
       ],
@@ -4468,6 +4468,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "type": "object",
                 "properties": {
                   "user_ids": {
                     "type": "array",

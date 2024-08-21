@@ -22,7 +22,7 @@ parameters:
     required: true
     schema:
       type: integer
-      format: int64
+      format: int32
 put:
   operationId: ShareSavedQuery
   summary: Share a saved query or set it to public
@@ -37,6 +37,7 @@ put:
     content:
       application/json:
         schema:
+          type: object
           properties: 
             user_ids:
               type: array
