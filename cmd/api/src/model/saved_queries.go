@@ -57,7 +57,7 @@ func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 		"user_id":     {Equals, NotEquals},
 		"name":        {Equals, NotEquals},
 		"query":       {Equals, NotEquals},
-		"description": {Equals, NotEquals, Contains},
+		"description": {Equals, NotEquals},
 	}
 }
 

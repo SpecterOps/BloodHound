@@ -39,7 +39,6 @@ const (
 	LessThanOrEquals    FilterOperator = "lte"
 	Equals              FilterOperator = "eq"
 	NotEquals           FilterOperator = "neq"
-	Contains            FilterOperator = "in"
 
 	GreaterThanSymbol         string = ">"
 	GreaterThanOrEqualsSymbol string = ">="
@@ -47,7 +46,6 @@ const (
 	LessThanOrEqualsSymbol    string = "<="
 	EqualsSymbol              string = "="
 	NotEqualsSymbol           string = "<>"
-	ContainsSymbol            string = "like"
 
 	TrueString     = "true"
 	FalseString    = "false"
@@ -80,9 +78,6 @@ func ParseFilterOperator(raw string) (FilterOperator, error) {
 
 	case NotEquals:
 		return NotEquals, nil
-
-	case Contains:
-		return Contains, nil
 
 	default:
 		return "", fmt.Errorf("unknown query parameter filter predicate: %s", raw)
@@ -170,25 +165,14 @@ func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 				predicate = EqualsSymbol
 			case NotEquals:
 				predicate = NotEqualsSymbol
-			case Contains:
-				predicate = ContainsSymbol
 			default:
 				return SQLFilter{}, fmt.Errorf("invalid filter predicate specified")
 			}
 
-			switch predicate {
-			case ContainsSymbol:
-				result.WriteString(filter.Name)
-				result.WriteString(" ")
-				result.WriteString(predicate)
-				filter.Value = fmt.Sprintf("%%%s%%", filter.Value)
-				result.WriteString(" lower(?)")
-			default:
-				result.WriteString(filter.Name)
-				result.WriteString(" ")
-				result.WriteString(predicate)
-				result.WriteString(" ?")
-			}
+			result.WriteString(filter.Name)
+			result.WriteString(" ")
+			result.WriteString(predicate)
+			result.WriteString(" ?")
 
 			params = append(params, filter.Value)
 			firstFilter = false
