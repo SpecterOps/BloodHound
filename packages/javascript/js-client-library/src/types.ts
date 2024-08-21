@@ -272,19 +272,22 @@ export interface UpdateUserRequest {
     is_disabled?: boolean;
 }
 
-export type PasswordExpirationConfiguration = {
-    duration: string;
+type PasswordExpirationConfiguration = {
+    key: 'auth.password_expiration_window';
+    value: {
+        duration: string;
+    };
 };
 
-export type Neo4jConfiguration = {
-    batch_write_size: number;
-    write_flush_size: number;
+type Neo4jConfiguration = {
+    key: 'neo4j.configuration';
+    value: {
+        batch_write_size: number;
+        write_flush_size: number;
+    };
 };
 
 // Add additional types here depending on contract from backend work
-export type ConfigurationValue = PasswordExpirationConfiguration | Neo4jConfiguration;
+export type ConfigurationPayload = PasswordExpirationConfiguration | Neo4jConfiguration;
 
-export type UpdateConfigurationRequest = {
-    key: string;
-    value: ConfigurationValue;
-};
+export type UpdateConfigurationRequest = ConfigurationPayload;
