@@ -45,9 +45,6 @@ delete:
               items:
                 type: string
                 format: uuid
-            self:
-              type: boolean
-              description: Whether or not the request is attempting to revoke permissions from the given saved query from the currently logged in user
   responses:
     204:
       $ref: './../responses/no-content.yaml'

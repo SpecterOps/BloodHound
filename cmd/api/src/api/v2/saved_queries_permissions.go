@@ -27,13 +27,13 @@ import (
 	ctx2 "github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
 	"net/http"
+	"slices"
 	"strconv"
 )
 
 // DeleteSavedQueryPermissionsRequest represents the payload sent to the unshare endpoint
 type DeleteSavedQueryPermissionsRequest struct {
 	UserIds []uuid.UUID `json:"user_ids"`
-	Self    bool        `json:"self"`
 }
 
 // DeleteSavedQueryPermissions allows an owner of a shared query, a user that has a saved query shared to them, or an admin, to remove sharing privileges.
@@ -53,7 +53,8 @@ func (s Resources) DeleteSavedQueryPermissions(response http.ResponseWriter, req
 	} else if err = json.NewDecoder(request.Body).Decode(&deleteRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {
-		if deleteRequest.Self {
+		// Check if the user is attempting to unshare a query from themselves
+		if slices.Contains(deleteRequest.UserIds, user.ID) {
 			if isShared, err := s.DB.IsSavedQuerySharedToUser(request.Context(), savedQueryID, user.ID); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
@@ -62,14 +63,9 @@ func (s Resources) DeleteSavedQueryPermissions(response http.ResponseWriter, req
 				// The user cannot unshare a saved query if a saved query permission does not exist for them. This means a user cannot unshare a query that they don't own, or hasn't been shared with them
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "User cannot unshare a query from themselves that is not shared to them", request), response)
 				return
-			} else {
-				// User is trying to unshare from themselves
-				if err = s.DB.DeleteSavedQueryPermissionsForUser(request.Context(), savedQueryID, user.ID); err != nil {
-					api.HandleDatabaseError(request, response, err)
-					return
-				}
 			}
 		} else {
+			// User is attempting to unshare a query from another user
 			isAdmin := user.Roles.Has(model.Role{Name: auth.RoleAdministrator})
 			if !isAdmin {
 				// If a user is not admin, then they need to own the query in order to unshare it
@@ -82,13 +78,13 @@ func (s Resources) DeleteSavedQueryPermissions(response http.ResponseWriter, req
 				}
 			}
 
-			// Unshare the queries
-			if err = s.DB.DeleteSavedQueryPermissionsForUsers(request.Context(), savedQueryID, deleteRequest.UserIds); err != nil {
-				api.HandleDatabaseError(request, response, err)
-				return
-			}
 		}
 
+		// Unshare the queries
+		if err = s.DB.DeleteSavedQueryPermissionsForUsers(request.Context(), savedQueryID, deleteRequest.UserIds); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
 		response.WriteHeader(http.StatusNoContent)
 	}
 }

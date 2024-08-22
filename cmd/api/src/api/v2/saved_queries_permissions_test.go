@@ -114,11 +114,11 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		payload := v2.DeleteSavedQueryPermissionsRequest{
-			Self: true,
+			UserIds: []uuid2.UUID{userId},
 		}
 
 		mockDB.EXPECT().IsSavedQuerySharedToUser(gomock.Any(), int64(1), userId).Return(true, nil)
-		mockDB.EXPECT().DeleteSavedQueryPermissionsForUser(gomock.Any(), int64(1), userId).Return(fmt.Errorf("an error"))
+		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), []uuid2.UUID{userId}).Return(fmt.Errorf("an error"))
 
 		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
@@ -142,11 +142,11 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		payload := v2.DeleteSavedQueryPermissionsRequest{
-			Self: true,
+			UserIds: []uuid2.UUID{userId},
 		}
 
 		mockDB.EXPECT().IsSavedQuerySharedToUser(gomock.Any(), int64(1), userId).Return(true, nil)
-		mockDB.EXPECT().DeleteSavedQueryPermissionsForUser(gomock.Any(), int64(1), userId).Return(nil)
+		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), []uuid2.UUID{userId}).Return(nil)
 
 		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
@@ -170,7 +170,7 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		payload := v2.DeleteSavedQueryPermissionsRequest{
-			Self: true,
+			UserIds: []uuid2.UUID{userId},
 		}
 
 		mockDB.EXPECT().IsSavedQuerySharedToUser(gomock.Any(), int64(1), userId).Return(false, nil)
@@ -197,7 +197,7 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		payload := v2.DeleteSavedQueryPermissionsRequest{
-			Self: true,
+			UserIds: []uuid2.UUID{userId},
 		}
 
 		mockDB.EXPECT().IsSavedQuerySharedToUser(gomock.Any(), int64(1), userId).Return(false, fmt.Errorf("an error"))
