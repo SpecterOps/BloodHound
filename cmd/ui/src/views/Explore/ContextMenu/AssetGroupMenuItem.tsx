@@ -48,7 +48,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
         },
         onSuccess: () => {
             if (selectedNode?.graphId) {
-                if(isMenuItemForTierZero) {
+                if (isMenuItemForTierZero) {
                     dispatch(toggleTierZeroNode(selectedNode.graphId));
                 } else if (isMenuItemForOwnedObject) {
                     dispatch(toggleOwnedObjectNode(selectedNode.graphId));
