@@ -14,6 +14,18 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- Add unique constraint to roles table
+ALTER TABLE IF EXISTS roles
+  DROP CONSTRAINT IF EXISTS roles_name_key;
+ALTER TABLE IF EXISTS roles
+  ADD CONSTRAINT roles_name_key UNIQUE (name);
+
+-- Add unique constraint to permissions table
+ALTER TABLE IF EXISTS permissions
+  DROP CONSTRAINT IF EXISTS permissions_authority_name_key;
+ALTER TABLE IF EXISTS permissions
+  ADD CONSTRAINT permissions_authority_name_key UNIQUE (authority, name);
+
 -- Feature Flags
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 'adcs', 'Enable collection and processing of Active Directory Certificate Services Data', 'Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.', false, true) ON CONFLICT DO NOTHING;
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 'clear_graph_data', 'Clear Graph Data', 'Enables the ability to delete all nodes and edges from the graph database.', true, false) ON CONFLICT DO NOTHING;
