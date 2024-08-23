@@ -17,8 +17,8 @@
 export * from './AppNotifications';
 export { default as AppNotifications } from './AppNotifications';
 
-export * from './CardWithToggle';
-export { default as CardWithToggle } from './CardWithToggle';
+export * from './CardWithSwitch';
+export { default as CardWithToggle } from './CardWithSwitch';
 
 export * from './CheckboxGroup';
 export { default as CheckboxGroup } from './CheckboxGroup';
