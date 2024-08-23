@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Typography } from '@mui/material';
-import { PageWithTitle, CardWithToggle, useGetConfiguration } from 'bh-shared-ui';
+import { PageWithTitle, CardWithSwitch, useGetConfiguration } from 'bh-shared-ui';
 import { FC, useState } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -41,7 +41,7 @@ const CitrixRDPConfiguration: FC = () => {
 
     console.log(data, isLoading, isError, isSuccess);
 
-    const handleToggleChange = () => {
+    const handleSwitchChange = () => {
         setIsEnabled((prev) => !prev);
         toggleShowDialog();
     };
@@ -61,11 +61,11 @@ const CitrixRDPConfiguration: FC = () => {
 
     return (
         <>
-            <CardWithToggle
+            <CardWithSwitch
                 title={configurationData.title}
                 isEnabled={isEnabled}
                 description={configurationData.description}
-                onToggleChange={handleToggleChange}
+                onSwitchChange={handleSwitchChange}
             />
             <ConfirmCitrixRDPDialog
                 open={isOpenDialog}
