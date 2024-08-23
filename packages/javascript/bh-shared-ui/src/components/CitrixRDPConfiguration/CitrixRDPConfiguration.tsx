@@ -13,25 +13,61 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Switch } from '@bloodhoundenterprise/doodleui';
-import { Box, Paper, Typography } from '@mui/material';
+import { FC } from 'react';
+import CardWithSwitch from '../CardWithSwitch';
+import ConfirmCitrixRDPDialog from './CitrixRDPConfirmDialog';
+import { useGetConfiguration } from '../../hooks';
 import { useState } from 'react';
 
-const CitrixRDPConfiguration = () => {
-    const [enabled, setEnabled] = useState(false);
+// To do: Add this to the shared ui, just using here for ease
+const CitrixRDPConfiguration: FC = () => {
+    const [isEnabled, setIsEnabled] = useState(false);
+    const [isOpenDialog, setIsOpenDialog] = useState(false);
+    const configurationData = {
+        title: 'Citrix RDP Support',
+        description:
+            'When enabled, post-processing for the CanRDP edge will look for the presence of the default &quot;Direct Access Users&quot; group and assume that only local Administrators and members of this group can RDP to the system without validation that Citrix VDA is present and correctly configured.Use with caution.',
+    };
+
+    // To do: make sure we have correct loading behavior and subsequent behavior for setting existing saved state
+    // to do: make sure this is sending and getting the data we need
+    const { data, isLoading, isError, isSuccess } = useGetConfiguration();
+
+    console.log(data, isLoading, isError, isSuccess);
+
+    const handleSwitchChange = () => {
+        setIsEnabled((prev) => !prev);
+        toggleShowDialog();
+    };
+
+    const toggleShowDialog = () => {
+        setIsOpenDialog((prev) => !prev);
+    };
+
+    const handleCancel = () => {
+        toggleShowDialog();
+        setIsEnabled((prev) => !prev);
+    };
+
+    const handleConfirm = async () => {
+        //const { data, isLoading, isError, isSuccess } = useUpdateConfiguration();
+    };
 
     return (
-        <Paper sx={{ padding: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <Typography variant='h4'>Citrix RDP Support</Typography>
-                <Switch label={enabled ? 'On' : 'Off'} onClick={() => setEnabled((prev) => !prev)}></Switch>
-            </Box>
-            <Typography variant='body1'>
-                When enabled, post-processing for the CanRDP edge will look for the presence of the default &quot;Direct
-                Access Users&quot; group and assume that only local Administrators and members of this group can RDP to
-                the system without validation that Citrix VDA is present and correctly configured. Use with caution.
-            </Typography>
-        </Paper>
+        <>
+            <CardWithSwitch
+                title={configurationData.title}
+                isEnabled={isEnabled}
+                description={configurationData.description}
+                onSwitchChange={handleSwitchChange}
+            />
+            <ConfirmCitrixRDPDialog
+                open={isOpenDialog}
+                handleCancel={handleCancel}
+                handleConfirm={handleConfirm}
+                isLoading={isLoading}
+            />
+        </>
     );
 };
 
