@@ -22,8 +22,9 @@ package database_test
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/model"
@@ -82,7 +83,7 @@ func TestSavedQueries_IsSavedQuerySharedToUser(t *testing.T) {
 	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
 	require.NoError(t, err)
 
-	_, err = dbInst.CreateSavedQueryPermissionToUser(testCtx, query.ID, user1.ID)
+	_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user1.ID)
 	require.NoError(t, err)
 
 	isShared, err := dbInst.IsSavedQuerySharedToUser(testCtx, query.ID, user1.ID)

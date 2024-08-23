@@ -31,7 +31,7 @@ import (
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/api/v2"
+	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/mocks"
@@ -1477,7 +1477,7 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 		handler := http.HandlerFunc(resources.DeleteSavedQueryPermissions)
 
 		handler.ServeHTTP(response, req)
-		require.Equal(t, http.StatusUnauthorized, response.Code)
+		require.Equal(t, http.StatusForbidden, response.Code)
 	})
 
 	t.Run("error database fails while unsharing to users", func(t *testing.T) {
