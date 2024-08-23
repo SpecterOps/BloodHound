@@ -1,15 +1,23 @@
 import { FC } from 'react';
-import { Typography, Button } from '@mui/material';
-import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Typography, Button, useTheme, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-const CitrixRDPConfirmDialog: FC<{
+type CitrixRDPConfirmDialogProps = {
     open: boolean;
     dialogDescription: string;
     handleCancel: () => void;
     handleConfirm: () => void;
-}> = ({ open, dialogDescription, handleCancel, handleConfirm }) => {
+};
+
+const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({
+    open,
+    dialogDescription,
+    handleCancel,
+    handleConfirm,
+}) => {
+    const theme = useTheme();
+
     return (
         <Dialog
             open={open}
@@ -33,8 +41,12 @@ const CitrixRDPConfirmDialog: FC<{
                 </Typography>
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => handleCancel()}>Cancel</Button>
-                <Button onClick={() => handleConfirm()}>Confirm</Button>
+                <Button sx={{ color: theme.palette.color.primary }} onClick={() => handleCancel()}>
+                    Cancel
+                </Button>
+                <Button sx={{ color: theme.palette.primary.main }} onClick={() => handleConfirm()}>
+                    Confirm
+                </Button>
             </DialogActions>
         </Dialog>
     );
