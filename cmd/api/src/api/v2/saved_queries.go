@@ -234,7 +234,7 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 			if _, isAdmin := user.Roles.FindByName(auth.RoleAdministrator); !isAdmin {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to delete this query", request), response)
 				return
-			} else if isPublicQuery, err := s.DB.IsSavedQueryPublic(request.Context(), int64(savedQueryID)); err != nil {
+			} else if isPublicQuery, err := s.DB.IsSavedQueryPublic(request.Context(), savedQueryID); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else if !isPublicQuery {

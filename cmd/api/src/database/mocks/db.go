@@ -318,21 +318,6 @@ func (mr *MockDatabaseMockRecorder) CreateSavedQueryPermissionToPublic(arg0, arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQueryPermissionToPublic", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQueryPermissionToPublic), arg0, arg1)
 }
 
-// CreateSavedQueryPermissionToUser mocks base method.
-func (m *MockDatabase) CreateSavedQueryPermissionToUser(arg0 context.Context, arg1 int64, arg2 uuid.UUID) (model.SavedQueriesPermissions, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSavedQueryPermissionToUser", arg0, arg1, arg2)
-	ret0, _ := ret[0].(model.SavedQueriesPermissions)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateSavedQueryPermissionToUser indicates an expected call of CreateSavedQueryPermissionToUser.
-func (mr *MockDatabaseMockRecorder) CreateSavedQueryPermissionToUser(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQueryPermissionToUser", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQueryPermissionToUser), arg0, arg1, arg2)
-}
-
 // CreateSavedQueryPermissionsToUsers mocks base method.
 func (m *MockDatabase) CreateSavedQueryPermissionsToUsers(arg0 context.Context, arg1 int64, arg2 ...uuid.UUID) ([]model.SavedQueriesPermissions, error) {
 	m.ctrl.T.Helper()
