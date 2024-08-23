@@ -14,33 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC, useState } from 'react';
+import { FC, ReactNode } from 'react';
 import { Paper, Box, Typography } from '@mui/material';
 import { Switch } from '@bloodhoundenterprise/doodleui';
 
 type CardWithToggleProps = {
     title: string;
-    onToggleChange: () => void;
-    children?: any;
     description?: string;
+    isEnabled: boolean;
+    children?: ReactNode;
+    onToggleChange: () => void;
 };
 
-const CardWithToggle: FC<CardWithToggleProps> = ({ title, onToggleChange, children, description }) => {
-    const [isEnabled, setIsEnabled] = useState(false);
-
-    const handleToggleChange = () => {
-        setIsEnabled((prev) => !prev);
-        onToggleChange();
-    };
-
+const CardWithToggle: FC<CardWithToggleProps> = ({ title, description, isEnabled, onToggleChange, children }) => {
     return (
         <Paper sx={{ padding: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <Typography variant='h4'>{title}</Typography>
-                <Switch
-                    label={isEnabled ? 'On' : 'Off'}
-                    checked={isEnabled}
-                    onCheckedChange={() => handleToggleChange()}></Switch>
+                <Switch label={isEnabled ? 'On' : 'Off'} checked={isEnabled} onCheckedChange={onToggleChange}></Switch>
             </Box>
             {children || <Typography>{description}</Typography>}
         </Paper>
