@@ -18,24 +18,24 @@ import { FC, ReactNode } from 'react';
 import { Paper, Box, Typography } from '@mui/material';
 import { Switch } from '@bloodhoundenterprise/doodleui';
 
-type CardWithToggleProps = {
+type CardWithSwitchProps = {
     title: string;
     description?: string;
     isEnabled: boolean;
     children?: ReactNode;
-    onToggleChange: () => void;
+    onSwitchChange: () => void;
 };
 
-const CardWithToggle: FC<CardWithToggleProps> = ({ title, description, isEnabled, onToggleChange, children }) => {
+const CardWithSwitch: FC<CardWithSwitchProps> = ({ title, description, isEnabled, onSwitchChange, children }) => {
     return (
         <Paper sx={{ padding: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <Typography variant='h4'>{title}</Typography>
-                <Switch label={isEnabled ? 'On' : 'Off'} checked={isEnabled} onCheckedChange={onToggleChange}></Switch>
+                <Switch label={isEnabled ? 'On' : 'Off'} checked={isEnabled} onCheckedChange={onSwitchChange}></Switch>
             </Box>
             {children || <Typography>{description}</Typography>}
         </Paper>
     );
 };
 
-export default CardWithToggle;
+export default CardWithSwitch;
