@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Box, Typography, Button } from '@mui/material';
+import { Typography, Button } from '@mui/material';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -9,10 +9,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const CitrixRDPConfirmDialog: FC<{
     open: boolean;
+    dialogDescription: string;
     handleCancel: () => void;
     handleConfirm: () => void;
-    isLoading: boolean;
-}> = ({ open, handleCancel, handleConfirm, isLoading }) => {
+}> = ({ open, dialogDescription, handleCancel, handleConfirm }) => {
     return (
         <Dialog
             open={open}
@@ -21,14 +21,13 @@ const CitrixRDPConfirmDialog: FC<{
             aria-describedby='citrix-rdp-alert-dialog-description'>
             <DialogTitle id='citrix-rdp-alert-dialog-title'>Confirm environment configuration</DialogTitle>
             <DialogContent sx={{ paddingBottom: 0 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', paddingBottom: '16px' }}>
+                <Typography
+                    variant='body1'
+                    component='div'
+                    sx={{ display: 'flex', alignItems: 'center', paddingBottom: '16px' }}>
                     <FontAwesomeIcon icon={faTriangleExclamation} size='2x' />
-                    <Typography sx={{ marginLeft: '20px' }}>
-                        Analysis has been added with Citrix Configuration, this will ensure that BloodHound can account
-                        for Direct Access RDP connections. Compensating controls handled within Citrix are not handled
-                        by BloodHound at this time.
-                    </Typography>
-                </Box>
+                    <Typography sx={{ marginLeft: '20px' }}>{dialogDescription}</Typography>
+                </Typography>
                 <Typography>
                     Select <b>`Confirm`</b> to proceed and to start analysis.
                 </Typography>
@@ -37,12 +36,8 @@ const CitrixRDPConfirmDialog: FC<{
                 </Typography>
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => handleCancel()} disabled={isLoading}>
-                    Cancel
-                </Button>
-                <Button onClick={() => handleConfirm()} disabled={isLoading}>
-                    Confirm
-                </Button>
+                <Button onClick={() => handleCancel()}>Cancel</Button>
+                <Button onClick={() => handleConfirm()}>Confirm</Button>
             </DialogActions>
         </Dialog>
     );

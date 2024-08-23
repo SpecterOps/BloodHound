@@ -26,7 +26,11 @@ const CitrixRDPConfiguration: FC = () => {
     const configurationData = {
         title: 'Citrix RDP Support',
         description:
-            'When enabled, post-processing for the CanRDP edge will look for the presence of the default &quot;Direct Access Users&quot; group and assume that only local Administrators and members of this group can RDP to the system without validation that Citrix VDA is present and correctly configured.Use with caution.',
+            'When enabled, post-processing for the CanRDP edge will look for the presence of the default "Direct Access Users" group and assume that only local Administrators and members of this group can RDP to the system without validation that Citrix VDA is present and correctly configured.Use with caution.',
+        enabledDialogText:
+            'Analysis has been added with Citrix Configuration, this will ensure that BloodHound can account for Direct Access RDP connections. Compensating controls handled within Citrix are not handled by BloodHound at this time.',
+        disabledDialogText:
+            'Analysis has been removed with Citrix Configuration, this will result in BloodHound performing analysis to account for this change.',
     };
 
     // To do: make sure we have correct loading behavior and subsequent behavior for setting existing saved state
@@ -63,9 +67,11 @@ const CitrixRDPConfiguration: FC = () => {
             />
             <ConfirmCitrixRDPDialog
                 open={isOpenDialog}
+                dialogDescription={
+                    isEnabled ? configurationData.enabledDialogText : configurationData.disabledDialogText
+                }
                 handleCancel={handleCancel}
                 handleConfirm={handleConfirm}
-                isLoading={isLoading}
             />
         </>
     );
