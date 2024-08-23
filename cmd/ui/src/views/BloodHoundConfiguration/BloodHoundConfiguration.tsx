@@ -14,9 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Paper, Typography } from '@mui/material';
-import { PageWithTitle } from 'bh-shared-ui';
-import { Switch } from '@bloodhoundenterprise/doodleui';
+import { Box, Typography } from '@mui/material';
+import { PageWithTitle, CardWithToggle, useGetConfiguration } from 'bh-shared-ui';
 import { FC, useState } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -25,19 +24,20 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useQuery } from 'react-query';
-import { apiClient } from 'bh-shared-ui';
 
 // To do: Add this to the shared ui, just using here for ease
 const CitrixRDPConfiguration: FC = () => {
     const [isEnabled, setIsEnabled] = useState(false);
     const [isOpenDialog, setIsOpenDialog] = useState(false);
+    const configurationData = {
+        title: 'Citrix RDP Support',
+        description:
+            'When enabled, post-processing for the CanRDP edge will look for the presence of the default &quot;Direct Access Users&quot; group and assume that only local Administrators and members of this group can RDP to the system without validation that Citrix VDA is present and correctly configured.Use with caution.',
+    };
 
     // To do: make sure we have correct loading behavior and subsequent behavior for setting existing saved state
     // to do: make sure this is sending and getting the data we need
-    const { data, isLoading, isError, isSuccess } = useQuery(['get-config'], ({ signal }) =>
-        apiClient.getConfiguration({ signal })
-    );
+    const { data, isLoading, isError, isSuccess } = useGetConfiguration();
 
     console.log(data, isLoading, isError, isSuccess);
 
@@ -56,37 +56,17 @@ const CitrixRDPConfiguration: FC = () => {
     };
 
     const handleConfirm = async () => {
-        try {
-            await handleUpdateConfiguration();
-            toggleShowDialog();
-        } catch (error) {
-            // To do: handle error
-            console.log(error);
-        }
-    };
-
-    const handleUpdateConfiguration = async () => {
-        // To do: setup the right call
-        await apiClient.updateConfiguration({} as any);
+        //const { data, isLoading, isError, isSuccess } = useUpdateConfiguration();
     };
 
     return (
         <>
-            <Paper sx={{ padding: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <Typography variant='h4'>Citrix RDP Support</Typography>
-                    <Switch
-                        label={isEnabled ? 'On' : 'Off'}
-                        checked={isEnabled}
-                        onCheckedChange={() => handleToggleChange()}></Switch>
-                </Box>
-                <Typography variant='body1'>
-                    When enabled, post-processing for the CanRDP edge will look for the presence of the default
-                    &quot;Direct Access Users&quot; group and assume that only local Administrators and members of this
-                    group can RDP to the system without validation that Citrix VDA is present and correctly configured.
-                    Use with caution.
-                </Typography>
-            </Paper>
+            <CardWithToggle
+                title={configurationData.title}
+                isEnabled={isEnabled}
+                description={configurationData.description}
+                onToggleChange={handleToggleChange}
+            />
             <ConfirmCitrixRDPDialog
                 open={isOpenDialog}
                 handleCancel={handleCancel}
