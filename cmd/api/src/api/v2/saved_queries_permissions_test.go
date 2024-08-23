@@ -20,6 +20,10 @@ package v2_test
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	uuid2 "github.com/gofrs/uuid"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -32,9 +36,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestResources_DeleteSavedQueryPermissions(t *testing.T) {

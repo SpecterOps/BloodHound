@@ -20,15 +20,16 @@ package v2
 
 import (
 	"encoding/json"
+	"net/http"
+	"slices"
+	"strconv"
+
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	ctx2 "github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
-	"net/http"
-	"slices"
-	"strconv"
 )
 
 // DeleteSavedQueryPermissionsRequest represents the payload sent to the unshare endpoint

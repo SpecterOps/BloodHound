@@ -22,8 +22,9 @@ package database_test
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/model"

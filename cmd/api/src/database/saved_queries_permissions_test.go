@@ -21,8 +21,9 @@ package database_test
 
 import (
 	"context"
-	"github.com/gofrs/uuid"
 	"testing"
+
+	"github.com/gofrs/uuid"
 
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
