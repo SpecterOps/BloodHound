@@ -1,10 +1,9 @@
 import { FC } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -38,7 +37,7 @@ const CitrixRDPConfirmDialog: FC<{
                 </Typography>
             </DialogContent>
             <DialogActions>
-                <Button variant='tertiary' onClick={() => handleCancel()} disabled={isLoading}>
+                <Button onClick={() => handleCancel()} disabled={isLoading}>
                     Cancel
                 </Button>
                 <Button onClick={() => handleConfirm()} disabled={isLoading}>
