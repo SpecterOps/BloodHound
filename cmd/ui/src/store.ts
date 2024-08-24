@@ -64,7 +64,7 @@ const loadState = (): PreloadedState<RootState> => {
 
 type PersistedState = {
     auth: { sessionToken: string | null };
-    global: { view: { darkMode: boolean; notifications: string[] } };
+    global: { view: { darkMode: boolean; notifications: string[], labelsMode: boolean; } };
 };
 
 const saveState = (state: PersistedState) => {
@@ -106,6 +106,7 @@ store.subscribe(
             global: {
                 view: {
                     darkMode: state.global.view.darkMode,
+                    labelsMode: state.global.view.labelsMode,
                     notifications: [],
                 },
             },

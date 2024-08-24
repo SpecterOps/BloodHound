@@ -52,6 +52,13 @@ export const setDarkMode = (darkMode: boolean): types.GlobalViewActionTypes => {
     };
 };
 
+export const setLabelsMode = (labelsMode: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SHOW_LABELS_MODE,
+        labelsMode,
+    };
+};
+
 export const setExpanded = (expanded: { [key: string]: symbol[] }): types.GlobalAccordionsActionTypes => {
     return {
         type: types.GLOBAL_SET_EXPANDED,

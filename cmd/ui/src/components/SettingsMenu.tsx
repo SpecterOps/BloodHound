@@ -23,6 +23,7 @@ import {
     faSignOutAlt,
     faUser,
     faUserShield,
+    faTags,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Divider, useTheme } from '@mui/material';
@@ -35,7 +36,7 @@ import { EnterpriseIcon } from 'bh-shared-ui';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from 'src/ducks/auth/authSlice';
-import { setDarkMode } from 'src/ducks/global/actions.ts';
+import { setDarkMode, setLabelsMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/ducks/global/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import FeatureFlag from './FeatureFlag';
@@ -68,6 +69,7 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
+    const labelsMode = useAppSelector((state) => state.global.view.labelsMode);
     const theme = useTheme();
 
     const navigateTo = (route: string) => {
@@ -82,6 +84,10 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
 
     const toggleDarkMode: React.MouseEventHandler<HTMLLIElement> = () => {
         dispatch(setDarkMode(!darkMode));
+    };
+
+    const toggleLabelsMode: React.MouseEventHandler<HTMLLIElement> = () => {
+        dispatch(setLabelsMode(!labelsMode));
     };
 
     const openInNewTab = (url: string) => {
@@ -152,6 +158,14 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                         <EnterpriseIcon fill={theme.palette.color.primary} width='1rem' height='1rem' />
                     </ListItemIcon>
                     <ListItemText primary='BloodHound Enterprise' />
+                </MenuItem>
+
+                <MenuItem onClick={toggleLabelsMode}>
+                    <ListItemIcon>
+                        <FontAwesomeIcon icon={faTags} />
+                    </ListItemIcon>
+                    <ListItemText primary={'Show Labels'} />
+                    <Switch checked={labelsMode}>Show labels</Switch>
                 </MenuItem>
 
                 <FeatureFlag

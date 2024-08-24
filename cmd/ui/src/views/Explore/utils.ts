@@ -22,11 +22,12 @@ import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
 import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
 
-export const initGraph = (graph: MultiDirectedGraph, items: GraphData, theme: Theme, darkMode: boolean) => {
+export const initGraph = (graph: MultiDirectedGraph, items: GraphData, theme: Theme, darkMode: boolean, labelsMode: boolean) => {
     const { nodes, edges } = items;
 
     const themedOptions = {
         labels: {
+            showLabels: labelsMode,
             labelColor: theme.palette.color.primary,
             backgroundColor: theme.palette.neutral.secondary,
             highlightedBackground: theme.palette.color.links,
@@ -51,9 +52,14 @@ const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, themedOpti
     Object.keys(nodes).forEach((key: string) => {
         const node = nodes[key];
         // Set default node parameters
+        let labels = ""
+        if (themedOptions.labels.showLabels) {
+            labels = node.label;
+        }
+
         const nodeParams: Partial<NodeParams> = {
             type: 'combined',
-            label: node.label,
+            label: labels,
             forceLabel: true,
             ...themedOptions.labels,
         };
