@@ -22,12 +22,13 @@ import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
 import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
 
-export const initGraph = (graph: MultiDirectedGraph, items: GraphData, theme: Theme, darkMode: boolean, labelsMode: boolean) => {
+export const initGraph = (graph: MultiDirectedGraph, items: GraphData, theme: Theme, darkMode: boolean, nodeLabelsMode: boolean, edgeLabelsMode: boolean) => {
     const { nodes, edges } = items;
 
     const themedOptions = {
         labels: {
-            showLabels: labelsMode,
+            showNodeLabels: nodeLabelsMode,
+            showEdgeLabels: edgeLabelsMode,
             labelColor: theme.palette.color.primary,
             backgroundColor: theme.palette.neutral.secondary,
             highlightedBackground: theme.palette.color.links,
@@ -52,14 +53,14 @@ const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, themedOpti
     Object.keys(nodes).forEach((key: string) => {
         const node = nodes[key];
         // Set default node parameters
-        let labels = ""
-        if (themedOptions.labels.showLabels) {
-            labels = node.label;
+        let label = ""
+        if (themedOptions.labels.showNodeLabels) {
+            label = node.label;
         }
 
         const nodeParams: Partial<NodeParams> = {
             type: 'combined',
-            label: labels,
+            label: label,
             forceLabel: true,
             ...themedOptions.labels,
         };
@@ -114,13 +115,17 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOpti
         const groupSize = groupedEdges[group].length;
 
         for (const [i, edge] of groupedEdges[group].entries()) {
+            let label = ""
+            if (themedOptions.labels.showEdgeLabels) {
+                label = edge.label;
+            }
             const key = `${edge.source}_${edge.kind}_${edge.target}`;
 
             // Set default values for single edges
             const edgeParams: Partial<EdgeParams> = {
                 size: 3,
                 type: 'arrow',
-                label: edge.label,
+                label: label,
                 groupPosition: 0,
                 groupSize: 1,
                 exploreGraphId: edge.exploreGraphId || key,

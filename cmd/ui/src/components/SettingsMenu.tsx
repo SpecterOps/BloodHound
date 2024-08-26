@@ -24,9 +24,13 @@ import {
     faUser,
     faUserShield,
     faTags,
+    faCaretDown,
+    faCaretUp,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Divider, useTheme } from '@mui/material';
+import { Box, Collapse, Divider, useTheme } from '@mui/material';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem'
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Menu, { MenuProps } from '@mui/material/Menu';
@@ -36,7 +40,7 @@ import { EnterpriseIcon } from 'bh-shared-ui';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from 'src/ducks/auth/authSlice';
-import { setDarkMode, setLabelsMode } from 'src/ducks/global/actions.ts';
+import { setDarkMode, setNodeLabelsMode, setEdgeLabelsMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/ducks/global/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import FeatureFlag from './FeatureFlag';
@@ -69,8 +73,11 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const labelsMode = useAppSelector((state) => state.global.view.labelsMode);
+    const nodeLabelsMode = useAppSelector((state) => state.global.view.nodeLabelsMode);
+    const edgeLabelsMode = useAppSelector((state) => state.global.view.edgeLabelsMode);
     const theme = useTheme();
+    const [openCollapse, setOpenCollapse] = React.useState(false);
+
 
     const navigateTo = (route: string) => {
         handleClose();
@@ -86,8 +93,15 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
         dispatch(setDarkMode(!darkMode));
     };
 
-    const toggleLabelsMode: React.MouseEventHandler<HTMLLIElement> = () => {
-        dispatch(setLabelsMode(!labelsMode));
+    const handleOpenLabels:React.MouseEventHandler<HTMLLIElement> = () => {
+        setOpenCollapse(!openCollapse)
+    }
+
+    const toggleNodeLabelsMode: React.MouseEventHandler<HTMLLIElement> = () => {
+        dispatch(setNodeLabelsMode(!nodeLabelsMode));
+    };
+    const toggleEdgeLabelsMode: React.MouseEventHandler<HTMLLIElement> = () => {
+        dispatch(setEdgeLabelsMode(!edgeLabelsMode));
     };
 
     const openInNewTab = (url: string) => {
@@ -160,13 +174,34 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                     <ListItemText primary='BloodHound Enterprise' />
                 </MenuItem>
 
-                <MenuItem onClick={toggleLabelsMode}>
+                <MenuItem onClick={handleOpenLabels}>
                     <ListItemIcon>
                         <FontAwesomeIcon icon={faTags} />
                     </ListItemIcon>
-                    <ListItemText primary={'Show Labels'} />
-                    <Switch checked={labelsMode}>Show labels</Switch>
+                    <ListItemText primary={'Toggle Labels'} />
+                    {
+                        openCollapse
+                        ? <ListItemIcon><FontAwesomeIcon icon={faCaretUp} /></ListItemIcon>
+                        : <ListItemIcon><FontAwesomeIcon icon={faCaretDown} /></ListItemIcon>
+                    }
                 </MenuItem>
+                <Collapse in={openCollapse} timeout="auto" unmountOnExit>
+                    <List component='div' disablePadding>
+                        <MenuItem onClick={toggleNodeLabelsMode}>
+                            <ListItem>
+                                <ListItemText primary='Node Labels' />
+                                <Switch checked={nodeLabelsMode}>Node Labels</Switch>
+                            </ListItem>
+                        </MenuItem>
+                        <MenuItem onClick={toggleEdgeLabelsMode}>
+                            <ListItem>
+                                <ListItemText primary='Edge Labels' />
+                                <Switch checked={edgeLabelsMode}>Edge Labels</Switch>
+                            </ListItem>
+                        </MenuItem>
+                        </List>
+                </Collapse>
+
 
                 <FeatureFlag
                     flagKey='dark_mode'

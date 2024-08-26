@@ -93,7 +93,8 @@ export const initializeBHEClient = () => {
 };
 
 type ThemedLabels = {
-    showLabels: boolean;
+    showNodeLabels: boolean;
+    showEdgeLabels: boolean;
     labelColor: string;
     backgroundColor: string;
     highlightedBackground: string;
