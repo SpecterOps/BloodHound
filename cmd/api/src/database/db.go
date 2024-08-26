@@ -85,7 +85,6 @@ type Database interface {
 
 	Wipe(ctx context.Context) error
 	Migrate(ctx context.Context) error
-	RequiresMigration(ctx context.Context) (bool, error)
 	CreateInstallation(ctx context.Context) (model.Installation, error)
 	GetInstallation(ctx context.Context) (model.Installation, error)
 	HasInstallation(ctx context.Context) (bool, error)
@@ -241,13 +240,9 @@ func (s *BloodhoundDB) Wipe(ctx context.Context) error {
 	})
 }
 
-func (s *BloodhoundDB) RequiresMigration(ctx context.Context) (bool, error) {
-	return migration.NewMigrator(s.db.WithContext(ctx)).RequiresMigration()
-}
-
 func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 	// Run the migrator
-	if err := migration.NewMigrator(s.db.WithContext(ctx)).Migrate(); err != nil {
+	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteStepwiseMigrations(); err != nil {
 		log.Errorf("Error during SQL database migration phase: %v", err)
 		return err
 	}

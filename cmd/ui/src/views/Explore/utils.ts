@@ -61,16 +61,16 @@ const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, themedOpti
         const icon = NODE_ICON[node.kind] || UNKNOWN_ICON;
         nodeParams.color = icon.color;
         nodeParams.image = icon.url || '';
-        nodeParams.glyphs = []
+        nodeParams.glyphs = [];
 
         // Tier zero nodes should be marked with a gem glyph
         if (node.isTierZero) {
             nodeParams.type = 'glyphs';
             nodeParams.glyphs.push({
-                    location: GlyphLocation.TOP_RIGHT,
-                    image: themedOptions.glyph.tierZeroGlyph.url || '',
-                    ...themedOptions.glyph.colors,
-                });
+                location: GlyphLocation.TOP_RIGHT,
+                image: themedOptions.glyph.tierZeroGlyph.url || '',
+                ...themedOptions.glyph.colors,
+            });
         }
         if (node.isOwnedObject) {
             nodeParams.type = 'glyphs';
