@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -290,4 +291,50 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.
 		model.SavedQueryScopeOwned:  false,
 		model.SavedQueryScopeShared: false,
 	}, scope2)
+}
+
+func TestSavedQueriesPermissions_IsSavedQueryPublic(t *testing.T) {
+
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+
+	user1, err := dbInst.CreateUser(testCtx, model.User{
+		PrincipalName: userPrincipal,
+	})
+	require.NoError(t, err)
+
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	require.NoError(t, err)
+
+	_, err = dbInst.CreateSavedQueryPermissionToPublic(testCtx, query.ID)
+	require.NoError(t, err)
+
+	isPublic, err := dbInst.IsSavedQueryPublic(testCtx, query.ID)
+	require.NoError(t, err)
+	assert.True(t, isPublic)
+}
+
+func TestSavedQueriesPermissions_IsSavedQuerySharedToUser(t *testing.T) {
+
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+
+	user1, err := dbInst.CreateUser(testCtx, model.User{
+		PrincipalName: userPrincipal,
+	})
+	require.NoError(t, err)
+
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	require.NoError(t, err)
+
+	_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user1.ID)
+	require.NoError(t, err)
+
+	isShared, err := dbInst.IsSavedQuerySharedToUser(testCtx, query.ID, user1.ID)
+	require.NoError(t, err)
+	assert.True(t, isShared)
 }

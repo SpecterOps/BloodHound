@@ -76,7 +76,7 @@ func (s *BloodhoundDB) CreateSavedQueryPermissionsToUsers(ctx context.Context, q
 	return newPermissions, CheckError(result)
 }
 
-// DeleteSavedQueryPermissionsForUsers batch deletes permissions associated a query id and a list of users
+// DeleteSavedQueryPermissionsForUsers batch deletes permissions associated with a query id and a list of users
 // If no user ids are supplied, all records for query id are deleted
 func (s *BloodhoundDB) DeleteSavedQueryPermissionsForUsers(ctx context.Context, queryID int64, userIDs ...uuid.UUID) error {
 	result := s.db.WithContext(ctx).Table("saved_queries_permissions").Where("query_id = ?", queryID)
@@ -125,7 +125,7 @@ func (s *BloodhoundDB) GetScopeForSavedQuery(ctx context.Context, queryID int64,
 // IsSavedQueryPublic returns true or false whether a provided saved query is public
 func (s *BloodhoundDB) IsSavedQueryPublic(ctx context.Context, queryID int64) (bool, error) {
 	rows := int64(0)
-	result := s.db.WithContext(ctx).Select("saved_queries_permissions.*").Where("public = true AND query_id=", queryID).Count(&rows)
+	result := s.db.WithContext(ctx).Table("saved_queries_permissions").Where("public = true AND query_id = ?", queryID).Count(&rows)
 
 	return rows > 0, CheckError(result)
 }
