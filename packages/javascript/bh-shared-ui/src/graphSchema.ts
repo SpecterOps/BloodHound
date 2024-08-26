@@ -882,6 +882,7 @@ export enum AzureKindProperties {
     AppOwnerOrganizationID = 'appownerorganizationid',
     AppDescription = 'appdescription',
     AppDisplayName = 'appdisplayname',
+    LoginURL = 'loginurl',
     ServicePrincipalType = 'serviceprincipaltype',
     UserType = 'usertype',
     TenantID = 'tenantid',
@@ -919,6 +920,8 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'App Description';
         case AzureKindProperties.AppDisplayName:
             return 'App Display Name';
+        case AzureKindProperties.LoginURL:
+            return 'Login URL';
         case AzureKindProperties.ServicePrincipalType:
             return 'Service Principal Type';
         case AzureKindProperties.UserType:

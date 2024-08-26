@@ -911,6 +911,7 @@ func ConvertAzureServicePrincipal(data models.ServicePrincipal) ([]IngestibleNod
 			azure.AppOwnerOrganizationID.String(): data.AppOwnerOrganizationId,
 			azure.AppDescription.String():         data.AppDescription,
 			azure.AppDisplayName.String():         data.AppDisplayName,
+			azure.LoginURL.String():               data.LoginUrl,
 			azure.ServicePrincipalType.String():   data.ServicePrincipalType,
 			azure.TenantID.String():               strings.ToUpper(data.TenantId),
 		},
