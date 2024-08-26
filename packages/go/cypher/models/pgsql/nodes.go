@@ -59,7 +59,6 @@ type MergeAction interface {
 	AsMergeAction() MergeAction
 }
 
-
 // SetExpression is an expression that represents a query body expression.
 type SetExpression interface {
 	Expression

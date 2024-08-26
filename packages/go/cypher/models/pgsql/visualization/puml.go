@@ -18,10 +18,11 @@ package visualization
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
 
 func WriteStrings(writer io.Writer, strings ...string) error {

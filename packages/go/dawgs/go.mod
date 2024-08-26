@@ -27,7 +27,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.9.0
 	github.com/specterops/bloodhound/cypher v0.0.0-00010101000000-000000000000
 	github.com/specterops/bloodhound/log v0.0.0-00010101000000-000000000000
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	go.uber.org/mock v0.2.0
 )
 
@@ -50,9 +50,9 @@ require (
 	github.com/rs/zerolog v1.29.1 // indirect
 	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc // indirect
-	golang.org/x/sync v0.7.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

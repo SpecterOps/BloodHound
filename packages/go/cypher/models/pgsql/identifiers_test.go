@@ -17,8 +17,9 @@
 package pgsql
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIdentifierSet_CombinedKey(t *testing.T) {

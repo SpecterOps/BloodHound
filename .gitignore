@@ -161,6 +161,7 @@ tags
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/*.code-profile
 *.code-workspace
 
 # Local History for Visual Studio Code

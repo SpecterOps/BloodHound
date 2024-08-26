@@ -19,6 +19,7 @@ package pg
 import (
 	"context"
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/cypher/models/pgsql/translate"
 

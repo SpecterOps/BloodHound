@@ -17,21 +17,22 @@
 package test
 
 import (
-	"cuelang.org/go/pkg/regexp"
 	"embed"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/fs"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"cuelang.org/go/pkg/regexp"
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/cypher/models/pgsql/translate"
 	"github.com/specterops/bloodhound/cypher/models/walk"
 	"github.com/stretchr/testify/require"
-	"io"
-	"io/fs"
-	"path/filepath"
-	"strings"
-	"testing"
 )
 
 //go:embed translation_cases/*

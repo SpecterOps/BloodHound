@@ -18,11 +18,12 @@ package format_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/cypher/models/pgsql/format"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func mustAsLiteral(value any) pgsql.Literal {
