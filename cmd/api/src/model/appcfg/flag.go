@@ -126,13 +126,6 @@ func AvailableFlags() FeatureFlagSet {
 			Enabled:       false,
 			UserUpdatable: true,
 		},
-		FeatureAutoTagT0ParentObjects: {
-			Key:           FeatureAutoTagT0ParentObjects,
-			Name:          "Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero",
-			Description:   "Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.",
-			Enabled:       true,
-			UserUpdatable: true,
-		},
 	}
 }
 
