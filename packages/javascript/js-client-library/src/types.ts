@@ -287,7 +287,14 @@ type Neo4jConfiguration = {
     };
 };
 
+type CitrixConfiguration = {
+    key: 'analysis.citrix_rdp_support';
+    value: {
+        enabled: boolean;
+    };
+};
+
 // Add additional types here depending on contract from backend work
-export type ConfigurationPayload = PasswordExpirationConfiguration | Neo4jConfiguration;
+export type ConfigurationPayload = PasswordExpirationConfiguration | Neo4jConfiguration | CitrixConfiguration;
 
 export type UpdateConfigurationRequest = ConfigurationPayload;
