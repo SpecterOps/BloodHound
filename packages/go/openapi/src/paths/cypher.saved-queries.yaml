@@ -45,6 +45,10 @@ get:
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: scope
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.contains.yaml'
   responses:
     200:
       description: OK

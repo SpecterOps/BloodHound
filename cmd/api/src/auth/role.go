@@ -17,8 +17,6 @@
 package auth
 
 import (
-	"fmt"
-
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -36,33 +34,7 @@ type RoleTemplate struct {
 	Permissions model.Permissions
 }
 
-func (s RoleTemplate) Build(allPermissions model.Permissions) (model.Role, error) {
-	role := model.Role{
-		Name:        s.Name,
-		Description: s.Description,
-		Permissions: make(model.Permissions, len(s.Permissions)),
-	}
-
-	for idx, requiredPermission := range s.Permissions {
-		found := false
-
-		for _, permission := range allPermissions {
-			if permission.Equals(requiredPermission) {
-				role.Permissions[idx] = permission
-				found = true
-
-				break
-			}
-		}
-
-		if !found {
-			return role, fmt.Errorf("unable to locate required permission %s for role template %s", requiredPermission, s.Name)
-		}
-	}
-
-	return role, nil
-}
-
+// Roles Note: Not the source of truth, changes here must be added to a migration *.sql file to update the roles & roles_permissions table
 func Roles() map[string]RoleTemplate {
 	permissions := Permissions()
 

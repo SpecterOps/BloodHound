@@ -27,11 +27,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/specterops/bloodhound/bomenc"
-	"github.com/specterops/bloodhound/mediatypes"
-
 	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api/v2/integration"
+	"github.com/specterops/bloodhound/src/services/fileupload"
 	"github.com/specterops/bloodhound/src/test/fixtures/fixtures"
 	"github.com/stretchr/testify/assert"
 )
@@ -269,5 +268,5 @@ func Test_CompressedFileUploadWorkFlowVersion6(t *testing.T) {
 func Test_BadFileUploadError(t *testing.T) {
 	testCtx := integration.NewFOSSContext(t)
 
-	testCtx.SendInvalidFileIngest("v6/ingest/jker.jpg", bomenc.ErrUnknownEncodingInvalidUTF8)
+	testCtx.SendInvalidFileIngest("v6/ingest/jker.jpg", fileupload.ErrInvalidJSON)
 }

@@ -17,6 +17,9 @@
 package bomenc
 
 import (
+	"bufio"
+	"bytes"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,7 +46,8 @@ func TestEncodingInterface(t *testing.T) {
 			}
 			// Test HasSequence method
 			if tt.encoding.String() != Unknown.String() {
-				assert.True(t, tt.encoding.HasSequence(tt.encoding.Sequence()), "HasSequence() should return true for its own sequence")
+				reader := bufio.NewReader(bytes.NewReader(tt.encoding.Sequence()))
+				assert.True(t, tt.encoding.HasSequence(reader), "HasSequence() should return true for its own sequence")
 			}
 		})
 	}
@@ -99,7 +103,7 @@ func TestEncodingValues(t *testing.T) {
 			assert.Equal(t, tt.expectedType, tt.encoding.String(), "Encoding type should match")
 			assert.Equal(t, tt.expectedSeq, tt.encoding.Sequence(), "Encoding sequence should match")
 			if tt.encoding.String() != Unknown.String() {
-				assert.True(t, tt.encoding.HasSequence(tt.expectedSeq), "HasSequence() should return true for the expected sequence")
+				assert.True(t, tt.encoding.HasSequence(bufio.NewReader(bytes.NewReader(tt.expectedSeq))), "HasSequence() should return true for the expected sequence")
 			}
 		})
 	}
@@ -119,8 +123,11 @@ func TestBOMEncoding(t *testing.T) {
 			encoding: bomEncoding{
 				encodingType: "Custom",
 				sequence:     []byte{0x01, 0x02, 0x03},
-				hasSequenceFunc: func(data []byte) bool {
-					return len(data) >= 3 && data[0] == 0x01 && data[1] == 0x02 && data[2] == 0x03
+				hasSequenceFunc: func(input Peeker) bool {
+					if data, err := input.Peek(3); err == nil {
+						return len(data) >= 3 && data[0] == 0x01 && data[1] == 0x02 && data[2] == 0x03
+					}
+					return false
 				},
 			},
 			expectedString: "Custom",
@@ -131,9 +138,14 @@ func TestBOMEncoding(t *testing.T) {
 		{
 			name: "Empty encoding",
 			encoding: bomEncoding{
-				encodingType:    "",
-				sequence:        []byte{},
-				hasSequenceFunc: func(data []byte) bool { return len(data) == 0 },
+				encodingType: "",
+				sequence:     []byte{},
+				hasSequenceFunc: func(input Peeker) bool {
+					if data, err := input.Peek(0); err == io.EOF {
+						return len(data) == 0
+					}
+					return false
+				},
 			},
 			expectedString: "",
 			expectedSeq:    []byte{},
@@ -146,7 +158,7 @@ func TestBOMEncoding(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.expectedString, tc.encoding.String(), "bomEncoding String() should return correct value")
 			assert.Equal(t, tc.expectedSeq, tc.encoding.Sequence(), "bomEncoding Sequence() should return correct value")
-			assert.Equal(t, tc.hasSequence, tc.encoding.HasSequence(tc.testData), "bomEncoding HasSequence() should return correct value")
+			assert.Equal(t, tc.hasSequence, tc.encoding.HasSequence(bufio.NewReader(bytes.NewReader(tc.testData))), "bomEncoding HasSequence() should return correct value")
 		})
 	}
 }
@@ -214,7 +226,7 @@ func TestHasSequence(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := tc.encoding.HasSequence(tc.input)
+			result := tc.encoding.HasSequence(bufio.NewReader(bytes.NewReader(tc.input)))
 			assert.Equal(t, tc.expected, result, "HasSequence() should correctly identify BOM presence")
 		})
 	}

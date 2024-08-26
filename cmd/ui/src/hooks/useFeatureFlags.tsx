@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { RequestOptions } from 'js-client-library';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { UseQueryOptions, UseQueryResult, useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from 'bh-shared-ui';
 
 export type Flag = {
@@ -39,7 +39,9 @@ export const toggleFeatureFlag = (flagId: string | number, options?: RequestOpti
     return apiClient.toggleFeatureFlag(flagId, options).then((response) => response.data);
 };
 
-export const useFeatureFlags = () => useQuery(featureFlagKeys.all, ({ signal }) => getFeatureFlags({ signal }));
+type QueryOptions = Omit<UseQueryOptions<unknown, unknown, Flag[], readonly ['featureFlags']>, 'queryKey' | 'queryFn'>;
+export const useFeatureFlags = (queryOptions?: QueryOptions): UseQueryResult<Flag[], unknown> =>
+    useQuery(featureFlagKeys.all, ({ signal }) => getFeatureFlags({ signal }), queryOptions);
 
 export const useFeatureFlag = (flagKey: string) =>
     useQuery(featureFlagKeys.all, ({ signal }) => getFeatureFlags({ signal }), {

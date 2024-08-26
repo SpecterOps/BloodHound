@@ -1211,7 +1211,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
-						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{}, fmt.Errorf("GetAssetGroupNodes fail"))
 				},
 				Test: func(output apitest.Output) {
@@ -1228,7 +1228,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
-						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
 							1: &graph.Node{
 								ID:    1,
@@ -1278,7 +1278,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
-						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
 							1: &graph.Node{
 								ID:    1,
@@ -1314,7 +1314,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
-						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
 							1: &graph.Node{
 								ID:    1,
@@ -1355,7 +1355,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
-						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
 							1: &graph.Node{
 								ID:    1,
@@ -1398,7 +1398,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
-						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
 							1: &graph.Node{
 								ID:    1,
@@ -1433,7 +1433,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
-						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
 							1: &graph.Node{
 								ID:    1,
@@ -1574,7 +1574,7 @@ func TestResources_ListAssetGroupMembersCount(t *testing.T) {
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
-						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{}, fmt.Errorf("GetAssetGroupNodes fail"))
 				},
 				Test: func(output apitest.Output) {
@@ -1591,7 +1591,7 @@ func TestResources_ListAssetGroupMembersCount(t *testing.T) {
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
-						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
 							1: &graph.Node{
 								ID:    1,
@@ -1627,7 +1627,7 @@ func TestResources_ListAssetGroupMembersCount(t *testing.T) {
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
 					mockGraph.EXPECT().
-						GetAssetGroupNodes(gomock.Any(), gomock.Any()).
+						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
 							1: &graph.Node{
 								ID:    1,

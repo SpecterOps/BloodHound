@@ -324,6 +324,8 @@ paths:
     $ref: './paths/cypher.saved-queries.yaml'
   /api/v2/saved-queries/{saved_query_id}:
     $ref: './paths/cypher.saved-queries.id.yaml'
+  /api/v2/saved-queries/{saved_query_id}/permissions:
+    $ref: './paths/cypher.saved-queries.id.permissions.yaml'
   /api/v2/graphs/cypher:
     $ref: './paths/cypher.graphs.cypher.yaml'
 
@@ -663,7 +665,7 @@ components:
       description: >
         `Authorization: Bearer $JWT_TOKEN`
       type: http
-      scheme: Bearer
+      scheme: bearer
       bearerFormat: JWT
     # BHE Signature
     SignedRequest:

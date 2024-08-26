@@ -17,12 +17,16 @@
 package test
 
 import (
+	"bytes"
 	"embed"
 	"encoding/json"
+	"io"
 	"regexp"
 	"testing"
 
-	"github.com/specterops/bloodhound/cypher/backend"
+	"github.com/specterops/bloodhound/cypher/models/cypher"
+	format2 "github.com/specterops/bloodhound/cypher/models/cypher/format"
+
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/stretchr/testify/require"
 )
@@ -90,6 +94,30 @@ func (s NegativeTest) Run(t *testing.T, testCase Case) {
 	}
 }
 
+type Emitter interface {
+	Write(query *cypher.RegularQuery, writer io.Writer) error
+	WriteExpression(output io.Writer, expression cypher.Expression) error
+}
+
+func CypherToCypher(ctx *frontend.Context, input string) (string, error) {
+	if query, err := frontend.ParseCypher(ctx, input); err != nil {
+		return "", err
+	} else {
+		var (
+			output  = &bytes.Buffer{}
+			emitter = format2.Emitter{
+				StripLiterals: false,
+			}
+		)
+
+		if err := emitter.Write(query, output); err != nil {
+			return "", err
+		}
+
+		return output.String(), nil
+	}
+}
+
 type StringMatchTest struct {
 	Query      string `json:"query"`
 	Matcher    string `json:"matcher"`
@@ -99,7 +127,7 @@ type StringMatchTest struct {
 func (s StringMatchTest) Run(t *testing.T, testCase Case) {
 	var (
 		ctx         = frontend.NewContext()
-		result, err = backend.CypherToCypher(ctx, s.Query)
+		result, err = CypherToCypher(ctx, s.Query)
 	)
 
 	if err != nil {

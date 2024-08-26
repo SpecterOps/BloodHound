@@ -53,7 +53,7 @@ func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) 
 				return ingest.Metadata{}, ErrInvalidJSON
 			}
 		} else {
-			// Validate that our data tag is actually opening correctly
+			//Validate that our data tag is actually opening correctly
 			if dataTagFound && !dataTagValidated {
 				if typed, ok := token.(json.Delim); ok && typed == ingest.DelimOpenSquareBracket {
 					dataTagValidated = true

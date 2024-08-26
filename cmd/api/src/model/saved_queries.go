@@ -16,7 +16,9 @@
 
 package model
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type SavedQuery struct {
 	UserID      string `json:"user_id" gorm:"index:,unique,composite:compositeIndex"`
@@ -28,6 +30,11 @@ type SavedQuery struct {
 }
 
 type SavedQueries []SavedQuery
+
+type SavedQueryResponse struct {
+	SavedQuery
+	Scope string `json:"scope"`
+}
 
 func (s SavedQueries) IsSortable(column string) bool {
 	switch column {
@@ -51,6 +58,12 @@ func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 		"name":        {Equals, NotEquals},
 		"query":       {Equals, NotEquals},
 		"description": {Equals, NotEquals},
+	}
+}
+
+func IgnoreFilters() []string {
+	return []string{
+		"scope",
 	}
 }
 

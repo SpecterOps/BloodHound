@@ -21,7 +21,7 @@ get:
   summary: List Auth Tokens
   description: Get all auth tokens.
   tags:
-    - Tokens
+    - API Tokens
     - Community
     - Enterprise
   parameters:

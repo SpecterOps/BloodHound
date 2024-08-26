@@ -19,8 +19,9 @@ package frontend
 import (
 	"fmt"
 
+	"github.com/specterops/bloodhound/cypher/models/cypher"
+
 	"github.com/antlr4-go/antlr/v4"
-	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/parser"
 )
 
@@ -37,12 +38,12 @@ import (
 type PartialComparisonVisitor struct {
 	BaseVisitor
 
-	PartialComparison *model.PartialComparison
+	PartialComparison *cypher.PartialComparison
 }
 
 func NewPartialComparisonVisitor() *PartialComparisonVisitor {
 	return &PartialComparisonVisitor{
-		PartialComparison: &model.PartialComparison{},
+		PartialComparison: &cypher.PartialComparison{},
 	}
 }
 
@@ -59,7 +60,7 @@ func (s *PartialComparisonVisitor) ExitOC_StringListNullPredicateExpression(ctx 
 type ComparisonVisitor struct {
 	BaseVisitor
 
-	Comparison *model.Comparison
+	Comparison *cypher.Comparison
 }
 
 func (s *ComparisonVisitor) EnterOC_StringListNullPredicateExpression(ctx *parser.OC_StringListNullPredicateExpressionContext) {
@@ -69,7 +70,7 @@ func (s *ComparisonVisitor) EnterOC_StringListNullPredicateExpression(ctx *parse
 func (s *ComparisonVisitor) ExitOC_StringListNullPredicateExpression(ctx *parser.OC_StringListNullPredicateExpressionContext) {
 	result := s.ctx.Exit().(*StringListNullPredicateExpressionVisitor).Expression
 
-	s.Comparison = &model.Comparison{
+	s.Comparison = &cypher.Comparison{
 		Left: result,
 	}
 }
@@ -79,7 +80,7 @@ func (s *ComparisonVisitor) EnterOC_PartialComparisonExpression(ctx *parser.OC_P
 
 	switch operatorChild := ctx.GetChild(0).(type) {
 	case *antlr.TerminalNodeImpl:
-		if operator, err := model.ParseOperator(operatorChild.GetText()); err != nil {
+		if operator, err := cypher.ParseOperator(operatorChild.GetText()); err != nil {
 			s.ctx.AddErrors(err)
 		} else {
 			partialComparisonVisitor.PartialComparison.Operator = operator

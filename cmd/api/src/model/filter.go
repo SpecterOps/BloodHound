@@ -173,6 +173,7 @@ func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 			result.WriteString(" ")
 			result.WriteString(predicate)
 			result.WriteString(" ?")
+
 			params = append(params, filter.Value)
 			firstFilter = false
 		}
@@ -320,6 +321,10 @@ func (s QueryParameterFilterParser) ParseQueryParameterFilters(request *http.Req
 	for name, values := range request.URL.Query() {
 		// ignore pagination query params
 		if slices.Contains(AllPaginationQueryParameters(), name) {
+			continue
+		}
+
+		if slices.Contains(IgnoreFilters(), name) {
 			continue
 		}
 

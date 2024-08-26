@@ -425,7 +425,7 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.HighValue:
             return 'High Value';
         case ActiveDirectoryKindProperties.BlocksInheritance:
-            return 'Blocks Inheritance';
+            return 'Blocks GPO Inheritance';
         case ActiveDirectoryKindProperties.IsACL:
             return 'Is ACL';
         case ActiveDirectoryKindProperties.IsACLProtected:

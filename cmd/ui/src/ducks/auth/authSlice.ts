@@ -228,12 +228,12 @@ export const authExpiredSelector = createSelector(
 export const fullyAuthenticatedSelector = createSelector(
     (state: AppState) => state.auth,
     (authState) => {
-        if (authState.user === null || authState.sessionToken === null || authState.isInitialized === false) {
+        if (!authState.user || !authState.sessionToken || authState.isInitialized === false) {
             return false;
         }
 
         const authExpired =
-            authState.user.AuthSecret !== null &&
+            authState.user.AuthSecret?.expires_at &&
             DateTime.fromISO(authState.user.AuthSecret.expires_at) < DateTime.local();
 
         return !authExpired;

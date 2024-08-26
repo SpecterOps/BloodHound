@@ -21,8 +21,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/specterops/bloodhound/cypher/backend/cypher"
 	"github.com/specterops/bloodhound/cypher/frontend"
+	"github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
 )
@@ -205,6 +205,7 @@ type nodeUpdates struct {
 	identityKind       graph.Kind
 	identityProperties []string
 	nodeKindsToAdd     graph.Kinds
+	nodeKindsToRemove  graph.Kinds
 	properties         []map[string]any
 }
 
@@ -220,6 +221,7 @@ func (s nodeUpdateByMap) add(update graph.NodeUpdate) {
 			identityKind:       update.IdentityKind,
 			identityProperties: update.IdentityProperties,
 			nodeKindsToAdd:     update.Node.Kinds,
+			nodeKindsToRemove:  update.Node.DeletedKinds,
 			properties: []map[string]any{
 				update.Node.Properties.Map,
 			},
@@ -272,6 +274,19 @@ func cypherBuildNodeUpdateQueryBatch(updates []graph.NodeUpdate) ([]string, []ma
 			}
 		}
 
+		if len(batch.nodeKindsToRemove) > 0 {
+			output.WriteString(" remove ")
+
+			for idx, kindToRemove := range batch.nodeKindsToRemove {
+				if idx > 0 {
+					output.WriteString(",")
+				}
+
+				output.WriteString("n:")
+				output.WriteString(kindToRemove.String())
+			}
+		}
+
 		output.WriteString(";")
 
 		// Write out the query to be run
@@ -288,7 +303,7 @@ func cypherBuildNodeUpdateQueryBatch(updates []graph.NodeUpdate) ([]string, []ma
 
 func stripCypherQuery(rawQuery string) string {
 	var (
-		strippedEmitter = cypher.NewCypherEmitter(true)
+		strippedEmitter = format.NewCypherEmitter(true)
 		buffer          = &bytes.Buffer{}
 	)
 

@@ -458,7 +458,7 @@
         "summary": "Delete a SAML Provider",
         "description": "Deletes an existing BloodHound SAML provider.",
         "tags": [
-          "Auth API",
+          "Auth",
           "Community",
           "Enterprise"
         ],
@@ -836,7 +836,7 @@
         "summary": "List Auth Tokens",
         "description": "Get all auth tokens.",
         "tags": [
-          "Tokens",
+          "API Tokens",
           "Community",
           "Enterprise"
         ],
@@ -2709,7 +2709,7 @@
         "summary": "Write application configuration parameters",
         "description": "Writes application configuration parameters for this instance",
         "tags": [
-          "Config API",
+          "Config",
           "Community",
           "Enterprise"
         ],
@@ -4225,6 +4225,13 @@
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
             }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.contains"
+            }
           }
         ],
         "responses": {
@@ -4349,6 +4356,133 @@
           "Community",
           "Enterprise"
         ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "UpdateSavedQuery",
+        "summary": "Update a saved query",
+        "description": "Update an existing saved query by ID",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for updating a saved query",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.saved-query"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.saved-query"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/saved-queries/{saved_query_id}/permissions": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "saved_query_id",
+          "description": "ID of the saved query",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "delete": {
+        "operationId": "DeleteSavedQueryPermissions",
+        "summary": "Revokes permission of a saved query from users",
+        "description": "Revokes permission of a saved query from a given set of users",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for revoking permissions of a saved query from users",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_ids": {
+                    "type": "array",
+                    "description": "A list of user ids that will have their permission revoked from the given saved query",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "204": {
             "$ref": "#/components/responses/no-content"
@@ -12601,7 +12735,7 @@
       "JWTBearerToken": {
         "description": "`Authorization: Bearer $JWT_TOKEN`\n",
         "type": "http",
-        "scheme": "Bearer",
+        "scheme": "bearer",
         "bearerFormat": "JWT"
       },
       "SignedRequest": {

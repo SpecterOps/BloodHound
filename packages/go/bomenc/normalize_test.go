@@ -17,14 +17,15 @@
 package bomenc
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
+	"io"
 	"testing"
-	"unicode/utf16"
-	"unicode/utf8"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/text/encoding/unicode"
 )
 
 func TestDetectBOMEncoding(t *testing.T) {
@@ -82,8 +83,8 @@ func TestDetectBOMEncoding(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := DetectBOMEncoding(tt.input)
-			require.NoError(t, err)
+			reader := bufio.NewReader(bytes.NewReader(tt.input))
+			result := DetectBOMEncoding(reader)
 			assert.Equal(t, tt.expected.String(), result.String(), "DetectBOMEncoding() should return the correct encoding")
 		})
 	}
@@ -142,9 +143,9 @@ func TestNormalizeToUTF8(t *testing.T) {
 		{
 			name:     "No BOM (invalid UTF-8)",
 			input:    []byte{0xFF, 0xFE, 0xFD},
-			expected: nil,
+			expected: []byte{0xEF, 0xBF, 0xBD, 0xEF, 0xBF, 0xBD, 0xEF, 0xBF, 0xBD},
 			encFrom:  Unknown,
-			wantErr:  true,
+			wantErr:  false,
 		},
 		{
 			name:     "Empty input",
@@ -157,8 +158,11 @@ func TestNormalizeToUTF8(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			reader := bytes.NewReader(tt.input)
+			reader := bufio.NewReader(bytes.NewReader(tt.input))
+			detectedEnc := DetectBOMEncoding(reader)
 			result, err := NormalizeToUTF8(reader)
+			assert.NoError(t, err)
+			actual, err := io.ReadAll(result)
 
 			if tt.wantErr {
 				assert.Error(t, err, "NormalizeToUTF8() should return an error for invalid input")
@@ -166,104 +170,8 @@ func TestNormalizeToUTF8(t *testing.T) {
 			}
 
 			require.NoError(t, err, "NormalizeToUTF8() should not return an error for valid input")
-			assert.Equal(t, tt.expected, result.NormalizedContent(), "NormalizedContent() should return the correct normalized content")
-			assert.Equal(t, tt.encFrom.String(), result.NormalizedFrom().String(), "NormalizedFrom() should return the correct original encoding")
-		})
-	}
-}
-
-func TestNormalizeBytesToUTF8(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    []byte
-		enc      Encoding
-		expected []byte
-		wantErr  bool
-	}{
-		{
-			name:     "UTF-8 BOM",
-			input:    []byte{0xEF, 0xBB, 0xBF, 0x68, 0x65, 0x6C, 0x6C, 0x6F},
-			enc:      UTF8,
-			expected: []byte("hello"),
-			wantErr:  false,
-		},
-		{
-			name:     "UTF-16BE BOM",
-			input:    []byte{0xFE, 0xFF, 0x00, 0x68, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x6C, 0x00, 0x6F},
-			enc:      UTF16BE,
-			expected: []byte("hello"),
-			wantErr:  false,
-		},
-		{
-			name:     "UTF-16LE BOM",
-			input:    []byte{0xFF, 0xFE, 0x68, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x6C, 0x00, 0x6F, 0x00},
-			enc:      UTF16LE,
-			expected: []byte("hello"),
-			wantErr:  false,
-		},
-		{
-			name:     "UTF-32BE BOM",
-			input:    []byte{0x00, 0x00, 0xFE, 0xFF, 0x00, 0x00, 0x00, 0x68, 0x00, 0x00, 0x00, 0x65, 0x00, 0x00, 0x00, 0x6C, 0x00, 0x00, 0x00, 0x6C, 0x00, 0x00, 0x00, 0x6F},
-			enc:      UTF32BE,
-			expected: []byte("hello"),
-			wantErr:  false,
-		},
-		{
-			name:     "UTF-32LE BOM",
-			input:    []byte{0xFF, 0xFE, 0x00, 0x00, 0x68, 0x00, 0x00, 0x00, 0x65, 0x00, 0x00, 0x00, 0x6C, 0x00, 0x00, 0x00, 0x6C, 0x00, 0x00, 0x00, 0x6F, 0x00, 0x00, 0x00},
-			enc:      UTF32LE,
-			expected: []byte("hello"),
-			wantErr:  false,
-		},
-		{
-			name:     "No BOM (valid UTF-8)",
-			input:    []byte("hello"),
-			enc:      Unknown,
-			expected: []byte("hello"),
-			wantErr:  false,
-		},
-		{
-			name:     "No BOM (invalid UTF-8)",
-			input:    []byte{0xFF, 0xFE, 0xFD},
-			enc:      Unknown,
-			expected: nil,
-			wantErr:  true,
-		},
-		{
-			name:     "Empty input",
-			input:    []byte{},
-			enc:      Unknown,
-			expected: []byte{},
-			wantErr:  false,
-		},
-		{
-			name:     "Invalid UTF-16",
-			input:    []byte{0xFE, 0xFF, 0x00},
-			enc:      UTF16BE,
-			expected: nil,
-			wantErr:  true,
-		},
-		{
-			name:     "Invalid UTF-32",
-			input:    []byte{0x00, 0x00, 0xFE, 0xFF, 0x00, 0x00, 0x00},
-			enc:      UTF32BE,
-			expected: nil,
-			wantErr:  true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := NormalizeBytesToUTF8(tt.input, tt.enc)
-
-			if tt.wantErr {
-				assert.Error(t, err, "NormalizeBytesToUTF8() should return an error for invalid input")
-				return
-			}
-
-			require.NoError(t, err, "NormalizeBytesToUTF8() should not return an error for valid input")
-			assert.Equal(t, tt.expected, result.NormalizedContent(), "NormalizedContent() should return the correct normalized content")
-			assert.Equal(t, tt.enc.String(), result.NormalizedFrom().String(), "NormalizedFrom() should return the correct original encoding")
+			assert.Equal(t, tt.expected, actual, "NormalizedContent() should return the correct normalized content")
+			assert.Equal(t, tt.encFrom.String(), detectedEnc.String(), "NormalizedFrom() should return the correct original encoding")
 		})
 	}
 }
@@ -276,7 +184,9 @@ func (er errorReader) Read(p []byte) (n int, err error) {
 }
 
 func TestNormalizeToUTF8_ReaderError(t *testing.T) {
-	_, err := NormalizeToUTF8(errorReader{})
+	reader, err := NormalizeToUTF8(errorReader{})
+	assert.NoError(t, err)
+	_, err = io.ReadAll(reader)
 	assert.Error(t, err, "NormalizeToUTF8() should return an error when the reader fails")
 }
 
@@ -288,59 +198,52 @@ func TestNormalizeToUTF8_LargeInput(t *testing.T) {
 		encFrom  Encoding
 	}
 
-	// Generate a large input with 1000 Unicode code points
-	var utf16LE, expected []byte
-
-	for i := 0; i < 1000; i++ {
-		r := rune(i % 0x10FFFF) // Use all possible Unicode code points
-
-		// UTF-16
-		u16 := utf16.Encode([]rune{r})
-		for _, c := range u16 {
-			utf16LE = append(utf16LE, byte(c), byte(c>>8))
-		}
-
-		// Expected UTF-8
-		buf := make([]byte, 4)
-		n := utf8.EncodeRune(buf, r)
-		expected = append(expected, buf[:n]...)
+	// Generate a large data set with 1000 Unicode code points
+	// NOTE: We don't want to begin the payload with a NULL character because it would then be impossible to discern between UTF16LE and UTF32LE
+	var runes []rune
+	for i := 0; i <= 1000; i++ {
+		runes = append(runes, rune(i%0x10FFFF))
 	}
 
-	// Add BOM
-	utf16LE = append([]byte{0xFF, 0xFE}, utf16LE...)
+	utf8Bytes := []byte(string(runes))
+	utf16LEBytes, err := unicode.UTF16(unicode.LittleEndian, unicode.UseBOM).NewEncoder().Bytes(utf8Bytes)
+	require.NoError(t, err)
 
 	tests := []testCase{
 		{
 			name:     "Large UTF-16LE input",
-			input:    utf16LE,
-			expected: expected,
+			input:    utf16LEBytes,
+			expected: utf8Bytes,
 			encFrom:  UTF16LE,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			reader := bytes.NewReader(tt.input)
+			reader := bufio.NewReader(bytes.NewReader(tt.input))
+			detectedEnc := DetectBOMEncoding(reader)
+			assert.Equal(t, tt.encFrom.String(), detectedEnc.String(), "NormalizedFrom() should return the correct original encoding")
+
 			result, err := NormalizeToUTF8(reader)
 			if err != nil {
 				t.Errorf("NormalizeToUTF8() error = %v", err)
 				// Print the first few bytes of the input for debugging
 				t.Logf("First 20 bytes of input: %v", tt.input[:20])
 				// Print the detected encoding
-				detectedEnc, err := DetectBOMEncoding(tt.input)
 				assert.NoError(t, err)
 				t.Logf("Detected encoding: %v", detectedEnc)
 				return
 			}
 
-			assert.Equal(t, tt.encFrom.String(), result.NormalizedFrom().String(), "NormalizedFrom() should return the correct original encoding")
+			actual, err := io.ReadAll(result)
+			assert.NoError(t, err)
 
-			if !bytes.Equal(tt.expected, result.NormalizedContent()) {
-				t.Errorf("NormalizedContent() = %v, want %v", result.NormalizedContent(), tt.expected)
+			if !bytes.Equal(tt.expected, actual) {
+				t.Errorf("NormalizedContent() = %v, want %v", actual, tt.expected)
 				// Print the first few bytes of the result and expected for debugging
-				t.Logf("First 20 bytes of result: %v", result.NormalizedContent()[:20])
+				t.Logf("First 20 bytes of result: %v", actual[:20])
 				t.Logf("First 20 bytes of expected: %v", tt.expected[:20])
-
+				t.Logf("First 20 bytes of input: %v", tt.input[:20])
 			}
 		})
 	}
