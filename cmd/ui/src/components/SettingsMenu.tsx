@@ -30,7 +30,6 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Collapse, Divider, useTheme } from '@mui/material';
-import List from '@mui/material/List';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Menu, { MenuProps } from '@mui/material/Menu';
@@ -185,7 +184,6 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                     }
                 </MenuItem>
                 <Collapse in={openCollapse} timeout="auto" unmountOnExit>
-                    <List component='div' disablePadding>
                         <MenuItem onClick={toggleNodeLabelsMode} sx={{paddingLeft: '2.5rem'}}>
                             <ListItemIcon>
                                 <FontAwesomeIcon icon={faTag} />
@@ -200,7 +198,6 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                             <ListItemText primary='Edge Labels' />
                             <Switch checked={edgeLabelsMode}>Edge Labels</Switch>
                         </MenuItem>
-                        </List>
                 </Collapse>
 
 
