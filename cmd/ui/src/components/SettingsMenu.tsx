@@ -24,13 +24,13 @@ import {
     faUser,
     faUserShield,
     faTags,
+    faTag,
     faCaretDown,
     faCaretUp,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Collapse, Divider, useTheme } from '@mui/material';
 import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem'
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Menu, { MenuProps } from '@mui/material/Menu';
@@ -77,7 +77,6 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
     const edgeLabelsMode = useAppSelector((state) => state.global.view.edgeLabelsMode);
     const theme = useTheme();
     const [openCollapse, setOpenCollapse] = React.useState(false);
-
 
     const navigateTo = (route: string) => {
         handleClose();
@@ -187,17 +186,19 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                 </MenuItem>
                 <Collapse in={openCollapse} timeout="auto" unmountOnExit>
                     <List component='div' disablePadding>
-                        <MenuItem onClick={toggleNodeLabelsMode}>
-                            <ListItem>
-                                <ListItemText primary='Node Labels' />
-                                <Switch checked={nodeLabelsMode}>Node Labels</Switch>
-                            </ListItem>
+                        <MenuItem onClick={toggleNodeLabelsMode} sx={{paddingLeft: '2.5rem'}}>
+                            <ListItemIcon>
+                                <FontAwesomeIcon icon={faTag} />
+                            </ListItemIcon>
+                            <ListItemText primary='Node Labels' />
+                            <Switch checked={nodeLabelsMode}>Node Labels</Switch>
                         </MenuItem>
-                        <MenuItem onClick={toggleEdgeLabelsMode}>
-                            <ListItem>
-                                <ListItemText primary='Edge Labels' />
-                                <Switch checked={edgeLabelsMode}>Edge Labels</Switch>
-                            </ListItem>
+                        <MenuItem onClick={toggleEdgeLabelsMode} sx={{paddingLeft: '2.5rem'}}>
+                            <ListItemIcon>
+                                <FontAwesomeIcon icon={faTag} />
+                            </ListItemIcon>
+                            <ListItemText primary='Edge Labels' />
+                            <Switch checked={edgeLabelsMode}>Edge Labels</Switch>
                         </MenuItem>
                         </List>
                 </Collapse>

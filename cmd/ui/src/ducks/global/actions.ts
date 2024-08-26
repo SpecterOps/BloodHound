@@ -54,14 +54,14 @@ export const setDarkMode = (darkMode: boolean): types.GlobalViewActionTypes => {
 
 export const setNodeLabelsMode = (nodeLabelsMode: boolean): types.GlobalViewActionTypes => {
     return {
-        type: types.GLOBAL_SHOW_NODE_LABELS_MODE,
+        type: types.GLOBAL_SET_NODE_LABELS_MODE,
         nodeLabelsMode,
     };
 };
 
 export const setEdgeLabelsMode = (edgeLabelsMode: boolean): types.GlobalViewActionTypes => {
     return {
-        type: types.GLOBAL_SHOW_EDGE_LABELS_MODE,
+        type: types.GLOBAL_SET_EDGE_LABELS_MODE,
         edgeLabelsMode,
     };
 };

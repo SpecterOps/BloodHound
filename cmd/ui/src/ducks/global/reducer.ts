@@ -40,9 +40,9 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             draft.notifications = draft.notifications.filter((notification) => notification.key !== action.key);
         } else if (action.type === types.GLOBAL_SET_DARK_MODE) {
             draft.darkMode = action.darkMode;
-        } else if (action.type == types.GLOBAL_SHOW_NODE_LABELS_MODE) {
+        } else if (action.type == types.GLOBAL_SET_NODE_LABELS_MODE) {
             draft.nodeLabelsMode = action.nodeLabelsMode;
-        } else if (action.type == types.GLOBAL_SHOW_EDGE_LABELS_MODE) {
+        } else if (action.type == types.GLOBAL_SET_EDGE_LABELS_MODE) {
             draft.edgeLabelsMode = action.edgeLabelsMode;
         }
     });

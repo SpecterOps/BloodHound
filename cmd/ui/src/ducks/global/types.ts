@@ -24,8 +24,8 @@ const GLOBAL_SET_ASSET_GROUPS = 'app/global/GLOBALSETASSETGROUPS';
 const GLOBAL_SET_ASSET_GROUP_INDEX = 'app/global/GLOBALSETASSETGROUPINDEX';
 const GLOBAL_SET_ASSET_GROUP_EDIT = 'app/global/GLOBALSETASSETGROUPEDIT';
 const GLOBAL_SET_DARK_MODE = 'app/global/GLOBALSETDARKMODE';
-const GLOBAL_SHOW_NODE_LABELS_MODE = 'app/global/GLOBALSHOWNODELABELSMODE';
-const GLOBAL_SHOW_EDGE_LABELS_MODE = 'app/global/GLOBALSHOWEDGELABELSMODE';
+const GLOBAL_SET_NODE_LABELS_MODE = 'app/global/GLOBALSETNODELABELSMODE';
+const GLOBAL_SET_EDGE_LABELS_MODE = 'app/global/GLOBALSETEDGELABELSMODE';
 
 export {
     GLOBAL_ADD_SNACKBAR,
@@ -38,8 +38,8 @@ export {
     GLOBAL_SET_ASSET_GROUP_INDEX,
     GLOBAL_SET_ASSET_GROUP_EDIT,
     GLOBAL_SET_DARK_MODE,
-    GLOBAL_SHOW_NODE_LABELS_MODE,
-    GLOBAL_SHOW_EDGE_LABELS_MODE,
+    GLOBAL_SET_NODE_LABELS_MODE,
+    GLOBAL_SET_EDGE_LABELS_MODE,
 };
 
 export interface GlobalViewState {
@@ -88,12 +88,12 @@ export interface SetDarkModeAction {
 }
 
 export interface SetNodeLabelsModeAction {
-    type: typeof GLOBAL_SHOW_NODE_LABELS_MODE;
+    type: typeof GLOBAL_SET_NODE_LABELS_MODE;
     nodeLabelsMode: boolean;
 }
 
 export interface SetEdgeLabelsModeAction {
-    type: typeof GLOBAL_SHOW_EDGE_LABELS_MODE;
+    type: typeof GLOBAL_SET_EDGE_LABELS_MODE;
     edgeLabelsMode: boolean;
 }
 
