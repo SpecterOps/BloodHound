@@ -20,13 +20,13 @@ allOf:
   - type: object
     properties:
       user_id:
+        readOnly: true
         allOf:
           - $ref: './null.uuid.yaml'
-          - readOnly: true
       name:
+        readOnly: true
         allOf:
           - $ref: './null.string.yaml'
-          - readOnly: true
       key:
         type: string
         readOnly: true

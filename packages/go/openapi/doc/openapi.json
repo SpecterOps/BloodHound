@@ -13083,12 +13083,10 @@
             "readOnly": true
           },
           "deleted_at": {
+            "readOnly": true,
             "allOf": [
               {
                 "$ref": "#/components/schemas/null.time"
-              },
-              {
-                "readOnly": true
               }
             ]
           }
@@ -13220,22 +13218,18 @@
             "type": "object",
             "properties": {
               "saml_provider_id": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.int32"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "AuthSecret": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/model.auth-secret"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13247,32 +13241,21 @@
                 }
               },
               "first_name": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "last_name": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": false
-                  }
-                ]
+                "$ref": "#/components/schemas/null.string"
               },
               "email_address": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13383,22 +13366,18 @@
             "type": "object",
             "properties": {
               "user_id": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.uuid"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "name": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13559,22 +13538,18 @@
                 "readOnly": true
               },
               "event_id": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.int32"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "status": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/enum.job-status"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13593,12 +13568,10 @@
                 "readOnly": true
               },
               "log_path": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13710,32 +13683,26 @@
                 }
               },
               "token": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/model.auth-token"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "current_job_id": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.int64"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "current_job": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/model.client-scheduled-job"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13745,12 +13712,10 @@
                 "readOnly": true
               },
               "domain_controller": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13759,22 +13724,18 @@
                 "readOnly": true
               },
               "user_sid": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "type": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/enum.client-type"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               }
@@ -14122,12 +14083,10 @@
                 "readOnly": true
               },
               "status": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/enum.audit-log-status"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               }

@@ -25,6 +25,6 @@ properties:
     format: date-time
     readOnly: true
   deleted_at:
+    readOnly: true
     allOf:
       - $ref: './null.time.yaml'
-      - readOnly: true
