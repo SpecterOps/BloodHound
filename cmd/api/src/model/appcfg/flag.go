@@ -36,6 +36,7 @@ const (
 	FeatureRiskExposureNewCalculation = "risk_exposure_new_calculation"
 	FeatureFedRAMPEULA                = "fedramp_eula"
 	FeatureDarkMode                   = "dark_mode"
+	FeatureAutoTagT0ParentObjects     = "auto_tag_t0_parent_objects"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
