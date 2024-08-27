@@ -18,8 +18,6 @@ module github.com/specterops/bloodhound/packages/go/stbernard
 
 go 1.23
 
-toolchain go1.23.0
-
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/gofrs/uuid v4.4.0+incompatible
