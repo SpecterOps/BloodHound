@@ -155,7 +155,7 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 	return nil
 }
 
-func TagActiveDirectoryTierZero(ctx context.Context, db database.Database, graphDB graph.Database) error {
+func TagActiveDirectoryTierZero(ctx context.Context, db appcfg.GetFlagByKeyer, graphDB graph.Database) error {
 	defer log.Measure(log.LevelInfo, "Finished tagging Active Directory Tier Zero")()
 
 	if autoTagT0ParentObjectsFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureAutoTagT0ParentObjects); err != nil {
