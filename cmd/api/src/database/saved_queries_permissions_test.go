@@ -301,11 +301,16 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.
 	})
 	require.NoError(t, err)
 
+	user3, err := dbInst.CreateUser(testCtx, model.User{
+		PrincipalName: "first3.last3@example.com",
+	})
+	require.NoError(t, err)
+
 	t.Run("Deletes saved query permissions for user(s)", func(t *testing.T) {
 		query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
 		require.NoError(t, err)
 
-		_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID)
+		_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID, user3.ID)
 		require.NoError(t, err)
 
 		scope, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user2.ID)
@@ -316,16 +321,32 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.
 			model.SavedQueryScopeShared: true,
 		}, scope)
 
+		scope2, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user3.ID)
+		require.NoError(t, err)
+		require.Equal(t, database.SavedQueryScopeMap{
+			model.SavedQueryScopePublic: false,
+			model.SavedQueryScopeOwned:  false,
+			model.SavedQueryScopeShared: true,
+		}, scope2)
+
 		err = dbInst.DeleteSavedQueryPermissionsForUsers(testCtx, query.ID, user2.ID)
 		require.NoError(t, err)
 
-		scope2, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user2.ID)
+		scope3, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user2.ID)
 		require.NoError(t, err)
 		require.Equal(t, database.SavedQueryScopeMap{
 			model.SavedQueryScopePublic: false,
 			model.SavedQueryScopeOwned:  false,
 			model.SavedQueryScopeShared: false,
-		}, scope2)
+		}, scope3)
+
+		scope4, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user3.ID)
+		require.NoError(t, err)
+		require.Equal(t, database.SavedQueryScopeMap{
+			model.SavedQueryScopePublic: false,
+			model.SavedQueryScopeOwned:  false,
+			model.SavedQueryScopeShared: true,
+		}, scope4)
 	})
 
 	t.Run("Deletes saved query permissions given no provided users", func(t *testing.T) {

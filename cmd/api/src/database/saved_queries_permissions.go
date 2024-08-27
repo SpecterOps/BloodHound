@@ -89,38 +89,28 @@ func (s *BloodhoundDB) DeleteSavedQueryPermissionsForUsers(ctx context.Context, 
 
 // GetScopeForSavedQuery will return a map of the possible scopes given a query id and a user id
 func (s *BloodhoundDB) GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (SavedQueryScopeMap, error) {
-	scopes := SavedQueryScopeMap{
-		model.SavedQueryScopePublic: false,
-		model.SavedQueryScopeOwned:  false,
-		model.SavedQueryScopeShared: false,
-	}
+	var (
+		err    error
+		scopes = SavedQueryScopeMap{
+			model.SavedQueryScopePublic: false,
+			model.SavedQueryScopeOwned:  false,
+			model.SavedQueryScopeShared: false,
+		}
+	)
 
 	// Check if the query was shared with the user publicly
-	publicCount := int64(0)
-	if result := s.db.WithContext(ctx).Select("*").Table("saved_queries_permissions").Where("public = true AND query_id = ?", queryID).Count(&publicCount).Limit(1); result.Error != nil {
-		return scopes, CheckError(result)
-	} else if isPublic, err := s.IsSavedQueryPublic(ctx, queryID); err != nil {
+	if scopes[model.SavedQueryScopePublic], err = s.IsSavedQueryPublic(ctx, queryID); err != nil {
 		return scopes, err
-	} else if isPublic {
-		scopes[model.SavedQueryScopePublic] = true
 	}
 
 	// Check if the user owns the query
-	ownedCount := int64(0)
-	if result := s.db.WithContext(ctx).Select("*").Table("saved_queries").Where("id = ? AND user_id = ?", queryID, userID).Count(&ownedCount).Limit(1); result.Error != nil {
-		return scopes, CheckError(result)
-	} else if ownedCount > 0 {
-		scopes[model.SavedQueryScopeOwned] = true
+	if scopes[model.SavedQueryScopeOwned], err = s.SavedQueryBelongsToUser(ctx, userID, queryID); err != nil {
+		return scopes, err
 	}
 
 	// Check if the user has had the query shared to them
-	sharedCount := int64(0)
-	if result := s.db.WithContext(ctx).Select("*").Table("saved_queries_permissions").Where("query_id = ? AND shared_to_user_id = ?", queryID, userID).Count(&sharedCount).Limit(1); result.Error != nil {
-		return scopes, CheckError(result)
-	} else if isShared, err := s.IsSavedQuerySharedToUser(ctx, queryID, userID); err != nil {
+	if scopes[model.SavedQueryScopeShared], err = s.IsSavedQuerySharedToUser(ctx, queryID, userID); err != nil {
 		return scopes, err
-	} else if isShared {
-		scopes[model.SavedQueryScopeShared] = true
 	}
 
 	return scopes, nil
