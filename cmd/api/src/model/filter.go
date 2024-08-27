@@ -352,6 +352,6 @@ func (s QueryParameterFilterParser) ParseQueryParameterFilters(request *http.Req
 
 func NewQueryParameterFilterParser() QueryParameterFilterParser {
 	return QueryParameterFilterParser{
-		re: regexp.MustCompile(`([~\w]+):([\w\d\--_]+)`),
+		re: regexp.MustCompile(`([~\w]+):([\w\--_ ]+)`),
 	}
 }
