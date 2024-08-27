@@ -108,6 +108,7 @@ export enum ActiveDirectoryRelationshipKind {
     RemoteInteractiveLogonPrivilege = 'RemoteInteractiveLogonPrivilege',
     SyncLAPSPassword = 'SyncLAPSPassword',
     WriteAccountRestrictions = 'WriteAccountRestrictions',
+    WriteGPLink = 'WriteGPLink',
     RootCAFor = 'RootCAFor',
     DCFor = 'DCFor',
     PublishedTo = 'PublishedTo',
@@ -218,6 +219,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'SyncLAPSPassword';
         case ActiveDirectoryRelationshipKind.WriteAccountRestrictions:
             return 'WriteAccountRestrictions';
+        case ActiveDirectoryRelationshipKind.WriteGPLink:
+            return 'WriteGPLink';
         case ActiveDirectoryRelationshipKind.RootCAFor:
             return 'RootCAFor';
         case ActiveDirectoryRelationshipKind.DCFor:
@@ -643,6 +646,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
         ActiveDirectoryRelationshipKind.SyncLAPSPassword,
         ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
+        ActiveDirectoryRelationshipKind.WriteGPLink,
         ActiveDirectoryRelationshipKind.GoldenCert,
         ActiveDirectoryRelationshipKind.ADCSESC1,
         ActiveDirectoryRelationshipKind.ADCSESC3,
@@ -882,6 +886,7 @@ export enum AzureKindProperties {
     AppOwnerOrganizationID = 'appownerorganizationid',
     AppDescription = 'appdescription',
     AppDisplayName = 'appdisplayname',
+    LoginURL = 'loginurl',
     ServicePrincipalType = 'serviceprincipaltype',
     UserType = 'usertype',
     TenantID = 'tenantid',
@@ -919,6 +924,8 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'App Description';
         case AzureKindProperties.AppDisplayName:
             return 'App Display Name';
+        case AzureKindProperties.LoginURL:
+            return 'Login URL';
         case AzureKindProperties.ServicePrincipalType:
             return 'Service Principal Type';
         case AzureKindProperties.UserType:
