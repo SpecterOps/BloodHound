@@ -98,6 +98,7 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
     const toggleNodeLabelsMode: React.MouseEventHandler<HTMLLIElement> = () => {
         dispatch(setNodeLabelsMode(!nodeLabelsMode));
     };
+
     const toggleEdgeLabelsMode: React.MouseEventHandler<HTMLLIElement> = () => {
         dispatch(setEdgeLabelsMode(!edgeLabelsMode));
     };

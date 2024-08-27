@@ -97,7 +97,13 @@ export interface SetEdgeLabelsModeAction {
     edgeLabelsMode: boolean;
 }
 
-export type GlobalViewActionTypes = AddSnackbarAction | RemoveSnackbarAction | CloseSnackbarAction | SetDarkModeAction | SetNodeLabelsModeAction | SetEdgeLabelsModeAction;
+export type GlobalViewActionTypes =
+    | AddSnackbarAction
+    | RemoveSnackbarAction
+    | CloseSnackbarAction
+    | SetDarkModeAction
+    | SetNodeLabelsModeAction
+    | SetEdgeLabelsModeAction;
 
 export interface SetDomainAction {
     type: typeof GLOBAL_SET_DOMAIN;
