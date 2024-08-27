@@ -229,7 +229,7 @@ func getLAPSComputersForDomain(tx graph.Transaction, domain *graph.Node) ([]grap
 	}
 }
 
-func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansions impact.PathAggregator, enforceURA bool) (*analysis.AtomicPostProcessingStats, error) {
+func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansions impact.PathAggregator, enforceURA bool, citrixEnabled bool) (*analysis.AtomicPostProcessingStats, error) {
 	var (
 		adminGroupSuffix    = "-544"
 		psRemoteGroupSuffix = "-580"
@@ -318,7 +318,7 @@ func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansion
 			}
 
 			if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-				if entities, err := FetchRDPEntityBitmapForComputer(tx, computerID, threadSafeLocalGroupExpansions, enforceURA); err != nil {
+				if entities, err := FetchCanRDPEntityBitmapForComputer(tx, computerID, threadSafeLocalGroupExpansions, enforceURA, citrixEnabled); err != nil {
 					return err
 				} else {
 					for _, rdp := range entities.Slice() {
@@ -416,6 +416,20 @@ func FetchComputerLocalGroupBySIDSuffix(tx graph.Transaction, computer graph.ID,
 	}
 }
 
+func FetchComputerLocalGroupByName(tx graph.Transaction, computer graph.ID, groupName string) (*graph.Node, error) {
+	if rel, err := tx.Relationships().Filter(
+		query.And(
+			query.Equals(query.StartProperty(common.Name.String()), groupName),
+			query.Kind(query.Relationship(), ad.LocalToComputer),
+			query.InIDs(query.EndID(), computer),
+		),
+	).First(); err != nil {
+		return nil, err
+	} else {
+		return ops.FetchNode(tx, rel.StartID)
+	}
+}
+
 func FetchLocalGroupMembership(tx graph.Transaction, computer graph.ID, groupSuffix string) (graph.NodeSet, error) {
 	if localGroup, err := FetchComputerLocalGroupBySIDSuffix(tx, computer, groupSuffix); err != nil {
 		return nil, err
@@ -474,7 +488,37 @@ func ExpandAllRDPLocalGroups(ctx context.Context, db graph.Database) (impact.Pat
 	))
 }
 
-func FetchRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool) (cardinality.Duplex[uint32], error) {
+func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool, citrixEnabled bool) (cardinality.Duplex[uint32], error) {
+	if citrixEnabled {
+		if directAccessUsersGroup, err := FetchComputerLocalGroupByName(tx, computer, "Direct Access Users"); err != nil {
+			if graph.IsErrNotFound(err) {
+				// "Direct Access Users" is a group that Citrix creates.  If the group does not exist, then the computer does not have Citrix installed and post-processing logic can continue by enumerating the "Remote Desktop Users" AD group.
+				return FetchRemoteDesktopUsersBitmapForComputer(tx, computer, localGroupExpansions, enforceURA)
+			}
+			return nil, err
+		} else {
+			// 1. fetch group membership
+			dauGroupMembers := localGroupExpansions.Cardinality(directAccessUsersGroup.ID.Uint32()).(cardinality.Duplex[uint32])
+			if dauGroupMembers.Cardinality() == 0 {
+				return cardinality.NewBitmap32(), nil
+			} else {
+				// 2. intersect "direct access users" with the entities that have RDP privileges via the "remote desktop users" AD group
+				if remoteDesktopUsers, err := FetchRemoteDesktopUsersBitmapForComputer(tx, computer, localGroupExpansions, enforceURA); err != nil {
+					return cardinality.NewBitmap32(), err
+				} else {
+					dauGroupMembers.And(remoteDesktopUsers)
+					return dauGroupMembers, nil
+				}
+			}
+
+		}
+	} else {
+		return FetchRemoteDesktopUsersBitmapForComputer(tx, computer, localGroupExpansions, enforceURA)
+	}
+}
+
+// returns a bitmap containing the ID's of all entities that have RDP privileges to the specified computer via membership to the "Remote Desktop Users" AD group
+func FetchRemoteDesktopUsersBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool) (cardinality.Duplex[uint32], error) {
 	if rdpLocalGroup, err := FetchComputerLocalGroupBySIDSuffix(tx, computer, RDPGroupSuffix); err != nil {
 		if graph.IsErrNotFound(err) {
 			return cardinality.NewBitmap32(), nil

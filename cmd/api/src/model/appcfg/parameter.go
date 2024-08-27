@@ -180,3 +180,21 @@ func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jPara
 type CitrixRDPSupport struct {
 	Enabled bool `json:"enabled,omitempty"`
 }
+
+func GetCitrixRDPSupport(ctx context.Context, service ParameterService) CitrixRDPSupport {
+	var result CitrixRDPSupport
+
+	if cfg, err := service.GetConfigurationParameter(ctx, CitrixRDPSupportKey); err != nil {
+		log.Errorf("Failed to fetch CitrixRDPSupport configuration; returning default values")
+		result = CitrixRDPSupport{
+			Enabled: false,
+		}
+	} else if err := cfg.Map(&result); err != nil {
+		log.Errorf("Invalid CitrixRDPSupport configuration supplied, %v. returning default values.", err)
+		result = CitrixRDPSupport{
+			Enabled: false,
+		}
+	}
+
+	return result
+}

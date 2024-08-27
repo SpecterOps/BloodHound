@@ -186,8 +186,8 @@
     {
       "id": "n10",
       "position": {
-        "x": 670.6032624306471,
-        "y": -38.25458849908
+        "x": 675.431201442582,
+        "y": -29.126792002940533
       },
       "caption": "Group C",
       "labels": [],
@@ -199,8 +199,8 @@
     {
       "id": "n11",
       "position": {
-        "x": 1858.5359677978236,
-        "y": 50
+        "x": 1882.6268885240816,
+        "y": 59.33121557319919
       },
       "caption": "Dillon",
       "labels": [],
@@ -286,6 +286,17 @@
       "style": {
         "border-color": "#73d8ff"
       }
+    },
+    {
+      "id": "n18",
+      "position": {
+        "x": -114.42765768189122,
+        "y": 314.07033468628157
+      },
+      "caption": "Direct Access Users Group ",
+      "style": {},
+      "labels": [],
+      "properties": {}
     }
   ],
   "relationships": [
@@ -360,16 +371,6 @@
       }
     },
     {
-      "id": "n7",
-      "fromId": "n3",
-      "toId": "n2",
-      "type": "CanRDP",
-      "properties": {},
-      "style": {
-        "arrow-color": "#f44e3b"
-      }
-    },
-    {
       "id": "n8",
       "fromId": "n0",
       "toId": "n6",
@@ -420,16 +421,6 @@
       }
     },
     {
-      "id": "n13",
-      "fromId": "n8",
-      "toId": "n2",
-      "type": "CanRDP",
-      "properties": {},
-      "style": {
-        "arrow-color": "#f44e3b"
-      }
-    },
-    {
       "id": "n14",
       "fromId": "n9",
       "toId": "n2",
@@ -447,16 +438,6 @@
       "properties": {},
       "style": {
         "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n16",
-      "fromId": "n9",
-      "toId": "n2",
-      "type": "CanRDP",
-      "properties": {},
-      "style": {
-        "arrow-color": "#f44e3b"
       }
     },
     {
@@ -590,23 +571,45 @@
       "style": {}
     },
     {
-      "id": "n32",
+      "id": "n34",
+      "type": "MemberOfLocalGroup",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n18"
+    },
+    {
+      "id": "n35",
+      "type": "LocalToComputer",
+      "style": {},
+      "properties": {},
+      "fromId": "n18",
+      "toId": "n2"
+    },
+    {
+      "id": "n36",
+      "type": "MemberOfLocalGroup",
+      "style": {},
+      "properties": {},
+      "fromId": "n14",
+      "toId": "n18"
+    },
+    {
+      "id": "n37",
+      "type": "MemberOfLocalGroup",
+      "style": {},
+      "properties": {},
+      "fromId": "n12",
+      "toId": "n18"
+    },
+    {
+      "id": "n38",
       "type": "CanRDP",
       "style": {
         "arrow-color": "#f44e3b"
       },
       "properties": {},
       "fromId": "n11",
-      "toId": "n2"
-    },
-    {
-      "id": "n33",
-      "type": "CanRDP",
-      "style": {
-        "arrow-color": "#f44e3b"
-      },
-      "properties": {},
-      "fromId": "n5",
       "toId": "n2"
     }
   ]
