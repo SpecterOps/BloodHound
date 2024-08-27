@@ -158,17 +158,15 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 func TagActiveDirectoryTierZero(ctx context.Context, db database.Database, graphDB graph.Database) error {
 	defer log.Measure(log.LevelInfo, "Finished tagging Active Directory Tier Zero")()
 
-	autoTagMembersFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureAutoTagT0ADMembers)
-	if err != nil {
-		log.Errorf("error getting AutoTagT0ADMembers feature flag: %w", err)
+	if autoTagT0ParentObjectsFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureAutoTagT0ParentObjects); err != nil {
 		return err
-	}
-
-	if domains, err := adAnalysis.FetchAllDomains(ctx, graphDB); err != nil {
+	} else if autoTagMembersFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureAutoTagT0ADMembers); err != nil {
+		return err
+	} else if domains, err := adAnalysis.FetchAllDomains(ctx, graphDB); err != nil {
 		return err
 	} else {
 		for _, domain := range domains {
-			if roots, err := adAnalysis.FetchActiveDirectoryTierZeroRoots(ctx, graphDB, domain, autoTagMembersFlag.Enabled); err != nil {
+			if roots, err := adAnalysis.FetchActiveDirectoryTierZeroRoots(ctx, graphDB, domain, autoTagT0ParentObjectsFlag.Enabled, autoTagMembersFlag.Enabled); err != nil {
 				return err
 			} else {
 				properties := graph.NewProperties()

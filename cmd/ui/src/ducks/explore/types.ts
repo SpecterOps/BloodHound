@@ -29,6 +29,7 @@ const REMOVE_NODES = 'app/explore/REMOVENODE';
 const SAVE_RESPONSE_FOR_EXPORT = 'app/explore/SAVE_RESPONSE_FOR_EXPORT';
 
 const TOGGLE_TIER_ZERO_NODE = 'app/explore/TOGGLE_TIER_ZERO_NODE';
+const TOGGLE_OWNED_OBJECT_NODE = 'app/explore/TOGGLE_OWNED_OBJECT_NODE';
 
 export {
     SET_GRAPH_LOADING,
@@ -41,6 +42,7 @@ export {
     GRAPH_INIT,
     SAVE_RESPONSE_FOR_EXPORT,
     TOGGLE_TIER_ZERO_NODE,
+    TOGGLE_OWNED_OBJECT_NODE,
 };
 
 export enum GraphEndpoints {}
@@ -105,6 +107,11 @@ interface ToggleTierZeroNodeAction {
     nodeId: string;
 }
 
+interface ToggleOwnedObjectNodeAction {
+    type: typeof TOGGLE_OWNED_OBJECT_NODE;
+    nodeId: string;
+}
+
 export type GraphActionTypes =
     | SetGraphLoadingAction
     | GraphStartAction
@@ -115,7 +122,8 @@ export type GraphActionTypes =
     | RemoveNodeAction
     | GraphInitAction
     | SaveResponseForExportAction
-    | ToggleTierZeroNodeAction;
+    | ToggleTierZeroNodeAction
+    | ToggleOwnedObjectNodeAction;
 
 export interface NodeInfoRequest {
     type: typeof GRAPH_START;

@@ -51,14 +51,14 @@ func rewriteCompositeTypeFieldReference(scopeIdentifier pgsql.Identifier, compos
 // is wrapped in a parenthetical:
 //
 // // a.properties with scopeIdentifier 's0' becomes -> (s0.a).properties
-// pgsql.CompoundExpression{
-//		&pgsql.Parenthetical{
-//			Expression: pgsql.CompoundIdentifier{scopeIdentifier, fieldReference.Root()},
-//		},
 //
-//		fieldReference[1:],
-//	}
+//	pgsql.CompoundExpression{
+//			&pgsql.Parenthetical{
+//				Expression: pgsql.CompoundIdentifier{scopeIdentifier, fieldReference.Root()},
+//			},
 //
+//			fieldReference[1:],
+//		}
 type IdentifierRewriter struct {
 	walk.HierarchicalVisitor[pgsql.SyntaxNode]
 

@@ -14,6 +14,6 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
-INSERT INTO asset_groups (name, tag, system_group)
-SELECT 'Owned', 'owned', true
+INSERT INTO asset_groups (name, tag, system_group, created_at, updated_at)
+SELECT 'Owned', 'owned', true, current_timestamp, current_timestamp
 WHERE NOT EXISTS (SELECT 1 FROM asset_groups WHERE tag='owned')
