@@ -99,7 +99,9 @@ func (s *BloodhoundDB) GetScopeForSavedQuery(ctx context.Context, queryID int64,
 	publicCount := int64(0)
 	if result := s.db.WithContext(ctx).Select("*").Table("saved_queries_permissions").Where("public = true AND query_id = ?", queryID).Count(&publicCount).Limit(1); result.Error != nil {
 		return scopes, CheckError(result)
-	} else if publicCount > 0 {
+	} else if isPublic, err := s.IsSavedQueryPublic(ctx, queryID); err != nil {
+		return scopes, err
+	} else if isPublic {
 		scopes[model.SavedQueryScopePublic] = true
 	}
 
@@ -115,7 +117,9 @@ func (s *BloodhoundDB) GetScopeForSavedQuery(ctx context.Context, queryID int64,
 	sharedCount := int64(0)
 	if result := s.db.WithContext(ctx).Select("*").Table("saved_queries_permissions").Where("query_id = ? AND shared_to_user_id = ?", queryID, userID).Count(&sharedCount).Limit(1); result.Error != nil {
 		return scopes, CheckError(result)
-	} else if sharedCount > 0 {
+	} else if isShared, err := s.IsSavedQuerySharedToUser(ctx, queryID, userID); err != nil {
+		return scopes, err
+	} else if isShared {
 		scopes[model.SavedQueryScopeShared] = true
 	}
 
