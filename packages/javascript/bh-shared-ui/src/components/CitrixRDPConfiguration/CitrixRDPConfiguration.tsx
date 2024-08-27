@@ -16,45 +16,39 @@
 import { FC } from 'react';
 import CardWithSwitch from '../CardWithSwitch';
 import ConfirmCitrixRDPDialog from './CitrixRDPConfirmDialog';
-import { useGetConfiguration } from '../../hooks';
+import { useGetConfiguration, useUpdateConfiguration } from '../../hooks';
 import { useState } from 'react';
 
 // To do: Add this to the shared ui, just using here for ease
 const CitrixRDPConfiguration: FC = () => {
     const [isEnabled, setIsEnabled] = useState(false);
     const [isOpenDialog, setIsOpenDialog] = useState(false);
+    // To do: make sure we have correct loading behavior and subsequent behavior for setting existing saved state
+    // To do: make sure this is sending and getting the data we need
+    const { data, isLoading, isError, isSuccess } = useGetConfiguration();
+    const updateConfigurationMutation = useUpdateConfiguration();
+
     const configurationData = {
         title: 'Citrix RDP Support',
         description:
             'When enabled, post-processing for the CanRDP edge will look for the presence of the default "Direct Access Users" group and assume that only local Administrators and members of this group can RDP to the system without validation that Citrix VDA is present and correctly configured.Use with caution.',
-        enabledDialogText:
-            'Analysis has been added with Citrix Configuration, this will ensure that BloodHound can account for Direct Access RDP connections. Compensating controls handled within Citrix are not handled by BloodHound at this time.',
-        disabledDialogText:
-            'Analysis has been removed with Citrix Configuration, this will result in BloodHound performing analysis to account for this change.',
     };
 
-    // To do: make sure we have correct loading behavior and subsequent behavior for setting existing saved state
-    // to do: make sure this is sending and getting the data we need
-    const { data, isLoading, isError, isSuccess } = useGetConfiguration();
-
     console.log(data, isLoading, isError, isSuccess);
+
+    const toggleShowDialog = () => {
+        setIsOpenDialog((prev) => !prev);
+    };
 
     const handleSwitchChange = () => {
         setIsEnabled((prev) => !prev);
         toggleShowDialog();
     };
 
-    const toggleShowDialog = () => {
-        setIsOpenDialog((prev) => !prev);
-    };
-
-    const handleCancel = () => {
+    const handleConfirm = () => {
+        // To do: add correct call args
+        updateConfigurationMutation.mutate({ key: 'test' } as any);
         toggleShowDialog();
-        setIsEnabled((prev) => !prev);
-    };
-
-    const handleConfirm = async () => {
-        //const { data, isLoading, isError, isSuccess } = useUpdateConfiguration();
     };
 
     return (
@@ -67,10 +61,8 @@ const CitrixRDPConfiguration: FC = () => {
             />
             <ConfirmCitrixRDPDialog
                 open={isOpenDialog}
-                dialogDescription={
-                    isEnabled ? configurationData.enabledDialogText : configurationData.disabledDialogText
-                }
-                handleCancel={handleCancel}
+                isEnabled={isEnabled}
+                handleCancel={handleSwitchChange}
                 handleConfirm={handleConfirm}
             />
         </>

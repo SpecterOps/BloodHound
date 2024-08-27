@@ -1,42 +1,37 @@
 import { FC } from 'react';
 import { Typography, Button, useTheme, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 type CitrixRDPConfirmDialogProps = {
     open: boolean;
-    dialogDescription: string;
+    isEnabled: boolean;
     handleCancel: () => void;
     handleConfirm: () => void;
 };
 
-const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({
-    open,
-    dialogDescription,
-    handleCancel,
-    handleConfirm,
-}) => {
+const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, isEnabled, handleCancel, handleConfirm }) => {
     const theme = useTheme();
+    const enabledText =
+        'Analysis has been added with Citrix Configuration, this will ensure that BloodHound can account for Direct Access RDP connections. \n\nCompensating controls handled within Citrix are not handled by BloodHound at this time.';
+    const disabledText =
+        'Analysis has been removed with Citrix Configuration, this will result in BloodHound performing analysis to account for this change';
 
     return (
         <Dialog
             open={open}
-            maxWidth='md'
+            maxWidth='sm'
             aria-labelledby='citrix-rdp-alert-dialog-title'
             aria-describedby='citrix-rdp-alert-dialog-description'>
-            <DialogTitle id='citrix-rdp-alert-dialog-title'>Confirm environment configuration</DialogTitle>
+            <DialogTitle id='citrix-rdp-alert-dialog-title' sx={{ fontSize: '20px' }}>
+                Confirm environment configuration
+            </DialogTitle>
             <DialogContent sx={{ paddingBottom: 0 }}>
-                <Typography
-                    variant='body1'
-                    component='div'
-                    sx={{ display: 'flex', alignItems: 'center', paddingBottom: '16px' }}>
-                    <FontAwesomeIcon icon={faTriangleExclamation} size='2x' />
-                    <Typography sx={{ marginLeft: '20px' }}>{dialogDescription}</Typography>
+                <Typography variant='body2' sx={{ paddingBottom: '16px', whiteSpace: 'break-spaces' }}>
+                    {isEnabled ? enabledText : disabledText}
                 </Typography>
-                <Typography>
+                <Typography variant='body2'>
                     Select <b>`Confirm`</b> to proceed and to start analysis.
                 </Typography>
-                <Typography>
+                <Typography variant='body2'>
                     Select <b>`Cancel`</b> to return to previous configuration.
                 </Typography>
             </DialogContent>
