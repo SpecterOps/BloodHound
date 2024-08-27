@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC, ReactNode } from 'react';
-import { Paper, Box, Typography } from '@mui/material';
+import { Paper, Box, Typography, useTheme } from '@mui/material';
+import { addOpacityToHex } from '../utils/colors';
 import { Switch } from '@bloodhoundenterprise/doodleui';
 
 type CardWithSwitchProps = {
@@ -27,8 +28,27 @@ type CardWithSwitchProps = {
 };
 
 const CardWithSwitch: FC<CardWithSwitchProps> = ({ title, description, isEnabled, onSwitchChange, children }) => {
+    const theme = useTheme();
+
+    const enabledStyles = {
+        background: theme.palette.background.paper,
+        borderColor: 'transparent',
+    };
+    const disabledStyles = {
+        background: addOpacityToHex(theme.palette.background.paper, 30),
+        borderColor: theme.palette.neutral.tertiary,
+        boxShadow: 'none',
+    };
+
     return (
-        <Paper sx={{ padding: 2 }}>
+        <Paper
+            sx={{
+                padding: 2,
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                borderRadius: '8px',
+                ...(isEnabled ? enabledStyles : disabledStyles),
+            }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <Typography variant='h4'>{title}</Typography>
                 <Switch label={isEnabled ? 'On' : 'Off'} checked={isEnabled} onCheckedChange={onSwitchChange}></Switch>
