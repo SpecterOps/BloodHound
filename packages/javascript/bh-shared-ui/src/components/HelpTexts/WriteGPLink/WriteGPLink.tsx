@@ -14,16 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package migration
+import General from './General';
+import WindowsAbuse from './WindowsAbuse';
+import LinuxAbuse from './LinuxAbuse';
+import Opsec from './Opsec';
+import References from './References';
 
-import "gorm.io/gorm"
+const WriteGPLink = {
+    general: General,
+    windowsAbuse: WindowsAbuse,
+    linuxAbuse: LinuxAbuse,
+    opsec: Opsec,
+    references: References,
+};
 
-func (s *Migrator) cleanupIngest() error {
-	return s.DB.Transaction(func(tx *gorm.DB) error {
-		if result := tx.Exec(`truncate table ingest_tasks;`); result.Error != nil {
-			return result.Error
-		}
-
-		return nil
-	})
-}
+export default WriteGPLink;
