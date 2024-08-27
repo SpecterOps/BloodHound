@@ -21,7 +21,6 @@ package ad
 
 import (
 	"errors"
-
 	graph "github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -79,6 +78,7 @@ var (
 	RemoteInteractiveLogonPrivilege = graph.StringKind("RemoteInteractiveLogonPrivilege")
 	SyncLAPSPassword                = graph.StringKind("SyncLAPSPassword")
 	WriteAccountRestrictions        = graph.StringKind("WriteAccountRestrictions")
+	WriteGPLink                     = graph.StringKind("WriteGPLink")
 	RootCAFor                       = graph.StringKind("RootCAFor")
 	DCFor                           = graph.StringKind("DCFor")
 	PublishedTo                     = graph.StringKind("PublishedTo")
@@ -117,88 +117,110 @@ var (
 type Property string
 
 const (
-	AdminCount                             Property = "admincount"
-	CASecurityCollected                    Property = "casecuritycollected"
-	CAName                                 Property = "caname"
-	CertChain                              Property = "certchain"
-	CertName                               Property = "certname"
-	CertThumbprint                         Property = "certthumbprint"
-	CertThumbprints                        Property = "certthumbprints"
-	HasEnrollmentAgentRestrictions         Property = "hasenrollmentagentrestrictions"
-	EnrollmentAgentRestrictionsCollected   Property = "enrollmentagentrestrictionscollected"
-	IsUserSpecifiesSanEnabled              Property = "isuserspecifiessanenabled"
-	IsUserSpecifiesSanEnabledCollected     Property = "isuserspecifiessanenabledcollected"
-	RoleSeparationEnabled                  Property = "roleseparationenabled"
-	RoleSeparationEnabledCollected         Property = "roleseparationenabledcollected"
-	HasBasicConstraints                    Property = "hasbasicconstraints"
-	BasicConstraintPathLength              Property = "basicconstraintpathlength"
-	UnresolvedPublishedTemplates           Property = "unresolvedpublishedtemplates"
-	DNSHostname                            Property = "dnshostname"
-	CrossCertificatePair                   Property = "crosscertificatepair"
-	DistinguishedName                      Property = "distinguishedname"
-	DomainFQDN                             Property = "domain"
-	DomainSID                              Property = "domainsid"
-	Sensitive                              Property = "sensitive"
-	HighValue                              Property = "highvalue"
-	BlocksInheritance                      Property = "blocksinheritance"
-	IsACL                                  Property = "isacl"
-	IsACLProtected                         Property = "isaclprotected"
-	IsDeleted                              Property = "isdeleted"
-	Enforced                               Property = "enforced"
-	Department                             Property = "department"
-	HasCrossCertificatePair                Property = "hascrosscertificatepair"
-	HasSPN                                 Property = "hasspn"
-	UnconstrainedDelegation                Property = "unconstraineddelegation"
-	LastLogon                              Property = "lastlogon"
-	LastLogonTimestamp                     Property = "lastlogontimestamp"
-	IsPrimaryGroup                         Property = "isprimarygroup"
-	HasLAPS                                Property = "haslaps"
-	DontRequirePreAuth                     Property = "dontreqpreauth"
-	LogonType                              Property = "logontype"
-	HasURA                                 Property = "hasura"
-	PasswordNeverExpires                   Property = "pwdneverexpires"
-	PasswordNotRequired                    Property = "passwordnotreqd"
-	FunctionalLevel                        Property = "functionallevel"
-	TrustType                              Property = "trusttype"
-	SidFiltering                           Property = "sidfiltering"
-	TrustedToAuth                          Property = "trustedtoauth"
-	SamAccountName                         Property = "samaccountname"
-	CertificateMappingMethodsRaw           Property = "certificatemappingmethodsraw"
-	CertificateMappingMethods              Property = "certificatemappingmethods"
-	StrongCertificateBindingEnforcementRaw Property = "strongcertificatebindingenforcementraw"
-	StrongCertificateBindingEnforcement    Property = "strongcertificatebindingenforcement"
-	EKUs                                   Property = "ekus"
-	SubjectAltRequireUPN                   Property = "subjectaltrequireupn"
-	SubjectAltRequireDNS                   Property = "subjectaltrequiredns"
-	SubjectAltRequireDomainDNS             Property = "subjectaltrequiredomaindns"
-	SubjectAltRequireEmail                 Property = "subjectaltrequireemail"
-	SubjectAltRequireSPN                   Property = "subjectaltrequirespn"
-	SubjectRequireEmail                    Property = "subjectrequireemail"
-	AuthorizedSignatures                   Property = "authorizedsignatures"
-	ApplicationPolicies                    Property = "applicationpolicies"
-	IssuancePolicies                       Property = "issuancepolicies"
-	SchemaVersion                          Property = "schemaversion"
-	RequiresManagerApproval                Property = "requiresmanagerapproval"
-	AuthenticationEnabled                  Property = "authenticationenabled"
-	EnrolleeSuppliesSubject                Property = "enrolleesuppliessubject"
-	CertificateApplicationPolicy           Property = "certificateapplicationpolicy"
-	CertificateNameFlag                    Property = "certificatenameflag"
-	EffectiveEKUs                          Property = "effectiveekus"
-	EnrollmentFlag                         Property = "enrollmentflag"
-	Flags                                  Property = "flags"
-	NoSecurityExtension                    Property = "nosecurityextension"
-	RenewalPeriod                          Property = "renewalperiod"
-	ValidityPeriod                         Property = "validityperiod"
-	OID                                    Property = "oid"
-	HomeDirectory                          Property = "homedirectory"
-	CertificatePolicy                      Property = "certificatepolicy"
-	CertTemplateOID                        Property = "certtemplateoid"
-	GroupLinkID                            Property = "grouplinkid"
-	ObjectGUID                             Property = "objectguid"
+	AdminCount                              Property = "admincount"
+	CASecurityCollected                     Property = "casecuritycollected"
+	CAName                                  Property = "caname"
+	CertChain                               Property = "certchain"
+	CertName                                Property = "certname"
+	CertThumbprint                          Property = "certthumbprint"
+	CertThumbprints                         Property = "certthumbprints"
+	HasEnrollmentAgentRestrictions          Property = "hasenrollmentagentrestrictions"
+	EnrollmentAgentRestrictionsCollected    Property = "enrollmentagentrestrictionscollected"
+	IsUserSpecifiesSanEnabled               Property = "isuserspecifiessanenabled"
+	IsUserSpecifiesSanEnabledCollected      Property = "isuserspecifiessanenabledcollected"
+	RoleSeparationEnabled                   Property = "roleseparationenabled"
+	RoleSeparationEnabledCollected          Property = "roleseparationenabledcollected"
+	HasBasicConstraints                     Property = "hasbasicconstraints"
+	BasicConstraintPathLength               Property = "basicconstraintpathlength"
+	UnresolvedPublishedTemplates            Property = "unresolvedpublishedtemplates"
+	DNSHostname                             Property = "dnshostname"
+	CrossCertificatePair                    Property = "crosscertificatepair"
+	DistinguishedName                       Property = "distinguishedname"
+	DomainFQDN                              Property = "domain"
+	DomainSID                               Property = "domainsid"
+	Sensitive                               Property = "sensitive"
+	HighValue                               Property = "highvalue"
+	BlocksInheritance                       Property = "blocksinheritance"
+	IsACL                                   Property = "isacl"
+	IsACLProtected                          Property = "isaclprotected"
+	IsDeleted                               Property = "isdeleted"
+	Enforced                                Property = "enforced"
+	Department                              Property = "department"
+	HasCrossCertificatePair                 Property = "hascrosscertificatepair"
+	HasSPN                                  Property = "hasspn"
+	UnconstrainedDelegation                 Property = "unconstraineddelegation"
+	LastLogon                               Property = "lastlogon"
+	LastLogonTimestamp                      Property = "lastlogontimestamp"
+	IsPrimaryGroup                          Property = "isprimarygroup"
+	HasLAPS                                 Property = "haslaps"
+	DontRequirePreAuth                      Property = "dontreqpreauth"
+	LogonType                               Property = "logontype"
+	HasURA                                  Property = "hasura"
+	PasswordNeverExpires                    Property = "pwdneverexpires"
+	PasswordNotRequired                     Property = "passwordnotreqd"
+	FunctionalLevel                         Property = "functionallevel"
+	TrustType                               Property = "trusttype"
+	SidFiltering                            Property = "sidfiltering"
+	TrustedToAuth                           Property = "trustedtoauth"
+	SamAccountName                          Property = "samaccountname"
+	CertificateMappingMethodsRaw            Property = "certificatemappingmethodsraw"
+	CertificateMappingMethods               Property = "certificatemappingmethods"
+	StrongCertificateBindingEnforcementRaw  Property = "strongcertificatebindingenforcementraw"
+	StrongCertificateBindingEnforcement     Property = "strongcertificatebindingenforcement"
+	EKUs                                    Property = "ekus"
+	SubjectAltRequireUPN                    Property = "subjectaltrequireupn"
+	SubjectAltRequireDNS                    Property = "subjectaltrequiredns"
+	SubjectAltRequireDomainDNS              Property = "subjectaltrequiredomaindns"
+	SubjectAltRequireEmail                  Property = "subjectaltrequireemail"
+	SubjectAltRequireSPN                    Property = "subjectaltrequirespn"
+	SubjectRequireEmail                     Property = "subjectrequireemail"
+	AuthorizedSignatures                    Property = "authorizedsignatures"
+	ApplicationPolicies                     Property = "applicationpolicies"
+	IssuancePolicies                        Property = "issuancepolicies"
+	SchemaVersion                           Property = "schemaversion"
+	RequiresManagerApproval                 Property = "requiresmanagerapproval"
+	AuthenticationEnabled                   Property = "authenticationenabled"
+	EnrolleeSuppliesSubject                 Property = "enrolleesuppliessubject"
+	CertificateApplicationPolicy            Property = "certificateapplicationpolicy"
+	CertificateNameFlag                     Property = "certificatenameflag"
+	EffectiveEKUs                           Property = "effectiveekus"
+	EnrollmentFlag                          Property = "enrollmentflag"
+	Flags                                   Property = "flags"
+	NoSecurityExtension                     Property = "nosecurityextension"
+	RenewalPeriod                           Property = "renewalperiod"
+	ValidityPeriod                          Property = "validityperiod"
+	OID                                     Property = "oid"
+	HomeDirectory                           Property = "homedirectory"
+	CertificatePolicy                       Property = "certificatepolicy"
+	CertTemplateOID                         Property = "certtemplateoid"
+	GroupLinkID                             Property = "grouplinkid"
+	ObjectGUID                              Property = "objectguid"
+	ExpirePasswordsOnSmartCardOnlyAccounts  Property = "expirepasswordsonsmartcardonlyaccounts"
+	MachineAccountQuota                     Property = "machineaccountquota"
+	SupportedKerberosEncryptionTypes        Property = "supportedencryptiontypes"
+	TGTDelegationEnabled                    Property = "tgtdelegationenabled"
+	PasswordStoredUsingReversibleEncryption Property = "encryptedtextpwdallowed"
+	SmartcardRequired                       Property = "smartcardrequired"
+	UseDESKeyOnly                           Property = "usedeskeyonly"
+	LogonScriptEnabled                      Property = "logonscriptenabled"
+	LockedOut                               Property = "lockedout"
+	UserCannotChangePassword                Property = "passwordcantchange"
+	PasswordExpired                         Property = "passwordexpired"
+	DSHeuristics                            Property = "dsheuristics"
+	UserAccountControl                      Property = "useraccountcontrol"
+	TrustAttributes                         Property = "trustattributes"
+	MinPwdLength                            Property = "minpwdlength"
+	PwdProperties                           Property = "pwdproperties"
+	PwdHistoryLength                        Property = "pwdhistorylength"
+	LockoutThreshold                        Property = "lockoutthreshold"
+	MinPwdAge                               Property = "minpwdage"
+	MaxPwdAge                               Property = "maxpwdage"
+	LockoutDuration                         Property = "lockoutduration"
+	LockoutObservationWindow                Property = "lockoutobservationwindow"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationEnabled, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributes, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -358,6 +380,50 @@ func ParseProperty(source string) (Property, error) {
 		return GroupLinkID, nil
 	case "objectguid":
 		return ObjectGUID, nil
+	case "expirepasswordsonsmartcardonlyaccounts":
+		return ExpirePasswordsOnSmartCardOnlyAccounts, nil
+	case "machineaccountquota":
+		return MachineAccountQuota, nil
+	case "supportedencryptiontypes":
+		return SupportedKerberosEncryptionTypes, nil
+	case "tgtdelegationenabled":
+		return TGTDelegationEnabled, nil
+	case "encryptedtextpwdallowed":
+		return PasswordStoredUsingReversibleEncryption, nil
+	case "smartcardrequired":
+		return SmartcardRequired, nil
+	case "usedeskeyonly":
+		return UseDESKeyOnly, nil
+	case "logonscriptenabled":
+		return LogonScriptEnabled, nil
+	case "lockedout":
+		return LockedOut, nil
+	case "passwordcantchange":
+		return UserCannotChangePassword, nil
+	case "passwordexpired":
+		return PasswordExpired, nil
+	case "dsheuristics":
+		return DSHeuristics, nil
+	case "useraccountcontrol":
+		return UserAccountControl, nil
+	case "trustattributes":
+		return TrustAttributes, nil
+	case "minpwdlength":
+		return MinPwdLength, nil
+	case "pwdproperties":
+		return PwdProperties, nil
+	case "pwdhistorylength":
+		return PwdHistoryLength, nil
+	case "lockoutthreshold":
+		return LockoutThreshold, nil
+	case "minpwdage":
+		return MinPwdAge, nil
+	case "maxpwdage":
+		return MaxPwdAge, nil
+	case "lockoutduration":
+		return LockoutDuration, nil
+	case "lockoutobservationwindow":
+		return LockoutObservationWindow, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -520,6 +586,50 @@ func (s Property) String() string {
 		return string(GroupLinkID)
 	case ObjectGUID:
 		return string(ObjectGUID)
+	case ExpirePasswordsOnSmartCardOnlyAccounts:
+		return string(ExpirePasswordsOnSmartCardOnlyAccounts)
+	case MachineAccountQuota:
+		return string(MachineAccountQuota)
+	case SupportedKerberosEncryptionTypes:
+		return string(SupportedKerberosEncryptionTypes)
+	case TGTDelegationEnabled:
+		return string(TGTDelegationEnabled)
+	case PasswordStoredUsingReversibleEncryption:
+		return string(PasswordStoredUsingReversibleEncryption)
+	case SmartcardRequired:
+		return string(SmartcardRequired)
+	case UseDESKeyOnly:
+		return string(UseDESKeyOnly)
+	case LogonScriptEnabled:
+		return string(LogonScriptEnabled)
+	case LockedOut:
+		return string(LockedOut)
+	case UserCannotChangePassword:
+		return string(UserCannotChangePassword)
+	case PasswordExpired:
+		return string(PasswordExpired)
+	case DSHeuristics:
+		return string(DSHeuristics)
+	case UserAccountControl:
+		return string(UserAccountControl)
+	case TrustAttributes:
+		return string(TrustAttributes)
+	case MinPwdLength:
+		return string(MinPwdLength)
+	case PwdProperties:
+		return string(PwdProperties)
+	case PwdHistoryLength:
+		return string(PwdHistoryLength)
+	case LockoutThreshold:
+		return string(LockoutThreshold)
+	case MinPwdAge:
+		return string(MinPwdAge)
+	case MaxPwdAge:
+		return string(MaxPwdAge)
+	case LockoutDuration:
+		return string(LockoutDuration)
+	case LockoutObservationWindow:
+		return string(LockoutObservationWindow)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -682,6 +792,50 @@ func (s Property) Name() string {
 		return "Group Link ID"
 	case ObjectGUID:
 		return "Object GUID"
+	case ExpirePasswordsOnSmartCardOnlyAccounts:
+		return "Expire Passwords on Smart Card only Accounts"
+	case MachineAccountQuota:
+		return "Machine Account Quota"
+	case SupportedKerberosEncryptionTypes:
+		return "Supported Kerberos Encryption Types"
+	case TGTDelegationEnabled:
+		return "TGT Delegation Enabled"
+	case PasswordStoredUsingReversibleEncryption:
+		return "Password Stored Using Reversible Encryption"
+	case SmartcardRequired:
+		return "Smartcard Required"
+	case UseDESKeyOnly:
+		return "Use DES Key Only"
+	case LogonScriptEnabled:
+		return "Logon Script Enabled"
+	case LockedOut:
+		return "Locked Out"
+	case UserCannotChangePassword:
+		return "User Cannot Change Password"
+	case PasswordExpired:
+		return "Password Expired"
+	case DSHeuristics:
+		return "DSHeuristics"
+	case UserAccountControl:
+		return "User Account Control"
+	case TrustAttributes:
+		return "Trust Attributes"
+	case MinPwdLength:
+		return "Minimum password length"
+	case PwdProperties:
+		return "Password Properties"
+	case PwdHistoryLength:
+		return "Password History Length"
+	case LockoutThreshold:
+		return "Lockout Threshold"
+	case MinPwdAge:
+		return "Minimum Password Age"
+	case MaxPwdAge:
+		return "Maximum Password Age"
+	case LockoutDuration:
+		return "Lockout Duration"
+	case LockoutObservationWindow:
+		return "Lockout Observation Window"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -698,13 +852,13 @@ func Nodes() []graph.Kind {
 	return []graph.Kind{Entity, User, Computer, Group, GPO, OU, Container, Domain, LocalGroup, LocalUser, AIACA, RootCA, EnterpriseCA, NTAuthStore, CertTemplate, IssuancePolicy}
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonPrivilege, SyncLAPSPassword, WriteAccountRestrictions, RootCAFor, DCFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, CanAbuseUPNCertMapping, CanAbuseWeakCertBinding, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, OIDGroupLink, ExtendedByPolicy, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6a, ADCSESC6b, ADCSESC7, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToEntraUser}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonPrivilege, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, RootCAFor, DCFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, CanAbuseUPNCertMapping, CanAbuseWeakCertBinding, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, OIDGroupLink, ExtendedByPolicy, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6a, ADCSESC6b, ADCSESC7, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToEntraUser}
 }
 func ACLRelationships() []graph.Kind {
-	return []graph.Kind{AllExtendedRights, ForceChangePassword, AddMember, AddAllowedToAct, GenericAll, WriteDACL, WriteOwner, GenericWrite, ReadLAPSPassword, ReadGMSAPassword, Owns, AddSelf, WriteSPN, AddKeyCredentialLink, GetChanges, GetChangesAll, GetChangesInFilteredSet, WriteAccountRestrictions, SyncLAPSPassword, DCSync, ManageCertificates, ManageCA, Enroll, WritePKIEnrollmentFlag, WritePKINameFlag}
+	return []graph.Kind{AllExtendedRights, ForceChangePassword, AddMember, AddAllowedToAct, GenericAll, WriteDACL, WriteOwner, GenericWrite, ReadLAPSPassword, ReadGMSAPassword, Owns, AddSelf, WriteSPN, AddKeyCredentialLink, GetChanges, GetChangesAll, GetChangesInFilteredSet, WriteAccountRestrictions, WriteGPLink, SyncLAPSPassword, DCSync, ManageCertificates, ManageCA, Enroll, WritePKIEnrollmentFlag, WritePKINameFlag}
 }
 func PathfindingRelationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6a, ADCSESC6b, ADCSESC7, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, DCFor, SyncedToEntraUser}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6a, ADCSESC6b, ADCSESC7, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, DCFor, SyncedToEntraUser}
 }
 func IsACLKind(s graph.Kind) bool {
 	for _, acl := range ACLRelationships() {

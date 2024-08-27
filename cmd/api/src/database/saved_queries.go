@@ -34,6 +34,7 @@ type SavedQueriesData interface {
 	GetSharedSavedQueries(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error)
 	GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error)
 	IsSavedQueryPublic(ctx context.Context, savedQueryID int64) (bool, error)
+	IsSavedQuerySharedToUser(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error)
 }
 
 func (s *BloodhoundDB) GetSavedQuery(ctx context.Context, savedQueryID int64) (model.SavedQuery, error) {
@@ -113,7 +114,7 @@ func (s *BloodhoundDB) GetSharedSavedQueries(ctx context.Context, userID uuid.UU
 func (s *BloodhoundDB) GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error) {
 	savedQueries := model.SavedQueries{}
 
-	result := s.db.WithContext(ctx).Select("sqp.*").Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id").Where("sqp.public = true").Find(&savedQueries)
+	result := s.db.WithContext(ctx).Select("saved_queries.*").Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id").Where("sqp.public = true").Find(&savedQueries)
 
 	return savedQueries, CheckError(result)
 }
@@ -129,4 +130,12 @@ func (s *BloodhoundDB) IsSavedQueryPublic(ctx context.Context, savedQueryID int6
 		}
 		return false, nil
 	}
+}
+
+// IsSavedQuerySharedToUser returns true or false whether a provided saved query is shared with a provided user
+func (s *BloodhoundDB) IsSavedQuerySharedToUser(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error) {
+	rows := int64(0)
+	result := s.db.WithContext(ctx).Table("saved_queries_permissions").Where("query_id = ? AND shared_to_user_id = ?", queryID, userID).Count(&rows)
+
+	return rows > 0, CheckError(result)
 }

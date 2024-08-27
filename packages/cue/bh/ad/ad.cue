@@ -574,6 +574,160 @@ ObjectGUID: types.#StringEnum & {
 	representation: "objectguid"
 }
 
+ExpirePasswordsOnSmartCardOnlyAccounts: types.#StringEnum & {
+	symbol: "ExpirePasswordsOnSmartCardOnlyAccounts"
+	schema: "ad"
+	name: "Expire Passwords on Smart Card only Accounts"
+	representation: "expirepasswordsonsmartcardonlyaccounts"
+}
+
+MachineAccountQuota: types.#StringEnum & {
+	symbol: "MachineAccountQuota"
+	schema: "ad"
+	name: "Machine Account Quota"
+	representation: "machineaccountquota"
+}
+
+SupportedKerberosEncryptionTypes: types.#StringEnum & {
+	symbol: "SupportedKerberosEncryptionTypes"
+	schema: "ad"
+	name: "Supported Kerberos Encryption Types"
+	representation: "supportedencryptiontypes"
+}
+
+TGTDelegationEnabled: types.#StringEnum & {
+	symbol: "TGTDelegationEnabled"
+	schema: "ad"
+	name: "TGT Delegation Enabled"
+	representation: "tgtdelegationenabled"
+}
+
+PasswordStoredUsingReversibleEncryption: types.#StringEnum & {
+	symbol: "PasswordStoredUsingReversibleEncryption"
+	schema: "ad"
+	name: "Password Stored Using Reversible Encryption"
+	representation: "encryptedtextpwdallowed"
+}
+
+SmartcardRequired: types.#StringEnum & {
+	symbol: "SmartcardRequired"
+	schema: "ad"
+	name: "Smartcard Required"
+	representation: "smartcardrequired"
+}
+
+UseDESKeyOnly: types.#StringEnum & {
+	symbol: "UseDESKeyOnly"
+	schema: "ad"
+	name: "Use DES Key Only"
+	representation: "usedeskeyonly"
+}
+
+LogonScriptEnabled: types.#StringEnum & {
+	symbol: "LogonScriptEnabled"
+	schema: "ad"
+	name: "Logon Script Enabled"
+	representation: "logonscriptenabled"
+}
+
+LockedOut: types.#StringEnum & {
+	symbol: "LockedOut"
+	schema: "ad"
+	name: "Locked Out"
+	representation: "lockedout"
+}
+
+UserCannotChangePassword: types.#StringEnum & {
+	symbol: "UserCannotChangePassword"
+	schema: "ad"
+	name: "User Cannot Change Password"
+	representation: "passwordcantchange"
+}
+
+PasswordExpired: types.#StringEnum & {
+	symbol: "PasswordExpired"
+	schema: "ad"
+	name: "Password Expired"
+	representation: "passwordexpired"
+}
+
+DSHeuristics: types.#StringEnum & {
+	symbol: "DSHeuristics"
+	schema: "ad"
+	name: "DSHeuristics"
+	representation: "dsheuristics"
+}
+
+UserAccountControl: types.#StringEnum & {
+	symbol: "UserAccountControl"
+	schema: "ad"
+	name: "User Account Control"
+	representation: "useraccountcontrol"
+}
+
+TrustAttributes: types.#StringEnum & {
+	symbol: "TrustAttributes"
+	schema: "ad"
+	name: "Trust Attributes"
+	representation: "trustattributes"
+}
+
+LockoutDuration: types.#StringEnum & {
+	symbol: "LockoutDuration"
+	schema: "ad"
+	name: "Lockout Duration"
+	representation: "lockoutduration"
+}
+
+LockoutObservationWindow: types.#StringEnum & {
+	symbol: "LockoutObservationWindow"
+	schema: "ad"
+	name: "Lockout Observation Window"
+	representation: "lockoutobservationwindow"
+}
+
+MaxPwdAge: types.#StringEnum & {
+	symbol: "MaxPwdAge"
+	schema: "ad"
+	name: "Maximum Password Age"
+	representation: "maxpwdage"
+}
+
+MinPwdAge: types.#StringEnum & {
+	symbol: "MinPwdAge"
+	schema: "ad"
+	name: "Minimum Password Age"
+	representation: "minpwdage"
+}
+
+LockoutThreshold: types.#StringEnum & {
+	symbol: "LockoutThreshold"
+	schema: "ad"
+	name: "Lockout Threshold"
+	representation: "lockoutthreshold"
+}
+
+PwdHistoryLength: types.#StringEnum & {
+	symbol: "PwdHistoryLength"
+	schema: "ad"
+	name: "Password History Length"
+	representation: "pwdhistorylength"
+}
+
+PwdProperties: types.#StringEnum & {
+	symbol: "PwdProperties"
+	schema: "ad"
+	name: "Password Properties"
+	representation: "pwdproperties"
+}
+
+MinPwdLength: types.#StringEnum & {
+	symbol: "MinPwdLength"
+	schema: "ad"
+	name: "Minimum password length"
+	representation: "minpwdlength"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -652,7 +806,29 @@ Properties: [
 	CertificatePolicy,
 	CertTemplateOID,
 	GroupLinkID,
-	ObjectGUID
+	ObjectGUID,
+	ExpirePasswordsOnSmartCardOnlyAccounts,
+	MachineAccountQuota,
+	SupportedKerberosEncryptionTypes,
+	TGTDelegationEnabled,
+	PasswordStoredUsingReversibleEncryption,
+	SmartcardRequired,
+	UseDESKeyOnly,
+	LogonScriptEnabled,
+	LockedOut,
+	UserCannotChangePassword,
+	PasswordExpired,
+	DSHeuristics,
+	UserAccountControl,
+	TrustAttributes,
+	MinPwdLength,
+	PwdProperties,
+	PwdHistoryLength,
+	LockoutThreshold,
+	MinPwdAge,
+	MaxPwdAge,
+	LockoutDuration,
+	LockoutObservationWindow
 ]
 
 // Kinds
@@ -939,6 +1115,11 @@ WriteAccountRestrictions: types.#Kind & {
 	schema: "active_directory"
 }
 
+WriteGPLink: types.#Kind & {
+	symbol: "WriteGPLink"
+	schema: "active_directory"
+}
+
 GetChangesInFilteredSet: types.#Kind & {
 	symbol: "GetChangesInFilteredSet"
 	schema: "active_directory"
@@ -1153,6 +1334,7 @@ RelationshipKinds: [
 	RemoteInteractiveLogonPrivilege,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
+	WriteGPLink,
 	RootCAFor,
 	DCFor,
 	PublishedTo,
@@ -1208,6 +1390,7 @@ ACLRelationships: [
 	GetChangesAll,
 	GetChangesInFilteredSet,
 	WriteAccountRestrictions,
+	WriteGPLink,
 	SyncLAPSPassword,
 	DCSync,
 	ManageCertificates,
@@ -1250,6 +1433,7 @@ PathfindingRelationships: [
 	AddKeyCredentialLink,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
+	WriteGPLink,
 	GoldenCert,
 	ADCSESC1,
 	ADCSESC3,

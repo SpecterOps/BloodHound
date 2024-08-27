@@ -431,7 +431,7 @@ func (s Resources) getAssetGroupMembers(response http.ResponseWriter, request *h
 		} else if assetGroup, err := s.DB.GetAssetGroup(request.Context(), int32(assetGroupID)); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return agMembers, err
-		} else if assetGroupNodes, err := s.GraphQuery.GetAssetGroupNodes(request.Context(), assetGroup.Tag); err != nil {
+		} else if assetGroupNodes, err := s.GraphQuery.GetAssetGroupNodes(request.Context(), assetGroup.Tag, assetGroup.SystemGroup); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error fetching nodes for asset group ID %v: %v", assetGroup.ID, err), request), response)
 			return agMembers, err
 		} else if agMembers, err = parseAGMembersFromNodes(assetGroupNodes, assetGroup.Selectors, int(assetGroup.ID)).SortBy(sortByColumns); err != nil {
@@ -520,16 +520,14 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 
 		if node.Kinds.ContainsOneOf(azure.Entity) {
 			if tenantID, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
-				log.Warnf("%s is missing for node %d, skipping AG Membership...", azure.TenantID.String(), node.ID)
-				continue
+				log.Warnf("%s is missing for node %d", azure.TenantID.String(), node.ID)
 			} else {
 				agMember.EnvironmentKind = azure.Tenant.String()
 				agMember.EnvironmentID = tenantID
 			}
 		} else if node.Kinds.ContainsOneOf(ad.Entity) {
 			if domainSID, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				log.Warnf("%s is missing for node %d, skipping AG Membership...", ad.DomainSID.String(), node.ID)
-				continue
+				log.Warnf("%s is missing for node %d", ad.DomainSID.String(), node.ID)
 			} else {
 				agMember.EnvironmentKind = ad.Domain.String()
 				agMember.EnvironmentID = domainSID

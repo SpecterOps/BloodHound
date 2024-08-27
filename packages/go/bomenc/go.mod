@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package migration
+module github.com/specterops/bloodhound/bomenc
 
-import "gorm.io/gorm"
+go 1.21.3
 
-func (s *Migrator) cleanupIngest() error {
-	return s.DB.Transaction(func(tx *gorm.DB) error {
-		if result := tx.Exec(`truncate table ingest_tasks;`); result.Error != nil {
-			return result.Error
-		}
+require (
+	github.com/stretchr/testify v1.9.0
+	golang.org/x/text v0.17.0
+)
 
-		return nil
-	})
-}
+require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rogpeppe/go-internal v1.10.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+)

@@ -74,6 +74,7 @@ func (s PermissionSet) All() model.Permissions {
 	}
 }
 
+// Permissions Note: Not the only source of truth, changes here must be added to a migration *.sql file to update the permissions table
 func Permissions() PermissionSet {
 	return PermissionSet{
 		AppReadApplicationConfiguration:  model.NewPermission("app", "ReadAppConfig"),

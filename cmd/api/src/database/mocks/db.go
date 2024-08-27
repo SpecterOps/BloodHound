@@ -545,6 +545,34 @@ func (mr *MockDatabaseMockRecorder) DeleteSavedQuery(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQuery", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQuery), arg0, arg1)
 }
 
+// DeleteSavedQueryPermissionsForUser mocks base method.
+func (m *MockDatabase) DeleteSavedQueryPermissionsForUser(arg0 context.Context, arg1 int64, arg2 uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSavedQueryPermissionsForUser", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSavedQueryPermissionsForUser indicates an expected call of DeleteSavedQueryPermissionsForUser.
+func (mr *MockDatabaseMockRecorder) DeleteSavedQueryPermissionsForUser(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQueryPermissionsForUser", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQueryPermissionsForUser), arg0, arg1, arg2)
+}
+
+// DeleteSavedQueryPermissionsForUsers mocks base method.
+func (m *MockDatabase) DeleteSavedQueryPermissionsForUsers(arg0 context.Context, arg1 int64, arg2 []uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSavedQueryPermissionsForUsers", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSavedQueryPermissionsForUsers indicates an expected call of DeleteSavedQueryPermissionsForUsers.
+func (mr *MockDatabaseMockRecorder) DeleteSavedQueryPermissionsForUsers(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSavedQueryPermissionsForUsers", reflect.TypeOf((*MockDatabase)(nil).DeleteSavedQueryPermissionsForUsers), arg0, arg1, arg2)
+}
+
 // DeleteUser mocks base method.
 func (m *MockDatabase) DeleteUser(arg0 context.Context, arg1 model.User) error {
 	m.ctrl.T.Helper()
@@ -1279,6 +1307,21 @@ func (mr *MockDatabaseMockRecorder) IsSavedQueryPublic(arg0, arg1 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSavedQueryPublic", reflect.TypeOf((*MockDatabase)(nil).IsSavedQueryPublic), arg0, arg1)
 }
 
+// IsSavedQuerySharedToUser mocks base method.
+func (m *MockDatabase) IsSavedQuerySharedToUser(arg0 context.Context, arg1 int64, arg2 uuid.UUID) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsSavedQuerySharedToUser", arg0, arg1, arg2)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsSavedQuerySharedToUser indicates an expected call of IsSavedQuerySharedToUser.
+func (mr *MockDatabaseMockRecorder) IsSavedQuerySharedToUser(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSavedQuerySharedToUser", reflect.TypeOf((*MockDatabase)(nil).IsSavedQuerySharedToUser), arg0, arg1, arg2)
+}
+
 // ListAuditLogs mocks base method.
 func (m *MockDatabase) ListAuditLogs(arg0 context.Context, arg1, arg2 time.Time, arg3, arg4 int, arg5 string, arg6 model.SQLFilter) (model.AuditLogs, int, error) {
 	m.ctrl.T.Helper()
@@ -1396,21 +1439,6 @@ func (m *MockDatabase) RequestCollectedGraphDataDeletion(arg0 context.Context, a
 func (mr *MockDatabaseMockRecorder) RequestCollectedGraphDataDeletion(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestCollectedGraphDataDeletion", reflect.TypeOf((*MockDatabase)(nil).RequestCollectedGraphDataDeletion), arg0, arg1)
-}
-
-// RequiresMigration mocks base method.
-func (m *MockDatabase) RequiresMigration(arg0 context.Context) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RequiresMigration", arg0)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RequiresMigration indicates an expected call of RequiresMigration.
-func (mr *MockDatabaseMockRecorder) RequiresMigration(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequiresMigration", reflect.TypeOf((*MockDatabase)(nil).RequiresMigration), arg0)
 }
 
 // SavedQueryBelongsToUser mocks base method.

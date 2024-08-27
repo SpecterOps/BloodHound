@@ -23,6 +23,7 @@ export const ZERO_VALUE_API_DATE = '0001-01-01T00:00:00Z';
 
 export const TIER_ZERO_TAG = 'admin_tier_0';
 export const TIER_ZERO_LABEL = 'High Value';
+export const OWNED_OBJECT_TAG = 'owned';
 
 export const lightPalette = {
     primary: {
@@ -133,14 +134,13 @@ export const typography: Partial<Theme['typography']> = {
     },
 };
 
-
 const defaultPortalContainer = {
     // Defaults all MUI components that leverage the Modal construct to portal to a child of the applicationContainer element.
     // If not for this, any tailwind based components in a portal and outside the applicationContainer will not respect the current theme.
     // Controlling doodle components: https://tailwindcss.com/docs/dark-mode#toggling-dark-mode-manually
     // Modal construct: https://mui.com/material-ui/api/modal/
-    container: () => document.getElementById('app-root') // Callback so this is re-run on useLayoutEffect within MUI
-}
+    container: () => document.getElementById('app-root'), // Callback so this is re-run on useLayoutEffect within MUI
+};
 
 export const components = (theme: Theme): Partial<Theme['components']> => ({
     MuiButton: {
@@ -202,7 +202,7 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
     },
     MuiDialog: {
         defaultProps: {
-            ...defaultPortalContainer
+            ...defaultPortalContainer,
         },
         styleOverrides: {
             root: {
@@ -215,17 +215,17 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
     },
     MuiMenu: {
         defaultProps: {
-            ...defaultPortalContainer
-        }
+            ...defaultPortalContainer,
+        },
     },
     MuiAutocomplete: {
         defaultProps: {
             componentsProps: {
                 popper: {
-                    ...defaultPortalContainer
-                }
-            }
-        }
+                    ...defaultPortalContainer,
+                },
+            },
+        },
     },
     MuiDialogActions: {
         styleOverrides: {
@@ -236,7 +236,7 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
     },
     MuiPopover: {
         defaultProps: {
-            ...defaultPortalContainer
+            ...defaultPortalContainer,
         },
         styleOverrides: {
             root: {

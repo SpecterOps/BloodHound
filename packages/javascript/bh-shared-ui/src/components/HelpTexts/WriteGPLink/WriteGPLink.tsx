@@ -14,16 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package migration
+import General from './General';
+import WindowsAbuse from './WindowsAbuse';
+import LinuxAbuse from './LinuxAbuse';
+import Opsec from './Opsec';
+import References from './References';
 
-import (
-	"testing"
+const WriteGPLink = {
+    general: General,
+    windowsAbuse: WindowsAbuse,
+    linuxAbuse: LinuxAbuse,
+    opsec: Opsec,
+    references: References,
+};
 
-	"github.com/stretchr/testify/require"
-)
-
-func TestSelectorToObjectID(t *testing.T) {
-	require.Equal(t, "nope", SelectorToObjectID(`nope`))
-	require.Equal(t, "S-1-5-21-12345-12345-12345-12345", SelectorToObjectID(`match (t) WHERE (t:Base) AND t.objectid="S-1-5-21-12345-12345-12345-12345"`))
-	require.Equal(t, "S-1-5-21-12345-12345-12345-12345", SelectorToObjectID(`match (t :Base {objectid: "S-1-5-21-12345-12345-12345-12345"})`))
-}
+export default WriteGPLink;
