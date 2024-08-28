@@ -886,7 +886,6 @@ export enum AzureKindProperties {
     AppOwnerOrganizationID = 'appownerorganizationid',
     AppDescription = 'appdescription',
     AppDisplayName = 'appdisplayname',
-    LoginURL = 'loginurl',
     ServicePrincipalType = 'serviceprincipaltype',
     UserType = 'usertype',
     TenantID = 'tenantid',
@@ -909,6 +908,7 @@ export enum AzureKindProperties {
     MFAEnabled = 'mfaenabled',
     License = 'license',
     Licenses = 'licenses',
+    LoginURL = 'loginurl',
     MFAEnforced = 'mfaenforced',
     UserPrincipalName = 'userprincipalname',
     IsAssignableToRole = 'isassignabletorole',
@@ -924,8 +924,6 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'App Description';
         case AzureKindProperties.AppDisplayName:
             return 'App Display Name';
-        case AzureKindProperties.LoginURL:
-            return 'Login URL';
         case AzureKindProperties.ServicePrincipalType:
             return 'Service Principal Type';
         case AzureKindProperties.UserType:
@@ -970,6 +968,8 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'License';
         case AzureKindProperties.Licenses:
             return 'Licenses';
+        case AzureKindProperties.LoginURL:
+            return 'Login URL';
         case AzureKindProperties.MFAEnforced:
             return 'MFA Enforced';
         case AzureKindProperties.UserPrincipalName:
