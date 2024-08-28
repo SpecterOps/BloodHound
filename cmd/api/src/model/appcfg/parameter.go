@@ -30,19 +30,12 @@ import (
 )
 
 const (
-	PasswordExpirationWindow            = "auth.password_expiration_window"
-	DefaultPasswordExpirationWindow     = "P90D"
-	PasswordExpirationWindowName        = "Local Auth Password Expiry Window"
-	PasswordExpirationWindowDescription = "This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601."
+	PasswordExpirationWindow        = "auth.password_expiration_window"
+	DefaultPasswordExpirationWindow = time.Hour * 24 * 90
 
-	Neo4jConfigs            = "neo4j.configuration"
-	Neo4jConfigsName        = "Neo4j Configuration Parameters"
-	Neo4jConfigsDescription = "This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J."
-
+	Neo4jConfigs = "neo4j.configuration"
+	PruneTTL     = "prune.ttl"
 	CitrixRDPSupportKey         = "analysis.citrix_rdp_support"
-	CitrixRDPSupportName        = "Citrix RDP Support"
-	CitrixRDPSupportDescription = "This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a 'Direct Access Users' local group will assume that Citrix is installed and CanRDP edges will require membership of both 'Direct Access Users' and 'Remote Desktop Users' local groups on the computer."
-
 	PruneTTL = "prune.ttl"
 )
 
@@ -90,6 +83,8 @@ type ParameterService interface {
 	SetConfigurationParameter(ctx context.Context, configurationParameter Parameter) error
 }
 
+// PasswordExpirationWindow
+
 type PasswordExpiration struct {
 	Duration time.Duration `json:"duration"`
 }
@@ -113,17 +108,21 @@ func (s *PasswordExpiration) UnmarshalJSON(data []byte) error {
 	}
 }
 
-func GetPasswordExpiration(ctx context.Context, service ParameterService) (time.Duration, error) {
+func GetPasswordExpiration(ctx context.Context, service ParameterService) time.Duration {
 	var expiration PasswordExpiration
 
 	if cfg, err := service.GetConfigurationParameter(ctx, PasswordExpirationWindow); err != nil {
-		return 0, err
+		log.Warnf("Failed to fetch password expiratio configuration; returning default values")
+		return DefaultPasswordExpirationWindow
 	} else if err := cfg.Map(&expiration); err != nil {
-		return 0, err
+		log.Warnf("Invalid password expiration configuration supplied; returning default values")
+		return DefaultPasswordExpirationWindow
 	}
 
-	return expiration.Duration, nil
+	return expiration.Duration
 }
+
+// Neo4jConfigs
 
 type Neo4jParameters struct {
 	WriteFlushSize int `json:"write_flush_size,omitempty"`

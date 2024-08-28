@@ -47,14 +47,10 @@ func Test_GetAppConfigs(t *testing.T) {
 		switch parameter.Key {
 		case appcfg.PasswordExpirationWindow:
 			mapParameter(t, &passwordExpirationValue, parameter)
-			require.Equal(t, appcfg.PasswordExpirationWindowName, parameter.Name)
-			require.Equal(t, appcfg.PasswordExpirationWindowDescription, parameter.Description)
 			require.Equal(t, appcfg.DefaultPasswordExpirationWindow, passwordExpirationValue.Duration)
 			passwordExpirationWindowFound = true
 		case appcfg.Neo4jConfigs:
 			mapParameter(t, &neo4jParametersValue, parameter)
-			require.Equal(t, appcfg.Neo4jConfigsName, parameter.Name)
-			require.Equal(t, appcfg.Neo4jConfigsDescription, parameter.Description)
 			require.Equal(t, neo4j.DefaultBatchWriteSize, neo4jParametersValue.BatchWriteSize)
 			require.Equal(t, neo4j.DefaultWriteFlushSize, neo4jParametersValue.WriteFlushSize)
 			neo4jConfigsFound = true
@@ -81,8 +77,6 @@ func Test_GetAppConfigWithParameter(t *testing.T) {
 	require.True(t, len(config) == 1, "Response contains too many results")
 	require.Equal(t, appcfg.PasswordExpirationWindow, config[0].Key)
 	mapParameter(t, &passwordExpirationValue, config[0])
-	require.Equal(t, appcfg.PasswordExpirationWindowName, config[0].Name)
-	require.Equal(t, appcfg.PasswordExpirationWindowDescription, config[0].Description)
 	require.Equal(t, appcfg.DefaultPasswordExpirationWindow, passwordExpirationValue.Duration)
 }
 
