@@ -19,6 +19,12 @@ import ConfirmCitrixRDPDialog from './CitrixRDPConfirmDialog';
 import { useGetConfiguration, useUpdateConfiguration } from '../../hooks';
 import { useState } from 'react';
 
+export const configurationData = {
+    title: 'Citrix RDP Support',
+    description:
+        'When enabled, post-processing for the CanRDP edge will look for the presence of the default "Direct Access Users" group and assume that only local Administrators and members of this group can RDP to the system without validation that Citrix VDA is present and correctly configured.Use with caution.',
+};
+
 // To do: Add this to the shared ui, just using here for ease
 const CitrixRDPConfiguration: FC = () => {
     const [isEnabled, setIsEnabled] = useState(false);
@@ -27,12 +33,6 @@ const CitrixRDPConfiguration: FC = () => {
     // To do: make sure this is sending and getting the data we need
     const { data, isLoading, isError, isSuccess } = useGetConfiguration();
     const updateConfigurationMutation = useUpdateConfiguration();
-
-    const configurationData = {
-        title: 'Citrix RDP Support',
-        description:
-            'When enabled, post-processing for the CanRDP edge will look for the presence of the default "Direct Access Users" group and assume that only local Administrators and members of this group can RDP to the system without validation that Citrix VDA is present and correctly configured.Use with caution.',
-    };
 
     console.log(data, isLoading, isError, isSuccess);
 
