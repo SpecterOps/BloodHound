@@ -135,7 +135,7 @@ func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jPara
 
 	if neo4jParametersCfg, err := service.GetConfigurationParameter(ctx, Neo4jConfigs); err != nil {
 		log.Warnf("Failed to fetch neo4j configuration; returning default values")
-	} else if err = neo4jParametersCfg.Map(result); err != nil {
+	} else if err = neo4jParametersCfg.Map(&result); err != nil {
 		log.Warnf("Invalid neo4j configuration supplied; returning default values")
 	}
 
