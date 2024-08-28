@@ -8,9 +8,9 @@ type CitrixRDPConfirmDialogProps = {
     handleConfirm: () => void;
 };
 export const dialogTitle = 'Confirm environment configuration';
-export const enabledDialogDescription =
+const enabledDialogDescription =
     'Analysis has been added with Citrix Configuration, this will ensure that BloodHound can account for Direct Access RDP connections. \n\nCompensating controls handled within Citrix are not handled by BloodHound at this time.';
-export const disabledDialogDescription =
+const disabledDialogDescription =
     'Analysis has been removed with Citrix Configuration, this will result in BloodHound performing analysis to account for this change';
 
 const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, isEnabled, handleCancel, handleConfirm }) => {
