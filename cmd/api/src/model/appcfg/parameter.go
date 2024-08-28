@@ -33,10 +33,9 @@ const (
 	PasswordExpirationWindow        = "auth.password_expiration_window"
 	DefaultPasswordExpirationWindow = time.Hour * 24 * 90
 
-	Neo4jConfigs = "neo4j.configuration"
-	PruneTTL     = "prune.ttl"
-	CitrixRDPSupportKey         = "analysis.citrix_rdp_support"
-	PruneTTL = "prune.ttl"
+	Neo4jConfigs        = "neo4j.configuration"
+	PruneTTL            = "prune.ttl"
+	CitrixRDPSupportKey = "analysis.citrix_rdp_support"
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -144,6 +143,8 @@ func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jPara
 	return result
 }
 
+// CitrixRDP
+
 type CitrixRDPSupport struct {
 	Enabled bool `json:"enabled,omitempty"`
 }
@@ -159,6 +160,8 @@ func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 
 	return result.Enabled
 }
+
+// PruneTTL
 
 type PruneTTLParameters struct {
 	BaseTTL           time.Duration `json:"base_ttl,omitempty"`
