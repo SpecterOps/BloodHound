@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import userEvent from '@testing-library/user-event';
 import { render, screen } from '../../test-utils';
 import CitrixRDPConfiguration, { configurationData } from './CitrixRDPConfiguration';
+import { dialogTitle } from './CitrixRDPConfirmDialog';
 
 describe('CitrixRDPConfiguration', () => {
     beforeEach(() => {
@@ -34,6 +36,30 @@ describe('CitrixRDPConfiguration', () => {
         expect(panelSwitchLabel).toBeInTheDocument();
         expect(panelSwitch).not.toBeChecked();
     });
-    it.todo('when clicking on switch to on its shows modal and when clicking on confirm stays on', async () => {});
-    it.todo('when clicking on switch to on its shows modal and when clicking on cancel it returns to off', () => {});
+    it('when clicking on switch to on its shows modal and when clicking on confirm stays on', async () => {
+        const panelSwitch = screen.getByRole('switch');
+        const user = userEvent.setup();
+
+        await user.click(panelSwitch);
+
+        const panelDialogTitle = screen.getByText(dialogTitle, { exact: false });
+        const panelDialogDescription = screen.getByText(/Analysis has been added with Citrix Configuration/i);
+
+        expect(panelSwitch).toBeChecked();
+        expect(panelDialogTitle).toBeInTheDocument();
+        expect(panelDialogDescription).toBeInTheDocument();
+    });
+    it('when clicking on switch to on its shows modal and when clicking on cancel it returns to off', async () => {
+        const panelSwitch = screen.getByRole('switch');
+        const user = userEvent.setup();
+
+        await user.click(panelSwitch);
+
+        const panelDialogTitle = screen.getByText(dialogTitle, { exact: false });
+        const panelDialogDescription = screen.getByText(/Analysis has been removed with Citrix Configuration/i);
+
+        expect(panelSwitch).not.toBeChecked();
+        expect(panelDialogTitle).toBeInTheDocument();
+        expect(panelDialogDescription).toBeInTheDocument();
+    });
 });

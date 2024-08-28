@@ -7,13 +7,14 @@ type CitrixRDPConfirmDialogProps = {
     handleCancel: () => void;
     handleConfirm: () => void;
 };
+export const dialogTitle = 'Confirm environment configuration';
+export const enabledDialogDescription =
+    'Analysis has been added with Citrix Configuration, this will ensure that BloodHound can account for Direct Access RDP connections. \n\nCompensating controls handled within Citrix are not handled by BloodHound at this time.';
+export const disabledDialogDescription =
+    'Analysis has been removed with Citrix Configuration, this will result in BloodHound performing analysis to account for this change';
 
 const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, isEnabled, handleCancel, handleConfirm }) => {
     const theme = useTheme();
-    const enabledText =
-        'Analysis has been added with Citrix Configuration, this will ensure that BloodHound can account for Direct Access RDP connections. \n\nCompensating controls handled within Citrix are not handled by BloodHound at this time.';
-    const disabledText =
-        'Analysis has been removed with Citrix Configuration, this will result in BloodHound performing analysis to account for this change';
 
     return (
         <Dialog
@@ -22,11 +23,11 @@ const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, isEnabl
             aria-labelledby='citrix-rdp-alert-dialog-title'
             aria-describedby='citrix-rdp-alert-dialog-description'>
             <DialogTitle id='citrix-rdp-alert-dialog-title' sx={{ fontSize: '20px' }}>
-                Confirm environment configuration
+                {dialogTitle}
             </DialogTitle>
             <DialogContent sx={{ paddingBottom: 0 }}>
                 <Typography variant='body2' sx={{ paddingBottom: '16px', whiteSpace: 'break-spaces' }}>
-                    {isEnabled ? enabledText : disabledText}
+                    {isEnabled ? enabledDialogDescription : disabledDialogDescription}
                 </Typography>
                 <Typography variant='body2'>
                     Select <b>`Confirm`</b> to proceed and to start analysis.
