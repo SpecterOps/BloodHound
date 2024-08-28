@@ -92,7 +92,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		WithContext(bhCtx).
 		WithMethod(http.MethodPut).
 		WithHeader(headers.RequestID.String(), "requestID").
-		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUser.ID.String())).
+		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUser.ID.String())). //nolint:govet // Ignore non-constant format string failure because it's test code
 		WithURLPathVars(map[string]string{"user_id": goodUser.ID.String()}).
 		WithBody(v2.SetUserSecretRequest{
 			CurrentSecret:      currentPassword,
@@ -110,7 +110,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		WithContext(bhCtx).
 		WithMethod(http.MethodPut).
 		WithHeader(headers.RequestID.String(), "requestID").
-		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUser.ID.String())).
+		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUser.ID.String())). //nolint:govet // Ignore non-constant format string failure because it's test code
 		WithURLPathVars(map[string]string{"user_id": otherUser.ID.String()}).
 		WithBody(v2.SetUserSecretRequest{
 			Secret:             "tesT12345!@#$",
@@ -126,7 +126,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		WithContext(bhCtx).
 		WithMethod(http.MethodPut).
 		WithHeader(headers.RequestID.String(), "requestID").
-		WithURL(fmt.Sprintf(updateUserSecretPathFmt, badUser.ID.String())).
+		WithURL(fmt.Sprintf(updateUserSecretPathFmt, badUser.ID.String())). //nolint:govet // Ignore non-constant format string failure because it's test code
 		WithURLPathVars(map[string]string{"user_id": badUser.ID.String()}).
 		WithBody(v2.SetUserSecretRequest{
 			Secret:             "tesT12345!@#$",
@@ -146,7 +146,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		WithContext(bhCtx).
 		WithMethod(http.MethodPut).
 		WithHeader(headers.RequestID.String(), "requestID").
-		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUser.ID.String())).
+		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUser.ID.String())). //nolint:govet // Ignore non-constant format string failure because it's test code
 		WithURLPathVars(map[string]string{"user_id": goodUser.ID.String()}).
 		WithBody(v2.SetUserSecretRequest{
 			CurrentSecret:      "wrongPassword",
@@ -184,7 +184,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 	// Happy path
 	test.Request(t).
 		WithMethod(http.MethodPut).
-		WithURL(fmt.Sprintf(updateUserPathFmt, goodUserID.String())).
+		WithURL(fmt.Sprintf(updateUserPathFmt, goodUserID.String())). //nolint:govet // Ignore non-constant format string failure because it's test code
 		WithURLPathVars(map[string]string{
 			"user_id": goodUserID.String(),
 		}).
@@ -200,7 +200,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 	// Negative path where a user already has an auth secret set
 	test.Request(t).
 		WithMethod(http.MethodPut).
-		WithURL(fmt.Sprintf(updateUserPathFmt, badUserID.String())).
+		WithURL(fmt.Sprintf(updateUserPathFmt, badUserID.String())). //nolint:govet // Ignore non-constant format string failure because it's test code
 		WithURLPathVars(map[string]string{
 			"user_id": badUserID.String(),
 		}).
@@ -251,7 +251,7 @@ func TestManagementResource_DeleteSAMLProvider(t *testing.T) {
 	// Happy path
 	test.Request(t).
 		WithMethod(http.MethodDelete).
-		WithURL(fmt.Sprintf(samlProviderPathFmt, goodSAMLProvider.ID)).
+		WithURL(fmt.Sprintf(samlProviderPathFmt, goodSAMLProvider.ID)). //nolint:govet // Ignore non-constant format string failure because it's test code
 		WithURLPathVars(map[string]string{
 			api.URIPathVariableSAMLProviderID: fmt.Sprintf("%d", goodSAMLProvider.ID),
 		}).
@@ -262,7 +262,7 @@ func TestManagementResource_DeleteSAMLProvider(t *testing.T) {
 	// Negative path where a provider has attached users
 	test.Request(t).
 		WithMethod(http.MethodDelete).
-		WithURL(fmt.Sprintf(samlProviderPathFmt, samlProviderWithUsers.ID)).
+		WithURL(fmt.Sprintf(samlProviderPathFmt, samlProviderWithUsers.ID)). //nolint:govet // Ignore non-constant format string failure because it's test code
 		WithURLPathVars(map[string]string{
 			api.URIPathVariableSAMLProviderID: fmt.Sprintf("%d", samlProviderWithUsers.ID),
 		}).

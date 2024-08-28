@@ -908,6 +908,7 @@ export enum AzureKindProperties {
     MFAEnabled = 'mfaenabled',
     License = 'license',
     Licenses = 'licenses',
+    LoginURL = 'loginurl',
     MFAEnforced = 'mfaenforced',
     UserPrincipalName = 'userprincipalname',
     IsAssignableToRole = 'isassignabletorole',
@@ -967,6 +968,8 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'License';
         case AzureKindProperties.Licenses:
             return 'Licenses';
+        case AzureKindProperties.LoginURL:
+            return 'Login URL';
         case AzureKindProperties.MFAEnforced:
             return 'MFA Enforced';
         case AzureKindProperties.UserPrincipalName:
