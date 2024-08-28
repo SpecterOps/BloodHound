@@ -60,3 +60,53 @@ delete:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+put:
+  operationId: ShareSavedQuery
+  summary: Share a saved query or set it to public
+  description: Shares an existing saved query or makes it public
+  tags:
+    - Cypher
+    - Community
+    - Enterprise
+  requestBody:
+    description: The request body for sharing a saved query or making it public
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties: 
+            user_ids:
+              type: array
+              items: 
+                type: string
+                format: uuid
+            public:
+              type: boolean
+
+  responses:
+    201:
+      description: Created
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: './../schemas/model.saved-queries-permissions.yaml'
+    204:
+      $ref: './../responses/no-content.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
