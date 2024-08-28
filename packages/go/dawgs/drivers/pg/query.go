@@ -28,7 +28,6 @@ type liveQuery struct {
 	ctx          context.Context
 	tx           graph.Transaction
 	kindMapper   KindMapper
-	parameters   map[string]any
 	queryBuilder *query.Builder
 }
 

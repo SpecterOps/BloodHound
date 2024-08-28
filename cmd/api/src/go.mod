@@ -16,7 +16,7 @@
 
 module github.com/specterops/bloodhound/src
 
-go 1.21
+go 1.23
 
 require (
 	github.com/beevik/etree v1.2.0
@@ -28,6 +28,7 @@ require (
 	github.com/gobeam/stringy v0.0.6
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/schema v1.4.1

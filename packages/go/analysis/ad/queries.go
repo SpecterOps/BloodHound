@@ -148,7 +148,7 @@ func FetchActiveDirectoryTierZeroRoots(ctx context.Context, db graph.Database, d
 			attackPathRoots.AddSet(enforcedGPOs)
 		}
 
-		if (autoTagT0ParentObjectsFlag) {
+		if autoTagT0ParentObjectsFlag {
 			// Add the OUs to the attack path roots
 			if ous, err := FetchOUContainers(ctx, db, attackPathRoots); err != nil {
 				return nil, err
