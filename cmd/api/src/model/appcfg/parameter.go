@@ -18,6 +18,7 @@ package appcfg
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -31,11 +32,12 @@ import (
 const (
 	PasswordExpirationWindow            = "auth.password_expiration_window"
 	DefaultPasswordExpirationWindow     = "P90D"
-	Neo4jConfigs                        = "neo4j.configuration"
 	PasswordExpirationWindowName        = "Local Auth Password Expiry Window"
-	Neo4jConfigsName                    = "Neo4j Configuration Parameters"
 	PasswordExpirationWindowDescription = "This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601."
-	Neo4jConfigsDescription             = "This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J."
+
+	Neo4jConfigs            = "neo4j.configuration"
+	Neo4jConfigsName        = "Neo4j Configuration Parameters"
+	Neo4jConfigsDescription = "This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J."
 
 	CitrixRDPSupportKey         = "analysis.citrix_rdp_support"
 	CitrixRDPSupportName        = "Citrix RDP Support"
@@ -61,20 +63,16 @@ func (s Parameter) Map(value any) error {
 }
 
 func (s Parameter) IsValid(parameter string) bool {
-	availParams, err := AvailableParameters()
-	if err != nil {
-		log.Errorf("Error occurred getting AvailableParamters: %v", err)
-		return false
+	validKeys := map[string]bool{
+		PasswordExpirationWindow: true,
+		Neo4jConfigs:             true,
 	}
 
-	_, valid := availParams[parameter]
-	return valid
+	return validKeys[parameter]
 }
 
 // Parameters is a collection of Parameter structs.
 type Parameters []Parameter
-
-type ParameterSet map[string]Parameter
 
 // ParameterService is a contract which defines expected functionality for fetching and setting Parameter from an
 // abstract backend storage.
@@ -89,54 +87,26 @@ type ParameterService interface {
 	SetConfigurationParameter(ctx context.Context, configurationParameter Parameter) error
 }
 
-func AvailableParameters() (ParameterSet, error) {
-	if passwordExpirationValue, err := types.NewJSONBObject(PasswordExpiration{
-		Duration: DefaultPasswordExpirationWindow,
-	}); err != nil {
-		return ParameterSet{}, fmt.Errorf("error creating PasswordExpiration parameter: %w", err)
-	} else if neo4jExpirationValue, err := types.NewJSONBObject(Neo4jParameters{
-		BatchWriteSize: neo4j.DefaultBatchWriteSize,
-		WriteFlushSize: neo4j.DefaultWriteFlushSize,
-	}); err != nil {
-		return ParameterSet{}, fmt.Errorf("error creating neo4jExpirationValue parameter: %w", err)
-	} else if citrixRDPSupportValue, err := types.NewJSONBObject(CitrixRDPSupport{
-		Enabled: false,
-	}); err != nil {
-		return ParameterSet{}, fmt.Errorf("error creating CitrixRDPSupport parameter: %w", err)
-	} else {
-		return ParameterSet{
-			PasswordExpirationWindow: {
-				Key:         PasswordExpirationWindow,
-				Name:        PasswordExpirationWindowName,
-				Description: PasswordExpirationWindowDescription,
-				Value:       passwordExpirationValue,
-				Serial:      model.Serial{},
-			},
-			Neo4jConfigs: {
-				Key:         Neo4jConfigs,
-				Name:        Neo4jConfigsName,
-				Description: Neo4jConfigsDescription,
-				Value:       neo4jExpirationValue,
-			},
-			CitrixRDPSupportKey: {
-				Key:         CitrixRDPSupportKey,
-				Name:        CitrixRDPSupportName,
-				Description: CitrixRDPSupportDescription,
-				Value:       citrixRDPSupportValue,
-			},
-		}, nil
-	}
-}
-
 type PasswordExpiration struct {
-	Duration string `json:"duration"`
+	Duration time.Duration `json:"duration"`
 }
 
-func (s PasswordExpiration) ParseDuration() (time.Duration, error) {
-	if duration, err := iso8601.FromString(s.Duration); err != nil {
-		return 0, err
+// Because PasswordExpiration are stored as ISO strings, but we want to use them as durations, we override UnmarshalJSON to handle the conversion
+func (s *PasswordExpiration) UnmarshalJSON(data []byte) error {
+	pDb := struct {
+		Duration string `json:"duration,omitempty"`
+	}{}
+
+	if err := json.Unmarshal(data, &pDb); err != nil {
+		return fmt.Errorf("error unmarshaling data for PruneTTLParameters: %w", err)
 	} else {
-		return duration.ToDuration(), nil
+		if duration, err := iso8601.FromString(pDb.Duration); err != nil {
+			return err
+		} else {
+			s.Duration = duration.ToDuration()
+		}
+
+		return nil
 	}
 }
 
@@ -147,9 +117,9 @@ func GetPasswordExpiration(ctx context.Context, service ParameterService) (time.
 		return 0, err
 	} else if err := cfg.Map(&expiration); err != nil {
 		return 0, err
-	} else {
-		return expiration.ParseDuration()
 	}
+
+	return expiration.Duration, nil
 }
 
 type Neo4jParameters struct {
@@ -158,20 +128,15 @@ type Neo4jParameters struct {
 }
 
 func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jParameters {
-	var result Neo4jParameters
+	var result = Neo4jParameters{
+		WriteFlushSize: neo4j.DefaultWriteFlushSize,
+		BatchWriteSize: neo4j.DefaultBatchWriteSize,
+	}
 
 	if neo4jParametersCfg, err := service.GetConfigurationParameter(ctx, Neo4jConfigs); err != nil {
-		log.Errorf("Failed to fetch neo4j configuration; returning default values")
-		result = Neo4jParameters{
-			WriteFlushSize: neo4j.DefaultWriteFlushSize,
-			BatchWriteSize: neo4j.DefaultBatchWriteSize,
-		}
+		log.Warnf("Failed to fetch neo4j configuration; returning default values")
 	} else if err = neo4jParametersCfg.Map(result); err != nil {
-		log.Errorf("Invalid neo4j configuration supplied; returning default values")
-		result = Neo4jParameters{
-			WriteFlushSize: neo4j.DefaultWriteFlushSize,
-			BatchWriteSize: neo4j.DefaultBatchWriteSize,
-		}
+		log.Warnf("Invalid neo4j configuration supplied; returning default values")
 	}
 
 	return result
