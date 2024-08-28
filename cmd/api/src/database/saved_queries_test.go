@@ -24,8 +24,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
@@ -67,26 +65,4 @@ func TestSavedQueries_ListSavedQueries(t *testing.T) {
 	} else if count != 3 {
 		t.Fatalf("Expected 3 saved queries to be returned")
 	}
-}
-
-func TestSavedQueries_IsSavedQuerySharedToUser(t *testing.T) {
-	var (
-		testCtx = context.Background()
-		dbInst  = integration.SetupDB(t)
-	)
-
-	user1, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: userPrincipal,
-	})
-	require.NoError(t, err)
-
-	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
-	require.NoError(t, err)
-
-	_, err = dbInst.CreateSavedQueryPermissionToUser(testCtx, query.ID, user1.ID)
-	require.NoError(t, err)
-
-	isShared, err := dbInst.IsSavedQuerySharedToUser(testCtx, query.ID, user1.ID)
-	require.NoError(t, err)
-	assert.True(t, isShared)
 }

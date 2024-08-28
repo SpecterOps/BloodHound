@@ -1503,9 +1503,10 @@ func createContextWithAdminOwnerId(id uuid2.UUID) context.Context {
 				Unique: model.Unique{
 					ID: id,
 				},
-				Roles: []model.Role{{
+				Roles: model.Roles{{
 					Name:        auth.RoleAdministrator,
 					Description: "Can manage users, clients, and application configuration",
+					Permissions: auth.Permissions().All(),
 				}},
 			},
 		},
