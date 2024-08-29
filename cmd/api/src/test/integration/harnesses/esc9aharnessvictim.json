@@ -116,7 +116,9 @@
       },
       "caption": "DC",
       "labels": [],
-      "properties": {},
+      "properties": {
+        "StrongCertificateBindingEnforcementRaw": "1"
+      },
       "style": {
         "node-color": "#f44e3b",
         "caption-position": "inside",
@@ -310,16 +312,6 @@
     },
     {
       "id": "n4",
-      "fromId": "n3",
-      "toId": "n4",
-      "type": "CanAbuseWeakCertBinding",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n5",
       "fromId": "n4",
       "toId": "n0",
       "type": "DCFor",
@@ -330,7 +322,7 @@
       }
     },
     {
-      "id": "n6",
+      "id": "n5",
       "fromId": "n5",
       "toId": "n3",
       "type": "Enroll",
@@ -338,7 +330,7 @@
       "style": {}
     },
     {
-      "id": "n7",
+      "id": "n6",
       "fromId": "n6",
       "toId": "n3",
       "type": "PublishedTo",
@@ -346,7 +338,7 @@
       "style": {}
     },
     {
-      "id": "n8",
+      "id": "n7",
       "fromId": "n7",
       "toId": "n6",
       "type": "GenericAll",
@@ -354,7 +346,7 @@
       "style": {}
     },
     {
-      "id": "n9",
+      "id": "n8",
       "fromId": "n7",
       "toId": "n5",
       "type": "MemberOf",
@@ -362,15 +354,15 @@
       "style": {}
     },
     {
-      "id": "n10",
-      "type": "AllExtendedRights",
-      "style": {},
-      "properties": {},
+      "id": "n9",
       "fromId": "n8",
-      "toId": "n6"
+      "toId": "n6",
+      "type": "AllExtendedRights",
+      "properties": {},
+      "style": {}
     },
     {
-      "id": "n11",
+      "id": "n10",
       "fromId": "n8",
       "toId": "n5",
       "type": "MemberOf",
@@ -378,7 +370,7 @@
       "style": {}
     },
     {
-      "id": "n12",
+      "id": "n11",
       "fromId": "n9",
       "toId": "n6",
       "type": "GenericWrite",
@@ -386,7 +378,7 @@
       "style": {}
     },
     {
-      "id": "n13",
+      "id": "n12",
       "fromId": "n9",
       "toId": "n5",
       "type": "MemberOf",
@@ -394,7 +386,7 @@
       "style": {}
     },
     {
-      "id": "n14",
+      "id": "n13",
       "fromId": "n10",
       "toId": "n6",
       "type": "Enroll",
@@ -402,7 +394,7 @@
       "style": {}
     },
     {
-      "id": "n15",
+      "id": "n14",
       "fromId": "n11",
       "toId": "n7",
       "type": "GenericAll",
@@ -410,7 +402,7 @@
       "style": {}
     },
     {
-      "id": "n16",
+      "id": "n15",
       "fromId": "n11",
       "toId": "n0",
       "type": "ADCSESC9a",
@@ -418,7 +410,7 @@
       "style": {}
     },
     {
-      "id": "n17",
+      "id": "n16",
       "fromId": "n12",
       "toId": "n8",
       "type": "GenericAll",
@@ -426,7 +418,7 @@
       "style": {}
     },
     {
-      "id": "n18",
+      "id": "n17",
       "fromId": "n12",
       "toId": "n0",
       "type": "ADCSESC9a",
@@ -434,7 +426,7 @@
       "style": {}
     },
     {
-      "id": "n19",
+      "id": "n18",
       "fromId": "n13",
       "toId": "n9",
       "type": "GenericAll",
@@ -442,7 +434,7 @@
       "style": {}
     },
     {
-      "id": "n20",
+      "id": "n19",
       "fromId": "n14",
       "toId": "n10",
       "type": "GenericAll",

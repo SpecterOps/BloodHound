@@ -27,9 +27,7 @@ var (
 	groupKind      = StringKind("group")
 	domainKind     = StringKind("domain")
 	userKind       = StringKind("user")
-	computerKind   = StringKind("computer")
 	permissionKind = StringKind("permission")
-	membershipKind = StringKind("member")
 )
 
 func Test_ComputeAndSetSize(t *testing.T) {

@@ -16,9 +16,7 @@
 
 package model
 
-import (
-	"fmt"
-)
+import "errors"
 
 type SavedQuery struct {
 	UserID      string `json:"user_id" gorm:"index:,unique,composite:compositeIndex"`
@@ -77,7 +75,7 @@ func (s SavedQueries) GetFilterableColumns() []string {
 
 func (s SavedQueries) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
-		return []string{}, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
+		return []string{}, errors.New(ErrorResponseDetailsColumnNotFilterable)
 	} else {
 		var stringPredicates = make([]string, 0)
 		for _, predicate := range predicates {
