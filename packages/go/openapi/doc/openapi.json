@@ -13929,7 +13929,7 @@
       },
       "api.params.predicate.filter.string": {
         "type": "string",
-        "description": "Filter results by column string value. Valid filter predicates are `eq`, `neq`, `~eq`.\n"
+        "description": "Filter results by column string value. Valid filter predicates are `eq`, `~eq`, `neq`.\n"
       },
       "api.params.predicate.filter.integer": {
         "type": "integer",
