@@ -177,6 +177,10 @@ init wipe="":
     echo "Backing up build.config.json and resetting"
     mv ./local-harnesses/build.config.json ./local-harnesses/build.config.json.bak
     cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
+  elif [[ -d "./local-harnesses/build.config.json" ]]; then
+    echo "Removing junk directory and resetting build.config.json"
+    rm -r ./local-harnesses/build.config.json
+    cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
   else
     cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
   fi
@@ -186,6 +190,10 @@ init wipe="":
   elif [[ -f "./local-harnesses/integration.config.json" ]]; then
     echo "Backing up integration.config.json and resetting"
     mv ./local-harnesses/integration.config.json ./local-harnesses/integration.config.json.bak
+    cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
+  elif [[ -d "./local-harnesses/integration.config.json" ]]; then
+    echo "Removing junk directory and resetting integration.config.json"
+    rm -r ./local-harnesses/integration.config.json
     cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
   else
     cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
