@@ -19,7 +19,9 @@ package database
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -53,8 +55,15 @@ func (s *BloodhoundDB) GetConfigurationParameter(ctx context.Context, parameterK
 }
 
 func (s *BloodhoundDB) SetConfigurationParameter(ctx context.Context, parameter appcfg.Parameter) error {
-	return CheckError(s.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "key"}},
-		DoUpdates: clause.AssignmentColumns([]string{"value"}),
-	}).Create(&parameter))
+	auditEntry := model.AuditEntry{
+		Action: model.AuditLogActionUpdateParameter,
+		Model:  &parameter, // Pointer is required to ensure success log contains updated fields after transaction
+	}
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(s.db.WithContext(ctx).Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "key"}},
+			DoUpdates: clause.AssignmentColumns([]string{"value"}),
+		}).Create(&parameter))
+	})
 }

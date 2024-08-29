@@ -68,6 +68,13 @@ func (s Parameter) IsValid(parameter string) bool {
 	return validKeys[parameter]
 }
 
+func (s *Parameter) AuditData() model.AuditData {
+	return model.AuditData{
+		"key":   s.Key,
+		"value": s.Value,
+	}
+}
+
 // Parameters is a collection of Parameter structs.
 type Parameters []Parameter
 
