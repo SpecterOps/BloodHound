@@ -15,51 +15,78 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { render, screen } from '../../test-utils';
+import { render, screen, waitFor } from '../../test-utils';
 import CitrixRDPConfiguration, { configurationData } from './CitrixRDPConfiguration';
 import { dialogTitle } from './CitrixRDPConfirmDialog';
+
+// To do: Test for initial switch value once getting configuration ( test for when it is on)
+// To do: Test for checking correct dialog text when clicking to disable
 
 describe('CitrixRDPConfiguration', () => {
     beforeEach(() => {
         render(<CitrixRDPConfiguration />);
     });
 
-    it('should render the component with all info and switch off', () => {
-        const panelTitle = screen.getByText(configurationData.title);
-        const panelDescription = screen.getByText(configurationData.description);
-        const panelSwitchLabel = screen.getByLabelText(/off/i);
-        const panelSwitch = screen.getByRole('switch');
+    describe('Initial render', () => {
+        it('renders the component with all info and switch off', () => {
+            const panelTitle = screen.getByText(configurationData.title);
+            const panelDescription = screen.getByText(configurationData.description);
+            const panelSwitch = screen.getByRole('switch');
 
-        expect(panelTitle).toBeInTheDocument();
-        expect(panelDescription).toBeInTheDocument();
-        expect(panelSwitch).toBeInTheDocument();
-        expect(panelSwitchLabel).toBeInTheDocument();
-        expect(panelSwitch).not.toBeChecked();
+            expect(panelTitle).toBeInTheDocument();
+            expect(panelDescription).toBeInTheDocument();
+            expect(panelSwitch).toBeInTheDocument();
+            expect(panelSwitch).not.toBeChecked();
+        });
     });
-    it('when clicking on switch to on its shows modal and when clicking on confirm stays on', async () => {
-        const panelSwitch = screen.getByRole('switch');
+
+    describe('Click on switch to enable', () => {
+        let panelSwitch: HTMLElement;
+        let panelDialogTitle: HTMLElement;
+        let panelDialogDescription: HTMLElement;
         const user = userEvent.setup();
 
-        await user.click(panelSwitch);
+        beforeEach(async () => {
+            panelSwitch = screen.getByRole('switch');
 
-        const panelDialogTitle = screen.getByText(dialogTitle, { exact: false });
-        const panelDialogDescription = screen.getByText(/Analysis has been added with Citrix Configuration/i);
+            await user.click(panelSwitch);
 
-        expect(panelSwitch).toBeChecked();
-        expect(panelDialogTitle).toBeInTheDocument();
-        expect(panelDialogDescription).toBeInTheDocument();
-    });
-    it('when clicking on switch to on its shows modal and when clicking on cancel it returns to off', async () => {
-        const panelSwitch = screen.getByRole('switch');
-        const user = userEvent.setup();
+            panelDialogTitle = screen.getByText(dialogTitle, { exact: false });
+            panelDialogDescription = screen.getByText(/analysis has been added with citrix configuration/i);
+        });
 
-        await user.click(panelSwitch);
+        it('on clicking switch shows modal and when clicking confirm closes it and switch stays enabled', async () => {
+            expect(panelSwitch).toBeInTheDocument();
+            expect(panelSwitch).toBeChecked();
+            expect(panelDialogTitle).toBeInTheDocument();
+            expect(panelDialogDescription).toBeInTheDocument();
 
-        const panelDialogTitle = screen.getByText(dialogTitle, { exact: false });
-        const panelDialogDescription = screen.getByText(/Analysis has been removed with Citrix Configuration/i);
+            const confirmButton = screen.getByRole('button', { name: /confirm/i });
 
-        expect(panelSwitch).not.toBeChecked();
-        expect(panelDialogTitle).toBeInTheDocument();
-        expect(panelDialogDescription).toBeInTheDocument();
+            await user.click(confirmButton);
+
+            await waitFor(() => {
+                expect(panelDialogTitle).not.toBeInTheDocument();
+                expect(panelDialogDescription).not.toBeInTheDocument();
+                expect(panelSwitch).toBeChecked();
+            });
+        });
+
+        it('on clicking switch shows modal and when clicking cancel closes it and switch reverts to disabled', async () => {
+            expect(panelSwitch).toBeInTheDocument();
+            expect(panelSwitch).toBeChecked();
+            expect(panelDialogTitle).toBeInTheDocument();
+            expect(panelDialogDescription).toBeInTheDocument();
+
+            const cancelButton = screen.getByRole('button', { name: /cancel/i });
+
+            await user.click(cancelButton);
+
+            await waitFor(() => {
+                expect(panelDialogTitle).not.toBeInTheDocument();
+                expect(panelDialogDescription).not.toBeInTheDocument();
+                expect(panelSwitch).not.toBeChecked();
+            });
+        });
     });
 });
