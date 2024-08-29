@@ -25,10 +25,36 @@ import (
 func TestQueryParameterFilterParser_ParseQueryParameterFilter(t *testing.T) {
 	parser := NewQueryParameterFilterParser()
 
-	if filter, err := parser.ParseQueryParameterFilter("parameter", "eq:auth.value"); err != nil {
-		t.Fatalf("Failed parsing query parameter: %v", err)
-	} else {
-		require.Equal(t, filter.Name, "parameter")
-		require.Equal(t, "auth.value", filter.Value)
-	}
+	t.Run("parser should parse a parameter filter", func(t *testing.T) {
+		if filter, err := parser.ParseQueryParameterFilter("parameter", "eq:auth.value"); err != nil {
+			t.Fatalf("Failed parsing query parameter: %v", err)
+		} else {
+			require.Equal(t, filter.Name, "parameter")
+			require.Equal(t, "auth.value", filter.Value)
+		}
+	})
+
+	t.Run("parser should parse a parameter with ~", func(t *testing.T) {
+		if filter, err := parser.ParseQueryParameterFilter("parameter", "~eq:auth.value"); err != nil {
+			t.Fatalf("Failed parsing query parameter: %v", err)
+		} else {
+			require.Equal(t, filter.Name, "parameter")
+			require.Equal(t, "auth.value", filter.Value)
+		}
+	})
+
+	t.Run("parser should parse a parameter filter with spacing", func(t *testing.T) {
+		if filter, err := parser.ParseQueryParameterFilter("parameter", "eq:hello world"); err != nil {
+			t.Fatalf("Failed parsing query parameter: %v", err)
+		} else {
+			require.Equal(t, filter.Name, "parameter")
+			require.Equal(t, "hello world", filter.Value)
+		}
+	})
+
+	t.Run("error when parsing an invalid parameter", func(t *testing.T) {
+		_, err := parser.ParseQueryParameterFilter("parameter", "eq : hello world")
+		require.Error(t, err)
+	})
+
 }
