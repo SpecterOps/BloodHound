@@ -18,7 +18,7 @@ name: Publish Edge Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, BED-4778]
 
 env:
   REVISION: v5.0.0-edge

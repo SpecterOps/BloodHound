@@ -36,6 +36,9 @@ RUN apk add --update --no-cache git
 COPY --from=golang:1.23-alpine3.20 /usr/local/go/ /usr/local/go/
 ENV PATH="/usr/local/go/bin:${PATH}"
 
+RUN ls -la /usr/local/go/bin
+RUN tail -c 64 /usr/local/go/bin/go
+
 COPY . /bloodhound
 RUN go run github.com/specterops/bloodhound/packages/go/stbernard deps
 
