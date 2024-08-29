@@ -13,6 +13,7 @@
 
 # go binaries
 bin
+packages/go/stbernard/stbernard
 packages/go/schemagen/schemagen
 cmd/api/src/cmd/bhapi/bhapi
 

@@ -21,6 +21,7 @@ package azure
 
 import (
 	"errors"
+
 	graph "github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -100,7 +101,6 @@ const (
 	AppOwnerOrganizationID  Property = "appownerorganizationid"
 	AppDescription          Property = "appdescription"
 	AppDisplayName          Property = "appdisplayname"
-	LoginURL                Property = "loginurl"
 	ServicePrincipalType    Property = "serviceprincipaltype"
 	UserType                Property = "usertype"
 	TenantID                Property = "tenantid"
@@ -123,6 +123,7 @@ const (
 	MFAEnabled              Property = "mfaenabled"
 	License                 Property = "license"
 	Licenses                Property = "licenses"
+	LoginURL                Property = "loginurl"
 	MFAEnforced             Property = "mfaenforced"
 	UserPrincipalName       Property = "userprincipalname"
 	IsAssignableToRole      Property = "isassignabletorole"
@@ -132,7 +133,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, LoginURL, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, ServicePrincipalNames, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID}
+	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, ServicePrincipalNames, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -142,8 +143,6 @@ func ParseProperty(source string) (Property, error) {
 		return AppDescription, nil
 	case "appdisplayname":
 		return AppDisplayName, nil
-	case "loginurl":
-		return LoginURL, nil
 	case "serviceprincipaltype":
 		return ServicePrincipalType, nil
 	case "usertype":
@@ -188,6 +187,8 @@ func ParseProperty(source string) (Property, error) {
 		return License, nil
 	case "licenses":
 		return Licenses, nil
+	case "loginurl":
+		return LoginURL, nil
 	case "mfaenforced":
 		return MFAEnforced, nil
 	case "userprincipalname":
@@ -212,8 +213,6 @@ func (s Property) String() string {
 		return string(AppDescription)
 	case AppDisplayName:
 		return string(AppDisplayName)
-	case LoginURL:
-		return string(LoginURL)
 	case ServicePrincipalType:
 		return string(ServicePrincipalType)
 	case UserType:
@@ -258,6 +257,8 @@ func (s Property) String() string {
 		return string(License)
 	case Licenses:
 		return string(Licenses)
+	case LoginURL:
+		return string(LoginURL)
 	case MFAEnforced:
 		return string(MFAEnforced)
 	case UserPrincipalName:
@@ -282,8 +283,6 @@ func (s Property) Name() string {
 		return "App Description"
 	case AppDisplayName:
 		return "App Display Name"
-	case LoginURL:
-		return "Login URL"
 	case ServicePrincipalType:
 		return "Service Principal Type"
 	case UserType:
@@ -328,6 +327,8 @@ func (s Property) Name() string {
 		return "License"
 	case Licenses:
 		return "Licenses"
+	case LoginURL:
+		return "Login URL"
 	case MFAEnforced:
 		return "MFA Enforced"
 	case UserPrincipalName:

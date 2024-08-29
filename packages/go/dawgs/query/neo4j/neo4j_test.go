@@ -118,7 +118,7 @@ func assertOneOfQueryResult(rawQuery *cypher.RegularQuery, expectations []QueryO
 				msg += "\n\t" + expectation.Query
 			}
 
-			t.Fatalf(msg)
+			t.Fatalf(msg) //nolint:all // Ignore non-constant format string failure because it's test code
 		} else if matchingExpectation.Parameters != nil {
 			require.Equal(t, matchingExpectation.Parameters, builder.Parameters)
 		}
