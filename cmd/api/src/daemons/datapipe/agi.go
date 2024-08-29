@@ -160,7 +160,7 @@ func TagActiveDirectoryTierZero(ctx context.Context, featureFlagProvider appcfg.
 
 	if autoTagT0ParentObjectsFlag, err := featureFlagProvider.GetFlagByKey(ctx, appcfg.FeatureAutoTagT0ParentObjects); err != nil {
 		return err
-	} else if autoTagMembersFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureAutoTagT0ADMembers); err != nil {
+	} else if autoTagMembersFlag, err := featureFlagProvider.GetFlagByKey(ctx, appcfg.FeatureAutoTagT0ADMembers); err != nil {
 		return err
 	} else if domains, err := adAnalysis.FetchAllDomains(ctx, graphDB); err != nil {
 		return err
