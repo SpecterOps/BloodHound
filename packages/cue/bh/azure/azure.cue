@@ -276,6 +276,7 @@ Properties: [
 	MFAEnabled,
 	License,
 	Licenses,
+	LoginURL,
 	MFAEnforced,
 	UserPrincipalName,
 	IsAssignableToRole,

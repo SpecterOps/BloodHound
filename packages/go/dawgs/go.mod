@@ -16,7 +16,7 @@
 
 module github.com/specterops/bloodhound/dawgs
 
-go 1.21
+go 1.23
 
 require (
 	github.com/RoaringBitmap/roaring v1.3.0

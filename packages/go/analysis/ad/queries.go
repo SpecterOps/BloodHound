@@ -1555,32 +1555,39 @@ func FetchCertTemplatesPublishedToCA(tx graph.Transaction, ca *graph.Node) (grap
 	}))
 }
 
-func FetchCanAbuseWeakCertBindingRels(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship, error) {
-	if rels, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Equals(query.StartID(), node.ID),
-			query.Kind(query.Relationship(), ad.CanAbuseWeakCertBinding),
-			query.Kind(query.End(), ad.Entity),
-		)
-	})); err != nil {
+func FetchNodesWithTrustedByParentChildRelationship(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
+	if pathSet, err := ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      root,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.KindIn(query.Start(), ad.Domain),
+				query.KindIn(query.Relationship(), ad.TrustedBy),
+				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
+			)
+		},
+	}); err != nil {
 		return nil, err
 	} else {
-		return rels, nil
+		alldomains := pathSet.AllNodes()
+		if alldomains.Len() == 0 {
+			alldomains.Add(root)
+		}
+		return alldomains, nil
 	}
 }
 
-func FetchCanAbuseUPNCertMappingRels(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship, error) {
-	if rels, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Equals(query.StartID(), node.ID),
-			query.Kind(query.Relationship(), ad.CanAbuseUPNCertMapping),
-			query.Kind(query.End(), ad.Entity),
-		)
-	})); err != nil {
-		return nil, err
-	} else {
-		return rels, nil
-	}
+func FetchNodesWithDCForEdge(tx graph.Transaction, rootNode *graph.Node) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:      rootNode,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.And(
+				query.KindIn(query.Start(), ad.Computer),
+				query.KindIn(query.Relationship(), ad.DCFor),
+			)
+		},
+	})
 }
 
 func FetchEnterpriseCAsCertChainPathToDomain(tx graph.Transaction, enterpriseCA, domain *graph.Node) (graph.PathSet, error) {
