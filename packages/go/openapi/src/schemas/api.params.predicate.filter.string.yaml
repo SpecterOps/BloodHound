@@ -16,4 +16,4 @@
 
 type: string
 description: |
-  Filter results by column string value. Valid filter predicates are `eq`, `neq`.
+  Filter results by column string value. Valid filter predicates are `eq`, `~eq`, `neq`.
