@@ -13,13 +13,15 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import CardWithSwitch from '../CardWithSwitch';
 import ConfirmCitrixRDPDialog from './CitrixRDPConfirmDialog';
-//import { useGetConfiguration, useUpdateConfiguration } from '../../hooks';
+import { useGetConfiguration, useUpdateConfiguration } from '../../hooks';
 import { useState } from 'react';
+import { useNotifications } from '../../providers';
 
 export const configurationData = {
+    key: 'analysis.citrix_rdp_support',
     title: 'Citrix RDP Support',
     description:
         'When enabled, post-processing for the CanRDP edge will look for the presence of the default "Direct Access Users" group and assume that only local Administrators and members of this group can RDP to the system without validation that Citrix VDA is present and correctly configured. Use with caution.',
@@ -30,12 +32,20 @@ const CitrixRDPConfiguration: FC = () => {
     const [isEnabled, setIsEnabled] = useState(false);
     const [isOpenDialog, setIsOpenDialog] = useState(false);
 
-    // To do: make sure we have correct loading behavior and subsequent behavior for setting existing saved state
-    // To do: make sure this is sending and getting the data we need
-    // const { data, isLoading, isError, isSuccess } = useGetConfiguration();
-    // const updateConfigurationMutation = useUpdateConfiguration();
+    const { addNotification } = useNotifications();
+    const { data: savedConfigurationResponse, isSuccess } = useGetConfiguration();
+    const updateConfigurationMutation = useUpdateConfiguration();
 
-    // console.log(data, isLoading, isError, isSuccess);
+    useEffect(() => {
+        if (isSuccess) {
+            const savedConfigurationList = savedConfigurationResponse?.data;
+            const citrixRDPConfiguration = savedConfigurationList?.find(
+                (configItem) => configItem.key === configurationData.key
+            );
+            const citrixRDPConfigurationEnabled = citrixRDPConfiguration?.value.enabled;
+            setIsEnabled(citrixRDPConfigurationEnabled);
+        }
+    }, [savedConfigurationResponse, isSuccess]);
 
     const toggleShowDialog = () => {
         setIsOpenDialog((prev) => !prev);
@@ -47,9 +57,17 @@ const CitrixRDPConfiguration: FC = () => {
     };
 
     const handleConfirm = () => {
-        // To do: add correct call args
-        //updateConfigurationMutation.mutate({ key: 'test' } as any);
-        toggleShowDialog();
+        updateConfigurationMutation.mutate(
+            {
+                key: configurationData.key,
+                value: { enabled: isEnabled },
+            },
+            {
+                onError: () => {
+                    addNotification('There was an error updating configuration.');
+                },
+            }
+        );
     };
 
     return (

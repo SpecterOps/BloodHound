@@ -286,8 +286,14 @@ type Neo4jConfiguration = {
         write_flush_size: number;
     };
 };
+type CitrixRDPConfiguration = {
+    key: 'analysis.citrix_rdp_support';
+    value: {
+        enabled: boolean;
+    };
+};
 
 // Add additional types here depending on contract from backend work
-export type ConfigurationPayload = PasswordExpirationConfiguration | Neo4jConfiguration;
+export type ConfigurationPayload = PasswordExpirationConfiguration | Neo4jConfiguration | CitrixRDPConfiguration;
 
 export type UpdateConfigurationRequest = ConfigurationPayload;
