@@ -24,8 +24,6 @@ const GLOBAL_SET_ASSET_GROUPS = 'app/global/GLOBALSETASSETGROUPS';
 const GLOBAL_SET_ASSET_GROUP_INDEX = 'app/global/GLOBALSETASSETGROUPINDEX';
 const GLOBAL_SET_ASSET_GROUP_EDIT = 'app/global/GLOBALSETASSETGROUPEDIT';
 const GLOBAL_SET_DARK_MODE = 'app/global/GLOBALSETDARKMODE';
-const GLOBAL_SET_NODE_LABELS_MODE = 'app/global/GLOBALSETNODELABELSMODE';
-const GLOBAL_SET_EDGE_LABELS_MODE = 'app/global/GLOBALSETEDGELABELSMODE';
 
 export {
     GLOBAL_ADD_SNACKBAR,
@@ -38,15 +36,11 @@ export {
     GLOBAL_SET_ASSET_GROUP_INDEX,
     GLOBAL_SET_ASSET_GROUP_EDIT,
     GLOBAL_SET_DARK_MODE,
-    GLOBAL_SET_NODE_LABELS_MODE,
-    GLOBAL_SET_EDGE_LABELS_MODE,
 };
 
 export interface GlobalViewState {
     notifications: Notification[];
     darkMode: boolean;
-    nodeLabelsMode: boolean;
-    edgeLabelsMode: boolean;
 }
 
 export interface Notification {
@@ -87,23 +81,7 @@ export interface SetDarkModeAction {
     darkMode: boolean;
 }
 
-export interface SetNodeLabelsModeAction {
-    type: typeof GLOBAL_SET_NODE_LABELS_MODE;
-    nodeLabelsMode: boolean;
-}
-
-export interface SetEdgeLabelsModeAction {
-    type: typeof GLOBAL_SET_EDGE_LABELS_MODE;
-    edgeLabelsMode: boolean;
-}
-
-export type GlobalViewActionTypes =
-    | AddSnackbarAction
-    | RemoveSnackbarAction
-    | CloseSnackbarAction
-    | SetDarkModeAction
-    | SetNodeLabelsModeAction
-    | SetEdgeLabelsModeAction;
+export type GlobalViewActionTypes = AddSnackbarAction | RemoveSnackbarAction | CloseSnackbarAction | SetDarkModeAction;
 
 export interface SetDomainAction {
     type: typeof GLOBAL_SET_DOMAIN;

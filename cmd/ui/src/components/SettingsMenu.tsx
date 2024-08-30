@@ -23,13 +23,9 @@ import {
     faSignOutAlt,
     faUser,
     faUserShield,
-    faTags,
-    faTag,
-    faCaretDown,
-    faCaretUp,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Collapse, Divider, useTheme } from '@mui/material';
+import { Box, Divider, useTheme } from '@mui/material';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Menu, { MenuProps } from '@mui/material/Menu';
@@ -39,7 +35,7 @@ import { EnterpriseIcon } from 'bh-shared-ui';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from 'src/ducks/auth/authSlice';
-import { setDarkMode, setNodeLabelsMode, setEdgeLabelsMode } from 'src/ducks/global/actions.ts';
+import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/ducks/global/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import FeatureFlag from './FeatureFlag';
@@ -72,10 +68,7 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const nodeLabelsMode = useAppSelector((state) => state.global.view.nodeLabelsMode);
-    const edgeLabelsMode = useAppSelector((state) => state.global.view.edgeLabelsMode);
     const theme = useTheme();
-    const [openCollapse, setOpenCollapse] = React.useState(false);
 
     const navigateTo = (route: string) => {
         handleClose();
@@ -89,18 +82,6 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
 
     const toggleDarkMode: React.MouseEventHandler<HTMLLIElement> = () => {
         dispatch(setDarkMode(!darkMode));
-    };
-
-    const handleOpenLabels:React.MouseEventHandler<HTMLLIElement> = () => {
-        setOpenCollapse(!openCollapse)
-    }
-
-    const toggleNodeLabelsMode: React.MouseEventHandler<HTMLLIElement> = () => {
-        dispatch(setNodeLabelsMode(!nodeLabelsMode));
-    };
-
-    const toggleEdgeLabelsMode: React.MouseEventHandler<HTMLLIElement> = () => {
-        dispatch(setEdgeLabelsMode(!edgeLabelsMode));
     };
 
     const openInNewTab = (url: string) => {
@@ -172,35 +153,6 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                     </ListItemIcon>
                     <ListItemText primary='BloodHound Enterprise' />
                 </MenuItem>
-
-                <MenuItem onClick={handleOpenLabels}>
-                    <ListItemIcon>
-                        <FontAwesomeIcon icon={faTags} />
-                    </ListItemIcon>
-                    <ListItemText primary={'Toggle Labels'} />
-                    {
-                        openCollapse
-                        ? <ListItemIcon><FontAwesomeIcon icon={faCaretUp} /></ListItemIcon>
-                        : <ListItemIcon><FontAwesomeIcon icon={faCaretDown} /></ListItemIcon>
-                    }
-                </MenuItem>
-                <Collapse in={openCollapse} timeout="auto" unmountOnExit>
-                        <MenuItem onClick={toggleNodeLabelsMode} sx={{paddingLeft: '2.5rem'}}>
-                            <ListItemIcon>
-                                <FontAwesomeIcon icon={faTag} />
-                            </ListItemIcon>
-                            <ListItemText primary='Node Labels' />
-                            <Switch checked={nodeLabelsMode}>Node Labels</Switch>
-                        </MenuItem>
-                        <MenuItem onClick={toggleEdgeLabelsMode} sx={{paddingLeft: '2.5rem'}}>
-                            <ListItemIcon>
-                                <FontAwesomeIcon icon={faTag} />
-                            </ListItemIcon>
-                            <ListItemText primary='Edge Labels' />
-                            <Switch checked={edgeLabelsMode}>Edge Labels</Switch>
-                        </MenuItem>
-                </Collapse>
-
 
                 <FeatureFlag
                     flagKey='dark_mode'

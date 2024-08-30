@@ -52,20 +52,6 @@ export const setDarkMode = (darkMode: boolean): types.GlobalViewActionTypes => {
     };
 };
 
-export const setNodeLabelsMode = (nodeLabelsMode: boolean): types.GlobalViewActionTypes => {
-    return {
-        type: types.GLOBAL_SET_NODE_LABELS_MODE,
-        nodeLabelsMode,
-    };
-};
-
-export const setEdgeLabelsMode = (edgeLabelsMode: boolean): types.GlobalViewActionTypes => {
-    return {
-        type: types.GLOBAL_SET_EDGE_LABELS_MODE,
-        edgeLabelsMode,
-    };
-};
-
 export const setExpanded = (expanded: { [key: string]: symbol[] }): types.GlobalAccordionsActionTypes => {
     return {
         type: types.GLOBAL_SET_EXPANDED,

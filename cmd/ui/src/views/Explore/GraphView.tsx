@@ -63,8 +63,6 @@ const GraphView: FC = () => {
     const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
     const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const nodeLabelsMode = useAppSelector((state) => state.global.view.nodeLabelsMode);
-    const edgeLabelsMode = useAppSelector((state) => state.global.view.edgeLabelsMode);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
@@ -82,7 +80,7 @@ const GraphView: FC = () => {
 
         const graph = new MultiDirectedGraph();
 
-        initGraph(graph, items, theme, darkMode, nodeLabelsMode, edgeLabelsMode);
+        initGraph(graph, items, theme, darkMode);
 
         setCurrentNodes(items.nodes);
 
@@ -96,7 +94,7 @@ const GraphView: FC = () => {
             },
         });
         setGraphologyGraph(graph);
-    }, [graphState.chartProps.items, theme, darkMode, nodeLabelsMode, edgeLabelsMode]);
+    }, [graphState.chartProps.items, theme, darkMode]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {

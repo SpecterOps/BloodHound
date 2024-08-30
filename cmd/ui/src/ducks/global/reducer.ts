@@ -22,8 +22,6 @@ import assign from 'lodash/assign';
 const initialGlobalState: types.GlobalViewState = {
     notifications: [],
     darkMode: false,
-    nodeLabelsMode: true,
-    edgeLabelsMode: true,
 };
 
 const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewActionTypes) => {
@@ -40,10 +38,6 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             draft.notifications = draft.notifications.filter((notification) => notification.key !== action.key);
         } else if (action.type === types.GLOBAL_SET_DARK_MODE) {
             draft.darkMode = action.darkMode;
-        } else if (action.type == types.GLOBAL_SET_NODE_LABELS_MODE) {
-            draft.nodeLabelsMode = action.nodeLabelsMode;
-        } else if (action.type == types.GLOBAL_SET_EDGE_LABELS_MODE) {
-            draft.edgeLabelsMode = action.edgeLabelsMode;
         }
     });
 };
