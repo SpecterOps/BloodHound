@@ -21,6 +21,11 @@ ARG SHARPHOUND_VERSION=v2.4.1
 ARG AZUREHOUND_VERSION=v2.1.9
 
 ########
+# Golang Image
+################
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.23-alpine3.20 AS godeps
+
+########
 # Builder init
 ################
 FROM --platform=$BUILDPLATFORM docker.io/library/node:20-alpine3.20 AS deps
@@ -33,7 +38,7 @@ WORKDIR /bloodhound
 
 RUN apk add --update --no-cache git
 
-COPY --from=golang:1.23-alpine3.20 /usr/local/go/ /usr/local/go/
+COPY --from=godeps /usr/local/go/ /usr/local/go/
 ENV PATH="/usr/local/go/bin:${PATH}"
 
 COPY . /bloodhound
