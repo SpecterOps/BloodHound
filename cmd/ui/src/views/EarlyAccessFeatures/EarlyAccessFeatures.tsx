@@ -48,12 +48,12 @@ export const EarlyAccessFeatureToggle: React.FC<{
 
     return (
         <Paper>
-            <Box p={2} display='flex' justifyContent='space-between' flexWrap='wrap' style={{ rowGap: '1rem' }}>
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
                 <Box overflow='hidden'>
                     <Typography variant='h6'>{flag.name}</Typography>
                     <Typography variant='body1'>{flag.description}</Typography>
                 </Box>
-                <Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Button disabled={disabled} onClick={handleOnClick}>
                         <Box display={'flex'} alignItems={'center'}>
                             {flag.enabled ? <FontAwesomeIcon icon={faCheckCircle} fixedWidth /> : null}
