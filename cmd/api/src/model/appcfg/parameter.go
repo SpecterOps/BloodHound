@@ -19,6 +19,7 @@ package appcfg
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -27,6 +28,8 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
 const (
@@ -53,11 +56,11 @@ type Parameter struct {
 
 // Map is a convenience function for mapping the data stored in the Value Parameter struct member onto
 // a richer type provided by the given value.
-func (s Parameter) Map(value any) error {
+func (s *Parameter) Map(value any) error {
 	return s.Value.Map(value)
 }
 
-func (s Parameter) IsValid(parameter string) bool {
+func (s *Parameter) IsValidKey(parameterKey string) bool {
 	validKeys := map[string]bool{
 		PasswordExpirationWindow: true,
 		Neo4jConfigs:             true,
@@ -65,7 +68,37 @@ func (s Parameter) IsValid(parameter string) bool {
 		ReconciliationKey:        true,
 	}
 
-	return validKeys[parameter]
+	return validKeys[parameterKey]
+}
+
+func (s *Parameter) SanitizeAndValidate() utils.Errors {
+	// validate the base parameter
+	if obj, ok := s.Value.Object.(map[string]any); !ok || len(obj) == 0 {
+		return utils.Errors{errors.New("missing or invalid value")}
+	}
+
+	// validate the specific parameter value
+	var v any
+	switch s.Key {
+	case PasswordExpirationWindow:
+		v = &PasswordExpiration{}
+	case Neo4jConfigs:
+		v = &Neo4jParameters{}
+	case PruneTTL:
+		v = &PruneTTLParameters{}
+	case ReconciliationKey:
+		v = &ReconciliationParameter{}
+	default:
+		return utils.Errors{errors.New("invalid key")}
+	}
+
+	if err := s.Map(&v); err != nil {
+		return utils.Errors{err}
+	} else if errs := validation.Validate(v); errs != nil {
+		return errs
+	}
+
+	return nil
 }
 
 func (s *Parameter) AuditData() model.AuditData {
@@ -173,8 +206,8 @@ func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 // PruneTTL
 
 type PruneTTLParameters struct {
-	BaseTTL           time.Duration `json:"base_ttl,omitempty"`
-	HasSessionEdgeTTL time.Duration `json:"has_session_edge_ttl,omitempty"`
+	BaseTTL           time.Duration `json:"base_ttl,omitempty" validate:"duration,min=P4D,max=P30D"`
+	HasSessionEdgeTTL time.Duration `json:"has_session_edge_ttl,omitempty" validate:"duration,min=P2D,max=P7D"`
 }
 
 // Because PruneTTLs are stored as ISO strings, but we want to use them as durations, we override UnmarshalJSON to handle the conversion
@@ -188,12 +221,12 @@ func (s *PruneTTLParameters) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("error unmarshaling data for PruneTTLParameters: %w", err)
 	} else {
 		if duration, err := iso8601.FromString(pTTL.BaseTTL); err != nil {
-			return err
+			return errors.New("missing or invalid base_ttl")
 		} else {
 			s.BaseTTL = duration.ToDuration()
 		}
 		if duration, err := iso8601.FromString(pTTL.HasSessionEdgeTTL); err != nil {
-			return err
+			return errors.New("missing or invalid has_session_edge_ttl")
 		} else {
 			s.HasSessionEdgeTTL = duration.ToDuration()
 		}

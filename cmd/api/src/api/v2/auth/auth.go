@@ -45,7 +45,6 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/serde"
-	"github.com/specterops/bloodhound/src/utils"
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
@@ -443,8 +442,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 
 		if createUserRequest.Secret != "" {
 			if errs := validation.Validate(createUserRequest.SetUserSecretRequest); errs != nil {
-				msg := strings.Join(utils.Errors(errs).AsStringSlice(), ", ")
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, msg, request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 				return
 			} else if secretDigest, err := s.secretDigester.Digest(createUserRequest.Secret); err != nil {
 				log.Errorf("Error while attempting to digest secret for user: %v", err)
@@ -645,8 +643,7 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 	} else if err := api.ReadJSONRequestPayloadLimited(&setUserSecretRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if errs := validation.Validate(setUserSecretRequest); errs != nil {
-		msg := strings.Join(utils.Errors(errs).AsStringSlice(), ", ")
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, msg, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 	} else if targetUser, err := s.db.GetUser(request.Context(), targetUserID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if targetUser.SAMLProviderID.Valid {
