@@ -19,8 +19,9 @@ package fixtures
 import (
 	"bytes"
 
-	"github.com/specterops/bloodhound/cypher/backend/cypher"
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/models/cypher/format"
+
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
@@ -276,11 +277,11 @@ var (
 
 func FormatQueryComponent(criteria graph.Criteria) string {
 	var (
-		emitter      = cypher.NewCypherEmitter(false)
+		emitter      = format.NewCypherEmitter(false)
 		stringBuffer = &bytes.Buffer{}
 	)
 
-	if err := emitter.WriteExpression(stringBuffer, criteria.(model.Expression)); err != nil {
+	if err := emitter.WriteExpression(stringBuffer, criteria.(cypher.Expression)); err != nil {
 		return "ERROR"
 	}
 

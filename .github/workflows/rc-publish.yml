@@ -15,6 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: Publish Release Candidate
+run-name: Publish ${{ github.ref_name }}
 
 on:
   push:

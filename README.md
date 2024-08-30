@@ -9,21 +9,30 @@
 
 BloodHound is a monolithic web application composed of an embedded React frontend with [Sigma.js](https://www.sigmajs.org/) and a [Go](https://go.dev/) based REST API backend. It is deployed with a [Postgresql](https://www.postgresql.org/) application database and a [Neo4j](https://neo4j.com/) graph database, and is fed by the [SharpHound](https://github.com/BloodHoundAD/SharpHound) and [AzureHound](https://github.com/BloodHoundAD/AzureHound) data collectors.
 
-BloodHound uses graph theory to reveal the hidden and often unintended relationships within an Active Directory or Azure environment. Attackers can use BloodHound to easily identify highly complex attack paths that would otherwise be impossible to identify quickly. Defenders can use BloodHound to identify and eliminate those same attack paths. Both red and blue teams can use BloodHound to easily gain a deeper understanding of privilege relationships in an Active Directory or Azure environment.
+BloodHound uses graph theory to reveal the hidden and often unintended relationships within an Active Directory or Azure environment. Attackers can use BloodHound to quickly identify highly complex attack paths that would otherwise be impossible to find. Defenders can use BloodHound to identify and eliminate those same attack paths. Both red and blue teams can use BloodHound to better understand privileged relationships in an Active Directory or Azure environment.
 
 BloodHound CE is created and maintained by the [BloodHound Enterprise Team](https://bloodhoundenterprise.io). The original BloodHound was created by [@\_wald0](https://www.twitter.com/_wald0), [@CptJesus](https://twitter.com/CptJesus), and [@harmj0y](https://twitter.com/harmj0y).
 
 ## Running BloodHound Community Edition
+Docker Compose is the easiest way to get up and running with BloodHound CE. Instructions below describe how to install and upgrade your deployment.
 
-The easiest way to get up and running is to use our pre-configured Docker Compose setup. The following steps will get BloodHound CE up and running with the least amount of effort.
+### Deploy BloodHound CE
+Deploying BloodHound CE quickly with the following steps:
 
-1. Install Docker Compose and ensure Docker is running. This should be included with the [Docker Desktop](https://www.docker.com/products/docker-desktop/) installation
-2. Run `curl -L https://ghst.ly/getbhce | docker compose -f - up`
-   > On Windows: Execute the command in CMD, or use `curl.exe` instead of `curl` in PowerShell
-3. Locate the randomly generated password in the terminal output of Docker Compose
-4. In a browser, navigate to `http://localhost:8080/ui/login`. Login with a username of `admin` and the randomly generated password from the logs
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/). Docker Desktop includes Docker Compose as part of the installation.
+2. Download the [Docker Compose YAML file](examples/docker-compose/docker-compose.yaml) and save it to a directory where you'd like to run BloodHound. You can do this from a terminal application with `curl -L https://ghst.ly/getbhce`.
+   > On Windows: Execute the command in CMD, or use `curl.exe` instead of `curl` in PowerShell.
+3. Navigate to the folder with the saved `docker-compose.yaml` file and run `docker compose pull && docker compose up`.
+4. Locate the randomly generated password in the terminal output of Docker Compose.
+5. In a browser, navigate to `http://localhost:8080/ui/login`. Login with a username of `admin` and the randomly generated password from the logs.
 
-NOTE: Going forward, the default `docker-compose.yml` example binds only to localhost (127.0.0.1). If you want to access BloodHound outside of localhost, you'll need to follow the instructions in [examples/docker-compose/README.md](examples/docker-compose/README.md) to configure the host binding for the container.
+*NOTE: The default `docker-compose.yml` example binds only to localhost (127.0.0.1). If you want to access BloodHound outside of localhost, you'll need to follow the instructions in [examples/docker-compose/README.md](examples/docker-compose/README.md) to configure the host binding for the container.*
+
+### Upgrade BloodHound CE
+Once installed, upgrade BloodHound CE to the latest version with the following steps:
+
+1. Navigate to the folder with the saved `docker-compose.yaml` file and run `docker compose pull && docker compose up`.
+2. In a browser, navigate to `http://localhost:8080/ui/login` and log in with your previously configured username and password.
 
 ### Importing sample data
 

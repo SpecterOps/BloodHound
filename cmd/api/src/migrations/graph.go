@@ -18,6 +18,7 @@ package migrations
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -63,32 +64,45 @@ func UpdateMigrationData(ctx context.Context, db graph.Database, target version.
 	}
 }
 
+var ErrNoMigrationData = errors.New("no migration data")
+
+// GetMigrationData fetches the database migration version for the given graph. This function logs failures but does
+// not return the raw error condition to the caller, instead the sentinel ErrNoMigrationData is returned. This is done
+// to avoid situations where a version check prevents an otherwise uninitialized database from reaching schema
+// assertion.
 func GetMigrationData(ctx context.Context, db graph.Database) (version.Version, error) {
 	var (
 		node             *graph.Node
-		currentMigration version.Version
+		currentMigration = version.GetVersion()
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var err error
 
-		if node, err = tx.Nodes().Filterf(func() graph.Criteria {
+		node, err = tx.Nodes().Filterf(func() graph.Criteria {
 			return query.Kind(query.Node(), common.MigrationData)
-		}).First(); err != nil {
-			return err
-		}
-		return nil
+		}).First()
+
+		return err
 	}); err != nil {
-		return currentMigration, err
-	} else if currentMigration.Major, err = node.Properties.Get("Major").Int(); err != nil {
-		return currentMigration, fmt.Errorf("unable to get Major property from node: %w", err)
-	} else if currentMigration.Minor, err = node.Properties.Get("Minor").Int(); err != nil {
-		return currentMigration, fmt.Errorf("unable to get Major property from node: %w", err)
-	} else if currentMigration.Patch, err = node.Properties.Get("Patch").Int(); err != nil {
-		return currentMigration, fmt.Errorf("unable to get Major property from node: %w", err)
+		log.Warnf("Unable to fetch migration data from graph: %v", err)
+		return currentMigration, ErrNoMigrationData
+	} else if major, err := node.Properties.Get("Major").Int(); err != nil {
+		log.Warnf("Unable to get Major property from migration data node: %v", err)
+		return currentMigration, ErrNoMigrationData
+	} else if minor, err := node.Properties.Get("Minor").Int(); err != nil {
+		log.Warnf("unable to get Minor property from migration data node: %v", err)
+		return currentMigration, ErrNoMigrationData
+	} else if patch, err := node.Properties.Get("Patch").Int(); err != nil {
+		log.Warnf("unable to get Patch property from migration data node: %v", err)
+		return currentMigration, ErrNoMigrationData
 	} else {
-		return currentMigration, nil
+		currentMigration.Major = major
+		currentMigration.Minor = minor
+		currentMigration.Patch = patch
 	}
+
+	return currentMigration, nil
 }
 
 type GraphMigrator struct {
@@ -113,12 +127,12 @@ func (s *GraphMigrator) Migrate(ctx context.Context, schema graph.Schema) error 
 	return nil
 }
 
-func (s *GraphMigrator) createMigrationData() error {
-	return s.db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
+func CreateMigrationData(ctx context.Context, db graph.Database, currentVersion version.Version) error {
+	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		if _, err := tx.CreateNode(graph.AsProperties(map[string]any{
-			"Major": 0,
-			"Minor": 0,
-			"Patch": 0,
+			"Major": currentVersion.Major,
+			"Minor": currentVersion.Minor,
+			"Patch": currentVersion.Patch,
 		}), common.MigrationData); err != nil {
 			return fmt.Errorf("could not create migration data: %w", err)
 		}
@@ -155,15 +169,11 @@ func (s *GraphMigrator) executeStepwiseMigrations(ctx context.Context) error {
 	}
 
 	if currentMigration, err := GetMigrationData(ctx, s.db); err != nil {
-		if graph.IsErrNotFound(err) {
-			if err := s.createMigrationData(); err != nil {
-				return fmt.Errorf("could not create graph db migration data: %w", err)
-			}
-
+		if errors.Is(err, ErrNoMigrationData) {
 			currentVersion := version.GetVersion()
 
 			log.Infof("This is a new graph database. Creating a migration entry for GraphDB version %s", currentVersion)
-			return UpdateMigrationData(ctx, s.db, currentVersion)
+			return CreateMigrationData(ctx, s.db, currentMigration)
 		} else {
 			return fmt.Errorf("unable to get graph db migration data: %w", err)
 		}

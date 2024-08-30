@@ -26,6 +26,27 @@ var (
 	ErrAuthoritativeDatabaseSwitching = errors.New("switching authoritative database")
 )
 
+func IsDriver[T any](db Database) bool {
+	switch typedDB := db.(type) {
+	case *DatabaseSwitch:
+		_, matchesDriverType := any(typedDB.currentDB).(T)
+		return matchesDriverType
+	}
+
+	return false
+}
+
+func AsDriver[T any](db Database) (T, bool) {
+	switch typedDB := db.(type) {
+	case *DatabaseSwitch:
+		driver, matchesDriverType := typedDB.currentDB.(T)
+		return driver, matchesDriverType
+	}
+
+	driver, matchesDriverType := db.(T)
+	return driver, matchesDriverType
+}
+
 type DatabaseSwitch struct {
 	activeContexts map[any]func()
 	currentDB      Database

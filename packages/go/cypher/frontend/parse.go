@@ -21,12 +21,13 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/specterops/bloodhound/cypher/models/cypher"
+
 	"github.com/antlr4-go/antlr/v4"
-	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/parser"
 )
 
-func parseCypher(ctx *Context, input string) (*model.RegularQuery, error) {
+func parseCypher(ctx *Context, input string) (*cypher.RegularQuery, error) {
 	var (
 		queryBuffer     = bytes.NewBufferString(input)
 		lexer           = parser.NewCypherLexer(antlr.NewIoStream(queryBuffer))
@@ -53,7 +54,7 @@ func parseCypher(ctx *Context, input string) (*model.RegularQuery, error) {
 	return queryVisitor.Query, errors.Join(ctx.Errors...)
 }
 
-func ParseCypher(ctx *Context, input string) (*model.RegularQuery, error) {
+func ParseCypher(ctx *Context, input string) (*cypher.RegularQuery, error) {
 	if formattedInput := strings.TrimSpace(input); len(formattedInput) == 0 {
 		return nil, ErrInvalidInput
 	} else {

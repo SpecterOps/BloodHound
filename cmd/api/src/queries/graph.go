@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -33,9 +32,7 @@ import (
 
 	"github.com/specterops/bloodhound/dawgs/util"
 
-	"github.com/specterops/bloodhound/cypher/backend/cypher"
-	"github.com/specterops/bloodhound/cypher/backend/pgsql"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg"
+	"github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/services/agi"
 
@@ -134,7 +131,7 @@ func BuildEntityQueryParams(request *http.Request, queryName string, pathDelegat
 
 type Graph interface {
 	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string) (map[string]any, error)
-	GetAssetGroupNodes(ctx context.Context, assetGroupTag string) (graph.NodeSet, error)
+	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	SearchNodesByName(ctx context.Context, nodeKinds graph.Kinds, nameQuery string, skip int, limit int) ([]model.SearchResult, error)
 	SearchByNameOrObjectID(ctx context.Context, searchValue string, searchType string) (graph.NodeSet, error)
@@ -157,8 +154,8 @@ type GraphQuery struct {
 	SlowQueryThreshold           int64 // Threshold in milliseconds
 	DisableCypherComplexityLimit bool
 	EnableCypherMutations        bool
-	cypherEmitter                cypher.Emitter
-	strippedCypherEmitter        cypher.Emitter
+	cypherEmitter                format.Emitter
+	strippedCypherEmitter        format.Emitter
 }
 
 func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configuration) *GraphQuery {
@@ -168,8 +165,8 @@ func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configu
 		SlowQueryThreshold:           cfg.SlowQueryThreshold,
 		DisableCypherComplexityLimit: cfg.DisableCypherComplexityLimit,
 		EnableCypherMutations:        cfg.EnableCypherMutations,
-		cypherEmitter:                cypher.NewCypherEmitter(false),
-		strippedCypherEmitter:        cypher.NewCypherEmitter(true),
+		cypherEmitter:                format.NewCypherEmitter(false),
+		strippedCypherEmitter:        format.NewCypherEmitter(true),
 	}
 }
 
@@ -225,42 +222,20 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 	})
 }
 
-func (s *GraphQuery) GetAssetGroupNodes(ctx context.Context, assetGroupTag string) (graph.NodeSet, error) {
+func (s *GraphQuery) GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error) {
 	var (
 		assetGroupNodes graph.NodeSet
 		err             error
 	)
-	return assetGroupNodes, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if assetGroupNodes, err = ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
-			filters := []graph.Criteria{
-				query.KindIn(query.Node(), azure.Entity, ad.Entity),
-				query.Or(
-					query.StringContains(query.NodeProperty(common.SystemTags.String()), assetGroupTag),
-					query.StringContains(query.NodeProperty(common.UserTags.String()), assetGroupTag),
-				),
-			}
 
-			return query.And(filters...)
-		})); err != nil {
+	err = s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if assetGroupNodes, err = agi.FetchAssetGroupNodes(tx, assetGroupTag, isSystemGroup); err != nil {
 			return err
-		} else {
-			for _, node := range assetGroupNodes {
-				// We need to filter out nodes that do not contain an exact tag match
-				var (
-					systemTags, _ = node.Properties.Get(common.SystemTags.String()).String()
-					userTags, _   = node.Properties.Get(common.UserTags.String()).String()
-					allTags       = append(strings.Split(systemTags, " "), strings.Split(userTags, " ")...)
-				)
-
-				if !slices.Contains(allTags, assetGroupTag) {
-					assetGroupNodes.Remove(node.ID)
-				} else {
-					node.Properties.Set("type", analysis.GetNodeKindDisplayLabel(node))
-				}
-			}
-			return nil
 		}
+		return nil
 	})
+
+	return assetGroupNodes, err
 }
 
 func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
@@ -365,7 +340,6 @@ func (s *GraphQuery) SearchNodesByName(ctx context.Context, nodeKinds graph.Kind
 		if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(SearchNodeByKindAndEqualsNameCriteria(kind, formattedName))); err != nil {
 				return err
-
 			} else {
 				exactResults = append(exactResults, nodesToSearchResult(exactMatchNodes...)...)
 			}
@@ -432,27 +406,13 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		return graphQuery, ErrCypherQueryTooComplex
 	}
 
-	if pgDB, isPG := s.Graph.(*pg.Driver); isPG {
-		if _, err = pgsql.Translate(queryModel, pgDB.KindMapper()); err != nil {
-			return graphQuery, err
-		}
+	graphQuery.StrippedQuery = strippedQueryBuffer.String()
+	graphQuery.complexity = complexityMeasure
 
-		if err = pgsql.NewEmitter(false, pgDB.KindMapper()).Write(queryModel, queryBuffer); err != nil {
-			return graphQuery, err
-		} else {
-			graphQuery.query = queryBuffer.String()
-		}
-
-		return graphQuery, nil
+	if err = s.cypherEmitter.Write(queryModel, queryBuffer); err != nil {
+		return graphQuery, err
 	} else {
-		graphQuery.StrippedQuery = strippedQueryBuffer.String()
-		graphQuery.complexity = complexityMeasure
-
-		if err = s.cypherEmitter.Write(queryModel, queryBuffer); err != nil {
-			return graphQuery, err
-		} else {
-			graphQuery.query = queryBuffer.String()
-		}
+		graphQuery.query = queryBuffer.String()
 	}
 
 	return graphQuery, nil

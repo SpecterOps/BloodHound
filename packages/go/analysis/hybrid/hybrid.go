@@ -175,8 +175,17 @@ func createMissingADUser(ctx context.Context, db graph.Database, objectID string
 	})
 
 	err = db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		newNode, err = tx.CreateNode(properties, adSchema.Entity, adSchema.User)
-		return err
+		if newNode, err = analysis.FetchNodeByObjectID(tx, objectID); errors.Is(err, graph.ErrNoResultsFound) {
+			if newNode, err = tx.CreateNode(properties, adSchema.Entity, adSchema.User); err != nil {
+				return fmt.Errorf("create missing ad user: %w", err)
+			} else {
+				return nil
+			}
+		} else if err != nil {
+			return fmt.Errorf("create missing ad user precheck: %w", err)
+		} else {
+			return nil
+		}
 	})
 
 	return newNode, err
