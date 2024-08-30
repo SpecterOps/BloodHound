@@ -69,7 +69,7 @@ WORKDIR /bloodhound
 VOLUME [ "/go/pkg/mod" ]
 
 RUN mkdir -p /bhapi/collectors/azurehound /bhapi/collectors/sharphound /bhapi/work
-RUN go install github.com/go-delve/delve/cmd/dlv@v1.21.0
+RUN go install github.com/go-delve/delve/cmd/dlv@v1.23.0
 RUN go install github.com/cosmtrek/air@v1.44.0
 
 COPY --from=hound-builder /tmp/sharphound/sharphound-$SHARPHOUND_VERSION.zip /bhapi/collectors/sharphound/
