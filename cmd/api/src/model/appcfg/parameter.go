@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	iso8601 "github.com/channelmeter/iso8601duration"
@@ -71,10 +72,14 @@ func (s *Parameter) IsValidKey(parameterKey string) bool {
 	return validKeys[parameterKey]
 }
 
-func (s *Parameter) SanitizeAndValidate() utils.Errors {
+func (s *Parameter) Validate() utils.Errors {
 	// validate the base parameter
-	if obj, ok := s.Value.Object.(map[string]any); !ok || len(obj) == 0 {
-		return utils.Errors{errors.New("missing or invalid value")}
+	var (
+		objMap map[string]any
+		ok     bool
+	)
+	if objMap, ok = s.Value.Object.(map[string]any); !ok || len(objMap) == 0 {
+		return utils.Errors{errors.New("missing or invalid property: value")}
 	}
 
 	// validate the specific parameter value
@@ -92,7 +97,10 @@ func (s *Parameter) SanitizeAndValidate() utils.Errors {
 		return utils.Errors{errors.New("invalid key")}
 	}
 
-	if err := s.Map(&v); err != nil {
+	// numField panics when val is not a struct, so we need both checks
+	if val := reflect.Indirect(reflect.ValueOf(v)); val.Kind() != reflect.Struct || val.NumField() != len(objMap) {
+		return utils.Errors{errors.New("value property contains an invalid field")}
+	} else if err := s.Map(&v); err != nil {
 		return utils.Errors{err}
 	} else if errs := validation.Validate(v); errs != nil {
 		return errs
@@ -228,6 +236,7 @@ func (s *PruneTTLParameters) UnmarshalJSON(data []byte) error {
 		if duration, err := iso8601.FromString(pTTL.HasSessionEdgeTTL); err != nil {
 			return errors.New("missing or invalid has_session_edge_ttl")
 		} else {
+
 			s.HasSessionEdgeTTL = duration.ToDuration()
 		}
 
