@@ -41,7 +41,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${BH_POSTGRES_USER:-bloodhound} -d 'dbname=${BH_POSTGRES_DB:-bloodhound}' -h 127.0.0.1 -p 5432"
+          "pg_isready -U ${BH_POSTGRES_USER:-bloodhound} -d 'dbname=${BH_POSTGRES_DB:-bloodhound}' -h 127.0.0.1 -p 5432",
         ]
       interval: 10s
       timeout: 5s
@@ -88,10 +88,7 @@ services:
       - traefik.http.services.neo4jbrowser.loadbalancer.server.port=7474
     healthcheck:
       test:
-        [
-          "CMD-SHELL",
-          "wget -O /dev/null -q http://localhost:7474 || exit 1"
-        ]
+        ["CMD-SHELL", "wget -O /dev/null -q http://localhost:7474 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -107,6 +104,7 @@ services:
     command: "-c .air.toml ${AIR_FLAGS:-''}"
     ports:
       - ${BH_API_PORT:-127.0.0.1:8080}:8080
+      - ${TOOLAPI_PORT:-127.0.0.1:2112}:2112
     labels:
       - traefik.enable=true
       - traefik.http.routers.bhapi.rule=Host(`${BH_HOSTNAME:-bloodhound.localhost}`) && PathPrefix(`/api`)
@@ -153,6 +151,7 @@ services:
     command: "-c .air.debug.toml ${AIR_FLAGS:-''}"
     ports:
       - ${BH_API_PORT:-127.0.0.1:8080}:8080
+      - ${TOOLAPI_PORT:-127.0.0.1:2112}:2112
       - ${DEBUG_PORT:-127.0.0.1:3456}:2345
     labels:
       - traefik.enable=true
