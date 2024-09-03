@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as axios from 'axios';
+import { ConfigurationPayload } from './utils/config';
 
 export type RequestOptions = axios.AxiosRequestConfig;
 
@@ -271,29 +272,5 @@ export interface UpdateUserRequest {
     SAMLProviderId?: string;
     is_disabled?: boolean;
 }
-
-type PasswordExpirationConfiguration = {
-    key: 'auth.password_expiration_window';
-    value: {
-        duration: string;
-    };
-};
-
-type Neo4jConfiguration = {
-    key: 'neo4j.configuration';
-    value: {
-        batch_write_size: number;
-        write_flush_size: number;
-    };
-};
-type CitrixRDPConfiguration = {
-    key: 'analysis.citrix_rdp_support';
-    value: {
-        enabled: boolean;
-    };
-};
-
-// Add additional types here depending on contract from backend work
-export type ConfigurationPayload = PasswordExpirationConfiguration | Neo4jConfiguration | CitrixRDPConfiguration;
 
 export type UpdateConfigurationRequest = ConfigurationPayload;

@@ -49,7 +49,7 @@ const CardWithSwitch: FC<CardWithSwitchProps> = ({ title, description, isEnabled
                 borderRadius: '8px',
                 ...(isEnabled ? enabledStyles : disabledStyles),
             }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <Typography variant='h4'>{title}</Typography>
                 <Switch label={isEnabled ? 'On' : 'Off'} checked={isEnabled} onCheckedChange={onSwitchChange}></Switch>
             </Box>

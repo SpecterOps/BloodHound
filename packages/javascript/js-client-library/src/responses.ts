@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ConfigurationPayload } from './types';
+import { ConfigurationPayload } from './utils/config';
 
 export type BasicResponse<T> = {
     data: T;
@@ -191,13 +191,13 @@ export type UploadFileToIngestResponse = null;
 
 export type EndFileIngestResponse = null;
 
-export type ConfigurationWithMetadata = TimestampFields &
-    ConfigurationPayload & {
+export type ConfigurationWithMetadata<T> = TimestampFields &
+    T & {
         name: string;
         description: string;
         id: number;
     };
 
-export type GetConfigurationResponse = BasicResponse<ConfigurationWithMetadata[]>;
+export type GetConfigurationResponse = BasicResponse<ConfigurationWithMetadata<ConfigurationPayload>[]>;
 
 export type UpdateConfigurationResponse = BasicResponse<ConfigurationPayload>;
