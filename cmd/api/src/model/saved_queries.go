@@ -53,9 +53,9 @@ func (s SavedQueries) IsSortable(column string) bool {
 func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
 		"user_id":     {Equals, NotEquals},
-		"name":        {Equals, NotEquals},
+		"name":        {Equals, NotEquals, ApproximatelyEquals},
 		"query":       {Equals, NotEquals},
-		"description": {Equals, NotEquals},
+		"description": {Equals, NotEquals, ApproximatelyEquals},
 	}
 }
 
