@@ -29,7 +29,7 @@ type CardWithSwitchProps = {
 const CardWithSwitch: FC<CardWithSwitchProps> = ({ title, description, isEnabled, onSwitchChange, children }) => {
     return (
         <Paper sx={{ padding: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <Typography variant='h4'>{title}</Typography>
                 <Switch label={isEnabled ? 'On' : 'Off'} checked={isEnabled} onCheckedChange={onSwitchChange}></Switch>
             </Box>
