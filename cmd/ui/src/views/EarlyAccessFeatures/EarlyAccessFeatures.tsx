@@ -54,10 +54,13 @@ export const EarlyAccessFeatureToggle: React.FC<{
                     <Typography variant='body1'>{flag.description}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Button disabled={disabled} onClick={handleOnClick}>
+                    {/* TODO: replace style prop with TW classes once TW is added */}
+                    <Button disabled={disabled} onClick={handleOnClick} style={{ width: '132px' }}>
                         <Box display={'flex'} alignItems={'center'}>
-                            {flag.enabled ? <FontAwesomeIcon icon={faCheckCircle} fixedWidth /> : null}
-                            <Typography ml='8px'>{flag.enabled ? 'Enabled' : 'Disabled'}</Typography>
+                            {flag.enabled ? (
+                                <FontAwesomeIcon style={{ marginRight: '8px' }} icon={faCheckCircle} fixedWidth />
+                            ) : null}
+                            <Typography>{flag.enabled ? 'Enabled' : 'Disabled'}</Typography>
                         </Box>
                     </Button>
                 </Box>
