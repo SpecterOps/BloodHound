@@ -42,6 +42,8 @@ const (
 	CitrixRDPSupportKey         = "analysis.citrix_rdp_support"
 	CitrixRDPSupportName        = "Citrix RDP Support"
 	CitrixRDPSupportDescription = "This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a 'Direct Access Users' local group will assume that Citrix is installed and CanRDP edges will require membership of both 'Direct Access Users' and 'Remote Desktop Users' local groups on the computer."
+
+	PruneTTL = "prune.ttl"
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -66,6 +68,7 @@ func (s Parameter) IsValid(parameter string) bool {
 	validKeys := map[string]bool{
 		PasswordExpirationWindow: true,
 		Neo4jConfigs:             true,
+		PruneTTL:                 true,
 	}
 
 	return validKeys[parameter]
@@ -98,7 +101,7 @@ func (s *PasswordExpiration) UnmarshalJSON(data []byte) error {
 	}{}
 
 	if err := json.Unmarshal(data, &pDb); err != nil {
-		return fmt.Errorf("error unmarshaling data for PruneTTLParameters: %w", err)
+		return fmt.Errorf("error unmarshaling data for PasswordExpiration: %w", err)
 	} else {
 		if duration, err := iso8601.FromString(pDb.Duration); err != nil {
 			return err
@@ -156,4 +159,52 @@ func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 	}
 
 	return result.Enabled
+}
+
+type PruneTTLParameters struct {
+	BaseTTL           time.Duration `json:"base_ttl,omitempty"`
+	HasSessionEdgeTTL time.Duration `json:"has_session_edge_ttl,omitempty"`
+}
+
+// Because PruneTTLs are stored as ISO strings, but we want to use them as durations, we override UnmarshalJSON to handle the conversion
+func (s *PruneTTLParameters) UnmarshalJSON(data []byte) error {
+	pTTL := struct {
+		BaseTTL           string `json:"base_ttl,omitempty"`
+		HasSessionEdgeTTL string `json:"has_session_edge_ttl,omitempty"`
+	}{}
+
+	if err := json.Unmarshal(data, &pTTL); err != nil {
+		return fmt.Errorf("error unmarshaling data for PruneTTLParameters: %w", err)
+	} else {
+		if duration, err := iso8601.FromString(pTTL.BaseTTL); err != nil {
+			return err
+		} else {
+			s.BaseTTL = duration.ToDuration()
+		}
+		if duration, err := iso8601.FromString(pTTL.HasSessionEdgeTTL); err != nil {
+			return err
+		} else {
+			s.HasSessionEdgeTTL = duration.ToDuration()
+		}
+
+		return nil
+	}
+}
+
+func GetPruneTTLParameters(ctx context.Context, service ParameterService) PruneTTLParameters {
+	var (
+		day    = time.Hour * 24
+		result = PruneTTLParameters{
+			BaseTTL:           7 * day,
+			HasSessionEdgeTTL: 3 * day,
+		}
+	)
+
+	if pruneTTLParametersCfg, err := service.GetConfigurationParameter(ctx, PruneTTL); err != nil {
+		log.Warnf("Failed to fetch prune TTL configuration; returning default values")
+	} else if err = pruneTTLParametersCfg.Map(&result); err != nil {
+		log.Warnf("Invalid prune TTL configuration supplied; returning default values %+v", err)
+	}
+
+	return result
 }
