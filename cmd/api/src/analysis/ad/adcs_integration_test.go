@@ -2426,8 +2426,7 @@ func FetchADCSPrereqs(db graph.Database) (impact.PathAggregator, []*graph.Node, 
 	}
 }
 
-func TestADCSESC10a(t *testing.T) { //***
-	t.Skip("3 Disabling test to allow engineers to continue submitting PRs and not have significant errors BED-4747")
+func TestADCSESC10a(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
@@ -2990,8 +2989,7 @@ func TestADCSESC13(t *testing.T) { //***
 	})
 }
 
-func TestADCSESC10b(t *testing.T) { //***
-	t.Skip("5 Disabling test to allow engineers to continue submitting PRs and not have significant errors BED-4747")
+func TestADCSESC10b(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
