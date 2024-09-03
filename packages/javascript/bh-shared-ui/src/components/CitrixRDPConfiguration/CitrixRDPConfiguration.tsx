@@ -19,6 +19,7 @@ import ConfirmCitrixRDPDialog from './CitrixRDPConfirmDialog';
 import { useGetConfiguration, useUpdateConfiguration } from '../../hooks';
 import { useState } from 'react';
 import { useNotifications } from '../../providers';
+import { ConfigurationPayload, parseCitrixConfiguration } from 'js-client-library';
 
 export const configurationData = {
     key: 'analysis.citrix_rdp_support',
@@ -27,7 +28,6 @@ export const configurationData = {
         'When enabled, post-processing for the CanRDP edge will look for the presence of the default "Direct Access Users" group and assume that only local Administrators and members of this group can RDP to the system without validation that Citrix VDA is present and correctly configured. Use with caution.',
 };
 
-// To do: Add this to the shared ui, just using here for ease
 const CitrixRDPConfiguration: FC = () => {
     const [isEnabled, setIsEnabled] = useState(false);
     const [isOpenDialog, setIsOpenDialog] = useState(false);
@@ -38,12 +38,8 @@ const CitrixRDPConfiguration: FC = () => {
 
     useEffect(() => {
         if (isSuccess) {
-            const savedConfigurationList = savedConfigurationResponse?.data;
-            const citrixRDPConfiguration = savedConfigurationList?.find(
-                (configItem) => configItem.key === configurationData.key
-            );
-            const citrixRDPConfigurationEnabled = citrixRDPConfiguration?.value.enabled;
-            setIsEnabled(citrixRDPConfigurationEnabled);
+            const citrixRDPconfigurationEnabled = parseCitrixConfiguration(savedConfigurationResponse)?.value.enabled;
+            setIsEnabled(citrixRDPconfigurationEnabled as boolean);
         }
     }, [savedConfigurationResponse, isSuccess]);
 
@@ -61,7 +57,7 @@ const CitrixRDPConfiguration: FC = () => {
             {
                 key: configurationData.key,
                 value: { enabled: isEnabled },
-            },
+            } as ConfigurationPayload,
             {
                 onError: () => {
                     addNotification('There was an error updating configuration.');
