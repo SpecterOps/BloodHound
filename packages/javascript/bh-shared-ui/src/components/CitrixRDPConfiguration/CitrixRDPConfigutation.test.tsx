@@ -18,9 +18,8 @@ import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor } from '../../test-utils';
 import CitrixRDPConfiguration, { configurationData } from './CitrixRDPConfiguration';
 import { dialogTitle } from './CitrixRDPConfirmDialog';
-
-// To do: Test for initial switch value once getting configuration ( test for when it is on)
-// To do: Test for checking correct dialog text when clicking to disable
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 
 describe('CitrixRDPConfiguration', () => {
     beforeEach(() => {
@@ -46,6 +45,38 @@ describe('CitrixRDPConfiguration', () => {
         let panelDialogDescription: HTMLElement;
         const user = userEvent.setup();
 
+        const server = setupServer(
+            rest.get(`/api/v2/config`, async (_req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: [
+                            {
+                                key: 'analysis.citrix_rdp_support',
+                                value: {
+                                    enabled: false,
+                                },
+                            },
+                        ],
+                    })
+                );
+            }),
+            rest.put(`/api/v2/config`, async (_req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: [
+                            {
+                                key: 'analysis.citrix_rdp_support',
+                                value: {
+                                    enabled: true,
+                                },
+                            },
+                        ],
+                    })
+                );
+            })
+        );
+        beforeAll(() => server.listen());
+
         beforeEach(async () => {
             panelSwitch = screen.getByRole('switch');
 
@@ -54,6 +85,9 @@ describe('CitrixRDPConfiguration', () => {
             panelDialogTitle = screen.getByText(dialogTitle, { exact: false });
             panelDialogDescription = screen.getByText(/analysis has been added with citrix configuration/i);
         });
+
+        afterEach(() => server.resetHandlers());
+        afterAll(() => server.close());
 
         it('on clicking switch shows modal and when clicking confirm closes it and switch stays enabled', async () => {
             expect(panelSwitch).toBeInTheDocument();
@@ -86,6 +120,90 @@ describe('CitrixRDPConfiguration', () => {
                 expect(panelDialogTitle).not.toBeInTheDocument();
                 expect(panelDialogDescription).not.toBeInTheDocument();
                 expect(panelSwitch).not.toBeChecked();
+            });
+        });
+    });
+    describe('Click on switch to disable', () => {
+        let panelSwitch: HTMLElement;
+        let panelDialogTitle: HTMLElement;
+        let panelDialogDescription: HTMLElement;
+        const user = userEvent.setup();
+
+        const server = setupServer(
+            rest.get(`/api/v2/config`, async (_req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: [
+                            {
+                                key: 'analysis.citrix_rdp_support',
+                                value: {
+                                    enabled: true,
+                                },
+                            },
+                        ],
+                    })
+                );
+            }),
+            rest.put(`/api/v2/config`, async (_req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: [
+                            {
+                                key: 'analysis.citrix_rdp_support',
+                                value: {
+                                    enabled: false,
+                                },
+                            },
+                        ],
+                    })
+                );
+            })
+        );
+        beforeAll(() => server.listen());
+
+        beforeEach(async () => {
+            panelSwitch = screen.getByRole('switch');
+
+            await user.click(panelSwitch);
+
+            panelDialogTitle = screen.getByText(dialogTitle, { exact: false });
+            panelDialogDescription = screen.getByText(/analysis has been removed with citrix configuration/i);
+        });
+
+        afterEach(() => server.resetHandlers());
+        afterAll(() => server.close());
+
+        it('on clicking switch shows modal and when clicking confirm closes it and switch stays disabled', async () => {
+            expect(panelSwitch).toBeInTheDocument();
+            expect(panelSwitch).not.toBeChecked();
+            expect(panelDialogTitle).toBeInTheDocument();
+            expect(panelDialogDescription).toBeInTheDocument();
+
+            const confirmButton = screen.getByRole('button', { name: /confirm/i });
+
+            await user.click(confirmButton);
+
+            await waitFor(() => {
+                expect(panelDialogTitle).not.toBeInTheDocument();
+                expect(panelDialogDescription).not.toBeInTheDocument();
+                expect(panelSwitch).not.toBeChecked();
+            });
+        });
+
+        it('on clicking switch shows modal and when clicking cancel closes it and switch reverts to enabled', async () => {
+            expect(panelSwitch).toBeInTheDocument();
+            expect(panelSwitch).not.toBeChecked();
+            expect(panelDialogTitle).toBeInTheDocument();
+            expect(panelDialogDescription).toBeInTheDocument();
+
+            const cancelButton = screen.getByRole('button', { name: /cancel/i });
+
+            await user.click(cancelButton);
+
+            await waitFor(() => {
+                expect(panelDialogTitle).not.toBeInTheDocument();
+                expect(panelDialogDescription).not.toBeInTheDocument();
+                expect(panelSwitch).toBeChecked();
             });
         });
     });
