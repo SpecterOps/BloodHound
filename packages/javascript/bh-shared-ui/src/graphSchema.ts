@@ -363,6 +363,7 @@ export enum ActiveDirectoryKindProperties {
     SchemaVersion = 'schemaversion',
     RequiresManagerApproval = 'requiresmanagerapproval',
     AuthenticationEnabled = 'authenticationenabled',
+    SchannelAuthenticationEnabled = 'schannelauthenticationenabled',
     EnrolleeSuppliesSubject = 'enrolleesuppliessubject',
     CertificateApplicationPolicy = 'certificateapplicationpolicy',
     CertificateNameFlag = 'certificatenameflag',
@@ -529,6 +530,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Requires Manager Approval';
         case ActiveDirectoryKindProperties.AuthenticationEnabled:
             return 'Authentication Enabled';
+        case ActiveDirectoryKindProperties.SchannelAuthenticationEnabled:
+            return 'Schannel Authentication Enabled';
         case ActiveDirectoryKindProperties.EnrolleeSuppliesSubject:
             return 'Enrollee Supplies Subject';
         case ActiveDirectoryKindProperties.CertificateApplicationPolicy:

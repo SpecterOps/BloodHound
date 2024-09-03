@@ -476,6 +476,13 @@ AuthenticationEnabled: types.#StringEnum & {
 	representation: "authenticationenabled"
 }
 
+SchannelAuthenticationEnabled: types.#StringEnum & {
+	symbol: "SchannelAuthenticationEnabled"
+	schema: "ad"
+	name: "Schannel Authentication Enabled"
+	representation: "schannelauthenticationenabled"
+}
+
 EnrolleeSuppliesSubject: types.#StringEnum & {
 	symbol: "EnrolleeSuppliesSubject"
 	schema: "ad"

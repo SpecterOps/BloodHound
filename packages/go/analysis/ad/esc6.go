@@ -179,10 +179,6 @@ func isCertTemplateValidForESC6(ct *graph.Node, scenarioB bool) (bool, error) {
 		return false, err
 	} else if reqManagerApproval {
 		return false, nil
-	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
-		return false, err
-	} else if !authenticationEnabled {
-		return false, nil
 	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
 		return false, err
 	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
@@ -194,11 +190,21 @@ func isCertTemplateValidForESC6(ct *graph.Node, scenarioB bool) (bool, error) {
 			return false, err
 		} else if !noSecurityExtension {
 			return false, nil
+		} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
+			return false, err
+		} else if !authenticationEnabled {
+			return false, nil
 		} else {
 			return true, nil
 		}
 	} else {
-		return true, nil
+		if schannelAuthenticationEnabled, err := schannelAuthenticationEnabled(ct); err != nil {
+			return false, err
+		} else if !schannelAuthenticationEnabled {
+			return false, nil
+		} else {
+			return true, nil
+		}
 	}
 }
 
@@ -217,7 +223,8 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 		MATCH p3 = (n)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d:Domain)
 		WHERE ct.nosecurityextension = true                                                  <- ESC6a only
-			AND ct.authenticationenabled = true
+			AND ct.authenticationenabled = true                                              <- ESC6a only
+			AND ct.schannelauthenticationenabled = true                                      <- ESC6b only
 			AND ct.requiresmanagerapproval = false
 			AND (ct.schemaversion = 1 OR ct.authorizedsignatures = 0)
 			AND (
@@ -346,7 +353,6 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 func getESC6CertTemplateCriteria(edgeKind graph.Kind) graph.Criteria {
 	criteria := query.And(
 		query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
-		query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
 		query.Or(
 			query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
 			query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
@@ -357,6 +363,17 @@ func getESC6CertTemplateCriteria(edgeKind graph.Kind) graph.Criteria {
 		criteria = query.And(
 			criteria,
 			query.Equals(query.EndProperty(ad.NoSecurityExtension.String()), true),
+			query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+		)
+	} else {
+		criteria = query.And(
+			criteria,
+			query.Or(
+				query.Equals(query.EndProperty(ad.SchannelAuthenticationEnabled.String()), true),
+				query.Equals(query.Size(query.EndProperty(ad.EffectiveEKUs.String())), 0),
+				query.InInverted(query.EndProperty(ad.EffectiveEKUs.String()), "1.3.6.1.5.5.7.3.2"),
+				query.InInverted(query.EndProperty(ad.EffectiveEKUs.String()), "2.5.29.37.0"),
+			),
 		)
 	}
 

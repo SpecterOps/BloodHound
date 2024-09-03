@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -358,4 +359,19 @@ func getVictimBitmap(groupExpansions impact.PathAggregator, certTemplateControll
 	victimBitmap.And(ecaBitmap)
 
 	return victimBitmap
+}
+
+func schannelAuthenticationEnabled(certTemplate *graph.Node) (bool, error) {
+	schannelAuthenticationEnabledExist := certTemplate.Properties.Exists(ad.SchannelAuthenticationEnabled.String())
+
+	if schannelAuthenticationEnabledExist {
+		return certTemplate.Properties.Get(ad.SchannelAuthenticationEnabled.String()).Bool()
+	} else {
+		// Fallback to EffectiveEKUs property
+		if effectiveekus, err2 := certTemplate.Properties.Get(ad.EffectiveEKUs.String()).StringSlice(); err2 != nil {
+			return false, err2
+		} else {
+			return slices.Contains(effectiveekus, "1.3.6.1.5.5.7.3.2") || slices.Contains(effectiveekus, "2.5.29.37.0") || len(effectiveekus) == 0, nil
+		}
+	}
 }
