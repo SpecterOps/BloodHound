@@ -74,12 +74,10 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		dataQualityFailed = false
 	)
 
-	citrixRDPSupport := appcfg.GetCitrixRDPSupport(ctx, db)
-
 	// TODO: Cleanup #ADCSFeatureFlag after full launch.
 	if adcsFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving ADCS feature flag: %w", err))
-	} else if stats, err := ad.Post(ctx, graphDB, adcsFlag.Enabled, citrixRDPSupport.Enabled); err != nil {
+	} else if stats, err := ad.Post(ctx, graphDB, adcsFlag.Enabled, appcfg.GetCitrixRDPSupport(ctx, db)); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
 		adFailed = true
 	} else {

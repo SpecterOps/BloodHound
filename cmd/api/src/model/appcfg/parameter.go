@@ -181,20 +181,14 @@ type CitrixRDPSupport struct {
 	Enabled bool `json:"enabled,omitempty"`
 }
 
-func GetCitrixRDPSupport(ctx context.Context, service ParameterService) CitrixRDPSupport {
+func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 	var result CitrixRDPSupport
 
 	if cfg, err := service.GetConfigurationParameter(ctx, CitrixRDPSupportKey); err != nil {
-		log.Errorf("Failed to fetch CitrixRDPSupport configuration; returning default values")
-		result = CitrixRDPSupport{
-			Enabled: false,
-		}
+		log.Warnf("Failed to fetch CitrixRDPSupport configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
-		log.Errorf("Invalid CitrixRDPSupport configuration supplied, %v. returning default values.", err)
-		result = CitrixRDPSupport{
-			Enabled: false,
-		}
+		log.Warnf("Invalid CitrixRDPSupport configuration supplied, %v. returning default values.", err)
 	}
 
-	return result
+	return result.Enabled
 }

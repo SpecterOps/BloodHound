@@ -19,3 +19,6 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE INDEX IF NOT EXISTS idx_saved_queries_description ON saved_queries using gin(description gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_saved_queries_name ON saved_queries USING gin(name gin_trgm_ops);
+
+INSERT INTO parameters (id, key, name, description, value, created_at, updated_at) 
+VALUES (3, 'analysis.citrix_rdp_support', 'Citrix RDP Support', 'This configuration parameter toggles Citrix support during post-processing. When on, CanRDP edges will come from the `Direct Access Users` group instead of the builtin `Remote Desktop Users` group.', '{"enabled": false}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
