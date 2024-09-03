@@ -38,9 +38,13 @@ const (
 	DefaultPasswordExpirationWindow = time.Hour * 24 * 90
 
 	Neo4jConfigs        = "neo4j.configuration"
-	PruneTTL            = "prune.ttl"
 	CitrixRDPSupportKey = "analysis.citrix_rdp_support"
-	ReconciliationKey   = "analysis.reconciliation"
+
+	PruneTTL                      = "prune.ttl"
+	DefaultPruneBaseTTL           = time.Hour * 24 * 7
+	DefaultPruneHasSessionEdgeTTL = time.Hour * 24 * 3
+
+	ReconciliationKey = "analysis.reconciliation"
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -66,6 +70,7 @@ func (s *Parameter) IsValidKey(parameterKey string) bool {
 		PasswordExpirationWindow: true,
 		Neo4jConfigs:             true,
 		PruneTTL:                 true,
+		CitrixRDPSupportKey:      true,
 		ReconciliationKey:        true,
 	}
 
@@ -91,6 +96,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &Neo4jParameters{}
 	case PruneTTL:
 		v = &PruneTTLParameters{}
+	case CitrixRDPSupportKey:
+		v = &CitrixRDPSupport{}
 	case ReconciliationKey:
 		v = &ReconciliationParameter{}
 	default:
@@ -245,13 +252,10 @@ func (s *PruneTTLParameters) UnmarshalJSON(data []byte) error {
 }
 
 func GetPruneTTLParameters(ctx context.Context, service ParameterService) PruneTTLParameters {
-	var (
-		day    = time.Hour * 24
-		result = PruneTTLParameters{
-			BaseTTL:           7 * day,
-			HasSessionEdgeTTL: 3 * day,
-		}
-	)
+	result := PruneTTLParameters{
+		BaseTTL:           DefaultPruneBaseTTL,
+		HasSessionEdgeTTL: DefaultPruneHasSessionEdgeTTL,
+	}
 
 	if pruneTTLParametersCfg, err := service.GetConfigurationParameter(ctx, PruneTTL); err != nil {
 		log.Warnf("Failed to fetch prune TTL configuration; returning default values")
