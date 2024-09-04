@@ -36,6 +36,7 @@ const (
 	Neo4jConfigs        = "neo4j.configuration"
 	PruneTTL            = "prune.ttl"
 	CitrixRDPSupportKey = "analysis.citrix_rdp_support"
+	ReconciliationKey   = "analysis.reconciliation"
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -61,6 +62,7 @@ func (s Parameter) IsValid(parameter string) bool {
 		PasswordExpirationWindow: true,
 		Neo4jConfigs:             true,
 		PruneTTL:                 true,
+		ReconciliationKey:        true,
 	}
 
 	return validKeys[parameter]
@@ -209,4 +211,22 @@ func GetPruneTTLParameters(ctx context.Context, service ParameterService) PruneT
 	}
 
 	return result
+}
+
+// Reconciliation
+
+type ReconciliationParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetReconciliationParameter(ctx context.Context, service ParameterService) bool {
+	result := ReconciliationParameter{Enabled: true}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, ReconciliationKey); err != nil {
+		log.Warnf("Failed to fetch reconciliation configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		log.Warnf("Invalid reconciliation configuration supplied, %v. returning default values.", err)
+	}
+
+	return result.Enabled
 }

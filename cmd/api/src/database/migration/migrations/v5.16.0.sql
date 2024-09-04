@@ -26,8 +26,13 @@ VALUES ('analysis.citrix_rdp_support', 'Citrix RDP Support', 'This configuration
 --     CACHE 1
 --     OWNED BY parameters.id;
 
-INSERT INTO parameters (id, key, name, description, value, created_at, updated_at) 
+INSERT INTO parameters (id, key, name, description, value, created_at, updated_at)
 VALUES (3, 'analysis.citrix_rdp_support', 'Citrix RDP Support', 'This configuration parameter toggles Citrix support during post-processing. When on, CanRDP edges will come from the `Direct Access Users` group instead of the builtin `Remote Desktop Users` group.', '{"enabled": false}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
 
 -- Add Prune TTLs
-INSERT INTO parameters (id, key, name, description, value, created_at, updated_at) VALUES (3, 'prune.ttl', 'Prune Retention TTL Configuration Parameters', 'This configuration parameter sets the retention TTLs during analysis pruning.', '{"base_ttl": "P7D", "has_session_edge_ttl": "P3D"}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+INSERT INTO parameters (id, key, name, description, value, created_at, updated_at) VALUES (4, 'prune.ttl', 'Prune Retention TTL Configuration Parameters', 'This configuration parameter sets the retention TTLs during analysis pruning.', '{"base_ttl": "P7D", "has_session_edge_ttl": "P3D"}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+
+-- Add Reconciliation to parameters and remove from feature_flags
+INSERT INTO parameters (id, key, name, description, value, created_at, updated_at) VALUES (5, 'analysis.reconciliation', 'Reconciliation', 'This configuration parameter enables / disables reconciliation during analysis.', format('{"enabled": %s}', (SELECT enabled FROM feature_flags WHERE key = 'reconciliation')::text)::json, current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+-- must occur after insert to ensure reconciliation flag is set to whatever current value is
+DELETE FROM feature_flags WHERE key = 'reconciliation';
