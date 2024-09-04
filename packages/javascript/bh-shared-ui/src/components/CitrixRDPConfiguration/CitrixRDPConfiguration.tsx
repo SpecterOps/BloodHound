@@ -62,6 +62,9 @@ const CitrixRDPConfiguration: FC = () => {
                 onError: () => {
                     addNotification('There was an error updating configuration.');
                 },
+                onSuccess: () => {
+                    toggleShowDialog();
+                },
             }
         );
     };
