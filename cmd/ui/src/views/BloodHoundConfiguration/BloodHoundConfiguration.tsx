@@ -22,14 +22,13 @@ const BloodHoundConfiguration = () => {
         <PageWithTitle
             title='Bloodhound Configuration'
             pageDescription={
-                // To do: Add max-width to parent content
-                <Typography variant='body2' paragraph sx={{ maxWidth: '955px' }}>
+                <Typography variant='body2' paragraph>
                     Brief Description of the Feature Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
                     eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
                     exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
                 </Typography>
             }>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '860px' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <CitrixRDPConfiguration />
             </Box>
         </PageWithTitle>
