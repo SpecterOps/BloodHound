@@ -50,8 +50,8 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, o
 	)
 
 	if filter.SQLString != "" {
-		cursor = cursor.Where(filter.SQLString, filter.Params)
-		result = s.db.Model(&queries).WithContext(ctx).Where("user_id = ?", userID).Where(filter.SQLString, filter.Params).Count(&count)
+		cursor = cursor.Where(filter.SQLString, filter.Params...)
+		result = s.db.Model(&queries).WithContext(ctx).Where("user_id = ?", userID).Where(filter.SQLString, filter.Params...).Count(&count)
 	} else {
 		result = s.db.Model(&queries).WithContext(ctx).Where("user_id = ?", userID).Count(&count)
 	}
