@@ -3,7 +3,7 @@ import { Typography, Button, useTheme, Dialog, DialogActions, DialogContent, Dia
 
 type CitrixRDPConfirmDialogProps = {
     open: boolean;
-    isEnabled: boolean;
+    futureSwitchState: boolean;
     handleCancel: () => void;
     handleConfirm: () => void;
 };
@@ -13,7 +13,12 @@ const enabledDialogDescription =
 const disabledDialogDescription =
     'Analysis has been removed with Citrix Configuration, this will result in BloodHound performing analysis to account for this change';
 
-const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, isEnabled, handleCancel, handleConfirm }) => {
+const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({
+    open,
+    futureSwitchState,
+    handleCancel,
+    handleConfirm,
+}) => {
     const theme = useTheme();
 
     return (
@@ -27,7 +32,7 @@ const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, isEnabl
             </DialogTitle>
             <DialogContent sx={{ paddingBottom: 0 }}>
                 <Typography variant='body2' sx={{ paddingBottom: '16px', whiteSpace: 'break-spaces' }}>
-                    {isEnabled ? enabledDialogDescription : disabledDialogDescription}
+                    {futureSwitchState ? enabledDialogDescription : disabledDialogDescription}
                 </Typography>
                 <Typography variant='body2'>
                     Select <b>`Confirm`</b> to proceed and to start analysis.
