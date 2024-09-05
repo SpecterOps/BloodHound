@@ -308,10 +308,14 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 
 	//The intention is that the node sets being passed into this function contain all the first degree principals for control
 	var (
-		refSetIndex        = -1
-		unrolledSets       = []cardinality.Duplex[uint32]{}
-		unrolledRefSet     = cardinality.NewBitmap32()
-		checkSet           = cardinality.NewBitmap32()
+		refSetIndex = -1
+		//Temporary storage for unrolled sets so we can determine reference for auth users/everyone
+		unrolledSets = []cardinality.Duplex[uint32]{}
+		//This is the set we use as a reference set to check against checkset
+		unrolledRefSet = cardinality.NewBitmap32()
+		//This is the set we use to aggregate multiple sets together
+		checkSet = cardinality.NewBitmap32()
+		//This is our set of entities that have the complete cross product of permissions
 		resultEntities     = cardinality.NewBitmap32()
 		skipNodeSetIndices = []int{}
 	)
@@ -350,9 +354,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 			}
 		}
 		return resultEntities
-
-		//If every nodeset (unrolled) except one includes Auth. Users/Everyone then return that one nodeset (first degree)
-	} else if len(skipNodeSetIndices)+1 == len(nodeSets) {
+	} else if len(skipNodeSetIndices) == len(nodeSets)-1 { //If every nodeset (unrolled) except one includes Auth. Users/Everyone then return that one nodeset (first degree)
 		for i := range nodeSets {
 			if !slices.Contains(skipNodeSetIndices, i) {
 				for _, entity := range nodeSets[i] {
