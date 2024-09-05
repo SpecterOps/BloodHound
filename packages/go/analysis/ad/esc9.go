@@ -35,11 +35,11 @@ import (
 func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
 	results := cardinality.NewBitmap32()
 
-	if _, ok := cache.HasWeakCertBindingInForest[domain.ID]; !ok {
+	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint32()); !ok {
 		return nil
-	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
+	} else if publishedCertTemplates, ok := cache.GetPublishedTemplateCache(eca.ID); !ok {
 		return nil
-	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
+	} else if ecaEnrollers, ok := cache.GetEnterpriseCAEnrollers(eca.ID); !ok {
 		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
@@ -48,11 +48,11 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateEnrollers, ok := cache.CertTemplateEnrollers[template.ID]; !ok {
+			} else if certTemplateEnrollers, ok := cache.GetCertTemplateEnrollers(template.ID); !ok {
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
-				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaControllers)
+				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers)
 
 				if filteredVictims, err := filterUserDNSResults(tx, victimBitmap, template); err != nil {
 					log.Warnf("Error filtering users from victims for esc9a: %v", err)
@@ -81,11 +81,11 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
 	results := cardinality.NewBitmap32()
 
-	if _, ok := cache.HasWeakCertBindingInForest[domain.ID]; !ok {
+	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint32()); !ok {
 		return nil
-	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
+	} else if publishedCertTemplates, ok := cache.GetPublishedTemplateCache(eca.ID); !ok {
 		return nil
-	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
+	} else if ecaEnrollers, ok := cache.GetEnterpriseCAEnrollers(eca.ID); !ok {
 		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
@@ -94,11 +94,11 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateEnrollers, ok := cache.CertTemplateEnrollers[template.ID]; !ok {
+			} else if certTemplateEnrollers, ok := cache.GetCertTemplateEnrollers(template.ID); !ok {
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
-				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaControllers)
+				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers)
 
 				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
 					log.Warnf("Error getting start nodes for esc9a attacker nodes: %v", err)

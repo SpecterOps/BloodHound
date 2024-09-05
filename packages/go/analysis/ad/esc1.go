@@ -34,7 +34,7 @@ import (
 
 func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
 	results := cardinality.NewBitmap32()
-	if publishedCertTemplates, ok := cache.PublishedTemplateCache[enterpriseCA.ID]; !ok {
+	if publishedCertTemplates, ok := cache.GetPublishedTemplateCache(enterpriseCA.ID); !ok {
 		return nil
 	} else {
 		for _, certTemplate := range publishedCertTemplates {
@@ -44,7 +44,11 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			} else if !valid {
 				continue
 			} else {
-				results.Or(CalculateCrossProductNodeSets(expandedGroups, cache.CertTemplateEnrollers[certTemplate.ID], cache.EnterpriseCAEnrollers[enterpriseCA.ID]))
+				var (
+					enterpriseCAEnrollers, _ = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
+					certTemplateEnrollers, _ = cache.GetCertTemplateEnrollers(certTemplate.ID)
+				)
+				results.Or(CalculateCrossProductNodeSets(expandedGroups, certTemplateEnrollers, enterpriseCAEnrollers))
 			}
 		}
 	}

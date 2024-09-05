@@ -34,11 +34,11 @@ import (
 )
 
 func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	if _, ok := cache.HasUPNCertMappingInForest[domain.ID]; !ok {
+	if ok := cache.HasUPNCertMappingInForest(domain.ID.Uint32()); !ok {
 		return nil
-	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
+	} else if publishedCertTemplates, ok := cache.GetPublishedTemplateCache(eca.ID); !ok {
 		return nil
-	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
+	} else if ecaControllers, ok := cache.GetEnterpriseCAEnrollers(eca.ID); !ok {
 		return nil
 	} else {
 		results := cardinality.NewBitmap32()
@@ -49,7 +49,7 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateEnrollers, ok := cache.CertTemplateEnrollers[template.ID]; !ok {
+			} else if certTemplateEnrollers, ok := cache.GetCertTemplateEnrollers(template.ID); !ok {
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
@@ -80,11 +80,11 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 }
 
 func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
-	if _, ok := cache.HasUPNCertMappingInForest[domain.ID]; !ok {
+	if ok := cache.HasUPNCertMappingInForest(domain.ID.Uint32()); !ok {
 		return nil
-	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[enterpriseCA.ID]; !ok {
+	} else if publishedCertTemplates, ok := cache.GetPublishedTemplateCache(enterpriseCA.ID); !ok {
 		return nil
-	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[enterpriseCA.ID]; !ok {
+	} else if ecaEnrollers, ok := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID); !ok {
 		return nil
 	} else {
 		results := cardinality.NewBitmap32()
@@ -95,11 +95,11 @@ func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analy
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateEnrollers, ok := cache.CertTemplateEnrollers[template.ID]; !ok {
+			} else if certTemplateEnrollers, ok := cache.GetCertTemplateEnrollers(template.ID); !ok {
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
-				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaControllers)
+				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers)
 
 				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
 					log.Warnf("Error getting start nodes for esc10b attacker nodes: %v", err)

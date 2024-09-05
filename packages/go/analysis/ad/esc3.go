@@ -37,7 +37,7 @@ import (
 func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca2, domain *graph.Node, cache ADCSCache) error {
 	results := cardinality.NewBitmap32()
 
-	if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca2.ID]; !ok {
+	if publishedCertTemplates, ok := cache.GetPublishedTemplateCache(eca2.ID); !ok {
 		return nil
 	} else if collected, err := eca2.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
 		return fmt.Errorf("error getting enrollmentagentcollected for eca2 %d: %w", eca2.ID, err)
@@ -73,6 +73,12 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 						continue
 					}
 
+					var (
+						ecaEnrollersTwo, _          = cache.GetEnterpriseCAEnrollers(eca2.ID)
+						certTemplateEnrollersOne, _ = cache.GetCertTemplateEnrollers(certTemplateOne.ID)
+						certTemplateEnrollersTwo, _ = cache.GetCertTemplateEnrollers(certTemplateTwo.ID)
+					)
+
 					if publishedECAs, err := FetchCertTemplateCAs(tx, certTemplateOne); err != nil {
 						log.Errorf("Error getting cas for cert template %d: %v", certTemplateOne.ID, err)
 					} else if publishedECAs.Len() == 0 {
@@ -82,11 +88,12 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 							log.Errorf("Error getting delegated agents for cert template %d: %v", certTemplateTwo.ID, err)
 						} else {
 							for _, eca1 := range publishedECAs {
+								ecaEnrollersOne, _ := cache.GetEnterpriseCAEnrollers(eca1.ID)
 								tempResults := CalculateCrossProductNodeSets(groupExpansions,
-									cache.CertTemplateEnrollers[certTemplateOne.ID],
-									cache.CertTemplateEnrollers[certTemplateTwo.ID],
-									cache.EnterpriseCAEnrollers[eca1.ID],
-									cache.EnterpriseCAEnrollers[eca2.ID],
+									certTemplateEnrollersOne,
+									certTemplateEnrollersTwo,
+									ecaEnrollersOne,
+									ecaEnrollersTwo,
 									delegatedAgents.Slice())
 
 								// Add principals to result set unless it's a user and DNS is required
@@ -99,11 +106,12 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 						}
 					} else {
 						for _, eca1 := range publishedECAs {
+							ecaEnrollersOne, _ := cache.GetEnterpriseCAEnrollers(eca1.ID)
 							tempResults := CalculateCrossProductNodeSets(groupExpansions,
-								cache.CertTemplateEnrollers[certTemplateOne.ID],
-								cache.CertTemplateEnrollers[certTemplateTwo.ID],
-								cache.EnterpriseCAEnrollers[eca1.ID],
-								cache.EnterpriseCAEnrollers[eca2.ID])
+								certTemplateEnrollersOne,
+								certTemplateEnrollersTwo,
+								ecaEnrollersOne,
+								ecaEnrollersTwo)
 
 							if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
 								log.Errorf("Error filtering user dns results: %v", err)
