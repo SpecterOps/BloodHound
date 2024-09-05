@@ -17,8 +17,9 @@
 package model_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/stretchr/testify/require"
