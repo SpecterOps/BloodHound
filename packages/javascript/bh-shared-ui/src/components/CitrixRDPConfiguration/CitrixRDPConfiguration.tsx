@@ -31,22 +31,10 @@ const CitrixRDPConfiguration: FC = () => {
     const [isOpenDialog, setIsOpenDialog] = useState(false);
 
     const { addNotification } = useNotifications();
-    const { data, isFetching } = useGetConfiguration();
+    const { data } = useGetConfiguration();
     const updateConfiguration = useUpdateConfiguration();
 
     const citrixRDPconfigurationEnabled = parseCitrixConfiguration(data)?.value.enabled;
-
-    const computeSwitchState = (): boolean => {
-        const haveUnsettledRequests = updateConfiguration.isLoading || isFetching;
-
-        if (haveUnsettledRequests && updateConfiguration.variables?.key === ConfigurationKey.Citrix) {
-            return updateConfiguration.variables?.value.enabled;
-        } else {
-            return !!citrixRDPconfigurationEnabled;
-        }
-    };
-
-    const switchState = computeSwitchState();
 
     const toggleShowDialog = () => {
         setIsOpenDialog((prev) => !prev);
@@ -56,7 +44,7 @@ const CitrixRDPConfiguration: FC = () => {
         updateConfiguration.mutate(
             {
                 key: ConfigurationKey.Citrix,
-                value: { enabled: !switchState },
+                value: { enabled: !citrixRDPconfigurationEnabled },
             },
             {
                 onError: () => {
@@ -73,13 +61,13 @@ const CitrixRDPConfiguration: FC = () => {
         <>
             <CardWithSwitch
                 title={configurationData.title}
-                isEnabled={switchState}
+                isEnabled={!!citrixRDPconfigurationEnabled}
                 description={configurationData.description}
                 onSwitchChange={toggleShowDialog}
             />
             <ConfirmCitrixRDPDialog
                 open={isOpenDialog}
-                futureSwitchState={!switchState}
+                futureSwitchState={!citrixRDPconfigurationEnabled}
                 handleCancel={toggleShowDialog}
                 handleConfirm={handleConfirm}
             />
