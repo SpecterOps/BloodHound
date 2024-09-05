@@ -72,7 +72,7 @@ describe('CitrixRDPConfiguration', () => {
         afterEach(() => server.resetHandlers());
         afterAll(() => server.close());
 
-        it('on clicking switch shows modal and when clicking confirm closes it and switch stays enabled', async () => {
+        it('on clicking switch shows modal and when clicking confirm closes it and switch changes to enabled', async () => {
             const panelSwitch = screen.getByRole('switch');
             const user = userEvent.setup();
 
@@ -82,7 +82,7 @@ describe('CitrixRDPConfiguration', () => {
             const panelDialogDescription = screen.getByText(/analysis has been added with citrix configuration/i);
 
             expect(panelSwitch).toBeInTheDocument();
-            expect(panelSwitch).toBeChecked();
+            expect(panelSwitch).not.toBeChecked();
             expect(panelDialogTitle).toBeInTheDocument();
             expect(panelDialogDescription).toBeInTheDocument();
 
@@ -97,7 +97,7 @@ describe('CitrixRDPConfiguration', () => {
             });
         });
 
-        it('on clicking switch shows modal and when clicking cancel closes it and switch reverts to disabled', async () => {
+        it('on clicking switch shows modal and when clicking cancel closes it and switch stays disabled', async () => {
             const panelSwitch = screen.getByRole('switch');
             const user = userEvent.setup();
 
@@ -107,7 +107,7 @@ describe('CitrixRDPConfiguration', () => {
             const panelDialogDescription = screen.getByText(/analysis has been added with citrix configuration/i);
 
             expect(panelSwitch).toBeInTheDocument();
-            expect(panelSwitch).toBeChecked();
+            expect(panelSwitch).not.toBeChecked();
             expect(panelDialogTitle).toBeInTheDocument();
             expect(panelDialogDescription).toBeInTheDocument();
 
@@ -157,7 +157,7 @@ describe('CitrixRDPConfiguration', () => {
         afterEach(() => server.resetHandlers());
         afterAll(() => server.close());
 
-        it('on clicking switch shows modal and when clicking confirm closes it and switch stays disabled', async () => {
+        it('on clicking switch shows modal and when clicking confirm closes it and switch changes to disabled', async () => {
             const panelSwitch = screen.getByRole('switch');
             const user = userEvent.setup();
 
@@ -167,7 +167,7 @@ describe('CitrixRDPConfiguration', () => {
             const panelDialogDescription = screen.getByText(/analysis has been removed with citrix configuration/i);
 
             expect(panelSwitch).toBeInTheDocument();
-            expect(panelSwitch).not.toBeChecked();
+            expect(panelSwitch).toBeChecked();
             expect(panelDialogTitle).toBeInTheDocument();
             expect(panelDialogDescription).toBeInTheDocument();
 
@@ -182,7 +182,7 @@ describe('CitrixRDPConfiguration', () => {
             });
         });
 
-        it('on clicking switch shows modal and when clicking cancel closes it and switch reverts to enabled', async () => {
+        it('on clicking switch shows modal and when clicking cancel closes it and switch stays enabled', async () => {
             const panelSwitch = screen.getByRole('switch');
             const user = userEvent.setup();
 
@@ -192,7 +192,7 @@ describe('CitrixRDPConfiguration', () => {
             const panelDialogDescription = screen.getByText(/analysis has been removed with citrix configuration/i);
 
             expect(panelSwitch).toBeInTheDocument();
-            expect(panelSwitch).not.toBeChecked();
+            expect(panelSwitch).toBeChecked();
             expect(panelDialogTitle).toBeInTheDocument();
             expect(panelDialogDescription).toBeInTheDocument();
 
