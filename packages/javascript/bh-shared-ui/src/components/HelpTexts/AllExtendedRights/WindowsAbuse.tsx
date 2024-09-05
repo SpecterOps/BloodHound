@@ -258,7 +258,11 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                 </Typography>
             );
         default:
-            return null;
+            return (
+                <>
+                    <Typography variant='body2'>No abuse information available for this node type.</Typography>
+                </>
+            );
     }
 };
 

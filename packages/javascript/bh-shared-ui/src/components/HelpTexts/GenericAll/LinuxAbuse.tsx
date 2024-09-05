@@ -563,8 +563,13 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     </Typography>
                 </>
             );
+        default:
+            return (
+                <>
+                    <Typography variant='body2'>No abuse information available for this node type.</Typography>
+                </>
+            );
     }
-    return <></>;
 };
 
 export default LinuxAbuse;

@@ -348,7 +348,11 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, t
                 </>
             );
         default:
-            return null;
+            return (
+                <>
+                    <Typography variant='body2'>No abuse information available for this node type.</Typography>
+                </>
+            );
     }
 };
 

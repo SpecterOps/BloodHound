@@ -700,7 +700,11 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                 </>
             );
         default:
-            return <></>;
+            return (
+                <>
+                    <Typography variant='body2'>No abuse information available for this node type.</Typography>
+                </>
+            );
     }
 };
 

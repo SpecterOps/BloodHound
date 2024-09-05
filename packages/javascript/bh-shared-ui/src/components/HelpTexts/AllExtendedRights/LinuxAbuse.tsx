@@ -206,7 +206,11 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                 </>
             );
         default:
-            return null;
+            return (
+                <>
+                    <Typography variant='body2'>No abuse information available for this node type.</Typography>
+                </>
+            );
     }
 };
 
