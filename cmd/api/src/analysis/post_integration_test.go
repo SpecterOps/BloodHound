@@ -89,7 +89,7 @@ func TestCrossProduct(t *testing.T) {
 		require.Nil(t, err)
 		domainsid, _ := harness.ShortcutHarness.Group3.Properties.Get(ad.DomainSID.String()).String()
 		results := ad2.CalculateCrossProductNodeSets(tx, domainsid, groupExpansions, firstSet, secondSet)
-		require.True(t, results.Contains(harness.ShortcutHarness.Group3.ID.Uint32()))
+		require.Truef(t, results.Contains(harness.ShortcutHarness.Group3.ID.Uint32()), "missing id %d", harness.ShortcutHarness.Group3.ID.Uint32())
 	})
 }
 
