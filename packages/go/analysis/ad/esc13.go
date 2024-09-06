@@ -34,9 +34,10 @@ import (
 )
 
 func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
+	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
+		ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID)
 		for _, template := range publishedCertTemplates {
 			if isValid, err := isCertTemplateValidForESC13(template); err != nil {
 				log.Errorf("Error checking esc13 cert template: %v", err)
@@ -47,7 +48,7 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else if len(groupNodes) == 0 {
 				continue
 			} else {
-				controlBitmap := CalculateCrossProductNodeSets(groupExpansions, cache.CertTemplateEnrollers[template.ID], cache.EnterpriseCAEnrollers[eca.ID])
+				controlBitmap := CalculateCrossProductNodeSets(groupExpansions, ecaEnrollers, cache.GetCertTemplateEnrollers(template.ID))
 				if filtered, err := filterUserDNSResults(tx, controlBitmap, template); err != nil {
 					log.Warnf("Error filtering users from victims for esc13: %v", err)
 					continue
