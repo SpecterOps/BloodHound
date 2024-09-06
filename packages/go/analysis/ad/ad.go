@@ -383,20 +383,24 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 	}
 
 	//Check first degree principals in our reference set (firstDegreeSets[0]) first
-	tempMap := map[uint32]uint64{}
-
 	firstDegreeSets[0].Each(func(id uint32) bool {
 		if checkSet.Contains(id) {
 			resultEntities.Add(id)
 		} else {
-			unrolledExpansion := groupExpansions.Cardinality(id)
+			unrolledRefSet.Or(groupExpansions.Cardinality(id))
+		}
 
-			if unrolledCardinality := unrolledExpansion.Cardinality(); unrolledCardinality > 0 {
-				tempMap[id] = unrolledCardinality
-			}
+		return true
+	})
 
-			unrolledRefSet.Add(id)
-			unrolledRefSet.Or(unrolledExpansion)
+	//Find all the groups in our secondary targets and map them to their cardinality in our expansions
+	//Saving off to a map to prevent multiple lookups on the expansions
+	tempMap := map[uint32]uint64{}
+	unrolledRefSet.Each(func(id uint32) bool {
+		//If group expansions contains this ID and its cardinality is > 0, it's a group/localgroup
+		idCardinality := groupExpansions.Cardinality(id).Cardinality()
+		if idCardinality > 0 {
+			tempMap[id] = idCardinality
 		}
 
 		return true
