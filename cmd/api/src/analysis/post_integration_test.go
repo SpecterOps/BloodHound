@@ -124,3 +124,20 @@ func TestCrossProductEveryone(t *testing.T) {
 		require.True(t, results.Contains(harness.ShortcutHarnessEveryone.Group2.ID.Uint32()))
 	})
 }
+
+func TestCrossProductEveryone2(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ShortcutHarnessEveryone2.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database, tx graph.Transaction) {
+		firstSet := []*graph.Node{testContext.Harness.ShortcutHarnessEveryone2.Group1}
+		secondSet := []*graph.Node{testContext.Harness.ShortcutHarnessEveryone2.Group2}
+		groupExpansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db)
+		require.Nil(t, err)
+		domainsid, _ := harness.ShortcutHarnessEveryone2.Group3.Properties.Get(ad.DomainSID.String()).String()
+		results := ad2.CalculateCrossProductNodeSets(tx, domainsid, groupExpansions, firstSet, secondSet)
+		require.True(t, results.Contains(harness.ShortcutHarnessEveryone2.Group1.ID.Uint32()))
+		require.True(t, results.Contains(harness.ShortcutHarnessEveryone2.Group2.ID.Uint32()))
+	})
+}

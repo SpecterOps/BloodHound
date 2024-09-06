@@ -1544,6 +1544,57 @@ func (s *ADCSESC1Harness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.CertTemplate46, s.EnterpriseCA4, ad.PublishedTo)
 }
 
+type ADCSESC1HarnessAuthUsers struct {
+	Domain       *graph.Node
+	RootCA       *graph.Node
+	AuthStore    *graph.Node
+	EnterpriseCA *graph.Node
+	CertTemplate *graph.Node
+	Group1       *graph.Node
+	AuthUsers    *graph.Node
+	DomainUsers  *graph.Node
+	User1        *graph.Node
+}
+
+func (s *ADCSESC1HarnessAuthUsers) Setup(graphTestContext *GraphTestContext) {
+	emptyEkus := make([]string, 0)
+	sid := RandomDomainSID()
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("domain", sid, false, true)
+	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("rca", sid)
+	s.AuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("authstore", sid)
+	s.EnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("eca", sid)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("group-1", sid)
+	s.AuthUsers = graphTestContext.NewActiveDirectoryGroup("Authenticated Users", sid)
+	s.DomainUsers = graphTestContext.NewActiveDirectoryGroup("Domain Users", sid)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", sid)
+	s.CertTemplate = graphTestContext.NewActiveDirectoryCertTemplate("certtemplate", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   true,
+		EnrolleeSuppliesSubject: true,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           emptyEkus,
+		ApplicationPolicies:     emptyEkus,
+	})
+
+	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.AuthStore, s.Domain, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA, s.AuthStore, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.EnterpriseCAFor)
+	graphTestContext.NewRelationship(s.CertTemplate, s.EnterpriseCA, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.Group1, s.CertTemplate, ad.Enroll)
+	graphTestContext.NewRelationship(s.AuthUsers, s.EnterpriseCA, ad.Enroll)
+	graphTestContext.NewRelationship(s.DomainUsers, s.AuthUsers, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.DomainUsers, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.Group1, ad.MemberOf)
+
+	s.AuthUsers.Properties.Set(common.ObjectID.String(), "TEST.LOCAL-S-1-5-11")
+	graphTestContext.UpdateNode(s.AuthUsers)
+}
+
 type EnrollOnBehalfOfHarnessTwo struct {
 	Domain2        *graph.Node
 	AuthStore2     *graph.Node
@@ -5455,6 +5506,31 @@ func (s *ShortcutHarnessEveryone) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.Everyone)
 }
 
+type ShortcutHarnessEveryone2 struct {
+	Group1   *graph.Node
+	Group2   *graph.Node
+	Group3   *graph.Node
+	Everyone *graph.Node
+	User1    *graph.Node
+}
+
+func (s *ShortcutHarnessEveryone2) Setup(graphTestContext *GraphTestContext) {
+	sid := RandomDomainSID()
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("GROUP ONE", sid)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("GROUP TWO", sid)
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("GROUP THREE", sid)
+	s.Everyone = graphTestContext.NewActiveDirectoryGroup("Everyone", sid)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("USER ONE", sid)
+
+	graphTestContext.NewRelationship(s.Everyone, s.Group3, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group3, s.Group1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group3, s.Group2, ad.MemberOf)
+	graphTestContext.NewRelationship(s.User1, s.Group1, ad.MemberOf)
+
+	s.Everyone.Properties.Set(common.ObjectID.String(), "TEST.LOCAL-S-1-1-0")
+	graphTestContext.UpdateNode(s.Everyone)
+}
+
 type RootADHarness struct {
 	ActiveDirectoryDomainSID                string
 	ActiveDirectoryDomain                   *graph.Node
@@ -8218,7 +8294,9 @@ type HarnessDetails struct {
 	ShortcutHarness                                 ShortcutHarness
 	ShortcutHarnessAuthUsers                        ShortcutHarnessAuthUsers
 	ShortcutHarnessEveryone                         ShortcutHarnessEveryone
+	ShortcutHarnessEveryone2                        ShortcutHarnessEveryone2
 	ADCSESC1Harness                                 ADCSESC1Harness
+	ADCSESC1HarnessAuthUsers                        ADCSESC1HarnessAuthUsers
 	EnrollOnBehalfOfHarnessOne                      EnrollOnBehalfOfHarnessOne
 	EnrollOnBehalfOfHarnessTwo                      EnrollOnBehalfOfHarnessTwo
 	ADCSGoldenCertHarness                           ADCSGoldenCertHarness

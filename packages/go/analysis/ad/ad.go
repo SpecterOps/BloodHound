@@ -299,6 +299,7 @@ func createOrUpdateWellKnownLink(tx graph.Transaction, startNode *graph.Node, en
 }
 
 // CalculateCrossProductNodeSets finds the intersection of the given sets of nodes.
+// See CalculateCrossProductNodeSetsDoc.md for explaination of the specialGroups (Authenticated Users and Everyone) and why we treat them the way we do
 func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, groupExpansions impact.PathAggregator, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint32] {
 	if len(nodeSlices) < 2 {
 		log.Errorf("Cross products require at least 2 nodesets")

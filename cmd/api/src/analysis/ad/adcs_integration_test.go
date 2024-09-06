@@ -150,6 +150,50 @@ func TestADCSESC1(t *testing.T) {
 		})
 		assert.Nil(t, err)
 	})
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ADCSESC1HarnessAuthUsers.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC1 Authenticated Users")
+
+		groupExpansions, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(db)
+		require.Nil(t, err)
+
+		for _, domain := range domains {
+			innerDomain := domain
+
+			for _, enterpriseCA := range enterpriseCertAuthorities {
+				innerEnterpriseCA := enterpriseCA
+
+				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
+					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+						if err := ad2.PostADCSESC1(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
+							t.Logf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
+						}
+						return nil
+					})
+				}
+			}
+		}
+		err = operation.Done()
+		require.Nil(t, err)
+
+		err = db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.ADCSESC1)
+			})); err != nil {
+				t.Fatalf("error fetching esc1 edges in integration test; %v", err)
+			} else {
+				assert.Equal(t, 1, len(results))
+
+				require.True(t, results.Contains(harness.ADCSESC1HarnessAuthUsers.Group1))
+			}
+
+			return nil
+		})
+		assert.Nil(t, err)
+	})
 }
 
 func TestGoldenCert(t *testing.T) {
