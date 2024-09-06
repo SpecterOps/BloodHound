@@ -307,9 +307,9 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 
 	//The intention is that the node sets being passed into this function contain all the first degree principals for control
 	var (
-		//Temporary storage for unrolled sets so we can determine reference for auth users/everyone
-		unrolledSets    []cardinality.Duplex[uint32]
+		//Temporary storage for first degree and unrolled sets without auth users/everyone
 		firstDegreeSets []cardinality.Duplex[uint32]
+		unrolledSets    []cardinality.Duplex[uint32]
 
 		//This is the set we use as a reference set to check against checkset
 		unrolledRefSet = cardinality.NewBitmap32()
@@ -346,7 +346,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 			}
 		}
 
-		//Save the indices of node sets containing Auth. Users or Everyone
+		//Skip sets containing Auth. Users or Everyone
 		hasSpecialGroup := false
 
 		for _, specialGroup := range specialGroups {
@@ -374,7 +374,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 	} else if len(firstDegreeSets) == 1 { //If every nodeset (unrolled) except one includes Auth. Users/Everyone then return that one nodeset (first degree)
 		return firstDegreeSets[0]
 	} else {
-		// This means that len(firstDegreeSets) must be greater than or equal to 2
+		// This means that len(firstDegreeSets) must be greater than or equal to 2 i.e. we have at least two nodesets (unrolled) without Auth. Users/Everyone
 		checkSet.Or(unrolledSets[1])
 
 		for _, unrolledSet := range unrolledSets[2:] {
