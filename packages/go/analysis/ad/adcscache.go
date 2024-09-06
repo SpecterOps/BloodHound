@@ -189,26 +189,21 @@ func (s *ADCSCache) GetPublishedTemplateCache(id graph.ID) []*graph.Node {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	published := s.publishedTemplateCache[id]
-	return published
+	return s.publishedTemplateCache[id]
 }
 
 func (s *ADCSCache) HasUPNCertMappingInForest(id uint32) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	hasUPNCertMappingInForest := s.hasUPNCertMappingInForest.Contains(id)
-
-	return hasUPNCertMappingInForest
+	return s.hasUPNCertMappingInForest.Contains(id)
 }
 
 func (s *ADCSCache) HasWeakCertBindingInForest(id uint32) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	hasWeakCertBindingInForest := s.hasWeakCertBindingInForest.Contains(id)
-
-	return hasWeakCertBindingInForest
+	return s.hasWeakCertBindingInForest.Contains(id)
 }
 
 func hasUPNCertMappingInForest(tx graph.Transaction, domain *graph.Node) (bool, error) {
