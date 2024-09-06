@@ -146,7 +146,11 @@ func (s *ADCSCache) GetExpandedCertTemplateControllers(id graph.ID) cardinality.
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	return s.expandedCertTemplateControllers[id]
+	if expandedCertTemplateControllers, ok := s.expandedCertTemplateControllers[id]; !ok {
+		return cardinality.NewBitmap32()
+	} else {
+		return expandedCertTemplateControllers
+	}
 }
 
 func (s *ADCSCache) SetExpandedCertTemplateControllers(certId graph.ID, principalId uint32) {
@@ -185,7 +189,8 @@ func (s *ADCSCache) GetPublishedTemplateCache(id graph.ID) []*graph.Node {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	return s.publishedTemplateCache[id]
+	published := s.publishedTemplateCache[id]
+	return published
 }
 
 func (s *ADCSCache) HasUPNCertMappingInForest(id uint32) bool {
