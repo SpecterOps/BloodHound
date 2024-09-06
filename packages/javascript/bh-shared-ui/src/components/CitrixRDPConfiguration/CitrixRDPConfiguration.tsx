@@ -41,7 +41,8 @@ const CitrixRDPConfiguration: FC = () => {
     };
 
     const handleConfirm = () => {
-        updateConfiguration.mutate(
+        toggleShowDialog();
+        updateConfiguration.mutateAsync(
             {
                 key: ConfigurationKey.Citrix,
                 value: { enabled: !citrixRDPconfigurationEnabled },
@@ -49,9 +50,6 @@ const CitrixRDPConfiguration: FC = () => {
             {
                 onError: () => {
                     addNotification('There was an error updating configuration.');
-                },
-                onSuccess: () => {
-                    toggleShowDialog();
                 },
             }
         );
