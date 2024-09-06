@@ -1,0 +1,15 @@
+type: object
+properties:
+  data:
+    allOf:
+      - $ref: './../schemas/api.response.pagination.yaml'
+      - $ref: './../schemas/api.response.time-window.yaml'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              oneOf:
+                - $ref: './../schemas/model.ad-data-quality-aggregation.yaml'
+                - $ref: './../schemas/model.azure-data-quality-aggregation.yaml'
+
