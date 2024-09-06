@@ -41,13 +41,8 @@ const handlers = (savedEnabledValue?: boolean) => {
         }),
         rest.put(`/api/v2/config`, async (req, res, ctx) => {
             const body = await req.json();
-            if (body['key'] === ConfigurationKey.Citrix) {
-                if (body['value']) {
-                    isCitrixRDPConfigurationEnabled = body['value']['enabled'] || false;
-                    body['value']['enabled'] = isCitrixRDPConfigurationEnabled;
-                }
-            }
-            return res(ctx.delay(1000), ctx.json({ data: body }));
+            isCitrixRDPConfigurationEnabled = body['value']['enabled'];
+            return res(ctx.json({ data: body }));
         }),
     ];
 };
