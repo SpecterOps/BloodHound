@@ -76,33 +76,30 @@ describe('CitrixRDPConfiguration', () => {
         afterEach(() => server.resetHandlers());
         afterAll(() => server.close());
 
-        it.todo(
-            'on clicking switch shows modal and when clicking cancel closes it and switch stays disabled',
-            async () => {
-                const panelSwitch = screen.getByRole('switch');
-                const user = userEvent.setup();
+        it('on clicking switch shows modal and when clicking cancel closes it and switch stays disabled', async () => {
+            const panelSwitch = screen.getByRole('switch');
+            const user = userEvent.setup();
 
-                await user.click(panelSwitch);
+            await user.click(panelSwitch);
 
-                const panelDialogTitle = screen.getByText(dialogTitle, { exact: false });
-                const panelDialogDescription = screen.getByText(/analysis has been added with citrix configuration/i);
+            const panelDialogTitle = screen.getByText(dialogTitle, { exact: false });
+            const panelDialogDescription = screen.getByText(/analysis has been added with citrix configuration/i);
 
-                expect(panelSwitch).toBeInTheDocument();
+            expect(panelSwitch).toBeInTheDocument();
+            expect(panelSwitch).not.toBeChecked();
+            expect(panelDialogTitle).toBeInTheDocument();
+            expect(panelDialogDescription).toBeInTheDocument();
+
+            const cancelButton = screen.getByRole('button', { name: /cancel/i });
+
+            await user.click(cancelButton);
+
+            await waitFor(() => {
+                expect(panelDialogTitle).not.toBeInTheDocument();
+                expect(panelDialogDescription).not.toBeInTheDocument();
                 expect(panelSwitch).not.toBeChecked();
-                expect(panelDialogTitle).toBeInTheDocument();
-                expect(panelDialogDescription).toBeInTheDocument();
-
-                const cancelButton = screen.getByRole('button', { name: /cancel/i });
-
-                await user.click(cancelButton);
-
-                await waitFor(() => {
-                    expect(panelDialogTitle).not.toBeInTheDocument();
-                    expect(panelDialogDescription).not.toBeInTheDocument();
-                    expect(panelSwitch).not.toBeChecked();
-                });
-            }
-        );
+            });
+        });
 
         it('on clicking switch shows modal and when clicking confirm closes it and switch changes to enabled', async () => {
             const panelSwitch = screen.getByRole('switch');
