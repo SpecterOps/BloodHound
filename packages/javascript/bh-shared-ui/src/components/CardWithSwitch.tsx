@@ -24,7 +24,7 @@ type CardWithSwitchProps = {
     description?: string;
     isEnabled: boolean;
     children?: ReactNode;
-    disableSwitch: boolean;
+    disableSwitch?: boolean;
     onSwitchChange: () => void;
 };
 
