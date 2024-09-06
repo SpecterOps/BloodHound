@@ -39,12 +39,13 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return err
 	} else if !isUserSpecifiesSanEnabled {
 		return nil
-	} else if publishedCertTemplates, ok := cache.GetPublishedTemplateCache(enterpriseCA.ID); !ok {
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
 		var (
-			tempResults        = cardinality.NewBitmap32()
-			validCertTemplates []*graph.Node
+			tempResults           = cardinality.NewBitmap32()
+			validCertTemplates    []*graph.Node
+			enterpriseCAEnrollers = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
 		)
 		for _, publishedCertTemplate := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC6(publishedCertTemplate, false); err != nil {
@@ -55,12 +56,7 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else {
 				validCertTemplates = append(validCertTemplates, publishedCertTemplate)
 
-				var (
-					enrollers, _             = cache.GetCertTemplateEnrollers(publishedCertTemplate.ID)
-					enterpriseCAEnrollers, _ = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
-				)
-
-				for _, enroller := range enrollers {
+				for _, enroller := range cache.GetCertTemplateEnrollers(publishedCertTemplate.ID) {
 					tempResults.Or(CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(enroller).Slice(), enterpriseCAEnrollers))
 				}
 
@@ -86,12 +82,13 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return nil
 	} else if ok := cache.HasUPNCertMappingInForest(domain.ID.Uint32()); !ok {
 		return nil
-	} else if publishedCertTemplates, ok := cache.GetPublishedTemplateCache(enterpriseCA.ID); !ok {
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
 		var (
-			tempResults        = cardinality.NewBitmap32()
-			validCertTemplates []*graph.Node
+			tempResults           = cardinality.NewBitmap32()
+			validCertTemplates    []*graph.Node
+			enterpriseCAEnrollers = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
 		)
 		for _, publishedCertTemplate := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC6(publishedCertTemplate, true); err != nil {
@@ -102,12 +99,7 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else {
 				validCertTemplates = append(validCertTemplates, publishedCertTemplate)
 
-				var (
-					enrollers, _             = cache.GetCertTemplateEnrollers(publishedCertTemplate.ID)
-					enterpriseCAEnrollers, _ = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
-				)
-
-				for _, enroller := range enrollers {
+				for _, enroller := range cache.GetCertTemplateEnrollers(publishedCertTemplate.ID) {
 					tempResults.Or(
 						CalculateCrossProductNodeSets(
 							groupExpansions,
@@ -168,11 +160,11 @@ func filterTempResultsForESC6(tx graph.Transaction, tempResults cardinality.Dupl
 func principalControlsCertTemplate(principal, certTemplate *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
 	principalID := principal.ID.Uint32()
 
-	if expandedCertTemplateControllers, ok := cache.GetExpandedCertTemplateControllers(certTemplate.ID); ok && expandedCertTemplateControllers.Contains(principalID) {
+	if expandedCertTemplateControllers := cache.GetExpandedCertTemplateControllers(certTemplate.ID); expandedCertTemplateControllers.Contains(principalID) {
 		return true
 	}
 
-	if certTemplateEnrollers, ok := cache.GetCertTemplateEnrollers(certTemplate.ID); !ok {
+	if certTemplateEnrollers := cache.GetCertTemplateEnrollers(certTemplate.ID); len(certTemplateEnrollers) == 0 {
 		return false
 	} else if CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(principal).Slice(), certTemplateEnrollers).Contains(principalID) {
 		cache.SetExpandedCertTemplateControllers(certTemplate.ID, principalID)

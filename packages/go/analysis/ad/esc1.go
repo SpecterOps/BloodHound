@@ -32,11 +32,12 @@ import (
 	"github.com/specterops/bloodhound/log"
 )
 
-func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
+func PostADCSESC1(ctx context.Context, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
 	results := cardinality.NewBitmap32()
-	if publishedCertTemplates, ok := cache.GetPublishedTemplateCache(enterpriseCA.ID); !ok {
+	if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
+		ecaEnrollers := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
 		for _, certTemplate := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForEsc1(certTemplate); err != nil {
 				log.Warnf("Error validating cert template %d: %v", certTemplate.ID, err)
@@ -44,11 +45,7 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			} else if !valid {
 				continue
 			} else {
-				var (
-					enterpriseCAEnrollers, _ = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
-					certTemplateEnrollers, _ = cache.GetCertTemplateEnrollers(certTemplate.ID)
-				)
-				results.Or(CalculateCrossProductNodeSets(expandedGroups, certTemplateEnrollers, enterpriseCAEnrollers))
+				results.Or(CalculateCrossProductNodeSets(expandedGroups, cache.GetCertTemplateEnrollers(certTemplate.ID), ecaEnrollers))
 			}
 		}
 	}

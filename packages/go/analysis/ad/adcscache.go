@@ -28,7 +28,7 @@ import (
 )
 
 type ADCSCache struct {
-	sync.RWMutex
+	mu *sync.RWMutex
 
 	// To discourage direct access without getting a read lock, these are private
 	authStoreForChainValid          map[graph.ID]cardinality.Duplex[uint32]
@@ -44,6 +44,7 @@ type ADCSCache struct {
 
 func NewADCSCache() ADCSCache {
 	return ADCSCache{
+		mu:                              &sync.RWMutex{},
 		authStoreForChainValid:          make(map[graph.ID]cardinality.Duplex[uint32]),
 		rootCAForChainValid:             make(map[graph.ID]cardinality.Duplex[uint32]),
 		expandedCertTemplateControllers: make(map[graph.ID]cardinality.Duplex[uint32]),
@@ -57,8 +58,8 @@ func NewADCSCache() ADCSCache {
 }
 
 func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpriseCAs, certTemplates, domains []*graph.Node) {
-	s.Lock()
-	defer s.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, ct := range certTemplates {
@@ -130,8 +131,8 @@ func (s *ADCSCache) DoesCAChainProperlyToDomain(enterpriseCA, domain *graph.Node
 	var domainID = domain.ID
 	var caID = enterpriseCA.ID.Uint32()
 
-	s.RLock()
-	defer s.RUnlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	if _, ok := s.rootCAForChainValid[domainID]; !ok {
 		return false
 	} else if _, ok := s.authStoreForChainValid[domainID]; !ok {
@@ -141,67 +142,55 @@ func (s *ADCSCache) DoesCAChainProperlyToDomain(enterpriseCA, domain *graph.Node
 	}
 }
 
-func (s *ADCSCache) GetExpandedCertTemplateControllers(id graph.ID) (cardinality.Duplex[uint32], bool) {
-	s.RLock()
-	defer s.RUnlock()
+func (s *ADCSCache) GetExpandedCertTemplateControllers(id graph.ID) cardinality.Duplex[uint32] {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	expandedCertTemplateControllers, ok := s.expandedCertTemplateControllers[id]
-
-	return expandedCertTemplateControllers, ok
+	return s.expandedCertTemplateControllers[id]
 }
 
-func (s *ADCSCache) SetExpandedCertTemplateControllers(certId graph.ID, principalId uint32)  {
-	s.Lock()
-	defer s.Unlock()
+func (s *ADCSCache) SetExpandedCertTemplateControllers(certId graph.ID, principalId uint32) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	if _, ok := s.expandedCertTemplateControllers[certId]; !ok {
 		s.expandedCertTemplateControllers[certId] = cardinality.NewBitmap32With(principalId)
 	} else {
 		s.expandedCertTemplateControllers[certId].Add(principalId)
 	}
-
-	return
 }
 
-func (s *ADCSCache) GetCertTemplateEnrollers(id graph.ID) ([]*graph.Node, bool) {
-	s.RLock()
-	defer s.RUnlock()
+func (s *ADCSCache) GetCertTemplateEnrollers(id graph.ID) []*graph.Node {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	certTemplateEnrollers, ok := s.certTemplateEnrollers[id]
-
-	return certTemplateEnrollers, ok
+	return s.certTemplateEnrollers[id]
 }
 
-func (s *ADCSCache) GetCertTemplateControllers(id graph.ID) ([]*graph.Node, bool) {
-	s.RLock()
-	defer s.RUnlock()
+func (s *ADCSCache) GetCertTemplateControllers(id graph.ID) []*graph.Node {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	certTemplateControllers, ok := s.certTemplateControllers[id]
-
-	return certTemplateControllers, ok
+	return s.certTemplateControllers[id]
 }
 
-func (s *ADCSCache) GetEnterpriseCAEnrollers(id graph.ID) ([]*graph.Node, bool) {
-	s.RLock()
-	defer s.RUnlock()
+func (s *ADCSCache) GetEnterpriseCAEnrollers(id graph.ID) []*graph.Node {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	enterpriseCAEnrollers, ok := s.enterpriseCAEnrollers[id]
-
-	return enterpriseCAEnrollers, ok
+	return s.enterpriseCAEnrollers[id]
 }
 
-func (s *ADCSCache) GetPublishedTemplateCache(id graph.ID) ([]*graph.Node, bool) {
-	s.RLock()
-	defer s.RUnlock()
+func (s *ADCSCache) GetPublishedTemplateCache(id graph.ID) []*graph.Node {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	publishedTemplateCache, ok := s.publishedTemplateCache[id]
-
-	return publishedTemplateCache, ok
+	return s.publishedTemplateCache[id]
 }
 
 func (s *ADCSCache) HasUPNCertMappingInForest(id uint32) bool {
-	s.RLock()
-	defer s.RUnlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	hasUPNCertMappingInForest := s.hasUPNCertMappingInForest.Contains(id)
 
@@ -209,8 +198,8 @@ func (s *ADCSCache) HasUPNCertMappingInForest(id uint32) bool {
 }
 
 func (s *ADCSCache) HasWeakCertBindingInForest(id uint32) bool {
-	s.RLock()
-	defer s.RUnlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	hasWeakCertBindingInForest := s.hasWeakCertBindingInForest.Contains(id)
 

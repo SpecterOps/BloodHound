@@ -35,7 +35,7 @@ import (
 func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
 	// 1.
 	principals := cardinality.NewBitmap32()
-	publishedTemplates, _ := cache.GetPublishedTemplateCache(enterpriseCA.ID)
+	publishedTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID)
 	// 2. iterate certtemplates that have an outbound `PublishedTo` edge to eca
 	for _, certTemplate := range publishedTemplates {
 		if principalsWithGenericWrite, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, certTemplate); err != nil {
@@ -53,8 +53,8 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		} else {
 
 			var (
-				enterpriseCAEnrollers, _ = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
-				certTemplateControllers, _ = cache.GetCertTemplateControllers(certTemplate.ID)
+				enterpriseCAEnrollers = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
+				certTemplateControllers = cache.GetCertTemplateControllers(certTemplate.ID)
 			)
 
 			// 2a. principals that control the cert template

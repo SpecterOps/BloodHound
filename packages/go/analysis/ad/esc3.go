@@ -37,7 +37,7 @@ import (
 func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca2, domain *graph.Node, cache ADCSCache) error {
 	results := cardinality.NewBitmap32()
 
-	if publishedCertTemplates, ok := cache.GetPublishedTemplateCache(eca2.ID); !ok {
+	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca2.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else if collected, err := eca2.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
 		return fmt.Errorf("error getting enrollmentagentcollected for eca2 %d: %w", eca2.ID, err)
@@ -74,9 +74,9 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 					}
 
 					var (
-						ecaEnrollersTwo, _          = cache.GetEnterpriseCAEnrollers(eca2.ID)
-						certTemplateEnrollersOne, _ = cache.GetCertTemplateEnrollers(certTemplateOne.ID)
-						certTemplateEnrollersTwo, _ = cache.GetCertTemplateEnrollers(certTemplateTwo.ID)
+						ecaEnrollersTwo          = cache.GetEnterpriseCAEnrollers(eca2.ID)
+						certTemplateEnrollersOne = cache.GetCertTemplateEnrollers(certTemplateOne.ID)
+						certTemplateEnrollersTwo = cache.GetCertTemplateEnrollers(certTemplateTwo.ID)
 					)
 
 					if publishedECAs, err := FetchCertTemplateCAs(tx, certTemplateOne); err != nil {
@@ -88,11 +88,10 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 							log.Errorf("Error getting delegated agents for cert template %d: %v", certTemplateTwo.ID, err)
 						} else {
 							for _, eca1 := range publishedECAs {
-								ecaEnrollersOne, _ := cache.GetEnterpriseCAEnrollers(eca1.ID)
 								tempResults := CalculateCrossProductNodeSets(groupExpansions,
 									certTemplateEnrollersOne,
 									certTemplateEnrollersTwo,
-									ecaEnrollersOne,
+									cache.GetEnterpriseCAEnrollers(eca1.ID),
 									ecaEnrollersTwo,
 									delegatedAgents.Slice())
 
@@ -106,11 +105,10 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 						}
 					} else {
 						for _, eca1 := range publishedECAs {
-							ecaEnrollersOne, _ := cache.GetEnterpriseCAEnrollers(eca1.ID)
 							tempResults := CalculateCrossProductNodeSets(groupExpansions,
 								certTemplateEnrollersOne,
 								certTemplateEnrollersTwo,
-								ecaEnrollersOne,
+								cache.GetEnterpriseCAEnrollers(eca1.ID),
 								ecaEnrollersTwo)
 
 							if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {

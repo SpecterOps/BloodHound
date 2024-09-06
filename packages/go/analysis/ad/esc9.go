@@ -37,9 +37,9 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 
 	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint32()); !ok {
 		return nil
-	} else if publishedCertTemplates, ok := cache.GetPublishedTemplateCache(eca.ID); !ok {
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaEnrollers, ok := cache.GetEnterpriseCAEnrollers(eca.ID); !ok {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaEnrollers) == 0 {
 		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
@@ -48,7 +48,7 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateEnrollers, ok := cache.GetCertTemplateEnrollers(template.ID); !ok {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
@@ -83,9 +83,9 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 
 	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint32()); !ok {
 		return nil
-	} else if publishedCertTemplates, ok := cache.GetPublishedTemplateCache(eca.ID); !ok {
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaEnrollers, ok := cache.GetEnterpriseCAEnrollers(eca.ID); !ok {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaEnrollers) == 0 {
 		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
@@ -94,7 +94,7 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateEnrollers, ok := cache.GetCertTemplateEnrollers(template.ID); !ok {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
