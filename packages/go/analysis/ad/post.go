@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
@@ -415,6 +416,7 @@ func FetchComputerLocalGroupBySIDSuffix(tx graph.Transaction, computer graph.ID,
 func FetchComputerLocalGroupByName(tx graph.Transaction, computer graph.ID, groupName string) (*graph.Node, error) {
 	if rel, err := tx.Relationships().Filter(
 		query.And(
+			query.Kind(query.Start(), ad.LocalGroup),
 			query.Equals(query.StartProperty(common.Name.String()), groupName),
 			query.Kind(query.Relationship(), ad.LocalToComputer),
 			query.InIDs(query.EndID(), computer),
@@ -485,31 +487,26 @@ func ExpandAllRDPLocalGroups(ctx context.Context, db graph.Database) (impact.Pat
 }
 
 func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool, citrixEnabled bool) (cardinality.Duplex[uint32], error) {
-	if citrixEnabled {
+	if remoteDesktopUsers, err := FetchRemoteDesktopUsersBitmapForComputer(tx, computer, localGroupExpansions, enforceURA); err != nil {
+		return cardinality.NewBitmap32(), err
+	} else if remoteDesktopUsers.Cardinality() == 0 || !citrixEnabled {
+		return remoteDesktopUsers, nil
+	} else {
+		// Citrix enabled
 		if directAccessUsersGroup, err := FetchComputerLocalGroupByName(tx, computer, "Direct Access Users"); err != nil {
 			if graph.IsErrNotFound(err) {
 				// "Direct Access Users" is a group that Citrix creates.  If the group does not exist, then the computer does not have Citrix installed and post-processing logic can continue by enumerating the "Remote Desktop Users" AD group.
-				return FetchRemoteDesktopUsersBitmapForComputer(tx, computer, localGroupExpansions, enforceURA)
+				return remoteDesktopUsers, nil
 			}
-			return nil, err
+			return cardinality.NewBitmap32(), err
 		} else {
-			// 1. fetch group membership
-			dauGroupMembers := localGroupExpansions.Cardinality(directAccessUsersGroup.ID.Uint32()).(cardinality.Duplex[uint32])
-			if dauGroupMembers.Cardinality() == 0 {
-				return cardinality.NewBitmap32(), nil
+			if dauGroupMembers, ok := localGroupExpansions.Cardinality(directAccessUsersGroup.ID.Uint32()).(cardinality.Duplex[uint32]); !ok {
+				return cardinality.NewBitmap32(), errors.New("type assertion failed in FetchCanRDPEntityBitmapForComputer")
 			} else {
-				// 2. intersect "direct access users" with the entities that have RDP privileges via the "remote desktop users" AD group
-				if remoteDesktopUsers, err := FetchRemoteDesktopUsersBitmapForComputer(tx, computer, localGroupExpansions, enforceURA); err != nil {
-					return cardinality.NewBitmap32(), err
-				} else {
-					dauGroupMembers.And(remoteDesktopUsers)
-					return dauGroupMembers, nil
-				}
+				dauGroupMembers.And(remoteDesktopUsers)
+				return dauGroupMembers, nil
 			}
-
 		}
-	} else {
-		return FetchRemoteDesktopUsersBitmapForComputer(tx, computer, localGroupExpansions, enforceURA)
 	}
 }
 

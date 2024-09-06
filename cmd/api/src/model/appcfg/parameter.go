@@ -39,7 +39,7 @@ const (
 
 	CitrixRDPSupportKey         = "analysis.citrix_rdp_support"
 	CitrixRDPSupportName        = "Citrix RDP Support"
-	CitrixRDPSupportDescription = "This configuration parameter toggles Citrix support during post-processing. When on, CanRDP edges will come from the `Direct Access Users` group instead of the builtin `Remote Desktop Users` group."
+	CitrixRDPSupportDescription = "This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a 'Direct Access Users' local group will assume that Citrix is installed and CanRDP edges will require membership of both 'Direct Access Users' and 'Remote Desktop Users' local groups on the computer."
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
