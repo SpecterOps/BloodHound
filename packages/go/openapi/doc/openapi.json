@@ -12174,6 +12174,7 @@
         "parameters": [
           {
             "name": "finding",
+            "x-go-name": "FindingDeprecated",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -12190,6 +12191,7 @@
           {
             "name": "FromPrincipal",
             "deprecated": true,
+            "x-go-name": "FromPrincipalDeprecated",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -12198,6 +12200,7 @@
           {
             "name": "ToPrincipal",
             "deprecated": true,
+            "x-go-name": "ToPrincipalDeprecated",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -12234,6 +12237,7 @@
           {
             "name": "AcceptedUntil",
             "deprecated": true,
+            "x-go-name": "AcceptedUntilDeprecated",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.time"
@@ -12589,6 +12593,7 @@
           {
             "name": "from",
             "deprecated": true,
+            "x-go-name": "fromDeprecated",
             "description": "Lower bound for created_at; to return posture stats starting at a specific date/time",
             "in": "query",
             "schema": {
@@ -12599,6 +12604,7 @@
           {
             "name": "to",
             "deprecated": true,
+            "x-go-name": "toDeprecated",
             "description": "Upper bound for created_at; to return posture stats upto a specific date/time",
             "in": "query",
             "schema": {
