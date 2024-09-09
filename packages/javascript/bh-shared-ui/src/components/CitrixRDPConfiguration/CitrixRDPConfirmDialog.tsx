@@ -35,7 +35,7 @@ const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({
                     {futureSwitchState ? enabledDialogDescription : disabledDialogDescription}
                 </Typography>
                 <Typography variant='body2'>
-                    Select <b>`Confirm`</b> to proceed and to start analysis.
+                    Select <b>`Confirm`</b> to proceed. Changes will be reflected upon completion of next analysis.
                 </Typography>
                 <Typography variant='body2'>
                     Select <b>`Cancel`</b> to return to previous configuration.
