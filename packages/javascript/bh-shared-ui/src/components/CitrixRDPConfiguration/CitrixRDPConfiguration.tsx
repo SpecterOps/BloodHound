@@ -31,10 +31,11 @@ const CitrixRDPConfiguration: FC = () => {
     const [isOpenDialog, setIsOpenDialog] = useState(false);
 
     const { addNotification } = useNotifications();
-    const { data } = useGetConfiguration();
+    const { data, isFetching } = useGetConfiguration();
     const updateConfiguration = useUpdateConfiguration();
 
     const citrixRDPconfigurationEnabled = parseCitrixConfiguration(data)?.value.enabled;
+    const isSwitchDisabled = isFetching || updateConfiguration.isLoading;
 
     const toggleShowDialog = () => {
         setIsOpenDialog((prev) => !prev);
@@ -61,6 +62,7 @@ const CitrixRDPConfiguration: FC = () => {
                 title={configurationData.title}
                 isEnabled={!!citrixRDPconfigurationEnabled}
                 description={configurationData.description}
+                disableSwitch={isSwitchDisabled}
                 onSwitchChange={toggleShowDialog}
             />
             <ConfirmCitrixRDPDialog
