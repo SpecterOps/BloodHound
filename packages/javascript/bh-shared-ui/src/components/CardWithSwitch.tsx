@@ -24,10 +24,18 @@ type CardWithSwitchProps = {
     description?: string;
     isEnabled: boolean;
     children?: ReactNode;
+    disableSwitch?: boolean;
     onSwitchChange: () => void;
 };
 
-const CardWithSwitch: FC<CardWithSwitchProps> = ({ title, description, isEnabled, onSwitchChange, children }) => {
+const CardWithSwitch: FC<CardWithSwitchProps> = ({
+    title,
+    description,
+    isEnabled,
+    onSwitchChange,
+    children,
+    disableSwitch = false,
+}) => {
     const theme = useTheme();
 
     const enabledStyles = {
@@ -51,7 +59,11 @@ const CardWithSwitch: FC<CardWithSwitchProps> = ({ title, description, isEnabled
             }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <Typography variant='h4'>{title}</Typography>
-                <Switch label={isEnabled ? 'On' : 'Off'} checked={isEnabled} onCheckedChange={onSwitchChange}></Switch>
+                <Switch
+                    label={isEnabled ? 'On' : 'Off'}
+                    checked={isEnabled}
+                    onCheckedChange={onSwitchChange}
+                    disabled={disableSwitch}></Switch>
             </Box>
             {children || <Typography>{description}</Typography>}
         </Paper>
