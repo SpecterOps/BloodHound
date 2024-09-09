@@ -18,8 +18,8 @@ export enum ConfigurationKey {
     PasswordExpiration = 'auth.password_expiration_window',
     Neo4j = 'neo4j.configuration',
     Citrix = 'analysis.citrix_rdp_support',
-    ReconciliationToggle = 'analysis.reconciliation',
-    ReconcilationThreshold = 'analysis.reconciliation_threshold',
+    Reconciliation = 'analysis.reconciliation',
+    PruneTTL = 'prune.ttl',
 }
 
 export type PasswordExpirationConfiguration = {
@@ -44,18 +44,18 @@ export type CitrixConfiguration = {
     };
 };
 
-export type ReconciliationToggleConfiguration = {
-    key: ConfigurationKey.ReconciliationToggle;
+export type ReconciliationConfiguration = {
+    key: ConfigurationKey.Reconciliation;
     value: {
         enabled: boolean;
     };
 };
 
-export type ReconciliationThresholdConfiguration = {
-    key: ConfigurationKey.ReconcilationThreshold;
+export type PruneTTLConfiguration = {
+    key: ConfigurationKey.PruneTTL;
     value: {
-        session_threshold: string;
-        general_threshold: string;
+        has_session_edge_ttl: string;
+        base_ttl: string;
     };
 };
 
@@ -63,8 +63,8 @@ export type ConfigurationPayload =
     | PasswordExpirationConfiguration
     | Neo4jConfiguration
     | CitrixConfiguration
-    | ReconciliationToggleConfiguration
-    | ReconciliationThresholdConfiguration;
+    | ReconciliationConfiguration
+    | PruneTTLConfiguration;
 
 export const getConfigurationFromKey = (config: GetConfigurationResponse | undefined, key: ConfigurationKey) => {
     return config?.data.find((c) => c.key === key);
@@ -97,19 +97,19 @@ export const parseCitrixConfiguration = (
     return config?.key === key ? config : undefined;
 };
 
-export const parseReconciliationToggleConfiguration = (
+export const parseReconciliationConfiguration = (
     response: GetConfigurationResponse | undefined
-): ConfigurationWithMetadata<ReconciliationToggleConfiguration> | undefined => {
-    const key = ConfigurationKey.ReconciliationToggle;
+): ConfigurationWithMetadata<ReconciliationConfiguration> | undefined => {
+    const key = ConfigurationKey.Reconciliation;
     const config = getConfigurationFromKey(response, key);
 
     return config?.key === key ? config : undefined;
 };
 
-export const parseReconciliationThresholdConfiguration = (
+export const parsePruneTTLConfiguration = (
     response: GetConfigurationResponse | undefined
-): ConfigurationWithMetadata<ReconciliationThresholdConfiguration> | undefined => {
-    const key = ConfigurationKey.ReconcilationThreshold;
+): ConfigurationWithMetadata<PruneTTLConfiguration> | undefined => {
+    const key = ConfigurationKey.PruneTTL;
     const config = getConfigurationFromKey(response, key);
 
     return config?.key === key ? config : undefined;
