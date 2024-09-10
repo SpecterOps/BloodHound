@@ -486,12 +486,14 @@ class BHEAPIClient {
         skip: number,
         limit: number,
         filterAccepted?: boolean,
+        sortBy?: string,
         options?: types.RequestOptions
     ) => {
         const params: types.RiskDetailsRequest = {
             finding: finding,
             skip: skip,
             limit: limit,
+            sort_by: sortBy,
         };
 
         if (typeof filterAccepted === 'boolean') params.Accepted = `eq:${filterAccepted}`;
