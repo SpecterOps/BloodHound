@@ -73,3 +73,8 @@ INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM r
 INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'saved_queries'  and permissions.name = 'Read')) ON CONFLICT DO NOTHING;
 INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'saved_queries'  and permissions.name = 'Write')) ON CONFLICT DO NOTHING;
 INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Power User'), (SELECT id FROM permissions WHERE permissions.authority  = 'graphdb'  AND permissions.name = 'Mutate')) ON CONFLICT DO NOTHING;
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+CREATE INDEX IF NOT EXISTS idx_saved_queries_description ON saved_queries using gin(description gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_saved_queries_name ON saved_queries USING gin(name gin_trgm_ops);
