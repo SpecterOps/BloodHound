@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Field } from './fragments';
 import { render, screen } from '../../test-utils';
+import { EntityField } from '../../utils';
+import { exclusionList, Field, ObjectInfoFields } from './fragments';
 
 describe('Field', () => {
     it('should render a Field when the provided value is false', () => {
@@ -42,5 +43,23 @@ describe('Field', () => {
     it('should not render a Field when the provided value is []', () => {
         const { container } = render(<Field label='Test Field (Array)' value={[]} keyprop='test-field-array' />);
         expect(container.innerHTML).toBe('');
+    });
+});
+
+describe('ObjectInfoFields', () => {
+    it('should filter properties that we do not want to display in the entity panel', () => {
+        const properties: EntityField[] = exclusionList.map((key) => {
+            return { label: key, value: 'test', keyprop: key };
+        });
+        const validProperty: EntityField = { label: 'Object ID', value: 'OBJECT_ID' };
+        properties.push(validProperty);
+
+        render(<ObjectInfoFields fields={properties} />);
+
+        expect(screen.getByText('Object ID')).toBeInTheDocument();
+
+        exclusionList.forEach((property) => {
+            expect(screen.queryByText(property)).not.toBeInTheDocument();
+        });
     });
 });

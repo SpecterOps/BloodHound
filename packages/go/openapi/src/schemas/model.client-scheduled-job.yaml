@@ -27,13 +27,13 @@ allOf:
         type: string
         readOnly: true
       event_id:
+        readOnly: true
         allOf:
           - $ref: './null.int32.yaml'
-          - readOnly: true
       status:
+        readOnly: true
         allOf:
           - $ref: './enum.job-status.yaml'
-          - readOnly: true
       statusMessage:
         type: string
         readOnly: true
@@ -46,9 +46,9 @@ allOf:
         format: date-time
         readOnly: true
       log_path:
+        readOnly: true
         allOf:
           - $ref: './null.string.yaml'
-          - readOnly: true
       session_collection:
         type: boolean
       local_group_collection:
