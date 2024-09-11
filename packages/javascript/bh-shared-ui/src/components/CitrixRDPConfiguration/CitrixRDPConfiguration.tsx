@@ -68,8 +68,8 @@ const CitrixRDPConfiguration: FC = () => {
             <ConfirmCitrixRDPDialog
                 open={isOpenDialog}
                 futureSwitchState={!citrixRDPconfigurationEnabled}
-                handleCancel={toggleShowDialog}
-                handleConfirm={handleConfirm}
+                onCancel={toggleShowDialog}
+                onConfirm={handleConfirm}
             />
         </>
     );
