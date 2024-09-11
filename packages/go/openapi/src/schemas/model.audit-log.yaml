@@ -52,6 +52,6 @@ allOf:
         format: uuid
         readOnly: true
       status:
+        readOnly: true
         allOf:
           - $ref: './enum.audit-log-status.yaml'
-          - readOnly: true
