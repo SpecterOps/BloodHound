@@ -66,7 +66,7 @@ func (s *BloodhoundDB) GetAllFileUploadJobs(ctx context.Context, skip int, limit
 	}
 
 	if filter.SQLString != "" {
-		result = s.db.Model(model.FileUploadJob{}).WithContext(ctx).Where(filter.SQLString, filter.Params).Count(&count)
+		result = s.db.Model(model.FileUploadJob{}).WithContext(ctx).Where(filter.SQLString, filter.Params...).Count(&count)
 	} else {
 		result = s.db.Model(model.FileUploadJob{}).WithContext(ctx).Count(&count)
 	}
@@ -76,7 +76,7 @@ func (s *BloodhoundDB) GetAllFileUploadJobs(ctx context.Context, skip int, limit
 	}
 
 	if filter.SQLString != "" {
-		result = s.Scope(Paginate(skip, limit)).WithContext(ctx).Preload("User").Where(filter.SQLString, filter.Params).Order(order).Find(&jobs)
+		result = s.Scope(Paginate(skip, limit)).WithContext(ctx).Preload("User").Where(filter.SQLString, filter.Params...).Order(order).Find(&jobs)
 	} else {
 		result = s.Scope(Paginate(skip, limit)).WithContext(ctx).Preload("User").Order(order).Find(&jobs)
 	}

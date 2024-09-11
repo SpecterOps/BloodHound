@@ -39,6 +39,7 @@ export const initGraph = (graph: MultiDirectedGraph, items: GraphData, theme: Th
                 color: theme.palette.neutral.primary, //border
             },
             tierZeroGlyph: darkMode ? GLYPHS[GlyphKind.TIER_ZERO_DARK] : GLYPHS[GlyphKind.TIER_ZERO],
+            ownedObjectGlyph: darkMode ? GLYPHS[GlyphKind.OWNED_OBJECT_DARK] : GLYPHS[GlyphKind.OWNED_OBJECT],
         },
     };
 
@@ -60,17 +61,24 @@ const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, themedOpti
         const icon = NODE_ICON[node.kind] || UNKNOWN_ICON;
         nodeParams.color = icon.color;
         nodeParams.image = icon.url || '';
+        nodeParams.glyphs = [];
 
         // Tier zero nodes should be marked with a gem glyph
         if (node.isTierZero) {
             nodeParams.type = 'glyphs';
-            nodeParams.glyphs = [
-                {
-                    location: GlyphLocation.TOP_RIGHT,
-                    image: themedOptions.glyph.tierZeroGlyph.url || '',
-                    ...themedOptions.glyph.colors,
-                },
-            ];
+            nodeParams.glyphs.push({
+                location: GlyphLocation.TOP_RIGHT,
+                image: themedOptions.glyph.tierZeroGlyph.url || '',
+                ...themedOptions.glyph.colors,
+            });
+        }
+        if (node.isOwnedObject) {
+            nodeParams.type = 'glyphs';
+            nodeParams.glyphs.push({
+                location: GlyphLocation.BOTTOM_RIGHT,
+                image: themedOptions.glyph.ownedObjectGlyph.url || '',
+                ...themedOptions.glyph.colors,
+            });
         }
 
         graph.addNode(key, {

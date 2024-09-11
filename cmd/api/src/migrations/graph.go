@@ -91,10 +91,10 @@ func GetMigrationData(ctx context.Context, db graph.Database) (version.Version, 
 		log.Warnf("Unable to get Major property from migration data node: %v", err)
 		return currentMigration, ErrNoMigrationData
 	} else if minor, err := node.Properties.Get("Minor").Int(); err != nil {
-		log.Warnf("unable to get Major property from migration data node: %v", err)
+		log.Warnf("unable to get Minor property from migration data node: %v", err)
 		return currentMigration, ErrNoMigrationData
 	} else if patch, err := node.Properties.Get("Patch").Int(); err != nil {
-		log.Warnf("unable to get Major property from migration data node: %v", err)
+		log.Warnf("unable to get Patch property from migration data node: %v", err)
 		return currentMigration, ErrNoMigrationData
 	} else {
 		currentMigration.Major = major

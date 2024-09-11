@@ -50,6 +50,13 @@ AppDisplayName: types.#StringEnum & {
 	representation: "appdisplayname"
 }
 
+LoginURL: types.#StringEnum & {
+	symbol:         "LoginURL"
+	schema:         "azure"
+	name:           "Login URL"
+	representation: "loginurl"
+}
+
 ServicePrincipalType: types.#StringEnum & {
 	symbol:         "ServicePrincipalType"
 	schema:         "azure"
@@ -269,6 +276,7 @@ Properties: [
 	MFAEnabled,
 	License,
 	Licenses,
+	LoginURL,
 	MFAEnforced,
 	UserPrincipalName,
 	IsAssignableToRole,

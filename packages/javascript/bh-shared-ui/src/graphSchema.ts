@@ -108,6 +108,7 @@ export enum ActiveDirectoryRelationshipKind {
     RemoteInteractiveLogonPrivilege = 'RemoteInteractiveLogonPrivilege',
     SyncLAPSPassword = 'SyncLAPSPassword',
     WriteAccountRestrictions = 'WriteAccountRestrictions',
+    WriteGPLink = 'WriteGPLink',
     RootCAFor = 'RootCAFor',
     DCFor = 'DCFor',
     PublishedTo = 'PublishedTo',
@@ -121,8 +122,6 @@ export enum ActiveDirectoryRelationshipKind {
     NTAuthStoreFor = 'NTAuthStoreFor',
     TrustedForNTAuth = 'TrustedForNTAuth',
     EnterpriseCAFor = 'EnterpriseCAFor',
-    CanAbuseUPNCertMapping = 'CanAbuseUPNCertMapping',
-    CanAbuseWeakCertBinding = 'CanAbuseWeakCertBinding',
     IssuedSignedBy = 'IssuedSignedBy',
     GoldenCert = 'GoldenCert',
     EnrollOnBehalfOf = 'EnrollOnBehalfOf',
@@ -218,6 +217,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'SyncLAPSPassword';
         case ActiveDirectoryRelationshipKind.WriteAccountRestrictions:
             return 'WriteAccountRestrictions';
+        case ActiveDirectoryRelationshipKind.WriteGPLink:
+            return 'WriteGPLink';
         case ActiveDirectoryRelationshipKind.RootCAFor:
             return 'RootCAFor';
         case ActiveDirectoryRelationshipKind.DCFor:
@@ -244,10 +245,6 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'TrustedForNTAuth';
         case ActiveDirectoryRelationshipKind.EnterpriseCAFor:
             return 'EnterpriseCAFor';
-        case ActiveDirectoryRelationshipKind.CanAbuseUPNCertMapping:
-            return 'CanAbuseUPNCertMapping';
-        case ActiveDirectoryRelationshipKind.CanAbuseWeakCertBinding:
-            return 'CanAbuseWeakCertBinding';
         case ActiveDirectoryRelationshipKind.IssuedSignedBy:
             return 'IssuedSignedBy';
         case ActiveDirectoryRelationshipKind.GoldenCert:
@@ -381,6 +378,28 @@ export enum ActiveDirectoryKindProperties {
     CertTemplateOID = 'certtemplateoid',
     GroupLinkID = 'grouplinkid',
     ObjectGUID = 'objectguid',
+    ExpirePasswordsOnSmartCardOnlyAccounts = 'expirepasswordsonsmartcardonlyaccounts',
+    MachineAccountQuota = 'machineaccountquota',
+    SupportedKerberosEncryptionTypes = 'supportedencryptiontypes',
+    TGTDelegationEnabled = 'tgtdelegationenabled',
+    PasswordStoredUsingReversibleEncryption = 'encryptedtextpwdallowed',
+    SmartcardRequired = 'smartcardrequired',
+    UseDESKeyOnly = 'usedeskeyonly',
+    LogonScriptEnabled = 'logonscriptenabled',
+    LockedOut = 'lockedout',
+    UserCannotChangePassword = 'passwordcantchange',
+    PasswordExpired = 'passwordexpired',
+    DSHeuristics = 'dsheuristics',
+    UserAccountControl = 'useraccountcontrol',
+    TrustAttributes = 'trustattributes',
+    MinPwdLength = 'minpwdlength',
+    PwdProperties = 'pwdproperties',
+    PwdHistoryLength = 'pwdhistorylength',
+    LockoutThreshold = 'lockoutthreshold',
+    MinPwdAge = 'minpwdage',
+    MaxPwdAge = 'maxpwdage',
+    LockoutDuration = 'lockoutduration',
+    LockoutObservationWindow = 'lockoutobservationwindow',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -540,6 +559,50 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Group Link ID';
         case ActiveDirectoryKindProperties.ObjectGUID:
             return 'Object GUID';
+        case ActiveDirectoryKindProperties.ExpirePasswordsOnSmartCardOnlyAccounts:
+            return 'Expire Passwords on Smart Card only Accounts';
+        case ActiveDirectoryKindProperties.MachineAccountQuota:
+            return 'Machine Account Quota';
+        case ActiveDirectoryKindProperties.SupportedKerberosEncryptionTypes:
+            return 'Supported Kerberos Encryption Types';
+        case ActiveDirectoryKindProperties.TGTDelegationEnabled:
+            return 'TGT Delegation Enabled';
+        case ActiveDirectoryKindProperties.PasswordStoredUsingReversibleEncryption:
+            return 'Password Stored Using Reversible Encryption';
+        case ActiveDirectoryKindProperties.SmartcardRequired:
+            return 'Smartcard Required';
+        case ActiveDirectoryKindProperties.UseDESKeyOnly:
+            return 'Use DES Key Only';
+        case ActiveDirectoryKindProperties.LogonScriptEnabled:
+            return 'Logon Script Enabled';
+        case ActiveDirectoryKindProperties.LockedOut:
+            return 'Locked Out';
+        case ActiveDirectoryKindProperties.UserCannotChangePassword:
+            return 'User Cannot Change Password';
+        case ActiveDirectoryKindProperties.PasswordExpired:
+            return 'Password Expired';
+        case ActiveDirectoryKindProperties.DSHeuristics:
+            return 'DSHeuristics';
+        case ActiveDirectoryKindProperties.UserAccountControl:
+            return 'User Account Control';
+        case ActiveDirectoryKindProperties.TrustAttributes:
+            return 'Trust Attributes';
+        case ActiveDirectoryKindProperties.MinPwdLength:
+            return 'Minimum password length';
+        case ActiveDirectoryKindProperties.PwdProperties:
+            return 'Password Properties';
+        case ActiveDirectoryKindProperties.PwdHistoryLength:
+            return 'Password History Length';
+        case ActiveDirectoryKindProperties.LockoutThreshold:
+            return 'Lockout Threshold';
+        case ActiveDirectoryKindProperties.MinPwdAge:
+            return 'Minimum Password Age';
+        case ActiveDirectoryKindProperties.MaxPwdAge:
+            return 'Maximum Password Age';
+        case ActiveDirectoryKindProperties.LockoutDuration:
+            return 'Lockout Duration';
+        case ActiveDirectoryKindProperties.LockoutObservationWindow:
+            return 'Lockout Observation Window';
         default:
             return undefined;
     }
@@ -577,6 +640,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
         ActiveDirectoryRelationshipKind.SyncLAPSPassword,
         ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
+        ActiveDirectoryRelationshipKind.WriteGPLink,
         ActiveDirectoryRelationshipKind.GoldenCert,
         ActiveDirectoryRelationshipKind.ADCSESC1,
         ActiveDirectoryRelationshipKind.ADCSESC3,
@@ -838,6 +902,7 @@ export enum AzureKindProperties {
     MFAEnabled = 'mfaenabled',
     License = 'license',
     Licenses = 'licenses',
+    LoginURL = 'loginurl',
     MFAEnforced = 'mfaenforced',
     UserPrincipalName = 'userprincipalname',
     IsAssignableToRole = 'isassignabletorole',
@@ -897,6 +962,8 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'License';
         case AzureKindProperties.Licenses:
             return 'Licenses';
+        case AzureKindProperties.LoginURL:
+            return 'Login URL';
         case AzureKindProperties.MFAEnforced:
             return 'MFA Enforced';
         case AzureKindProperties.UserPrincipalName:

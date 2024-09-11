@@ -88,12 +88,6 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 	} else if err := PostEnterpriseCAFor(operation, enterpriseCertAuthorities); err != nil {
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
-	} else if err = PostCanAbuseUPNCertMapping(operation, enterpriseCertAuthorities); err != nil {
-		operation.Done()
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.CanAbuseUPNCertMapping.String(), err)
-	} else if err = PostCanAbuseWeakCertBinding(operation, enterpriseCertAuthorities); err != nil {
-		operation.Done()
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.CanAbuseWeakCertBinding.String(), err)
 	} else if err = PostExtendedByPolicyBinding(operation, certTemplates); err != nil {
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.ExtendedByPolicy.String(), err)
@@ -124,7 +118,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC1(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
+		if err := PostADCSESC1(ctx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
 			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC1.String(), err)
 		}
 		return nil

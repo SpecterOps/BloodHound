@@ -104,7 +104,7 @@ func (s *BloodhoundDB) GetAllRoles(ctx context.Context, order string, filter mod
 		cursor = cursor.Order(order)
 	}
 	if filter.SQLString != "" {
-		cursor = cursor.Where(filter.SQLString, filter.Params)
+		cursor = cursor.Where(filter.SQLString, filter.Params...)
 	}
 
 	return roles, CheckError(cursor.Find(&roles))
@@ -145,7 +145,7 @@ func (s *BloodhoundDB) GetAllPermissions(ctx context.Context, order string, filt
 	}
 
 	if filter.SQLString != "" {
-		cursor = cursor.Where(filter.SQLString, filter.Params)
+		cursor = cursor.Where(filter.SQLString, filter.Params...)
 	}
 
 	return permissions, CheckError(cursor.Find(&permissions))
@@ -299,7 +299,7 @@ func (s *BloodhoundDB) GetAllUsers(ctx context.Context, order string, filter mod
 	}
 
 	if filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params).Find(&users)
+		result = cursor.Where(filter.SQLString, filter.Params...).Find(&users)
 	} else {
 		result = cursor.Find(&users)
 	}
@@ -393,7 +393,7 @@ func (s *BloodhoundDB) GetAllAuthTokens(ctx context.Context, order string, filte
 	}
 
 	if filter.SQLString != "" {
-		cursor = cursor.Where(filter.SQLString, filter.Params)
+		cursor = cursor.Where(filter.SQLString, filter.Params...)
 	}
 
 	return tokens, CheckError(cursor.Find(&tokens))

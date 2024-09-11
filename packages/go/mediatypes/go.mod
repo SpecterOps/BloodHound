@@ -16,4 +16,4 @@
 
 module github.com/specterops/bloodhound/mediatypes
 
-go 1.21
+go 1.23

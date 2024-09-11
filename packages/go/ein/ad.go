@@ -303,10 +303,12 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 				},
 				IngestibleRel{
 					RelProps: map[string]any{
-						"isacl":        false,
-						"sidfiltering": trust.SidFilteringEnabled,
-						"trusttype":    trust.TrustType,
-						"transitive":   trust.IsTransitive},
+						"isacl":                false,
+						"sidfiltering":         trust.SidFilteringEnabled,
+						"tgtdelegationenabled": trust.TGTDelegationEnabled,
+						"trustattributes":      trust.TrustAttributes,
+						"trusttype":            trust.TrustType,
+						"transitive":           trust.IsTransitive},
 					RelType: ad.TrustedBy,
 				},
 			))
@@ -324,10 +326,12 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 				},
 				IngestibleRel{
 					RelProps: map[string]any{
-						"isacl":        false,
-						"sidfiltering": trust.SidFilteringEnabled,
-						"trusttype":    trust.TrustType,
-						"transitive":   trust.IsTransitive},
+						"isacl":                false,
+						"sidfiltering":         trust.SidFilteringEnabled,
+						"tgtdelegationenabled": trust.TGTDelegationEnabled,
+						"trustattributes":      trust.TrustAttributes,
+						"trusttype":            trust.TrustType,
+						"transitive":           trust.IsTransitive},
 					RelType: ad.TrustedBy,
 				},
 			))

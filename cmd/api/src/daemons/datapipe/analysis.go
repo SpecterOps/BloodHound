@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
@@ -60,7 +59,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation tagging failed: %w", err))
 	}
 
-	if err := TagActiveDirectoryTierZero(ctx, graphDB); err != nil {
+	if err := TagActiveDirectoryTierZero(ctx, db, graphDB); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("active directory tier zero tagging failed: %w", err))
 	}
 
@@ -92,7 +91,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		stats.LogStats()
 	}
 
-	if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB, analysis.GetNodeKindDisplayLabel); err != nil {
+	if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
 		agiFailed = true
 	}

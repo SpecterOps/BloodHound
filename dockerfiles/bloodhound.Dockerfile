@@ -17,13 +17,18 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.4.1
-ARG AZUREHOUND_VERSION=v2.1.9
+ARG SHARPHOUND_VERSION=v2.5.6
+ARG AZUREHOUND_VERSION=v2.2.1
+
+########
+# Golang Image
+################
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.23-alpine3.20 AS godeps
 
 ########
 # Builder init
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/node:20-alpine AS deps
+FROM --platform=$BUILDPLATFORM docker.io/library/node:20-alpine3.20 AS deps
 ARG version=v999.999.999
 ARG checkout_hash=""
 ENV SB_LOG_LEVEL=debug
@@ -31,7 +36,10 @@ ENV SB_VERSION=${version}
 ENV CHECKOUT_HASH=${checkout_hash}
 WORKDIR /bloodhound
 
-RUN apk add --update --no-cache git go
+RUN apk add --update --no-cache git
+
+COPY --from=godeps /usr/local/go/ /usr/local/go/
+ENV PATH="/usr/local/go/bin:${PATH}"
 
 COPY . /bloodhound
 RUN go run github.com/specterops/bloodhound/packages/go/stbernard deps
@@ -51,7 +59,7 @@ RUN go run github.com/specterops/bloodhound/packages/go/stbernard build --os ${T
 ########
 # Package other assets
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.16 as hound-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.20 as hound-builder
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 
