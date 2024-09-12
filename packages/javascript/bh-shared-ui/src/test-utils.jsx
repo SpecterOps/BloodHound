@@ -28,6 +28,7 @@ const defaultTheme = {
     palette: {
         ...theme.palette,
         neutral: { ...darkPalette.neutral },
+        button: { ...darkPalette.button },
         color: { ...darkPalette.color },
         tertiary: { ...darkPalette.tertiary },
     },
@@ -63,4 +64,4 @@ const customRender = (
 // re-export everything
 export * from '@testing-library/react';
 // override render method
-export { customRender as render};
+export { customRender as render };
