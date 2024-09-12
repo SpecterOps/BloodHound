@@ -33,7 +33,6 @@ type SavedQueriesData interface {
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int64) (bool, error)
 	GetSharedSavedQueries(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error)
 	GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error)
-	IsSavedQueryPublic(ctx context.Context, savedQueryID int64) (bool, error)
 }
 
 func (s *BloodhoundDB) GetSavedQuery(ctx context.Context, savedQueryID int64) (model.SavedQuery, error) {
@@ -51,8 +50,8 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, userID uuid.UUID, o
 	)
 
 	if filter.SQLString != "" {
-		cursor = cursor.Where(filter.SQLString, filter.Params)
-		result = s.db.Model(&queries).WithContext(ctx).Where("user_id = ?", userID).Where(filter.SQLString, filter.Params).Count(&count)
+		cursor = cursor.Where(filter.SQLString, filter.Params...)
+		result = s.db.Model(&queries).WithContext(ctx).Where("user_id = ?", userID).Where(filter.SQLString, filter.Params...).Count(&count)
 	} else {
 		result = s.db.Model(&queries).WithContext(ctx).Where("user_id = ?", userID).Count(&count)
 	}
@@ -113,20 +112,7 @@ func (s *BloodhoundDB) GetSharedSavedQueries(ctx context.Context, userID uuid.UU
 func (s *BloodhoundDB) GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error) {
 	savedQueries := model.SavedQueries{}
 
-	result := s.db.WithContext(ctx).Select("sqp.*").Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id").Where("sqp.public = true").Find(&savedQueries)
+	result := s.db.WithContext(ctx).Select("saved_queries.*").Joins("JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id").Where("sqp.public = true").Find(&savedQueries)
 
 	return savedQueries, CheckError(result)
-}
-
-func (s *BloodhoundDB) IsSavedQueryPublic(ctx context.Context, savedQueryID int64) (bool, error) {
-	if publicQueries, err := s.GetPublicSavedQueries(ctx); err != nil {
-		return false, err
-	} else {
-		for _, publicQuery := range publicQueries {
-			if publicQuery.ID == savedQueryID {
-				return true, nil
-			}
-		}
-		return false, nil
-	}
 }

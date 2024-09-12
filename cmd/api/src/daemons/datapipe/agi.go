@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/agi"
 )
 
@@ -154,20 +155,22 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 	return nil
 }
 
-func TagActiveDirectoryTierZero(ctx context.Context, db graph.Database) error {
+func TagActiveDirectoryTierZero(ctx context.Context, featureFlagProvider appcfg.GetFlagByKeyer, graphDB graph.Database) error {
 	defer log.Measure(log.LevelInfo, "Finished tagging Active Directory Tier Zero")()
 
-	if domains, err := adAnalysis.FetchAllDomains(ctx, db); err != nil {
+	if autoTagT0ParentObjectsFlag, err := featureFlagProvider.GetFlagByKey(ctx, appcfg.FeatureAutoTagT0ParentObjects); err != nil {
+		return err
+	} else if domains, err := adAnalysis.FetchAllDomains(ctx, graphDB); err != nil {
 		return err
 	} else {
 		for _, domain := range domains {
-			if roots, err := adAnalysis.FetchActiveDirectoryTierZeroRoots(ctx, db, domain); err != nil {
+			if roots, err := adAnalysis.FetchActiveDirectoryTierZeroRoots(ctx, graphDB, domain, autoTagT0ParentObjectsFlag.Enabled); err != nil {
 				return err
 			} else {
 				properties := graph.NewProperties()
 				properties.Set(common.SystemTags.String(), ad.AdminTierZero)
 
-				if err := db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+				if err := graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
 					return tx.Nodes().Filter(query.InIDs(query.Node(), roots.IDs()...)).Update(properties)
 				}); err != nil {
 					return err

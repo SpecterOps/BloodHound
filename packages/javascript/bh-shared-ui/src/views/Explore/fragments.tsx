@@ -19,7 +19,7 @@ import useCollapsibleSectionStyles from './InfoStyles/CollapsibleSection';
 import React, { PropsWithChildren } from 'react';
 import { EntityField, format } from '../../utils';
 
-const exclusionList = [
+export const exclusionList = [
     'gid',
     'admin_rights_count',
     'admin_rights_risk_percent',
@@ -32,6 +32,7 @@ const exclusionList = [
     'displayname',
     'service_principal_id',
     'highvalue',
+    'reconcile',
 ];
 
 const filterNegatedFields = (fields: EntityField[]): EntityField[] =>

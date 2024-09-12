@@ -76,28 +76,28 @@ func TestModel_BuildSQLFilter_Success(t *testing.T) {
 		IsStringData: false,
 	}
 
-	stringContains := model.QueryParameterFilter{
+	approximatelyEquals := model.QueryParameterFilter{
 		Name:         "filtercolumn6",
-		Operator:     model.Contains,
-		Value:        "something",
+		Operator:     model.ApproximatelyEquals,
+		Value:        "testing value",
 		IsStringData: true,
 	}
 
 	expectedResults := map[string]model.SQLFilter{
-		"numericMin":     {SQLString: fmt.Sprintf("%s > ?", numericMin.Name), Params: []any{numericMin.Value}},
-		"numericMax":     {SQLString: fmt.Sprintf("%s < ?", numericMax.Name), Params: []any{numericMax.Value}},
-		"stringValue":    {SQLString: fmt.Sprintf("%s = ?", stringValue.Name), Params: []any{stringValue.Value}},
-		"boolEquals":     {SQLString: fmt.Sprintf("%s = ?", boolEquals.Name), Params: []any{boolEquals.Value}},
-		"boolNotEquals":  {SQLString: fmt.Sprintf("%s <> ?", boolNotEquals.Name), Params: []any{boolNotEquals.Value}},
-		"stringContains": {SQLString: fmt.Sprintf("%s like lower(?)", stringContains.Name), Params: []any{stringContains.Value}},
+		"numericMin":                {SQLString: fmt.Sprintf("%s > ?", numericMin.Name), Params: []any{numericMin.Value}},
+		"numericMax":                {SQLString: fmt.Sprintf("%s < ?", numericMax.Name), Params: []any{numericMax.Value}},
+		"stringValue":               {SQLString: fmt.Sprintf("%s = ?", stringValue.Name), Params: []any{stringValue.Value}},
+		"boolEquals":                {SQLString: fmt.Sprintf("%s = ?", boolEquals.Name), Params: []any{boolEquals.Value}},
+		"boolNotEquals":             {SQLString: fmt.Sprintf("%s <> ?", boolNotEquals.Name), Params: []any{boolNotEquals.Value}},
+		"stringApproximatelyEquals": {SQLString: fmt.Sprintf("%s ILIKE ?", approximatelyEquals.Name), Params: []any{approximatelyEquals.Value}},
 	}
 
 	queryParameterFilterMap := model.QueryParameterFilterMap{
-		numericMax.Name:     model.QueryParameterFilters{numericMin, numericMax},
-		stringValue.Name:    model.QueryParameterFilters{stringValue},
-		boolEquals.Name:     model.QueryParameterFilters{boolEquals},
-		boolNotEquals.Name:  model.QueryParameterFilters{boolNotEquals},
-		stringContains.Name: model.QueryParameterFilters{stringContains},
+		numericMax.Name:          model.QueryParameterFilters{numericMin, numericMax},
+		stringValue.Name:         model.QueryParameterFilters{stringValue},
+		boolEquals.Name:          model.QueryParameterFilters{boolEquals},
+		boolNotEquals.Name:       model.QueryParameterFilters{boolNotEquals},
+		approximatelyEquals.Name: model.QueryParameterFilters{approximatelyEquals},
 	}
 
 	result, err := queryParameterFilterMap.BuildSQLFilter()

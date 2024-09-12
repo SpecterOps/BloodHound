@@ -113,7 +113,7 @@ func (s *BloodhoundDB) GetAllAssetGroups(ctx context.Context, order string, filt
 	}
 
 	if filter.SQLString != "" {
-		result = result.Where(filter.SQLString, filter.Params)
+		result = result.Where(filter.SQLString, filter.Params...)
 	}
 
 	if result = result.Find(&assetGroups); errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -149,9 +149,9 @@ func (s *BloodhoundDB) GetAssetGroupCollections(ctx context.Context, assetGroupI
 	} else if order != "" && filter.SQLString == "" {
 		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Order(order).Where("asset_group_id = ?", assetGroupID).Find(&collections)
 	} else if order == "" && filter.SQLString != "" {
-		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Where("asset_group_id = ?", assetGroupID).Where(filter.SQLString, filter.Params).Find(&collections)
+		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Where("asset_group_id = ?", assetGroupID).Where(filter.SQLString, filter.Params...).Find(&collections)
 	} else {
-		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Order(order).Where("asset_group_id = ?", assetGroupID).Where(filter.SQLString, filter.Params).Find(&collections)
+		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Order(order).Where("asset_group_id = ?", assetGroupID).Where(filter.SQLString, filter.Params...).Find(&collections)
 	}
 	return collections, CheckError(result)
 }

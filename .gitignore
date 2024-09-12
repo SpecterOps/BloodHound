@@ -13,6 +13,7 @@
 
 # go binaries
 bin
+packages/go/stbernard/stbernard
 packages/go/schemagen/schemagen
 cmd/api/src/cmd/bhapi/bhapi
 
@@ -161,6 +162,7 @@ tags
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/*.code-profile
 *.code-workspace
 
 # Local History for Visual Studio Code

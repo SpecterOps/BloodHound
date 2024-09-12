@@ -20,6 +20,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/RoaringBitmap/roaring"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -33,9 +34,10 @@ import (
 )
 
 func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
+	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
+		ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID)
 		for _, template := range publishedCertTemplates {
 			if isValid, err := isCertTemplateValidForESC13(template); err != nil {
 				log.Errorf("Error checking esc13 cert template: %v", err)
@@ -46,7 +48,7 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else if len(groupNodes) == 0 {
 				continue
 			} else {
-				controlBitmap := CalculateCrossProductNodeSets(groupExpansions, cache.CertTemplateEnrollers[template.ID], cache.EnterpriseCAEnrollers[eca.ID])
+				controlBitmap := CalculateCrossProductNodeSets(groupExpansions, ecaEnrollers, cache.GetCertTemplateEnrollers(template.ID))
 				if filtered, err := filterUserDNSResults(tx, controlBitmap, template); err != nil {
 					log.Warnf("Error filtering users from victims for esc13: %v", err)
 					continue
@@ -72,37 +74,47 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 }
 
 func groupIsContainedOrTrusted(tx graph.Transaction, group, domain *graph.Node) bool {
-	var matchFound bool
-	if err := ops.Traversal(tx, ops.TraversalPlan{
-		Root:      group,
-		Direction: graph.DirectionInbound,
-		BranchQuery: func() graph.Criteria {
-			return query.KindIn(query.Relationship(), ad.Contains, ad.TrustedBy)
-		},
-		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.Kinds.ContainsOneOf(ad.Domain)
-		},
-	}, func(ctx *ops.TraversalContext, segment *graph.PathSegment) error {
-		//Check to make sure that this segment contains our target domain id
-		segment.WalkReverse(func(nextSegment *graph.PathSegment) bool {
-			if nextSegment.Node.ID == domain.ID {
-				matchFound = true
-				return false
-			}
+	var (
+		matchFound    = false
+		visitedBitmap = roaring.New()
+		traversalPlan = ops.TraversalPlan{
+			Root:      group,
+			Direction: graph.DirectionInbound,
+			ExpansionFilter: func(segment *graph.PathSegment) bool {
+				return visitedBitmap.CheckedAdd(segment.Node.ID.Uint32())
+			},
+			BranchQuery: func() graph.Criteria {
+				return query.KindIn(query.Relationship(), ad.Contains, ad.TrustedBy)
+			},
+			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+				return segment.Node.Kinds.ContainsOneOf(ad.Domain)
+			},
+		}
+		pathVisitor = func(ctx *ops.TraversalContext, segment *graph.PathSegment) error {
+			//Check to make sure that this segment contains our target domain id
+			segment.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+				if nextSegment.Node.ID == domain.ID {
+					matchFound = true
+					return false
+				}
 
-			if !nextSegment.Node.Kinds.ContainsOneOf(ad.Domain) {
-				return false
-			}
+				if !nextSegment.Node.Kinds.ContainsOneOf(ad.Domain) {
+					return false
+				}
 
-			return true
-		})
+				return true
+			})
 
-		return nil
-	}); err != nil {
-		return false
-	} else {
-		return matchFound
+			return nil
+		}
+	)
+
+	if err := ops.Traversal(tx, traversalPlan, pathVisitor); err != nil {
+		log.Debugf("groupIsContainedOrTrusted traversal error: %v", err)
 	}
+
+	return matchFound
+
 }
 
 func isCertTemplateValidForESC13(ct *graph.Node) (bool, error) {

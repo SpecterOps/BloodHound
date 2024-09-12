@@ -71,6 +71,7 @@ describe('app', () => {
             await act(async () => {
                 const initialState: DeepPartial<AppState> = {
                     auth: {
+                        ...authSlice.initialState,
                         isInitialized: true,
                     },
                 };

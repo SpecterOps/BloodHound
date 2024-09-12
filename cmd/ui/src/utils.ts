@@ -105,6 +105,7 @@ type ThemedGlyph = {
         color: string;
     };
     tierZeroGlyph: GlyphIconInfo;
+    ownedObjectGlyph: GlyphIconInfo;
 };
 
 export type ThemedOptions = {
@@ -176,6 +177,7 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
                 kind: node.data.nodetype,
                 objectId: node.data.objectid,
                 isTierZero: !!(node.data.system_tags && node.data.system_tags.indexOf('admin_tier_0') !== -1),
+                isOwnedObject: !!(node.data.system_tags && node.data.system_tags.indexOf('owned') !== -1),
                 lastSeen: lastSeen,
             };
         } else if (isLink(item)) {
@@ -201,6 +203,14 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
     const result: any = {};
     for (const [key, value] of Object.entries(graph.data.nodes)) {
         const lastSeen = getLastSeenValue(value);
+        // Check and add needed system_tags to node
+        const tags = [];
+        {
+            value.isTierZero ? tags.push('admin_tier_0') : null;
+        }
+        {
+            value.isOwnedObject ? tags.push('owned') : null;
+        }
         result[key] = {
             label: {
                 text: value.label,
@@ -209,7 +219,7 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 nodetype: value.kind,
                 name: value.label,
                 objectid: value.objectId,
-                system_tags: value.isTierZero ? 'admin_tier_0' : undefined,
+                system_tags: tags.join(' '),
                 lastseen: lastSeen,
             },
         };
