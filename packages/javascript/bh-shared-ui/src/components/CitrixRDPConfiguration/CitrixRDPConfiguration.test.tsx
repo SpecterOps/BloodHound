@@ -22,9 +22,16 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ConfigurationKey } from 'js-client-library';
 
-const handlers = (savedEnabledValue?: boolean) => {
-    let isCitrixRDPConfigurationEnabled = savedEnabledValue || false;
-    return [
+describe('CitrixRDPConfiguration', () => {
+    const setInitialServerState = (savedConfigurationValue?: boolean) => {
+        return {
+            isCitrixRDPConfigurationEnabled: savedConfigurationValue || false,
+        };
+    };
+
+    let serverState = setInitialServerState();
+
+    const server = setupServer(
         rest.get(`/api/v2/config`, async (_req, res, ctx) => {
             return res(
                 ctx.json({
@@ -32,7 +39,7 @@ const handlers = (savedEnabledValue?: boolean) => {
                         {
                             key: ConfigurationKey.Citrix,
                             value: {
-                                enabled: isCitrixRDPConfigurationEnabled,
+                                enabled: serverState.isCitrixRDPConfigurationEnabled,
                             },
                         },
                     ],
@@ -41,18 +48,19 @@ const handlers = (savedEnabledValue?: boolean) => {
         }),
         rest.put(`/api/v2/config`, async (req, res, ctx) => {
             const body = await req.json();
-            isCitrixRDPConfigurationEnabled = body['value']['enabled'];
+            serverState.isCitrixRDPConfigurationEnabled = !!body['value']['enabled'];
             return res(ctx.json({ data: body }));
-        }),
-    ];
-};
-
-describe('CitrixRDPConfiguration', () => {
-    beforeEach(() => {
-        render(<CitrixRDPConfiguration />);
-    });
+        })
+    );
+    beforeAll(() => server.listen());
+    afterEach(() => server.resetHandlers());
+    afterAll(() => server.close());
 
     describe('Initial render', () => {
+        beforeEach(() => {
+            serverState = setInitialServerState();
+            render(<CitrixRDPConfiguration />);
+        });
         it('renders the component with all info and switch off', () => {
             const panelTitle = screen.getByText(configurationData.title);
             const panelDescription = screen.getByText(configurationData.description);
@@ -65,12 +73,10 @@ describe('CitrixRDPConfiguration', () => {
         });
     });
     describe('Click on switch to enable', () => {
-        const server = setupServer(...handlers());
-
-        beforeAll(() => server.listen());
-        afterEach(() => server.resetHandlers());
-        afterAll(() => server.close());
-
+        beforeEach(() => {
+            serverState = setInitialServerState();
+            render(<CitrixRDPConfiguration />);
+        });
         it('on clicking switch shows modal and when clicking cancel closes it and switch stays disabled', async () => {
             const panelSwitch = screen.getByRole('switch');
             const user = userEvent.setup();
@@ -122,13 +128,11 @@ describe('CitrixRDPConfiguration', () => {
         });
     });
     describe('Click on switch to disable', () => {
-        const savedEnabledValue = true;
-        const server = setupServer(...handlers(savedEnabledValue));
-
-        beforeAll(() => server.listen());
-        afterEach(() => server.resetHandlers());
-        afterAll(() => server.close());
-
+        beforeEach(() => {
+            const savedConfigurationValue = true;
+            serverState = setInitialServerState(savedConfigurationValue);
+            render(<CitrixRDPConfiguration />);
+        });
         it('on clicking switch shows modal and when clicking cancel closes it and switch stays enabled', async () => {
             const panelSwitch = screen.getByRole('switch');
             const user = userEvent.setup();
