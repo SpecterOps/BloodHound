@@ -58,7 +58,7 @@ const CitrixRDPConfiguration: FC = () => {
         updateConfiguration.mutateAsync(
             {
                 key: ConfigurationKey.Citrix,
-                value: { enabled: switchState },
+                value: { enabled: !switchState },
             },
             {
                 onError: () => {
@@ -72,14 +72,14 @@ const CitrixRDPConfiguration: FC = () => {
         <>
             <CardWithSwitch
                 title={configurationData.title}
-                isEnabled={!!citrixRDPconfigurationEnabled}
+                isEnabled={switchState}
                 description={configurationData.description}
                 disableSwitch={haveUnsettledRequests}
                 onSwitchChange={toggleShowDialog}
             />
             <ConfirmCitrixRDPDialog
                 open={isOpenDialog}
-                futureSwitchState={!citrixRDPconfigurationEnabled}
+                futureSwitchState={!switchState}
                 onCancel={toggleShowDialog}
                 onConfirm={handleConfirm}
             />
