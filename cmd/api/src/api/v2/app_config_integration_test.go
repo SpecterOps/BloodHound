@@ -33,8 +33,10 @@ func Test_GetAppConfigs(t *testing.T) {
 	var (
 		passwordExpirationWindowFound = false
 		neo4jConfigsFound             = false
+		citrixConfigsFound            = false
 		passwordExpirationValue       appcfg.PasswordExpiration
 		neo4jParametersValue          appcfg.Neo4jParameters
+		citrixConfigValue             appcfg.CitrixRDPSupport
 		testCtx                       = integration.NewFOSSContext(t)
 	)
 
@@ -56,11 +58,16 @@ func Test_GetAppConfigs(t *testing.T) {
 			require.Equal(t, neo4j.DefaultBatchWriteSize, neo4jParametersValue.BatchWriteSize)
 			require.Equal(t, neo4j.DefaultWriteFlushSize, neo4jParametersValue.WriteFlushSize)
 			neo4jConfigsFound = true
+		case appcfg.CitrixRDPSupportKey:
+			mapParameter(t, &citrixConfigValue, parameter)
+			require.False(t, citrixConfigValue.Enabled)
+			citrixConfigsFound = true
 		}
 	}
 
 	require.True(t, passwordExpirationWindowFound, "Failed to find Password Expiration Window in response")
 	require.True(t, neo4jConfigsFound, "Failed to find Neo4J Configs in response")
+	require.True(t, citrixConfigsFound, "Failed to find Citrix configs in response")
 }
 
 func Test_GetAppConfigWithParameter(t *testing.T) {
@@ -107,7 +114,7 @@ func Test_PutAppConfig(t *testing.T) {
 	require.Equal(t, updatedDuration, updatedPasswordExpiration.Duration)
 }
 
-func mapParameter[T *appcfg.PasswordExpiration | *appcfg.Neo4jParameters](t *testing.T, value T, parameter appcfg.Parameter) {
+func mapParameter[T *appcfg.PasswordExpiration | *appcfg.Neo4jParameters | *appcfg.CitrixRDPSupport](t *testing.T, value T, parameter appcfg.Parameter) {
 	err := parameter.Value.Map(&value)
 	require.Nilf(t, err, "Failed to map parameter value to %T type: %v", value, err)
 }
