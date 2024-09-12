@@ -23,6 +23,9 @@ export { default as CardWithSwitch } from './CardWithSwitch';
 export * from './CheckboxGroup';
 export { default as CheckboxGroup } from './CheckboxGroup';
 
+export * from './CitrixRDPConfiguration';
+export { default as CitrixRDPConfiguration } from './CitrixRDPConfiguration';
+
 export * from './CollectorCard';
 export { default as CollectorCard } from './CollectorCard';
 

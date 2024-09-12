@@ -28,6 +28,7 @@ const defaultTheme = {
     palette: {
         ...theme.palette,
         neutral: { ...darkPalette.neutral },
+        button: { ...darkPalette.button },
         color: { ...darkPalette.color },
         tertiary: { ...darkPalette.tertiary },
     },

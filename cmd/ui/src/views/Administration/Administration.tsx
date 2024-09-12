@@ -27,6 +27,7 @@ import {
     ROUTE_ADMINISTRATION_MANAGE_USERS,
     ROUTE_ADMINISTRATION_SAML_CONFIGURATION,
     ROUTE_ADMINISTRATION_DB_MANAGEMENT,
+    ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
 } from 'src/ducks/global/routes';
 import usePermissions from 'src/hooks/usePermissions/usePermissions';
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
@@ -35,6 +36,7 @@ const Users = React.lazy(() => import('src/views/Users'));
 const SAMLConfiguration = React.lazy(() => import('src/views/SAMLConfiguration'));
 const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures'));
 const FileIngest = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.FileIngest })));
+const BloodHoundConfiguration = React.lazy(() => import('src/views/BloodHoundConfiguration'));
 
 const Administration: React.FC = () => {
     const sections = [
@@ -89,6 +91,11 @@ const Administration: React.FC = () => {
         {
             title: 'Configuration',
             items: [
+                {
+                    label: 'Bloodhound Configuration',
+                    path: ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
+                    component: BloodHoundConfiguration,
+                },
                 {
                     label: 'Early Access Features',
                     path: ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
