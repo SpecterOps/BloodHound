@@ -35,7 +35,19 @@ const CitrixRDPConfiguration: FC = () => {
     const updateConfiguration = useUpdateConfiguration();
 
     const citrixRDPconfigurationEnabled = parseCitrixConfiguration(data)?.value.enabled;
-    const isSwitchDisabled = isFetching || updateConfiguration.isLoading;
+
+    // optimistically update switch state during pending mutations
+    const haveUnsettledRequests = updateConfiguration.isLoading || isFetching;
+
+    const computeSwitchState = (): boolean => {
+        if (haveUnsettledRequests && updateConfiguration.variables?.key === ConfigurationKey.Citrix) {
+            return updateConfiguration.variables?.value.enabled;
+        } else {
+            return !!citrixRDPconfigurationEnabled;
+        }
+    };
+
+    const switchState = computeSwitchState();
 
     const toggleShowDialog = () => {
         setIsOpenDialog((prev) => !prev);
@@ -46,7 +58,7 @@ const CitrixRDPConfiguration: FC = () => {
         updateConfiguration.mutateAsync(
             {
                 key: ConfigurationKey.Citrix,
-                value: { enabled: !citrixRDPconfigurationEnabled },
+                value: { enabled: switchState },
             },
             {
                 onError: () => {
@@ -62,7 +74,7 @@ const CitrixRDPConfiguration: FC = () => {
                 title={configurationData.title}
                 isEnabled={!!citrixRDPconfigurationEnabled}
                 description={configurationData.description}
-                disableSwitch={isSwitchDisabled}
+                disableSwitch={haveUnsettledRequests}
                 onSwitchChange={toggleShowDialog}
             />
             <ConfirmCitrixRDPDialog
