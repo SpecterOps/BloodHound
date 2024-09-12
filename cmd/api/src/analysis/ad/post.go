@@ -25,7 +25,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 )
 
-func Post(ctx context.Context, db graph.Database, adcsEnabled bool) (*analysis.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database, adcsEnabled bool, citrixEnabled bool) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
 	if stats, err := analysis.DeleteTransitEdges(ctx, db, ad.Entity, ad.Entity, adAnalysis.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
@@ -35,7 +35,7 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled bool) (*analysis.A
 		return &aggregateStats, err
 	} else if syncLAPSStats, err := adAnalysis.PostSyncLAPSPassword(ctx, db, groupExpansions); err != nil {
 		return &aggregateStats, err
-	} else if localGroupStats, err := adAnalysis.PostLocalGroups(ctx, db, groupExpansions, false); err != nil {
+	} else if localGroupStats, err := adAnalysis.PostLocalGroups(ctx, db, groupExpansions, false, citrixEnabled); err != nil {
 		return &aggregateStats, err
 	} else if adcsStats, err := adAnalysis.PostADCS(ctx, db, groupExpansions, adcsEnabled); err != nil {
 		return &aggregateStats, err
