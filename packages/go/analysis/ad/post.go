@@ -417,7 +417,7 @@ func FetchComputerLocalGroupByName(tx graph.Transaction, computer graph.ID, grou
 	if rel, err := tx.Relationships().Filter(
 		query.And(
 			query.Kind(query.Start(), ad.LocalGroup),
-			query.Equals(query.StartProperty(common.Name.String()), groupName),
+			query.CaseInsensitiveStringStartsWith(query.StartProperty(common.Name.String()), groupName),
 			query.Kind(query.Relationship(), ad.LocalToComputer),
 			query.InIDs(query.EndID(), computer),
 		),
@@ -550,7 +550,7 @@ func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer
 		return firstDegreeMembers, tx.Relationships().Filter(
 			query.And(
 				query.Kind(query.Relationship(), ad.MemberOfLocalGroup),
-				query.KindIn(query.Start(), ad.Group, ad.User),
+				query.KindIn(query.Start(), ad.Group, ad.User, ad.Computer),
 				query.Equals(query.EndID(), rdpLocalGroup.ID),
 			),
 		).FetchTriples(func(cursor graph.Cursor[graph.RelationshipTripleResult]) error {
