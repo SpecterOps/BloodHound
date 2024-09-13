@@ -151,27 +151,30 @@ func ADCSESC1Path2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[ui
 
 func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
-		MATCH (u:User {objectid:'S-1-5-21-2057499049-1289676208-1959431660-238209'})-[:ADCSESC1]->(d:Domain {objectid:'S-1-5-21-1621856376-872934182-3936853371'})
-		MATCH p1_1 = (ct:CertTemplate)-[:PublishedTo]->(ca:EnterpriseCA)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
-		WHERE ct.requiresmanagerapproval = false
+		MATCH (c:Container)-[:Contains]->(rca:RootCA)
+		WHERE c.name CONTAINS "CERTIFICATION AUTHORITIES" AND c.domain = d.domain
+		MATCH (ca:EnterpriseCA)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(rca)
+		WHERE (ca)-[:TrustedForNTAuth]->(:NTAuthStore)
+		MATCH (ct:CertTemplate)-[:PublishedTo]->(ca)
+		WHERE (ct.requiresmanagerapproval = false
+		AND ct.schemaversion > 1
+		AND ct.authorizedsignatures = 0
+		AND ct.enrolleesuppliessubject = true)
+		OR (ct.requiresmanagerapproval = false
+		AND ct.schemaversion = 1
 		AND ct.authenticationenabled = true
-		AND ct.enrolleesuppliessubject = true
-		AND ct.schemaversion = 1 OR ct.authorizedsignatures = 0
-		OPTIONAL MATCH p1_2 = (u)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)
-		OPTIONAL MATCH p1_2a = (g1:Group)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)
-		WHERE g1.objectid ENDS WITH "-S-1-5-11" OR g1.objectid ENDS WITH -S-1-1-0" // Authenticated Users/Everyone
-
-		MATCH p2_1 = (ca)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
-		OPTIONAL MATCH p2_2 = (u)-[:MemberOf*0..]->()-[:Enroll]->(ca)
-		OPTIONAL MATCH p2_a = (g2:Group)-[:MemberOf*0..]->()-[:Enroll]->(ca)
-		WHERE g2.objectid ENDS WITH "-S-1-5-11" OR g2.objectid ENDS WITH -S-1-1-0" // Authenticated Users/Everyone
-
-		RETURN p1_1,p1_2,p1_2a,p2_1,p2_2,p2_2a
+		AND ct.enrolleesuppliessubject = true)
+		OPTIONAL MATCH p1 = (u)-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)
+		OPTIONAL MATCH p2 = (u)-[:MemberOf*1..]->(:Group)-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)
+		OPTIONAL MATCH p3 = (u)-[:Enroll]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		OPTIONAL MATCH p4 = (u)-[:MemberOf*1..]->(:Group)-[:Enroll]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		OPTIONAL MATCH p5 = (ca)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
+		RETURN p1,p2,p3,p4,p5
 	*/
 	var (
-		startNode                  *graph.Node
-		endNode                    *graph.Node
-		authUsersAndEveryoneGroups graph.NodeSet
+		startNode  *graph.Node
+		endNode    *graph.Node
+		startNodes graph.NodeSet
 
 		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		paths              = graph.PathSet{}
@@ -194,6 +197,7 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	}
 
+	// Add startnode, Auth. Users, and Everyone to start nodes
 	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 		log.Warnf("Error getting domain SID for domain %d: %v", endNode.ID, err)
 		return nil, err
@@ -201,41 +205,18 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
 			return err
 		} else {
-			authUsersAndEveryoneGroups = nodeSet
+			startNodes = nodeSet
 			return nil
 		}
 	}); err != nil {
 		return nil, err
 	}
+	startNodes.Add(startNode)
 
 	// P1
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: ADCSESC1Path1Pattern(edge.EndID).Do(func(terminal *graph.PathSegment) error {
-			// Find the first enterprise CA and track it before stuffing this path into the candidates
-			var enterpriseCANode *graph.Node
-			terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
-				if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-					enterpriseCANode = nextSegment.Node
-				}
-				return true
-			})
-
-			lock.Lock()
-			candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
-			path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
-			lock.Unlock()
-
-			return nil
-		}),
-	}); err != nil {
-		return nil, err
-	}
-
-	// P1 alterantive: Auth. Users or Everyone as root
-	for _, group := range authUsersAndEveryoneGroups.Slice() {
+	for _, n := range startNodes.Slice() {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-			Root: group,
+			Root: n,
 			Driver: ADCSESC1Path1Pattern(edge.EndID).Do(func(terminal *graph.PathSegment) error {
 				// Find the first enterprise CA and track it before stuffing this path into the candidates
 				var enterpriseCANode *graph.Node
@@ -259,29 +240,9 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	// P2
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: ADCSESC1Path2Pattern(edge.EndID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
-			// Find the CA and track it before stuffing this path into the candidates
-			enterpriseCANode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-			})
-
-			lock.Lock()
-			candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
-			path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
-			lock.Unlock()
-
-			return nil
-		}),
-	}); err != nil {
-		return nil, err
-	}
-
-	// P2 alterantive: Auth. Users or Everyone as root
-	for _, group := range authUsersAndEveryoneGroups.Slice() {
+	for _, n := range startNodes.Slice() {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-			Root: group,
+			Root: n,
 			Driver: ADCSESC1Path2Pattern(edge.EndID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
 				// Find the CA and track it before stuffing this path into the candidates
 				enterpriseCANode := terminal.Search(func(nextSegment *graph.PathSegment) bool {

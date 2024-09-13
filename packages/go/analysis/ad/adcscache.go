@@ -31,29 +31,33 @@ type ADCSCache struct {
 	mu *sync.RWMutex
 
 	// To discourage direct access without getting a read lock, these are private
-	authStoreForChainValid          map[graph.ID]cardinality.Duplex[uint32]
-	rootCAForChainValid             map[graph.ID]cardinality.Duplex[uint32]
-	expandedCertTemplateControllers map[graph.ID]cardinality.Duplex[uint32]
-	certTemplateEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment on a cert template via `enroll`, `generic all`, `all extended rights` edges
-	certTemplateControllers         map[graph.ID][]*graph.Node // principals that have privileges on a cert template via `owner`, `generic all`, `write dacl`, `write owner` edges
-	enterpriseCAEnrollers           map[graph.ID][]*graph.Node // principals that have enrollment rights on an enterprise ca via `enroll` edge
-	publishedTemplateCache          map[graph.ID][]*graph.Node // cert templates that are published to an enterprise ca
-	hasUPNCertMappingInForest       cardinality.Duplex[uint32] // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
-	hasWeakCertBindingInForest      cardinality.Duplex[uint32] // domains where at least one DC in the forest has Kerberos weak cert binding enabled
+	authStoreForChainValid           map[graph.ID]cardinality.Duplex[uint32]
+	rootCAForChainValid              map[graph.ID]cardinality.Duplex[uint32]
+	expandedCertTemplateControllers  map[graph.ID]cardinality.Duplex[uint32]
+	certTemplateHasSpecicalEnrollers map[graph.ID]bool          // whether Auth. Users or Everyone has enrollment rights on templates
+	enterpriseCAHasSpecicalEnrollers map[graph.ID]bool          // whether Auth. Users or Everyone has enrollment rights on enterprise CAs
+	certTemplateEnrollers            map[graph.ID][]*graph.Node // principals that have enrollment on a cert template via `enroll`, `generic all`, `all extended rights` edges
+	certTemplateControllers          map[graph.ID][]*graph.Node // principals that have privileges on a cert template via `owner`, `generic all`, `write dacl`, `write owner` edges
+	enterpriseCAEnrollers            map[graph.ID][]*graph.Node // principals that have enrollment rights on an enterprise ca via `enroll` edge
+	publishedTemplateCache           map[graph.ID][]*graph.Node // cert templates that are published to an enterprise ca
+	hasUPNCertMappingInForest        cardinality.Duplex[uint32] // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
+	hasWeakCertBindingInForest       cardinality.Duplex[uint32] // domains where at least one DC in the forest has Kerberos weak cert binding enabled
 }
 
 func NewADCSCache() ADCSCache {
 	return ADCSCache{
-		mu:                              &sync.RWMutex{},
-		authStoreForChainValid:          make(map[graph.ID]cardinality.Duplex[uint32]),
-		rootCAForChainValid:             make(map[graph.ID]cardinality.Duplex[uint32]),
-		expandedCertTemplateControllers: make(map[graph.ID]cardinality.Duplex[uint32]),
-		certTemplateEnrollers:           make(map[graph.ID][]*graph.Node),
-		certTemplateControllers:         make(map[graph.ID][]*graph.Node),
-		enterpriseCAEnrollers:           make(map[graph.ID][]*graph.Node),
-		publishedTemplateCache:          make(map[graph.ID][]*graph.Node),
-		hasUPNCertMappingInForest:       cardinality.NewBitmap32(),
-		hasWeakCertBindingInForest:      cardinality.NewBitmap32(),
+		mu:                               &sync.RWMutex{},
+		authStoreForChainValid:           make(map[graph.ID]cardinality.Duplex[uint32]),
+		rootCAForChainValid:              make(map[graph.ID]cardinality.Duplex[uint32]),
+		expandedCertTemplateControllers:  make(map[graph.ID]cardinality.Duplex[uint32]),
+		certTemplateHasSpecicalEnrollers: make(map[graph.ID]bool),
+		enterpriseCAHasSpecicalEnrollers: make(map[graph.ID]bool),
+		certTemplateEnrollers:            make(map[graph.ID][]*graph.Node),
+		certTemplateControllers:          make(map[graph.ID][]*graph.Node),
+		enterpriseCAEnrollers:            make(map[graph.ID][]*graph.Node),
+		publishedTemplateCache:           make(map[graph.ID][]*graph.Node),
+		hasUPNCertMappingInForest:        cardinality.NewBitmap32(),
+		hasWeakCertBindingInForest:       cardinality.NewBitmap32(),
 	}
 }
 
@@ -68,6 +72,15 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				log.Errorf("Error fetching enrollers for cert template %d: %v", ct.ID, err)
 			} else {
 				s.certTemplateEnrollers[ct.ID] = firstDegreePrincipals.Slice()
+
+				// Check if Auth. Users or Everyone has enroll
+				if domainsid, err := ct.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+					log.Warnf("Error getting domain SID for certtemplate %d: %v", ct.ID, err)
+				} else if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, firstDegreePrincipals.Slice(), domainsid); err != nil {
+					log.Errorf("Error fetching if auth. users or everyone has enroll on certtemplate %d: %v", ct.ID, err)
+				} else {
+					s.certTemplateHasSpecicalEnrollers[ct.ID] = authUsersOrEveryoneHasEnroll
+				}
 			}
 
 			// cert template controllers
@@ -84,6 +97,15 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				log.Errorf("Error fetching enrollers for enterprise ca %d: %v", eca.ID, err)
 			} else {
 				s.enterpriseCAEnrollers[eca.ID] = firstDegreeEnrollers.Slice()
+
+				// Check if Auth. Users or Everyone has enroll
+				if domainsid, err := eca.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+					log.Warnf("Error getting domain SID for eca %d: %v", eca.ID, err)
+				} else if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, firstDegreeEnrollers.Slice(), domainsid); err != nil {
+					log.Errorf("Error fetching if auth. users or everyone has enroll on enterprise ca %d: %v", eca.ID, err)
+				} else {
+					s.enterpriseCAHasSpecicalEnrollers[eca.ID] = authUsersOrEveryoneHasEnroll
+				}
 			}
 
 			if publishedTemplates, err := FetchCertTemplatesPublishedToCA(tx, eca); err != nil {
@@ -162,6 +184,20 @@ func (s *ADCSCache) SetExpandedCertTemplateControllers(certId graph.ID, principa
 	} else {
 		s.expandedCertTemplateControllers[certId].Add(principalId)
 	}
+}
+
+func (s *ADCSCache) GetCertTemplateHasSpecicalEnrollers(id graph.ID) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.certTemplateHasSpecicalEnrollers[id]
+}
+
+func (s *ADCSCache) GetEnterpriseCAHasSpecicalEnrollers(id graph.ID) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.enterpriseCAHasSpecicalEnrollers[id]
 }
 
 func (s *ADCSCache) GetCertTemplateEnrollers(id graph.ID) []*graph.Node {

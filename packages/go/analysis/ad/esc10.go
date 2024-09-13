@@ -38,7 +38,7 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 		return nil
 	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaControllers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaControllers) == 0 {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaEnrollers) == 0 {
 		return nil
 	} else {
 		results := cardinality.NewBitmap32()
@@ -53,7 +53,7 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
-				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaControllers)
+				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecicalEnrollers(template.ID), cache.GetEnterpriseCAHasSpecicalEnrollers(eca.ID))
 
 				if filteredVictims, err := filterUserDNSResults(tx, victimBitmap, template); err != nil {
 					log.Warnf("Error filtering users from victims for esc9a: %v", err)
@@ -99,7 +99,7 @@ func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analy
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
-				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers)
+				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecicalEnrollers(template.ID), cache.GetEnterpriseCAHasSpecicalEnrollers(enterpriseCA.ID))
 
 				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
 					log.Warnf("Error getting start nodes for esc10b attacker nodes: %v", err)

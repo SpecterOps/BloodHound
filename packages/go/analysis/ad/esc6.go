@@ -241,8 +241,10 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	*/
 
 	var (
-		startNode          *graph.Node
-		endNode            *graph.Node
+		startNode  *graph.Node
+		endNode    *graph.Node
+		startNodes graph.NodeSet
+
 		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		lock               = &sync.Mutex{}
 		paths              = graph.PathSet{}
@@ -264,27 +266,45 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}); err != nil {
 		return nil, err
 	}
+	startNodes.Add(startNode)
+
+	// Add startnode, Auth. Users, and Everyone to start nodes
+	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		log.Warnf("Error getting domain SID for domain %d: %v", endNode.ID, err)
+		return nil, err
+	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
+			return err
+		} else {
+			startNodes = nodeSet
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	}
 
 	// P1
-	if err := traversalInst.BreadthFirst(ctx,
-		traversal.Plan{
-			Root: startNode,
-			Driver: ADCSESC6Path1Pattern(edge.EndID).Do(
-				func(terminal *graph.PathSegment) error {
-					enterpriseCA := terminal.Search(
-						func(nextSegment *graph.PathSegment) bool {
-							return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-						})
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx,
+			traversal.Plan{
+				Root: n,
+				Driver: ADCSESC6Path1Pattern(edge.EndID).Do(
+					func(terminal *graph.PathSegment) error {
+						enterpriseCA := terminal.Search(
+							func(nextSegment *graph.PathSegment) bool {
+								return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+							})
 
-					lock.Lock()
-					path1EnterpriseCAs.Add(enterpriseCA.ID.Uint32())
-					path1Segments[enterpriseCA.ID] = append(path1Segments[enterpriseCA.ID], terminal)
-					lock.Unlock()
+						lock.Lock()
+						path1EnterpriseCAs.Add(enterpriseCA.ID.Uint32())
+						path1Segments[enterpriseCA.ID] = append(path1Segments[enterpriseCA.ID], terminal)
+						lock.Unlock()
 
-					return nil
-				}),
-		}); err != nil {
-		return nil, err
+						return nil
+					}),
+			}); err != nil {
+			return nil, err
+		}
 	}
 
 	// P2
@@ -309,29 +329,31 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	// P3
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: ADCSESC6Path3Pattern(edge.EndID, path1EnterpriseCAs, edge.Kind).Do(
-			func(terminal *graph.PathSegment) error {
-				certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
-				})
-
-				if !startNode.Kinds.ContainsOneOf(ad.User) || certTemplateValidForUserVictim(certTemplate) {
-					paths.AddPath(terminal.Path())
-
-					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
-					terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
-						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-							finalEnterpriseCAs.Add(end.ID.Uint32())
-							return false
-						}
-						return true
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: ADCSESC6Path3Pattern(edge.EndID, path1EnterpriseCAs, edge.Kind).Do(
+				func(terminal *graph.PathSegment) error {
+					certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+						return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
 					})
-				}
-				return nil
-			})}); err != nil {
-		return nil, err
+
+					if !startNode.Kinds.ContainsOneOf(ad.User) || certTemplateValidForUserVictim(certTemplate) {
+						paths.AddPath(terminal.Path())
+
+						// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
+						terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+							if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+								finalEnterpriseCAs.Add(end.ID.Uint32())
+								return false
+							}
+							return true
+						})
+					}
+					return nil
+				})}); err != nil {
+			return nil, err
+		}
 	}
 
 	if paths.Len() > 0 {
