@@ -75,7 +75,7 @@ func TestParameters_GetConfigurationParameter(t *testing.T) {
 		expected := &appcfg.Parameter{
 			Key:         appcfg.CitrixRDPSupportKey,
 			Name:        "Citrix RDP Support",
-			Description: "This configuration parameter toggles Citrix support during post-processing. When on, CanRDP edges will come from the `Direct Access Users` group instead of the builtin `Remote Desktop Users` group.",
+			Description: "This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a 'Direct Access Users' local group will assume that Citrix is installed and CanRDP edges will require membership of both 'Direct Access Users' and 'Remote Desktop Users' local groups on the computer.",
 		}
 		require.Equal(t, expected.Key, parameter.Key)
 		require.Equal(t, expected.Name, parameter.Name)
