@@ -45,7 +45,7 @@ func (s Resources) GetApplicationConfigurations(response http.ResponseWriter, re
 	} else if parameterFilter, hasParameterFilter := queryFilters.FirstFilter(queryParameterName); hasParameterFilter {
 		if parameterFilter.Operator != model.Equals {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, parameterFilter.Name, parameterFilter.Operator), request), response)
-		} else if !cfgParameter.IsValid(parameterFilter.Value) {
+		} else if !cfgParameter.IsValidKey(parameterFilter.Value) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", parameterFilter.Value), request), response)
 		} else if cfgParameter, err = s.DB.GetConfigurationParameter(request.Context(), parameterFilter.Value); err != nil {
 			api.HandleDatabaseError(request, response, err)
@@ -68,8 +68,10 @@ func (s Resources) SetApplicationConfiguration(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if parameter, err := convertAppConfigUpdateRequestToParameter(appConfig); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration update request not converted to a parameter: %s", parameter.Key), request), response)
-	} else if !parameter.IsValid(parameter.Key) {
+	} else if !parameter.IsValidKey(parameter.Key) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", parameter.Key), request), response)
+	} else if errs := parameter.Validate(); errs != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 	} else if err = s.DB.SetConfigurationParameter(request.Context(), parameter); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {

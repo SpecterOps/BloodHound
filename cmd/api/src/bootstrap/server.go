@@ -25,7 +25,6 @@ import (
 	"syscall"
 	"time"
 
-	iso8601 "github.com/channelmeter/iso8601duration"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
@@ -105,10 +104,8 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 
 		if cfg.DefaultAdmin.ExpireNow {
 			authSecret.ExpiresAt = time.Time{}
-		} else if defaultWindow, err := iso8601.FromString(appcfg.DefaultPasswordExpirationWindow); err != nil {
-			return fmt.Errorf("unable to parse default password expiration window: %w", err)
 		} else {
-			authSecret.ExpiresAt = time.Now().Add(defaultWindow.ToDuration())
+			authSecret.ExpiresAt = time.Now().Add(appcfg.GetPasswordExpiration(ctx, db))
 		}
 
 		if _, err := db.InitializeSecretAuth(ctx, adminUser, authSecret); err != nil {
