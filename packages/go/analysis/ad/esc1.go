@@ -151,6 +151,7 @@ func ADCSESC1Path2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[ui
 
 func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
+		MATCH (u:User {objectid:'S-1-5-21-2057499049-1289676208-1959431660-238209'})-[:ADCSESC1]->(d:Domain {objectid:'S-1-5-21-1621856376-872934182-3936853371'})
 		MATCH (c:Container)-[:Contains]->(rca:RootCA)
 		WHERE c.name CONTAINS "CERTIFICATION AUTHORITIES" AND c.domain = d.domain
 		MATCH (ca:EnterpriseCA)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(rca)
@@ -159,6 +160,7 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		WHERE (ct.requiresmanagerapproval = false
 		AND ct.schemaversion > 1
 		AND ct.authorizedsignatures = 0
+		AND ct.authenticationenabled = true
 		AND ct.enrolleesuppliessubject = true)
 		OR (ct.requiresmanagerapproval = false
 		AND ct.schemaversion = 1
