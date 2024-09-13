@@ -18,7 +18,7 @@ import { Box, CircularProgress, Container } from '@mui/material';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { GenericErrorBoundaryFallback, Permission } from 'bh-shared-ui';
+import { GenericErrorBoundaryFallback } from 'bh-shared-ui';
 import LeftNav from 'src/components/LeftNav';
 import {
     ROUTE_ADMINISTRATION_FILE_INGEST,
@@ -27,9 +27,8 @@ import {
     ROUTE_ADMINISTRATION_MANAGE_USERS,
     ROUTE_ADMINISTRATION_SAML_CONFIGURATION,
     ROUTE_ADMINISTRATION_DB_MANAGEMENT,
-    ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
+    ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION
 } from 'src/ducks/global/routes';
-import usePermissions from 'src/hooks/usePermissions/usePermissions';
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const QA = React.lazy(() => import('src/views/QA'));
 const Users = React.lazy(() => import('src/views/Users'));
@@ -47,19 +46,16 @@ const Administration: React.FC = () => {
                     label: 'File Ingest',
                     path: ROUTE_ADMINISTRATION_FILE_INGEST,
                     component: FileIngest,
-                    adminOnly: false,
                 },
                 {
                     label: 'Data Quality',
                     path: ROUTE_ADMINISTRATION_DATA_QUALITY,
                     component: QA,
-                    adminOnly: false,
                 },
                 {
                     label: 'Database Management',
                     path: ROUTE_ADMINISTRATION_DB_MANAGEMENT,
                     component: DatabaseManagement,
-                    adminOnly: false,
                 },
             ],
             order: 0,
@@ -71,7 +67,6 @@ const Administration: React.FC = () => {
                     label: 'Manage Users',
                     path: ROUTE_ADMINISTRATION_MANAGE_USERS,
                     component: Users,
-                    adminOnly: false,
                 },
             ],
             order: 0,
@@ -83,7 +78,6 @@ const Administration: React.FC = () => {
                     label: 'SAML Configuration',
                     path: ROUTE_ADMINISTRATION_SAML_CONFIGURATION,
                     component: SAMLConfiguration,
-                    adminOnly: false,
                 },
             ],
             order: 0,
@@ -100,36 +94,15 @@ const Administration: React.FC = () => {
                     label: 'Early Access Features',
                     path: ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
                     component: EarlyAccessFeatures,
-                    adminOnly: false,
                 },
             ],
             order: 1,
         },
     ];
 
-    const { checkAllPermissions } = usePermissions();
-
-    // Checking these for now because the only route we are currently hiding is to the configuration page.
-    // In practice, this will permit Administrators and Power User roles only.
-    const hasAdminPermissions = checkAllPermissions([
-        Permission.APP_READ_APPLICATION_CONFIGURATION,
-        Permission.APP_WRITE_APPLICATION_CONFIGURATION,
-    ]);
-
-    // Filter adminOnly links from the data we pass to the sidebar if a user does not have the correct permissions
-    const adminFilteredSections = sections
-        .map((section) => {
-            const filteredItems = section.items.filter((item) => !item.adminOnly || hasAdminPermissions);
-            return {
-                ...section,
-                items: filteredItems,
-            };
-        })
-        .filter((section) => section.items.length !== 0);
-
     return (
         <Box display='flex' minHeight='100%'>
-            <LeftNav sections={adminFilteredSections} />
+            <LeftNav sections={sections} />
             <Box flexGrow={1} position='relative' minWidth={0}>
                 <main>
                     <Container maxWidth='xl'>
