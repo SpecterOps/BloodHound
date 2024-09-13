@@ -397,7 +397,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	var (
 		startNode  *graph.Node
 		endNode    *graph.Node
-		startNodes graph.NodeSet
+		startNodes = graph.NodeSet{}
 
 		traversalInst            = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		paths                    = graph.PathSet{}
@@ -435,7 +435,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
 			return err
 		} else {
-			startNodes = nodeSet
+			startNodes.AddSet(nodeSet)
 			return nil
 		}
 	}); err != nil {
