@@ -2684,6 +2684,75 @@ func (s *ESC9aHarnessVictim) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.DC)
 }
 
+type ESC9aHarnessAuthUsers struct {
+	CertTemplate1 *graph.Node
+	DC            *graph.Node
+	Domain        *graph.Node
+	EnterpriseCA  *graph.Node
+	Group0        *graph.Node
+	Group1        *graph.Node
+	Group2        *graph.Node
+	Group3        *graph.Node
+	Group4        *graph.Node
+	NTAuthStore   *graph.Node
+	RootCA        *graph.Node
+	User1         *graph.Node
+	User2         *graph.Node
+	User3         *graph.Node
+	User4         *graph.Node
+}
+
+func (s *ESC9aHarnessAuthUsers) Setup(graphTestContext *GraphTestContext) {
+	domainSid := RandomDomainSID()
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid, CertTemplateData{
+		ApplicationPolicies:     []string{},
+		AuthenticationEnabled:   true,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           []string{},
+		EnrolleeSuppliesSubject: false,
+		NoSecurityExtension:     true,
+		RequiresManagerApproval: false,
+		SchemaVersion:           1,
+		SubjectAltRequireEmail:  false,
+		SubjectAltRequireSPN:    false,
+		SubjectAltRequireUPN:    true,
+	})
+	s.DC = graphTestContext.NewActiveDirectoryComputer("DC", domainSid)
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
+	s.EnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA", domainSid)
+	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Authenticated Users", domainSid)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid)
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSid)
+	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid)
+	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
+	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid)
+	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", domainSid)
+	s.User3 = graphTestContext.NewActiveDirectoryUser("User3", domainSid)
+	s.User4 = graphTestContext.NewActiveDirectoryUser("User4", domainSid)
+	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA, s.RootCA, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.EnterpriseCA, s.NTAuthStore, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.DC, s.Domain, ad.DCFor)
+	graphTestContext.NewRelationship(s.Group0, s.EnterpriseCA, ad.Enroll)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.User1, s.CertTemplate1, ad.GenericAll)
+	graphTestContext.NewRelationship(s.User2, s.CertTemplate1, ad.AllExtendedRights)
+	graphTestContext.NewRelationship(s.User3, s.CertTemplate1, ad.GenericWrite)
+	graphTestContext.NewRelationship(s.User4, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Group1, s.User1, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group2, s.User2, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group3, s.User3, ad.GenericAll)
+	graphTestContext.NewRelationship(s.Group4, s.User4, ad.GenericAll)
+
+	s.DC.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
+	graphTestContext.UpdateNode(s.DC)
+	s.Group0.Properties.Set(common.ObjectID.String(), "TEST.LOCAL-S-1-5-11")
+	graphTestContext.UpdateNode(s.Group0)
+}
+
 type ESC9aHarnessECA struct {
 	CertTemplate1 *graph.Node
 	CertTemplate3 *graph.Node
@@ -8320,6 +8389,7 @@ type HarnessDetails struct {
 	ESC9aHarnessDC1                                 ESC9aHarnessDC1
 	ESC9aHarnessDC2                                 ESC9aHarnessDC2
 	ESC9aHarnessVictim                              ESC9aHarnessVictim
+	ESC9aHarnessAuthUsers                           ESC9aHarnessAuthUsers
 	ESC9aHarnessECA                                 ESC9aHarnessECA
 	ESC9bPrincipalHarness                           ESC9bPrincipalHarness
 	ESC9bHarness1                                   ESC9bHarness1
