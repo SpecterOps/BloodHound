@@ -14,5 +14,8 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
-INSERT INTO parameters (key, name, description, value, created_at, updated_at) 
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
 VALUES ('analysis.citrix_rdp_support', 'Citrix RDP Support', 'This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a ''Direct Access Users'' local group will assume that Citrix is installed and CanRDP edges will require membership of both ''Direct Access Users'' and ''Remote Desktop Users'' local groups on the computer.', '{"enabled": false}',current_timestamp,current_timestamp) ON CONFLICT DO NOTHING;
+
+-- Grant the ReadOnly user SavedQueriesRead permissions
+INSERT INTO roles_permissions (role_id, permission_id) VALUES (3, 15)
