@@ -14,5 +14,14 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- Add Citrix RDP
 INSERT INTO parameters (key, name, description, value, created_at, updated_at) 
 VALUES ('analysis.citrix_rdp_support', 'Citrix RDP Support', 'This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a ''Direct Access Users'' local group will assume that Citrix is installed and CanRDP edges will require membership of both ''Direct Access Users'' and ''Remote Desktop Users'' local groups on the computer.', '{"enabled": false}',current_timestamp,current_timestamp) ON CONFLICT DO NOTHING;
+
+-- Add Prune TTLs
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('prune.ttl', 'Prune Retention TTL Configuration Parameters', 'This configuration parameter sets the retention TTLs during analysis pruning.', '{"base_ttl": "P7D", "has_session_edge_ttl": "P3D"}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+
+-- Add Reconciliation to parameters and remove from feature_flags
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('analysis.reconciliation', 'Reconciliation', 'This configuration parameter enables / disables reconciliation during analysis.', format('{"enabled": %s}', (SELECT COALESCE((SELECT enabled FROM feature_flags WHERE key = 'reconciliation'), TRUE))::text)::json, current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+-- must occur after insert to ensure reconciliation flag is set to whatever current value is
+DELETE FROM feature_flags WHERE key = 'reconciliation';

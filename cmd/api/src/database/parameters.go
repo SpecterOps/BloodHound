@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -19,28 +19,11 @@ package database
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
-func (s *BloodhoundDB) GetFlag(ctx context.Context, id int32) (appcfg.FeatureFlag, error) {
-	var flag appcfg.FeatureFlag
-	return flag, CheckError(s.db.WithContext(ctx).Find(&flag, id))
-}
-
-func (s *BloodhoundDB) GetFlagByKey(ctx context.Context, key string) (appcfg.FeatureFlag, error) {
-	var flag appcfg.FeatureFlag
-	return flag, CheckError(s.db.WithContext(ctx).Where("key = ?", key).First(&flag))
-}
-
-func (s *BloodhoundDB) GetAllFlags(ctx context.Context) ([]appcfg.FeatureFlag, error) {
-	var flags []appcfg.FeatureFlag
-	return flags, CheckError(s.db.WithContext(ctx).Find(&flags))
-}
-
-func (s *BloodhoundDB) SetFlag(ctx context.Context, flag appcfg.FeatureFlag) error {
-	return CheckError(s.db.WithContext(ctx).Save(&flag))
-}
 
 func (s *BloodhoundDB) GetAllConfigurationParameters(ctx context.Context) (appcfg.Parameters, error) {
 	var appConfig appcfg.Parameters
@@ -53,8 +36,15 @@ func (s *BloodhoundDB) GetConfigurationParameter(ctx context.Context, parameterK
 }
 
 func (s *BloodhoundDB) SetConfigurationParameter(ctx context.Context, parameter appcfg.Parameter) error {
-	return CheckError(s.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "key"}},
-		DoUpdates: clause.AssignmentColumns([]string{"value"}),
-	}).Create(&parameter))
+	auditEntry := model.AuditEntry{
+		Action: model.AuditLogActionUpdateParameter,
+		Model:  &parameter, // Pointer is required to ensure success log contains updated fields after transaction
+	}
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(s.db.WithContext(ctx).Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "key"}},
+			DoUpdates: clause.AssignmentColumns([]string{"value"}),
+		}).Create(&parameter))
+	})
 }

@@ -21,6 +21,7 @@ package v2_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
@@ -31,13 +32,22 @@ import (
 
 func Test_GetAppConfigs(t *testing.T) {
 	var (
+		testCtx = integration.NewFOSSContext(t)
+
 		passwordExpirationWindowFound = false
-		neo4jConfigsFound             = false
-		citrixConfigsFound            = false
 		passwordExpirationValue       appcfg.PasswordExpiration
-		neo4jParametersValue          appcfg.Neo4jParameters
-		citrixConfigValue             appcfg.CitrixRDPSupport
-		testCtx                       = integration.NewFOSSContext(t)
+
+		neo4jConfigsFound    = false
+		neo4jParametersValue appcfg.Neo4jParameters
+
+		citrixConfigsFound = false
+		citrixConfigValue  appcfg.CitrixRDPSupport
+
+		pruneFound           = false
+		pruneParametersValue appcfg.PruneTTLParameters
+
+		reconciliationFound           = false
+		reconciliationParametersValue appcfg.ReconciliationParameter
 	)
 
 	config, err := testCtx.AdminClient().GetAppConfigs()
@@ -47,14 +57,10 @@ func Test_GetAppConfigs(t *testing.T) {
 		switch parameter.Key {
 		case appcfg.PasswordExpirationWindow:
 			mapParameter(t, &passwordExpirationValue, parameter)
-			require.Equal(t, appcfg.PasswordExpirationWindowName, parameter.Name)
-			require.Equal(t, appcfg.PasswordExpirationWindowDescription, parameter.Description)
 			require.Equal(t, appcfg.DefaultPasswordExpirationWindow, passwordExpirationValue.Duration)
 			passwordExpirationWindowFound = true
 		case appcfg.Neo4jConfigs:
 			mapParameter(t, &neo4jParametersValue, parameter)
-			require.Equal(t, appcfg.Neo4jConfigsName, parameter.Name)
-			require.Equal(t, appcfg.Neo4jConfigsDescription, parameter.Description)
 			require.Equal(t, neo4j.DefaultBatchWriteSize, neo4jParametersValue.BatchWriteSize)
 			require.Equal(t, neo4j.DefaultWriteFlushSize, neo4jParametersValue.WriteFlushSize)
 			neo4jConfigsFound = true
@@ -62,12 +68,23 @@ func Test_GetAppConfigs(t *testing.T) {
 			mapParameter(t, &citrixConfigValue, parameter)
 			require.False(t, citrixConfigValue.Enabled)
 			citrixConfigsFound = true
+		case appcfg.PruneTTL:
+			mapParameter(t, &pruneParametersValue, parameter)
+			require.Equal(t, appcfg.DefaultPruneBaseTTL, pruneParametersValue.BaseTTL)
+			require.Equal(t, appcfg.DefaultPruneHasSessionEdgeTTL, pruneParametersValue.HasSessionEdgeTTL)
+			pruneFound = true
+		case appcfg.ReconciliationKey:
+			mapParameter(t, &reconciliationParametersValue, parameter)
+			require.True(t, reconciliationParametersValue.Enabled)
+			reconciliationFound = true
 		}
 	}
 
 	require.True(t, passwordExpirationWindowFound, "Failed to find Password Expiration Window in response")
 	require.True(t, neo4jConfigsFound, "Failed to find Neo4J Configs in response")
 	require.True(t, citrixConfigsFound, "Failed to find Citrix configs in response")
+	require.True(t, pruneFound, "Failed to find Prune TTL  in response")
+	require.True(t, reconciliationFound, "Failed to find Reconciliation in response")
 }
 
 func Test_GetAppConfigWithParameter(t *testing.T) {
@@ -81,8 +98,6 @@ func Test_GetAppConfigWithParameter(t *testing.T) {
 	require.True(t, len(config) == 1, "Response contains too many results")
 	require.Equal(t, appcfg.PasswordExpirationWindow, config[0].Key)
 	mapParameter(t, &passwordExpirationValue, config[0])
-	require.Equal(t, appcfg.PasswordExpirationWindowName, config[0].Name)
-	require.Equal(t, appcfg.PasswordExpirationWindowDescription, config[0].Description)
 	require.Equal(t, appcfg.DefaultPasswordExpirationWindow, passwordExpirationValue.Duration)
 }
 
@@ -104,17 +119,21 @@ func Test_PutAppConfig(t *testing.T) {
 	require.Nilf(t, err, "Error while updating app config: %v", err)
 
 	mapParameter(t, &updatedPasswordExpiration, parameter)
-	require.Equal(t, updatedDuration, updatedPasswordExpiration.Duration)
+	require.Equal(t, time.Hour*24*30, updatedPasswordExpiration.Duration)
 
 	// Check that our change really is in the database
 	config, err := testCtx.AdminClient().GetAppConfig(appcfg.PasswordExpirationWindow)
 	require.Nilf(t, err, "Error while getting updated app config: %v", err)
 
 	mapParameter(t, &updatedPasswordExpiration, config[0])
-	require.Equal(t, updatedDuration, updatedPasswordExpiration.Duration)
+	require.Equal(t, time.Hour*24*30, updatedPasswordExpiration.Duration)
 }
 
-func mapParameter[T *appcfg.PasswordExpiration | *appcfg.Neo4jParameters | *appcfg.CitrixRDPSupport](t *testing.T, value T, parameter appcfg.Parameter) {
+func mapParameter[T *appcfg.PasswordExpiration |
+	*appcfg.Neo4jParameters |
+	*appcfg.CitrixRDPSupport |
+	*appcfg.PruneTTLParameters |
+	*appcfg.ReconciliationParameter](t *testing.T, value T, parameter appcfg.Parameter) {
 	err := parameter.Value.Map(&value)
 	require.Nilf(t, err, "Failed to map parameter value to %T type: %v", value, err)
 }

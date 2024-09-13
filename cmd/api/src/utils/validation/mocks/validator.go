@@ -23,6 +23,7 @@ package mocks
 import (
 	reflect "reflect"
 
+	utils "github.com/specterops/bloodhound/src/utils"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -50,10 +51,10 @@ func (m *MockValidator) EXPECT() *MockValidatorMockRecorder {
 }
 
 // Validate mocks base method.
-func (m *MockValidator) Validate(arg0 interface{}) []error {
+func (m *MockValidator) Validate(arg0 interface{}) utils.Errors {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Validate", arg0)
-	ret0, _ := ret[0].([]error)
+	ret0, _ := ret[0].(utils.Errors)
 	return ret0
 }
 
