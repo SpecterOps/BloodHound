@@ -17,5 +17,5 @@
 INSERT INTO parameters (key, name, description, value, created_at, updated_at)
 VALUES ('analysis.citrix_rdp_support', 'Citrix RDP Support', 'This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a ''Direct Access Users'' local group will assume that Citrix is installed and CanRDP edges will require membership of both ''Direct Access Users'' and ''Remote Desktop Users'' local groups on the computer.', '{"enabled": false}',current_timestamp,current_timestamp) ON CONFLICT DO NOTHING;
 
--- Grant the ReadOnly user SavedQueriesRead permissions
-INSERT INTO roles_permissions (role_id, permission_id) VALUES (3, 15)
+-- Grant the Read-Only user SavedQueriesRead permissions
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Read-Only'), (SELECT id FROM permissions WHERE permissions.authority  = 'saved_queries'  and permissions.name = 'Read')) ON CONFLICT DO NOTHING;
