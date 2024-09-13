@@ -22,7 +22,7 @@ const BloodHoundConfiguration = () => {
         <PageWithTitle
             title='Bloodhound Configuration'
             pageDescription={
-                <Typography variant='body2'>
+                <Typography variant='body2' paragraph>
                     Modify the configuration of your BloodHound tenant. See our{' '}
                     <Link href='https://support.bloodhoundenterprise.io/hc/en-us/articles/28947871870363'>
                         documentation

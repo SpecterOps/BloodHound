@@ -34,7 +34,7 @@ const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, futureS
     return (
         <Dialog
             open={open}
-            maxWidth='sm'
+            maxWidth='md'
             aria-labelledby='citrix-rdp-alert-dialog-title'
             aria-describedby='citrix-rdp-alert-dialog-description'>
             <DialogTitle id='citrix-rdp-alert-dialog-title' sx={{ fontSize: '20px' }}>
