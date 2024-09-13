@@ -77,17 +77,18 @@ func ResolveAllGroupMemberships(ctx context.Context, db graph.Database, addition
 				} else {
 					var nextSegments []*graph.IDSegment
 
-					if err := nextQuery.FetchTriples(func(cursor graph.Cursor[graph.RelationshipTripleResult]) error {
-						for nextTriple := range cursor.Chan() {
-							if traversalMap.CheckedAdd(nextTriple.StartID.Uint32()) {
-								nextSegments = append(nextSegments, segment.Descend(nextTriple.StartID, nextTriple.ID))
-							} else {
-								memberships.AddShortcut(segment.Descend(nextTriple.StartID, nextTriple.ID))
+					if err := nextQuery.FetchTriples(
+						func(cursor graph.Cursor[graph.RelationshipTripleResult]) error {
+							for nextTriple := range cursor.Chan() {
+								if traversalMap.CheckedAdd(nextTriple.StartID.Uint32()) {
+									nextSegments = append(nextSegments, segment.Descend(nextTriple.StartID, nextTriple.ID))
+								} else {
+									memberships.AddShortcut(segment.Descend(nextTriple.StartID, nextTriple.ID))
+								}
 							}
-						}
 
-						return cursor.Error()
-					}); err != nil {
+							return cursor.Error()
+						}); err != nil {
 						return nil, err
 					}
 
