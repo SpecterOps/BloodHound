@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Typography } from '@mui/material';
+import { Box, Link, Typography } from '@mui/material';
 import { PageWithTitle, CitrixRDPConfiguration } from 'bh-shared-ui';
 
 const BloodHoundConfiguration = () => {
@@ -22,10 +22,12 @@ const BloodHoundConfiguration = () => {
         <PageWithTitle
             title='Bloodhound Configuration'
             pageDescription={
-                <Typography variant='body2' paragraph>
-                    Brief Description of the Feature Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                    eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-                    exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                <Typography variant='body2'>
+                    Modify the configuration of your BloodHound tenant. See our{' '}
+                    <Link href='https://support.bloodhoundenterprise.io/hc/en-us/articles/28947871870363'>
+                        documentation
+                    </Link>{' '}
+                    for more details on each option.
                 </Typography>
             }>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
