@@ -94,6 +94,8 @@ func (s Resources) ListAuditLogs(response http.ResponseWriter, request *http.Req
 		}
 
 		queryParams := request.URL.Query()
+
+		// Note: Handling both 'skip' and 'offset' query parameters to maintain backward compatibility
 		if queryParams.Has(model.PaginationQueryParameterSkip) {
 			if skip, err = ParseSkipQueryParameter(queryParams, 0); err != nil {
 				api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
@@ -104,8 +106,6 @@ func (s Resources) ListAuditLogs(response http.ResponseWriter, request *http.Req
 				api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, offsetQueryParam, err), response)
 				return
 			}
-		} else {
-			skip = 0
 		}
 
 		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
