@@ -28,7 +28,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
   app-db:
-    image: docker.io/library/postgres:13.2
+    image: docker.io/library/postgres:16.1
     environment:
       - POSTGRES_USER=${BH_POSTGRES_USER:-bloodhound}
       - POSTGRES_PASSWORD=${BH_POSTGRES_PASSWORD:-bloodhoundcommunityedition}
