@@ -20,9 +20,9 @@ allOf:
   - type: object
     properties:
       shared_to_user_id:
+        readOnly: true
         allOf:
           - $ref: './null.uuid.yaml'
-          - readOnly: true
       query_id:
         type: integer
         format: int64
