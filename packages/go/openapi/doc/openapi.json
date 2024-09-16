@@ -205,19 +205,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "oneOf": [
-                        {
-                          "$ref": "#/components/schemas/model.user"
-                        },
-                        {
-                          "$ref": "#/components/schemas/model.client"
-                        }
-                      ]
-                    }
-                  }
+                  "$ref": "#/components/schemas/api.response.authenticated-requester"
                 }
               }
             }
@@ -9373,32 +9361,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/api.response.pagination"
-                    },
-                    {
-                      "$ref": "#/components/schemas/api.response.time-window"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "data": {
-                          "type": "array",
-                          "items": {
-                            "oneOf": [
-                              {
-                                "$ref": "#/components/schemas/model.ad-data-quality-aggregation"
-                              },
-                              {
-                                "$ref": "#/components/schemas/model.azure-data-quality-aggregation"
-                              }
-                            ]
-                          }
-                        }
-                      }
-                    }
-                  ]
+                  "$ref": "#/components/schemas/api.response.data-quality-platform-aggregate"
                 }
               }
             }
@@ -12574,19 +12537,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "oneOf": [
-                        {
-                          "$ref": "#/components/schemas/model.list-finding"
-                        },
-                        {
-                          "$ref": "#/components/schemas/model.relationship-finding"
-                        }
-                      ]
-                    }
-                  }
+                  "$ref": "#/components/schemas/api.response.finding"
                 }
               }
             }
@@ -13817,6 +13768,21 @@
           }
         ]
       },
+      "api.response.authenticated-requester": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/model.user"
+              },
+              {
+                "$ref": "#/components/schemas/model.client"
+              }
+            ]
+          }
+        }
+      },
       "model.saml-provider": {
         "allOf": [
           {
@@ -14786,12 +14752,10 @@
             "type": "object",
             "properties": {
               "shared_to_user_id": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.uuid"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -15071,6 +15035,34 @@
               "run_id": {
                 "type": "string",
                 "format": "uuid"
+              }
+            }
+          }
+        ]
+      },
+      "api.response.data-quality-platform-aggregate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/api.response.pagination"
+          },
+          {
+            "$ref": "#/components/schemas/api.response.time-window"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/model.ad-data-quality-aggregation"
+                    },
+                    {
+                      "$ref": "#/components/schemas/model.azure-data-quality-aggregation"
+                    }
+                  ]
+                }
               }
             }
           }
@@ -15476,6 +15468,21 @@
             }
           }
         ]
+      },
+      "api.response.finding": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/model.list-finding"
+              },
+              {
+                "$ref": "#/components/schemas/model.relationship-finding"
+              }
+            ]
+          }
+        }
       },
       "model.risk-posture-stat": {
         "allOf": [
