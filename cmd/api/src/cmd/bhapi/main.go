@@ -66,6 +66,7 @@ func main() {
 		initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
 			Configuration: cfg,
 			DBConnector:   services.ConnectDatabases,
+			PreEntrypoint: services.PreEntrypoint,
 			Entrypoint:    services.Entrypoint,
 		}
 

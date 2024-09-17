@@ -21,17 +21,15 @@ import (
 	"fmt"
 	"time"
 
-	schema "github.com/specterops/bloodhound/graphschema"
-	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/src/bootstrap"
-	"github.com/specterops/bloodhound/src/queries"
-
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	schema "github.com/specterops/bloodhound/graphschema"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/registration"
 	"github.com/specterops/bloodhound/src/api/router"
 	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/daemons"
 	"github.com/specterops/bloodhound/src/daemons/api/bhapi"
@@ -40,6 +38,7 @@ import (
 	"github.com/specterops/bloodhound/src/daemons/gc"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/src/queries"
 )
 
 // ConnectPostgres initializes a connection to PG, and returns errors if any
@@ -65,6 +64,13 @@ func ConnectDatabases(ctx context.Context, cfg config.Configuration) (bootstrap.
 
 		return connections, nil
 	}
+}
+
+// PreEntrypoint Word of caution: These daemons will be launched prior to any migration starting
+func PreEntrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
+	return []daemons.Daemon{
+		toolapi.NewDaemon(ctx, connections, cfg, schema.DefaultGraphSchema()),
+	}, nil
 }
 
 func Entrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
@@ -111,7 +117,6 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		return []daemons.Daemon{
 			bhapi.NewDaemon(cfg, routerInst.Handler()),
-			toolapi.NewDaemon(ctx, connections, cfg, schema.DefaultGraphSchema()),
 			gc.NewDataPruningDaemon(connections.RDMS),
 			datapipeDaemon,
 		}, nil
