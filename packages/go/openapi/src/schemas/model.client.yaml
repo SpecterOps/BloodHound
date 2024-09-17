@@ -43,33 +43,33 @@ allOf:
         items:
           $ref: './model.client-schedule.yaml'
       token:
+        readOnly: true
         allOf:
           - $ref: './model.auth-token.yaml'
-          - readOnly: true
       current_job_id:
+        readOnly: true
         allOf:
           - $ref: './null.int64.yaml'
-          - readOnly: true
       current_job:
+        readOnly: true
         allOf:
           - $ref: './model.client-scheduled-job.yaml'
-          - readOnly: true
       completed_job_count:
         type: integer
         format: int32
         readOnly: true
       domain_controller:
+        readOnly: true
         allOf:
           - $ref: './null.string.yaml'
-          - readOnly: true
       version:
         type: string
         readOnly: true
       user_sid:
+        readOnly: true
         allOf:
           - $ref: './null.string.yaml'
-          - readOnly: true
       type:
+        readOnly: true
         allOf:
           - $ref: './enum.client-type.yaml'
-          - readOnly: true

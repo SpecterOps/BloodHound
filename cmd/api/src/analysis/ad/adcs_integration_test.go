@@ -21,6 +21,7 @@ package ad_test
 
 import (
 	"context"
+	"testing"
 
 	"github.com/specterops/bloodhound/analysis"
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
@@ -29,8 +30,6 @@ import (
 
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
-
-	"testing"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
@@ -61,7 +60,7 @@ func TestADCSESC1(t *testing.T) {
 
 				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
 					operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						if err := ad2.PostADCSESC1(ctx, tx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
+						if err := ad2.PostADCSESC1(ctx, outC, groupExpansions, innerEnterpriseCA, innerDomain, cache); err != nil {
 							t.Logf("failed post processing for %s: %v", ad.ADCSESC1.String(), err)
 						}
 						return nil

@@ -20,30 +20,28 @@ allOf:
   - type: object
     properties:
       saml_provider_id:
+        readOnly: true
         allOf:
           - $ref: './null.int32.yaml'
-          - readOnly: true
       AuthSecret:
+        readOnly: true
         allOf:
           - $ref: './model.auth-secret.yaml'
-          - readOnly: true
       roles:
         type: array
         readOnly: true
         items:
           $ref: './model.role.yaml'
       first_name:
+        readOnly: true
         allOf:
           - $ref: './null.string.yaml'
-          - readOnly: true
       last_name:
-        allOf:
-          - $ref: './null.string.yaml'
-          - readOnly: false
+          $ref: './null.string.yaml'
       email_address:
+        readOnly: true
         allOf:
           - $ref: './null.string.yaml'
-          - readOnly: true
       principal_name:
         type: string
         readOnly: true

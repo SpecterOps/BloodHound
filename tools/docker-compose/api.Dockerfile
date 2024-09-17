@@ -17,8 +17,8 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.4.1
-ARG AZUREHOUND_VERSION=v2.1.9
+ARG SHARPHOUND_VERSION=v2.5.6
+ARG AZUREHOUND_VERSION=v2.2.1
 
 ########
 # Package other assets
@@ -70,7 +70,7 @@ VOLUME [ "/go/pkg/mod" ]
 
 RUN mkdir -p /bhapi/collectors/azurehound /bhapi/collectors/sharphound /bhapi/work
 RUN go install github.com/go-delve/delve/cmd/dlv@v1.23.0
-RUN go install github.com/cosmtrek/air@v1.44.0
+RUN go install github.com/air-verse/air@v1.52.3
 
 COPY --from=hound-builder /tmp/sharphound/sharphound-$SHARPHOUND_VERSION.zip /bhapi/collectors/sharphound/
 COPY --from=hound-builder /tmp/sharphound/sharphound-$SHARPHOUND_VERSION.zip.sha256 /bhapi/collectors/sharphound/

@@ -21,6 +21,8 @@ package validation
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/specterops/bloodhound/src/utils"
 )
 
 const tagName = "validate"
@@ -31,12 +33,17 @@ const (
 )
 
 type Validator interface {
-	Validate(value any) []error
+	Validate(value any) utils.Errors
 }
 
-func Validate(obj any) []error {
-	value := reflect.ValueOf(obj)
-	errs := []error{}
+func Validate(obj any) utils.Errors {
+	var errs utils.Errors
+	// Indirect protects value from panicing if a pointer is supplied
+	value := reflect.Indirect(reflect.ValueOf(obj))
+	// value.NumField below panics if not supplied a Struct
+	if reflect.TypeOf(value).Kind() != reflect.Struct {
+		return append(errs, fmt.Errorf(ErrorValidation, obj))
+	}
 
 	for i := 0; i < value.NumField(); i++ {
 		validatorTag := value.Type().Field(i).Tag.Get(tagName)
