@@ -56,7 +56,7 @@ const useStyles = makeStyles((theme) => ({
         backgroundColor: 'white',
         minHeight: '94px',
         maxHeight: '94px',
-        overflow: 'scroll',
+        overflow: 'auto',
         '@media (min-height: 720px)': {
             maxHeight: '276px',
         },
@@ -74,7 +74,7 @@ const useStyles = makeStyles((theme) => ({
         backgroundColor: '#002b36',
         minHeight: '94px',
         maxHeight: '94px',
-        overflow: 'scroll',
+        overflow: 'auto',
         '@media (min-height: 720px)': {
             maxHeight: '278px',
         },
@@ -167,7 +167,7 @@ const CypherSearch = () => {
 
     return (
         <>
-            <Box display='flex' flexDirection='column' height='100%' overflow='hidden'>
+            <Box display='flex' flexDirection='column' height='100%'>
                 <Box display={'flex'} gap={1} flexShrink={0}>
                     <Button
                         className={`${classes.button} ${classes.iconButton}`}
