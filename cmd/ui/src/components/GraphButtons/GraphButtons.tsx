@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
+import { faCropAlt, faEye } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, MenuItem } from '@mui/material';
-import { useSigma } from '@react-sigma/core';
+import { useSetSettings, useSigma } from '@react-sigma/core';
 import { GraphMenu, GraphButton, GraphButtonProps, exportToJson } from 'bh-shared-ui';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
@@ -46,6 +46,7 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
+    const setSettings = useSetSettings();
     const { assign: assignDagre } = layoutDagre(
         {
             graph: {
@@ -73,6 +74,33 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
         resetCamera(sigma);
     };
 
+    const showAllLabels = (): void => {
+        setSettings ({
+            renderLabels: true,
+            renderEdgeLabels: true,
+        })
+        resetCamera(sigma);
+    }
+
+    const hideAllLabels = (): void => {
+        setSettings ({
+            renderLabels: false,
+            renderEdgeLabels: false,
+        })
+        resetCamera(sigma);
+    }
+
+    const hideNodeLabels = (): void => {
+        setSettings({ renderLabels: false });
+        resetCamera(sigma);
+    }
+
+    const hideEdgeLabels = (): void => {
+        setSettings({ renderEdgeLabels: false });
+        resetCamera(sigma);
+    }
+
+
     const reset = (): void => {
         resetCamera(sigma);
     };
@@ -80,6 +108,13 @@ const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayout
     return (
         <Box display={'flex'} gap={1} mt={2} ml={2}>
             <GraphButton onClick={reset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
+
+            <GraphMenu label={<FontAwesomeIcon icon={faEye} />}>
+               <MenuItem onClick={showAllLabels}>Show all labels</MenuItem>
+               <MenuItem onClick={hideAllLabels}>Hide all labels</MenuItem>
+               <MenuItem onClick={hideNodeLabels}>Hide node labels</MenuItem>
+               <MenuItem onClick={hideEdgeLabels}>Hide edge labels</MenuItem>
+            </GraphMenu>
 
             <GraphMenu label='Layout'>
                 {sequential && <MenuItem onClick={runSequentialLayout}>Sequential</MenuItem>}
