@@ -57,6 +57,18 @@ func ParseSkipQueryParameter(params url.Values, defaultValue int) (int, error) {
 	}
 }
 
+func ParseSkipQueryParameterWithKey(params url.Values, key string, defaultValue int) (int, error) {
+    if param := params.Get(key); param == "" {
+        return defaultValue, nil
+    } else if skip, err := strconv.Atoi(param); err != nil {
+        return 0, fmt.Errorf("error converting %s value %v to int: %v", key, param, err)
+    } else if skip < 0 {
+        return 0, fmt.Errorf(utils.ErrorInvalidSkip, skip)
+    } else {
+        return skip, nil
+    }
+}
+
 func ParseLimitQueryParameter(params url.Values, defaultValue int) (int, error) {
 	if param := params.Get(model.PaginationQueryParameterLimit); param == "" {
 		return defaultValue, nil
