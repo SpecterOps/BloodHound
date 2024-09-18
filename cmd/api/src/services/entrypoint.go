@@ -66,8 +66,8 @@ func ConnectDatabases(ctx context.Context, cfg config.Configuration) (bootstrap.
 	}
 }
 
-// PreEntrypoint Word of caution: These daemons will be launched prior to any migration starting
-func PreEntrypoint(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
+// PreMigrationDaemons Word of caution: These daemons will be launched prior to any migration starting
+func PreMigrationDaemons(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) ([]daemons.Daemon, error) {
 	return []daemons.Daemon{
 		toolapi.NewDaemon(ctx, connections, cfg, schema.DefaultGraphSchema()),
 	}, nil

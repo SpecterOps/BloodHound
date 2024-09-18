@@ -36,9 +36,9 @@ type DatabaseConstructor[DBType database.Database, GraphType graph.Database] fun
 type InitializerLogic[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration, databaseConnections DatabaseConnections[DBType, GraphType]) ([]daemons.Daemon, error)
 
 type Initializer[DBType database.Database, GraphType graph.Database] struct {
-	Configuration config.Configuration
-	PreEntrypoint InitializerLogic[DBType, GraphType]
-	Entrypoint    InitializerLogic[DBType, GraphType]
+	Configuration       config.Configuration
+	PreMigrationDaemons InitializerLogic[DBType, GraphType]
+	Entrypoint          InitializerLogic[DBType, GraphType]
 	DBConnector   DatabaseConstructor[DBType, GraphType]
 }
 
@@ -70,8 +70,8 @@ func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handle
 	defer databaseConnections.Graph.Close(ctx)
 
 	// Daemons that start prior to blocking db migration
-	if s.PreEntrypoint != nil {
-		if daemonInstances, err := s.PreEntrypoint(ctx, s.Configuration, databaseConnections); err != nil {
+	if s.PreMigrationDaemons != nil {
+		if daemonInstances, err := s.PreMigrationDaemons(ctx, s.Configuration, databaseConnections); err != nil {
 			return fmt.Errorf("failed to start services: %w", err)
 		} else {
 			daemonManager.Start(ctx, daemonInstances...)
