@@ -16,6 +16,21 @@ BloodHound CE is created and maintained by the [BloodHound Enterprise Team](http
 ## Running BloodHound Community Edition
 Docker Compose is the easiest way to get up and running with BloodHound CE. Instructions below describe how to install and upgrade your deployment.
 
+### System Requirements
+BloodHound CE deploys in a traditional multi-tier container architecture consisting of databases, application, and UI layers. 
+
+**Minimum specifications:**
+
+- 4GB of RAM
+- 4 processor cores
+- 10GB hard disk space
+
+**For large environments (>50,000 users):**
+
+- 96GB of RAM
+- 12 processor cores
+- 50GB hard disk space
+
 ### Deploy BloodHound CE
 Deploying BloodHound CE quickly with the following steps:
 
