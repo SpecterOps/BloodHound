@@ -53,7 +53,7 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		} else {
 
 			var (
-				enterpriseCAEnrollers = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
+				enterpriseCAEnrollers   = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
 				certTemplateControllers = cache.GetCertTemplateControllers(certTemplate.ID)
 			)
 
