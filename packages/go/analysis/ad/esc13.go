@@ -40,7 +40,6 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	} else {
 		ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID)
 		for _, template := range publishedCertTemplates {
-			// *** how to check for just back half of error
 			if isValid, err := isCertTemplateValidForESC13(template); errors.Is(err, graph.ErrPropertyNotFound) {
 				log.Warnf("Checking esc13 cert template PostADCSESC13: %v", err)
 			} else if err != nil {
