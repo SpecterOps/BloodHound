@@ -21,6 +21,7 @@ package queries
 import (
 	"bytes"
 	"context"
+	e "errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -494,7 +495,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 			timeoutLog.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
 			timeoutLog.Msg("Neo4j timed out while executing cypher query")
 		} else {
-			log.Errorf("RawCypherQuery failed: %v", err)
+			log.Warnf("RawCypherQuery failed: %v", err)
 		}
 		return graphResponse, err
 	}
@@ -636,7 +637,9 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 		go func(delegateKey string, delegate any) {
 			defer waitGroup.Done()
 
-			if result, err := runEntityQuery(ctx, s.Graph, delegate, node, 0, 0); err != nil {
+			if result, err := runEntityQuery(ctx, s.Graph, delegate, node, 0, 0); e.Is(err, graph.ErrContextTimedOut) {
+				log.Warnf("Running entity query for key %s: %v", delegateKey, err)
+			} else if err != nil {
 				log.Errorf("Error running entity query for key %s: %v", delegateKey, err)
 				data.Store(delegateKey, 0)
 			} else {

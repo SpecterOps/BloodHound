@@ -19,8 +19,10 @@ package datapipe
 import (
 	"archive/zip"
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -214,7 +216,9 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 
 				if err := file.Close(); err != nil {
 					log.Errorf("Error closing ingest file %s: %v", filePath, err)
-				} else if err := os.Remove(filePath); err != nil {
+				} else if err := os.Remove(filePath); errors.Is(err, fs.ErrNotExist) {
+					log.Warnf("Removing ingest file %s: %v", filePath, err)
+				} else if err != nil {
 					log.Errorf("Error removing ingest file %s: %v", filePath, err)
 				}
 			}
@@ -249,7 +253,9 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 			log.Errorf("Failed to fetch job for ingest task %d: %v", ingestTask.ID, err)
 		}
 		total, failed, err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType)
-		if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			log.Warnf("Didnt process ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
+		} else if err != nil {
 			log.Errorf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
 		}
 

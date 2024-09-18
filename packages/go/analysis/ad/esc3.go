@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"sync"
@@ -140,7 +141,9 @@ func PostEnrollOnBehalfOf(certTemplates []*graph.Node, operation analysis.StatTr
 	versionTwoTemplates := make([]*graph.Node, 0)
 
 	for _, node := range certTemplates {
-		if version, err := node.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
+		if version, err := node.Properties.Get(ad.SchemaVersion.String()).Float64(); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Did not get schema version for cert template %d: %v", node.ID, err)
+		} else if err != nil {
 			log.Errorf("Error getting schema version for cert template %d: %v", node.ID, err)
 		} else {
 			if version == 1 {
@@ -187,11 +190,15 @@ func PostEnrollOnBehalfOf(certTemplates []*graph.Node, operation analysis.StatTr
 func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, allCertTemplates []*graph.Node) ([]analysis.CreatePostRelationshipJob, error) {
 	results := make([]analysis.CreatePostRelationshipJob, 0)
 	for _, certTemplateOne := range allCertTemplates {
-		if hasBadEku, err := certTemplateHasEku(certTemplateOne, EkuAnyPurpose); err != nil {
+		if hasBadEku, err := certTemplateHasEku(certTemplateOne, EkuAnyPurpose); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Didnt get EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
+		} else if err != nil {
 			log.Errorf("Error getting EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
 		} else if hasBadEku {
 			continue
-		} else if hasEku, err := certTemplateHasEku(certTemplateOne, EkuCertRequestAgent); err != nil {
+		} else if hasEku, err := certTemplateHasEku(certTemplateOne, EkuCertRequestAgent); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Didnt get EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
+		} else if err != nil {
 			log.Errorf("Error getting EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
 		} else if !hasEku {
 			continue
@@ -252,7 +259,9 @@ func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []
 
 	for _, certTemplateOne := range allCertTemplates {
 		//prefilter as much as we can first
-		if hasEku, err := certTemplateHasEkuOrAll(certTemplateOne, EkuCertRequestAgent, EkuAnyPurpose); err != nil {
+		if hasEku, err := certTemplateHasEkuOrAll(certTemplateOne, EkuCertRequestAgent, EkuAnyPurpose); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Error checking ekus for certtemplate %d: %v", certTemplateOne.ID, err)
+		} else if err != nil {
 			log.Errorf("Error checking ekus for certtemplate %d: %v", certTemplateOne.ID, err)
 		} else if !hasEku {
 			continue
@@ -305,12 +314,18 @@ func isStartCertTemplateValidESC3(template *graph.Node) bool {
 }
 
 func isEndCertTemplateValidESC3(template *graph.Node) bool {
-	if authEnabled, err := template.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
+	if authEnabled, err := template.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
+		log.Warnf("Didnt getting authenabled for cert template %d: %v", template.ID, err)
+		return false
+	} else if err != nil {
 		log.Errorf("Error getting authenabled for cert template %d: %v", template.ID, err)
 		return false
 	} else if !authEnabled {
 		return false
-	} else if reqManagerApproval, err := template.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
+	} else if reqManagerApproval, err := template.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
+		log.Warnf("Didnt getting reqManagerApproval for cert template %d: %v", template.ID, err)
+		return false
+	} else if err != nil {
 		log.Errorf("Error getting reqManagerApproval for cert template %d: %v", template.ID, err)
 		return false
 	} else if reqManagerApproval {

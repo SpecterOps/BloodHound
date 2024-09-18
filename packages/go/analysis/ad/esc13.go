@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/RoaringBitmap/roaring"
@@ -39,8 +40,11 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	} else {
 		ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID)
 		for _, template := range publishedCertTemplates {
-			if isValid, err := isCertTemplateValidForESC13(template); err != nil {
-				log.Errorf("Error checking esc13 cert template: %v", err)
+			// *** how to check for just back half of error
+			if isValid, err := isCertTemplateValidForESC13(template); errors.Is(err, graph.ErrPropertyNotFound) {
+				log.Warnf("Checking esc13 cert template PostADCSESC13: %v", err)
+			} else if err != nil {
+				log.Errorf("Error checking esc13 cert template PostADCSESC13: %v", err)
 			} else if !isValid {
 				continue
 			} else if groupNodes, err := getCertTemplateGroupLinks(template, tx); err != nil {
