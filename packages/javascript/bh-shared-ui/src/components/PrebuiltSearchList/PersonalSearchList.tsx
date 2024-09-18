@@ -62,7 +62,7 @@ export const PersonalSearchList: FC<{ clickHandler: (query: string) => void }> =
         <PrebuiltSearchList
             listSections={[
                 {
-                    subheader: 'User Saved Searches: ',
+                    subheader: 'User Saved Searches',
                     lineItems,
                 },
             ]}
