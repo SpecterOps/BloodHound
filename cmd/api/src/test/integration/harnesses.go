@@ -554,6 +554,7 @@ type RDPHarness struct {
 	DomainGroupC        *graph.Node
 	DomainGroupD        *graph.Node
 	DomainGroupE        *graph.Node
+	DomainGroupF        *graph.Node
 	RDPLocalGroup       *graph.Node
 	Computer            *graph.Node
 	RDPDomainUsersGroup *graph.Node
@@ -589,6 +590,7 @@ func (s *RDPHarness) Setup(testCtx *GraphTestContext) {
 	s.DomainGroupC = testCtx.NewActiveDirectoryGroup("Domain Group C", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.DomainGroupD = testCtx.NewActiveDirectoryGroup("Domain Group D", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.DomainGroupE = testCtx.NewActiveDirectoryGroup("Domain Group E", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.DomainGroupF = testCtx.NewActiveDirectoryGroup("Domain Group F", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 
 	testCtx.NewRelationship(s.EliUser, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
 	testCtx.NewRelationship(s.EliUser, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
@@ -601,8 +603,8 @@ func (s *RDPHarness) Setup(testCtx *GraphTestContext) {
 	testCtx.NewRelationship(s.JohnUser, s.RDPDomainUsersGroup, ad.MemberOf, DefaultRelProperties)
 	testCtx.NewRelationship(s.RohanUser, s.RDPDomainUsersGroup, ad.MemberOf, DefaultRelProperties)
 
-	testCtx.NewRelationship(s.DomainGroupB, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
-	testCtx.NewRelationship(s.RohanUser, s.DomainGroupB, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupF, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.RohanUser, s.DomainGroupF, ad.MemberOf, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.AndyUser, s.DomainGroupB, ad.MemberOf, DefaultRelProperties)
 	testCtx.NewRelationship(s.DomainGroupB, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
@@ -627,6 +629,111 @@ func (s *RDPHarness) Setup(testCtx *GraphTestContext) {
 	testCtx.NewRelationship(s.AlyxUser, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.RDPLocalGroup, s.Computer, ad.LocalToComputer, DefaultRelProperties)
+}
+
+type RDPHarnessWithCitrix struct {
+	IrshadUser *graph.Node
+	EliUser    *graph.Node
+	DillonUser *graph.Node
+	UliUser    *graph.Node
+	AlyxUser   *graph.Node
+	AndyUser   *graph.Node
+	RohanUser  *graph.Node
+	JohnUser   *graph.Node
+
+	LocalGroupA            *graph.Node
+	DomainGroupA           *graph.Node
+	DomainGroupB           *graph.Node
+	DomainGroupC           *graph.Node
+	DomainGroupD           *graph.Node
+	DomainGroupE           *graph.Node
+	DomainGroupF           *graph.Node
+	RDPLocalGroup          *graph.Node
+	DirectAccessUsersGroup *graph.Node
+	DomainUsersGroup       *graph.Node
+
+	Computer *graph.Node
+}
+
+func (s *RDPHarnessWithCitrix) Setup(testCtx *GraphTestContext) {
+	s.Computer = testCtx.NewActiveDirectoryComputer("WIN10", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.DomainUsersGroup = testCtx.NewActiveDirectoryGroup("Domain Users", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.RDPLocalGroup = testCtx.NewActiveDirectoryLocalGroup("Remote Desktop Users", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.DirectAccessUsersGroup = testCtx.NewActiveDirectoryLocalGroup("Direct Access Users", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+
+	rdpLocalGroupObjectID, _ := s.RDPLocalGroup.Properties.Get(common.ObjectID.String()).String()
+
+	s.RDPLocalGroup.Properties.Set(
+		common.ObjectID.String(),
+		rdpLocalGroupObjectID+adAnalysis.RDPGroupSuffix,
+	)
+	testCtx.UpdateNode(s.RDPLocalGroup)
+
+	// Users
+	s.IrshadUser = testCtx.NewActiveDirectoryUser("Irshad", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.EliUser = testCtx.NewActiveDirectoryUser("Eli", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.DillonUser = testCtx.NewActiveDirectoryUser("Dillon", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.UliUser = testCtx.NewActiveDirectoryUser("Uli", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.AlyxUser = testCtx.NewActiveDirectoryUser("Alyx", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.AndyUser = testCtx.NewActiveDirectoryUser("Andy", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.RohanUser = testCtx.NewActiveDirectoryUser("Rohan", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.JohnUser = testCtx.NewActiveDirectoryUser("John", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+
+	// Groups
+	s.LocalGroupA = testCtx.NewActiveDirectoryGroup("Local Group A", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.DomainGroupA = testCtx.NewActiveDirectoryGroup("Domain Group A", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.DomainGroupB = testCtx.NewActiveDirectoryGroup("Domain Group B", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.DomainGroupC = testCtx.NewActiveDirectoryGroup("Domain Group C", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.DomainGroupD = testCtx.NewActiveDirectoryGroup("Domain Group D", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.DomainGroupE = testCtx.NewActiveDirectoryGroup("Domain Group E", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.DomainGroupF = testCtx.NewActiveDirectoryGroup("Domain Group F", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+
+	testCtx.NewRelationship(s.EliUser, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.EliUser, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+
+	testCtx.NewRelationship(s.DomainGroupA, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupA, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+
+	testCtx.NewRelationship(s.JohnUser, s.DomainGroupA, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainUsersGroup, s.DomainGroupA, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.JohnUser, s.DomainUsersGroup, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.RohanUser, s.DomainUsersGroup, ad.MemberOf, DefaultRelProperties)
+
+	testCtx.NewRelationship(s.DomainGroupF, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.RohanUser, s.DomainGroupF, ad.MemberOf, DefaultRelProperties)
+
+	testCtx.NewRelationship(s.AndyUser, s.DomainGroupB, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupB, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupB, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+
+	testCtx.NewRelationship(s.IrshadUser, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.IrshadUser, s.DomainGroupD, ad.MemberOf, DefaultRelProperties)
+
+	testCtx.NewRelationship(s.DomainGroupD, s.DomainGroupE, ad.MemberOf, DefaultRelProperties)
+
+	testCtx.NewRelationship(s.DomainGroupE, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+
+	testCtx.NewRelationship(s.DomainGroupC, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.DillonUser, s.DomainGroupC, ad.MemberOf, DefaultRelProperties)
+	testCtx.NewRelationship(s.DillonUser, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+
+	testCtx.NewRelationship(s.UliUser, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.UliUser, s.LocalGroupA, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.LocalGroupA, s.Computer, ad.LocalToComputer, DefaultRelProperties)
+	testCtx.NewRelationship(s.LocalGroupA, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+
+	testCtx.NewRelationship(s.AlyxUser, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+
+	testCtx.NewRelationship(s.RDPLocalGroup, s.Computer, ad.LocalToComputer, DefaultRelProperties)
+
+	testCtx.NewRelationship(s.DirectAccessUsersGroup, s.Computer, ad.LocalToComputer, DefaultRelProperties)
+
+	// add users to the DAU local group
+	testCtx.NewRelationship(s.UliUser, s.DirectAccessUsersGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.RohanUser, s.DirectAccessUsersGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.IrshadUser, s.DirectAccessUsersGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupC, s.DirectAccessUsersGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
+
 }
 
 type GPOEnforcementHarness struct {
@@ -8032,6 +8139,7 @@ func (s *ESC10bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
+	RDPHarnessWithCitrix                            RDPHarnessWithCitrix
 	GPOEnforcement                                  GPOEnforcementHarness
 	Session                                         SessionHarness
 	LocalGroupSQL                                   LocalGroupHarness
