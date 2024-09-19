@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { FC } from 'react';
-import { Typography, Button, useTheme, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Typography, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
 
 type CitrixRDPConfirmDialogProps = {
     open: boolean;
@@ -29,8 +30,6 @@ const disabledDialogDescription =
     'Analysis has been removed with Citrix Configuration, this will result in BloodHound performing analysis to account for this change';
 
 const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, futureSwitchState, onCancel, onConfirm }) => {
-    const theme = useTheme();
-
     return (
         <Dialog
             open={open}
@@ -52,10 +51,10 @@ const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, futureS
                 </Typography>
             </DialogContent>
             <DialogActions>
-                <Button sx={{ color: theme.palette.button.secondary }} onClick={onCancel}>
+                <Button variant={'text'} onClick={onCancel}>
                     Cancel
                 </Button>
-                <Button sx={{ color: theme.palette.button.primary }} onClick={onConfirm}>
+                <Button variant={'text'} fontColor={'primary'} onClick={onConfirm}>
                     Confirm
                 </Button>
             </DialogActions>
