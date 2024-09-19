@@ -23,6 +23,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/specterops/bloodhound/bomenc"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/log"
@@ -165,7 +166,10 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 			} else if srcFile, err := f.Open(); err != nil {
 				errs.Add(fmt.Errorf("error opening file %s in archive %s: %v", f.Name, path, err))
 				failed++
-			} else if _, err := io.Copy(tempFile, srcFile); err != nil {
+			} else if normFile, err := bomenc.NormalizeToUTF8(srcFile); err != nil {
+				errs.Add(fmt.Errorf("error normalizing file %s to UTF8 in archive %s: %v", f.Name, path, err))
+				failed++
+			} else if _, err := io.Copy(tempFile, normFile); err != nil {
 				errs.Add(fmt.Errorf("error extracting file %s in archive %s: %v", f.Name, path, err))
 				failed++
 			} else if err := tempFile.Close(); err != nil {
