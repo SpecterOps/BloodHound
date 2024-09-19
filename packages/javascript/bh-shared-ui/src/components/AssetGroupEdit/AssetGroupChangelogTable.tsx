@@ -49,7 +49,7 @@ const AssetGroupChangelogTable: FC<{
                         </Button>
                     </Grid>
                     <Grid item>
-                        <Button size='small' onClick={onSubmit}>
+                        <Button size='small' onClick={onSubmit} type='submit'>
                             Confirm Changes
                         </Button>
                     </Grid>
