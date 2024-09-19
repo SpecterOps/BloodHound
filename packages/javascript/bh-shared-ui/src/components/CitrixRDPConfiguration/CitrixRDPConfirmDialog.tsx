@@ -40,7 +40,7 @@ const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, futureS
             <DialogTitle id='citrix-rdp-alert-dialog-title' sx={{ fontSize: '20px' }}>
                 {dialogTitle}
             </DialogTitle>
-            <DialogContent sx={{ paddingBottom: 0 }}>
+            <DialogContent id='citrix-rdp-alert-dialog-description' sx={{ paddingBottom: 0 }}>
                 <Typography sx={{ paddingBottom: '16px', whiteSpace: 'break-spaces', fontSize: '12px' }}>
                     {futureSwitchState ? enabledDialogDescription : disabledDialogDescription}
                 </Typography>
