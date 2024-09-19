@@ -147,7 +147,9 @@ const CreateSAMLProviderForm: React.FC<{
                     data-testid='create-saml-provider-dialog_button-close'>
                     Cancel
                 </Button>
-                <Button data-testid='create-saml-provider-dialog_button-save'>Submit</Button>
+                <Button data-testid='create-saml-provider-dialog_button-save' type='submit'>
+                    Submit
+                </Button>
             </DialogActions>
         </form>
     );
