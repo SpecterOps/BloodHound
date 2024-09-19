@@ -1046,7 +1046,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                 <>
                     <Typography variant='body2'>
                         With WriteOwner permission on a root CA, you can grant yourself ownership over the object to
-                        then grant yourself GenericAll. With GenericAll, you can make a rouge certificate trusted as a
+                        then grant yourself GenericAll. With GenericAll, you can make a rogue certificate trusted as a
                         root CA in the AD forest by adding the certificate in the root CA object's cACertificate
                         attribute. This action may enable you to perform an ADCS domain escalation.
                     </Typography>
@@ -1058,7 +1058,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     <Typography variant='body2'>
                         With WriteOwner permission on a NTAuth store, you can grant yourself ownership over the object
                         to then grant yourself GenericAll. With GenericAll, you can make an enterprise CA certificate
-                        trusted for NT (domain) authentication the AD forest by adding the certificate in the root CA
+                        trusted for NT (domain) authentication in the AD forest by adding the certificate in the root CA
                         object's cACertificate attribute. This action may enable you to perform an ADCS domain
                         escalation. This action may enable you to perform an ADCS domain escalation.
                     </Typography>
@@ -1070,7 +1070,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     <Typography variant='body2'>
                         With WriteOwner permission on an issuance policy object, you can grant yourself ownership over
                         the object to then grant yourself GenericAll. With GenericAll, you create a OID group link to a
-                        targeted group by adding the groups distinguishedName in the msDS-OIDToGroupLink attribute of
+                        targeted group by adding the group's distinguishedName in the msDS-OIDToGroupLink attribute of
                         the issuance policy object. This action may enable you to gain membership of the group through
                         an ADCS ESC13 attack.
                     </Typography>

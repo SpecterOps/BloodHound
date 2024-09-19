@@ -891,7 +891,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                 <>
                     <Typography variant='body2'>
                         With WriteDacl permission over a root CA, you can grant yourself GenericAll. With GenericAll,
-                        you can make a rouge certificate trusted as a root CA in the AD forest by adding the certificate
+                        you can make a rogue certificate trusted as a root CA in the AD forest by adding the certificate
                         in the root CA object's cACertificate attribute. This action may enable you to perform an ADCS
                         domain escalation.
                     </Typography>
@@ -902,10 +902,10 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                 <>
                     <Typography variant='body2'>
                         With WriteDacl permission over a NTAuth store, you can grant yourself GenericAll. With
-                        GenericAll, you can make an enterprise CA certificate trusted for NT (domain) authentication the
-                        AD forest by adding the certificate in the root CA object's cACertificate attribute. This action
-                        may enable you to perform an ADCS domain escalation. This action may enable you to perform an
-                        ADCS domain escalation.
+                        GenericAll, you can make an enterprise CA certificate trusted for NT (domain) authentication in
+                        the AD forest by adding the certificate in the root CA object's cACertificate attribute. This
+                        action may enable you to perform an ADCS domain escalation. This action may enable you to
+                        perform an ADCS domain escalation.
                     </Typography>
                 </>
             );
