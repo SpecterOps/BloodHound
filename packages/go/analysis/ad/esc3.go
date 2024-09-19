@@ -36,8 +36,10 @@ import (
 
 func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca2, domain *graph.Node, cache ADCSCache) error {
 	results := cardinality.NewBitmap32()
-
-	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca2.ID); len(publishedCertTemplates) == 0 {
+	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
+		return nil
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca2.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else if collected, err := eca2.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
 		return fmt.Errorf("error getting enrollmentagentcollected for eca2 %d: %w", eca2.ID, err)
@@ -88,7 +90,9 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 							log.Errorf("Error getting delegated agents for cert template %d: %v", certTemplateTwo.ID, err)
 						} else {
 							for _, eca1 := range publishedECAs {
-								tempResults := CalculateCrossProductNodeSets(groupExpansions,
+								tempResults := CalculateCrossProductNodeSets(tx,
+									domainsid,
+									groupExpansions,
 									certTemplateEnrollersOne,
 									certTemplateEnrollersTwo,
 									cache.GetEnterpriseCAEnrollers(eca1.ID),
@@ -105,7 +109,9 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 						}
 					} else {
 						for _, eca1 := range publishedECAs {
-							tempResults := CalculateCrossProductNodeSets(groupExpansions,
+							tempResults := CalculateCrossProductNodeSets(tx,
+								domainsid,
+								groupExpansions,
 								certTemplateEnrollersOne,
 								certTemplateEnrollersTwo,
 								cache.GetEnterpriseCAEnrollers(eca1.ID),
@@ -389,7 +395,9 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		RETURN p1,p2,p3,p4,p5,p6,p7,p8
 	*/
 	var (
-		startNode *graph.Node
+		startNode  *graph.Node
+		endNode    *graph.Node
+		startNodes = graph.NodeSet{}
 
 		traversalInst            = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		paths                    = graph.PathSet{}
@@ -410,6 +418,8 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		var err error
 		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
 			return err
+		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
+			return err
 		} else {
 			return nil
 		}
@@ -417,46 +427,66 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	}
 
-	//Start by fetching all EnterpriseCA nodes that our user has Enroll rights on via group membership or directly (P4/P5)
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: ADCSESC3Path3Pattern().Do(func(terminal *graph.PathSegment) error {
-			enterpriseCANode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-			})
-
-			lock.Lock()
-			enterpriseCASegments[enterpriseCANode.ID] = append(enterpriseCASegments[enterpriseCANode.ID], terminal)
-			enterpriseCANodes.Add(enterpriseCANode.ID.Uint32())
-			lock.Unlock()
-
+	// Add startnode, Auth. Users, and Everyone to start nodes
+	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		log.Warnf("Error getting domain SID for domain %d: %v", endNode.ID, err)
+		return nil, err
+	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
+			return err
+		} else {
+			startNodes.AddSet(nodeSet)
 			return nil
-		}),
+		}
 	}); err != nil {
 		return nil, err
 	}
+	startNodes.Add(startNode)
+
+	//Start by fetching all EnterpriseCA nodes that our user has Enroll rights on via group membership or directly (P4/P5)
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: ADCSESC3Path3Pattern().Do(func(terminal *graph.PathSegment) error {
+				enterpriseCANode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+				})
+
+				lock.Lock()
+				enterpriseCASegments[enterpriseCANode.ID] = append(enterpriseCASegments[enterpriseCANode.ID], terminal)
+				enterpriseCANodes.Add(enterpriseCANode.ID.Uint32())
+				lock.Unlock()
+
+				return nil
+			}),
+		}); err != nil {
+			return nil, err
+		}
+	}
 
 	//Use the enterprise CA nodes we gathered to filter the first set of paths for P1
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: ADCSESC3Path1Pattern(enterpriseCANodes).Do(func(terminal *graph.PathSegment) error {
-			certTemplateNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
-			})
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: ADCSESC3Path1Pattern(enterpriseCANodes).Do(func(terminal *graph.PathSegment) error {
+				certTemplateNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+				})
 
-			lock.Lock()
-			path1CandidateSegments[certTemplateNode.ID] = append(path1CandidateSegments[certTemplateNode.ID], terminal)
+				lock.Lock()
+				path1CandidateSegments[certTemplateNode.ID] = append(path1CandidateSegments[certTemplateNode.ID], terminal)
 
-			// Check that CT is valid for user start nodes
-			userStartNode := startNode.Kinds.ContainsOneOf(ad.User)
-			if !userStartNode || certTemplateValidForUserVictim(certTemplateNode) {
-				path1CertTemplates.Add(certTemplateNode.ID.Uint32())
-			}
-			lock.Unlock()
+				// Check that CT is valid for user start nodes
+				userStartNode := startNode.Kinds.ContainsOneOf(ad.User)
+				if !userStartNode || certTemplateValidForUserVictim(certTemplateNode) {
+					path1CertTemplates.Add(certTemplateNode.ID.Uint32())
+				}
+				lock.Unlock()
 
-			return nil
-		})}); err != nil {
-		return nil, err
+				return nil
+			})}); err != nil {
+			return nil, err
+		}
 	}
 
 	//Find all cert templates we have EnrollOnBehalfOf from our first group of templates to prefilter again
@@ -481,21 +511,23 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	//Use our enterprise ca + candidate templates as filters for the third query (P2)
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: ADCSESC3Path2Pattern(edge.EndID, enterpriseCANodes, path2CandidateTemplates).Do(func(terminal *graph.PathSegment) error {
-			certTemplateNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
-			})
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: ADCSESC3Path2Pattern(edge.EndID, enterpriseCANodes, path2CandidateTemplates).Do(func(terminal *graph.PathSegment) error {
+				certTemplateNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+				})
 
-			lock.Lock()
-			path2CandidateSegments[certTemplateNode.ID] = append(path2CandidateSegments[certTemplateNode.ID], terminal)
-			path2CertTemplates.Add(certTemplateNode.ID.Uint32())
-			lock.Unlock()
+				lock.Lock()
+				path2CandidateSegments[certTemplateNode.ID] = append(path2CandidateSegments[certTemplateNode.ID], terminal)
+				path2CertTemplates.Add(certTemplateNode.ID.Uint32())
+				lock.Unlock()
 
-			return nil
-		})}); err != nil {
-		return nil, err
+				return nil
+			})}); err != nil {
+			return nil, err
+		}
 	}
 
 	//Manifest P6/P7 keyed to enterprise ca nodes
@@ -526,20 +558,22 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	//Manifest p8 keyed to certificate template nodes
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: ADCSESC3Path8Pattern(path2CandidateTemplates).Do(func(terminal *graph.PathSegment) error {
-			certTemplateNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
-			})
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: ADCSESC3Path8Pattern(path2CandidateTemplates).Do(func(terminal *graph.PathSegment) error {
+				certTemplateNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+				})
 
-			lock.Lock()
-			path8CandidateSegments[certTemplateNode.ID] = append(path8CandidateSegments[certTemplateNode.ID], terminal)
-			lock.Unlock()
-			return nil
-		}),
-	}); err != nil {
-		return nil, err
+				lock.Lock()
+				path8CandidateSegments[certTemplateNode.ID] = append(path8CandidateSegments[certTemplateNode.ID], terminal)
+				lock.Unlock()
+				return nil
+			}),
+		}); err != nil {
+			return nil, err
+		}
 	}
 
 	//EnrollOnBehalfOf is used to join P1 and P2, so we'll use it as the key

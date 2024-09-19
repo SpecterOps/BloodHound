@@ -183,12 +183,15 @@ func getLAPSSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions im
 		getChangesFilteredQuery = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesInFilteredSet)
 	)
 
-	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
+	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
+		return nil, err
+	} else if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
 		return nil, err
 	} else if getChangesFilteredNodes, err := ops.FetchStartNodes(getChangesFilteredQuery); err != nil {
 		return nil, err
 	} else {
-		results := CalculateCrossProductNodeSets(groupExpansions, getChangesNodes.Slice(), getChangesFilteredNodes.Slice())
+		results := CalculateCrossProductNodeSets(tx, domainsid, groupExpansions, getChangesNodes.Slice(), getChangesFilteredNodes.Slice())
 
 		return results, nil
 	}
@@ -200,12 +203,15 @@ func getDCSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions impa
 		getChangesAllQuery = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll)
 	)
 
-	if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
+	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
+		return nil, err
+	} else if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
 		return nil, err
 	} else if getChangesAllNodes, err := ops.FetchStartNodes(getChangesAllQuery); err != nil {
 		return nil, err
 	} else {
-		results := CalculateCrossProductNodeSets(groupExpansions, getChangesNodes.Slice(), getChangesAllNodes.Slice())
+		results := CalculateCrossProductNodeSets(tx, domainsid, groupExpansions, getChangesNodes.Slice(), getChangesAllNodes.Slice())
 
 		return results, nil
 	}
