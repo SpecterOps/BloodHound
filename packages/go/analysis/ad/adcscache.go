@@ -246,6 +246,8 @@ func hasWeakCertBindingInForest(tx graph.Transaction, domain *graph.Node) (bool,
 						continue
 					} else if strongCertBindingEnforcement == 0 || strongCertBindingEnforcement == 1 {
 						return true, nil
+					} else if strongCertBindingEnforcement == -1 { // We have confirmed the registry value does not exist. Compatibility mode is default.
+						return true, nil
 					}
 				}
 			}
