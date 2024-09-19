@@ -191,13 +191,13 @@ func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, a
 	results := make([]analysis.CreatePostRelationshipJob, 0)
 	for _, certTemplateOne := range allCertTemplates {
 		if hasBadEku, err := certTemplateHasEku(certTemplateOne, EkuAnyPurpose); errors.Is(err, graph.ErrPropertyNotFound) {
-			log.Warnf("Didnt get EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
+			log.Warnf("Did not get EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
 		} else if err != nil {
 			log.Errorf("Error getting EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
 		} else if hasBadEku {
 			continue
 		} else if hasEku, err := certTemplateHasEku(certTemplateOne, EkuCertRequestAgent); errors.Is(err, graph.ErrPropertyNotFound) {
-			log.Warnf("Didnt get EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
+			log.Warnf("Did not get EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
 		} else if err != nil {
 			log.Errorf("Error getting EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err)
 		} else if !hasEku {
@@ -315,7 +315,7 @@ func isStartCertTemplateValidESC3(template *graph.Node) bool {
 
 func isEndCertTemplateValidESC3(template *graph.Node) bool {
 	if authEnabled, err := template.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
-		log.Warnf("Didnt getting authenabled for cert template %d: %v", template.ID, err)
+		log.Warnf("Did not getting authenabled for cert template %d: %v", template.ID, err)
 		return false
 	} else if err != nil {
 		log.Errorf("Error getting authenabled for cert template %d: %v", template.ID, err)
@@ -323,7 +323,7 @@ func isEndCertTemplateValidESC3(template *graph.Node) bool {
 	} else if !authEnabled {
 		return false
 	} else if reqManagerApproval, err := template.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
-		log.Warnf("Didnt getting reqManagerApproval for cert template %d: %v", template.ID, err)
+		log.Warnf("Did not getting reqManagerApproval for cert template %d: %v", template.ID, err)
 		return false
 	} else if err != nil {
 		log.Errorf("Error getting reqManagerApproval for cert template %d: %v", template.ID, err)
