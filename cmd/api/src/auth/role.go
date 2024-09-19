@@ -48,6 +48,7 @@ func Roles() map[string]RoleTemplate {
 				permissions.AuthCreateToken,
 				permissions.AuthManageSelf,
 				permissions.GraphDBRead,
+				permissions.SavedQueriesRead,
 			},
 		},
 		RoleUploadOnly: {

@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/specterops/bloodhound/src/utils"
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
@@ -41,18 +42,18 @@ func TestRequiredValidator(t *testing.T) {
 
 	var cases = []struct {
 		Input  Foo
-		Errors []error
+		Errors utils.Errors
 	}{
-		{Foo{}, []error{stringError, intError, pointerError}[:]},
+		{Foo{}, utils.Errors{stringError, intError, pointerError}},
 		{Foo{someString, 1, &someString}, nil},
-		{Foo{someString, 0, &someString}, []error{intError}[:]},
+		{Foo{someString, 0, &someString}, utils.Errors{intError}},
 	}
 
 	for _, tc := range cases {
 		if errs := validation.Validate(tc.Input); errs != nil {
 			if tc.Errors == nil {
 				t.Errorf("For input: %v, expected errs to be nil: errs = %v\n", tc.Input, errs)
-			} else if len(errs) != len(tc.Errors) {
+			} else if errs.Error() != tc.Errors.Error() {
 				t.Errorf("For input: %v, got %v, want %v\n", tc.Input, errs, tc.Errors)
 			}
 		} else if tc.Errors != nil {

@@ -36,7 +36,7 @@ func NewRequiredError(value any) error {
 
 type RequiredValidator struct{}
 
-func (s RequiredValidator) Validate(value any) []error {
+func (s RequiredValidator) Validate(value any) utils.Errors {
 	errs := utils.Errors{}
 	if reflect.ValueOf(value).IsZero() {
 		errs = append(errs, NewRequiredError(value))
@@ -46,6 +46,6 @@ func (s RequiredValidator) Validate(value any) []error {
 	}
 }
 
-func NewRequiredValidator(params map[string]string) Validator {
+func NewRequiredValidator(_ map[string]string) Validator {
 	return RequiredValidator{}
 }

@@ -34,7 +34,6 @@ const useStyles = makeStyles((theme) => ({
     tabs: {
         height: '35px',
         minHeight: '35px',
-        mt: 1,
     },
     tab: {
         height: '35px',
@@ -43,8 +42,7 @@ const useStyles = makeStyles((theme) => ({
     },
     list: {
         position: 'relative',
-        overflow: 'auto',
-        maxHeight: 300,
+        overflow: 'hidden',
         '& ul': { padding: 0 },
     },
 }));
@@ -73,7 +71,7 @@ const CommonSearches = () => {
     };
 
     return (
-        <Box>
+        <Box height='100%' display='flex' flexDirection='column'>
             <Typography variant='h5' sx={{ mb: 2, mt: 2 }}>
                 Pre-built Searches
             </Typography>
@@ -90,9 +88,11 @@ const CommonSearches = () => {
                 <Tab label={CUSTOM_TAB} key={CUSTOM_TAB} value={CUSTOM_TAB} className={classes.tab} />
             </Tabs>
 
-            {activeTab === AD_TAB && <PrebuiltSearchList listSections={adSections} clickHandler={handleClick} />}
-            {activeTab === AZ_TAB && <PrebuiltSearchList listSections={azSections} clickHandler={handleClick} />}
-            {activeTab === CUSTOM_TAB && <PersonalSearchList clickHandler={handleClick} />}
+            <Box flexGrow={1} minHeight={0} overflow='auto'>
+                {activeTab === AD_TAB && <PrebuiltSearchList listSections={adSections} clickHandler={handleClick} />}
+                {activeTab === AZ_TAB && <PrebuiltSearchList listSections={azSections} clickHandler={handleClick} />}
+                {activeTab === CUSTOM_TAB && <PersonalSearchList clickHandler={handleClick} />}
+            </Box>
         </Box>
     );
 };

@@ -28,7 +28,6 @@ const (
 	FeatureEnableSAMLSSO              = "enable_saml_sso"
 	FeatureScopeCollectionByOU        = "scope_collection_by_ou"
 	FeatureAzureSupport               = "azure_support"
-	FeatureReconciliation             = "reconciliation"
 	FeatureEntityPanelCaching         = "entity_panel_cache"
 	FeatureAdcs                       = "adcs"
 	FeaturePGMigrationDualIngest      = "pg_migration_dual_ingest"

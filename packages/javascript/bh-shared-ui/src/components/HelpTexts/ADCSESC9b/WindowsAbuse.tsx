@@ -23,7 +23,24 @@ const WindowsAbuse: FC = () => {
     const step1 = (
         <>
             <Typography variant='body2' className={classes.containsCodeEl}>
-                <b>Step 1: </b>Set <code>dNSHostName</code> of victim computer to targeted computer's{' '}
+                <b>Step 1: </b>Remove SPNs including <code>dNSHostName</code> on victim.
+                <br />
+                <br />
+                The SPNs of the victim will be automatically updated when you change the <code>dNSHostName</code>. AD
+                will not allow the same SPN entry to be set on two accounts. Therefore, you must remove any SPN on the
+                victim account that includes the victim's <code>dNSHostName</code>. Set SPN of the victim computer using
+                PowerView:
+            </Typography>
+            <Typography component={'pre'}>
+                {"Set-DomainObject -Identity VICTIM -Set @{'serviceprincipalname'='HOST/victim'}"}
+            </Typography>
+        </>
+    );
+
+    const step2 = (
+        <>
+            <Typography variant='body2' className={classes.containsCodeEl}>
+                <b>Step 2: </b>Set <code>dNSHostName</code> of victim computer to targeted computer's{' '}
                 <code>dNSHostName.</code>
                 <br />
                 <br />
@@ -35,10 +52,10 @@ const WindowsAbuse: FC = () => {
         </>
     );
 
-    const step2 = (
+    const step3 = (
         <>
             <Typography variant='body2' className={classes.containsCodeEl}>
-                <b>Step 2: </b>Check if <code>mail</code> attribute of victim must be set and set it if required.
+                <b>Step 3: </b>Check if <code>mail</code> attribute of victim must be set and set it if required.
                 <br />
                 <br />
                 If the certificate template is of schema version 2 or above and its attribute{' '}
@@ -51,7 +68,7 @@ const WindowsAbuse: FC = () => {
                 <br />
                 <br />
                 If the certificate template is of schema version 1 or does not have any of the email flags, then
-                continue to Step 3.
+                continue to Step 4.
                 <br />
                 <br />
                 If any of the two flags are present, you will need the victim's mail attribute to be set. The value of
@@ -63,7 +80,7 @@ const WindowsAbuse: FC = () => {
             </Typography>
             <Typography component={'pre'}>{'Get-DomainObject -Identity VICTIM -Properties mail'}</Typography>
             <Typography variant='body2'>
-                If the victim has the mail attribute set, continue to Step 3.
+                If the victim has the mail attribute set, continue to Step 4.
                 <br />
                 <br />
                 If the victim does not have the mail attribute set, set it to a dummy mail using PowerView:
@@ -74,9 +91,9 @@ const WindowsAbuse: FC = () => {
         </>
     );
 
-    const step3 = (
+    const step4 = (
         <Typography variant='body2' className={classes.containsCodeEl}>
-            <b>Step 3: </b>Obtain a session as victim.
+            <b>Step 4: </b>Obtain a session as victim.
             <br />
             <br />
             There are several options for this step. You can obtain a session as SYSTEM on the host, which allows you to
@@ -91,10 +108,10 @@ const WindowsAbuse: FC = () => {
         </Typography>
     );
 
-    const step4 = (
+    const step5 = (
         <>
             <Typography variant='body2'>
-                <b>Step 4: </b>Enroll certificate as victim.
+                <b>Step 5: </b>Enroll certificate as victim.
                 <br />
                 <br />
                 Use Certify as the victim computer to request enrollment in the affected template, specifying the
@@ -109,37 +126,40 @@ const WindowsAbuse: FC = () => {
         </>
     );
 
-    const step5 = (
-        <>
-            <Typography variant='body2'>
-                <b>Step 5: </b>Convert the emitted certificate to PFX format:
-            </Typography>
-            <Typography component={'pre'}>{'certutil.exe -MergePFX .cert.pem .cert.pfx'}</Typography>
-        </>
-    );
     const step6 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
-                <b>Step 6 (Optional): </b>Set <code>dNSHostName</code> of victim to the previous value.
-                <br />
-                <br />
-                To avoid DNS issues in the environment, set the <code>dNSHostName</code> of the victim computer back to
-                its previous value using PowerView:
+            <Typography variant='body2'>
+                <b>Step 6: </b>Convert the emitted certificate to PFX format:
             </Typography>
-            <Typography component={'pre'}>
-                {"Set-DomainObject -Identity VICTIM -Set @{'dnshostname'='victim.corp.local'}"}
-            </Typography>
+            <Typography component={'pre'}>{'certutil.exe -MergePFX cert.pem cert.pfx'}</Typography>
         </>
     );
     const step7 = (
         <>
+            <Typography variant='body2' className={classes.containsCodeEl}>
+                <b>Step 7 (Optional): </b>Set <code>dNSHostName</code> and SPN of victim to the previous values.
+                <br />
+                <br />
+                To avoid issues in the environment, set the <code>dNSHostName</code> and SPN of the victim computer back
+                to its previous values using PowerView:
+            </Typography>
+            <Typography component={'pre'}>
+                {"Set-DomainObject -Identity VICTIM -Set @{'dnshostname'='victim.corp.local'}"}
+            </Typography>
+            <Typography component={'pre'}>
+                {"Set-DomainObject -Identity VICTIM -Set @{'serviceprincipalname'='HOST/victim'}"}
+            </Typography>
+        </>
+    );
+    const step8 = (
+        <>
             <Typography variant='body2'>
-                <b>Step 7: </b>Perform Kerberos authentication as targeted computer against affected DC using
+                <b>Step 8: </b>Perform Kerberos authentication as targeted computer against affected DC using
                 certificate.
                 <br />
                 <br />
                 Use Rubeus to request a ticket granting ticket (TGT) from an affected DC, specifying the target identity
-                to impersonate and the PFX-formatted certificate created in Step 5:
+                to impersonate and the PFX-formatted certificate created in Step 6:
             </Typography>
             <Typography component={'pre'}>
                 {'Rubeus.exe asktgt /certificate:cert.pfx /user:TARGET$ /domain:DOMAIN /dc:DOMAIN_CONTROLLER'}
@@ -157,6 +177,7 @@ const WindowsAbuse: FC = () => {
             {step5}
             {step6}
             {step7}
+            {step8}
         </>
     );
 };

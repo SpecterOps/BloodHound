@@ -73,6 +73,8 @@ const (
 	AuditLogActionDeleteBloodhoundData AuditLogAction = "DeleteBloodhoundData"
 
 	AuditLogActionMutateGraph AuditLogAction = "MutateGraph"
+
+	AuditLogActionUpdateParameter AuditLogAction = "UpdateParameter"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration
