@@ -1096,8 +1096,7 @@ func TestADCSESC4Composition(t *testing.T) {
 	})
 }
 
-func TestADCSESC9a(t *testing.T) { //***
-	t.Skip("1 Disabling test to allow engineers to continue submitting PRs and not have significant errors BED-4747")
+func TestADCSESC9a(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
@@ -1435,10 +1434,11 @@ func TestADCSESC9a(t *testing.T) { //***
 			})); err != nil {
 				t.Fatalf("error fetching esc9a edges in integration test; %v", err)
 			} else {
-				require.Equal(t, 2, len(results))
+				require.Equal(t, 3, len(results))
 
 				require.True(t, results.Contains(harness.ESC9aHarnessDC1.Group0))
 				require.True(t, results.Contains(harness.ESC9aHarnessDC1.Group1))
+				require.True(t, results.Contains(harness.ESC9aHarnessDC1.Group2))
 
 			}
 			return nil
@@ -1489,8 +1489,7 @@ func TestADCSESC9a(t *testing.T) { //***
 	})
 }
 
-func TestADCSESC9b(t *testing.T) { //***
-	t.Skip("2 Disabling test to allow engineers to continue submitting PRs and not have significant errors BED-4747")
+func TestADCSESC9b(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
@@ -1783,10 +1782,11 @@ func TestADCSESC9b(t *testing.T) { //***
 			})); err != nil {
 				t.Fatalf("error fetching esc9b edges in integration test; %v", err)
 			} else {
-				require.Equal(t, 2, len(results))
+				require.Equal(t, 3, len(results))
 
 				require.True(t, results.Contains(harness.ESC9bHarnessDC1.Group0))
 				require.True(t, results.Contains(harness.ESC9bHarnessDC1.Group1))
+				require.True(t, results.Contains(harness.ESC9bHarnessDC1.Group2))
 
 			}
 			return nil
