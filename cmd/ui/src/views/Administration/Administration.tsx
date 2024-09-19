@@ -92,7 +92,7 @@ const Administration: React.FC = () => {
             title: 'Configuration',
             items: [
                 {
-                    label: 'Bloodhound Configuration',
+                    label: 'BloodHound Configuration',
                     path: ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
                     component: BloodHoundConfiguration,
                     adminOnly: true,
