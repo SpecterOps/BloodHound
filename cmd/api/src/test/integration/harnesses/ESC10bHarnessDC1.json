@@ -103,7 +103,7 @@
       "caption": "CertTemplate0",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1",
         "SubjectAltRequireDNS": "True"
@@ -207,7 +207,7 @@
       "caption": "CertTemplate1",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1",
         "SubjectAltRequireDNS": "True"
@@ -312,7 +312,7 @@
       "caption": "CertTemplate2",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1",
         "SubjectAltRequireDNS": "True"

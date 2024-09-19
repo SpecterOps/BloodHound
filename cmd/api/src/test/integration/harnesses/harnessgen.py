@@ -81,6 +81,7 @@ class CertTemplateData:
     def __init__(self) -> None:
         self.RequiresManagerApproval = False
         self.AuthenticationEnabled = False
+        self.SchannelAuthenticationEnabled = False
         self.EnrolleeSuppliesSubject = False
         self.SubjectAltRequireUPN = False
         self.SubjectAltRequireSPN = False
