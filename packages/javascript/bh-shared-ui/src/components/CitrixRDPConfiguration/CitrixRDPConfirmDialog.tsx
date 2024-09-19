@@ -37,17 +37,17 @@ const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, futureS
             maxWidth='sm'
             aria-labelledby='citrix-rdp-alert-dialog-title'
             aria-describedby='citrix-rdp-alert-dialog-description'>
-            <DialogTitle id='citrix-rdp-alert-dialog-title' sx={{ fontSize: '20px' }}>
+            <DialogTitle id='citrix-rdp-alert-dialog-title' sx={{ fontSize: '1.25rem' }}>
                 {dialogTitle}
             </DialogTitle>
             <DialogContent id='citrix-rdp-alert-dialog-description' sx={{ paddingBottom: 0 }}>
-                <Typography sx={{ paddingBottom: '16px', whiteSpace: 'break-spaces', fontSize: '12px' }}>
+                <Typography sx={{ paddingBottom: '1rem', whiteSpace: 'break-spaces', fontSize: '0.75rem' }}>
                     {futureSwitchState ? enabledDialogDescription : disabledDialogDescription}
                 </Typography>
-                <Typography sx={{ fontSize: '12px' }}>
+                <Typography sx={{ fontSize: '0.75rem' }}>
                     Select <b>`Confirm`</b> to proceed. Changes will be reflected upon completion of next analysis.
                 </Typography>
-                <Typography sx={{ fontSize: '12px' }}>
+                <Typography sx={{ fontSize: '0.75rem' }}>
                     Select <b>`Cancel`</b> to return to previous configuration.
                 </Typography>
             </DialogContent>
