@@ -137,7 +137,7 @@ const LinuxAbuse: FC = () => {
                 <br />
                 <br />
                 To avoid issues in the environment, set the <code>dNSHostName</code> and SPN of the victim computer back
-                to it's previous values using Certipy and ldapmodify:
+                to its previous values using Certipy and ldapmodify:
             </Typography>
             <Typography component='pre'>
                 {
