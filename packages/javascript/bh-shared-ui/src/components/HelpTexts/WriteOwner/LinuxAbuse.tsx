@@ -784,7 +784,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                         to then grant yourself GenericAll. With GenericAll, you can make an enterprise CA certificate
                         trusted for NT (domain) authentication in the AD forest by adding the certificate in the root CA
                         object's cACertificate attribute. This action may enable you to perform an ADCS domain
-                        escalation. This action may enable you to perform an ADCS domain escalation.
+                        escalation.
                     </Typography>
                 </>
             );
