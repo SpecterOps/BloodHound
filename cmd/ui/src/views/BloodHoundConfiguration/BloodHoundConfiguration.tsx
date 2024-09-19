@@ -20,7 +20,7 @@ import { PageWithTitle, CitrixRDPConfiguration } from 'bh-shared-ui';
 const BloodHoundConfiguration = () => {
     return (
         <PageWithTitle
-            title='Bloodhound Configuration'
+            title='BloodHound Configuration'
             pageDescription={
                 <Typography variant='body2' paragraph>
                     Modify the configuration of your BloodHound tenant. See our{' '}
