@@ -152,7 +152,7 @@ const WindowsAbuse: FC = () => {
                 <br />
                 <br />
                 To avoid issues in the environment, set the <code>dNSHostName</code> and SPN of the victim computer back
-                to it’s previous values using Certipy and PowerView:
+                to its previous values using Certipy and PowerView:
             </Typography>
             <Typography component={'pre'}>
                 {'Certipy.exe account update -u ATTACKER@CORP.LOCAL -p PWD -user VICTIM$ -dns VICTIM.CORP.LOCAL'}
