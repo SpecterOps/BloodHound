@@ -50,10 +50,6 @@ export const lightPalette = {
         quaternary: '#DADEE1',
         quinary: '#CACFD3',
     },
-    button: {
-        primary: '#33318F',
-        secondary: '#36343B',
-    },
     background: {
         paper: '#fafafa',
         default: '#e4e9eb',
@@ -76,10 +72,6 @@ export const darkPalette = {
     tertiary: {
         main: '#5CC791',
         dark: '#02C577',
-    },
-    button: {
-        primary: '#99A3FF',
-        secondary: '#DADEE1',
     },
     color: {
         primary: '#FFFFFF',
@@ -151,13 +143,6 @@ const defaultPortalContainer = {
 };
 
 export const components = (theme: Theme): Partial<Theme['components']> => ({
-    MuiButton: {
-        styleOverrides: {
-            root: {
-                textTransform: 'none',
-            },
-        },
-    },
     MuiAccordionSummary: {
         styleOverrides: {
             root: {

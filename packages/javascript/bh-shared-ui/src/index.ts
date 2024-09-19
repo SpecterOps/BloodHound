@@ -23,7 +23,6 @@ declare module '@mui/material/styles' {
     interface Palette {
         neutral: { primary: string; secondary: string; tertiary: string; quaternary: string; quinary: string };
         color: { primary: string; links: string; error: string };
-        button: { primary: string; secondary: string };
         low: string;
         moderate: string;
         high: string;
@@ -32,7 +31,6 @@ declare module '@mui/material/styles' {
     interface PaletteOptions {
         neutral?: { primary: string; secondary: string; tertiary: string; quaternary: string; quinary: string };
         color: { primary: string; links: string; error: string };
-        button: { primary: string; secondary: string };
         low: string;
         moderate: string;
         high: string;
