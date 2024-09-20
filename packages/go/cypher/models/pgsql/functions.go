@@ -35,6 +35,7 @@ const (
 	FunctionNow                    Identifier = "now"
 	FunctionToLower                Identifier = "lower"
 	FunctionCoalesce               Identifier = "coalesce"
+	FunctionUnnest                 Identifier = "unnest"
 	FunctionJSONBSet               Identifier = "jsonb_set"
 	FunctionCount                  Identifier = "count"
 	FunctionEdgesToPath            Identifier = "edges_to_path"

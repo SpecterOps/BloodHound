@@ -79,7 +79,9 @@ func TestFormat_Update(t *testing.T) {
 
 func TestFormat_Insert(t *testing.T) {
 	formattedQuery, err := format.Statement(pgsql.Insert{
-		Table: pgsql.CompoundIdentifier{"table"},
+		Table: pgsql.TableReference{
+			Name: pgsql.CompoundIdentifier{"table"},
+		},
 		Shape: pgsql.RecordShape{
 			Columns: []pgsql.Identifier{"col1", "col2", "col3"},
 		},
@@ -94,7 +96,9 @@ func TestFormat_Insert(t *testing.T) {
 	require.Equal(t, "insert into table (col1, col2, col3) values ('1', 1, false);", formattedQuery)
 
 	formattedQuery, err = format.Statement(pgsql.Insert{
-		Table: pgsql.CompoundIdentifier{"table"},
+		Table: pgsql.TableReference{
+			Name: pgsql.CompoundIdentifier{"table"},
+		},
 		Shape: pgsql.RecordShape{
 			Columns: []pgsql.Identifier{"col1", "col2", "col3"},
 		},
@@ -121,7 +125,9 @@ func TestFormat_Insert(t *testing.T) {
 	require.Equal(t, "insert into table (col1, col2, col3) select * from other where other.col1 = '1234';", formattedQuery)
 
 	formattedQuery, err = format.Statement(pgsql.Insert{
-		Table: pgsql.CompoundIdentifier{"table"},
+		Table: pgsql.TableReference{
+			Name: pgsql.CompoundIdentifier{"table"},
+		},
 		Shape: pgsql.RecordShape{
 			Columns: []pgsql.Identifier{"col1", "col2", "col3"},
 		},
@@ -151,7 +157,9 @@ func TestFormat_Insert(t *testing.T) {
 	require.Equal(t, "insert into table (col1, col2, col3) select * from other where other.col1 = '1234' returning id;", formattedQuery)
 
 	formattedQuery, err = format.Statement(pgsql.Insert{
-		Table: pgsql.CompoundIdentifier{"table"},
+		Table: pgsql.TableReference{
+			Name: pgsql.CompoundIdentifier{"table"},
+		},
 		Shape: pgsql.RecordShape{
 			Columns: []pgsql.Identifier{"col1", "col2", "col3"},
 		},
@@ -200,7 +208,9 @@ func TestFormat_Insert(t *testing.T) {
 	require.Equal(t, "insert into table (col1, col2, col3) select * from other where other.col1 = '1234' on conflict on constraint other.hash_constraint do update set hit_count = hit_count + 1 where hit_count < 9999 returning id, hit_count;", formattedQuery)
 
 	formattedQuery, err = format.Statement(pgsql.Insert{
-		Table: pgsql.CompoundIdentifier{"table"},
+		Table: pgsql.TableReference{
+			Name: pgsql.CompoundIdentifier{"table"},
+		},
 		Shape: pgsql.RecordShape{
 			Columns: []pgsql.Identifier{"col1", "col2", "col3"},
 		},
@@ -223,7 +233,7 @@ func TestFormat_Insert(t *testing.T) {
 		},
 		OnConflict: &pgsql.OnConflict{
 			Target: &pgsql.ConflictTarget{
-				Columns: pgsql.CompoundIdentifier{"hash"},
+				Columns: []pgsql.Expression{pgsql.CompoundIdentifier{"hash"}},
 			},
 			Action: pgsql.DoUpdate{
 				Assignments: []pgsql.Assignment{pgsql.BinaryExpression{
