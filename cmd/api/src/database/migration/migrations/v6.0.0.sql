@@ -36,7 +36,7 @@ VALUES (
     current_timestamp,
     'oidc_support',
     'OIDC Support',
-    'Enables OpenID authentication support for SSO Authentication.',
+    'Enables OpenID Connect authentication support for SSO Authentication.',
     false,
     false
 )
