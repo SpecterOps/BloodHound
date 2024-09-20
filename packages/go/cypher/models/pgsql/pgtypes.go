@@ -92,6 +92,7 @@ const (
 	Text                     DataType = "text"
 	TextArray                DataType = "text[]"
 	JSONB                    DataType = "jsonb"
+	JSONBArray               DataType = "jsonb[]"
 	Date                     DataType = "date"
 	TimeWithTimeZone         DataType = "time with time zone"
 	TimeWithoutTimeZone      DataType = "time without time zone"
