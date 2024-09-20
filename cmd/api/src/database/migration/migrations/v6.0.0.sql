@@ -29,6 +29,19 @@ DELETE FROM feature_flags WHERE key = 'reconciliation';
 -- Grant the Read-Only user SavedQueriesRead permissions
 INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Read-Only'), (SELECT id FROM permissions WHERE permissions.authority  = 'saved_queries'  and permissions.name = 'Read')) ON CONFLICT DO NOTHING;
 
+-- Add OIDC Support feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (
+    current_timestamp,
+    current_timestamp,
+    'oidc_support',
+    'OIDC Support',
+    'Enables OpenID authentication support for SSO Authentication.',
+    false,
+    false
+)
+ON CONFLICT DO NOTHING;
+
 do
 $$
   begin
