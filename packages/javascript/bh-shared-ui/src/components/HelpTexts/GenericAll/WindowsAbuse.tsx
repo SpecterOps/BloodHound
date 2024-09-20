@@ -699,8 +699,64 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     </Typography>
                 </>
             );
+        case 'CertTemplate':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With GenericAll permission over a certificate template, you may be able to perform an ESC4
+                        attack by modifying the template's attributes. BloodHound will in that case create an ADCSESC4
+                        edge from the principal to the forest domain node.
+                    </Typography>
+                </>
+            );
+        case 'EnterpriseCA':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With GenericAll permission over an enterprise CA, you can publish certificate templates to the
+                        enterprise CA by adding the CN name of the template in the enterprise CA object's
+                        certificateTemplates attribute. This action may enable you to perform an ADCS domain escalation.
+                    </Typography>
+                </>
+            );
+        case 'RootCA':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With GenericAll permission over a root CA, you can make a rogue certificate trusted as a root CA
+                        in the AD forest by adding the certificate in the root CA object's cACertificate attribute. This
+                        action may enable you to perform an ADCS domain escalation.
+                    </Typography>
+                </>
+            );
+        case 'NTAuthStore':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With GenericAll permission over a NTAuth store, you can make an enterprise CA certificate
+                        trusted for NT (domain) authentication in the AD forest by adding the certificate in the root CA
+                        object's cACertificate attribute. This action may enable you to perform an ADCS domain
+                        escalation.
+                    </Typography>
+                </>
+            );
+        case 'IssuancePolicy':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With GenericAll permission over an issuance policy object, you create a OID group link to a
+                        targeted group by adding the group's distinguishedName in the msDS-OIDToGroupLink attribute of
+                        the issuance policy object. This action may enable you to gain membership of the group through
+                        an ADCS ESC13 attack.
+                    </Typography>
+                </>
+            );
         default:
-            return <></>;
+            return (
+                <>
+                    <Typography variant='body2'>No abuse information available for this node type.</Typography>
+                </>
+            );
     }
 };
 

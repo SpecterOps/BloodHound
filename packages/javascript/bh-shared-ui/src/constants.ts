@@ -143,13 +143,6 @@ const defaultPortalContainer = {
 };
 
 export const components = (theme: Theme): Partial<Theme['components']> => ({
-    MuiButton: {
-        styleOverrides: {
-            root: {
-                borderRadius: 999, // capsule-shaped buttons
-            },
-        },
-    },
     MuiAccordionSummary: {
         styleOverrides: {
             root: {
