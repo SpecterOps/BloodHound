@@ -243,8 +243,7 @@ func LogAndMeasure(level Level, format string, args ...any) func() {
 		then    = time.Now()
 	)
 
-	// Only output the message header on debug
-	WithLevel(LevelDebug).Uint64(FieldMeasurementID, pairID).Msg(message)
+	WithLevel(level).Uint64(FieldMeasurementID, pairID).Msg(message)
 
 	return func() {
 		if elapsed := time.Since(then); elapsed >= measureThreshold {

@@ -380,7 +380,7 @@ func (s *batch) flushRelationshipUpdateByBuffer(updates *sql.RelationshipUpdateB
 	if graphTarget, err := s.innerTransaction.getTargetGraph(); err != nil {
 		return err
 	} else {
-		query := sql.FormatRelationshipPartitionUpsert(graphTarget)
+		query := sql.FormatRelationshipPartitionUpsert(graphTarget, updates.IdentityProperties)
 
 		if _, err := s.innerTransaction.tx.Exec(s.ctx, query, parameters.Format(graphTarget)...); err != nil {
 			return err

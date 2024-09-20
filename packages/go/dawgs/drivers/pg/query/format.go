@@ -129,13 +129,13 @@ func FormatNodeUpsert(graphTarget model.Graph, identityProperties []string) stri
 	)
 }
 
-func FormatRelationshipPartitionUpsert(graphTarget model.Graph) string {
-	return join(
-		"merge into ", graphTarget.Partitions.Edge.Name, " as e ",
-		"using (select $1::int4 as gid, unnest($2::int4[]) as sid, unnest($3::int4[]) as eid, unnest($4::int2[]) as kid, unnest($5::jsonb[]) as p) as ei ",
-		"on e.start_id = ei.sid and e.end_id = ei.eid and e.kind_id = ei.kid ",
-		"when matched then update set properties = e.properties || ei.p ",
-		"when not matched then insert (graph_id, start_id, end_id, kind_id, properties) values (ei.gid, ei.sid, ei.eid, ei.kid, ei.p);",
+func FormatRelationshipPartitionUpsert(graphTarget model.Graph, identityProperties []string) string {
+	return join("insert into ", graphTarget.Partitions.Edge.Name, " as e ",
+		"(graph_id, start_id, end_id, kind_id, properties) ",
+		"select $1::int4, unnest($2::int4[]), unnest($3::int4[]), unnest($4::int2[]), unnest($5::jsonb[]) ",
+		formatConflictMatcher(identityProperties, "graph_id, start_id, end_id, kind_id"),
+		"do update set properties = e.properties || excluded.properties ",
+		"returning id;",
 	)
 }
 

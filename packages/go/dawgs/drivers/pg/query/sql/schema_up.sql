@@ -155,7 +155,9 @@ create table if not exists edge
   properties jsonb    not null,
 
   primary key (id, graph_id),
-  foreign key (graph_id) references graph (id) on delete cascade
+  foreign key (graph_id) references graph (id) on delete cascade,
+
+  unique (graph_id, start_id, end_id, kind_id)
 ) partition by list (graph_id);
 
 -- delete_node_edges is a trigger and associated plpgsql function to cascade delete edges when attached nodes are
