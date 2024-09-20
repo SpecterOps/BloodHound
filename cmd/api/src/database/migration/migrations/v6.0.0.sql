@@ -26,7 +26,6 @@ INSERT INTO parameters (key, name, description, value, created_at, updated_at) V
 -- must occur after insert to ensure reconciliation flag is set to whatever current value is
 DELETE FROM feature_flags WHERE key = 'reconciliation';
 
-
 -- Grant the Read-Only user SavedQueriesRead permissions
 INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Read-Only'), (SELECT id FROM permissions WHERE permissions.authority  = 'saved_queries'  and permissions.name = 'Read')) ON CONFLICT DO NOTHING;
 
@@ -42,3 +41,16 @@ VALUES (
     false
 )
 ON CONFLICT DO NOTHING;
+
+do
+$$
+  begin
+    -- Update existing Edge tables with an additional constraint to support ON CONFLICT upserts
+    alter table edge drop constraint if exists edge_graph_id_start_id_end_id_kind_id_key;
+    alter table edge add constraint edge_graph_id_start_id_end_id_kind_id_key unique (graph_id, start_id, end_id, kind_id);
+  exception
+    -- This guards against the possibility that the edge table doesn't exist, in which case there's no constraint to
+    -- migrate
+    when undefined_table then null;
+  end
+$$;

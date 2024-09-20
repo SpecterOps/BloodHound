@@ -269,6 +269,10 @@ func NewBinaryExpression(left Expression, operator Operator, right Expression) *
 	}
 }
 
+func NewJSONTextFieldLookup(reference CompoundIdentifier, field Identifier) *BinaryExpression {
+	return NewBinaryExpression(reference, OperatorJSONTextField, field)
+}
+
 func (s BinaryExpression) AsExpression() Expression {
 	return s
 }
@@ -421,6 +425,10 @@ type Parameter struct {
 	CastType   DataType
 }
 
+func (s Parameter) AsSelectItem() SelectItem {
+	return s
+}
+
 func (s Parameter) NodeType() string {
 	return "parameter"
 }
@@ -492,6 +500,16 @@ func (s Join) NodeType() string {
 }
 
 type Identifier string
+
+func AsIdentifiers(strs ...string) []Identifier {
+	identifiers := make([]Identifier, len(strs))
+
+	for idx, str := range strs {
+		identifiers[idx] = Identifier(str)
+	}
+
+	return identifiers
+}
 
 func (s Identifier) AsSelectItem() SelectItem {
 	return s
@@ -613,6 +631,22 @@ func (s CompoundIdentifier) AsSelectItem() SelectItem {
 
 func (s CompoundIdentifier) NodeType() string {
 	return "compound_identifier"
+}
+
+func AsCompoundIdentifier[T string | Identifier](parts ...T) CompoundIdentifier {
+	compoundIdentifier := make(CompoundIdentifier, len(parts))
+
+	for idx, part := range parts {
+		switch typedPart := any(part).(type) {
+		case string:
+			compoundIdentifier[idx] = Identifier(typedPart)
+
+		case Identifier:
+			compoundIdentifier[idx] = typedPart
+		}
+	}
+
+	return compoundIdentifier
 }
 
 type TableReference struct {
@@ -805,7 +839,7 @@ func (s Merge) AsStatement() Statement {
 }
 
 type ConflictTarget struct {
-	Columns    []Identifier
+	Columns    []Expression
 	Constraint CompoundIdentifier
 }
 
@@ -853,7 +887,7 @@ func (s OnConflict) AsExpression() Expression {
 
 // Insert is a SQL statement that is evaluated to insert data into a target table.
 type Insert struct {
-	Table      CompoundIdentifier
+	Table      TableReference
 	Shape      RecordShape
 	OnConflict *OnConflict
 	Source     *Query

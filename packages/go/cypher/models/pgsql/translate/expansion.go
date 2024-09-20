@@ -380,7 +380,9 @@ func (s *Translator) buildAllShortestPathsExpansionRoot(part *PatternPart, trave
 
 	var (
 		primerInsert = pgsql.Insert{
-			Table: pgsql.CompoundIdentifier{"next_pathspace"},
+			Table: pgsql.TableReference{
+				Name: pgsql.CompoundIdentifier{"next_pathspace"},
+			},
 			Shape: expansionColumns(),
 			Source: &pgsql.Query{
 				Body: expansion.PrimerStatement,
@@ -388,7 +390,9 @@ func (s *Translator) buildAllShortestPathsExpansionRoot(part *PatternPart, trave
 		}
 
 		recursiveInsert = pgsql.Insert{
-			Table: pgsql.CompoundIdentifier{"next_pathspace"},
+			Table: pgsql.TableReference{
+				Name: pgsql.CompoundIdentifier{"next_pathspace"},
+			},
 			Shape: expansionColumns(),
 			Source: &pgsql.Query{
 				Body: expansion.RecursiveStatement,
