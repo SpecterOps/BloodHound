@@ -28,6 +28,12 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
   app-db:
+    profiles:
+      - dev
+      - api-only
+      - ui-only
+      - debug-api
+      - pg-only
     image: docker.io/library/postgres:16.1
     environment:
       - POSTGRES_USER=${BH_POSTGRES_USER:-bloodhound}
@@ -49,6 +55,12 @@ services:
       start_period: 30s
 
   pgadmin:
+    profiles:
+      - dev
+      - api-only
+      - ui-only
+      - debug-api
+      - pg-only
     build:
       context: tools/docker-compose
       dockerfile: pgadmin.Dockerfile
@@ -68,6 +80,11 @@ services:
         condition: service_healthy
 
   graph-db:
+    profiles:
+      - dev
+      - api-only
+      - ui-only
+      - debug-api
     build:
       args:
         memconfig: true
