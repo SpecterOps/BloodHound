@@ -14,20 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
-import { EdgeInfoProps } from '../index';
-import { Typography } from '@mui/material';
+import General from './General';
+import WindowsAbuse from './WindowsAbuse';
+import LinuxAbuse from './LinuxAbuse';
+import Opsec from './Opsec';
+import References from './References';
 
-const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
-    return (
-        <>
-            <Typography variant='body2'>
-                The domain {sourceName} is trusted with an inter-forest trust by the domain {targetName}. The domains
-                belong to seperate forest but the trust relationship enable principals of {sourceName} to access
-                resources in {targetName}.
-            </Typography>
-        </>
-    );
+const AbuseTGTDelegation = {
+    general: General,
+    windowsAbuse: WindowsAbuse,
+    linuxAbuse: LinuxAbuse,
+    opsec: Opsec,
+    references: References,
 };
 
-export default General;
+export default AbuseTGTDelegation;

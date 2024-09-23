@@ -22,7 +22,8 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The domain {sourceName} is trusted with an intra-forest trust by the domain {targetName}. The domains belong to the same forest.
+                The domain {sourceName} is trusted with an intra-forest trust by the domain {targetName}. The domains
+                belong to the same forest.
             </Typography>
         </>
     );

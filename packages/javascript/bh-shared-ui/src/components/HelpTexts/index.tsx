@@ -103,6 +103,8 @@ import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
 import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import InterForestTrusted from './InterForestTrusted/InterForestTrusted';
 import IntraForestTrusted from './IntraForestTrusted/IntraForestTrusted';
+import SpoofSIDHistory from './SpoofSIDHistory/SpoofSIDHistory';
+import AbuseTGTDelegation from './AbuseTGTDelegation/AbuseTGTDelegation';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
 import WriteGPLink from './WriteGPLink/WriteGPLink';
@@ -159,6 +161,8 @@ const EdgeInfoComponents = {
     HasSIDHistory: HasSIDHistory,
     InterForestTrusted: InterForestTrusted,
     IntraForestTrusted: IntraForestTrusted,
+    SpoofSIDHistory: SpoofSIDHistory,
+    AbuseTGTDelegation: AbuseTGTDelegation,
     CanPSRemote: CanPSRemote,
     AZAddMembers: AZAddMembers,
     AZAddSecret: AZAddSecret,
