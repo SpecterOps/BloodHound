@@ -67,6 +67,7 @@ import AZUserAccessAdministrator from './AZUserAccessAdministrator/AZUserAccessA
 import AZVMAdminLogin from './AZVMAdminLogin/AZVMAdminLogin';
 import AZVMContributor from './AZVMContributor/AZVMContributor';
 import AZWebsiteContributor from './AZWebsiteContributor/AZWebsiteContributor';
+import AbuseTGTDelegation from './AbuseTGTDelegation/AbuseTGTDelegation';
 import AddAllowedToAct from './AddAllowedToAct/AddAllowedToAct';
 import AddKeyCredentialLink from './AddKeyCredentialLink/AddKeyCredentialLink';
 import AddMember from './AddMember/AddMember';
@@ -83,6 +84,7 @@ import CoerceAndRelayNTLMToLDAPS from './CoerceAndRelayNTLMToLDAPS/CoerceAndRela
 import CoerceAndRelayNTLMToSMB from './CoerceAndRelayNTLMToSMB/CoerceAndRelayNTLMToSMB';
 import CoerceToTGT from './CoerceToTGT/CoerceToTGT';
 import Contains from './Contains/Contains';
+import CrossForestTrust from './CrossForestTrust/CrossForestTrust';
 import DCFor from './DCFor/DCFor';
 import DCSync from './DCSync/DCSync';
 import DelegatedEnrollmentAgent from './DelegatedEnrollmentAgent/DelegatedEnrollmentAgent';
@@ -116,10 +118,11 @@ import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
 import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
 import RootCAFor from './RootCAFor/RootCAFor';
 import SQLAdmin from './SQLAdmin/SQLAdmin';
+import SameForestTrust from './SameForestTrust/SameForestTrust';
+import SpoofSIDHistory from './SpoofSIDHistory/SpoofSIDHistory';
 import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
 import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
-import TrustedBy from './TrustedBy/TrustedBy';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
 import WriteDacl from './WriteDacl/WriteDacl';
@@ -172,7 +175,10 @@ const EdgeInfoComponents = {
     SQLAdmin: SQLAdmin,
     ReadGMSAPassword: ReadGMSAPassword,
     HasSIDHistory: HasSIDHistory,
-    TrustedBy: TrustedBy,
+    CrossForestTrust: CrossForestTrust,
+    SameForestTrust: SameForestTrust,
+    SpoofSIDHistory: SpoofSIDHistory,
+    AbuseTGTDelegation: AbuseTGTDelegation,
     CanPSRemote: CanPSRemote,
     AZAddMembers: AZAddMembers,
     AZAddSecret: AZAddSecret,

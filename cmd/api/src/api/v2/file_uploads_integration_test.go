@@ -154,8 +154,7 @@ func Test_FileUpload(t *testing.T) {
 	})
 }
 
-func Test_FileUploadWorkFlowVersion5(t *testing.T) { //***
-	t.Skip("1 Disabling test to allow engineers to continue submitting PRs and not have significant errors BED-4747")
+func Test_FileUploadWorkFlowVersion5(t *testing.T) {
 	testCtx := integration.NewFOSSContext(t)
 
 	testCtx.SendFileIngest([]string{
@@ -174,8 +173,7 @@ func Test_FileUploadWorkFlowVersion5(t *testing.T) { //***
 	testCtx.AssertIngest(fixtures.IngestAssertions)
 }
 
-func Test_FileUploadWorkFlowVersion6(t *testing.T) { //***
-	t.Skip("2 Disabling test to allow engineers to continue submitting PRs and not have significant errors BED-4747")
+func Test_FileUploadWorkFlowVersion6(t *testing.T) {
 	testCtx := integration.NewFOSSContext(t)
 
 	testCtx.SendFileIngest([]string{
