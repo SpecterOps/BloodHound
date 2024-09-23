@@ -22,9 +22,11 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The domain {sourceName} is trusted with an inter-forest trust by the domain {targetName}. The domains
-                belong to seperate forest but the trust relationship enable principals of {sourceName} to access
-                resources in {targetName}.
+                The trust from {targetName} to {sourceName} has TGT Delegation enabled.
+            </Typography>
+            <Typography variant='body2'>
+                The {sourceName} domain allow TGTs of the domain to be send to computers in {sourceName} configured with
+                unconstrained delegation.
             </Typography>
         </>
     );

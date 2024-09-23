@@ -18,12 +18,16 @@ import { FC } from 'react';
 import { Typography } from '@mui/material';
 
 const Abuse: FC = () => {
-    return ( 
+    return (
         <>
             <Typography variant='body2'>This edge is not abusable by itself.</Typography>;
-            <Typography variant='body2'>BloodHound will create a seperate traversable edge between the domains if the trust has an abusable configuration.</Typography>;
+            <Typography variant='body2'>
+                BloodHound will create a seperate traversable edge between the domains if the trust has an abusable
+                configuration.
+            </Typography>
+            ;
         </>
-        );
+    );
 };
 
 export default Abuse;

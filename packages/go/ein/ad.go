@@ -413,6 +413,45 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 					RelType: edgeType,
 				},
 			))
+
+			if edgeType == ad.InterForestTrusted && !trust.SidFilteringEnabled {
+				parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
+					IngestibleSource{
+						Source:     domain.ObjectIdentifier,
+						SourceType: ad.Domain,
+					},
+					IngestibleTarget{
+						Target:     trust.TargetDomainSid,
+						TargetType: ad.Domain,
+					},
+					IngestibleRel{
+						RelProps: map[string]any{
+							"isacl":     false,
+							"trusttype": trust.TrustType,
+						},
+						RelType: ad.SpoofSIDHistory,
+					},
+				))
+			}
+			if edgeType == ad.InterForestTrusted && trust.TGTDelegationEnabled {
+				parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
+					IngestibleSource{
+						Source:     domain.ObjectIdentifier,
+						SourceType: ad.Domain,
+					},
+					IngestibleTarget{
+						Target:     trust.TargetDomainSid,
+						TargetType: ad.Domain,
+					},
+					IngestibleRel{
+						RelProps: map[string]any{
+							"isacl":     false,
+							"trusttype": trust.TrustType,
+						},
+						RelType: ad.AbuseTGTDelegation,
+					},
+				))
+			}
 		}
 
 		if dir == TrustDirectionOutbound || dir == TrustDirectionBidirectional {
@@ -436,6 +475,45 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 					RelType: edgeType,
 				},
 			))
+
+			if edgeType == ad.InterForestTrusted && !trust.SidFilteringEnabled {
+				parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
+					IngestibleSource{
+						Source:     domain.ObjectIdentifier,
+						SourceType: ad.Domain,
+					},
+					IngestibleTarget{
+						Target:     trust.TargetDomainSid,
+						TargetType: ad.Domain,
+					},
+					IngestibleRel{
+						RelProps: map[string]any{
+							"isacl":     false,
+							"trusttype": trust.TrustType,
+						},
+						RelType: ad.SpoofSIDHistory,
+					},
+				))
+			}
+			if edgeType == ad.InterForestTrusted && trust.TGTDelegationEnabled {
+				parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
+					IngestibleSource{
+						Source:     domain.ObjectIdentifier,
+						SourceType: ad.Domain,
+					},
+					IngestibleTarget{
+						Target:     trust.TargetDomainSid,
+						TargetType: ad.Domain,
+					},
+					IngestibleRel{
+						RelProps: map[string]any{
+							"isacl":     false,
+							"trusttype": trust.TrustType,
+						},
+						RelType: ad.AbuseTGTDelegation,
+					},
+				))
+			}
 		}
 	}
 

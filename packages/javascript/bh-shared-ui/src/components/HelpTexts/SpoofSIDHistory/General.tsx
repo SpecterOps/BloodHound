@@ -22,9 +22,10 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The domain {sourceName} is trusted with an inter-forest trust by the domain {targetName}. The domains
-                belong to seperate forest but the trust relationship enable principals of {sourceName} to access
-                resources in {targetName}.
+                The trust from {targetName} to {sourceName} has SID History enabled.
+            </Typography>
+            <Typography variant='body2'>
+                Principals of {sourceName} are allowed access in {targetName} by their SID history.
             </Typography>
         </>
     );

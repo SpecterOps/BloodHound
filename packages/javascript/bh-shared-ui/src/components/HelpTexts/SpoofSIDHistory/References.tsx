@@ -15,19 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
-import { EdgeInfoProps } from '../index';
-import { Typography } from '@mui/material';
+import { Link, Box } from '@mui/material';
 
-const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
+const References: FC = () => {
     return (
-        <>
-            <Typography variant='body2'>
-                The domain {sourceName} is trusted with an inter-forest trust by the domain {targetName}. The domains
-                belong to seperate forest but the trust relationship enable principals of {sourceName} to access
-                resources in {targetName}.
-            </Typography>
-        </>
+        <Box sx={{ overflowX: 'auto' }}>
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755321(v=ws.10)'>
+                Microsoft AD Trust Technical Documentation
+            </Link>
+            <br />
+        </Box>
     );
 };
 
-export default General;
+export default References;

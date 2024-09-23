@@ -1043,6 +1043,16 @@ IntraForestTrusted: types.#Kind & {
 	schema: "active_directory"
 }
 
+SpoofSIDHistory: types.#Kind & {
+	symbol: "SpoofSIDHistory"
+	schema: "active_directory"
+}
+
+AbuseTGTDelegation: types.#Kind & {
+	symbol: "AbuseTGTDelegation"
+	schema: "active_directory"
+}
+
 AllowedToAct: types.#Kind & {
 	symbol: "AllowedToAct"
 	schema: "active_directory"
@@ -1324,6 +1334,8 @@ RelationshipKinds: [
 	GetChangesInFilteredSet,
 	InterForestTrusted,
 	IntraForestTrusted,
+	SpoofSIDHistory,
+	AbuseTGTDelegation,
 	AllowedToAct,
 	AdminTo,
 	CanPSRemote,
@@ -1425,6 +1437,8 @@ PathfindingRelationships: [
 	AllowedToDelegate,
 	CoerceToTGT,
 	IntraForestTrusted,
+	SpoofSIDHistory,
+	AbuseTGTDelegation,
 	AllowedToAct,
 	AdminTo,
 	CanPSRemote,

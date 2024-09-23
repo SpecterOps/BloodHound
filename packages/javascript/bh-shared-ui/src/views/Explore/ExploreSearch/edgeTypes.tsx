@@ -112,6 +112,13 @@ export const AllEdgeTypes: Category[] = [
                 ],
             },
             {
+                name: 'Inter-forest Trust Abuse',
+                edgeTypes: [
+                    ActiveDirectoryRelationshipKind.SpoofSIDHistory,
+                    ActiveDirectoryRelationshipKind.AbuseTGTDelegation,
+                ],
+            },
+            {
                 name: 'Cross Platform',
                 edgeTypes: [ActiveDirectoryRelationshipKind.SyncedToEntraUser],
             },
