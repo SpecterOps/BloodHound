@@ -102,9 +102,9 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 			{
 				TargetDomainSid:      "abc123",
 				IsTransitive:         false,
-				TrustDirection:       ein.TrustDirectionInbound,
+				TrustDirection:       ein.TrustDirectionOutbound,
 				TrustType:            "abc",
-				SidFilteringEnabled:  false,
+				SidFilteringEnabled:  true,
 				TargetDomainName:     "abc456",
 				TGTDelegationEnabled: false,
 				TrustAttributes:      "12345",
@@ -115,8 +115,8 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 		require.Len(t, result.TrustRelationships, 1)
 
 		rel := result.TrustRelationships[0]
-		assert.Contains(t, rel.RelProps, ad.TrustAttributes.String())
-		assert.Equal(t, rel.RelProps[ad.TrustAttributes.String()], 12345)
+		assert.Contains(t, rel.RelProps, ad.TrustAttributesOutbound.String())
+		assert.Equal(t, rel.RelProps[ad.TrustAttributesOutbound.String()], 12345)
 	})
 
 	t.Run("TrustAttributes Parse Int Success", func(t *testing.T) {
@@ -124,9 +124,9 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 			{
 				TargetDomainSid:      "abc123",
 				IsTransitive:         false,
-				TrustDirection:       ein.TrustDirectionInbound,
+				TrustDirection:       ein.TrustDirectionOutbound,
 				TrustType:            "abc",
-				SidFilteringEnabled:  false,
+				SidFilteringEnabled:  true,
 				TargetDomainName:     "abc456",
 				TGTDelegationEnabled: false,
 				TrustAttributes:      12345,
@@ -137,8 +137,8 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 		require.Len(t, result.TrustRelationships, 1)
 
 		rel := result.TrustRelationships[0]
-		assert.Contains(t, rel.RelProps, ad.TrustAttributes.String())
-		assert.Equal(t, rel.RelProps[ad.TrustAttributes.String()], 12345)
+		assert.Contains(t, rel.RelProps, ad.TrustAttributesOutbound.String())
+		assert.Equal(t, rel.RelProps[ad.TrustAttributesOutbound.String()], 12345)
 	})
 
 	t.Run("TrustAttributes Parse Float64 Success", func(t *testing.T) {
@@ -148,7 +148,7 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 				IsTransitive:         false,
 				TrustDirection:       ein.TrustDirectionInbound,
 				TrustType:            "abc",
-				SidFilteringEnabled:  false,
+				SidFilteringEnabled:  true,
 				TargetDomainName:     "abc456",
 				TGTDelegationEnabled: false,
 				TrustAttributes:      float64(12345),
@@ -159,8 +159,8 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 		require.Len(t, result.TrustRelationships, 1)
 
 		rel := result.TrustRelationships[0]
-		assert.Contains(t, rel.RelProps, ad.TrustAttributes.String())
-		assert.Equal(t, 12345, rel.RelProps[ad.TrustAttributes.String()])
+		assert.Contains(t, rel.RelProps, ad.TrustAttributesInbound.String())
+		assert.Equal(t, 12345, rel.RelProps[ad.TrustAttributesInbound.String()])
 	})
 
 	t.Run("TrustAttributes Parse Float32 Success", func(t *testing.T) {
@@ -170,7 +170,7 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 				IsTransitive:         false,
 				TrustDirection:       ein.TrustDirectionInbound,
 				TrustType:            "abc",
-				SidFilteringEnabled:  false,
+				SidFilteringEnabled:  true,
 				TargetDomainName:     "abc456",
 				TGTDelegationEnabled: false,
 				TrustAttributes:      float32(12345),
@@ -181,8 +181,8 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 		require.Len(t, result.TrustRelationships, 1)
 
 		rel := result.TrustRelationships[0]
-		assert.Contains(t, rel.RelProps, ad.TrustAttributes.String())
-		assert.Equal(t, 12345, rel.RelProps[ad.TrustAttributes.String()])
+		assert.Contains(t, rel.RelProps, ad.TrustAttributesInbound.String())
+		assert.Equal(t, 12345, rel.RelProps[ad.TrustAttributesInbound.String()])
 	})
 
 	t.Run("TrustAttributes Parse Unknown Type Failure", func(t *testing.T) {
@@ -192,7 +192,7 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 				IsTransitive:         false,
 				TrustDirection:       ein.TrustDirectionInbound,
 				TrustType:            "abc",
-				SidFilteringEnabled:  false,
+				SidFilteringEnabled:  true,
 				TargetDomainName:     "abc456",
 				TGTDelegationEnabled: false,
 				TrustAttributes:      uint32(12345),
@@ -203,8 +203,8 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 		require.Len(t, result.TrustRelationships, 1)
 
 		rel := result.TrustRelationships[0]
-		assert.Contains(t, rel.RelProps, ad.TrustAttributes.String())
-		assert.Equal(t, nil, rel.RelProps[ad.TrustAttributes.String()])
+		assert.Contains(t, rel.RelProps, ad.TrustAttributesInbound.String())
+		assert.Equal(t, nil, rel.RelProps[ad.TrustAttributesInbound.String()])
 	})
 }
 

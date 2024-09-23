@@ -1,0 +1,86 @@
+---
+title: SpoofSIDHistory
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+The cross-forest trust from the target domain to the source domain has a weak SID filtering configuration (SpoofSIDHistoryBlocked = False).
+
+The target domain allows principals of the source domain access by SIDs of the target domain in their SID history. An attacker with control over the source domain can craft access requests with manipulated SID history containing SIDs of privileged principals of the target domain to gain control over the target domain.
+
+Abuse Info
+----------
+
+When spoofing SID history over a same-forest trust, any domain SID from the target domain can be used. The most common choice is the Enterprise Admins SID, as it grants full control over the target domain.
+
+Spoofing SID history over a cross-forest trust is more restricted. In this scenario, SID filtering removes SIDs with a RID below 1000, meaning built-in AD groups like Domain Admins and Enterprise Admins cannot be used. Additionally, group memberships for global and universal groups are not applied based on SID history, making accounts in groups like Domain Admins and Enterprise Admins ineffective as targets.
+
+The attack target must be a user, computer, or a non-builtin group with permissions granted directly or through built-in/domain local groups (NOT through membership of global/universal groups).
+
+Common viable targets with indirect full control over the environment include:
+
+- The Exchange Windows Permissions group
+- Entra ID sync (MSOL_) accounts
+- Custom groups with administrative control over Tier Zero assets
+
+Alternatively, an attacker can target a domain controller (DC) and use resource-based constrained delegation (RBCD) to obtain a local TGT as the DC, which can then be used for a DCSync attack on the target domain. However, the RBCD attack requires control over an account (user or computer) in the target forest. If no such account is available and the default permissions for creating computers have not been restricted, the attacker can first spoof SID history against a target with permissions to create computer accounts, to then perform the RBCD attack against a DC.
+
+The spoofed SID can be added to SID history at three different levels for the attacker-controlled user of the trusted domain:
+
+1. In the user's SID History AD attribute
+2. In the user's Kerberos TGT
+3. In the user's Kerberos inter-realm TGT
+
+The first option enables the attack over both Kerberos and NTLM, whereas the latter two only apply to Kerberos authentication. However, modifying the SID History attribute is risky — it cannot be edited directly via LDAP or built-in AD tools. Mimikatz supports modifying it with the command `sid::patch` followed by `sid::add`, but `sid::patch` does not work on Windows Server 2016 and later. It is possible to modify the SID History attribute using the DSInternals command `Add-ADDBSidHistory`, but this requires stopping and restarting the NTDS service, which is not recommended in a production environment.
+
+The second and third options are safer. The following example demonstrates the second option.
+
+## Attack
+
+**Step 1) Obtain krbtgt Credentials**
+
+The krbtgt credentials can be obtained in multiple ways with administrative access to a DC in the trusted domain, such as via a DCSync attack.
+
+**Step 2) Forge and Inject a Golden Ticket**
+
+Generate a Golden Ticket (Kerberos TGT) in the trusted domain with the target's SID added in SID history. Alternatively, a Diamond Ticket can be created for better OPSEC.
+
+On Windows, use Rubeus:
+
+```bash
+Rubeus.exe golden /aes256:<krbtgt AES256 secret key> /user:<trusted domain user SAMAccountName> /id:<trusted domain user RID> /domain:<trusted domain DNSname> /sid:<trusted domain SID> /sids:<target SID> /dc:<trusted domain DC DNSname> /nowrap /ptt
+```
+
+This command injects the ticket into memory, allowing access to the target domain with the permissions of the target.
+
+On Linux, use ticketer.py from Impacket:
+
+```bash
+ticketer.py -nthash <krbtgt NT hash> -aesKey <krbtgt AES256 secret key> -domain-sid <trusted domain SID> -domain <trusted domain DNSname> -extra-sid <target SID> <trusted domain user SAMAccountName>
+```
+
+The `ticketer.py` command saves the Golden Ticket as a `.ccache` file. To use it with tools supporting Kerberos authentication, set the `KRB5CCNAME` environment variable:
+
+```bash
+export KRB5CCNAME=$path_to_ticket.ccache
+```
+
+Opsec Considerations
+----------
+
+There is no OPSEC associated with this edge.
+
+References
+----------
+
+* [Microsoft AD Trust Technical Documentation](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755321(v=ws.10))
+* [How SID History can be used to elevate privileges](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755321(v=ws.10)#how-sid-history-can-be-used-to-elevate-privileges)
+* [Active Directory forest trusts part 1 - How does SID filtering work?](https://dirkjanm.io/active-directory-forest-trusts-part-one-how-does-sid-filtering-work/)
+* [T1134.005: Access Token Manipulation: SID-History Injection](https://attack.mitre.org/techniques/T1134/005/)
+* [T1558: Steal or Forge Kerberos Tickets](https://attack.mitre.org/techniques/T1558/)
+* [T1550.003: Use Alternate Authentication Material: Pass the Ticket](https://attack.mitre.org/techniques/T1550/003/)
+* [Sneaky Active Directory Persistence #14: SID History](https://adsecurity.org/?p=1772)
+* [Add-ADDBSidHistory](https://github.com/MichaelGrafnetter/DSInternals/blob/master/Documentation/PowerShell/Add-ADDBSidHistory.md)
+* [Rubeus](https://github.com/GhostPack/Rubeus)
+* [ticketer.py](https://github.com/fortra/impacket/blob/master/examples/ticketer.py)
+* [The Hacker Recipes: SID History](https://www.thehacker.recipes/ad/persistence/sid-history)
