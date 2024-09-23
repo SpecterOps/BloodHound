@@ -34,7 +34,7 @@ services:
       - ui-only
       - debug-api
       - pg-only
-    image: docker.io/library/postgres:16.1
+    image: docker.io/library/postgres:13.2
     environment:
       - POSTGRES_USER=${BH_POSTGRES_USER:-bloodhound}
       - POSTGRES_PASSWORD=${BH_POSTGRES_PASSWORD:-bloodhoundcommunityedition}
