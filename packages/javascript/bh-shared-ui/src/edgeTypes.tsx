@@ -44,7 +44,7 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.GPLink,
                     ActiveDirectoryRelationshipKind.HasSIDHistory,
                     ActiveDirectoryRelationshipKind.MemberOf,
-                    ActiveDirectoryRelationshipKind.TrustedBy,
+                    ActiveDirectoryRelationshipKind.SameForestTrust,
                 ],
             },
             {
@@ -111,6 +111,13 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.ADCSESC10a,
                     ActiveDirectoryRelationshipKind.ADCSESC10b,
                     ActiveDirectoryRelationshipKind.ADCSESC13,
+                ],
+            },
+            {
+                name: 'Cross Forest Trust Abuse',
+                edgeTypes: [
+                    ActiveDirectoryRelationshipKind.SpoofSIDHistory,
+                    ActiveDirectoryRelationshipKind.AbuseTGTDelegation,
                 ],
             },
             {
