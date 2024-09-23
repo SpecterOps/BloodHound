@@ -72,7 +72,7 @@ var (
 		query.And(
 			query.Kind(query.Start(), ad.Domain),
 			query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-3084884204-958224920-2707782873"),
-			query.Kind(query.Relationship(), ad.TrustedBy),
+			query.Kind(query.Relationship(), ad.IntraForestTrusted),
 			query.Kind(query.End(), ad.Domain),
 			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446")),
 		query.And(

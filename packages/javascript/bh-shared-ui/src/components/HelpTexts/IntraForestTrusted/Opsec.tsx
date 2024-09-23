@@ -17,8 +17,8 @@
 import { FC } from 'react';
 import { Typography } from '@mui/material';
 
-const References: FC = () => {
-    return <Typography>No Information Available</Typography>;
+const Opsec: FC = () => {
+    return <Typography variant='body2'>There is no opsec associated with this edge</Typography>;
 };
 
-export default References;
+export default Opsec;
