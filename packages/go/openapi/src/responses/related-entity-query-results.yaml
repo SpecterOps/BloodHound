@@ -17,31 +17,29 @@
 description: |
   **OK**
 
-  This endpoint returns a polymorphic response dependent upon which return type is requested
-  by the `type` parameter.
+  This endpoint returns a response, dependent upon which return type is requested by the `type` parameter.
+  The only supported `type` parameter is `list`.
+  While `list` is the only supported `type` parameter, the `count` or `graph` parameters can be used
+  and will result in a different response structure then documented here.
+  For those interested in using the undocumented graph type parameter, the response type is described in the schema
+  model.bh-graph.graph.
 content:
   application/json:
     schema:
-      oneOf:
-        - allOf:
-            - $ref: './../schemas/model.bh-graph.graph.yaml'
-            - title: graph
-        - title: count
-          type: integer
-        - allOf:
-            - $ref: './../schemas/api.response.pagination.yaml'
-            - title: list
-              type: object
-              properties:
-                data:
-                  type: array
-                  items:
-                    title: paged-node-list-entry
-                    type: object
-                    properties:
-                      objectID:
-                        type: string
-                      name:
-                        type: string
-                      label:
-                        type: string
+      allOf:
+        - $ref: './../schemas/api.response.pagination.yaml'
+        - title: list
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                title: paged-node-list-entry
+                type: object
+                properties:
+                  objectID:
+                    type: string
+                  name:
+                    type: string
+                  label:
+                    type: string
