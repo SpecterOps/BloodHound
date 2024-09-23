@@ -1,0 +1,6 @@
+type: object
+properties:
+  data:
+    oneOf:
+      - $ref: './../schemas/model.list-finding.yaml'
+      - $ref: './../schemas/model.relationship-finding.yaml'

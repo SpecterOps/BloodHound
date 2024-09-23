@@ -1,0 +1,6 @@
+type: object
+properties:
+  data:
+    oneOf:
+      - $ref: './../schemas/model.user.yaml'
+      - $ref: './../schemas/model.client.yaml'
