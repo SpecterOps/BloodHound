@@ -15,20 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
-import { EdgeInfoProps } from '../index';
 import { Typography } from '@mui/material';
 
-const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
-    return (
-        <>
-            <Typography variant='body2'>
-                The domain {sourceName} is trusted by the domain {targetName}.
-            </Typography>
-            <Typography variant='body2'>
-                This edge is informational and does not indicate any attacks, only that a trust exists.
-            </Typography>
-        </>
+const Abuse: FC = () => {
+    return ( 
+    <>
+        <Typography variant='body2'>This edge is not abusable by itself.</Typography>;
+        <Typography variant='body2'>BloodHound will create a seperate traversable edge between the domains if the trust has an abusable configuration.</Typography>;
+    </>
     );
 };
 
-export default General;
+export default Abuse;

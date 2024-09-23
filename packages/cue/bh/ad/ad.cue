@@ -1033,8 +1033,13 @@ GetChangesAll: types.#Kind & {
 	schema: "active_directory"
 }
 
-TrustedBy: types.#Kind & {
-	symbol: "TrustedBy"
+InterForestTrusted: types.#Kind & {
+	symbol: "InterForestTrusted"
+	schema: "active_directory"
+}
+
+IntraForestTrusted: types.#Kind & {
+	symbol: "IntraForestTrusted"
 	schema: "active_directory"
 }
 
@@ -1317,7 +1322,8 @@ RelationshipKinds: [
 	GetChanges,
 	GetChangesAll,
 	GetChangesInFilteredSet,
-	TrustedBy,
+	InterForestTrusted,
+	IntraForestTrusted,
 	AllowedToAct,
 	AdminTo,
 	CanPSRemote,
@@ -1418,7 +1424,7 @@ PathfindingRelationships: [
 	GPLink,
 	AllowedToDelegate,
 	CoerceToTGT,
-	TrustedBy,
+	IntraForestTrusted,
 	AllowedToAct,
 	AdminTo,
 	CanPSRemote,

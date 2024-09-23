@@ -1,19 +1,3 @@
-// Copyright 2024 Specter Ops, Inc.
-//
-// Licensed under the Apache License, Version 2.0
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// SPDX-License-Identifier: Apache-2.0
-
 export enum ActiveDirectoryNodeKind {
     Entity = 'Base',
     User = 'User',
@@ -88,7 +72,8 @@ export enum ActiveDirectoryRelationshipKind {
     GetChanges = 'GetChanges',
     GetChangesAll = 'GetChangesAll',
     GetChangesInFilteredSet = 'GetChangesInFilteredSet',
-    TrustedBy = 'TrustedBy',
+    InterForestTrusted = 'InterForestTrusted',
+    IntraForestTrusted = 'IntraForestTrusted',
     AllowedToAct = 'AllowedToAct',
     AdminTo = 'AdminTo',
     CanPSRemote = 'CanPSRemote',
@@ -178,8 +163,10 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'GetChangesAll';
         case ActiveDirectoryRelationshipKind.GetChangesInFilteredSet:
             return 'GetChangesInFilteredSet';
-        case ActiveDirectoryRelationshipKind.TrustedBy:
-            return 'TrustedBy';
+        case ActiveDirectoryRelationshipKind.InterForestTrusted:
+            return 'InterForestTrusted';
+        case ActiveDirectoryRelationshipKind.IntraForestTrusted:
+            return 'IntraForestTrusted';
         case ActiveDirectoryRelationshipKind.AllowedToAct:
             return 'AllowedToAct';
         case ActiveDirectoryRelationshipKind.AdminTo:
@@ -629,7 +616,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
         ActiveDirectoryRelationshipKind.CoerceToTGT,
-        ActiveDirectoryRelationshipKind.TrustedBy,
+        ActiveDirectoryRelationshipKind.IntraForestTrusted,
         ActiveDirectoryRelationshipKind.AllowedToAct,
         ActiveDirectoryRelationshipKind.AdminTo,
         ActiveDirectoryRelationshipKind.CanPSRemote,

@@ -385,6 +385,12 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 			Label:       ad.Domain,
 		})
 
+		// Determine edge type
+		var edgeType = ad.IntraForestTrusted
+		if trust.TrustType == "External" || trust.TrustType == "Forest" {
+			edgeType = ad.InterForestTrusted
+		}
+
 		var dir = trust.TrustDirection
 		if dir == TrustDirectionInbound || dir == TrustDirectionBidirectional {
 			parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
@@ -404,7 +410,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 						"trustattributes":      finalTrustAttributes,
 						"trusttype":            trust.TrustType,
 						"transitive":           trust.IsTransitive},
-					RelType: ad.TrustedBy,
+					RelType: edgeType,
 				},
 			))
 		}
@@ -427,7 +433,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 						"trustattributes":      finalTrustAttributes,
 						"trusttype":            trust.TrustType,
 						"transitive":           trust.IsTransitive},
-					RelType: ad.TrustedBy,
+					RelType: edgeType,
 				},
 			))
 		}

@@ -14,16 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import General from './General';
-import Abuse from './Abuse';
-import Opsec from './Opsec';
-import References from './References';
+import { FC } from 'react';
+import { Typography } from '@mui/material';
 
-const TrustedBy = {
-    general: General,
-    abuse: Abuse,
-    opsec: Opsec,
-    references: References,
+const Abuse: FC = () => {
+    return <Typography variant='body2'>There is no abuse associated with this edge.</Typography>;
 };
 
-export default TrustedBy;
+export default Abuse;
