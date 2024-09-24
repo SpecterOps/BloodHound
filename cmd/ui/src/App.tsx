@@ -72,11 +72,13 @@ export const Inner: React.FC = () => {
                         & .response-col_links,
                         & .opblock-description-wrapper > p,
                         & .btn-group > button,
+                        & textarea,
+                        & select,
                         `]: {
                         color: theme.palette.color.primary,
                     },
-                    '& .filter-container .operation-filter-input': {
-                        backgroundColor: 'inherit',
+                    ['& input, & textarea, & select, & .models, & .filter-container .operation-filter-input']: {
+                        backgroundColor: theme.palette.neutral.primary,
                         border: `1px solid ${theme.palette.grey[700]}`,
 
                         '&:hover': {
@@ -84,6 +86,20 @@ export const Inner: React.FC = () => {
                         },
                         '&:focus': {
                             outline: `1px solid ${theme.palette.color.links}`,
+                        },
+                    },
+                    '& .models': {
+                        '& h4': {
+                            borderBottomColor: theme.palette.grey[700],
+                        },
+                        '& span, & table': {
+                            color: theme.palette.color.primary,
+                        },
+                        '& svg': {
+                            fill: theme.palette.color.primary,
+                        },
+                        '& model-box': {
+                            backgroundColor: theme.palette.neutral.primary,
                         },
                     },
                     '& .responses-inner': {
@@ -96,6 +112,12 @@ export const Inner: React.FC = () => {
                     },
                     '& .opblock-deprecated': {
                         '& .opblock-title_normal': {
+                            color: theme.palette.color.primary,
+                        },
+                    },
+                    '& .opblock-section-header': {
+                        backgroundColor: theme.palette.neutral.primary,
+                        '& h4, & .btn': {
                             color: theme.palette.color.primary,
                         },
                     },
