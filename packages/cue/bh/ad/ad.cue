@@ -799,6 +799,7 @@ Properties: [
 	SchemaVersion,
 	RequiresManagerApproval,
 	AuthenticationEnabled,
+	SchannelAuthenticationEnabled,
 	EnrolleeSuppliesSubject,
 	CertificateApplicationPolicy,
 	CertificateNameFlag,
