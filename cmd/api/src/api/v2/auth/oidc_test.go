@@ -21,8 +21,6 @@ import (
 
 	"github.com/specterops/bloodhound/src/model"
 
-	"github.com/specterops/bloodhound/src/database/mocks"
-
 	"github.com/specterops/bloodhound/src/api/v2/auth"
 
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
@@ -35,15 +33,13 @@ import (
 
 func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	var (
-		mockCtrl     = gomock.NewController(t)
-		resources, _ = apitest.NewAuthManagementResource(mockCtrl)
-		url          = "/api/v2/sso/providers/oidc"
+		mockCtrl          = gomock.NewController(t)
+		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+		url               = "/api/v2/sso/providers/oidc"
 	)
 	defer mockCtrl.Finish()
 
 	t.Run("successfully create a new OIDCProvider", func(t *testing.T) {
-		mockDB := mocks.NewMockOIDCProviderData(mockCtrl)
-
 		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/1234", "bloodhound").Return(model.OIDCProvider{
 			Name:     "",
 			ClientID: "",
@@ -63,11 +59,24 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 			ResponseStatusCode(http.StatusCreated)
 	})
 
-	t.Run("error parsing json request", func(t *testing.T) {
+	t.Run("error parsing body request", func(t *testing.T) {
 		test.Request(t).
 			WithMethod(http.MethodPost).
 			WithURL(url).
 			WithBody("").
+			OnHandlerFunc(resources.CreateOIDCProvider).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest)
+	})
+
+	t.Run("error validating request field", func(t *testing.T) {
+		test.Request(t).
+			WithMethod(http.MethodPost).
+			WithURL(url).
+			WithBody(auth.CreateOIDCProviderRequest{
+				Name:     "test",
+				LoginURL: "",
+			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).
 			Require().
 			ResponseStatusCode(http.StatusBadRequest)

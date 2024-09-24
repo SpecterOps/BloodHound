@@ -17,19 +17,21 @@
 package auth
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/specterops/bloodhound/src/utils/validation"
 
 	"github.com/specterops/bloodhound/src/api"
 )
 
 // CreateOIDCProviderRequest represents the body of the CreateOIDCProvider endpoint
 type CreateOIDCProviderRequest struct {
-	Name     string `json:"name"`
-	LoginURL string `json:"login_url"`
-	ClientID string `json:"client_id"`
+	Name     string `json:"name" validate:"required"`
+	LoginURL string `json:"login_url" validate:"required"`
+	ClientID string `json:"client_id" validate:"required"`
 }
 
 // CreateOIDCProvider creates an OIDC provider entry given a valid request
@@ -38,12 +40,14 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 		createRequest = CreateOIDCProviderRequest{}
 	)
 
-	if err := json.NewDecoder(request.Body).Decode(&createRequest); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error parsing json body", request), response)
+	if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if validated := validation.Validate(createRequest); validated != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, validated.Error(), request), response)
 	} else if _, err = url.ParseRequestURI(createRequest.LoginURL); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid login_url provided", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("error invalid login_url provided: %v", err), request), response)
 	} else if strings.Contains(createRequest.Name, " ") {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid name formatting, please ensure there are no spaces in the provided name", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid name formatting, ensure there are no spaces in the provided name", request), response)
 	} else {
 		var (
 			formattedName = strings.ToLower(createRequest.Name)
