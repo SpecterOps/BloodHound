@@ -38,12 +38,6 @@ import (
 
 const jobActivityTimeout = time.Minute * 20
 
-const (
-	UTF8BOM1 = 0xef
-	UTF8BOM2 = 0xbb
-	UTF8BMO3 = 0xbf
-)
-
 var ErrInvalidJSON = errors.New("file is not valid json")
 
 type FileUploadData interface {

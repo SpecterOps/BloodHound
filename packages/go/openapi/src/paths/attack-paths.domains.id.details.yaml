@@ -31,6 +31,7 @@ get:
     - Enterprise
   parameters:
     - name: finding
+      x-go-name: "FindingDeprecated"
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
@@ -44,11 +45,13 @@ get:
         $ref: './../schemas/api.params.query.sort-by.yaml'
     - name: FromPrincipal
       deprecated: true
+      x-go-name: "FromPrincipalDeprecated"
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
     - name: ToPrincipal
       deprecated: true
+      x-go-name: "ToPrincipalDeprecated"
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
@@ -70,6 +73,7 @@ get:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
     - name: AcceptedUntil
       deprecated: true
+      x-go-name: "AcceptedUntilDeprecated"
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.time.yaml'

@@ -19,7 +19,7 @@
     "author": "The BloodHound Enterprise Team (https://bloodhoundenterprise.io/)",
     "license": "MIT",
     "dependencies": {
-        "@bloodhoundenterprise/doodleui": "^1.0.0-alpha.5",
+        "@bloodhoundenterprise/doodleui": "^1.0.0-alpha.6",
         "@fortawesome/fontawesome-free": "^6.4.2",
         "@fortawesome/fontawesome-svg-core": "^6.4.2",
         "@fortawesome/free-solid-svg-icons": "^6.4.2",
@@ -39,7 +39,7 @@
         "react-query": "^3.39.3",
         "react-window": "^1.8.9",
         "react-window-infinite-loader": "^1.0.9",
-        "swagger-ui-react": "^5.17.14"
+        "swagger-ui-react": "^4.18.3"
     },
     "devDependencies": {
         "@emotion/react": "^11.10.4",

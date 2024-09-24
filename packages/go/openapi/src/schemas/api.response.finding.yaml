@@ -14,17 +14,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-allOf:
-  - $ref: './model.components.int64.id.yaml'
-  - $ref: './model.components.timestamps.yaml'
-  - type: object
-    properties:
-      shared_to_user_id:
-        readOnly: true
-        allOf:
-          - $ref: './null.uuid.yaml'
-      query_id:
-        type: integer
-        format: int64
-      public:
-        type: boolean
+type: object
+properties:
+  data:
+    oneOf:
+      - $ref: './../schemas/model.list-finding.yaml'
+      - $ref: './../schemas/model.relationship-finding.yaml'

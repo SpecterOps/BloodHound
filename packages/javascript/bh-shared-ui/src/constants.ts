@@ -134,7 +134,7 @@ export const typography: Partial<Theme['typography']> = {
     },
 };
 
-const defaultPortalContainer = {
+export const defaultPortalContainer = {
     // Defaults all MUI components that leverage the Modal construct to portal to a child of the applicationContainer element.
     // If not for this, any tailwind based components in a portal and outside the applicationContainer will not respect the current theme.
     // Controlling doodle components: https://tailwindcss.com/docs/dark-mode#toggling-dark-mode-manually

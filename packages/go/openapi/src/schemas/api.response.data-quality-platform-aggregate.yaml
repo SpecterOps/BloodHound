@@ -15,16 +15,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 allOf:
-  - $ref: './model.components.int64.id.yaml'
-  - $ref: './model.components.timestamps.yaml'
+  - $ref: './../schemas/api.response.pagination.yaml'
+  - $ref: './../schemas/api.response.time-window.yaml'
   - type: object
     properties:
-      shared_to_user_id:
-        readOnly: true
-        allOf:
-          - $ref: './null.uuid.yaml'
-      query_id:
-        type: integer
-        format: int64
-      public:
-        type: boolean
+      data:
+        type: array
+        items:
+          oneOf:
+            - $ref: './../schemas/model.ad-data-quality-aggregation.yaml'
+            - $ref: './../schemas/model.azure-data-quality-aggregation.yaml'
+
