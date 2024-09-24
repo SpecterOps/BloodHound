@@ -86,6 +86,10 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 
 	router.Get("/features", toolContainer.GetFlags)
 	router.Put("/features/{feature_id:[0-9]+}/toggle", toolContainer.ToggleFlag)
+	router.Put("/features/{feature_id:[0-9]+}/toggle", toolContainer.ToggleFlag)
+
+	router.Get("/analysis/schedule", toolContainer.GetScheduledAnalysisConfiguration)
+	router.Put("/analysis/schedule", toolContainer.SetScheduledAnalysisConfiguration)
 
 	for _, extension := range extensions {
 		extension(router)
