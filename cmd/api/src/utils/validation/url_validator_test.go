@@ -31,7 +31,7 @@ func TestUrlValidator(t *testing.T) {
 
 	t.Run("Invalid HTTPS URL", func(t *testing.T) {
 		type testStruct struct {
-			URL string `validate:"url,https=true"`
+			URL string `validate:"url,httpsOnly=true"`
 		}
 		errs := validation.Validate(&testStruct{URL: "http://bloodhound.com"})
 		require.Len(t, errs, 1)

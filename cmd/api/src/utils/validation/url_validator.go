@@ -19,15 +19,15 @@ const (
 // UrlValidator implements the Validator interface which allows the usage of the `url` struct tag
 // to ensure a string is in a valid url format by calling `Validate`
 type UrlValidator struct {
-	forceHttps bool
+	httpsOnly bool
 }
 
 // NewUrlValidator returns a new Validator
 func NewUrlValidator(params map[string]string) Validator {
 	validator := UrlValidator{}
 
-	if val, ok := params["https"]; ok {
-		validator.forceHttps, _ = strconv.ParseBool(val)
+	if val, ok := params["httpsOnly"]; ok {
+		validator.httpsOnly, _ = strconv.ParseBool(val)
 	}
 
 	return validator
@@ -44,7 +44,7 @@ func (s UrlValidator) Validate(value any) utils.Errors {
 		errs = append(errs, fmt.Errorf("expected a string value, got %s", reflect.TypeOf(value)))
 	}
 
-	if s.forceHttps {
+	if s.httpsOnly {
 		if !strings.HasPrefix(inputUrl, "https://") {
 			errs = append(errs, errors.New(ErrorUrlHttpsInvalid))
 		}
