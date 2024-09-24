@@ -107,7 +107,7 @@ export const Inner: React.FC = () => {
                             color: theme.palette.color.primary,
                         },
                     },
-                    '& svg.arrow': {
+                    '& svg': {
                         fill: theme.palette.color.primary,
                     },
                     '& .opblock-deprecated': {
