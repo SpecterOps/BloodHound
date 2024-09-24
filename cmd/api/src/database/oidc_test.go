@@ -7,7 +7,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
 )
@@ -23,10 +24,8 @@ func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
 		provider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com", "bloodhound")
 		require.NoError(t, err)
 
-		require.Equal(t, model.OIDCProvider{
-			Name:     "test",
-			LoginURL: "https://test.localhost.com",
-			ClientID: "bloodhound",
-		}, provider)
+		assert.Equal(t, "test", provider.Name)
+		assert.Equal(t, "https://test.localhost.com", provider.LoginURL)
+		assert.Equal(t, "bloodhound", provider.ClientID)
 	})
 }

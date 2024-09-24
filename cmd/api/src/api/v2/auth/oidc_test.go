@@ -17,6 +17,7 @@
 package auth_test
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/specterops/bloodhound/src/model"
@@ -93,5 +94,21 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 			OnHandlerFunc(resources.CreateOIDCProvider).
 			Require().
 			ResponseStatusCode(http.StatusBadRequest)
+	})
+
+	t.Run("error creating oidc provider db entry", func(t *testing.T) {
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/1234", "bloodhound").Return(model.OIDCProvider{}, fmt.Errorf("error"))
+
+		test.Request(t).
+			WithMethod(http.MethodPost).
+			WithURL(url).
+			WithBody(auth.CreateOIDCProviderRequest{
+				Name:     "test",
+				LoginURL: "https://localhost/1234",
+				ClientID: "bloodhound",
+			}).
+			OnHandlerFunc(resources.CreateOIDCProvider).
+			Require().
+			ResponseStatusCode(http.StatusInternalServerError)
 	})
 }
