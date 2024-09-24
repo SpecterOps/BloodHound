@@ -16,10 +16,13 @@ const (
 	ErrorUrlInvalid      = "invalid url format"
 )
 
+// UrlValidator implements the Validator interface which allows the usage of the `url` struct tag
+// to ensure a string is in a valid url format by calling `Validate`
 type UrlValidator struct {
 	forceHttps bool
 }
 
+// NewUrlValidator returns a new Validator
 func NewUrlValidator(params map[string]string) Validator {
 	validator := UrlValidator{}
 
@@ -30,10 +33,13 @@ func NewUrlValidator(params map[string]string) Validator {
 	return validator
 }
 
+// Validate validates that the associated struct fields are in the proper formatting
 func (s UrlValidator) Validate(value any) utils.Errors {
+	var (
+		errs         = utils.Errors{}
+		inputUrl, ok = value.(string)
+	)
 
-	errs := utils.Errors{}
-	inputUrl, ok := value.(string)
 	if !ok {
 		errs = append(errs, fmt.Errorf("expected a string value, got %s", reflect.TypeOf(value)))
 	}
