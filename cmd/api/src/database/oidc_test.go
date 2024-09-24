@@ -28,6 +28,5 @@ func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
 			LoginURL: "https://test.localhost.com",
 			ClientID: "bloodhound",
 		}, provider)
-
 	})
 }

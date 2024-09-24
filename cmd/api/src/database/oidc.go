@@ -22,11 +22,12 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
+// OIDCProviderData defines the interface required to interact with the oidc_providers table
 type OIDCProviderData interface {
 	CreateOIDCProvider(ctx context.Context, name, loginURL, clientID string) (model.OIDCProvider, error)
 }
 
-// CreateOIDCProvider creates a new entry for an OIDC provider in the oidc_providers table
+// CreateOIDCProvider creates a new entry for an OIDC provider
 func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, loginURL, clientID string) (model.OIDCProvider, error) {
 	provider := model.OIDCProvider{
 		Name:     name,
