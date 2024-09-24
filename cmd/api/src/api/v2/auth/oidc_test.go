@@ -33,10 +33,12 @@ import (
 )
 
 func TestManagementResource_CreateOIDCProvider(t *testing.T) {
+	const (
+		url = "/api/v2/sso/providers/oidc"
+	)
 	var (
 		mockCtrl          = gomock.NewController(t)
 		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
-		url               = "/api/v2/sso/providers/oidc"
 	)
 	defer mockCtrl.Finish()
 
