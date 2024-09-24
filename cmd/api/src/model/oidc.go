@@ -19,7 +19,8 @@ package model
 type OIDCProvider struct {
 	Name     string `json:"name"`
 	ClientID string `json:"client_id"`
-	LoginURL string `json:"login_url"`
+	AuthURL  string `json:"auth_url"`
+	TokenURL string `json:"token_url"`
 
 	BigSerial
 }

@@ -43,10 +43,10 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("successfully create a new OIDCProvider", func(t *testing.T) {
-		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/1234", "bloodhound").Return(model.OIDCProvider{
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/auth", "https://localhost/token", "bloodhound").Return(model.OIDCProvider{
 			Name:     "",
 			ClientID: "",
-			LoginURL: "",
+			AuthURL:  "",
 		}, nil)
 
 		test.Request(t).
@@ -54,7 +54,8 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 			WithURL(url).
 			WithBody(auth.CreateOIDCProviderRequest{
 				Name:     "test",
-				LoginURL: "https://localhost/1234",
+				AuthURL:  "https://localhost/auth",
+				TokenURL: "https://localhost/token",
 				ClientID: "bloodhound",
 			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).
@@ -77,17 +78,31 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 			WithMethod(http.MethodPost).
 			WithURL(url).
 			WithBody(auth.CreateOIDCProviderRequest{
-				Name:     "test",
-				LoginURL: "",
+				Name:    "test",
+				AuthURL: "",
 			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).
 			Require().
 			ResponseStatusCode(http.StatusBadRequest)
 	})
 
-	t.Run("error invalid LoginURL", func(t *testing.T) {
+	t.Run("error invalid AuthURL", func(t *testing.T) {
 		request := auth.CreateOIDCProviderRequest{
-			LoginURL: "12345:bloodhound",
+			AuthURL: "12345:bloodhound",
+		}
+		test.Request(t).
+			WithMethod(http.MethodPost).
+			WithURL(url).
+			WithBody(request).
+			OnHandlerFunc(resources.CreateOIDCProvider).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest)
+	})
+
+	t.Run("error invalid TokenURL", func(t *testing.T) {
+		request := auth.CreateOIDCProviderRequest{
+			AuthURL:  "http://test/auth",
+			TokenURL: "12345:bloodhound",
 		}
 		test.Request(t).
 			WithMethod(http.MethodPost).
@@ -99,14 +114,15 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	})
 
 	t.Run("error creating oidc provider db entry", func(t *testing.T) {
-		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/1234", "bloodhound").Return(model.OIDCProvider{}, fmt.Errorf("error"))
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/auth", "https://localhost/token", "bloodhound").Return(model.OIDCProvider{}, fmt.Errorf("error"))
 
 		test.Request(t).
 			WithMethod(http.MethodPost).
 			WithURL(url).
 			WithBody(auth.CreateOIDCProviderRequest{
 				Name:     "test",
-				LoginURL: "https://localhost/1234",
+				AuthURL:  "https://localhost/auth",
+				TokenURL: "https://localhost/token",
 				ClientID: "bloodhound",
 			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).
