@@ -74,6 +74,8 @@ export const Inner: React.FC = () => {
                         & .btn-group > button,
                         & textarea,
                         & select,
+                        & .parameter__type,
+                        & .prop-format,
                         `]: {
                         color: theme.palette.color.primary,
                     },
@@ -100,6 +102,9 @@ export const Inner: React.FC = () => {
                         },
                         '& model-box': {
                             backgroundColor: theme.palette.neutral.primary,
+                        },
+                        '& .parameter__name.required::after': {
+                            color: theme.palette.color.error,
                         },
                     },
                     '& .responses-inner': {
