@@ -17,9 +17,13 @@
 package auth
 
 import (
+	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
+	"github.com/specterops/bloodhound/src/auth/bhsaml"
+	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils/validation"
 
 	"github.com/specterops/bloodhound/src/api"
@@ -31,6 +35,13 @@ type CreateOIDCProviderRequest struct {
 	AuthURL  string `json:"auth_url"  validate:"url"`
 	TokenURL string `json:"token_url" validate:"url"`
 	ClientID string `json:"client_id" validate:"required"`
+}
+
+type IdentityProvider struct {
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	LoginURL string `json:"login_url"`
+	Type     string `json:"idp_type"`
 }
 
 // CreateOIDCProvider creates an OIDC provider entry given a valid request
@@ -55,5 +66,51 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 		} else {
 			api.WriteBasicResponse(request.Context(), provider, http.StatusCreated, response)
 		}
+	}
+}
+
+// ListIdentityProviders lists all available identity providers (SAML and OIDC)
+func (s ManagementResource) ListIdentityProviders(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx           = request.Context()
+		samlProviders model.SAMLProviders
+		oidcProviders []model.OIDCProvider
+		providers     []IdentityProvider
+		err           error
+	)
+
+	if samlProviders, err = bhsaml.GetAllSAMLProviders(s.db, ctx); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if oidcProviders, err = s.db.GetAllOIDCProviders(ctx); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		// Process SAML providers
+		for _, sp := range samlProviders {
+			providers = append(providers, IdentityProvider{
+				ID:       int64(sp.ID),
+				Name:     sp.Name,
+				LoginURL: sp.ServiceProviderInitiationURI.String(),
+				Type:     "SAML",
+			})
+		}
+
+		// Process OIDC providers
+		for _, op := range oidcProviders {
+			loginURL := fmt.Sprintf("/api/v2/sso/oidc/%s/login", op.Name)
+			providers = append(providers, IdentityProvider{
+				ID:       op.ID,
+				Name:     op.Name,
+				LoginURL: loginURL,
+				Type:     "OIDC",
+			})
+		}
+
+		// Sort providers alphabetically by Name
+		sort.Slice(providers, func(i, j int) bool {
+			return providers[i].Name < providers[j].Name
+		})
+
+		// Return the combined list
+		api.WriteBasicResponse(ctx, providers, http.StatusOK, response)
 	}
 }

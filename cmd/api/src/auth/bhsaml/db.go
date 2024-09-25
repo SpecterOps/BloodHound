@@ -18,6 +18,7 @@ package bhsaml
 
 import (
 	"context"
+	"net/url"
 
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
@@ -26,8 +27,16 @@ import (
 )
 
 func formatSAMLProviderURLs(requestContext context.Context, samlProviders ...model.SAMLProvider) model.SAMLProviders {
+	hostURL := &url.URL{
+		Scheme: "https",
+		Host:   "localhost",
+	}
+	if ctxValues := ctx.Get(requestContext); ctxValues != nil && ctxValues.Host != nil {
+		hostURL = ctxValues.Host
+	}
+
 	for idx := 0; idx < len(samlProviders); idx++ {
-		providerURLs := FormatServiceProviderURLs(*ctx.Get(requestContext).Host, samlProviders[idx].Name)
+		providerURLs := FormatServiceProviderURLs(*hostURL, samlProviders[idx].Name)
 
 		samlProviders[idx].ServiceProviderIssuerURI = serde.FromURL(providerURLs.ServiceProviderRoot)
 		samlProviders[idx].ServiceProviderInitiationURI = serde.FromURL(providerURLs.SingleSignOnService)

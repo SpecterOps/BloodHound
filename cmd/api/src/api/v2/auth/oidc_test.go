@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/serde"
 
 	"github.com/specterops/bloodhound/src/api/v2/auth"
 
@@ -128,5 +129,55 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 			OnHandlerFunc(resources.CreateOIDCProvider).
 			Require().
 			ResponseStatusCode(http.StatusInternalServerError)
+	})
+}
+
+func TestManagementResource_ListIdentityProviders(t *testing.T) {
+	const url = "/api/v2/sso/providers"
+	mockCtrl := gomock.NewController(t)
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	defer mockCtrl.Finish()
+
+	t.Run("successfully list identity providers", func(t *testing.T) {
+		samlProviders := model.SAMLProviders{
+			{
+				Name:                         "SAMLProvider1",
+				ServiceProviderInitiationURI: serde.MustParseURL("https://example.com/sso/saml1"),
+				Serial: model.Serial{
+					ID: 1,
+				},
+			},
+			{
+				Name:                         "SAMLProvider2",
+				ServiceProviderInitiationURI: serde.MustParseURL("https://example.com/sso/saml2"),
+				Serial: model.Serial{
+					ID: 2,
+				},
+			},
+		}
+		oidcProviders := []model.OIDCProvider{
+			{
+				Name: "OIDCProvider1",
+				BigSerial: model.BigSerial{
+					ID: 3,
+				},
+			},
+			{
+				Name: "OIDCProvider2",
+				BigSerial: model.BigSerial{
+					ID: 4,
+				},
+			},
+		}
+
+		mockDB.EXPECT().GetAllSAMLProviders(gomock.Any()).Return(samlProviders, nil)
+		mockDB.EXPECT().GetAllOIDCProviders(gomock.Any()).Return(oidcProviders, nil)
+
+		test.Request(t).
+			WithMethod(http.MethodGet).
+			WithURL(url).
+			OnHandlerFunc(resources.ListIdentityProviders).
+			Require().
+			ResponseStatusCode(http.StatusOK)
 	})
 }

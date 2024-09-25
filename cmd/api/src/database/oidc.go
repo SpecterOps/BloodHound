@@ -38,3 +38,9 @@ func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, authURL, to
 
 	return provider, CheckError(s.db.WithContext(ctx).Table("oidc_providers").Create(&provider))
 }
+
+func (s *BloodhoundDB) GetAllOIDCProviders(ctx context.Context) ([]model.OIDCProvider, error) {
+    var oidcProviders []model.OIDCProvider
+    result := s.db.WithContext(ctx).Table("oidc_providers").Find(&oidcProviders)
+    return oidcProviders, CheckError(result)
+}
