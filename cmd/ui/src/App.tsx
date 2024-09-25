@@ -72,11 +72,15 @@ export const Inner: React.FC = () => {
                         & .response-col_links,
                         & .opblock-description-wrapper > p,
                         & .btn-group > button,
+                        & textarea,
+                        & select,
+                        & .parameter__type,
+                        & .prop-format,
                         `]: {
                         color: theme.palette.color.primary,
                     },
-                    '& .filter-container .operation-filter-input': {
-                        backgroundColor: 'inherit',
+                    ['& input, & textarea, & select, & .models, & .filter-container .operation-filter-input']: {
+                        backgroundColor: theme.palette.neutral.primary,
                         border: `1px solid ${theme.palette.grey[700]}`,
 
                         '&:hover': {
@@ -86,16 +90,39 @@ export const Inner: React.FC = () => {
                             outline: `1px solid ${theme.palette.color.links}`,
                         },
                     },
+                    '& .models': {
+                        '& h4': {
+                            borderBottomColor: theme.palette.grey[700],
+                        },
+                        '& span, & table': {
+                            color: theme.palette.color.primary,
+                        },
+                        '& svg': {
+                            fill: theme.palette.color.primary,
+                        },
+                        '& model-box': {
+                            backgroundColor: theme.palette.neutral.primary,
+                        },
+                    },
+                    '& .parameter__name.required::after': {
+                        color: theme.palette.color.error,
+                    },
                     '& .responses-inner': {
                         [`& h4, & h5`]: {
                             color: theme.palette.color.primary,
                         },
                     },
-                    '& svg.arrow': {
+                    '& svg': {
                         fill: theme.palette.color.primary,
                     },
                     '& .opblock-deprecated': {
                         '& .opblock-title_normal': {
+                            color: theme.palette.color.primary,
+                        },
+                    },
+                    '& .opblock-section-header': {
+                        backgroundColor: theme.palette.neutral.primary,
+                        '& h4, & .btn': {
                             color: theme.palette.color.primary,
                         },
                     },
