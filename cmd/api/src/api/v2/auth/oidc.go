@@ -28,8 +28,7 @@ import (
 // CreateOIDCProviderRequest represents the body of the CreateOIDCProvider endpoint
 type CreateOIDCProviderRequest struct {
 	Name     string `json:"name" validate:"required"`
-	AuthURL  string `json:"auth_url"  validate:"url"`
-	TokenURL string `json:"token_url" validate:"url"`
+	Issuer   string `json:"issuer"  validate:"url"`
 	ClientID string `json:"client_id" validate:"required"`
 }
 
@@ -50,7 +49,7 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 			formattedName = strings.ToLower(createRequest.Name)
 		)
 
-		if provider, err := s.db.CreateOIDCProvider(request.Context(), formattedName, createRequest.AuthURL, createRequest.TokenURL, createRequest.ClientID); err != nil {
+		if provider, err := s.db.CreateOIDCProvider(request.Context(), formattedName, createRequest.Issuer, createRequest.ClientID); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), provider, http.StatusCreated, response)
