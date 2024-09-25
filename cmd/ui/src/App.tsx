@@ -103,9 +103,9 @@ export const Inner: React.FC = () => {
                         '& model-box': {
                             backgroundColor: theme.palette.neutral.primary,
                         },
-                        '& .parameter__name.required::after': {
-                            color: theme.palette.color.error,
-                        },
+                    },
+                    '& .parameter__name.required::after': {
+                        color: theme.palette.color.error,
                     },
                     '& .responses-inner': {
                         [`& h4, & h5`]: {
