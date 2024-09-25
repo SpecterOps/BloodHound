@@ -42,10 +42,10 @@ VALUES (
 )
 ON CONFLICT DO NOTHING;
 
+-- Update existing Edge tables with an additional constraint to support ON CONFLICT upserts
 do
 $$
   begin
-    -- Update existing Edge tables with an additional constraint to support ON CONFLICT upserts
     alter table edge drop constraint if exists edge_graph_id_start_id_end_id_kind_id_key;
     alter table edge add constraint edge_graph_id_start_id_end_id_kind_id_key unique (graph_id, start_id, end_id, kind_id);
   exception
@@ -54,3 +54,6 @@ $$
     when undefined_table then null;
   end
 $$;
+
+-- Set Dark Mode to default to enabled and hide the flag from users in the UI
+UPDATE feature_flags set enabled = true, user_updatable = false where key = 'dark_mode';
