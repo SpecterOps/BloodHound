@@ -63,6 +63,7 @@ VALUES (current_timestamp,
         false)
 ON CONFLICT DO NOTHING;
 
+-- Update existing Edge tables with an additional constraint to support ON CONFLICT upserts
 do
 $$
   begin
@@ -78,3 +79,5 @@ $$
   end
 $$;
 
+-- Set Dark Mode to default to enabled and hide the flag from users in the UI
+UPDATE feature_flags set enabled = true, user_updatable = false where key = 'dark_mode';
