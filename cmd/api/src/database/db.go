@@ -133,6 +133,9 @@ type Database interface {
 	GetSAMLProviderUsers(ctx context.Context, id int32) (model.Users, error)
 	DeleteSAMLProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 
+	// SSO
+	OIDCProviderData
+
 	// Sessions
 	CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error)
 	SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key model.SessionFlagKey, state bool) error
