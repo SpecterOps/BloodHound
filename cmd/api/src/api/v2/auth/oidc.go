@@ -63,7 +63,7 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 	}
 }
 
-// DeleteOIDCProvider deletes an OIDC Provider
+// DeleteOIDCProvider deletes an OIDC Provider entry
 func (s ManagementResource) DeleteOIDCProvider(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawOIDCProviderID = mux.Vars(request)[api.URIPathVariableOIDCProviderID]

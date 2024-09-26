@@ -48,6 +48,12 @@ func TestBloodhoundDB_GetOIDCProvider(t *testing.T) {
 		assert.Equal(t, fetchedProvider.Issuer, provider.Issuer)
 		assert.Equal(t, fetchedProvider.ClientID, provider.ClientID)
 	})
+
+	t.Run("error OIDC provider not found", func(t *testing.T) {
+		_, err := dbInst.GetOIDCProvider(testCtx, 1234)
+		require.Error(t, err)
+		assert.ErrorIs(t, err, database.ErrNotFound)
+	})
 }
 
 func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
@@ -83,6 +89,6 @@ func TestBloodhoundDB_DeleteOIDCProvider(t *testing.T) {
 
 		provider, err = dbInst.GetOIDCProvider(testCtx, provider.ID)
 		require.Error(t, err)
-		require.ErrorContains(t, err, database.ErrNotFound.Error())
+		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 }

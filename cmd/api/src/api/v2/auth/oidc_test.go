@@ -130,7 +130,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	)
 
 	t.Run("successfully delete an OIDCProvider", func(t *testing.T) {
-		mockDB.EXPECT().DeleteOIDCProviders(gomock.Any(), int64(1)).Return(nil)
+		mockDB.EXPECT().DeleteOIDCProvider(gomock.Any(), int64(1)).Return(nil)
 
 		test.Request(t).
 			WithMethod(http.MethodDelete).
@@ -152,7 +152,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	})
 
 	t.Run("error database error", func(t *testing.T) {
-		mockDB.EXPECT().DeleteOIDCProviders(gomock.Any(), int64(1)).Return(errors.New("an error"))
+		mockDB.EXPECT().DeleteOIDCProvider(gomock.Any(), int64(1)).Return(errors.New("an error"))
 
 		test.Request(t).
 			WithMethod(http.MethodDelete).
@@ -164,7 +164,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	})
 
 	t.Run("error could not find oidc_provider by id", func(t *testing.T) {
-		mockDB.EXPECT().DeleteOIDCProviders(gomock.Any(), int64(1)).Return(database.ErrNotFound)
+		mockDB.EXPECT().DeleteOIDCProvider(gomock.Any(), int64(1)).Return(database.ErrNotFound)
 
 		test.Request(t).
 			WithMethod(http.MethodDelete).

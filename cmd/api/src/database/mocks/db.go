@@ -523,18 +523,18 @@ func (mr *MockDatabaseMockRecorder) DeleteIngestTask(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteIngestTask", reflect.TypeOf((*MockDatabase)(nil).DeleteIngestTask), arg0, arg1)
 }
 
-// DeleteOIDCProviders mocks base method.
-func (m *MockDatabase) DeleteOIDCProviders(arg0 context.Context, arg1 int64) error {
+// DeleteOIDCProvider mocks base method.
+func (m *MockDatabase) DeleteOIDCProvider(arg0 context.Context, arg1 int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteOIDCProvider", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteOIDCProviders indicates an expected call of DeleteOIDCProviders.
-func (mr *MockDatabaseMockRecorder) DeleteOIDCProviders(arg0, arg1 interface{}) *gomock.Call {
+// DeleteOIDCProvider indicates an expected call of DeleteOIDCProvider.
+func (mr *MockDatabaseMockRecorder) DeleteOIDCProvider(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).DeleteOIDCProviders), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).DeleteOIDCProvider), arg0, arg1)
 }
 
 // DeleteSAMLProvider mocks base method.
@@ -1048,6 +1048,21 @@ func (m *MockDatabase) GetLatestAssetGroupCollection(arg0 context.Context, arg1 
 func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestAssetGroupCollection", reflect.TypeOf((*MockDatabase)(nil).GetLatestAssetGroupCollection), arg0, arg1)
+}
+
+// GetOIDCProvider mocks base method.
+func (m *MockDatabase) GetOIDCProvider(arg0 context.Context, arg1 int64) (model.OIDCProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOIDCProvider", arg0, arg1)
+	ret0, _ := ret[0].(model.OIDCProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOIDCProvider indicates an expected call of GetOIDCProvider.
+func (mr *MockDatabaseMockRecorder) GetOIDCProvider(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).GetOIDCProvider), arg0, arg1)
 }
 
 // GetPermission mocks base method.
