@@ -77,3 +77,4 @@ $$
     when undefined_table then null;
   end
 $$;
+

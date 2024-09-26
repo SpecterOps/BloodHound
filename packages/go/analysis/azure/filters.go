@@ -94,9 +94,8 @@ func roleDescentFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bo
 			// If the group does not allow role inheritance then we do not inherit the terminal role
 			if isRoleAssignable, err := end.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil || !isRoleAssignable {
 				if graph.IsErrPropertyNotFound(err) {
-					log.Errorf("Node %d is missing property %s", end.ID, azure.IsAssignableToRole)
+					log.Warnf("Node %d is missing property %s", end.ID, azure.IsAssignableToRole)
 				}
-
 				acceptDescendent = false
 				return false
 			}
