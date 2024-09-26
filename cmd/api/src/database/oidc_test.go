@@ -23,11 +23,32 @@ import (
 	"context"
 	"testing"
 
+	"github.com/specterops/bloodhound/src/database"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
 )
+
+func TestBloodhoundDB_GetOIDCProvider(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+	defer dbInst.Close(testCtx)
+
+	t.Run("successfully get an OIDC provider", func(t *testing.T) {
+		provider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com/auth", "bloodhound")
+		require.NoError(t, err)
+
+		fetchedProvider, err := dbInst.GetOIDCProvider(testCtx, provider.ID)
+		require.NoError(t, err)
+		assert.Equal(t, fetchedProvider.Name, provider.Name)
+		assert.Equal(t, fetchedProvider.Issuer, provider.Issuer)
+		assert.Equal(t, fetchedProvider.ClientID, provider.ClientID)
+	})
+}
 
 func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
 	var (
@@ -43,5 +64,25 @@ func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
 		assert.Equal(t, "test", provider.Name)
 		assert.Equal(t, "https://test.localhost.com/auth", provider.Issuer)
 		assert.Equal(t, "bloodhound", provider.ClientID)
+	})
+}
+
+func TestBloodhoundDB_DeleteOIDCProvider(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+	defer dbInst.Close(testCtx)
+
+	t.Run("successfully delete an OIDC provider", func(t *testing.T) {
+		provider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com/auth", "bloodhound")
+		require.NoError(t, err)
+
+		err = dbInst.DeleteOIDCProvider(testCtx, provider.ID)
+		require.NoError(t, err)
+
+		provider, err = dbInst.GetOIDCProvider(testCtx, provider.ID)
+		require.Error(t, err)
+		require.ErrorContains(t, err, database.ErrNotFound.Error())
 	})
 }

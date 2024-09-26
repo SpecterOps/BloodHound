@@ -17,8 +17,14 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
+
+	"github.com/specterops/bloodhound/src/database"
 
 	"github.com/specterops/bloodhound/src/utils/validation"
 
@@ -54,5 +60,24 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 		} else {
 			api.WriteBasicResponse(request.Context(), provider, http.StatusCreated, response)
 		}
+	}
+}
+
+// DeleteOIDCProvider deletes an OIDC Provider
+func (s ManagementResource) DeleteOIDCProvider(response http.ResponseWriter, request *http.Request) {
+	var (
+		rawOIDCProviderID = mux.Vars(request)[api.URIPathVariableOIDCProviderID]
+	)
+
+	// Convert the incoming string url param to an int64
+	if oidcProviderID, err := strconv.ParseInt(rawOIDCProviderID, 10, 64); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if err = s.db.DeleteOIDCProvider(request.Context(), oidcProviderID); errors.Is(err, database.ErrNotFound) {
+		// Handle error if requested record could not be found
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)
+	} else if err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		api.WriteBasicResponse(request.Context(), "", http.StatusOK, response)
 	}
 }
