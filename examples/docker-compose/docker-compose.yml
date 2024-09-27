@@ -18,6 +18,7 @@ services:
   app-db:
     image: docker.io/library/postgres:13.2
     environment:
+      - PGUSER=${POSTGRES_USER:-bloodhound}
       - POSTGRES_USER=${POSTGRES_USER:-bloodhound}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-bloodhoundcommunityedition}
       - POSTGRES_DB=${POSTGRES_DB:-bloodhound}
