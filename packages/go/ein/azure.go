@@ -41,7 +41,10 @@ const (
 	KeyVaultPermissionGet string = "Get"
 )
 
-var resourceGroupLevel = regexp.MustCompile(`^[\\w\\d\\-\\/]*/resourceGroups/[0-9a-zA-Z]+$`)
+var (
+	resourceGroupLevel = regexp.MustCompile(`^[\\w\\d\\-\\/]*/resourceGroups/[0-9a-zA-Z]+$`)
+	InvalidTypeErr     = errors.New("invalid type returned from directory object")
+)
 
 func ConvertAZAppToNode(app models.App) IngestibleNode {
 	return IngestibleNode{
@@ -451,7 +454,9 @@ func ConvertAzureGroupMembersToRels(data models.GroupMembers) []IngestibleRelati
 		)
 		if err := json.Unmarshal(raw.Member, &member); err != nil {
 			log.Errorf(SerialError, "azure group member", err)
-		} else if memberType, err := ExtractTypeFromDirectoryObject(member); err != nil {
+		} else if memberType, err := ExtractTypeFromDirectoryObject(member); errors.Is(err, InvalidTypeErr) {
+			log.Warnf(ExtractError, err)
+		} else if err != nil {
 			log.Errorf(ExtractError, err)
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
@@ -483,7 +488,9 @@ func ConvertAzureGroupOwnerToRels(data models.GroupOwners) []IngestibleRelations
 		)
 		if err := json.Unmarshal(raw.Owner, &owner); err != nil {
 			log.Errorf(SerialError, "azure group owner", err)
-		} else if ownerType, err := ExtractTypeFromDirectoryObject(owner); err != nil {
+		} else if ownerType, err := ExtractTypeFromDirectoryObject(owner); errors.Is(err, InvalidTypeErr) {
+			log.Warnf(ExtractError, err)
+		} else if err != nil {
 			log.Errorf(ExtractError, err)
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
@@ -1067,7 +1074,9 @@ func ConvertAzureServicePrincipalOwnerToRels(data models.ServicePrincipalOwners)
 
 		if err := json.Unmarshal(raw.Owner, &owner); err != nil {
 			log.Errorf(SerialError, "azure service principal owner", err)
-		} else if ownerType, err := ExtractTypeFromDirectoryObject(owner); err != nil {
+		} else if ownerType, err := ExtractTypeFromDirectoryObject(owner); errors.Is(err, InvalidTypeErr) {
+			log.Warnf(ExtractError, err)
+		} else if err != nil {
 			log.Errorf(ExtractError, err)
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
@@ -1862,7 +1871,7 @@ func ExtractTypeFromDirectoryObject(directoryObject azure2.DirectoryObject) (obj
 	case enums.EntityDevice:
 		return azure.Device, nil
 	default:
-		return nil, errors.New(fmt.Sprintf("invalid type returned from directory object: %s", directoryObject.Type))
+		return nil, fmt.Errorf("%w: %s", InvalidTypeErr, directoryObject.Type)
 	}
 }
 

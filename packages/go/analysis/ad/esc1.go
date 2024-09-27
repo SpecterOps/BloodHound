@@ -32,7 +32,7 @@ import (
 	"github.com/specterops/bloodhound/log"
 )
 
-func PostADCSESC1(ctx context.Context, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
+func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
 	results := cardinality.NewBitmap32()
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
@@ -44,8 +44,11 @@ func PostADCSESC1(ctx context.Context, outC chan<- analysis.CreatePostRelationsh
 				continue
 			} else if !valid {
 				continue
+			} else if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+				log.Warnf("Error validating cert template %d: %v", certTemplate.ID, err)
+				continue
 			} else {
-				results.Or(CalculateCrossProductNodeSets(expandedGroups, cache.GetCertTemplateEnrollers(certTemplate.ID), ecaEnrollers))
+				results.Or(CalculateCrossProductNodeSets(tx, domainsid, expandedGroups, cache.GetCertTemplateEnrollers(certTemplate.ID), ecaEnrollers))
 			}
 		}
 	}
@@ -171,7 +174,9 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		RETURN p1,p2,p3,p4,p5
 	*/
 	var (
-		startNode *graph.Node
+		startNode  *graph.Node
+		endNode    *graph.Node
+		startNodes = graph.NodeSet{}
 
 		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		paths              = graph.PathSet{}
@@ -182,56 +187,80 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if node, err := ops.FetchNode(tx, edge.StartID); err != nil {
+		var err error
+		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
+			return err
+		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
 			return err
 		} else {
-			startNode = node
 			return nil
 		}
 	}); err != nil {
 		return nil, err
 	}
 
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: ADCSESC1Path1Pattern(edge.EndID).Do(func(terminal *graph.PathSegment) error {
-			// Find the first enterprise CA and track it before stuffing this path into the candidates
-			var enterpriseCANode *graph.Node
-			terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
-				if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-					enterpriseCANode = nextSegment.Node
-				}
-				return true
-			})
-
-			lock.Lock()
-			candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
-			path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
-			lock.Unlock()
-
+	// Add startnode, Auth. Users, and Everyone to start nodes
+	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		log.Warnf("Error getting domain SID for domain %d: %v", endNode.ID, err)
+		return nil, err
+	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
+			return err
+		} else {
+			startNodes.AddSet(nodeSet)
 			return nil
-		}),
+		}
 	}); err != nil {
 		return nil, err
 	}
+	startNodes.Add(startNode)
 
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: ADCSESC1Path2Pattern(edge.EndID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
-			// Find the CA and track it before stuffing this path into the candidates
-			enterpriseCANode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-			})
+	// P1
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: ADCSESC1Path1Pattern(edge.EndID).Do(func(terminal *graph.PathSegment) error {
+				// Find the first enterprise CA and track it before stuffing this path into the candidates
+				var enterpriseCANode *graph.Node
+				terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+					if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+						enterpriseCANode = nextSegment.Node
+					}
+					return true
+				})
 
-			lock.Lock()
-			candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
-			path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
-			lock.Unlock()
+				lock.Lock()
+				candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
+				path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
+				lock.Unlock()
 
-			return nil
-		}),
-	}); err != nil {
-		return nil, err
+				return nil
+			}),
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	// P2
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: ADCSESC1Path2Pattern(edge.EndID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
+				// Find the CA and track it before stuffing this path into the candidates
+				enterpriseCANode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+				})
+
+				lock.Lock()
+				candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
+				path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
+				lock.Unlock()
+
+				return nil
+			}),
+		}); err != nil {
+			return nil, err
+		}
 	}
 
 	// Intersect the CAs and take only those seen in both paths

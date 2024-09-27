@@ -56,6 +56,14 @@ const References: FC = () => {
                 href='https://www.thehacker.recipes/ad/movement/credentials/dumping/dcsync'>
                 https://www.thehacker.recipes/ad/movement/credentials/dumping/dcsync
             </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://github.com/ly4k/Certipy'>
+                https://github.com/ly4k/Certipy
+            </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Certify'>
+                https://github.com/GhostPack/Certify
+            </Link>
         </Box>
     );
 };

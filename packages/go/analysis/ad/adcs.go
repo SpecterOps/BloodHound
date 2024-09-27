@@ -111,77 +111,99 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, certTemplat
 func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostGoldenCert(ctx, tx, outC, domain, enterpriseCA); err != nil {
+		if err := PostGoldenCert(ctx, tx, outC, domain, enterpriseCA); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Post processing for %s: %v", ad.GoldenCert.String(), err)
+		} else if err != nil {
 			log.Errorf("Failed post processing for %s: %v", ad.GoldenCert.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC1(ctx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
+		if err := PostADCSESC1(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Post processing for %s: %v", ad.GoldenCert.String(), err)
+		} else if err != nil {
 			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC1.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC3(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
+		if err := PostADCSESC3(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Post processing for %s: %v", ad.GoldenCert.String(), err)
+		} else if err != nil {
 			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC3.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
+		if err := PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Post processing for %s: %v", ad.GoldenCert.String(), err)
+		} else if err != nil {
 			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC4.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC6a(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
+		if err := PostADCSESC6a(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Post processing for %s: %v", ad.GoldenCert.String(), err)
+		} else if err != nil {
 			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC6b(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
+		if err := PostADCSESC6b(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Post processing for %s: %v", ad.GoldenCert.String(), err)
+		} else if err != nil {
 			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC6b.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC9a(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
+		if err := PostADCSESC9a(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Post processing for %s: %v", ad.GoldenCert.String(), err)
+		} else if err != nil {
 			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC9a.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC9b(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
+		if err := PostADCSESC9b(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Post processing for %s: %v", ad.GoldenCert.String(), err)
+		} else if err != nil {
 			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC9b.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC10a(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
+		if err := PostADCSESC10a(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Post processing for %s: %v", ad.GoldenCert.String(), err)
+		} else if err != nil {
 			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC10a.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC10b(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
+		if err := PostADCSESC10b(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Post processing for %s: %v", ad.GoldenCert.String(), err)
+		} else if err != nil {
 			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC10b.String(), err)
 		}
 		return nil
 	})
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC13(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); err != nil {
+		if err := PostADCSESC13(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			log.Warnf("Post processing for %s: %v", ad.GoldenCert.String(), err)
+		} else if err != nil {
 			log.Errorf("Failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 		}
 		return nil

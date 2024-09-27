@@ -17,14 +17,27 @@
 import { FC } from 'react';
 import { Typography } from '@mui/material';
 
-const Abuse: FC = () => {
+const LinuxAbuse: FC = () => {
     return (
-        <Typography variant='body2'>
-            This relationship alone is not enough to perform a privilege escalation or impersonation primitive. This
-            relationship may contribute to other relationships and attributes, from which an escalation opportunity may
-            emerge.
-        </Typography>
+        <>
+            <Typography variant='body2'>Certipy can be used to enroll a certificate:</Typography>
+            <Typography component={'pre'}>
+                {'certipy req -u USER@CORP.LOCAL -p PWD -ca CA-NAME -target SERVER -template TEMPLATE'}
+            </Typography>
+            <Typography variant='body2'>
+                The following requirements must be met for a principal to be able to enroll a certificate:
+                <br />
+                1) The principal has enrollment rights on a certificate template
+                <br />
+                2) The certificate template is published on an enterprise CA
+                <br />
+                3) The principal has Enroll permission on the enterprise CA
+                <br />
+                4) The principal meets the issuance requirements and the requirements for subject name and subject
+                alternative name defined by the template
+            </Typography>
+        </>
     );
 };
 
-export default Abuse;
+export default LinuxAbuse;

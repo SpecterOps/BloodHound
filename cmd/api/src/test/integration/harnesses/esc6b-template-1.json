@@ -119,7 +119,7 @@
       "caption": "CertTemplate2",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelSchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1"
       },
@@ -182,7 +182,7 @@
       "caption": "CertTemplate3",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "False",
+        "SchannelSchannelAuthenticationEnabled": "False",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1"
       },
@@ -227,7 +227,7 @@
       "caption": "CertTemplate4",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelSchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "True",
         "SchemaVersion": "1"
       },
@@ -259,7 +259,7 @@
       "caption": "CertTemplate5",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelSchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "2",
         "AuthorizedSignatures": "1"
@@ -278,7 +278,7 @@
       "caption": "CertTemplate1",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "2",
         "AuthorizedSignatures": "0"

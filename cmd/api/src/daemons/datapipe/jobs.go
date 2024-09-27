@@ -19,10 +19,13 @@ package datapipe
 import (
 	"archive/zip"
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 
+	"github.com/specterops/bloodhound/bomenc"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/log"
@@ -165,7 +168,10 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 			} else if srcFile, err := f.Open(); err != nil {
 				errs.Add(fmt.Errorf("error opening file %s in archive %s: %v", f.Name, path, err))
 				failed++
-			} else if _, err := io.Copy(tempFile, srcFile); err != nil {
+			} else if normFile, err := bomenc.NormalizeToUTF8(srcFile); err != nil {
+				errs.Add(fmt.Errorf("error normalizing file %s to UTF8 in archive %s: %v", f.Name, path, err))
+				failed++
+			} else if _, err := io.Copy(tempFile, normFile); err != nil {
 				errs.Add(fmt.Errorf("error extracting file %s in archive %s: %v", f.Name, path, err))
 				failed++
 			} else if err := tempFile.Close(); err != nil {
@@ -214,7 +220,9 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 
 				if err := file.Close(); err != nil {
 					log.Errorf("Error closing ingest file %s: %v", filePath, err)
-				} else if err := os.Remove(filePath); err != nil {
+				} else if err := os.Remove(filePath); errors.Is(err, fs.ErrNotExist) {
+					log.Warnf("Removing ingest file %s: %w", filePath, err)
+				} else if err != nil {
 					log.Errorf("Error removing ingest file %s: %v", filePath, err)
 				}
 			}
@@ -249,7 +257,9 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 			log.Errorf("Failed to fetch job for ingest task %d: %v", ingestTask.ID, err)
 		}
 		total, failed, err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType)
-		if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			log.Warnf("Did not process ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
+		} else if err != nil {
 			log.Errorf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
 		}
 

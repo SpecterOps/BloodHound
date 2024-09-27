@@ -76,6 +76,11 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 		}
 	})
 
+	// Health endpoint that is online even during migrations
+	router.Get("/health", func(response http.ResponseWriter, _ *http.Request) {
+		response.WriteHeader(http.StatusOK)
+	})
+
 	router.Get("/logging", tools.GetLoggingDetails)
 	router.Put("/logging", tools.PutLoggingDetails)
 

@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as axios from 'axios';
+import { ConfigurationPayload } from './utils/config';
 
 export type RequestOptions = axios.AxiosRequestConfig;
 
@@ -272,3 +273,5 @@ export interface UpdateUserRequest {
     SAMLProviderId?: string;
     is_disabled?: boolean;
 }
+
+export type UpdateConfigurationRequest = ConfigurationPayload;
