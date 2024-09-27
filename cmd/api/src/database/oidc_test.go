@@ -23,9 +23,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -43,5 +42,26 @@ func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
 		assert.Equal(t, "test", provider.Name)
 		assert.Equal(t, "https://test.localhost.com/auth", provider.Issuer)
 		assert.Equal(t, "bloodhound", provider.ClientID)
+	})
+}
+
+func TestBloodhoundDB_GetAllOIDCProviders(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+	defer dbInst.Close(testCtx)
+
+	t.Run("successfully get all OIDC provider", func(t *testing.T) {
+		firstProvider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com/auth", "bloodhound")
+		secondProvider, err := dbInst.CreateOIDCProvider(testCtx, "test_2", "https://test.localhost.com/auth", "another_client")
+		require.NoError(t, err)
+
+		providers, err := dbInst.GetAllOIDCProviders(testCtx)
+		require.NoError(t, err)
+
+		require.Len(t, providers, 2)
+		assert.Equal(t, firstProvider, providers[0])
+		assert.Equal(t, secondProvider, providers[1])
 	})
 }

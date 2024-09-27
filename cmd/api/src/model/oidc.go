@@ -23,3 +23,5 @@ type OIDCProvider struct {
 
 	BigSerial
 }
+
+type OIDCProviders []OIDCProvider
