@@ -97,6 +97,8 @@ func (s ManagementResource) ListSAMLSignOnEndpoints(response http.ResponseWriter
 	}
 }
 
+// ListSAMLProviders ...
+// Deprecated: Use ManagementResource.ListIdentityProviders
 func (s ManagementResource) ListSAMLProviders(response http.ResponseWriter, request *http.Request) {
 	if samlProviders, err := bhsaml.GetAllSAMLProviders(s.db, request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
