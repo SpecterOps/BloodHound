@@ -24,23 +24,23 @@ import (
 
 // OIDCProviderData defines the interface required to interact with the oidc_providers table
 type OIDCProviderData interface {
-	CreateOIDCProvider(ctx context.Context, name, authURL, tokenURL, clientID string) (model.OIDCProvider, error)
+	CreateOIDCProvider(ctx context.Context, name, issuer, clientID string) (model.OIDCProvider, error)
+	GetAllOIDCProviders(ctx context.Context) ([]model.OIDCProvider, error)
 }
 
 // CreateOIDCProvider creates a new entry for an OIDC provider
-func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, authURL, tokenURL, clientID string) (model.OIDCProvider, error) {
+func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, issuer, clientID string) (model.OIDCProvider, error) {
 	provider := model.OIDCProvider{
 		Name:     name,
 		ClientID: clientID,
-		AuthURL:  authURL,
-		TokenURL: tokenURL,
+		Issuer:   issuer,
 	}
 
 	return provider, CheckError(s.db.WithContext(ctx).Table("oidc_providers").Create(&provider))
 }
 
 func (s *BloodhoundDB) GetAllOIDCProviders(ctx context.Context) ([]model.OIDCProvider, error) {
-    var oidcProviders []model.OIDCProvider
-    result := s.db.WithContext(ctx).Table("oidc_providers").Find(&oidcProviders)
-    return oidcProviders, CheckError(result)
+	var oidcProviders []model.OIDCProvider
+	result := s.db.WithContext(ctx).Table("oidc_providers").Find(&oidcProviders)
+	return oidcProviders, CheckError(result)
 }

@@ -135,8 +135,6 @@ type Database interface {
 
 	// SSO
 	OIDCProviderData
-	CreateOIDCProvider(ctx context.Context, name, authURL, tokenURL, clientID string) (model.OIDCProvider, error)
-    GetAllOIDCProviders(ctx context.Context) ([]model.OIDCProvider, error)
 
 	// Sessions
 	CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error)
