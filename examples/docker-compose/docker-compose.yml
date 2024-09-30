@@ -16,7 +16,7 @@
 
 services:
   app-db:
-    image: docker.io/library/postgres:13.2
+    image: docker.io/library/postgres:16
     environment:
       - PGUSER=${POSTGRES_USER:-bloodhound}
       - POSTGRES_USER=${POSTGRES_USER:-bloodhound}
