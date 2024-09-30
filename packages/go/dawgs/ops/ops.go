@@ -409,6 +409,25 @@ func FetchRelationshipNodes(tx graph.Transaction, relationship *graph.Relationsh
 	}
 }
 
+// CountNodes will fetch the current number of nodes in the database that match the given criteria
+func CountNodes(ctx context.Context, db graph.Database, criteria ...graph.Criteria) (int64, error) {
+	var (
+		nodeCount int64
+
+		err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+			if fetchedNodeCount, err := tx.Nodes().Filter(query.And(criteria...)).Count(); err != nil {
+				return err
+			} else {
+				nodeCount = fetchedNodeCount
+			}
+
+			return nil
+		})
+	)
+
+	return nodeCount, err
+}
+
 // FetchLargestNodeID will fetch the current node database identifier ceiling.
 func FetchLargestNodeID(ctx context.Context, db graph.Database) (graph.ID, error) {
 	var (
@@ -546,3 +565,4 @@ func ParallelFetchNodes(ctx context.Context, db graph.Database, criteria graph.C
 		return parallelFetchNodes(ctx, db, largestNodeID, criteria, numWorkers)
 	}
 }
+
