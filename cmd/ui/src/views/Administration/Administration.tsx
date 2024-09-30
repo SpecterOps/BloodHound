@@ -18,7 +18,7 @@ import { Box, CircularProgress, Container } from '@mui/material';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { GenericErrorBoundaryFallback, Permission } from 'bh-shared-ui';
+import { GenericErrorBoundaryFallback, Permission, MakeSSOConfiguration } from 'bh-shared-ui';
 import LeftNav from 'src/components/LeftNav';
 import {
     ROUTE_ADMINISTRATION_FILE_INGEST,
@@ -30,13 +30,16 @@ import {
     ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
 } from 'src/ducks/global/routes';
 import usePermissions from 'src/hooks/usePermissions/usePermissions';
+import useToggle from 'src/hooks/useToggle';
+import { addSnackbar } from 'src/ducks/global/actions';
+import { useAppDispatch } from 'src/store';
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const QA = React.lazy(() => import('src/views/QA'));
 const Users = React.lazy(() => import('src/views/Users'));
-const SAMLConfiguration = React.lazy(() => import('src/views/SAMLConfiguration'));
 const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures'));
 const FileIngest = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.FileIngest })));
 const BloodHoundConfiguration = React.lazy(() => import('src/views/BloodHoundConfiguration'));
+const SSOConfiguration = React.lazy(() => MakeSSOConfiguration(useToggle, addSnackbar, useAppDispatch));
 
 const Administration: React.FC = () => {
     const sections = [
@@ -80,9 +83,9 @@ const Administration: React.FC = () => {
             title: 'Authentication',
             items: [
                 {
-                    label: 'SAML Configuration',
+                    label: 'SSO Configuration',
                     path: ROUTE_ADMINISTRATION_SAML_CONFIGURATION,
-                    component: SAMLConfiguration,
+                    component: SSOConfiguration,
                     adminOnly: false,
                 },
             ],
