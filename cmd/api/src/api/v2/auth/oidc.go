@@ -49,10 +49,10 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 			formattedName = strings.ToLower(createRequest.Name)
 		)
 
-		if provider, err := s.db.CreateOIDCProvider(request.Context(), formattedName, createRequest.Issuer, createRequest.ClientID); err != nil {
+		if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), formattedName, createRequest.Issuer, createRequest.ClientID); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			api.WriteBasicResponse(request.Context(), provider, http.StatusCreated, response)
+			api.WriteBasicResponse(request.Context(), oidcProvider, http.StatusCreated, response)
 		}
 	}
 }

@@ -19,6 +19,7 @@ package auth_test
 import (
 	"fmt"
 	"net/http"
+	"testing"
 
 	"github.com/specterops/bloodhound/src/model"
 
@@ -26,8 +27,6 @@ import (
 
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/utils/test"
-
-	"testing"
 
 	"go.uber.org/mock/gomock"
 )
@@ -43,19 +42,25 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("successfully create a new OIDCProvider", func(t *testing.T) {
+		mockDB.EXPECT().CreateSSOProvider(gomock.Any(), "test", "https://localhost/auth", "bloodhound").Return(model.SSOProvider{
+			Type:   model.SessionAuthProviderOIDC,
+			Name:   "test",
+			Slug:   "https://localhost/auth",
+			Serial: model.Serial{},
+		}, nil)
+
 		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/auth", "bloodhound").Return(model.OIDCProvider{
-			Name:     "",
-			ClientID: "",
-			Issuer:   "",
+			Name:     "test",
+			ClientID: "bloodhound",
+			Issuer:   "https://localhost/auth",
 		}, nil)
 
 		test.Request(t).
 			WithMethod(http.MethodPost).
 			WithURL(url).
 			WithBody(auth.CreateOIDCProviderRequest{
-				Name:   "test",
-				Issuer: "https://localhost/auth",
-
+				Name:     "test",
+				Issuer:   "https://localhost/auth",
 				ClientID: "bloodhound",
 			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).

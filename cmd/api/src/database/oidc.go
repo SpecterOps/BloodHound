@@ -20,6 +20,11 @@ import (
 	"context"
 
 	"github.com/specterops/bloodhound/src/model"
+	"gorm.io/gorm"
+)
+
+const (
+	oidcProvidersTableName = "oidc_providers"
 )
 
 // OIDCProviderData defines the interface required to interact with the oidc_providers table
@@ -29,11 +34,23 @@ type OIDCProviderData interface {
 
 // CreateOIDCProvider creates a new entry for an OIDC provider
 func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, issuer, clientID string) (model.OIDCProvider, error) {
-	provider := model.OIDCProvider{
-		Name:     name,
-		ClientID: clientID,
-		Issuer:   issuer,
-	}
+	var (
+		oidcProvider = model.OIDCProvider{
+			Name:     name,
+			ClientID: clientID,
+			Issuer:   issuer,
+		}
+	)
 
-	return provider, CheckError(s.db.WithContext(ctx).Table("oidc_providers").Create(&provider))
+	// Create both the sso_providers and oidc_providers rows in a single transaction
+	// If one of these requests errors, both changes will be rolled back
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if _, err := s.CreateSSOProviderWithTransaction(ctx, tx, name, issuer, model.SessionAuthProviderOIDC); err != nil {
+			return err
+		} else {
+			return CheckError(tx.WithContext(ctx).Table(oidcProvidersTableName).Create(&oidcProvider))
+		}
+	})
+
+	return oidcProvider, err
 }

@@ -565,6 +565,7 @@ type SessionAuthProvider int
 const (
 	SessionAuthProviderSecret SessionAuthProvider = 0
 	SessionAuthProviderSAML   SessionAuthProvider = 1
+	SessionAuthProviderOIDC   SessionAuthProvider = 2
 )
 
 type SessionFlagKey string
