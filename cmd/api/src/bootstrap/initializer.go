@@ -39,7 +39,7 @@ type Initializer[DBType database.Database, GraphType graph.Database] struct {
 	Configuration       config.Configuration
 	PreMigrationDaemons InitializerLogic[DBType, GraphType]
 	Entrypoint          InitializerLogic[DBType, GraphType]
-	DBConnector   DatabaseConstructor[DBType, GraphType]
+	DBConnector         DatabaseConstructor[DBType, GraphType]
 }
 
 func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handleSignals bool) error {

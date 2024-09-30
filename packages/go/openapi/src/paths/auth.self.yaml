@@ -33,11 +33,6 @@ get:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              data:
-                oneOf:
-                  - $ref: './../schemas/model.user.yaml'
-                  - $ref: './../schemas/model.client.yaml'
+            $ref: './../schemas/api.response.authenticated-requester.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'

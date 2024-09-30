@@ -64,10 +64,10 @@ func main() {
 		log.Fatalf("Unable to read configuration %s: %v", configFilePath, err)
 	} else {
 		initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
-			Configuration: cfg,
-			DBConnector:   services.ConnectDatabases,
+			Configuration:       cfg,
+			DBConnector:         services.ConnectDatabases,
 			PreMigrationDaemons: services.PreMigrationDaemons,
-			Entrypoint:    services.Entrypoint,
+			Entrypoint:          services.Entrypoint,
 		}
 
 		if err := initializer.Launch(context.Background(), true); err != nil {
