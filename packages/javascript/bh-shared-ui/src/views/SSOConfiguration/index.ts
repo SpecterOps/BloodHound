@@ -14,6 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import SAMLConfiguration from './SAMLConfiguration';
-
-export default SAMLConfiguration;
+export { default }  from './SSOConfiguration';
