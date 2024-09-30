@@ -56,6 +56,9 @@ export { default as Enable2FADialog } from './Enable2FADialog';
 export * from './EnterpriseIcon';
 export { default as EnterpriseIcon } from './EnterpriseIcon';
 
+export * from './FeatureFlag';
+export { default as FeatureFlag } from './FeatureFlag';
+
 export * from './FileUploadDialog';
 export { default as FileUploadDialog } from './FileUploadDialog';
 
