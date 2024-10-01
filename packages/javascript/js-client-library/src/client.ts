@@ -654,6 +654,9 @@ class BHEAPIClient {
     deleteSAMLProvider = (SAMLProviderId: string, options?: types.RequestOptions) =>
         this.baseClient.delete(`/api/v2/saml/providers/${SAMLProviderId}`, options);
 
+    createOIDCProvider = (oidcProvider: types.CreateOIDCProvideRequest) => 
+        this.baseClient.post(`/api/v2/sso-providers/oidc/`, oidcProvider);
+
     permissionList = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/permissions', options);
 
     permissionGet = (permissionId: string, options?: types.RequestOptions) =>

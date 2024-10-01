@@ -38,6 +38,9 @@ export { default as CommunityIcon } from './CommunityIcon';
 export * from './ConfirmationDialog';
 export { default as ConfirmationDialog } from './ConfirmationDialog';
 
+export * from './CreateMenu';
+export { default as CreateMenu } from './CreateMenu';
+
 export * from './CreateSAMLProviderDialog';
 export { default as CreateSAMLProviderDialog } from './CreateSAMLProviderDialog';
 
