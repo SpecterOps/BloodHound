@@ -287,13 +287,12 @@ func GetReconciliationParameter(ctx context.Context, service ParameterService) b
 }
 
 type ScheduledAnalysisParameter struct {
-	Enabled bool      `json:"enabled,omitempty"`
-	RRule   string    `json:"rrule,omitempty"`
-	LastRun time.Time `json:"last_run,omitempty"`
+	Enabled bool   `json:"enabled,omitempty"`
+	RRule   string `json:"rrule,omitempty"`
 }
 
 func GetScheduledAnalysisParameter(ctx context.Context, service ParameterService) (ScheduledAnalysisParameter, error) {
-	result := ScheduledAnalysisParameter{Enabled: false, RRule: "", LastRun: time.Time{}}
+	result := ScheduledAnalysisParameter{Enabled: false, RRule: ""}
 
 	if cfg, err := service.GetConfigurationParameter(ctx, ScheduledAnalysis); err != nil {
 		return result, err
