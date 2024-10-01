@@ -301,7 +301,7 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
         styleOverrides: {
             root: {
                 backgroundImage: 'unset',
-            },
+            }
         },
     },
     MuiPaper: {

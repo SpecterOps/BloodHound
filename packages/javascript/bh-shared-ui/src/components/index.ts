@@ -117,11 +117,8 @@ export { default as PasswordResetForm } from './PasswordResetForm';
 export * from './PrebuiltSearchList';
 export { default as PrebuiltSearchList } from './PrebuiltSearchList';
 
-export * from './SAMLProviderTable';
-export { default as SAMLProviderTable } from './SAMLProviderTable';
-
-export * from './SAMLProviderTableActionMenu';
-export { default as SAMLProviderTableActionMenu } from './SAMLProviderTableActionMenu';
+export * from './SSOProviderTable';
+export { default as SSOProviderTable } from './SSOProviderTable';
 
 export * from './SearchCurrentNodes';
 export { default as SearchCurrentNodes } from './SearchCurrentNodes';
