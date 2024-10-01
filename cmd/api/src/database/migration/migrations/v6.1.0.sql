@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS sso_providers
     name       TEXT NOT NULL,
     slug       TEXT NOT NULL,
     type       int  NOT NULL,
-    
+
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
 
@@ -33,9 +33,9 @@ CREATE TABLE IF NOT EXISTS sso_providers
 CREATE TABLE IF NOT EXISTS oidc_providers
 (
     id              SERIAL PRIMARY KEY,
-    name            TEXT                                                    NOT NULL,
-    client_id       TEXT                                                    NOT NULL,
-    issuer          TEXT                                                    NOT NULL,
+    name            TEXT NOT NULL,
+    client_id       TEXT NOT NULL,
+    issuer          TEXT NOT NULL,
     sso_provider_id INTEGER REFERENCES sso_providers (id) ON DELETE CASCADE NULL,
 
     updated_at      TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -47,3 +47,4 @@ ALTER TABLE ONLY saml_providers
     ADD COLUMN IF NOT EXISTS sso_provider_id INTEGER NULL;
 ALTER TABLE ONLY saml_providers
     ADD CONSTRAINT fk_saml_provider_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE CASCADE;
+

@@ -42,14 +42,12 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if validated := validation.Validate(createRequest); validated != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, validated.Error(), request), response)
-	} else if strings.Contains(createRequest.Name, " ") {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid name formatting, ensure there are no spaces in the provided name", request), response)
 	} else {
 		var (
-			formattedName = strings.ToLower(createRequest.Name)
+			formattedName = strings.ToLower(strings.ReplaceAll(createRequest.Name, " ", "-"))
 		)
 
-		if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), formattedName, createRequest.Issuer, createRequest.ClientID); err != nil {
+		if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), createRequest.Name, formattedName, createRequest.Issuer, createRequest.ClientID); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), oidcProvider, http.StatusCreated, response)

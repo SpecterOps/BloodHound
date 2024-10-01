@@ -44,6 +44,7 @@ func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name, slug string,
 	return provider, CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))
 }
 
+// CreateSSOProviderWithTransaction uses a db transaction to create an entry in the sso_providers table
 func (s *BloodhoundDB) CreateSSOProviderWithTransaction(ctx context.Context, tx *gorm.DB, name, slug string, authType model.SessionAuthProvider) (model.SSOProvider, error) {
 	provider := model.SSOProvider{
 		Name: name,
@@ -52,5 +53,4 @@ func (s *BloodhoundDB) CreateSSOProviderWithTransaction(ctx context.Context, tx 
 	}
 
 	return provider, CheckError(tx.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))
-
 }

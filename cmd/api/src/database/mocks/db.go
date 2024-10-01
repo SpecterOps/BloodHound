@@ -275,18 +275,18 @@ func (mr *MockDatabaseMockRecorder) CreateInstallation(arg0 interface{}) *gomock
 }
 
 // CreateOIDCProvider mocks base method.
-func (m *MockDatabase) CreateOIDCProvider(arg0 context.Context, arg1, arg2, arg3 string) (model.OIDCProvider, error) {
+func (m *MockDatabase) CreateOIDCProvider(arg0 context.Context, arg1, arg2, arg3, arg4 string) (model.OIDCProvider, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOIDCProvider", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "CreateOIDCProvider", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(model.OIDCProvider)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateOIDCProvider indicates an expected call of CreateOIDCProvider.
-func (mr *MockDatabaseMockRecorder) CreateOIDCProvider(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateOIDCProvider(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).CreateOIDCProvider), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).CreateOIDCProvider), arg0, arg1, arg2, arg3, arg4)
 }
 
 // CreateSAMLIdentityProvider mocks base method.
