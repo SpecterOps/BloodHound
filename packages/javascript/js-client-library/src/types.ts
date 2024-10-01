@@ -143,6 +143,12 @@ export interface PutUserAuthSecretRequest {
     needsPasswordReset: boolean;
 }
 
+export interface CreateOIDCProvideRequest {
+    name: string;
+    clientId: string;
+    issuer: string;
+}
+
 export interface LoginRequest {
     login_method: string;
     secret: string;
