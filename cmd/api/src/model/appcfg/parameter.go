@@ -18,7 +18,10 @@ package appcfg
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	iso8601 "github.com/channelmeter/iso8601duration"
@@ -26,20 +29,22 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
 const (
-	PasswordExpirationWindow            = "auth.password_expiration_window"
-	DefaultPasswordExpirationWindow     = "P90D"
-	Neo4jConfigs                        = "neo4j.configuration"
-	PasswordExpirationWindowName        = "Local Auth Password Expiry Window"
-	Neo4jConfigsName                    = "Neo4j Configuration Parameters"
-	PasswordExpirationWindowDescription = "This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601."
-	Neo4jConfigsDescription             = "This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J."
+	PasswordExpirationWindow        = "auth.password_expiration_window"
+	DefaultPasswordExpirationWindow = time.Hour * 24 * 90
 
-	CitrixRDPSupportKey         = "analysis.citrix_rdp_support"
-	CitrixRDPSupportName        = "Citrix RDP Support"
-	CitrixRDPSupportDescription = "This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a 'Direct Access Users' local group will assume that Citrix is installed and CanRDP edges will require membership of both 'Direct Access Users' and 'Remote Desktop Users' local groups on the computer."
+	Neo4jConfigs        = "neo4j.configuration"
+	CitrixRDPSupportKey = "analysis.citrix_rdp_support"
+
+	PruneTTL                      = "prune.ttl"
+	DefaultPruneBaseTTL           = time.Hour * 24 * 7
+	DefaultPruneHasSessionEdgeTTL = time.Hour * 24 * 3
+
+	ReconciliationKey = "analysis.reconciliation"
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -56,25 +61,70 @@ type Parameter struct {
 
 // Map is a convenience function for mapping the data stored in the Value Parameter struct member onto
 // a richer type provided by the given value.
-func (s Parameter) Map(value any) error {
+func (s *Parameter) Map(value any) error {
 	return s.Value.Map(value)
 }
 
-func (s Parameter) IsValid(parameter string) bool {
-	availParams, err := AvailableParameters()
-	if err != nil {
-		log.Errorf("Error occurred getting AvailableParamters: %v", err)
-		return false
+func (s *Parameter) IsValidKey(parameterKey string) bool {
+	validKeys := map[string]bool{
+		PasswordExpirationWindow: true,
+		Neo4jConfigs:             true,
+		PruneTTL:                 true,
+		CitrixRDPSupportKey:      true,
+		ReconciliationKey:        true,
 	}
 
-	_, valid := availParams[parameter]
-	return valid
+	return validKeys[parameterKey]
+}
+
+func (s *Parameter) Validate() utils.Errors {
+	// validate the base parameter
+	var (
+		objMap map[string]any
+		ok     bool
+	)
+	if objMap, ok = s.Value.Object.(map[string]any); !ok || len(objMap) == 0 {
+		return utils.Errors{errors.New("missing or invalid property: value")}
+	}
+
+	// validate the specific parameter value
+	var v any
+	switch s.Key {
+	case PasswordExpirationWindow:
+		v = &PasswordExpiration{}
+	case Neo4jConfigs:
+		v = &Neo4jParameters{}
+	case PruneTTL:
+		v = &PruneTTLParameters{}
+	case CitrixRDPSupportKey:
+		v = &CitrixRDPSupport{}
+	case ReconciliationKey:
+		v = &ReconciliationParameter{}
+	default:
+		return utils.Errors{errors.New("invalid key")}
+	}
+
+	// numField panics when val is not a struct, so we need both checks
+	if val := reflect.Indirect(reflect.ValueOf(v)); val.Kind() != reflect.Struct || val.NumField() != len(objMap) {
+		return utils.Errors{errors.New("value property contains an invalid field")}
+	} else if err := s.Map(&v); err != nil {
+		return utils.Errors{err}
+	} else if errs := validation.Validate(v); errs != nil {
+		return errs
+	}
+
+	return nil
+}
+
+func (s *Parameter) AuditData() model.AuditData {
+	return model.AuditData{
+		"key":   s.Key,
+		"value": s.Value,
+	}
 }
 
 // Parameters is a collection of Parameter structs.
 type Parameters []Parameter
-
-type ParameterSet map[string]Parameter
 
 // ParameterService is a contract which defines expected functionality for fetching and setting Parameter from an
 // abstract backend storage.
@@ -89,68 +139,46 @@ type ParameterService interface {
 	SetConfigurationParameter(ctx context.Context, configurationParameter Parameter) error
 }
 
-func AvailableParameters() (ParameterSet, error) {
-	if passwordExpirationValue, err := types.NewJSONBObject(PasswordExpiration{
-		Duration: DefaultPasswordExpirationWindow,
-	}); err != nil {
-		return ParameterSet{}, fmt.Errorf("error creating PasswordExpiration parameter: %w", err)
-	} else if neo4jExpirationValue, err := types.NewJSONBObject(Neo4jParameters{
-		BatchWriteSize: neo4j.DefaultBatchWriteSize,
-		WriteFlushSize: neo4j.DefaultWriteFlushSize,
-	}); err != nil {
-		return ParameterSet{}, fmt.Errorf("error creating neo4jExpirationValue parameter: %w", err)
-	} else if citrixRDPSupportValue, err := types.NewJSONBObject(CitrixRDPSupport{
-		Enabled: false,
-	}); err != nil {
-		return ParameterSet{}, fmt.Errorf("error creating CitrixRDPSupport parameter: %w", err)
-	} else {
-		return ParameterSet{
-			PasswordExpirationWindow: {
-				Key:         PasswordExpirationWindow,
-				Name:        PasswordExpirationWindowName,
-				Description: PasswordExpirationWindowDescription,
-				Value:       passwordExpirationValue,
-				Serial:      model.Serial{},
-			},
-			Neo4jConfigs: {
-				Key:         Neo4jConfigs,
-				Name:        Neo4jConfigsName,
-				Description: Neo4jConfigsDescription,
-				Value:       neo4jExpirationValue,
-			},
-			CitrixRDPSupportKey: {
-				Key:         CitrixRDPSupportKey,
-				Name:        CitrixRDPSupportName,
-				Description: CitrixRDPSupportDescription,
-				Value:       citrixRDPSupportValue,
-			},
-		}, nil
-	}
-}
+// PasswordExpirationWindow
 
 type PasswordExpiration struct {
-	Duration string `json:"duration"`
+	Duration time.Duration `json:"duration"`
 }
 
-func (s PasswordExpiration) ParseDuration() (time.Duration, error) {
-	if duration, err := iso8601.FromString(s.Duration); err != nil {
-		return 0, err
+// Because PasswordExpiration are stored as ISO strings, but we want to use them as durations, we override UnmarshalJSON to handle the conversion
+func (s *PasswordExpiration) UnmarshalJSON(data []byte) error {
+	pDb := struct {
+		Duration string `json:"duration,omitempty"`
+	}{}
+
+	if err := json.Unmarshal(data, &pDb); err != nil {
+		return fmt.Errorf("error unmarshaling data for PasswordExpiration: %w", err)
 	} else {
-		return duration.ToDuration(), nil
+		if duration, err := iso8601.FromString(pDb.Duration); err != nil {
+			return err
+		} else {
+			s.Duration = duration.ToDuration()
+		}
+
+		return nil
 	}
 }
 
-func GetPasswordExpiration(ctx context.Context, service ParameterService) (time.Duration, error) {
+func GetPasswordExpiration(ctx context.Context, service ParameterService) time.Duration {
 	var expiration PasswordExpiration
 
 	if cfg, err := service.GetConfigurationParameter(ctx, PasswordExpirationWindow); err != nil {
-		return 0, err
+		log.Warnf("Failed to fetch password expiratio configuration; returning default values")
+		return DefaultPasswordExpirationWindow
 	} else if err := cfg.Map(&expiration); err != nil {
-		return 0, err
-	} else {
-		return expiration.ParseDuration()
+		log.Warnf("Invalid password expiration configuration supplied; returning default values")
+		return DefaultPasswordExpirationWindow
 	}
+
+	return expiration.Duration
 }
+
+// Neo4jConfigs
 
 type Neo4jParameters struct {
 	WriteFlushSize int `json:"write_flush_size,omitempty"`
@@ -158,24 +186,21 @@ type Neo4jParameters struct {
 }
 
 func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jParameters {
-	var result Neo4jParameters
+	var result = Neo4jParameters{
+		WriteFlushSize: neo4j.DefaultWriteFlushSize,
+		BatchWriteSize: neo4j.DefaultBatchWriteSize,
+	}
 
 	if neo4jParametersCfg, err := service.GetConfigurationParameter(ctx, Neo4jConfigs); err != nil {
-		log.Errorf("Failed to fetch neo4j configuration; returning default values")
-		result = Neo4jParameters{
-			WriteFlushSize: neo4j.DefaultWriteFlushSize,
-			BatchWriteSize: neo4j.DefaultBatchWriteSize,
-		}
-	} else if err = neo4jParametersCfg.Map(result); err != nil {
-		log.Errorf("Invalid neo4j configuration supplied; returning default values")
-		result = Neo4jParameters{
-			WriteFlushSize: neo4j.DefaultWriteFlushSize,
-			BatchWriteSize: neo4j.DefaultBatchWriteSize,
-		}
+		log.Warnf("Failed to fetch neo4j configuration; returning default values")
+	} else if err = neo4jParametersCfg.Map(&result); err != nil {
+		log.Warnf("Invalid neo4j configuration supplied; returning default values")
 	}
 
 	return result
 }
+
+// CitrixRDP
 
 type CitrixRDPSupport struct {
 	Enabled bool `json:"enabled,omitempty"`
@@ -188,6 +213,72 @@ func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 		log.Warnf("Failed to fetch CitrixRDPSupport configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		log.Warnf("Invalid CitrixRDPSupport configuration supplied, %v. returning default values.", err)
+	}
+
+	return result.Enabled
+}
+
+// PruneTTL
+
+type PruneTTLParameters struct {
+	BaseTTL           time.Duration `json:"base_ttl,omitempty" validate:"duration,min=P4D,max=P30D"`
+	HasSessionEdgeTTL time.Duration `json:"has_session_edge_ttl,omitempty" validate:"duration,min=P2D,max=P7D"`
+}
+
+// Because PruneTTLs are stored as ISO strings, but we want to use them as durations, we override UnmarshalJSON to handle the conversion
+func (s *PruneTTLParameters) UnmarshalJSON(data []byte) error {
+	pTTL := struct {
+		BaseTTL           string `json:"base_ttl,omitempty"`
+		HasSessionEdgeTTL string `json:"has_session_edge_ttl,omitempty"`
+	}{}
+
+	if err := json.Unmarshal(data, &pTTL); err != nil {
+		return fmt.Errorf("error unmarshaling data for PruneTTLParameters: %w", err)
+	} else {
+		if duration, err := iso8601.FromString(pTTL.BaseTTL); err != nil {
+			return errors.New("missing or invalid base_ttl")
+		} else {
+			s.BaseTTL = duration.ToDuration()
+		}
+		if duration, err := iso8601.FromString(pTTL.HasSessionEdgeTTL); err != nil {
+			return errors.New("missing or invalid has_session_edge_ttl")
+		} else {
+
+			s.HasSessionEdgeTTL = duration.ToDuration()
+		}
+
+		return nil
+	}
+}
+
+func GetPruneTTLParameters(ctx context.Context, service ParameterService) PruneTTLParameters {
+	result := PruneTTLParameters{
+		BaseTTL:           DefaultPruneBaseTTL,
+		HasSessionEdgeTTL: DefaultPruneHasSessionEdgeTTL,
+	}
+
+	if pruneTTLParametersCfg, err := service.GetConfigurationParameter(ctx, PruneTTL); err != nil {
+		log.Warnf("Failed to fetch prune TTL configuration; returning default values")
+	} else if err = pruneTTLParametersCfg.Map(&result); err != nil {
+		log.Warnf("Invalid prune TTL configuration supplied; returning default values %+v", err)
+	}
+
+	return result
+}
+
+// Reconciliation
+
+type ReconciliationParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetReconciliationParameter(ctx context.Context, service ParameterService) bool {
+	result := ReconciliationParameter{Enabled: true}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, ReconciliationKey); err != nil {
+		log.Warnf("Failed to fetch reconciliation configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		log.Warnf("Invalid reconciliation configuration supplied, %v. returning default values.", err)
 	}
 
 	return result.Enabled

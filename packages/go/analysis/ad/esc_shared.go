@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -317,6 +318,33 @@ func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, groupExpansions i
 	return bitmap
 }
 
+func containsAuthUsersOrEveryone(tx graph.Transaction, nodes []*graph.Node, domainsid string) (bool, error) {
+	if specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
+		return false, err
+	} else {
+		for _, node := range nodes {
+			if specialGroups.Contains(node) {
+				return true, nil
+			} else if node.Kinds.ContainsOneOf(ad.Group) {
+				for _, group := range specialGroups {
+					if path, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+						return query.And(
+							query.Equals(query.StartID(), group.ID),
+							query.KindIn(query.Relationship(), ad.MemberOf),
+							query.Equals(query.EndID(), node.ID),
+						)
+					})); err != nil {
+						return false, err
+					} else if len(path) > 0 {
+						return true, nil
+					}
+				}
+			}
+		}
+	}
+	return false, nil
+}
+
 func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
 	if subjectAltRequireDNS, err := certTemplate.Properties.Get(ad.SubjectAltRequireDNS.String()).Bool(); err != nil {
 		return false
@@ -348,14 +376,44 @@ func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint32
 	return bitmap, nil
 }
 
-func getVictimBitmap(groupExpansions impact.PathAggregator, certTemplateControllers, ecaControllers []*graph.Node) cardinality.Duplex[uint32] {
+func getVictimBitmap(groupExpansions impact.PathAggregator, certTemplateControllers, ecaControllers []*graph.Node, specialGroupHasTemplateEnroll, specialGroupHasECAEnroll bool) cardinality.Duplex[uint32] {
 	// Expand controllers for the eca + template completely because we don't do group shortcutting here
 	var (
-		victimBitmap = expandNodeSliceToBitmapWithoutGroups(certTemplateControllers, groupExpansions)
-		ecaBitmap    = expandNodeSliceToBitmapWithoutGroups(ecaControllers, groupExpansions)
+		templateBitmap = expandNodeSliceToBitmapWithoutGroups(certTemplateControllers, groupExpansions)
+		ecaBitmap      = expandNodeSliceToBitmapWithoutGroups(ecaControllers, groupExpansions)
+		victimBitmap   = cardinality.NewBitmap32()
 	)
 
-	victimBitmap.And(ecaBitmap)
+	// If no special group has enroll neither the template or eca then return the common nodes among the enrollers
+	if !specialGroupHasTemplateEnroll && !specialGroupHasECAEnroll {
+		templateBitmap.And(ecaBitmap)
+		return templateBitmap
+	}
+
+	// If a special group has enroll on the template then all enrollers of the eca can be a victim
+	if specialGroupHasTemplateEnroll {
+		victimBitmap.Or(ecaBitmap)
+	}
+
+	// If a special group has enroll on the eca then all enrollers of the template can be a victim
+	if specialGroupHasECAEnroll {
+		victimBitmap.Or(templateBitmap)
+	}
 
 	return victimBitmap
+}
+
+func schannelAuthenticationEnabled(certTemplate *graph.Node) (bool, error) {
+	schannelAuthenticationEnabledExist := certTemplate.Properties.Exists(ad.SchannelAuthenticationEnabled.String())
+
+	if schannelAuthenticationEnabledExist {
+		return certTemplate.Properties.Get(ad.SchannelAuthenticationEnabled.String()).Bool()
+	} else {
+		// Fallback to EffectiveEKUs property
+		if effectiveekus, err2 := certTemplate.Properties.Get(ad.EffectiveEKUs.String()).StringSlice(); err2 != nil {
+			return false, err2
+		} else {
+			return slices.Contains(effectiveekus, "1.3.6.1.5.5.7.3.2") || slices.Contains(effectiveekus, "2.5.29.37.0") || len(effectiveekus) == 0, nil
+		}
+	}
 }

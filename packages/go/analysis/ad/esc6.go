@@ -35,7 +35,10 @@ import (
 )
 
 func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
-	if isUserSpecifiesSanEnabled, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabled.String()).Bool(); err != nil {
+	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
+		return nil
+	} else if isUserSpecifiesSanEnabled, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabled.String()).Bool(); err != nil {
 		return err
 	} else if !isUserSpecifiesSanEnabled {
 		return nil
@@ -57,13 +60,13 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				validCertTemplates = append(validCertTemplates, publishedCertTemplate)
 
 				for _, enroller := range cache.GetCertTemplateEnrollers(publishedCertTemplate.ID) {
-					tempResults.Or(CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(enroller).Slice(), enterpriseCAEnrollers))
+					tempResults.Or(CalculateCrossProductNodeSets(tx, domainsid, groupExpansions, graph.NewNodeSet(enroller).Slice(), enterpriseCAEnrollers))
 				}
 
 			}
 		}
 
-		filterTempResultsForESC6(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(
+		filterTempResultsForESC6(tx, domainsid, tempResults, groupExpansions, validCertTemplates, cache).Each(
 			func(value uint32) bool {
 				return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 					FromID: graph.ID(value),
@@ -76,7 +79,10 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 }
 
 func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
-	if isUserSpecifiesSanEnabled, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabled.String()).Bool(); err != nil {
+	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
+		return nil
+	} else if isUserSpecifiesSanEnabled, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabled.String()).Bool(); err != nil {
 		return err
 	} else if !isUserSpecifiesSanEnabled {
 		return nil
@@ -101,7 +107,8 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 
 				for _, enroller := range cache.GetCertTemplateEnrollers(publishedCertTemplate.ID) {
 					tempResults.Or(
-						CalculateCrossProductNodeSets(
+						CalculateCrossProductNodeSets(tx,
+							domainsid,
 							groupExpansions,
 							graph.NewNodeSet(enroller).Slice(),
 							enterpriseCAEnrollers,
@@ -112,7 +119,7 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			}
 		}
 
-		filterTempResultsForESC6(tx, tempResults, groupExpansions, validCertTemplates, cache).Each(
+		filterTempResultsForESC6(tx, domainsid, tempResults, groupExpansions, validCertTemplates, cache).Each(
 			func(value uint32) bool {
 				return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 					FromID: graph.ID(value),
@@ -124,7 +131,7 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	return nil
 }
 
-func filterTempResultsForESC6(tx graph.Transaction, tempResults cardinality.Duplex[uint32], groupExpansions impact.PathAggregator, validCertTemplates []*graph.Node, cache ADCSCache) cardinality.Duplex[uint32] {
+func filterTempResultsForESC6(tx graph.Transaction, domainsid string, tempResults cardinality.Duplex[uint32], groupExpansions impact.PathAggregator, validCertTemplates []*graph.Node, cache ADCSCache) cardinality.Duplex[uint32] {
 	principalsEnabledForESC6 := cardinality.NewBitmap32()
 
 	tempResults.Each(func(value uint32) bool {
@@ -138,7 +145,7 @@ func filterTempResultsForESC6(tx graph.Transaction, tempResults cardinality.Dupl
 				principalsEnabledForESC6.Add(value)
 			} else if resultNode.Kinds.ContainsOneOf(ad.User) {
 				for _, certTemplate := range validCertTemplates {
-					if principalControlsCertTemplate(resultNode, certTemplate, groupExpansions, cache) {
+					if principalControlsCertTemplate(tx, domainsid, resultNode, certTemplate, groupExpansions, cache) {
 						if certTemplateValidForUserVictim(certTemplate) {
 							principalsEnabledForESC6.Add(value)
 						}
@@ -146,7 +153,7 @@ func filterTempResultsForESC6(tx graph.Transaction, tempResults cardinality.Dupl
 				}
 			} else if resultNode.Kinds.ContainsOneOf(ad.Computer) {
 				for _, certTemplate := range validCertTemplates {
-					if principalControlsCertTemplate(resultNode, certTemplate, groupExpansions, cache) {
+					if principalControlsCertTemplate(tx, domainsid, resultNode, certTemplate, groupExpansions, cache) {
 						principalsEnabledForESC6.Add(value)
 					}
 				}
@@ -157,7 +164,7 @@ func filterTempResultsForESC6(tx graph.Transaction, tempResults cardinality.Dupl
 	return principalsEnabledForESC6
 }
 
-func principalControlsCertTemplate(principal, certTemplate *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
+func principalControlsCertTemplate(tx graph.Transaction, domainsid string, principal, certTemplate *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
 	principalID := principal.ID.Uint32()
 
 	if expandedCertTemplateControllers := cache.GetExpandedCertTemplateControllers(certTemplate.ID); expandedCertTemplateControllers.Contains(principalID) {
@@ -166,7 +173,7 @@ func principalControlsCertTemplate(principal, certTemplate *graph.Node, groupExp
 
 	if certTemplateEnrollers := cache.GetCertTemplateEnrollers(certTemplate.ID); len(certTemplateEnrollers) == 0 {
 		return false
-	} else if CalculateCrossProductNodeSets(groupExpansions, graph.NewNodeSet(principal).Slice(), certTemplateEnrollers).Contains(principalID) {
+	} else if CalculateCrossProductNodeSets(tx, domainsid, groupExpansions, graph.NewNodeSet(principal).Slice(), certTemplateEnrollers).Contains(principalID) {
 		cache.SetExpandedCertTemplateControllers(certTemplate.ID, principalID)
 		return true
 	}
@@ -179,10 +186,6 @@ func isCertTemplateValidForESC6(ct *graph.Node, scenarioB bool) (bool, error) {
 		return false, err
 	} else if reqManagerApproval {
 		return false, nil
-	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
-		return false, err
-	} else if !authenticationEnabled {
-		return false, nil
 	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
 		return false, err
 	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
@@ -194,11 +197,21 @@ func isCertTemplateValidForESC6(ct *graph.Node, scenarioB bool) (bool, error) {
 			return false, err
 		} else if !noSecurityExtension {
 			return false, nil
+		} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
+			return false, err
+		} else if !authenticationEnabled {
+			return false, nil
 		} else {
 			return true, nil
 		}
 	} else {
-		return true, nil
+		if schannelAuthenticationEnabled, err := schannelAuthenticationEnabled(ct); err != nil {
+			return false, err
+		} else if !schannelAuthenticationEnabled {
+			return false, nil
+		} else {
+			return true, nil
+		}
 	}
 }
 
@@ -217,7 +230,8 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 		MATCH p3 = (n)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d:Domain)
 		WHERE ct.nosecurityextension = true                                                  <- ESC6a only
-			AND ct.authenticationenabled = true
+			AND ct.authenticationenabled = true                                              <- ESC6a only
+			AND ct.schannelauthenticationenabled = true                                      <- ESC6b only
 			AND ct.requiresmanagerapproval = false
 			AND (ct.schemaversion = 1 OR ct.authorizedsignatures = 0)
 			AND (
@@ -234,8 +248,10 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	*/
 
 	var (
-		startNode          *graph.Node
-		endNode            *graph.Node
+		startNode  *graph.Node
+		endNode    *graph.Node
+		startNodes = graph.NodeSet{}
+
 		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		lock               = &sync.Mutex{}
 		paths              = graph.PathSet{}
@@ -258,26 +274,44 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	}
 
-	// P1
-	if err := traversalInst.BreadthFirst(ctx,
-		traversal.Plan{
-			Root: startNode,
-			Driver: ADCSESC6Path1Pattern(edge.EndID).Do(
-				func(terminal *graph.PathSegment) error {
-					enterpriseCA := terminal.Search(
-						func(nextSegment *graph.PathSegment) bool {
-							return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-						})
-
-					lock.Lock()
-					path1EnterpriseCAs.Add(enterpriseCA.ID.Uint32())
-					path1Segments[enterpriseCA.ID] = append(path1Segments[enterpriseCA.ID], terminal)
-					lock.Unlock()
-
-					return nil
-				}),
-		}); err != nil {
+	// Add startnode, Auth. Users, and Everyone to start nodes
+	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		log.Warnf("Error getting domain SID for domain %d: %v", endNode.ID, err)
 		return nil, err
+	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
+			return err
+		} else {
+			startNodes.AddSet(nodeSet)
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	}
+	startNodes.Add(startNode)
+
+	// P1
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx,
+			traversal.Plan{
+				Root: n,
+				Driver: ADCSESC6Path1Pattern(edge.EndID).Do(
+					func(terminal *graph.PathSegment) error {
+						enterpriseCA := terminal.Search(
+							func(nextSegment *graph.PathSegment) bool {
+								return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+							})
+
+						lock.Lock()
+						path1EnterpriseCAs.Add(enterpriseCA.ID.Uint32())
+						path1Segments[enterpriseCA.ID] = append(path1Segments[enterpriseCA.ID], terminal)
+						lock.Unlock()
+
+						return nil
+					}),
+			}); err != nil {
+			return nil, err
+		}
 	}
 
 	// P2
@@ -302,29 +336,31 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	// P3
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: ADCSESC6Path3Pattern(edge.EndID, path1EnterpriseCAs, edge.Kind).Do(
-			func(terminal *graph.PathSegment) error {
-				certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
-				})
-
-				if !startNode.Kinds.ContainsOneOf(ad.User) || certTemplateValidForUserVictim(certTemplate) {
-					paths.AddPath(terminal.Path())
-
-					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
-					terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
-						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-							finalEnterpriseCAs.Add(end.ID.Uint32())
-							return false
-						}
-						return true
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: ADCSESC6Path3Pattern(edge.EndID, path1EnterpriseCAs, edge.Kind).Do(
+				func(terminal *graph.PathSegment) error {
+					certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+						return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
 					})
-				}
-				return nil
-			})}); err != nil {
-		return nil, err
+
+					if !startNode.Kinds.ContainsOneOf(ad.User) || certTemplateValidForUserVictim(certTemplate) {
+						paths.AddPath(terminal.Path())
+
+						// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
+						terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+							if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+								finalEnterpriseCAs.Add(end.ID.Uint32())
+								return false
+							}
+							return true
+						})
+					}
+					return nil
+				})}); err != nil {
+			return nil, err
+		}
 	}
 
 	if paths.Len() > 0 {
@@ -346,7 +382,6 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 func getESC6CertTemplateCriteria(edgeKind graph.Kind) graph.Criteria {
 	criteria := query.And(
 		query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
-		query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
 		query.Or(
 			query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
 			query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
@@ -357,6 +392,17 @@ func getESC6CertTemplateCriteria(edgeKind graph.Kind) graph.Criteria {
 		criteria = query.And(
 			criteria,
 			query.Equals(query.EndProperty(ad.NoSecurityExtension.String()), true),
+			query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+		)
+	} else {
+		criteria = query.And(
+			criteria,
+			query.Or(
+				query.Equals(query.EndProperty(ad.SchannelAuthenticationEnabled.String()), true),
+				query.Equals(query.Size(query.EndProperty(ad.EffectiveEKUs.String())), 0),
+				query.InInverted(query.EndProperty(ad.EffectiveEKUs.String()), "1.3.6.1.5.5.7.3.2"),
+				query.InInverted(query.EndProperty(ad.EffectiveEKUs.String()), "2.5.29.37.0"),
+			),
 		)
 	}
 

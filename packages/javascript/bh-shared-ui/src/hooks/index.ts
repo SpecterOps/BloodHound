@@ -29,3 +29,5 @@ export * from './useSavedQueries';
 export * from './useFileIngest';
 
 export * from './useFetchEntityProperties';
+
+export * from './useConfiguration';

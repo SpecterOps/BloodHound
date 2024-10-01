@@ -21,6 +21,7 @@ package queries
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -46,7 +47,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -83,7 +83,7 @@ type EntityQueryParameters struct {
 
 func GetEntityObjectIDFromRequestPath(request *http.Request) (string, error) {
 	if id, hasID := mux.Vars(request)["object_id"]; !hasID {
-		return "", errors.Error("no object ID found in request")
+		return "", errors.New("no object ID found in request")
 	} else {
 		return id, nil
 	}
@@ -494,7 +494,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 			timeoutLog.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
 			timeoutLog.Msg("Neo4j timed out while executing cypher query")
 		} else {
-			log.Errorf("RawCypherQuery failed: %v", err)
+			log.Warnf("RawCypherQuery failed: %v", err)
 		}
 		return graphResponse, err
 	}
@@ -636,7 +636,9 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 		go func(delegateKey string, delegate any) {
 			defer waitGroup.Done()
 
-			if result, err := runEntityQuery(ctx, s.Graph, delegate, node, 0, 0); err != nil {
+			if result, err := runEntityQuery(ctx, s.Graph, delegate, node, 0, 0); errors.Is(err, graph.ErrContextTimedOut) {
+				log.Warnf("Running entity query for key %s: %v", delegateKey, err)
+			} else if err != nil {
 				log.Errorf("Error running entity query for key %s: %v", delegateKey, err)
 				data.Store(delegateKey, 0)
 			} else {

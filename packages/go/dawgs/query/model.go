@@ -354,6 +354,10 @@ func In(reference graph.Criteria, value any) *cypherModel.Comparison {
 	return cypherModel.NewComparison(reference, cypherModel.OperatorIn, Parameter(value))
 }
 
+func InInverted(reference graph.Criteria, value any) *cypherModel.Comparison {
+	return cypherModel.NewComparison(Parameter(value), cypherModel.OperatorIn, reference)
+}
+
 func InIDs[T *cypherModel.FunctionInvocation | *cypherModel.Variable](reference T, ids ...graph.ID) *cypherModel.Comparison {
 	switch any(reference).(type) {
 	case *cypherModel.FunctionInvocation:

@@ -32,6 +32,7 @@ get:
         $ref: './../schemas/api.params.query.sort-by.yaml'
     - name: from
       deprecated: true
+      x-go-name: "fromDeprecated"
       description: Lower bound for created_at; to return posture stats starting at
         a specific date/time
       in: query
@@ -40,6 +41,7 @@ get:
         format: date-time
     - name: to
       deprecated: true
+      x-go-name: "toDeprecated"
       description: Upper bound for created_at; to return posture stats upto a specific
         date/time
       in: query

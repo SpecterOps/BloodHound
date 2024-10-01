@@ -61,17 +61,7 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: './../schemas/api.response.pagination.yaml'
-              - $ref: './../schemas/api.response.time-window.yaml'
-              - type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      oneOf:
-                        - $ref: './../schemas/model.ad-data-quality-aggregation.yaml'
-                        - $ref: './../schemas/model.azure-data-quality-aggregation.yaml'
+            $ref: './../schemas/api.response.data-quality-platform-aggregate.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

@@ -205,19 +205,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "oneOf": [
-                        {
-                          "$ref": "#/components/schemas/model.user"
-                        },
-                        {
-                          "$ref": "#/components/schemas/model.client"
-                        }
-                      ]
-                    }
-                  }
+                  "$ref": "#/components/schemas/api.response.authenticated-requester"
                 }
               }
             }
@@ -9373,32 +9361,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/api.response.pagination"
-                    },
-                    {
-                      "$ref": "#/components/schemas/api.response.time-window"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "data": {
-                          "type": "array",
-                          "items": {
-                            "oneOf": [
-                              {
-                                "$ref": "#/components/schemas/model.ad-data-quality-aggregation"
-                              },
-                              {
-                                "$ref": "#/components/schemas/model.azure-data-quality-aggregation"
-                              }
-                            ]
-                          }
-                        }
-                      }
-                    }
-                  ]
+                  "$ref": "#/components/schemas/api.response.data-quality-platform-aggregate"
                 }
               }
             }
@@ -12211,6 +12174,7 @@
         "parameters": [
           {
             "name": "finding",
+            "x-go-name": "FindingDeprecated",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -12227,6 +12191,7 @@
           {
             "name": "FromPrincipal",
             "deprecated": true,
+            "x-go-name": "FromPrincipalDeprecated",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -12235,6 +12200,7 @@
           {
             "name": "ToPrincipal",
             "deprecated": true,
+            "x-go-name": "ToPrincipalDeprecated",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -12271,6 +12237,7 @@
           {
             "name": "AcceptedUntil",
             "deprecated": true,
+            "x-go-name": "AcceptedUntilDeprecated",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.time"
@@ -12574,19 +12541,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "oneOf": [
-                        {
-                          "$ref": "#/components/schemas/model.list-finding"
-                        },
-                        {
-                          "$ref": "#/components/schemas/model.relationship-finding"
-                        }
-                      ]
-                    }
-                  }
+                  "$ref": "#/components/schemas/api.response.finding"
                 }
               }
             }
@@ -12638,6 +12593,7 @@
           {
             "name": "from",
             "deprecated": true,
+            "x-go-name": "fromDeprecated",
             "description": "Lower bound for created_at; to return posture stats starting at a specific date/time",
             "in": "query",
             "schema": {
@@ -12648,6 +12604,7 @@
           {
             "name": "to",
             "deprecated": true,
+            "x-go-name": "toDeprecated",
             "description": "Upper bound for created_at; to return posture stats upto a specific date/time",
             "in": "query",
             "schema": {
@@ -13817,6 +13774,21 @@
           }
         ]
       },
+      "api.response.authenticated-requester": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/model.user"
+              },
+              {
+                "$ref": "#/components/schemas/model.client"
+              }
+            ]
+          }
+        }
+      },
       "model.saml-provider": {
         "allOf": [
           {
@@ -14786,12 +14758,10 @@
             "type": "object",
             "properties": {
               "shared_to_user_id": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.uuid"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -15071,6 +15041,34 @@
               "run_id": {
                 "type": "string",
                 "format": "uuid"
+              }
+            }
+          }
+        ]
+      },
+      "api.response.data-quality-platform-aggregate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/api.response.pagination"
+          },
+          {
+            "$ref": "#/components/schemas/api.response.time-window"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/model.ad-data-quality-aggregation"
+                    },
+                    {
+                      "$ref": "#/components/schemas/model.azure-data-quality-aggregation"
+                    }
+                  ]
+                }
               }
             }
           }
@@ -15476,6 +15474,21 @@
             }
           }
         ]
+      },
+      "api.response.finding": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/model.list-finding"
+              },
+              {
+                "$ref": "#/components/schemas/model.relationship-finding"
+              }
+            ]
+          }
+        }
       },
       "model.risk-posture-stat": {
         "allOf": [
