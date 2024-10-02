@@ -132,7 +132,7 @@ func TestParameters_GetAllConfigurationParameter(t *testing.T) {
 	)
 	parameters, err := dbInst.GetAllConfigurationParameters(testCtx)
 	require.Nil(t, err)
-	require.Len(t, parameters, 6)
+	require.Len(t, parameters, 5)
 	for _, parameter := range parameters {
 		require.True(t, parameter.IsValidKey(parameter.Key))
 	}
