@@ -26,7 +26,7 @@ import (
 
 func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus, updateAnalysisTime bool) error {
 
-	updateSql := "UPDATE datapipe_status SET status = ?, updated_at = ?,last_analysis_run_at = ?"
+	updateSql := "UPDATE datapipe_status SET status = ?, updated_at = ?, last_analysis_run_at = ?"
 	now := time.Now().UTC()
 
 	if updateAnalysisTime {
