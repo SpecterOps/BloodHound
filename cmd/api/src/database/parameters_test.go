@@ -134,7 +134,7 @@ func TestParameters_GetAllConfigurationParameter(t *testing.T) {
 	require.Nil(t, err)
 	require.Len(t, parameters, 6)
 	for _, parameter := range parameters {
-		if parameter.Name != appcfg.ScheduledAnalysis {
+		if parameter.Key != appcfg.ScheduledAnalysis {
 			require.True(t, parameter.IsValidKey(parameter.Key))
 		}
 	}
