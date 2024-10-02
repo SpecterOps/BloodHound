@@ -18,7 +18,6 @@ package model
 
 // OIDCProvider contains the data needed to initiate an OIDC secure login flow
 type OIDCProvider struct {
-	Name          string `json:"name"`
 	ClientID      string `json:"client_id"`
 	Issuer        string `json:"issuer"`
 	SSOProviderID int    `json:"sso_provider_id"`

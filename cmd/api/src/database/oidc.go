@@ -32,10 +32,9 @@ type OIDCProviderData interface {
 	CreateOIDCProvider(ctx context.Context, name, slug, issuer, clientID string) (model.OIDCProvider, error)
 }
 
-// CreateOIDCProvider creates a new entry for an OIDC provider
+// CreateOIDCProvider creates a new entry for an OIDC provider as well as the associated SSO provider
 func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, slug, issuer, clientID string) (model.OIDCProvider, error) {
 	oidcProvider := model.OIDCProvider{
-		Name:     name,
 		ClientID: clientID,
 		Issuer:   issuer,
 	}
