@@ -44,6 +44,6 @@ CREATE TABLE IF NOT EXISTS oidc_providers
 -- Create the reference from saml_providers to sso_providers
 ALTER TABLE ONLY saml_providers
     ADD COLUMN IF NOT EXISTS sso_provider_id INTEGER NULL;
+ALTER TABLE ONLY saml_providers DROP CONSTRAINT IF EXISTS fk_saml_provider_sso_provider;
 ALTER TABLE ONLY saml_providers
     ADD CONSTRAINT fk_saml_provider_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE CASCADE;
-
