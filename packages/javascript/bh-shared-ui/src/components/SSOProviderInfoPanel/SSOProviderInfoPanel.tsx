@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -20,16 +20,29 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useState } from 'react';
 import Icon from '../../components/Icon';
 import { Field, FieldsContainer, usePaneStyles, useHeaderStyles } from '../../views/Explore';
+import LabelWithCopy from '../LabelWithCopy';
 
 const SAMLProviderInfoPanel: React.FC<{
     ssoProvider?: any;
 }> = ({ ssoProvider }) => {
     return (
         <FieldsContainer>
-            <Field label={'IdP SSO URL'} value={ssoProvider.idp_sso_uri}></Field>
-            <Field label={'BHE SSO URL'} value={ssoProvider.sp_sso_uri}></Field>
-            <Field label={'BHE ACS URL'} value={ssoProvider.sp_acs_uri}></Field>
-            <Field label={'BHE Metadata URL'} value={ssoProvider.sp_metadata_uri}></Field>
+            <Field
+                label={<LabelWithCopy label='IdP SSO URL' valueToCopy={ssoProvider.idp_sso_uri} hoverOnly />}
+                value={ssoProvider.idp_sso_uri}
+            />
+            <Field
+                label={<LabelWithCopy label='BHE SSO URL' valueToCopy={ssoProvider.sp_sso_uri} hoverOnly />}
+                value={ssoProvider.sp_sso_uri}
+            />
+            <Field
+                label={<LabelWithCopy label='BHE ACS URL' valueToCopy={ssoProvider.sp_acs_uri} hoverOnly />}
+                value={ssoProvider.sp_acs_uri}
+            />
+            <Field
+                label={<LabelWithCopy label='BHE Metadata URL' valueToCopy={ssoProvider.sp_metadata_uri} hoverOnly />}
+                value={ssoProvider.sp_metadata_uri}
+            />
         </FieldsContainer>
     );
 };
@@ -45,12 +58,27 @@ const SSOProviderInfoPanel: React.FC<{
     if (!ssoProvider) {
         return null;
     }
-    console.log(ssoProvider);
+
+    var infoPanel;
+    switch (ssoProvider.type) {
+        case 1:
+            infoPanel = <SAMLProviderInfoPanel ssoProvider={ssoProvider} />;
+            break;
+        default:
+            infoPanel = <SAMLProviderInfoPanel ssoProvider={ssoProvider} />;
+    }
+
     return (
         <Box className={paneStyles.container} data-testid='sso_provider-info-panel'>
             <Paper elevation={0} classes={{ root: paneStyles.headerPaperRoot }}>
                 <Box className={headerStyles.header}>
-                    <Box sx={{ backgroundColor: theme.palette.primary.main, width: 10, height: 'fit-content' }} />
+                    <Box
+                        sx={{
+                            backgroundColor: theme.palette.primary.main,
+                            width: 10,
+                            height: theme.spacing(5),
+                        }}
+                    />
                     <Icon
                         className={headerStyles.icon}
                         click={() => {
@@ -75,7 +103,7 @@ const SSOProviderInfoPanel: React.FC<{
                 <Box flexShrink={0} flexGrow={1} fontWeight='bold' mr={1} fontSize={'small'}>
                     Provider Information:
                 </Box>
-                <SAMLProviderInfoPanel ssoProvider={ssoProvider} />
+                {infoPanel}
             </Paper>
         </Box>
     );
