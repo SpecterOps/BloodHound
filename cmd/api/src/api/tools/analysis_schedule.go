@@ -2,7 +2,6 @@ package tools
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/database/types"
@@ -39,7 +38,7 @@ func (s ToolContainer) SetScheduledAnalysisConfiguration(response http.ResponseW
 		}
 
 		if val, err := types.NewJSONBObject(nextParameter); err != nil {
-			log.Errorf("Error updating database with new scheduled analysis parameter: %v", err)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("failed to convert value to JSONBObject: %v", err), request), response)
 		} else {
 			updatedParameter := appcfg.Parameter{
 				Key:   appcfg.ScheduledAnalysis,
@@ -47,7 +46,7 @@ func (s ToolContainer) SetScheduledAnalysisConfiguration(response http.ResponseW
 			}
 
 			if err := s.db.SetConfigurationParameter(request.Context(), updatedParameter); err != nil {
-				log.Errorf("Error updating database with new scheduled analysis parameter: %v", err)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error updating database: %v", api.FormatDatabaseError(err)), request), response)
 			}
 		}
 	} else {
@@ -66,7 +65,7 @@ func (s ToolContainer) SetScheduledAnalysisConfiguration(response http.ResponseW
 			}
 
 			if val, err := types.NewJSONBObject(nextParameter); err != nil {
-				log.Errorf("Error updating database with new scheduled analysis parameter: %v", err)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("failed to convert value to JSONBObject: %v", err), request), response)
 			} else {
 				updatedParameter := appcfg.Parameter{
 					Key:   appcfg.ScheduledAnalysis,
@@ -74,7 +73,7 @@ func (s ToolContainer) SetScheduledAnalysisConfiguration(response http.ResponseW
 				}
 
 				if err := s.db.SetConfigurationParameter(request.Context(), updatedParameter); err != nil {
-					log.Errorf("Error updating database with new scheduled analysis parameter: %v", err)
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error updating database: %v", api.FormatDatabaseError(err)), request), response)
 				}
 			}
 		}
