@@ -17,6 +17,7 @@
 import isEmpty from 'lodash/isEmpty';
 import startCase from 'lodash/startCase';
 import { DateTime } from 'luxon';
+import { isValidElement } from 'react';
 import { ZERO_VALUE_API_DATE } from '../constants';
 import {
     ActiveDirectoryKindProperties,
@@ -63,6 +64,10 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
     }
 
     mappedFields = mappedFields.sort((a, b) => {
+        if (isValidElement(a) || isValidElement(b)) {
+            return 0;
+        }
+        // @ts-ignore
         return a.label!.localeCompare(b.label!);
     });
 
@@ -117,7 +122,7 @@ const getFieldLabel = (kind: string, key: string): string => {
 export type EntityPropertyKind = 'ad' | 'az' | 'cm' | null;
 
 export type EntityField = {
-    label: string;
+    label: string | JSX.Element;
     value: string | number | boolean | any[];
     kind?: EntityPropertyKind;
     keyprop?: string;
