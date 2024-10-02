@@ -21,5 +21,6 @@ INSERT INTO parameters (key, name, description, value, created_at, updated_at)
         '{"enabled": false, "rrule": ""}',
         current_timestamp,current_timestamp) ON CONFLICT DO NOTHING;
 
+-- Add last analysis time to datapipe status so we can track scheduled analysis time properly
 ALTER TABLE datapipe_status
 ADD COLUMN IF NOT EXISTS "last_analysis_run_at" TIMESTAMP with time zone;
