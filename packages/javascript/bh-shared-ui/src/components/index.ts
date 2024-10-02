@@ -91,6 +91,9 @@ export { default as Icon } from './Icon';
 export * from './InfiniteScrollingTable';
 export { default as InfiniteScrollingTable } from './InfiniteScrollingTable';
 
+export * from './LabelWithCopy';
+export { default as LabelWithCopy } from './LabelWithCopy';
+
 export * from './LoadingOverlay';
 export { default as LoadingOverlay } from './LoadingOverlay';
 
