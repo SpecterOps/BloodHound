@@ -45,3 +45,21 @@ func TestBloodhoundDB_CreateSSOProvider(t *testing.T) {
 		assert.Equal(t, model.SessionAuthProviderSAML, result.Type)
 	})
 }
+
+func TestBloodhoundDB_CreateSSOProviderWithTransaction(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+		tx      = integration.SetupTransaction(t)
+	)
+	defer dbInst.Close(testCtx)
+
+	t.Run("successfully create an SSO provider", func(t *testing.T) {
+		result, err := dbInst.CreateSSOProviderWithTransaction(testCtx, tx, "name", "some_slug", model.SessionAuthProviderSAML)
+		require.NoError(t, err)
+
+		assert.Equal(t, "name", result.Name)
+		assert.Equal(t, "some_slug", result.Slug)
+		assert.Equal(t, model.SessionAuthProviderSAML, result.Type)
+	})
+}
