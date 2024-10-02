@@ -117,6 +117,9 @@ export { default as PasswordResetForm } from './PasswordResetForm';
 export * from './PrebuiltSearchList';
 export { default as PrebuiltSearchList } from './PrebuiltSearchList';
 
+export * from './SSOProviderInfoPanel';
+export { default as SSOProviderInfoPanel } from './SSOProviderInfoPanel';
+
 export * from './SSOProviderTable';
 export { default as SSOProviderTable } from './SSOProviderTable';
 

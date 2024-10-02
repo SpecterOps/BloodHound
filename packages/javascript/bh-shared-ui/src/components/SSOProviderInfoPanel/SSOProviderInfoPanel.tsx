@@ -14,11 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Paper,
-    Box,
-    Typography
-} from '@mui/material';
+import { Paper, Box, Typography, useTheme } from '@mui/material';
 import { faAngleDown, faAngleUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useState } from 'react';
@@ -29,18 +25,19 @@ const SAMLProviderInfoPanel: React.FC<{
     ssoProvider?: any;
 }> = ({ ssoProvider }) => {
     return (
-    <FieldsContainer>
-        <Field label={'IdP SSO URL'} value={ssoProvider.idp_sso_uri}></Field>
-        <Field label={'BHE SSO URL'} value={ssoProvider.sp_sso_uri}></Field>
-        <Field label={'BHE ACS URL'} value={ssoProvider.sp_acs_uri}></Field>
-        <Field label={'BHE Metadata URL'} value={ssoProvider.sp_metadata_uri}></Field>
-    </FieldsContainer>
-    )
-}
+        <FieldsContainer>
+            <Field label={'IdP SSO URL'} value={ssoProvider.idp_sso_uri}></Field>
+            <Field label={'BHE SSO URL'} value={ssoProvider.sp_sso_uri}></Field>
+            <Field label={'BHE ACS URL'} value={ssoProvider.sp_acs_uri}></Field>
+            <Field label={'BHE Metadata URL'} value={ssoProvider.sp_metadata_uri}></Field>
+        </FieldsContainer>
+    );
+};
 
 const SSOProviderInfoPanel: React.FC<{
     ssoProvider?: any;
 }> = ({ ssoProvider }) => {
+    const theme = useTheme();
     const paneStyles = usePaneStyles();
     const headerStyles = useHeaderStyles();
     const [expanded, setExpanded] = useState(true);
@@ -48,11 +45,12 @@ const SSOProviderInfoPanel: React.FC<{
     if (!ssoProvider) {
         return null;
     }
-    console.log(ssoProvider)
+    console.log(ssoProvider);
     return (
         <Box className={paneStyles.container} data-testid='sso_provider-info-panel'>
             <Paper elevation={0} classes={{ root: paneStyles.headerPaperRoot }}>
-            <Box className={headerStyles.header}>
+                <Box className={headerStyles.header}>
+                    <Box sx={{ backgroundColor: theme.palette.primary.main, width: 10, height: 'fit-content' }} />
                     <Icon
                         className={headerStyles.icon}
                         click={() => {
@@ -73,13 +71,11 @@ const SSOProviderInfoPanel: React.FC<{
             <Paper
                 elevation={0}
                 classes={{ root: paneStyles.contentPaperRoot }}
-                style={{
-                    display: expanded ? 'initial' : 'none',
-                }}>
-                    <Box flexShrink={0} flexGrow={1} fontWeight='bold' mr={1} fontSize={'small'}>
-                        Provider Information:
-                    </Box>
-                    <SAMLProviderInfoPanel ssoProvider={ssoProvider} />
+                sx={{ display: expanded ? 'initial' : 'none' }}>
+                <Box flexShrink={0} flexGrow={1} fontWeight='bold' mr={1} fontSize={'small'}>
+                    Provider Information:
+                </Box>
+                <SAMLProviderInfoPanel ssoProvider={ssoProvider} />
             </Paper>
         </Box>
     );
