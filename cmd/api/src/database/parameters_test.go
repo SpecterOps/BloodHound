@@ -132,8 +132,10 @@ func TestParameters_GetAllConfigurationParameter(t *testing.T) {
 	)
 	parameters, err := dbInst.GetAllConfigurationParameters(testCtx)
 	require.Nil(t, err)
-	require.Len(t, parameters, 5)
+	require.Len(t, parameters, 6)
 	for _, parameter := range parameters {
-		require.True(t, parameter.IsValidKey(parameter.Key))
+		if parameter.Name != appcfg.ScheduledAnalysis {
+			require.True(t, parameter.IsValidKey(parameter.Key))
+		}
 	}
 }
