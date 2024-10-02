@@ -45,7 +45,7 @@ const (
 	DefaultPruneHasSessionEdgeTTL = time.Hour * 24 * 3
 
 	ReconciliationKey = "analysis.reconciliation"
-	ScheduledAnalysis = "analysis.scheduled"
+	ScheduledAnalysis = "analysis.scheduled" //This key is not intended to be user updateable, so should not be added to IsValidKey
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -73,7 +73,6 @@ func (s *Parameter) IsValidKey(parameterKey string) bool {
 		PruneTTL:                 true,
 		CitrixRDPSupportKey:      true,
 		ReconciliationKey:        true,
-		ScheduledAnalysis:        true,
 	}
 
 	return validKeys[parameterKey]
