@@ -1,6 +1,14 @@
 {
     "test_cases": [
         {
+            "name": "brandon testing",
+            "type": "string_match",
+            "details": {
+                "query": "match p = (a)-[:Mon|Tues|Weds]->(b) return p",
+                "complexity": 3
+            }
+        },
+        {
             "name": "Match all nodes in the graph",
             "type": "string_match",
             "details": {

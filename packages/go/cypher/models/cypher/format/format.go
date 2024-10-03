@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cypher/models/cypher"
+	"github.com/specterops/bloodhound/graphschema/ad"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -34,6 +35,14 @@ func writeJoinedKinds(output io.Writer, delimiter string, kinds graph.Kinds) err
 		if idx > 0 {
 			if _, err := io.WriteString(output, delimiter); err != nil {
 				return err
+			}
+		}
+
+		if kind == "ALL_AD_ATTACKS" {
+			for _, relType := range ad.PathfindingRelationships() {
+				if _, err := io.WriteString(output, relType.String()+delimiter); err != nil {
+					return err
+				}
 			}
 		}
 
