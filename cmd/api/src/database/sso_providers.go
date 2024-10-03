@@ -30,8 +30,8 @@ const (
 
 var (
 	ssoProviderTypeMapping = map[model.SessionAuthProvider]model.SSOProviderType{
-		model.SessionAuthProviderOIDC: model.OIDCProviderType,
-		model.SessionAuthProviderSAML: model.SAMLProviderType,
+		model.SessionAuthProviderOIDC: model.SSOProviderTypeOIDC,
+		model.SessionAuthProviderSAML: model.SSOProviderTypeSAML,
 	}
 )
 

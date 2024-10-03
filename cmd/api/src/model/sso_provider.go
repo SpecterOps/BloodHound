@@ -21,8 +21,8 @@ package model
 type SSOProviderType string
 
 const (
-	OIDCProviderType SSOProviderType = "oidc"
-	SAMLProviderType SSOProviderType = "saml"
+	SSOProviderTypeOIDC SSOProviderType = "oidc"
+	SSOProviderTypeSAML SSOProviderType = "saml"
 )
 
 // SSOProvider is the common representation of an SSO provider that can be used to display high level information about that provider

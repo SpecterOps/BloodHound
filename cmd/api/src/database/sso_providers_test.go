@@ -42,7 +42,7 @@ func TestBloodhoundDB_CreateSSOProvider(t *testing.T) {
 
 		assert.Equal(t, "Bloodhound Gang", result.Name)
 		assert.Equal(t, "bloodhound-gang", result.Slug)
-		assert.Equal(t, model.SessionAuthProviderSAML, result.Type)
+		assert.Equal(t, model.SSOProviderTypeSAML, result.Type)
 	})
 
 	t.Run("error creating SSO provider, invalid SessionAuthProvider to SSOProviderType mapping", func(t *testing.T) {
