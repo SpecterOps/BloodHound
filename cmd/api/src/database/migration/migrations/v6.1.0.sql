@@ -14,6 +14,21 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- Add Scheduled Analysis Configs
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
+VALUES ('analysis.scheduled',
+        'Scheduled Analysis',
+        'This configuration parameter allows setting a schedule for analysis. When enabled, analysis will only run when the scheduled time arrives',
+        '{
+          "enabled": false,
+          "rrule": ""
+        }',
+        current_timestamp, current_timestamp)
+ON CONFLICT DO NOTHING;
+
+-- Add last analysis time to datapipe status so we can track scheduled analysis time properly
+ALTER TABLE datapipe_status
+    ADD COLUMN IF NOT EXISTS "last_analysis_run_at" TIMESTAMP with time zone;
 
 -- Create our sso_provider_type enum
 DO
@@ -59,7 +74,6 @@ ALTER TABLE ONLY saml_providers
     DROP CONSTRAINT IF EXISTS fk_saml_provider_sso_provider;
 ALTER TABLE ONLY saml_providers
     ADD CONSTRAINT fk_saml_provider_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE CASCADE;
-
 
 -- Backfill our sso_providers table with the existing data from saml_providers
 INSERT INTO sso_providers(name, slug, type) (SELECT name, lower(replace(name, ' ', '-')), 'saml'
