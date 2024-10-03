@@ -20,7 +20,7 @@ import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
 
-const IntraForestTrusted = {
+const SameForestTrusted = {
     general: General,
     windowsAbuse: WindowsAbuse,
     linuxAbuse: LinuxAbuse,
@@ -28,4 +28,4 @@ const IntraForestTrusted = {
     references: References,
 };
 
-export default IntraForestTrusted;
+export default SameForestTrusted;
