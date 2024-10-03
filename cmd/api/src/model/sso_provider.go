@@ -18,7 +18,7 @@ package model
 
 // SSOProvider is the common representation of an SSO provider that can be used to display high level information about that provider
 type SSOProvider struct {
-	Type SessionAuthProvider `json:"type"`
+	Type SessionAuthProvider `json:"type" gorm:"column:type"`
 	Name string              `json:"name"`
 	Slug string              `json:"slug"`
 

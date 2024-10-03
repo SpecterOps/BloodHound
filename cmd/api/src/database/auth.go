@@ -525,6 +525,16 @@ func (s *BloodhoundDB) GetSAMLProvider(ctx context.Context, id int32) (model.SAM
 	return samlProvider, CheckError(result)
 }
 
+// GetSAMLProviderBySSOProviderID returns a SAML provider corresponding to the SSO Provider ID provided
+func (s *BloodhoundDB) GetSAMLProviderBySSOProviderID(ctx context.Context, ssoProviderID int32) (model.SAMLProvider, error) {
+	var (
+		samlProvider model.SAMLProvider
+		result       = s.db.WithContext(ctx).Where("sso_provider_id = ?", ssoProviderID).First(&samlProvider)
+	)
+
+	return samlProvider, CheckError(result)
+}
+
 func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SAMLProvider) error {
 	auditEntry := model.AuditEntry{
 		Action: model.AuditLogActionDeleteSAMLIdentityProvider,

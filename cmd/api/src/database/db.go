@@ -130,6 +130,7 @@ type Database interface {
 	LookupSAMLProviderByName(ctx context.Context, name string) (model.SAMLProvider, error)
 	GetAllSAMLProviders(ctx context.Context) (model.SAMLProviders, error)
 	GetSAMLProvider(ctx context.Context, id int32) (model.SAMLProvider, error)
+	GetSAMLProviderBySSOProviderID(ctx context.Context, ssoProviderID int32) (model.SAMLProvider, error)
 	GetSAMLProviderUsers(ctx context.Context, id int32) (model.Users, error)
 	DeleteSAMLProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 

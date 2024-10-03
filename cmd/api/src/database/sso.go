@@ -31,6 +31,7 @@ const (
 type SSOProviderData interface {
 	CreateSSOProvider(ctx context.Context, name, slug string, authType model.SessionAuthProvider) (model.SSOProvider, error)
 	CreateSSOProviderWithTransaction(ctx context.Context, tx *gorm.DB, name, slug string, authType model.SessionAuthProvider) (model.SSOProvider, error)
+	GetAllSSOProviders(ctx context.Context) ([]model.SSOProvider, error)
 }
 
 // CreateSSOProvider creates an entry in the sso_providers table
@@ -53,4 +54,10 @@ func (s *BloodhoundDB) CreateSSOProviderWithTransaction(ctx context.Context, tx 
 	}
 
 	return provider, CheckError(tx.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))
+}
+
+func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context) ([]model.SSOProvider, error) {
+	var providers []model.SSOProvider
+	result := s.db.WithContext(ctx).Table(ssoProviderTableName).Find(&providers)
+	return providers, CheckError(result)
 }

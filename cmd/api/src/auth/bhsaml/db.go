@@ -54,6 +54,14 @@ func GetSAMLProviderByID(db database.Database, id int32, requestContext context.
 	}
 }
 
+func GetSAMLProviderBySSOProviderID(db database.Database, ssoProviderID int32, requestContext context.Context) (model.SAMLProvider, error) {
+	if samlProvider, err := db.GetSAMLProviderBySSOProviderID(requestContext, ssoProviderID); err != nil {
+		return model.SAMLProvider{}, err
+	} else {
+		return formatSAMLProviderURLs(requestContext, samlProvider)[0], nil
+	}
+}
+
 func GetAllSAMLProviders(db database.Database, requestContext context.Context) (model.SAMLProviders, error) {
 	if samlProviders, err := db.GetAllSAMLProviders(requestContext); err != nil {
 		return nil, err

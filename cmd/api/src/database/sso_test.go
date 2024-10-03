@@ -45,3 +45,41 @@ func TestBloodhoundDB_CreateSSOProvider(t *testing.T) {
 		assert.Equal(t, model.SessionAuthProviderSAML, result.Type)
 	})
 }
+
+func TestBloodhoundDB_ListSSOProviders(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+	defer dbInst.Close(testCtx)
+
+	t.Run("successfully list SSO providers", func(t *testing.T) {
+		provider1, err := dbInst.CreateSSOProvider(testCtx, "Provider One", "provider-one", model.SessionAuthProviderSAML)
+		require.NoError(t, err)
+
+		provider2, err := dbInst.CreateSSOProvider(testCtx, "Provider Two", "provider-two", model.SessionAuthProviderOIDC)
+		require.NoError(t, err)
+
+		providers, err := dbInst.GetAllSSOProviders(testCtx)
+		require.NoError(t, err)
+
+		assert.Len(t, providers, 2)
+
+		providerMap := make(map[int32]model.SSOProvider)
+		for _, p := range providers {
+			providerMap[p.ID] = p
+		}
+
+		retrievedProvider1, exists := providerMap[provider1.ID]
+		require.True(t, exists, "Provider One not found in the list")
+		assert.Equal(t, provider1.Name, retrievedProvider1.Name)
+		assert.Equal(t, provider1.Slug, retrievedProvider1.Slug)
+		assert.Equal(t, provider1.Type, retrievedProvider1.Type)
+
+		retrievedProvider2, exists := providerMap[provider2.ID]
+		require.True(t, exists, "Provider Two not found in the list")
+		assert.Equal(t, provider2.Name, retrievedProvider2.Name)
+		assert.Equal(t, provider2.Slug, retrievedProvider2.Slug)
+		assert.Equal(t, provider2.Type, retrievedProvider2.Type)
+	})
+}
