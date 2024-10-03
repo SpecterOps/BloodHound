@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen } from 'src/test-utils';
+import { render, screen } from '../../test-utils';
 import SAMLConfiguration from './SSOConfiguration';
 
 const initialSAMLProvider: CreateSAMLProviderResponse = {
@@ -107,7 +107,7 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('SAMLConfiguration', () => {
+describe('SSOConfiguration', () => {
     it('should eventually render previously configured SAML providers', async () => {
         render(<SAMLConfiguration />);
         expect(await screen.findByText('SSO Configuration')).toBeInTheDocument();
