@@ -26,4 +26,17 @@ CREATE TABLE IF NOT EXISTS oidc_providers
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
 
   UNIQUE (name)
-)
+);
+
+
+-- Add Scheduled Analysis Configs
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
+  VALUES ('analysis.scheduled',
+        'Scheduled Analysis',
+        'This configuration parameter allows setting a schedule for analysis. When enabled, analysis will only run when the scheduled time arrives',
+        '{"enabled": false, "rrule": ""}',
+        current_timestamp,current_timestamp) ON CONFLICT DO NOTHING;
+
+-- Add last analysis time to datapipe status so we can track scheduled analysis time properly
+ALTER TABLE datapipe_status
+ADD COLUMN IF NOT EXISTS "last_analysis_run_at" TIMESTAMP with time zone;
