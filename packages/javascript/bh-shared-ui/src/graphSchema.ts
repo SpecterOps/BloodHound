@@ -140,7 +140,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC10b = 'ADCSESC10b',
     ADCSESC13 = 'ADCSESC13',
     SyncedToEntraUser = 'SyncedToEntraUser',
-    ALL_AD_ATTACKS = 'ALL_AD_ATTACKS',
+    AllADAttacks = 'ALL_AD_ATTACKS',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -282,8 +282,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC13';
         case ActiveDirectoryRelationshipKind.SyncedToEntraUser:
             return 'SyncedToEntraUser';
-        case ActiveDirectoryRelationshipKind.ALL_AD_ATTACKS:
-            return 'ALL_AD_ATTACKS';
+        case ActiveDirectoryRelationshipKind.AllADAttacks:
+            return 'AllADAttacks';
         default:
             return undefined;
     }
@@ -780,6 +780,7 @@ export enum AzureRelationshipKind {
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
     SyncedToADUser = 'SyncedToADUser',
+    AllAZAttacks = 'ALL_AZ_ATTACKS',
 }
 export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): string | undefined {
     switch (value) {
@@ -877,6 +878,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantRole';
         case AzureRelationshipKind.SyncedToADUser:
             return 'SyncedToADUser';
+        case AzureRelationshipKind.AllAZAttacks:
+            return 'AllAZAttacks';
         default:
             return undefined;
     }
