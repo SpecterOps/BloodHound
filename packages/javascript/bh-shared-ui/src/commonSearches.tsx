@@ -235,8 +235,8 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH (n:Domain)-[:Contains*1..]->(m:Base)\nWHERE n.expirepasswordsonsmartcardonlyaccounts = false\nAND m.enabled = true\nAND m.smartcardrequired = true\nRETURN n`,
             },
             {
-                description: 'Two-way inter-forest trusts enabled for delegation',
-                cypher: `MATCH p=(n:Domain)-[r:InterForestTrusted]->(m:Domain)\nWHERE (n)<-[:InterForestTrusted]-(m)\nAND r.tgtdelegationenabled = true\nRETURN p`,
+                description: 'Inter-forest trusts with abusable configuration',
+                cypher: `MATCH p=(n:Domain)-[:InterForestTrusted|SpoofSIDHistory|AbuseTGTDelegation]-(m:Domain)\nWHERE (n)-[:SpoofSIDHistory|AbuseTGTDelegation]-(m)\nRETURN p`,
             },
             {
                 description: 'Computers with unsupported operating systems',

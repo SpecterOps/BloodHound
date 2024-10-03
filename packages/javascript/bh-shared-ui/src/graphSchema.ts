@@ -354,8 +354,10 @@ export enum ActiveDirectoryKindProperties {
     PasswordNeverExpires = 'pwdneverexpires',
     PasswordNotRequired = 'passwordnotreqd',
     FunctionalLevel = 'functionallevel',
-    TrustType = 'trusttype',
-    SidFiltering = 'sidfiltering',
+    TrustTypeInbound = 'trusttypeinbound',
+    TrustTypeOutbound = 'trusttypeoutbound',
+    SIDFilteringInbound = 'sidfilteringinbound',
+    SIDFilteringOutbound = 'sidfilteringoutbound',
     TrustedToAuth = 'trustedtoauth',
     SamAccountName = 'samaccountname',
     CertificateMappingMethodsRaw = 'certificatemappingmethodsraw',
@@ -394,7 +396,8 @@ export enum ActiveDirectoryKindProperties {
     ExpirePasswordsOnSmartCardOnlyAccounts = 'expirepasswordsonsmartcardonlyaccounts',
     MachineAccountQuota = 'machineaccountquota',
     SupportedKerberosEncryptionTypes = 'supportedencryptiontypes',
-    TGTDelegationEnabled = 'tgtdelegationenabled',
+    TGTDelegationInbound = 'tgtdelegationenabledinbound',
+    TGTDelegationOutbound = 'tgtdelegationenabledoutbound',
     PasswordStoredUsingReversibleEncryption = 'encryptedtextpwdallowed',
     SmartcardRequired = 'smartcardrequired',
     UseDESKeyOnly = 'usedeskeyonly',
@@ -404,7 +407,10 @@ export enum ActiveDirectoryKindProperties {
     PasswordExpired = 'passwordexpired',
     DSHeuristics = 'dsheuristics',
     UserAccountControl = 'useraccountcontrol',
-    TrustAttributes = 'trustattributes',
+    TrustAttributesInbound = 'trustattributesinbound',
+    TrustAttributesOutbound = 'trustattributesoutbound',
+    TrustTransitiveInbound = 'trusttransitiveinbound',
+    TrustTransitiveOutbound = 'trusttransitiveoutbound',
     MinPwdLength = 'minpwdlength',
     PwdProperties = 'pwdproperties',
     PwdHistoryLength = 'pwdhistorylength',
@@ -500,10 +506,14 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Password Not Required';
         case ActiveDirectoryKindProperties.FunctionalLevel:
             return 'Functional Level';
-        case ActiveDirectoryKindProperties.TrustType:
-            return 'Trust Type';
-        case ActiveDirectoryKindProperties.SidFiltering:
-            return 'SID Filtering Enabled';
+        case ActiveDirectoryKindProperties.TrustTypeInbound:
+            return 'Trust Type (Inbound)';
+        case ActiveDirectoryKindProperties.TrustTypeOutbound:
+            return 'Trust Type (Outbound)';
+        case ActiveDirectoryKindProperties.SIDFilteringInbound:
+            return 'SID Filtering (Inbound)';
+        case ActiveDirectoryKindProperties.SIDFilteringOutbound:
+            return 'SID Filtering (Outbound)';
         case ActiveDirectoryKindProperties.TrustedToAuth:
             return 'Trusted For Constrained Delegation';
         case ActiveDirectoryKindProperties.SamAccountName:
@@ -580,8 +590,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Machine Account Quota';
         case ActiveDirectoryKindProperties.SupportedKerberosEncryptionTypes:
             return 'Supported Kerberos Encryption Types';
-        case ActiveDirectoryKindProperties.TGTDelegationEnabled:
-            return 'TGT Delegation Enabled';
+        case ActiveDirectoryKindProperties.TGTDelegationInbound:
+            return 'TGT Delegation Enabled (Inbound)';
+        case ActiveDirectoryKindProperties.TGTDelegationOutbound:
+            return 'TGT Delegation Enabled (Outbound)';
         case ActiveDirectoryKindProperties.PasswordStoredUsingReversibleEncryption:
             return 'Password Stored Using Reversible Encryption';
         case ActiveDirectoryKindProperties.SmartcardRequired:
@@ -600,8 +612,14 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'DSHeuristics';
         case ActiveDirectoryKindProperties.UserAccountControl:
             return 'User Account Control';
-        case ActiveDirectoryKindProperties.TrustAttributes:
-            return 'Trust Attributes';
+        case ActiveDirectoryKindProperties.TrustAttributesInbound:
+            return 'Trust Attributes (Inbound)';
+        case ActiveDirectoryKindProperties.TrustAttributesOutbound:
+            return 'Trust Attributes (Outbound)';
+        case ActiveDirectoryKindProperties.TrustTransitiveInbound:
+            return 'Transitive (Inbound)';
+        case ActiveDirectoryKindProperties.TrustTransitiveOutbound:
+            return 'Transitive (Outbound)';
         case ActiveDirectoryKindProperties.MinPwdLength:
             return 'Minimum password length';
         case ActiveDirectoryKindProperties.PwdProperties:

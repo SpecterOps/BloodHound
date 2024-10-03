@@ -161,8 +161,10 @@ const (
 	PasswordNeverExpires                    Property = "pwdneverexpires"
 	PasswordNotRequired                     Property = "passwordnotreqd"
 	FunctionalLevel                         Property = "functionallevel"
-	TrustType                               Property = "trusttype"
-	SidFiltering                            Property = "sidfiltering"
+	TrustTypeInbound                        Property = "trusttypeinbound"
+	TrustTypeOutbound                       Property = "trusttypeoutbound"
+	SIDFilteringInbound                     Property = "sidfilteringinbound"
+	SIDFilteringOutbound                    Property = "sidfilteringoutbound"
 	TrustedToAuth                           Property = "trustedtoauth"
 	SamAccountName                          Property = "samaccountname"
 	CertificateMappingMethodsRaw            Property = "certificatemappingmethodsraw"
@@ -201,7 +203,8 @@ const (
 	ExpirePasswordsOnSmartCardOnlyAccounts  Property = "expirepasswordsonsmartcardonlyaccounts"
 	MachineAccountQuota                     Property = "machineaccountquota"
 	SupportedKerberosEncryptionTypes        Property = "supportedencryptiontypes"
-	TGTDelegationEnabled                    Property = "tgtdelegationenabled"
+	TGTDelegationInbound                    Property = "tgtdelegationenabledinbound"
+	TGTDelegationOutbound                   Property = "tgtdelegationenabledoutbound"
 	PasswordStoredUsingReversibleEncryption Property = "encryptedtextpwdallowed"
 	SmartcardRequired                       Property = "smartcardrequired"
 	UseDESKeyOnly                           Property = "usedeskeyonly"
@@ -211,7 +214,10 @@ const (
 	PasswordExpired                         Property = "passwordexpired"
 	DSHeuristics                            Property = "dsheuristics"
 	UserAccountControl                      Property = "useraccountcontrol"
-	TrustAttributes                         Property = "trustattributes"
+	TrustAttributesInbound                  Property = "trustattributesinbound"
+	TrustAttributesOutbound                 Property = "trustattributesoutbound"
+	TrustTransitiveInbound                  Property = "trusttransitiveinbound"
+	TrustTransitiveOutbound                 Property = "trusttransitiveoutbound"
 	MinPwdLength                            Property = "minpwdlength"
 	PwdProperties                           Property = "pwdproperties"
 	PwdHistoryLength                        Property = "pwdhistorylength"
@@ -223,7 +229,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationEnabled, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributes, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustTypeInbound, TrustTypeOutbound, SIDFilteringInbound, SIDFilteringOutbound, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationInbound, TGTDelegationOutbound, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributesInbound, TrustAttributesOutbound, TrustTransitiveInbound, TrustTransitiveOutbound, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -311,10 +317,14 @@ func ParseProperty(source string) (Property, error) {
 		return PasswordNotRequired, nil
 	case "functionallevel":
 		return FunctionalLevel, nil
-	case "trusttype":
-		return TrustType, nil
-	case "sidfiltering":
-		return SidFiltering, nil
+	case "trusttypeinbound":
+		return TrustTypeInbound, nil
+	case "trusttypeoutbound":
+		return TrustTypeOutbound, nil
+	case "sidfilteringinbound":
+		return SIDFilteringInbound, nil
+	case "sidfilteringoutbound":
+		return SIDFilteringOutbound, nil
 	case "trustedtoauth":
 		return TrustedToAuth, nil
 	case "samaccountname":
@@ -391,8 +401,10 @@ func ParseProperty(source string) (Property, error) {
 		return MachineAccountQuota, nil
 	case "supportedencryptiontypes":
 		return SupportedKerberosEncryptionTypes, nil
-	case "tgtdelegationenabled":
-		return TGTDelegationEnabled, nil
+	case "tgtdelegationenabledinbound":
+		return TGTDelegationInbound, nil
+	case "tgtdelegationenabledoutbound":
+		return TGTDelegationOutbound, nil
 	case "encryptedtextpwdallowed":
 		return PasswordStoredUsingReversibleEncryption, nil
 	case "smartcardrequired":
@@ -411,8 +423,14 @@ func ParseProperty(source string) (Property, error) {
 		return DSHeuristics, nil
 	case "useraccountcontrol":
 		return UserAccountControl, nil
-	case "trustattributes":
-		return TrustAttributes, nil
+	case "trustattributesinbound":
+		return TrustAttributesInbound, nil
+	case "trustattributesoutbound":
+		return TrustAttributesOutbound, nil
+	case "trusttransitiveinbound":
+		return TrustTransitiveInbound, nil
+	case "trusttransitiveoutbound":
+		return TrustTransitiveOutbound, nil
 	case "minpwdlength":
 		return MinPwdLength, nil
 	case "pwdproperties":
@@ -519,10 +537,14 @@ func (s Property) String() string {
 		return string(PasswordNotRequired)
 	case FunctionalLevel:
 		return string(FunctionalLevel)
-	case TrustType:
-		return string(TrustType)
-	case SidFiltering:
-		return string(SidFiltering)
+	case TrustTypeInbound:
+		return string(TrustTypeInbound)
+	case TrustTypeOutbound:
+		return string(TrustTypeOutbound)
+	case SIDFilteringInbound:
+		return string(SIDFilteringInbound)
+	case SIDFilteringOutbound:
+		return string(SIDFilteringOutbound)
 	case TrustedToAuth:
 		return string(TrustedToAuth)
 	case SamAccountName:
@@ -599,8 +621,10 @@ func (s Property) String() string {
 		return string(MachineAccountQuota)
 	case SupportedKerberosEncryptionTypes:
 		return string(SupportedKerberosEncryptionTypes)
-	case TGTDelegationEnabled:
-		return string(TGTDelegationEnabled)
+	case TGTDelegationInbound:
+		return string(TGTDelegationInbound)
+	case TGTDelegationOutbound:
+		return string(TGTDelegationOutbound)
 	case PasswordStoredUsingReversibleEncryption:
 		return string(PasswordStoredUsingReversibleEncryption)
 	case SmartcardRequired:
@@ -619,8 +643,14 @@ func (s Property) String() string {
 		return string(DSHeuristics)
 	case UserAccountControl:
 		return string(UserAccountControl)
-	case TrustAttributes:
-		return string(TrustAttributes)
+	case TrustAttributesInbound:
+		return string(TrustAttributesInbound)
+	case TrustAttributesOutbound:
+		return string(TrustAttributesOutbound)
+	case TrustTransitiveInbound:
+		return string(TrustTransitiveInbound)
+	case TrustTransitiveOutbound:
+		return string(TrustTransitiveOutbound)
 	case MinPwdLength:
 		return string(MinPwdLength)
 	case PwdProperties:
@@ -727,10 +757,14 @@ func (s Property) Name() string {
 		return "Password Not Required"
 	case FunctionalLevel:
 		return "Functional Level"
-	case TrustType:
-		return "Trust Type"
-	case SidFiltering:
-		return "SID Filtering Enabled"
+	case TrustTypeInbound:
+		return "Trust Type (Inbound)"
+	case TrustTypeOutbound:
+		return "Trust Type (Outbound)"
+	case SIDFilteringInbound:
+		return "SID Filtering (Inbound)"
+	case SIDFilteringOutbound:
+		return "SID Filtering (Outbound)"
 	case TrustedToAuth:
 		return "Trusted For Constrained Delegation"
 	case SamAccountName:
@@ -807,8 +841,10 @@ func (s Property) Name() string {
 		return "Machine Account Quota"
 	case SupportedKerberosEncryptionTypes:
 		return "Supported Kerberos Encryption Types"
-	case TGTDelegationEnabled:
-		return "TGT Delegation Enabled"
+	case TGTDelegationInbound:
+		return "TGT Delegation Enabled (Inbound)"
+	case TGTDelegationOutbound:
+		return "TGT Delegation Enabled (Outbound)"
 	case PasswordStoredUsingReversibleEncryption:
 		return "Password Stored Using Reversible Encryption"
 	case SmartcardRequired:
@@ -827,8 +863,14 @@ func (s Property) Name() string {
 		return "DSHeuristics"
 	case UserAccountControl:
 		return "User Account Control"
-	case TrustAttributes:
-		return "Trust Attributes"
+	case TrustAttributesInbound:
+		return "Trust Attributes (Inbound)"
+	case TrustAttributesOutbound:
+		return "Trust Attributes (Outbound)"
+	case TrustTransitiveInbound:
+		return "Transitive (Inbound)"
+	case TrustTransitiveOutbound:
+		return "Transitive (Outbound)"
 	case MinPwdLength:
 		return "Minimum password length"
 	case PwdProperties:
