@@ -44,7 +44,7 @@ type SSOProviderData interface {
 // A slug will be created for the SSO Provider using the name argument as a base. The name will be lower cased and all spaces are replaced with `-`
 func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authType model.SessionAuthProvider) (model.SSOProvider, error) {
 	if ssoProviderType, ok := ssoProviderTypeMapping[authType]; !ok {
-		return model.SSOProvider{}, fmt.Errorf("invalid auth type: %s", authType)
+		return model.SSOProvider{}, fmt.Errorf("error could not find a valid mapping from SessionAuthProvider to SSOProviderType: %d", authType)
 	} else {
 
 		provider := model.SSOProvider{
