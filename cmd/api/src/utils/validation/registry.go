@@ -50,5 +50,6 @@ func init() {
 		"password": NewPasswordValidator,
 		"required": NewRequiredValidator,
 		"duration": NewDurationValidator,
+		"url":      NewUrlValidator,
 	}}
 }

