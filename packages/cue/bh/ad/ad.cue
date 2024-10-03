@@ -315,18 +315,32 @@ FunctionalLevel: types.#StringEnum & {
 	representation: "functionallevel"
 }
 
-TrustType: types.#StringEnum & {
-	symbol: "TrustType"
+TrustTypeInbound: types.#StringEnum & {
+	symbol: "TrustTypeInbound"
 	schema: "ad"
-	name: "Trust Type"
-	representation: "trusttype"
+	name: "Trust Type (Inbound)"
+	representation: "trusttypeinbound"
 }
 
-SidFiltering: types.#StringEnum & {
-	symbol: "SidFiltering"
+TrustTypeOutbound: types.#StringEnum & {
+	symbol: "TrustTypeOutbound"
 	schema: "ad"
-	name: "SID Filtering Enabled"
-	representation: "sidfiltering"
+	name: "Trust Type (Outbound)"
+	representation: "trusttypeoutbound"
+}
+
+SIDFilteringInbound: types.#StringEnum & {
+	symbol: "SIDFilteringInbound"
+	schema: "ad"
+	name: "SID Filtering (Inbound)"
+	representation: "sidfilteringinbound"
+}
+
+SIDFilteringOutbound: types.#StringEnum & {
+	symbol: "SIDFilteringOutbound"
+	schema: "ad"
+	name: "SID Filtering (Outbound)"
+	representation: "sidfilteringoutbound"
 }
 
 TrustedToAuth: types.#StringEnum & {
@@ -602,11 +616,18 @@ SupportedKerberosEncryptionTypes: types.#StringEnum & {
 	representation: "supportedencryptiontypes"
 }
 
-TGTDelegationEnabled: types.#StringEnum & {
-	symbol: "TGTDelegationEnabled"
+TGTDelegationInbound: types.#StringEnum & {
+	symbol: "TGTDelegationInbound"
 	schema: "ad"
-	name: "TGT Delegation Enabled"
-	representation: "tgtdelegationenabled"
+	name: "TGT Delegation Enabled (Inbound)"
+	representation: "tgtdelegationenabledinbound"
+}
+
+TGTDelegationOutbound: types.#StringEnum & {
+	symbol: "TGTDelegationOutbound"
+	schema: "ad"
+	name: "TGT Delegation Enabled (Outbound)"
+	representation: "tgtdelegationenabledoutbound"
 }
 
 PasswordStoredUsingReversibleEncryption: types.#StringEnum & {
@@ -672,11 +693,32 @@ UserAccountControl: types.#StringEnum & {
 	representation: "useraccountcontrol"
 }
 
-TrustAttributes: types.#StringEnum & {
-	symbol: "TrustAttributes"
+TrustAttributesInbound: types.#StringEnum & {
+	symbol: "TrustAttributesInbound"
 	schema: "ad"
-	name: "Trust Attributes"
-	representation: "trustattributes"
+	name: "Trust Attributes (Inbound)"
+	representation: "trustattributesinbound"
+}
+
+TrustAttributesOutbound: types.#StringEnum & {
+	symbol: "TrustAttributesOutbound"
+	schema: "ad"
+	name: "Trust Attributes (Outbound)"
+	representation: "trustattributesoutbound"
+}
+
+TrustTransitiveInbound: types.#StringEnum & {
+	symbol: "TrustTransitiveInbound"
+	schema: "ad"
+	name: "Transitive (Inbound)"
+	representation: "trusttransitiveinbound"
+}
+
+TrustTransitiveOutbound: types.#StringEnum & {
+	symbol: "TrustTransitiveOutbound"
+	schema: "ad"
+	name: "Transitive (Outbound)"
+	representation: "trusttransitiveoutbound"
 }
 
 LockoutDuration: types.#StringEnum & {
@@ -778,8 +820,10 @@ Properties: [
 	PasswordNeverExpires,
 	PasswordNotRequired,
 	FunctionalLevel,
-	TrustType,
-	SidFiltering,
+	TrustTypeInbound,
+	TrustTypeOutbound,
+	SIDFilteringInbound,
+	SIDFilteringOutbound,
 	TrustedToAuth,
 	SamAccountName,
 	CertificateMappingMethodsRaw,
@@ -818,7 +862,8 @@ Properties: [
 	ExpirePasswordsOnSmartCardOnlyAccounts,
 	MachineAccountQuota,
 	SupportedKerberosEncryptionTypes,
-	TGTDelegationEnabled,
+	TGTDelegationInbound,
+	TGTDelegationOutbound,
 	PasswordStoredUsingReversibleEncryption,
 	SmartcardRequired,
 	UseDESKeyOnly,
@@ -828,7 +873,10 @@ Properties: [
 	PasswordExpired,
 	DSHeuristics,
 	UserAccountControl,
-	TrustAttributes,
+	TrustAttributesInbound,
+	TrustAttributesOutbound,
+	TrustTransitiveInbound,
+	TrustTransitiveOutbound,
 	MinPwdLength,
 	PwdProperties,
 	PwdHistoryLength,

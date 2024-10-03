@@ -291,7 +291,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		})
 
 		// Determine edge type
-		var edgeType = ad.SameForestTrusted
+		edgeType := ad.SameForestTrusted
 		if trust.TrustType == "External" || trust.TrustType == "Forest" {
 			edgeType = ad.InterForestTrusted
 		}
@@ -309,43 +309,24 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 				},
 				IngestibleRel{
 					RelProps: map[string]any{
-						"isacl":                false,
-						"sidfiltering":         trust.SidFilteringEnabled,
-						"tgtdelegationenabled": trust.TGTDelegationEnabled,
-						"trustattributes":      trust.TrustAttributes,
-						"trusttype":            trust.TrustType,
-						"transitive":           trust.IsTransitive},
+						"isacl":                  false,
+						"sidfilteringinbound":    trust.SidFilteringEnabled,
+						"tgtdelegationinbound":   trust.TGTDelegationEnabled,
+						"trustattributesinbound": trust.TrustAttributes,
+						"trusttypeinbound":       trust.TrustType,
+						"trusttransitiveinbound": trust.IsTransitive},
 					RelType: edgeType,
 				},
 			))
 
-			if edgeType == ad.InterForestTrusted && !trust.SidFilteringEnabled {
-				parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
-					IngestibleSource{
-						Source:     domain.ObjectIdentifier,
-						SourceType: ad.Domain,
-					},
-					IngestibleTarget{
-						Target:     trust.TargetDomainSid,
-						TargetType: ad.Domain,
-					},
-					IngestibleRel{
-						RelProps: map[string]any{
-							"isacl":     false,
-							"trusttype": trust.TrustType,
-						},
-						RelType: ad.SpoofSIDHistory,
-					},
-				))
-			}
 			if edgeType == ad.InterForestTrusted && trust.TGTDelegationEnabled {
 				parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
 					IngestibleSource{
-						Source:     domain.ObjectIdentifier,
+						Source:     trust.TargetDomainSid,
 						SourceType: ad.Domain,
 					},
 					IngestibleTarget{
-						Target:     trust.TargetDomainSid,
+						Target:     domain.ObjectIdentifier,
 						TargetType: ad.Domain,
 					},
 					IngestibleRel{
@@ -371,12 +352,12 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 				},
 				IngestibleRel{
 					RelProps: map[string]any{
-						"isacl":                false,
-						"sidfiltering":         trust.SidFilteringEnabled,
-						"tgtdelegationenabled": trust.TGTDelegationEnabled,
-						"trustattributes":      trust.TrustAttributes,
-						"trusttype":            trust.TrustType,
-						"transitive":           trust.IsTransitive},
+						"isacl":                   false,
+						"sidfilteringoutbound":    trust.SidFilteringEnabled,
+						"tgtdelegationoutbound":   trust.TGTDelegationEnabled,
+						"trustattributesoutbound": trust.TrustAttributes,
+						"trusttypeoutbound":       trust.TrustType,
+						"trusttransitiveoutbound": trust.IsTransitive},
 					RelType: edgeType,
 				},
 			))
@@ -384,11 +365,11 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 			if edgeType == ad.InterForestTrusted && !trust.SidFilteringEnabled {
 				parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
 					IngestibleSource{
-						Source:     domain.ObjectIdentifier,
+						Source:     trust.TargetDomainSid,
 						SourceType: ad.Domain,
 					},
 					IngestibleTarget{
-						Target:     trust.TargetDomainSid,
+						Target:     domain.ObjectIdentifier,
 						TargetType: ad.Domain,
 					},
 					IngestibleRel{
@@ -397,25 +378,6 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 							"trusttype": trust.TrustType,
 						},
 						RelType: ad.SpoofSIDHistory,
-					},
-				))
-			}
-			if edgeType == ad.InterForestTrusted && trust.TGTDelegationEnabled {
-				parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
-					IngestibleSource{
-						Source:     domain.ObjectIdentifier,
-						SourceType: ad.Domain,
-					},
-					IngestibleTarget{
-						Target:     trust.TargetDomainSid,
-						TargetType: ad.Domain,
-					},
-					IngestibleRel{
-						RelProps: map[string]any{
-							"isacl":     false,
-							"trusttype": trust.TrustType,
-						},
-						RelType: ad.AbuseTGTDelegation,
 					},
 				))
 			}
