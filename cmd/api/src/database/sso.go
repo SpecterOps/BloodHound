@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
@@ -25,6 +26,13 @@ import (
 
 const (
 	ssoProviderTableName = "sso_providers"
+)
+
+var (
+	ssoProviderTypeMapping = map[model.SessionAuthProvider]model.SSOProviderType{
+		model.SessionAuthProviderOIDC: model.OIDCProviderType,
+		model.SessionAuthProviderSAML: model.SAMLProviderType,
+	}
 )
 
 // SSOProviderData defines the methods required to interact with the sso_providers table
@@ -35,11 +43,16 @@ type SSOProviderData interface {
 // CreateSSOProvider creates an entry in the sso_providers table
 // A slug will be created for the SSO Provider using the name argument as a base. The name will be lower cased and all spaces are replaced with `-`
 func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authType model.SessionAuthProvider) (model.SSOProvider, error) {
-	provider := model.SSOProvider{
-		Name: name,
-		Slug: strings.ToLower(strings.ReplaceAll(name, " ", "-")),
-		Type: authType,
-	}
+	if ssoProviderType, ok := ssoProviderTypeMapping[authType]; !ok {
+		return model.SSOProvider{}, fmt.Errorf("invalid auth type: %s", authType)
+	} else {
 
-	return provider, CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))
+		provider := model.SSOProvider{
+			Name: name,
+			Slug: strings.ToLower(strings.ReplaceAll(name, " ", "-")),
+			Type: ssoProviderType,
+		}
+
+		return provider, CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))
+	}
 }

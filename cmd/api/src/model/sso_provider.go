@@ -16,11 +16,20 @@
 
 package model
 
+// SSOProviderType is the representation of the sso_provider_types enum declared in our database
+// Adding a new type will require an accompanying migration
+type SSOProviderType string
+
+const (
+	OIDCProviderType SSOProviderType = "oidc"
+	SAMLProviderType SSOProviderType = "saml"
+)
+
 // SSOProvider is the common representation of an SSO provider that can be used to display high level information about that provider
 type SSOProvider struct {
-	Type SessionAuthProvider `json:"type"`
-	Name string              `json:"name"`
-	Slug string              `json:"slug"`
+	Type SSOProviderType `json:"type"`
+	Name string          `json:"name"`
+	Slug string          `json:"slug"`
 
 	Serial
 }
