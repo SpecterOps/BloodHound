@@ -30,7 +30,6 @@ import {
     ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
 } from 'src/ducks/global/routes';
 import usePermissions from 'src/hooks/usePermissions/usePermissions';
-import useToggle from 'src/hooks/useToggle';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { useAppDispatch } from 'src/store';
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
@@ -39,7 +38,7 @@ const Users = React.lazy(() => import('src/views/Users'));
 const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures'));
 const FileIngest = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.FileIngest })));
 const BloodHoundConfiguration = React.lazy(() => import('src/views/BloodHoundConfiguration'));
-const SSOConfiguration = React.lazy(() => MakeSSOConfiguration(useToggle, addSnackbar, useAppDispatch));
+const SSOConfiguration = React.lazy(() => MakeSSOConfiguration(addSnackbar, useAppDispatch));
 
 const Administration: React.FC = () => {
     const sections = [

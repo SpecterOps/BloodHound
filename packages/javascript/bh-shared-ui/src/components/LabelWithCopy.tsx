@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
 import { faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useCallback, useState } from 'react';
@@ -25,6 +25,7 @@ const LabelWithCopy: React.FC<{
     valueToCopy: string;
     hoverOnly?: boolean;
 }> = ({ label, valueToCopy, hoverOnly = false }) => {
+    const theme = useTheme();
     const [copied, setCopied] = useState(false);
     const [hoverActive, setHoverActive] = useState(false);
 
@@ -38,19 +39,24 @@ const LabelWithCopy: React.FC<{
 
         setTimeout(() => {
             setCopied(false);
-        }, 3000);
+        }, 1000);
     }, []);
 
     return (
-        <Box display='flex' alignItems='center' onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+        <Box
+            display='flex'
+            alignItems='center'
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            sx={{ height: theme.spacing(3) }}>
             {label}
-            {(!hoverOnly || hoverActive) && (
-                <Tooltip title='Copied' open={copied} placement='right'>
-                    <IconButton onClick={handleCopy} sx={{ fontSize: 'inherit' }}>
-                        <FontAwesomeIcon icon={faCopy} />
-                    </IconButton>
-                </Tooltip>
-            )}
+            <Tooltip title='Copied' open={copied} placement='right'>
+                <IconButton
+                    onClick={handleCopy}
+                    sx={{ fontSize: 'inherit', display: !hoverOnly || hoverActive ? undefined : 'none' }}>
+                    <FontAwesomeIcon icon={faCopy} />
+                </IconButton>
+            </Tooltip>
         </Box>
     );
 };

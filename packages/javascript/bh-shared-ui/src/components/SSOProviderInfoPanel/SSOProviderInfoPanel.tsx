@@ -15,10 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Paper, Box, Typography, useTheme } from '@mui/material';
-import { faAngleDown, faAngleUp } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useState } from 'react';
-import Icon from '../../components/Icon';
+import React from 'react';
 import { Field, FieldsContainer, usePaneStyles, useHeaderStyles } from '../../views/Explore';
 import LabelWithCopy from '../LabelWithCopy';
 
@@ -53,7 +50,6 @@ const SSOProviderInfoPanel: React.FC<{
     const theme = useTheme();
     const paneStyles = usePaneStyles();
     const headerStyles = useHeaderStyles();
-    const [expanded, setExpanded] = useState(true);
 
     if (!ssoProvider) {
         return null;
@@ -70,40 +66,44 @@ const SSOProviderInfoPanel: React.FC<{
 
     return (
         <Box className={paneStyles.container} data-testid='sso_provider-info-panel'>
-            <Paper elevation={0} classes={{ root: paneStyles.headerPaperRoot }}>
-                <Box className={headerStyles.header}>
+            <Paper>
+                <Box className={headerStyles.header} sx={{ backgroundColor: theme.palette.neutral.quinary }}>
                     <Box
                         sx={{
                             backgroundColor: theme.palette.primary.main,
                             width: 10,
-                            height: theme.spacing(5),
+                            height: theme.spacing(7),
+                            mr: theme.spacing(1),
                         }}
                     />
-                    <Icon
-                        className={headerStyles.icon}
-                        click={() => {
-                            setExpanded(!expanded);
-                        }}>
-                        <FontAwesomeIcon icon={expanded ? faAngleUp : faAngleDown} />
-                    </Icon>
-
                     <Typography
                         data-testid='sso_provider-info-panel_header-text'
-                        variant='h5'
+                        variant={'h5'}
                         noWrap
-                        className={headerStyles.headerText}>
+                        sx={{
+                            color: theme.palette.text.primary,
+                            flexGrow: 1,
+                        }}>
                         {ssoProvider?.name}
                     </Typography>
                 </Box>
-            </Paper>
-            <Paper
-                elevation={0}
-                classes={{ root: paneStyles.contentPaperRoot }}
-                sx={{ display: expanded ? 'initial' : 'none' }}>
-                <Box flexShrink={0} flexGrow={1} fontWeight='bold' mr={1} fontSize={'small'}>
-                    Provider Information:
-                </Box>
-                {infoPanel}
+                <Paper
+                    elevation={0}
+                    sx={{
+                        backgroundColor: theme.palette.neutral.secondary,
+                        overflowX: 'hidden',
+                        overflowY: 'auto',
+                        padding: theme.spacing(1, 2),
+                        pointerEvents: 'auto',
+                        '& > div.node:nth-child(odd)': {
+                            background: theme.palette.neutral.tertiary,
+                        },
+                    }}>
+                    <Box flexShrink={0} flexGrow={1} fontWeight='bold' ml={theme.spacing(1)} fontSize={'small'}>
+                        Provider Information:
+                    </Box>
+                    {infoPanel}
+                </Paper>
             </Paper>
         </Box>
     );
