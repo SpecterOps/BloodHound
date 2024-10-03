@@ -1293,6 +1293,11 @@ SyncedToEntraUser: types.#Kind & {
 	schema: "active_directory"
 }
 
+ALL_AD_ATTACKS: types.#Kind & {
+	symbol: "ALL_AD_ATTACKS"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1364,6 +1369,7 @@ RelationshipKinds: [
 	ADCSESC10b,
 	ADCSESC13,
 	SyncedToEntraUser,
+	ALL_AD_ATTACKS
 ]
 
 // ACL Relationships

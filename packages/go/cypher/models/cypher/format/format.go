@@ -38,16 +38,23 @@ func writeJoinedKinds(output io.Writer, delimiter string, kinds graph.Kinds) err
 			}
 		}
 
-		if kind == "ALL_AD_ATTACKS" {
-			for _, relType := range ad.PathfindingRelationships() {
-				if _, err := io.WriteString(output, relType.String()+delimiter); err != nil {
+		// expand token to all pathfinding relationships in AD
+		if kind == ad.AllADAttacks {
+			for idx, relType := range ad.PathfindingRelationships() {
+				if idx > 0 {
+					if _, err := io.WriteString(output, delimiter); err != nil {
+						return err
+					}
+				}
+
+				if _, err := io.WriteString(output, relType.String()); err != nil {
 					return err
 				}
 			}
-		}
-
-		if _, err := io.WriteString(output, kind.String()); err != nil {
-			return err
+		} else {
+			if _, err := io.WriteString(output, kind.String()); err != nil {
+				return err
+			}
 		}
 	}
 
