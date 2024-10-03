@@ -23,6 +23,7 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    TableSortLabel,
     IconButton,
     ListItemIcon,
     ListItemText,
@@ -102,10 +103,11 @@ const SSOProviderTableActionsMenu: React.FC<{
 const SSOProviderTable: React.FC<{
     ssoProviders: any[];
     loading: boolean;
-    selectedSSOProviderId?: number;
     onDeleteSSOProvider: (ssoProviderId: number) => void;
     onClickSSOProvider: (ssoProviderId: number) => void;
-}> = ({ ssoProviders, selectedSSOProviderId, loading, onDeleteSSOProvider, onClickSSOProvider }) => {
+    onToggleTypeSortOrder: () => void;
+    typeSortOrder?: 'asc' | 'desc';
+}> = ({ ssoProviders, loading, onDeleteSSOProvider, onClickSSOProvider, typeSortOrder, onToggleTypeSortOrder }) => {
     const theme = useTheme();
     return (
         <Paper>
@@ -123,7 +125,12 @@ const SSOProviderTable: React.FC<{
                                 Provider Name
                             </TableCell>
                             <TableCell sx={{ fontWeight: 'bold', backgroundColor: theme.palette.background.paper }}>
-                                Type
+                                <TableSortLabel
+                                    active={!!typeSortOrder}
+                                    direction={typeSortOrder}
+                                    onClick={onToggleTypeSortOrder}>
+                                    Type
+                                </TableSortLabel>
                             </TableCell>
                         </TableRow>
                     </TableHead>
@@ -162,7 +169,7 @@ const SSOProviderTable: React.FC<{
                             </TableRow>
                         ) : (
                             ssoProviders.map((ssoProvider, i) => (
-                                <TableRow key={i} selected={ssoProvider.id === selectedSSOProviderId}>
+                                <TableRow key={i}>
                                     <TableCell align='center' padding='checkbox'>
                                         <SSOProviderTableActionsMenu
                                             onDeleteSSOProvider={() => onDeleteSSOProvider(ssoProvider.id)}
