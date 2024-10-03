@@ -14,13 +14,24 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+
+-- Create our sso_provider_type enum
+DO
+$$
+    BEGIN
+        CREATE TYPE sso_provider_type AS ENUM ('saml', 'oidc');
+    EXCEPTION
+        WHEN duplicate_object THEN null;
+    END
+$$;
+
 -- SSO Provider
 CREATE TABLE IF NOT EXISTS sso_providers
 (
     id         SERIAL PRIMARY KEY,
-    name       TEXT NOT NULL,
-    slug       TEXT NOT NULL,
-    type       int  NOT NULL,
+    name       TEXT              NOT NULL,
+    slug       TEXT              NOT NULL,
+    type       sso_provider_type NOT NULL,
 
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -33,8 +44,8 @@ CREATE TABLE IF NOT EXISTS sso_providers
 CREATE TABLE IF NOT EXISTS oidc_providers
 (
     id              SERIAL PRIMARY KEY,
-    client_id       TEXT NOT NULL,
-    issuer          TEXT NOT NULL,
+    client_id       TEXT                                                    NOT NULL,
+    issuer          TEXT                                                    NOT NULL,
     sso_provider_id INTEGER REFERENCES sso_providers (id) ON DELETE CASCADE NULL,
 
     updated_at      TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -44,6 +55,19 @@ CREATE TABLE IF NOT EXISTS oidc_providers
 -- Create the reference from saml_providers to sso_providers
 ALTER TABLE ONLY saml_providers
     ADD COLUMN IF NOT EXISTS sso_provider_id INTEGER NULL;
-ALTER TABLE ONLY saml_providers DROP CONSTRAINT IF EXISTS fk_saml_provider_sso_provider;
+ALTER TABLE ONLY saml_providers
+    DROP CONSTRAINT IF EXISTS fk_saml_provider_sso_provider;
 ALTER TABLE ONLY saml_providers
     ADD CONSTRAINT fk_saml_provider_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE CASCADE;
+
+
+-- Backfill our sso_providers table with the existing data from saml_providers
+INSERT INTO sso_providers(name, slug, type) (SELECT name, lower(replace(name, ' ', '-')), 'saml'
+                                             FROM saml_providers
+                                             WHERE sso_provider_id IS NULL)
+ON CONFLICT DO NOTHING;
+
+-- Backfill the references from the newly created sso_provider entries
+UPDATE saml_providers
+SET sso_provider_id = (SELECT id FROM sso_providers WHERE name = saml_providers.name)
+WHERE saml_providers.sso_provider_id IS NULL;

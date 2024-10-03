@@ -18,9 +18,9 @@ package database
 
 import (
 	"context"
+	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
-	"gorm.io/gorm"
 )
 
 const (
@@ -29,28 +29,17 @@ const (
 
 // SSOProviderData defines the methods required to interact with the sso_providers table
 type SSOProviderData interface {
-	CreateSSOProvider(ctx context.Context, name, slug string, authType model.SessionAuthProvider) (model.SSOProvider, error)
-	CreateSSOProviderWithTransaction(ctx context.Context, tx *gorm.DB, name, slug string, authType model.SessionAuthProvider) (model.SSOProvider, error)
+	CreateSSOProvider(ctx context.Context, name string, authType model.SessionAuthProvider) (model.SSOProvider, error)
 }
 
 // CreateSSOProvider creates an entry in the sso_providers table
-func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name, slug string, authType model.SessionAuthProvider) (model.SSOProvider, error) {
+// A slug will be created for the SSO Provider using the name argument as a base. The name will be lower cased and all spaces are replaced with `-`
+func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authType model.SessionAuthProvider) (model.SSOProvider, error) {
 	provider := model.SSOProvider{
 		Name: name,
-		Slug: slug,
+		Slug: strings.ToLower(strings.ReplaceAll(name, " ", "-")),
 		Type: authType,
 	}
 
 	return provider, CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))
-}
-
-// CreateSSOProviderWithTransaction uses a db transaction to create an entry in the sso_providers table
-func (s *BloodhoundDB) CreateSSOProviderWithTransaction(ctx context.Context, tx *gorm.DB, name, slug string, authType model.SessionAuthProvider) (model.SSOProvider, error) {
-	provider := model.SSOProvider{
-		Name: name,
-		Slug: slug,
-		Type: authType,
-	}
-
-	return provider, CheckError(tx.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))
 }

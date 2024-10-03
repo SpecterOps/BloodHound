@@ -18,7 +18,6 @@ package auth
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/specterops/bloodhound/src/utils/validation"
 
@@ -43,11 +42,7 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 	} else if validated := validation.Validate(createRequest); validated != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, validated.Error(), request), response)
 	} else {
-		var (
-			formattedName = strings.ToLower(strings.ReplaceAll(createRequest.Name, " ", "-"))
-		)
-
-		if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), createRequest.Name, formattedName, createRequest.Issuer, createRequest.ClientID); err != nil {
+		if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), createRequest.Name, createRequest.Issuer, createRequest.ClientID); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), oidcProvider, http.StatusCreated, response)

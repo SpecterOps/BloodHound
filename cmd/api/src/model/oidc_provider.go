@@ -22,5 +22,5 @@ type OIDCProvider struct {
 	Issuer        string `json:"issuer"`
 	SSOProviderID int    `json:"sso_provider_id"`
 
-	BigSerial
+	Serial
 }
