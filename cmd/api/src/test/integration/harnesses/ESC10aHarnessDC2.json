@@ -501,7 +501,7 @@
     },
     {
       "id": "n218",
-      "type": "IntraForestTrusted",
+      "type": "SameForestTrusted",
       "style": {},
       "properties": {
         "trusttype": "ParentChild"
@@ -511,7 +511,7 @@
     },
     {
       "id": "n219",
-      "type": "IntraForestTrusted",
+      "type": "SameForestTrusted",
       "style": {},
       "properties": {
         "trusttype": "ParentChild"
@@ -521,7 +521,7 @@
     },
     {
       "id": "n220",
-      "type": "IntraForestTrusted",
+      "type": "SameForestTrusted",
       "style": {},
       "properties": {
         "trusttype": "ParentChild"
@@ -531,7 +531,7 @@
     },
     {
       "id": "n221",
-      "type": "IntraForestTrusted",
+      "type": "SameForestTrusted",
       "style": {},
       "properties": {
         "trusttype": "ParentChild"
@@ -551,7 +551,7 @@
       "id": "n223",
       "fromId": "n109",
       "toId": "n108",
-      "type": "IntraForestTrusted",
+      "type": "SameForestTrusted",
       "properties": {
         "trusttype": "ParentChild"
       },
@@ -561,7 +561,7 @@
       "id": "n224",
       "fromId": "n108",
       "toId": "n109",
-      "type": "IntraForestTrusted",
+      "type": "SameForestTrusted",
       "properties": {
         "trusttype": "ParentChild"
       },
@@ -577,7 +577,7 @@
     },
     {
       "id": "n226",
-      "type": "IntraForestTrusted",
+      "type": "SameForestTrusted",
       "style": {},
       "properties": {},
       "fromId": "n108",
@@ -585,7 +585,7 @@
     },
     {
       "id": "n227",
-      "type": "IntraForestTrusted",
+      "type": "SameForestTrusted",
       "style": {},
       "properties": {},
       "fromId": "n25",

@@ -44,7 +44,7 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.GPLink,
                     ActiveDirectoryRelationshipKind.HasSIDHistory,
                     ActiveDirectoryRelationshipKind.MemberOf,
-                    ActiveDirectoryRelationshipKind.IntraForestTrusted,
+                    ActiveDirectoryRelationshipKind.SameForestTrusted,
                 ],
             },
             {

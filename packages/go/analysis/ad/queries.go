@@ -569,7 +569,7 @@ func CreateDomainTrustListDelegate(direction graph.Direction) analysis.ListDeleg
 			Root:      node,
 			Direction: direction,
 			BranchQuery: func() graph.Criteria {
-				return query.KindIn(query.Relationship(), ad.IntraForestTrusted, ad.InterForestTrusted)
+				return query.KindIn(query.Relationship(), ad.SameForestTrusted, ad.InterForestTrusted)
 			},
 			Skip:  skip,
 			Limit: limit,
@@ -585,7 +585,7 @@ func CreateDomainTrustPathDelegate(direction graph.Direction) analysis.PathDeleg
 			Root:      node,
 			Direction: direction,
 			BranchQuery: func() graph.Criteria {
-				return query.KindIn(query.Relationship(), ad.IntraForestTrusted, ad.InterForestTrusted)
+				return query.KindIn(query.Relationship(), ad.SameForestTrusted, ad.InterForestTrusted)
 			},
 		})
 	}
@@ -1553,14 +1553,14 @@ func FetchCertTemplatesPublishedToCA(tx graph.Transaction, ca *graph.Node) (grap
 	}))
 }
 
-func FetchNodesWithIntraForestTrustedRelationship(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
+func FetchNodesWithSameForestTrustedRelationship(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
 	if pathSet, err := ops.TraversePaths(tx, ops.TraversalPlan{
 		Root:      root,
 		Direction: graph.DirectionInbound,
 		BranchQuery: func() graph.Criteria {
 			return query.And(
 				query.KindIn(query.Start(), ad.Domain),
-				query.KindIn(query.Relationship(), ad.IntraForestTrusted),
+				query.KindIn(query.Relationship(), ad.SameForestTrusted),
 			)
 		},
 	}); err != nil {

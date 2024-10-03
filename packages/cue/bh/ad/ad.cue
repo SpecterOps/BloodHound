@@ -1038,8 +1038,8 @@ InterForestTrusted: types.#Kind & {
 	schema: "active_directory"
 }
 
-IntraForestTrusted: types.#Kind & {
-	symbol: "IntraForestTrusted"
+SameForestTrusted: types.#Kind & {
+	symbol: "SameForestTrusted"
 	schema: "active_directory"
 }
 
@@ -1333,7 +1333,7 @@ RelationshipKinds: [
 	GetChangesAll,
 	GetChangesInFilteredSet,
 	InterForestTrusted,
-	IntraForestTrusted,
+	SameForestTrusted,
 	SpoofSIDHistory,
 	AbuseTGTDelegation,
 	AllowedToAct,
@@ -1436,7 +1436,7 @@ PathfindingRelationships: [
 	GPLink,
 	AllowedToDelegate,
 	CoerceToTGT,
-	IntraForestTrusted,
+	SameForestTrusted,
 	SpoofSIDHistory,
 	AbuseTGTDelegation,
 	AllowedToAct,

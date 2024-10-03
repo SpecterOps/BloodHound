@@ -386,7 +386,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		})
 
 		// Determine edge type
-		var edgeType = ad.IntraForestTrusted
+		var edgeType = ad.SameForestTrusted
 		if trust.TrustType == "External" || trust.TrustType == "Forest" {
 			edgeType = ad.InterForestTrusted
 		}

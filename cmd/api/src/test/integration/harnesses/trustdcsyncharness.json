@@ -195,7 +195,7 @@
       "id": "n0",
       "fromId": "n1",
       "toId": "n2",
-      "type": "IntraForestTrusted",
+      "type": "SameForestTrusted",
       "properties": {},
       "style": {}
     },
@@ -203,7 +203,7 @@
       "id": "n1",
       "fromId": "n2",
       "toId": "n1",
-      "type": "IntraForestTrusted",
+      "type": "SameForestTrusted",
       "properties": {},
       "style": {}
     },
@@ -211,7 +211,7 @@
       "id": "n2",
       "fromId": "n1",
       "toId": "n3",
-      "type": "IntraForestTrusted",
+      "type": "SameForestTrusted",
       "properties": {},
       "style": {}
     },
@@ -317,7 +317,7 @@
     },
     {
       "id": "n15",
-      "type": "IntraForestTrusted",
+      "type": "SameForestTrusted",
       "style": {},
       "properties": {},
       "fromId": "n2",
@@ -325,7 +325,7 @@
     },
     {
       "id": "n16",
-      "type": "IntraForestTrusted",
+      "type": "SameForestTrusted",
       "style": {},
       "properties": {},
       "fromId": "n0",

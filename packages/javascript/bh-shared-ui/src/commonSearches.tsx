@@ -45,7 +45,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Map domain trusts',
-                cypher: `MATCH p=(n:Domain)-[:IntraForestTrusted|InterForestTrusted]->(m:Domain)\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(n:Domain)-[:SameForestTrusted|InterForestTrusted]->(m:Domain)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Locations of Tier Zero / High Value objects',
