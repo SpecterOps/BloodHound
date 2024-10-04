@@ -18,9 +18,10 @@ import { Paper, Box, Typography, useTheme } from '@mui/material';
 import React from 'react';
 import { Field, FieldsContainer, usePaneStyles, useHeaderStyles } from '../../views/Explore';
 import LabelWithCopy from '../LabelWithCopy';
+import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 
 const SAMLProviderInfoPanel: React.FC<{
-    samlProviderDetails?: any;
+    samlProviderDetails: SAMLProviderInfo;
 }> = ({ samlProviderDetails }) => (
     <FieldsContainer>
         <Field
@@ -45,7 +46,7 @@ const SAMLProviderInfoPanel: React.FC<{
 );
 
 const OIDCProviderInfoPanel: React.FC<{
-    oidcProviderDetails?: any;
+    oidcProviderDetails: OIDCProviderInfo;
 }> = ({ oidcProviderDetails }) => (
     <FieldsContainer>
         <Field
@@ -60,23 +61,23 @@ const OIDCProviderInfoPanel: React.FC<{
 );
 
 const SSOProviderInfoPanel: React.FC<{
-    ssoProvider?: any;
+    ssoProvider: SSOProvider;
 }> = ({ ssoProvider }) => {
     const theme = useTheme();
     const paneStyles = usePaneStyles();
     const headerStyles = useHeaderStyles();
 
-    if (!ssoProvider) {
+    if (!ssoProvider.type) {
         return null;
     }
 
     var infoPanel;
     switch (ssoProvider.type) {
         case 1:
-            infoPanel = <SAMLProviderInfoPanel samlProviderDetails={ssoProvider.details} />;
+            infoPanel = <SAMLProviderInfoPanel samlProviderDetails={ssoProvider.details as SAMLProviderInfo} />;
             break;
         case 2:
-            infoPanel = <OIDCProviderInfoPanel oidcProviderDetails={ssoProvider.details} />;
+            infoPanel = <OIDCProviderInfoPanel oidcProviderDetails={ssoProvider.details as OIDCProviderInfo} />;
             break;
         default:
             infoPanel = null;

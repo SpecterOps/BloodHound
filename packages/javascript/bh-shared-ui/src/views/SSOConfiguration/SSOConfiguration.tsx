@@ -19,7 +19,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Typography, Paper, TextField, useTheme } from '@mui/material';
 import { useMutation, useQuery } from 'react-query';
-import { CreateOIDCProvideRequest } from 'js-client-library';
+import { CreateOIDCProvideRequest, SSOProvider } from 'js-client-library';
 import { apiClient } from '../../utils';
 import {
     CreateSAMLProviderDialog,
@@ -43,38 +43,40 @@ const MakeSSOConfiguration = async (
         const theme = useTheme();
         const dispatch = useAppDispatch();
         const { data: flag } = useFeatureFlag('oidc_support');
-        const [selectedSSOProviderId, setSelectedSSOProviderId] = useState<number | undefined>();
+
+        const [selectedSSOProviderId, setSelectedSSOProviderId] = useState<SSOProvider['id'] | undefined>();
         const [dialogOpen, setDialogOpen] = useState('');
         const [nameFilter, setNameFilter] = useState('');
         const [createProviderError, setCreateProviderError] = useState('');
         const [typeSortOrder, setTypeSortOrder] = useState<'asc' | 'desc' | undefined>();
-        const listSAMLProvidersQuery = useQuery(['listSAMLProviders'], ({ signal }) =>
-            apiClient.listSAMLProviders({ signal }).then((res) => res.data.data.saml_providers)
+
+        const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
+            apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
         );
 
-        const deleteSAMLProviderMutation = useMutation(
-            (SAMLProviderId: string) => apiClient.deleteSAMLProvider(SAMLProviderId),
+        const deleteSSOProviderMutation = useMutation(
+            (ssoProviderId: SSOProvider['id']) => apiClient.deleteSSOProvider(ssoProviderId),
             {
                 onSuccess: () => {
-                    dispatch(addSnackbar('SAML Provider successfully deleted!', 'deleteSAMLProviderSuccess'));
+                    dispatch(addSnackbar('SSO Provider successfully deleted!', 'deleteSSOProviderSuccess'));
                 },
             }
         );
 
         const ssoProviders = useMemo(() => {
-            listSAMLProvidersQuery.data?.forEach((_: any, index: number) => {
-                listSAMLProvidersQuery.data[index].type = index % 2 == 0 ? 'SAML' : 'OIDC';
+            listSSOProvidersQuery.data?.forEach((_, index: number) => {
+                listSSOProvidersQuery.data[index].type = index % 2 == 0 ? 'SAML' : 'OIDC';
             });
-            var ssoProviders = listSAMLProvidersQuery.data ?? [];
+            var ssoProviders = listSSOProvidersQuery.data ?? [];
 
             if (nameFilter) {
-                ssoProviders = ssoProviders.filter((ssoProvider: any) =>
+                ssoProviders = ssoProviders.filter((ssoProvider) =>
                     ssoProvider.name?.toLowerCase()?.includes(nameFilter)
                 );
             }
 
             if (typeSortOrder) {
-                ssoProviders = ssoProviders.sort((a: any, b: any) => {
+                ssoProviders = ssoProviders.sort((a, b) => {
                     switch (typeSortOrder) {
                         case 'asc':
                             return a.type.localeCompare(b.type);
@@ -85,11 +87,11 @@ const MakeSSOConfiguration = async (
             }
 
             return ssoProviders;
-        }, [nameFilter, typeSortOrder, listSAMLProvidersQuery.data]);
+        }, [nameFilter, typeSortOrder, listSSOProvidersQuery.data]);
 
         const selectedSSOProvider = useMemo(() => {
-            return listSAMLProvidersQuery.data?.find(({ id }: any) => id === selectedSSOProviderId);
-        }, [selectedSSOProviderId, listSAMLProvidersQuery.data]);
+            return listSSOProvidersQuery.data?.find(({ id }) => id === selectedSSOProviderId);
+        }, [selectedSSOProviderId, listSSOProvidersQuery.data]);
 
         /* Event Handlers */
 
@@ -110,9 +112,17 @@ const MakeSSOConfiguration = async (
             setCreateProviderError('');
         };
 
-        const onClickSSOProvider = useCallback((ssoProviderId: number) => {
+        const onClickSSOProvider = useCallback((ssoProviderId: SSOProvider['id']) => {
             setSelectedSSOProviderId(ssoProviderId);
         }, []);
+
+        const onDeleteSSOProvider = useCallback(
+            (ssoProviderId: SSOProvider['id']) => {
+                setSelectedSSOProviderId(ssoProviderId);
+                openDeleteProviderDialog();
+            },
+            [selectedSSOProvider]
+        );
 
         const toggleTypeSortOrder = useCallback(() => {
             if (!typeSortOrder || typeSortOrder === 'desc') {
@@ -126,7 +136,7 @@ const MakeSSOConfiguration = async (
             setCreateProviderError('');
             try {
                 await apiClient.createSAMLProviderFromFile({ ...samlProvider, metadata: samlProvider.metadata[0] });
-                listSAMLProvidersQuery.refetch();
+                listSSOProvidersQuery.refetch();
                 closeDialog();
             } catch (error) {
                 console.error(error);
@@ -138,7 +148,7 @@ const MakeSSOConfiguration = async (
             setCreateProviderError('');
             try {
                 await apiClient.createOIDCProvider(oidcProvider);
-                listSAMLProvidersQuery.refetch();
+                listSSOProvidersQuery.refetch();
                 closeDialog();
             } catch (error) {
                 console.error(error);
@@ -210,12 +220,9 @@ const MakeSSOConfiguration = async (
                                 </Box>
                                 <SSOProviderTable
                                     ssoProviders={ssoProviders}
-                                    loading={listSAMLProvidersQuery.isLoading}
+                                    loading={listSSOProvidersQuery.isLoading}
                                     onClickSSOProvider={onClickSSOProvider}
-                                    onDeleteSSOProvider={(ssoProviderId: number) => {
-                                        setSelectedSSOProviderId(ssoProviderId);
-                                        openDeleteProviderDialog();
-                                    }}
+                                    onDeleteSSOProvider={onDeleteSSOProvider}
                                     typeSortOrder={typeSortOrder}
                                     onToggleTypeSortOrder={toggleTypeSortOrder}
                                 />
@@ -247,21 +254,21 @@ const MakeSSOConfiguration = async (
                     onClose={async (response) => {
                         if (response && selectedSSOProviderId) {
                             try {
-                                await deleteSAMLProviderMutation.mutateAsync(selectedSSOProviderId.toString());
+                                await deleteSSOProviderMutation.mutateAsync(selectedSSOProviderId);
                                 closeDialog();
-                                listSAMLProvidersQuery.refetch();
+                                listSSOProvidersQuery.refetch();
                             } catch (err) {
                                 console.error(err);
                             }
                         } else {
                             closeDialog();
                         }
-                        deleteSAMLProviderMutation.reset();
+                        deleteSSOProviderMutation.reset();
                     }}
                     error={
-                        deleteSAMLProviderMutation.isError ? 'An unexpected error has occurred. Please try again.' : ''
+                        deleteSSOProviderMutation.isError ? 'An unexpected error has occurred. Please try again.' : ''
                     }
-                    isLoading={deleteSAMLProviderMutation.isLoading}
+                    isLoading={deleteSSOProviderMutation.isLoading}
                 />
             </>
         );
