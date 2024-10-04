@@ -59,19 +59,6 @@ func SetupDB(t *testing.T) database.Database {
 	return dbInst
 }
 
-// SetupTransaction returns a *gorm.DB which can be useful when writing integration tests that require a transaction
-func SetupTransaction(t *testing.T) *gorm.DB {
-	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {
-		t.Fatalf("Failed loading integration test config: %v", err)
-	} else if db, err := gorm.Open(postgres.Open(cfg.Database.PostgreSQLConnectionString())); err != nil {
-		t.Fatalf("Error opening DB: %v", err)
-	} else {
-		return db
-	}
-
-	return nil
-}
-
 func Prepare(ctx context.Context, db database.Database) error {
 	if err := db.Wipe(ctx); err != nil {
 		return fmt.Errorf("failed to clear database: %v", err)
