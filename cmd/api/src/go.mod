@@ -28,6 +28,7 @@ require (
 	github.com/gobeam/stringy v0.0.6
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/golang/mock v1.6.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/schema v1.4.1
@@ -40,13 +41,13 @@ require (
 	github.com/prometheus/client_golang v1.16.0
 	github.com/russellhaering/goxmldsig v1.4.0
 	github.com/stretchr/testify v1.9.0
+	github.com/teambition/rrule-go v1.8.2
 	github.com/unrolled/secure v1.13.0
 	github.com/zenazn/goji v1.0.1
 	go.uber.org/mock v0.2.0
 	golang.org/x/crypto v0.24.0
 	gorm.io/driver/postgres v1.3.8
 	gorm.io/gorm v1.23.8
-	github.com/teambition/rrule-go v1.8.2
 )
 
 require (
