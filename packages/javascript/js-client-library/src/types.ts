@@ -174,11 +174,10 @@ export interface OIDCProviderInfo extends Serial {
     sso_provider_id: number;
 }
 
-export interface SSOProvider {
-    id: number;
+export interface SSOProvider extends Serial {
     name: string;
     slug: string;
-    type: string;
+    type: 'oidc' | 'saml';
     details: SAMLProviderInfo | OIDCProviderInfo;
 }
 
