@@ -18,7 +18,13 @@ import { FC } from 'react';
 import { Typography } from '@mui/material';
 
 const Opsec: FC = () => {
-    return <Typography variant='body2'>There is no opsec associated with this edge</Typography>;
+    return (
+        <Typography variant='body2'>
+            The attack can be detected by correlating Windows security events from the attacker-controlled host and the
+            target. See the reference 'Hunting in Active Directory: Unconstrained Delegation & Forests Trusts' for
+            details.
+        </Typography>
+    );
 };
 
 export default Opsec;
