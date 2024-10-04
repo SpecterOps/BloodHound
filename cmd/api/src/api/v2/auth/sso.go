@@ -35,7 +35,7 @@ func (s ManagementResource) SSOLoginHandler(response http.ResponseWriter, reques
 		switch ssoProvider.Type {
 		case model.SessionAuthProviderSAML:
 			//todo handle saml login
-			return
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 		case model.SessionAuthProviderOIDC:
 			if oidcProvider, err := s.db.GetOIDCProviderBySSOProviderID(request.Context(), ssoProvider.ID); err != nil {
 				api.HandleDatabaseError(request, response, err)
@@ -43,7 +43,30 @@ func (s ManagementResource) SSOLoginHandler(response http.ResponseWriter, reques
 				s.OIDCLoginHandler(response, request, ssoProvider, oidcProvider)
 			}
 		default:
-			return
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+		}
+	}
+}
+
+func (s ManagementResource) SSOCallbackHandler(response http.ResponseWriter, request *http.Request) {
+	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableSSOProviderSlug]
+	log.Debugf("HERE I AM IN CALLBACK - provider %s", ssoProviderSlug)
+
+	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		switch ssoProvider.Type {
+		case model.SessionAuthProviderSAML:
+			//todo handle saml callback
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+		case model.SessionAuthProviderOIDC:
+			if oidcProvider, err := s.db.GetOIDCProviderBySSOProviderID(request.Context(), ssoProvider.ID); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				s.OIDCCallbackHandler(response, request, ssoProvider, oidcProvider)
+			}
+		default:
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 		}
 	}
 }
