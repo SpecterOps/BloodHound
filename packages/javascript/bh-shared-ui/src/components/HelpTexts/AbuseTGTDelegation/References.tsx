@@ -23,10 +23,79 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener'
+                href='https://posts.specterops.io/not-a-security-boundary-breaking-forest-trusts-cd125829518d'>
+                Not A Security Boundary: Breaking Forest Trusts
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://posts.specterops.io/hunting-in-active-directory-unconstrained-delegation-forests-trusts-71f2b33688e1'>
+                Hunting in Active Directory: Unconstrained Delegation & Forests Trusts
+            </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://exploit.ph/user-constrained-delegation.html'>
+                Abusing Users Configured with Unconstrained Delegation
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://blog.improsec.com/tech-blog/sid-filter-as-security-boundary-between-domains-part-7-trust-account-attack-from-trusting-to-trusted'>
+                SID filter as security boundary between domains? (Part 7) - Trust account attack - from trusting to
+                trusted
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://github.com/p0dalirius/windows-coerced-authentication-methods'>
+                Windows Coerced Authentication Methods
+            </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus'>
+                Rubeus
+            </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://github.com/leechristensen/SpoolSample'>
+                SpoolSample
+            </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://github.com/gentilkiwi/mimikatz'>
+                mimikatz
+            </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'>
+                printerbug.py
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://github.com/fortra/impacket/blob/master/examples/ticketConverter.py'>
+                ticketConverter.py
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://github.com/fortra/impacket/blob/master/examples/secretsdump.py'>
+                secretsdump.py
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://support.microsoft.com/en-us/topic/updates-to-tgt-delegation-across-incoming-trusts-in-windows-server-1a6632ac-1599-0a7c-550a-a754796c291e'>
+                Updates to TGT delegation across incoming trusts in Windows Server
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
                 href='https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755321(v=ws.10)'>
                 Microsoft AD Trust Technical Documentation
             </Link>
-            <br />
         </Box>
     );
 };

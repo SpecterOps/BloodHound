@@ -25,8 +25,8 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
                 The trust from {targetName} to {sourceName} has TGT Delegation enabled.
             </Typography>
             <Typography variant='body2'>
-                The {sourceName} domain allow TGTs of the domain to be send to computers in {sourceName} configured with
-                unconstrained delegation.
+                The {sourceName} domain allows TGTs of the domain to be sent to computers in {sourceName} configured
+                with unconstrained delegation.
             </Typography>
         </>
     );
