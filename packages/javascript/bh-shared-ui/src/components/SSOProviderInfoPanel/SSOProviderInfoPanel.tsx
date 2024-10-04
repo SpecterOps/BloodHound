@@ -20,29 +20,44 @@ import { Field, FieldsContainer, usePaneStyles, useHeaderStyles } from '../../vi
 import LabelWithCopy from '../LabelWithCopy';
 
 const SAMLProviderInfoPanel: React.FC<{
-    ssoProvider?: any;
-}> = ({ ssoProvider }) => {
-    return (
-        <FieldsContainer>
-            <Field
-                label={<LabelWithCopy label='IdP SSO URL' valueToCopy={ssoProvider.idp_sso_uri} hoverOnly />}
-                value={ssoProvider.idp_sso_uri}
-            />
-            <Field
-                label={<LabelWithCopy label='BHE SSO URL' valueToCopy={ssoProvider.sp_sso_uri} hoverOnly />}
-                value={ssoProvider.sp_sso_uri}
-            />
-            <Field
-                label={<LabelWithCopy label='BHE ACS URL' valueToCopy={ssoProvider.sp_acs_uri} hoverOnly />}
-                value={ssoProvider.sp_acs_uri}
-            />
-            <Field
-                label={<LabelWithCopy label='BHE Metadata URL' valueToCopy={ssoProvider.sp_metadata_uri} hoverOnly />}
-                value={ssoProvider.sp_metadata_uri}
-            />
-        </FieldsContainer>
-    );
-};
+    samlProviderDetails?: any;
+}> = ({ samlProviderDetails }) => (
+    <FieldsContainer>
+        <Field
+            label={<LabelWithCopy label='IdP SSO URL' valueToCopy={samlProviderDetails.idp_sso_uri} hoverOnly />}
+            value={samlProviderDetails.idp_sso_uri}
+        />
+        <Field
+            label={<LabelWithCopy label='BHE SSO URL' valueToCopy={samlProviderDetails.sp_sso_uri} hoverOnly />}
+            value={samlProviderDetails.sp_sso_uri}
+        />
+        <Field
+            label={<LabelWithCopy label='BHE ACS URL' valueToCopy={samlProviderDetails.sp_acs_uri} hoverOnly />}
+            value={samlProviderDetails.sp_acs_uri}
+        />
+        <Field
+            label={
+                <LabelWithCopy label='BHE Metadata URL' valueToCopy={samlProviderDetails.sp_metadata_uri} hoverOnly />
+            }
+            value={samlProviderDetails.sp_metadata_uri}
+        />
+    </FieldsContainer>
+);
+
+const OIDCProviderInfoPanel: React.FC<{
+    oidcProviderDetails?: any;
+}> = ({ oidcProviderDetails }) => (
+    <FieldsContainer>
+        <Field
+            label={<LabelWithCopy label='Client ID' valueToCopy={oidcProviderDetails.client_id} hoverOnly />}
+            value={oidcProviderDetails.client_id}
+        />
+        <Field
+            label={<LabelWithCopy label='Issuer' valueToCopy={oidcProviderDetails.issuer} hoverOnly />}
+            value={oidcProviderDetails.issuer}
+        />
+    </FieldsContainer>
+);
 
 const SSOProviderInfoPanel: React.FC<{
     ssoProvider?: any;
@@ -58,10 +73,13 @@ const SSOProviderInfoPanel: React.FC<{
     var infoPanel;
     switch (ssoProvider.type) {
         case 1:
-            infoPanel = <SAMLProviderInfoPanel ssoProvider={ssoProvider} />;
+            infoPanel = <SAMLProviderInfoPanel samlProviderDetails={ssoProvider.details} />;
+            break;
+        case 2:
+            infoPanel = <OIDCProviderInfoPanel oidcProviderDetails={ssoProvider.details} />;
             break;
         default:
-            infoPanel = <SAMLProviderInfoPanel ssoProvider={ssoProvider} />;
+            infoPanel = null;
     }
 
     return (
@@ -95,7 +113,7 @@ const SSOProviderInfoPanel: React.FC<{
                         overflowY: 'auto',
                         padding: theme.spacing(1, 2),
                         pointerEvents: 'auto',
-                        '& > div.node:nth-child(odd)': {
+                        '& > div.node:nth-of-type(odd)': {
                             background: theme.palette.neutral.tertiary,
                         },
                     }}>

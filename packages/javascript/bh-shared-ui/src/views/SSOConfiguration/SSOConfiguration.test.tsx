@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from '../../test-utils';
-import SAMLConfiguration from './SSOConfiguration';
+import MakeSSOConfiguration from './SSOConfiguration';
 
 const initialSAMLProvider: CreateSAMLProviderResponse = {
     id: 1,
@@ -102,16 +102,46 @@ const server = setupServer(
     })
 );
 
-beforeEach(() => {});
+beforeEach(() => {
+    mockUseFeatureFlag.mockImplementation((flagKey: string) => {
+        return {
+            data: {
+                key: flagKey,
+                enabled: true, // flag enabled
+            },
+            isLoading: false,
+            isError: false,
+            error: null,
+        };
+    });
+});
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('SSOConfiguration', () => {
-    it('should eventually render previously configured SAML providers', async () => {
-        render(<SAMLConfiguration />);
+const mockUseFeatureFlag = vi.fn();
+
+vi.mock('../../hooks/useFeatureFlags', () => {
+    return {
+        useFeatureFlag: (flagKey: string) => mockUseFeatureFlag(flagKey),
+    };
+});
+
+describe('SSOConfiguration', async () => {
+    const addSnackbar = vi.fn();
+    const useAppDispatch = vi.fn();
+    const { default: SSOConfiguration } = await MakeSSOConfiguration(addSnackbar, useAppDispatch);
+
+    it('should eventually render previously configured SSO providers', async () => {
+        const user = userEvent.setup();
+
+        render(<SSOConfiguration />);
         expect(await screen.findByText('SSO Configuration')).toBeInTheDocument();
         expect(await screen.findByText(initialSAMLProvider.name)).toBeInTheDocument();
+        expect(await screen.findByText('SAML')).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: 'test-idp-1' }));
+
         expect(await screen.findByText(initialSAMLProvider.idp_sso_uri)).toBeInTheDocument();
         expect(await screen.findByText(initialSAMLProvider.sp_sso_uri)).toBeInTheDocument();
         expect(await screen.findByText(initialSAMLProvider.sp_acs_uri)).toBeInTheDocument();
@@ -126,17 +156,23 @@ describe('SSOConfiguration', () => {
             metadata: new File([], 'new-saml-provider.xml'),
         };
 
-        render(<SAMLConfiguration />);
+        render(<SSOConfiguration />);
 
-        await user.click(screen.getByRole('button', { name: 'Create SAML Provider' }));
+        await user.click(screen.getByRole('button', { name: /create provider/i }));
+
+        expect(await screen.findByRole('menu')).toBeInTheDocument();
+
+        await user.click(screen.getByRole('menuitem', { name: /saml provider/i }));
 
         await user.type(screen.getByLabelText('SAML Provider Name'), newSAMLProviderRequest.name);
-
         await user.upload(screen.getByLabelText('Choose File'), newSAMLProviderRequest.metadata);
 
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 
         expect(await screen.findByText(newSAMLProvider.name)).toBeInTheDocument();
+
+        await user.click(await screen.findByText(newSAMLProvider.name));
+
         expect(await screen.findByText(newSAMLProvider.idp_sso_uri)).toBeInTheDocument();
         expect(await screen.findByText(newSAMLProvider.sp_sso_uri)).toBeInTheDocument();
         expect(await screen.findByText(newSAMLProvider.sp_acs_uri)).toBeInTheDocument();
