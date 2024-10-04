@@ -25,7 +25,7 @@ import {
     ROUTE_ADMINISTRATION_DATA_QUALITY,
     ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
     ROUTE_ADMINISTRATION_MANAGE_USERS,
-    ROUTE_ADMINISTRATION_SAML_CONFIGURATION,
+    ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
     ROUTE_ADMINISTRATION_DB_MANAGEMENT,
     ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
 } from 'src/ducks/global/routes';
@@ -83,7 +83,7 @@ const Administration: React.FC = () => {
             items: [
                 {
                     label: 'SSO Configuration',
-                    path: ROUTE_ADMINISTRATION_SAML_CONFIGURATION,
+                    path: ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
                     component: SSOConfiguration,
                     adminOnly: false,
                 },
