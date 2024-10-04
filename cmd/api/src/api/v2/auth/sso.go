@@ -18,73 +18,126 @@ package auth
 
 import (
 	"net/http"
-	"sort"
+	"strings"
 
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"github.com/specterops/bloodhound/src/model"
+	"gorm.io/gorm/utils"
 )
 
 // AuthProvider represents a unified SSO provider (either OIDC or SAML)
 type AuthProvider struct {
-	ID      int64       `json:"id"`
+	ID      int32       `json:"id"`
 	Name    string      `json:"name"`
 	Type    string      `json:"type"`
 	Slug    string      `json:"slug"`
 	Details interface{} `json:"details"`
 }
 
-// ListAuthProviders lists all available SSO providers (SAML and OIDC)
+// ListAuthProviders lists all available SSO providers (SAML and OIDC) with sorting and filtering
 func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx               = request.Context()
+		queryParams       = request.URL.Query()
+		sortByColumns     = queryParams[api.QueryParameterSortBy]
+		order             []string
+		queryFilters      model.QueryParameterFilterMap
+		sqlFilter         model.SQLFilter
+		ssoProviders      []model.SSOProvider
+		providers         []AuthProvider
+		err               error
+		queryFilterParser = model.NewQueryParameterFilterParser()
+	)
 
-	ctx := request.Context()
+	// Handle sorting
+	for _, column := range sortByColumns {
+		var descending bool
+		if strings.HasPrefix(column, "-") {
+			descending = true
+			column = column[1:]
+		}
 
-	providers := []AuthProvider{}
+		if !model.SSOProviderSortableFields(column) {
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
+			return
+		}
 
-	// Fetch all SSO providers
-	ssoProviders, err := s.db.GetAllSSOProviders(ctx)
-	if err != nil {
-		api.HandleDatabaseError(request, response, err)
+		if descending {
+			order = append(order, column+" desc")
+		} else {
+			order = append(order, column)
+		}
+	}
+
+	// Set default order by created_at if no sorting is specified
+	if len(order) == 0 {
+		order = append(order, "created_at")
+	}
+
+	if queryFilters, err = queryFilterParser.ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 		return
-	}
-
-	for _, ssoProvider := range ssoProviders {
-		var details interface{}
-
-		switch ssoProvider.Type {
-		case model.SessionAuthProviderOIDC:
-			oidcProvider, err := s.db.GetOIDCProviderBySSOProviderID(ctx, int(ssoProvider.ID))
-			if err != nil {
-				api.HandleDatabaseError(request, response, err)
+	} else {
+		// Validate filters
+		for name, filters := range queryFilters {
+			if validPredicates, err := model.SSOProviderValidFilterPredicates(name); err != nil {
+				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 				return
+			} else {
+				for i, filter := range filters {
+					if !utils.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsFilterPredicateNotSupported, request), response)
+						return
+					}
+					queryFilters[name][i].IsStringData = model.SSOProviderIsStringField(filter.Name)
+				}
 			}
-			details = oidcProvider
-		case model.SessionAuthProviderSAML:
-			samlProvider, err := bhsaml.GetSAMLProviderBySSOProviderID(s.db, ssoProvider.ID, ctx)
-			if err != nil {
-				api.HandleDatabaseError(request, response, err)
-				return
-			}
-			details = samlProvider
-		default:
-			continue
 		}
 
-		provider := AuthProvider{
-			ID:      int64(ssoProvider.ID),
-			Name:    ssoProvider.Name,
-			Type:    ssoProvider.Type.String(),
-			Slug:    ssoProvider.Slug,
-			Details: details,
+		if sqlFilter, err = queryFilters.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+			return
+		} else if ssoProviders, err = s.db.GetAllSSOProviders(ctx, strings.Join(order, ", "), sqlFilter); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else {
+			for _, ssoProvider := range ssoProviders {
+				var details interface{}
+
+				switch ssoProvider.Type {
+				case model.SessionAuthProviderOIDC:
+					var oidcProvider model.OIDCProvider
+					if oidcProvider, err = s.db.GetOIDCProviderBySSOProviderID(ctx, int(ssoProvider.ID)); err != nil {
+						api.HandleDatabaseError(request, response, err)
+						return
+					} else {
+						details = oidcProvider
+					}
+				case model.SessionAuthProviderSAML:
+					var samlProvider model.SAMLProvider
+					if samlProvider, err = bhsaml.GetSAMLProviderBySSOProviderID(s.db, ssoProvider.ID, ctx); err != nil {
+						api.HandleDatabaseError(request, response, err)
+						return
+					} else {
+						details = samlProvider
+					}
+				default:
+					continue // Skip unknown types
+				}
+
+				provider := AuthProvider{
+					ID:      ssoProvider.ID,
+					Name:    ssoProvider.Name,
+					Type:    ssoProvider.Type.String(),
+					Slug:    ssoProvider.Slug,
+					Details: details,
+				}
+				providers = append(providers, provider)
+			}
+
+			// Return the combined list
+			api.WriteBasicResponse(ctx, providers, http.StatusOK, response)
 		}
-		providers = append(providers, provider)
 	}
-
-	// Sort providers alphabetically by Name
-	sort.Slice(providers, func(i, j int) bool {
-		return providers[i].Name < providers[j].Name
-	})
-
-	// Return the combined list
-	api.WriteBasicResponse(ctx, providers, http.StatusOK, response)
 }

@@ -46,40 +46,43 @@ func TestBloodhoundDB_CreateSSOProvider(t *testing.T) {
 	})
 }
 
-func TestBloodhoundDB_ListSSOProviders(t *testing.T) {
+func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
 	)
 	defer dbInst.Close(testCtx)
 
-	t.Run("successfully list SSO providers", func(t *testing.T) {
-		provider1, err := dbInst.CreateSSOProvider(testCtx, "Provider One", "provider-one", model.SessionAuthProviderSAML)
+	t.Run("successfully list SSO providers with and without sorting", func(t *testing.T) {
+		// Create SSO providers
+		provider1, err := dbInst.CreateSSOProvider(testCtx, "First Provider", "first-provider", model.SessionAuthProviderSAML)
 		require.NoError(t, err)
 
-		provider2, err := dbInst.CreateSSOProvider(testCtx, "Provider Two", "provider-two", model.SessionAuthProviderOIDC)
+		provider2, err := dbInst.CreateSSOProvider(testCtx, "Second Provider", "second-provider", model.SessionAuthProviderOIDC)
 		require.NoError(t, err)
 
-		providers, err := dbInst.GetAllSSOProviders(testCtx)
+		// Test default ordering (by created_at)
+		providers, err := dbInst.GetAllSSOProviders(testCtx, "", model.SQLFilter{})
 		require.NoError(t, err)
+		require.Len(t, providers, 2)
+		assert.Equal(t, provider1.ID, providers[0].ID)
+		assert.Equal(t, provider2.ID, providers[1].ID)
 
-		assert.Len(t, providers, 2)
+		// Test ordering by name descending
+		providers, err = dbInst.GetAllSSOProviders(testCtx, "name desc", model.SQLFilter{})
+		require.NoError(t, err)
+		require.Len(t, providers, 2)
+		assert.Equal(t, provider2.ID, providers[0].ID)
+		assert.Equal(t, provider1.ID, providers[1].ID)
 
-		providerMap := make(map[int32]model.SSOProvider)
-		for _, p := range providers {
-			providerMap[p.ID] = p
+		// Test filtering by name
+		sqlFilter := model.SQLFilter{
+			SQLString: "name = ?",
+			Params:    []interface{}{"First Provider"},
 		}
-
-		retrievedProvider1, exists := providerMap[provider1.ID]
-		require.True(t, exists, "Provider One not found in the list")
-		assert.Equal(t, provider1.Name, retrievedProvider1.Name)
-		assert.Equal(t, provider1.Slug, retrievedProvider1.Slug)
-		assert.Equal(t, provider1.Type, retrievedProvider1.Type)
-
-		retrievedProvider2, exists := providerMap[provider2.ID]
-		require.True(t, exists, "Provider Two not found in the list")
-		assert.Equal(t, provider2.Name, retrievedProvider2.Name)
-		assert.Equal(t, provider2.Slug, retrievedProvider2.Slug)
-		assert.Equal(t, provider2.Type, retrievedProvider2.Type)
+		providers, err = dbInst.GetAllSSOProviders(testCtx, "", sqlFilter)
+		require.NoError(t, err)
+		require.Len(t, providers, 1)
+		assert.Equal(t, provider1.ID, providers[0].ID)
 	})
 }

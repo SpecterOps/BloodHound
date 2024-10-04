@@ -31,7 +31,7 @@ const (
 type SSOProviderData interface {
 	CreateSSOProvider(ctx context.Context, name, slug string, authType model.SessionAuthProvider) (model.SSOProvider, error)
 	CreateSSOProviderWithTransaction(ctx context.Context, tx *gorm.DB, name, slug string, authType model.SessionAuthProvider) (model.SSOProvider, error)
-	GetAllSSOProviders(ctx context.Context) ([]model.SSOProvider, error)
+	GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error)
 }
 
 // CreateSSOProvider creates an entry in the sso_providers table
@@ -56,8 +56,24 @@ func (s *BloodhoundDB) CreateSSOProviderWithTransaction(ctx context.Context, tx 
 	return provider, CheckError(tx.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))
 }
 
-func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context) ([]model.SSOProvider, error) {
-	var providers []model.SSOProvider
-	result := s.db.WithContext(ctx).Table(ssoProviderTableName).Find(&providers)
+func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error) {
+	var (
+		providers []model.SSOProvider
+		query     = s.db.WithContext(ctx).Table(ssoProviderTableName)
+	)
+	// Apply SQL filter if provided
+	if sqlFilter.SQLString != "" {
+		query = query.Where(sqlFilter.SQLString, sqlFilter.Params...)
+	}
+
+	// Apply sorting order if provided
+	if order != "" {
+		query = query.Order(order)
+	} else {
+		// Default ordering by created_at if no order is specified
+		query = query.Order("created_at")
+	}
+
+	result := query.Find(&providers)
 	return providers, CheckError(result)
 }
