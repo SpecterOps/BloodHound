@@ -1,16 +1,6 @@
 {
     "test_cases": [
         {
-            "name": "ALL_AD_ATTACKS shortcut",
-            "type": "string_match",
-            "details": {
-                "query": "match p = ()-[:ALL_AD_ATTACKS]->() return p",
-                "matcher": "match p = \\(\\)-\\[:Owns|GenericAll|GenericWrite|WriteOwner|WriteDacl|MemberOf|ForceChangePassword|AllExtendedRights|AddMember|HasSession|Contains|GPLink|AllowedToDelegate|TrustedBy|AllowedToAct|AdminTo|CanPSRemote|CanRDP|ExecuteDCOM|HasSIDHistory|AddSelf|DCSync|ReadLAPSPassword|ReadGMSAPassword|DumpSMSAPassword|SQLAdmin|AddAllowedToAct|WriteSPN|AddKeyCredentialLink|SyncLAPSPassword|WriteAccountRestrictions|WriteGPLink|GoldenCert|ADCSESC1|ADCSESC3|ADCSESC4|ADCSESC5|ADCSESC6a|ADCSESC6b|ADCSESC7|ADCSESC9a|ADCSESC9b|ADCSESC10a|ADCSESC10b|ADCSESC13|DCFor|SyncedToEntraUser\\]->\\(\\) return p",
-                "complexity": 3
-            },
-            "targeted": true
-        },
-        {
             "name": "Match all nodes in the graph",
             "type": "string_match",
             "details": {
@@ -921,6 +911,38 @@
             "details": {
                 "query": "match (u:User {dontreqpreauth: true}) return u",
                 "complexity": 1
+            }
+        },
+        {
+            "name": "ALL_AD_ATTACKS edge shortcut",
+            "type": "string_match",
+            "details": {
+                "query": "match p = ()-[:ALL_AD_ATTACKS]->() return p",
+                "matcher": "match\\s+p\\s*=\\s*\\(\\)\\s*-\\[:Owns\\|GenericAll\\|GenericWrite\\|WriteOwner\\|WriteDacl\\|MemberOf\\|ForceChangePassword\\|AllExtendedRights\\|AddMember\\|HasSession\\|Contains\\|GPLink\\|AllowedToDelegate\\|TrustedBy\\|AllowedToAct\\|AdminTo\\|CanPSRemote\\|CanRDP\\|ExecuteDCOM\\|HasSIDHistory\\|AddSelf\\|DCSync\\|ReadLAPSPassword\\|ReadGMSAPassword\\|DumpSMSAPassword\\|SQLAdmin\\|AddAllowedToAct\\|WriteSPN\\|AddKeyCredentialLink\\|SyncLAPSPassword\\|WriteAccountRestrictions\\|WriteGPLink\\|GoldenCert\\|ADCSESC1\\|ADCSESC3\\|ADCSESC4\\|ADCSESC5\\|ADCSESC6a\\|ADCSESC6b\\|ADCSESC7\\|ADCSESC9a\\|ADCSESC9b\\|ADCSESC10a\\|ADCSESC10b\\|ADCSESC13\\|DCFor\\|SyncedToEntraUser\\]->\\(\\)\\s+return\\s+p"
+            }
+        },
+        {
+            "name": "ALL_AZ_ATTACKS edge shortcut",
+            "type": "string_match",
+            "details": {
+                "query": "match p = ()-[:ALL_AZ_ATTACKS]->() return p",
+                "matcher": "match\\s+p\\s*=\\s*\\(\\)\\s*-\\[:AZAvereContributor\\|AZContains\\|AZContributor\\|AZGetCertificates\\|AZGetKeys\\|AZGetSecrets\\|AZHasRole\\|AZMemberOf\\|AZOwner\\|AZRunsAs\\|AZVMContributor\\|AZAutomationContributor\\|AZKeyVaultContributor\\|AZVMAdminLogin\\|AZAddMembers\\|AZAddSecret\\|AZExecuteCommand\\|AZGlobalAdmin\\|AZPrivilegedAuthAdmin\\|AZGrant\\|AZGrantSelf\\|AZPrivilegedRoleAdmin\\|AZResetPassword\\|AZUserAccessAdministrator\\|AZOwns\\|AZCloudAppAdmin\\|AZAppAdmin\\|AZAddOwner\\|AZManagedIdentity\\|AZAKSContributor\\|AZNodeResourceGroup\\|AZWebsiteContributor\\|AZLogicAppContributor\\|AZMGAddMember\\|AZMGAddOwner\\|AZMGAddSecret\\|AZMGGrantAppRoles\\|AZMGGrantRole\\|SyncedToADUser\\]->\\(\\)\\s+return\\s+p"
+            }
+        },
+        {
+            "name": "ALL_AD_ATTACKS edge shortcut with extra edge after",
+            "type": "string_match",
+            "details": {
+                "query": "match p = ()-[:ALL_AD_ATTACKS|ExtraEdge]->() return p",
+                "matcher": "match\\s+p\\s*=\\s*\\(\\)\\s*-\\[:Owns\\|GenericAll\\|GenericWrite\\|WriteOwner\\|WriteDacl\\|MemberOf\\|ForceChangePassword\\|AllExtendedRights\\|AddMember\\|HasSession\\|Contains\\|GPLink\\|AllowedToDelegate\\|TrustedBy\\|AllowedToAct\\|AdminTo\\|CanPSRemote\\|CanRDP\\|ExecuteDCOM\\|HasSIDHistory\\|AddSelf\\|DCSync\\|ReadLAPSPassword\\|ReadGMSAPassword\\|DumpSMSAPassword\\|SQLAdmin\\|AddAllowedToAct\\|WriteSPN\\|AddKeyCredentialLink\\|SyncLAPSPassword\\|WriteAccountRestrictions\\|WriteGPLink\\|GoldenCert\\|ADCSESC1\\|ADCSESC3\\|ADCSESC4\\|ADCSESC5\\|ADCSESC6a\\|ADCSESC6b\\|ADCSESC7\\|ADCSESC9a\\|ADCSESC9b\\|ADCSESC10a\\|ADCSESC10b\\|ADCSESC13\\|DCFor\\|SyncedToEntraUser\\|ExtraEdge\\]->\\(\\)\\s+return\\s+p"
+            }
+        },
+        {
+            "name": "ALL_AD_ATTACKS edge shortcut with extra edge before",
+            "type": "string_match",
+            "details": {
+                "query": "match p = ()-[:ExtraEdge|ALL_AD_ATTACKS]->() return p",
+                "matcher": "match\\s+p\\s*=\\s*\\(\\)\\s*-\\[:ExtraEdge\\|Owns\\|GenericAll\\|GenericWrite\\|WriteOwner\\|WriteDacl\\|MemberOf\\|ForceChangePassword\\|AllExtendedRights\\|AddMember\\|HasSession\\|Contains\\|GPLink\\|AllowedToDelegate\\|TrustedBy\\|AllowedToAct\\|AdminTo\\|CanPSRemote\\|CanRDP\\|ExecuteDCOM\\|HasSIDHistory\\|AddSelf\\|DCSync\\|ReadLAPSPassword\\|ReadGMSAPassword\\|DumpSMSAPassword\\|SQLAdmin\\|AddAllowedToAct\\|WriteSPN\\|AddKeyCredentialLink\\|SyncLAPSPassword\\|WriteAccountRestrictions\\|WriteGPLink\\|GoldenCert\\|ADCSESC1\\|ADCSESC3\\|ADCSESC4\\|ADCSESC5\\|ADCSESC6a\\|ADCSESC6b\\|ADCSESC7\\|ADCSESC9a\\|ADCSESC9b\\|ADCSESC10a\\|ADCSESC10b\\|ADCSESC13\\|DCFor\\|SyncedToEntraUser\\]->\\(\\)\\s+return\\s+p"
             }
         }
     ]
