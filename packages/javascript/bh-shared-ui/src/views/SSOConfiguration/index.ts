@@ -14,5 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './SAMLProviderTableActionMenu';
-export { default } from './SAMLProviderTableActionMenu';
+export { default }  from './SSOConfiguration';
