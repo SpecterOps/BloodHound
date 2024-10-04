@@ -40,7 +40,6 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 
 	t.Run("successfully create a new OIDCProvider", func(t *testing.T) {
 		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "Bloodhound gang", "bloodhound-gang", "https://localhost/auth", "bloodhound").Return(model.OIDCProvider{
-			Name:     "bloodhound-gang",
 			ClientID: "bloodhound",
 			Issuer:   "https://localhost/auth",
 		}, nil)

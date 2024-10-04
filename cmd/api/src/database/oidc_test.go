@@ -40,7 +40,6 @@ func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
 		provider, err := dbInst.CreateOIDCProvider(testCtx, "test", "test", "https://test.localhost.com/auth", "bloodhound")
 		require.NoError(t, err)
 
-		assert.Equal(t, "test", provider.Name)
 		assert.Equal(t, "https://test.localhost.com/auth", provider.Issuer)
 		assert.Equal(t, "bloodhound", provider.ClientID)
 	})

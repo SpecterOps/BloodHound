@@ -33,7 +33,6 @@ CREATE TABLE IF NOT EXISTS sso_providers
 CREATE TABLE IF NOT EXISTS oidc_providers
 (
     id              SERIAL PRIMARY KEY,
-    name            TEXT NOT NULL,
     client_id       TEXT NOT NULL,
     issuer          TEXT NOT NULL,
     sso_provider_id INTEGER REFERENCES sso_providers (id) ON DELETE CASCADE NULL,

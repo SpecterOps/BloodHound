@@ -54,7 +54,6 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 
 		oidcProvider := model.OIDCProvider{
 			SSOProviderID: 1,
-			Name:          "OIDC Provider 1",
 			ClientID:      "client-id-1",
 			Issuer:        "https://issuer1.com",
 		}
@@ -77,7 +76,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 		mockDB.EXPECT().GetOIDCProviderBySSOProviderID(gomock.Any(), 1).Return(oidcProvider, nil)
 		mockDB.EXPECT().GetSAMLProviderBySSOProviderID(gomock.Any(), int32(2)).Return(samlProvider, nil)
 
-		endpoint := "/api/v2/sso"
+		endpoint := "/api/v2/sso-providers"
 
 		bhCtx := &ctx.Context{
 			Host: &url.URL{
@@ -119,7 +118,6 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 
 		oidcProvider := model.OIDCProvider{
 			SSOProviderID: 1,
-			Name:          "OIDC Provider 1",
 			ClientID:      "client-id-1",
 			Issuer:        "https://issuer1.com",
 		}
@@ -142,7 +140,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 		mockDB.EXPECT().GetOIDCProviderBySSOProviderID(gomock.Any(), 1).Return(oidcProvider, nil)
 		mockDB.EXPECT().GetSAMLProviderBySSOProviderID(gomock.Any(), int32(2)).Return(samlProvider, nil)
 
-		endpoint := "/api/v2/sso?sort_by=-name"
+		endpoint := "/api/v2/sso-providers?sort_by=-name"
 
 		bhCtx := &ctx.Context{
 			Host: &url.URL{
@@ -158,7 +156,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 		req.Host = "example.com"
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/sso", resources.ListAuthProviders).Methods("GET")
+		router.HandleFunc("/api/v2/sso-providers", resources.ListAuthProviders).Methods("GET")
 
 		rr := httptest.NewRecorder()
 		router.ServeHTTP(rr, req)
@@ -178,7 +176,6 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 
 		oidcProvider := model.OIDCProvider{
 			SSOProviderID: 1,
-			Name:          "OIDC Provider 1",
 			ClientID:      "client-id-1",
 			Issuer:        "https://issuer1.com",
 		}
@@ -195,7 +192,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 
 		mockDB.EXPECT().GetOIDCProviderBySSOProviderID(gomock.Any(), 1).Return(oidcProvider, nil)
 
-		endpoint := "/api/v2/sso?name=eq:OIDC Provider 1"
+		endpoint := "/api/v2/sso-providers?name=eq:OIDC Provider 1"
 
 		bhCtx := &ctx.Context{
 			Host: &url.URL{
@@ -211,7 +208,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 		req.Host = "example.com"
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/sso", resources.ListAuthProviders).Methods("GET")
+		router.HandleFunc("/api/v2/sso-providers", resources.ListAuthProviders).Methods("GET")
 
 		rr := httptest.NewRecorder()
 		router.ServeHTTP(rr, req)
@@ -220,7 +217,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 	})
 
 	t.Run("fail to list auth providers with invalid sort field", func(t *testing.T) {
-		endpoint := "/api/v2/sso?sort_by=invalid_field"
+		endpoint := "/api/v2/sso-providers?sort_by=invalid_field"
 
 		bhCtx := &ctx.Context{
 			Host: &url.URL{
@@ -236,7 +233,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 		req.Host = "example.com"
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/sso", resources.ListAuthProviders).Methods("GET")
+		router.HandleFunc("/api/v2/sso-providers", resources.ListAuthProviders).Methods("GET")
 
 		rr := httptest.NewRecorder()
 		router.ServeHTTP(rr, req)
@@ -245,7 +242,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 	})
 
 	t.Run("fail to list auth providers with invalid filter predicate", func(t *testing.T) {
-		endpoint := "/api/v2/sso?name=invalid_predicate:Provider"
+		endpoint := "/api/v2/sso-providers?name=invalid_predicate:Provider"
 
 		bhCtx := &ctx.Context{
 			Host: &url.URL{
@@ -261,7 +258,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 		req.Host = "example.com"
 
 		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/sso", resources.ListAuthProviders).Methods("GET")
+		router.HandleFunc("/api/v2/sso-providers", resources.ListAuthProviders).Methods("GET")
 
 		rr := httptest.NewRecorder()
 		router.ServeHTTP(rr, req)

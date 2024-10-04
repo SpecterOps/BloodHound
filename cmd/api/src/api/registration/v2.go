@@ -63,7 +63,7 @@ func registerV2Auth(cfg config.Configuration, db database.Database, permissions 
 
 		// SSO
 		routerInst.POST("/api/v2/sso-providers/oidc", managementResource.CreateOIDCProvider).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
-		routerInst.GET("/api/v2/sso", managementResource.ListAuthProviders).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
+		routerInst.GET("/api/v2/sso-providers", managementResource.ListAuthProviders).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
 
 		// Permissions
 		routerInst.GET("/api/v2/permissions", managementResource.ListPermissions).RequirePermissions(permissions.AuthManageSelf),
