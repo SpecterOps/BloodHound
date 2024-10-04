@@ -72,7 +72,7 @@ const SSOProviderInfoPanel: React.FC<{
     }
 
     var infoPanel;
-    switch (ssoProvider.type) {
+    switch (ssoProvider.type.toLowerCase()) {
         case 'saml':
             infoPanel = <SAMLProviderInfoPanel samlProviderDetails={ssoProvider.details as SAMLProviderInfo} />;
             break;
