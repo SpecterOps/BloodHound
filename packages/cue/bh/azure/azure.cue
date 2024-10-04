@@ -723,12 +723,6 @@ SyncedToADUser: types.#Kind & {
 	representation:	"SyncedToADUser"
 }
 
-AllAZAttacks: types.#Kind & {
-	symbol: "AllAZAttacks"
-	schema: "azure"
-	representation: "ALL_AZ_ATTACKS"
-}
-
 RelationshipKinds: [
 	AvereContributor,
 	Contains,
@@ -776,8 +770,7 @@ RelationshipKinds: [
 	AZMGAddSecret,
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
-	SyncedToADUser,
-	AllAZAttacks
+	SyncedToADUser
 ]
 
 AppRoleTransitRelationshipKinds: [

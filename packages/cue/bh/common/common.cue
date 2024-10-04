@@ -162,9 +162,23 @@ MigrationData: types.#Kind & {
 	representation: "MigrationData"
 }
 
+AllADAttacks: types.#Kind & {
+	symbol: "AllADAttacks"
+	schema: "active_directory"
+	representation: "ALL_AD_ATTACKS"
+}
+
+AllAZAttacks: types.#Kind & {
+	symbol: "AllAZAttacks"
+	schema: "azure"
+	representation: "ALL_AZ_ATTACKS"
+}
+
 NodeKinds: [
 	MigrationData,
 ]
 
 RelationshipKinds: [
+	AllADAttacks, 
+	AllAZAttacks
 ]

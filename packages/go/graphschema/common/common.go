@@ -26,6 +26,8 @@ import (
 
 var (
 	MigrationData = graph.StringKind("MigrationData")
+	AllADAttacks  = graph.StringKind("ALL_AD_ATTACKS")
+	AllAZAttacks  = graph.StringKind("ALL_AZ_ATTACKS")
 )
 
 type Property string
@@ -178,7 +180,7 @@ func Nodes() []graph.Kind {
 	return []graph.Kind{MigrationData}
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{}
+	return []graph.Kind{AllADAttacks, AllAZAttacks}
 }
 func NodeKinds() []graph.Kind {
 	return []graph.Kind{MigrationData}

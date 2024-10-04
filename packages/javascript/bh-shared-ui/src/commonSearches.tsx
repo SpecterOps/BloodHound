@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryRelationshipKind, AzureRelationshipKind } from './graphSchema';
+import { CommonRelationshipKind } from './graphSchema';
 
 const categoryAD = 'Active Directory';
 const categoryAzure = 'Azure';
 
-const adTransitEdgeTypes = ActiveDirectoryRelationshipKind.AllADAttacks;
-const azureTransitEdgeTypes = AzureRelationshipKind.AllAZAttacks;
+const adTransitEdgeTypes = CommonRelationshipKind.AllADAttacks;
+const azureTransitEdgeTypes = CommonRelationshipKind.AllAZAttacks;
 
 const highPrivilegedRoleDisplayNameRegex =
     'Global Administrator.*|User Administrator.*|Cloud Application Administrator.*|Authentication Policy Administrator.*|Exchange Administrator.*|Helpdesk Administrator.*|Privileged Authentication Administrator.*';

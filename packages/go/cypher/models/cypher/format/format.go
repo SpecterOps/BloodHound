@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/graphschema/common"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -40,11 +41,11 @@ func writeJoinedKinds(output io.Writer, delimiter string, kinds graph.Kinds) err
 		}
 
 		// if kind is a shortcut edge type, further expansion is required
-		if kind == ad.AllADAttacks {
+		if kind == common.AllADAttacks {
 			if err := writeJoinedKinds(output, delimiter, ad.PathfindingRelationships()); err != nil {
 				return err
 			}
-		} else if kind == azure.AllAZAttacks {
+		} else if kind == common.AllAZAttacks {
 			if err := writeJoinedKinds(output, delimiter, azure.PathfindingRelationships()); err != nil {
 				return err
 			}
