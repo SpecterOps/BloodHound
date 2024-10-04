@@ -38,6 +38,7 @@ var (
 // SSOProviderData defines the methods required to interact with the sso_providers table
 type SSOProviderData interface {
 	CreateSSOProvider(ctx context.Context, name string, authType model.SessionAuthProvider) (model.SSOProvider, error)
+	GetSSOProviderBySlug(ctx context.Context, slug string) (model.SSOProvider, error)
 }
 
 // CreateSSOProvider creates an entry in the sso_providers table
@@ -55,4 +56,13 @@ func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authT
 
 		return provider, CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))
 	}
+}
+
+func (s *BloodhoundDB) GetSSOProviderBySlug(ctx context.Context, slug string) (model.SSOProvider, error) {
+	var provider model.SSOProvider
+	if tx := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, name, slug, created_at, updated_at FROM %s WHERE slug = %s;", ssoProviderTableName, slug)).Scan(&provider); tx.RowsAffected == 0 {
+		return provider, ErrNotFound
+	}
+
+	return provider, nil
 }
