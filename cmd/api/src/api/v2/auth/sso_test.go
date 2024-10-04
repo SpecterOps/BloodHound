@@ -42,13 +42,13 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 				Serial: model.Serial{ID: 1},
 				Name:   "OIDC Provider 1",
 				Slug:   "oidc-provider-1",
-				Type:   model.SessionAuthProviderOIDC,
+				Type:   model.SSOProviderTypeOIDC,
 			},
 			{
 				Serial: model.Serial{ID: 2},
 				Name:   "SAML Provider 1",
 				Slug:   "saml-provider-1",
-				Type:   model.SessionAuthProviderSAML,
+				Type:   model.SSOProviderTypeSAML,
 			},
 		}
 
@@ -106,13 +106,13 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 				Serial: model.Serial{ID: 2},
 				Name:   "SAML Provider 1",
 				Slug:   "saml-provider-1",
-				Type:   model.SessionAuthProviderSAML,
+				Type:   model.SSOProviderTypeSAML,
 			},
 			{
 				Serial: model.Serial{ID: 1},
 				Name:   "OIDC Provider 1",
 				Slug:   "oidc-provider-1",
-				Type:   model.SessionAuthProviderOIDC,
+				Type:   model.SSOProviderTypeOIDC,
 			},
 		}
 
@@ -170,7 +170,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 				Serial: model.Serial{ID: 1},
 				Name:   "OIDC Provider 1",
 				Slug:   "oidc-provider-1",
-				Type:   model.SessionAuthProviderOIDC,
+				Type:   model.SSOProviderTypeOIDC,
 			},
 		}
 

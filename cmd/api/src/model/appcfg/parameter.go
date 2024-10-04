@@ -45,6 +45,7 @@ const (
 	DefaultPruneHasSessionEdgeTTL = time.Hour * 24 * 3
 
 	ReconciliationKey = "analysis.reconciliation"
+	ScheduledAnalysis = "analysis.scheduled" //This key is not intended to be user updateable, so should not be added to IsValidKey
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -282,4 +283,21 @@ func GetReconciliationParameter(ctx context.Context, service ParameterService) b
 	}
 
 	return result.Enabled
+}
+
+type ScheduledAnalysisParameter struct {
+	Enabled bool   `json:"enabled,omitempty"`
+	RRule   string `json:"rrule,omitempty"`
+}
+
+func GetScheduledAnalysisParameter(ctx context.Context, service ParameterService) (ScheduledAnalysisParameter, error) {
+	result := ScheduledAnalysisParameter{Enabled: false, RRule: ""}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, ScheduledAnalysis); err != nil {
+		return result, err
+	} else if err := cfg.Map(&result); err != nil {
+		return result, err
+	}
+
+	return result, nil
 }

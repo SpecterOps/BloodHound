@@ -37,12 +37,18 @@ func TestBloodhoundDB_CreateSSOProvider(t *testing.T) {
 	defer dbInst.Close(testCtx)
 
 	t.Run("successfully create an SSO provider", func(t *testing.T) {
-		result, err := dbInst.CreateSSOProvider(testCtx, "name", "some_slug", model.SessionAuthProviderSAML)
+		result, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang", model.SessionAuthProviderSAML)
 		require.NoError(t, err)
 
-		assert.Equal(t, "name", result.Name)
-		assert.Equal(t, "some_slug", result.Slug)
-		assert.Equal(t, model.SessionAuthProviderSAML, result.Type)
+		assert.Equal(t, "Bloodhound Gang", result.Name)
+		assert.Equal(t, "bloodhound-gang", result.Slug)
+		assert.Equal(t, model.SSOProviderTypeSAML, result.Type)
+	})
+
+	t.Run("error creating SSO provider, invalid SessionAuthProvider to SSOProviderType mapping", func(t *testing.T) {
+		_, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang", -1)
+		require.Error(t, err)
+		assert.ErrorContains(t, err, "error could not find a valid mapping")
 	})
 }
 
@@ -55,10 +61,10 @@ func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 
 	t.Run("successfully list SSO providers with and without sorting", func(t *testing.T) {
 		// Create SSO providers
-		provider1, err := dbInst.CreateSSOProvider(testCtx, "First Provider", "first-provider", model.SessionAuthProviderSAML)
+		provider1, err := dbInst.CreateSSOProvider(testCtx, "First Provider", model.SessionAuthProviderSAML)
 		require.NoError(t, err)
 
-		provider2, err := dbInst.CreateSSOProvider(testCtx, "Second Provider", "second-provider", model.SessionAuthProviderOIDC)
+		provider2, err := dbInst.CreateSSOProvider(testCtx, "Second Provider", model.SessionAuthProviderOIDC)
 		require.NoError(t, err)
 
 		// Test default ordering (by created_at)

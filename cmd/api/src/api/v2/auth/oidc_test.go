@@ -39,7 +39,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("successfully create a new OIDCProvider", func(t *testing.T) {
-		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "Bloodhound gang", "bloodhound-gang", "https://localhost/auth", "bloodhound").Return(model.OIDCProvider{
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "Bloodhound gang", "https://localhost/auth", "bloodhound").Return(model.OIDCProvider{
 			ClientID: "bloodhound",
 			Issuer:   "https://localhost/auth",
 		}, nil)
@@ -95,7 +95,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	})
 
 	t.Run("error creating oidc provider db entry", func(t *testing.T) {
-		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "test", "https://localhost/auth", "bloodhound").Return(model.OIDCProvider{}, fmt.Errorf("error"))
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/auth", "bloodhound").Return(model.OIDCProvider{}, fmt.Errorf("error"))
 
 		test.Request(t).
 			WithMethod(http.MethodPost).

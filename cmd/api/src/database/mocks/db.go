@@ -30,7 +30,6 @@ import (
 	model "github.com/specterops/bloodhound/src/model"
 	appcfg "github.com/specterops/bloodhound/src/model/appcfg"
 	gomock "go.uber.org/mock/gomock"
-	gorm "gorm.io/gorm"
 )
 
 // MockDatabase is a mock of Database interface.
@@ -275,18 +274,18 @@ func (mr *MockDatabaseMockRecorder) CreateInstallation(arg0 interface{}) *gomock
 }
 
 // CreateOIDCProvider mocks base method.
-func (m *MockDatabase) CreateOIDCProvider(arg0 context.Context, arg1, arg2, arg3, arg4 string) (model.OIDCProvider, error) {
+func (m *MockDatabase) CreateOIDCProvider(arg0 context.Context, arg1, arg2, arg3 string) (model.OIDCProvider, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOIDCProvider", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "CreateOIDCProvider", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(model.OIDCProvider)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateOIDCProvider indicates an expected call of CreateOIDCProvider.
-func (mr *MockDatabaseMockRecorder) CreateOIDCProvider(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateOIDCProvider(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).CreateOIDCProvider), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).CreateOIDCProvider), arg0, arg1, arg2, arg3)
 }
 
 // CreateSAMLIdentityProvider mocks base method.
@@ -305,33 +304,18 @@ func (mr *MockDatabaseMockRecorder) CreateSAMLIdentityProvider(arg0, arg1 interf
 }
 
 // CreateSSOProvider mocks base method.
-func (m *MockDatabase) CreateSSOProvider(arg0 context.Context, arg1, arg2 string, arg3 model.SessionAuthProvider) (model.SSOProvider, error) {
+func (m *MockDatabase) CreateSSOProvider(arg0 context.Context, arg1 string, arg2 model.SessionAuthProvider) (model.SSOProvider, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSSOProvider", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "CreateSSOProvider", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.SSOProvider)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSSOProvider indicates an expected call of CreateSSOProvider.
-func (mr *MockDatabaseMockRecorder) CreateSSOProvider(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateSSOProvider(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSSOProvider", reflect.TypeOf((*MockDatabase)(nil).CreateSSOProvider), arg0, arg1, arg2, arg3)
-}
-
-// CreateSSOProviderWithTransaction mocks base method.
-func (m *MockDatabase) CreateSSOProviderWithTransaction(arg0 context.Context, arg1 *gorm.DB, arg2, arg3 string, arg4 model.SessionAuthProvider) (model.SSOProvider, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSSOProviderWithTransaction", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(model.SSOProvider)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateSSOProviderWithTransaction indicates an expected call of CreateSSOProviderWithTransaction.
-func (mr *MockDatabaseMockRecorder) CreateSSOProviderWithTransaction(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSSOProviderWithTransaction", reflect.TypeOf((*MockDatabase)(nil).CreateSSOProviderWithTransaction), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSSOProvider", reflect.TypeOf((*MockDatabase)(nil).CreateSSOProvider), arg0, arg1, arg2)
 }
 
 // CreateSavedQuery mocks base method.
