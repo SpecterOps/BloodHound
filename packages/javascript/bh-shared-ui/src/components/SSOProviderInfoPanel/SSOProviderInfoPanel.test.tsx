@@ -14,39 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 import { render, screen } from '../../test-utils';
 
 import SSOProviderInfoPanel from './SSOProviderInfoPanel';
 
-interface SAMLInfo {
-    idp_issuer_uri: string;
-    idp_sso_uri: string;
-    principal_attribute_mappings: string[] | null;
-    sp_issuer_uri: string;
-    sp_sso_uri: string;
-    sp_metadata_uri: string;
-    sp_acs_uri: string;
-}
-
-interface OIDCInfo {
-    client_id: string;
-    issuer: string;
-}
-interface ListSSOProviderInfoResponse {
-    id: number;
-    slug: string;
-    type: number;
-    name: string;
-    details: SAMLInfo | OIDCInfo;
-    created_at: string;
-    updated_at: string;
-    deleted_at: {
-        Time: string;
-        Valid: boolean;
-    };
-}
-
-const samlProvider: ListSSOProviderInfoResponse = {
+const samlProvider: SSOProvider = {
     id: 1,
     slug: 'gotham-saml',
     name: 'Gotham SAML',
@@ -59,13 +32,12 @@ const samlProvider: ListSSOProviderInfoResponse = {
         sp_sso_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-2/sso',
         sp_metadata_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-2/metadata',
         sp_acs_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-2/acs',
-    },
+    } as SAMLProviderInfo,
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
-    deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
 };
 
-const oidcProvider: ListSSOProviderInfoResponse = {
+const oidcProvider: SSOProvider = {
     id: 1,
     slug: 'gotham-oidc',
     name: 'Gotham OIDC',
@@ -73,7 +45,7 @@ const oidcProvider: ListSSOProviderInfoResponse = {
     details: {
         issuer: 'http://bloodhound.localhost/test-idp-2',
         client_id: 'gotham-oidc',
-    },
+    } as OIDCProviderInfo,
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
     deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
@@ -83,7 +55,7 @@ describe('SSOProviderTable', () => {
     it('should render saml info provider', async () => {
         render(<SSOProviderInfoPanel ssoProvider={samlProvider} />);
 
-        const samlInfo = samlProvider.details as SAMLInfo;
+        const samlInfo = samlProvider.details as SAMLProviderInfo;
 
         expect(await screen.findByText(samlInfo.idp_sso_uri)).toBeInTheDocument();
         expect(await screen.findByText(samlInfo.sp_sso_uri)).toBeInTheDocument();
@@ -94,7 +66,7 @@ describe('SSOProviderTable', () => {
     it('should render oidc info provider', async () => {
         render(<SSOProviderInfoPanel ssoProvider={oidcProvider} />);
 
-        const oidcInfo = oidcProvider.details as OIDCInfo;
+        const oidcInfo = oidcProvider.details as OIDCProviderInfo;
 
         expect(await screen.findByText(oidcInfo.issuer)).toBeInTheDocument();
         expect(await screen.findByText(oidcInfo.client_id)).toBeInTheDocument();
