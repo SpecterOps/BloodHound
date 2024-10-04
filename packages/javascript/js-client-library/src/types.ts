@@ -151,7 +151,7 @@ export interface PutUserAuthSecretRequest {
 
 export interface CreateOIDCProvideRequest {
     name: string;
-    clientId: string;
+    client_id: string;
     issuer: string;
 }
 

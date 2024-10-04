@@ -34,7 +34,7 @@ const CreateOIDCProviderDialog: React.FC<{
     } = useForm<CreateOIDCProvideRequest>({
         defaultValues: {
             name: '',
-            clientId: '',
+            client_id: '',
             issuer: '',
         },
     });
@@ -88,7 +88,7 @@ const CreateOIDCProviderDialog: React.FC<{
                         <Grid item xs={12}>
                             <Controller
                                 control={control}
-                                name='clientId'
+                                name='client_id'
                                 rules={{
                                     required: 'Client ID is required',
                                 }}
@@ -100,8 +100,8 @@ const CreateOIDCProviderDialog: React.FC<{
                                         fullWidth
                                         name='clientId'
                                         label='Client ID'
-                                        error={!!errors.clientId}
-                                        helperText={errors.clientId?.message || 'OIDC Provider Client ID'}
+                                        error={!!errors.client_id}
+                                        helperText={errors.client_id?.message || 'OIDC Provider Client ID'}
                                     />
                                 )}
                             />
