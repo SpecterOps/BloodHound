@@ -64,10 +64,6 @@ const MakeSSOConfiguration = async (
         );
 
         const ssoProviders = useMemo(() => {
-            // todo remove this temporary assignment once listSSOProviders endpoint is operational
-            listSSOProvidersQuery.data?.forEach((_, index: number) => {
-                listSSOProvidersQuery.data[index].type = index % 2 == 0 ? 'saml' : 'oidc';
-            });
             var ssoProviders = listSSOProvidersQuery.data ?? [];
 
             if (nameFilter) {
