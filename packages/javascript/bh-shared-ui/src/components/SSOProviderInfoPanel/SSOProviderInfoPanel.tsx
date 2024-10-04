@@ -73,10 +73,10 @@ const SSOProviderInfoPanel: React.FC<{
 
     var infoPanel;
     switch (ssoProvider.type) {
-        case 1:
+        case 'saml':
             infoPanel = <SAMLProviderInfoPanel samlProviderDetails={ssoProvider.details as SAMLProviderInfo} />;
             break;
-        case 2:
+        case 'oidc':
             infoPanel = <OIDCProviderInfoPanel oidcProviderDetails={ssoProvider.details as OIDCProviderInfo} />;
             break;
         default:

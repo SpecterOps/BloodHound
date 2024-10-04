@@ -181,7 +181,7 @@ const SSOProviderTable: React.FC<{
                                             {ssoProvider.name}
                                         </Button>
                                     </TableCell>
-                                    <TableCell>{ssoProvider.type}</TableCell>
+                                    <TableCell>{ssoProvider.type.toUpperCase()}</TableCell>
                                 </TableRow>
                             ))
                         )}
