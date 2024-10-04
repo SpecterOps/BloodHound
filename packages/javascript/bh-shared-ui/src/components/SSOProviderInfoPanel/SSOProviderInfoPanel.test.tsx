@@ -23,7 +23,7 @@ const samlProvider: SSOProvider = {
     id: 1,
     slug: 'gotham-saml',
     name: 'Gotham SAML',
-    type: 1,
+    type: 'saml',
     details: {
         idp_issuer_uri: 'http://test-idp-2:8081/metadata',
         idp_sso_uri: 'http://test-idp-2.localhost/sso',
@@ -41,14 +41,13 @@ const oidcProvider: SSOProvider = {
     id: 1,
     slug: 'gotham-oidc',
     name: 'Gotham OIDC',
-    type: 2,
+    type: 'oidc',
     details: {
         issuer: 'http://bloodhound.localhost/test-idp-2',
         client_id: 'gotham-oidc',
     } as OIDCProviderInfo,
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
-    deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
 };
 
 describe('SSOProviderTable', () => {
