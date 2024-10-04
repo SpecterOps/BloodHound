@@ -1,17 +1,17 @@
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '../../test-utils';
-import CreateClientMenu from './CreateMenu';
+import CreateMenu from './CreateMenu';
 
 const mockUseFeatureFlag = vi.fn();
 
-vi.mock('src/hooks/useFeatureFlags', () => {
+vi.mock('../../hooks/useFeatureFlags', () => {
     return {
         useFeatureFlag: (flagKey: string) => mockUseFeatureFlag(flagKey),
     };
 });
 
-describe('CreateClientMenu', () => {
-    describe('azure_support feature flag enabled', () => {
+describe('CreateMenu', () => {
+    describe('oidc_support feature flag enabled', () => {
         beforeEach(() => {
             mockUseFeatureFlag.mockImplementation((flagKey: string) => {
                 return {
@@ -28,77 +28,92 @@ describe('CreateClientMenu', () => {
 
         it('renders a button and a menu', async () => {
             const user = userEvent.setup();
-            const testCreateSharpHoundClient = vi.fn();
-            const testCreateAzureHoundClient = vi.fn();
+            const openSAMLProviderDialog = vi.fn();
+            const openOIDCProviderDialog = vi.fn();
             render(
-                <CreateClientMenu
-                    onClickCreateSharpHoundClient={testCreateSharpHoundClient}
-                    onClickCreateAzureHoundClient={testCreateAzureHoundClient}
+                <CreateMenu
+                    createMenuTitle={`Create Provider`}
+                    featureFlag='oidc_support'
+                    featureFlagEnabledMenuItems={[
+                        { title: 'SAML Provider', onClick: openSAMLProviderDialog },
+                        { title: 'OIDC Provider', onClick: openOIDCProviderDialog },
+                    ]}
+                    menuItems={[{ title: 'SAML Provider', onClick: openSAMLProviderDialog }]}
                 />
             );
 
-            expect(screen.getByRole('button', { name: /create client/i })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /create provider/i })).toBeInTheDocument();
 
             // click button to open menu
-            await user.click(screen.getByRole('button', { name: /create client/i }));
+            await user.click(screen.getByRole('button', { name: /create provider/i }));
 
             expect(await screen.findByRole('menu')).toBeInTheDocument();
-            expect(screen.getByRole('menuitem', { name: /create sharphound client/i })).toBeInTheDocument();
-            expect(screen.getByRole('menuitem', { name: /create azurehound client/i })).toBeInTheDocument();
+            expect(screen.getByRole('menuitem', { name: /saml provider/i })).toBeInTheDocument();
+            expect(screen.getByRole('menuitem', { name: /oidc provider/i })).toBeInTheDocument();
         });
 
-        it('calls onClickCreateSharpHoundClient when Create SharpHound Client menu item is clicked', async () => {
+        it('calls openSAMLProviderDialog when SAML Provider menu item is clicked', async () => {
             const user = userEvent.setup();
-            const testCreateSharpHoundClient = vi.fn();
-            const testCreateAzureHoundClient = vi.fn();
+            const openSAMLProviderDialog = vi.fn();
+            const openOIDCProviderDialog = vi.fn();
             render(
-                <CreateClientMenu
-                    onClickCreateSharpHoundClient={testCreateSharpHoundClient}
-                    onClickCreateAzureHoundClient={testCreateAzureHoundClient}
+                <CreateMenu
+                    createMenuTitle={`Create Provider`}
+                    featureFlag='oidc_support'
+                    featureFlagEnabledMenuItems={[
+                        { title: 'SAML Provider', onClick: openSAMLProviderDialog },
+                        { title: 'OIDC Provider', onClick: openOIDCProviderDialog },
+                    ]}
+                    menuItems={[{ title: 'SAML Provider', onClick: openSAMLProviderDialog }]}
                 />
             );
 
             // click button to open menu
-            await user.click(screen.getByRole('button', { name: /create client/i }));
+            await user.click(screen.getByRole('button', { name: /create provider/i }));
 
             expect(await screen.findByRole('menu')).toBeInTheDocument();
 
             // click menu item
-            await user.click(screen.getByRole('menuitem', { name: /create sharphound client/i }));
+            await user.click(screen.getByRole('menuitem', { name: /saml provider/i }));
 
-            expect(testCreateSharpHoundClient).toHaveBeenCalled();
+            expect(openSAMLProviderDialog).toHaveBeenCalled();
 
             // menu has been closed
             expect(screen.queryByRole('menu')).not.toBeInTheDocument();
         });
 
-        it('calls onClickCreateAzureHoundClient when Create AzureHound Client menu item is clicked', async () => {
+        it('calls openOIDCProviderDialog when OIDC Provider menu item is clicked', async () => {
             const user = userEvent.setup();
-            const testCreateSharpHoundClient = vi.fn();
-            const testCreateAzureHoundClient = vi.fn();
+            const openSAMLProviderDialog = vi.fn();
+            const openOIDCProviderDialog = vi.fn();
             render(
-                <CreateClientMenu
-                    onClickCreateSharpHoundClient={testCreateSharpHoundClient}
-                    onClickCreateAzureHoundClient={testCreateAzureHoundClient}
+                <CreateMenu
+                    createMenuTitle={`Create Provider`}
+                    featureFlag='oidc_support'
+                    featureFlagEnabledMenuItems={[
+                        { title: 'SAML Provider', onClick: openSAMLProviderDialog },
+                        { title: 'OIDC Provider', onClick: openOIDCProviderDialog },
+                    ]}
+                    menuItems={[{ title: 'SAML Provider', onClick: openSAMLProviderDialog }]}
                 />
             );
 
             // click button to open menu
-            await user.click(screen.getByRole('button', { name: /create client/i }));
+            await user.click(screen.getByRole('button', { name: /create provider/i }));
 
             expect(await screen.findByRole('menu')).toBeInTheDocument();
 
             // click menu item
-            await user.click(screen.getByRole('menuitem', { name: /create azurehound client/i }));
+            await user.click(screen.getByRole('menuitem', { name: /oidc provider/i }));
 
-            expect(testCreateAzureHoundClient).toHaveBeenCalled();
+            expect(openOIDCProviderDialog).toHaveBeenCalled();
 
             // menu has been closed
             expect(screen.queryByRole('menu')).not.toBeInTheDocument();
         });
     });
 
-    describe('azure_support feature flag disabled', () => {
+    describe('oidc_support feature flag disabled', () => {
         beforeEach(() => {
             mockUseFeatureFlag.mockImplementation((flagKey: string) => {
                 return {
@@ -114,33 +129,43 @@ describe('CreateClientMenu', () => {
         });
 
         it('renders a button', () => {
-            const testCreateSharpHoundClient = vi.fn();
-            const testCreateAzureHoundClient = vi.fn();
+            const openSAMLProviderDialog = vi.fn();
+            const openOIDCProviderDialog = vi.fn();
             render(
-                <CreateClientMenu
-                    onClickCreateSharpHoundClient={testCreateSharpHoundClient}
-                    onClickCreateAzureHoundClient={testCreateAzureHoundClient}
+                <CreateMenu
+                    createMenuTitle={`Create Provider`}
+                    featureFlag='oidc_support'
+                    featureFlagEnabledMenuItems={[
+                        { title: 'SAML Provider', onClick: openSAMLProviderDialog },
+                        { title: 'OIDC Provider', onClick: openOIDCProviderDialog },
+                    ]}
+                    menuItems={[{ title: 'SAML Provider', onClick: openSAMLProviderDialog }]}
                 />
             );
 
-            expect(screen.getByRole('button', { name: /create client/i })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /create provider/i })).toBeInTheDocument();
         });
 
-        it('calls onClickCreateSharpHoundClient when Create Client button is clicked', async () => {
+        it('calls openSAMLProviderDialog when create provider button is clicked', async () => {
             const user = userEvent.setup();
-            const testCreateSharpHoundClient = vi.fn();
-            const testCreateAzureHoundClient = vi.fn();
+            const openOIDCProviderDialog = vi.fn();
+            const openSAMLProviderDialog = vi.fn();
             render(
-                <CreateClientMenu
-                    onClickCreateSharpHoundClient={testCreateSharpHoundClient}
-                    onClickCreateAzureHoundClient={testCreateAzureHoundClient}
+                <CreateMenu
+                    createMenuTitle={`Create Provider`}
+                    featureFlag='oidc_support'
+                    featureFlagEnabledMenuItems={[
+                        { title: 'SAML Provider', onClick: openSAMLProviderDialog },
+                        { title: 'OIDC Provider', onClick: openOIDCProviderDialog },
+                    ]}
+                    menuItems={[{ title: 'SAML Provider', onClick: openSAMLProviderDialog }]}
                 />
             );
 
             // click button to open menu
-            await user.click(screen.getByRole('button', { name: /create client/i }));
+            await user.click(screen.getByRole('button', { name: /create provider/i }));
 
-            expect(testCreateSharpHoundClient).toHaveBeenCalled();
+            expect(openSAMLProviderDialog).toHaveBeenCalled();
         });
     });
 });
