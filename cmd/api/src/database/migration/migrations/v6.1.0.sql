@@ -30,23 +30,13 @@ ON CONFLICT DO NOTHING;
 ALTER TABLE datapipe_status
     ADD COLUMN IF NOT EXISTS "last_analysis_run_at" TIMESTAMP with time zone;
 
--- Create our sso_provider_type enum
-DO
-$$
-    BEGIN
-        CREATE TYPE sso_provider_type AS ENUM ('saml', 'oidc');
-    EXCEPTION
-        WHEN duplicate_object THEN null;
-    END
-$$;
-
 -- SSO Provider
 CREATE TABLE IF NOT EXISTS sso_providers
 (
     id         SERIAL PRIMARY KEY,
-    name       TEXT              NOT NULL,
-    slug       TEXT              NOT NULL,
-    type       sso_provider_type NOT NULL,
+    name       TEXT    NOT NULL,
+    slug       TEXT    NOT NULL,
+    type       INTEGER NOT NULL,
 
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -76,7 +66,7 @@ ALTER TABLE ONLY saml_providers
     ADD CONSTRAINT fk_saml_provider_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE CASCADE;
 
 -- Backfill our sso_providers table with the existing data from saml_providers
-INSERT INTO sso_providers(name, slug, type) (SELECT name, lower(replace(name, ' ', '-')), 'saml'
+INSERT INTO sso_providers(name, slug, type) (SELECT name, lower(replace(name, ' ', '-')), 0
                                              FROM saml_providers
                                              WHERE sso_provider_id IS NULL)
 ON CONFLICT DO NOTHING;
@@ -85,3 +75,11 @@ ON CONFLICT DO NOTHING;
 UPDATE saml_providers
 SET sso_provider_id = (SELECT id FROM sso_providers WHERE name = saml_providers.name)
 WHERE saml_providers.sso_provider_id IS NULL;
+
+-- Add the sso_provider to the users table
+ALTER TABLE ONLY users
+    ADD COLUMN sso_provider_id INTEGER NULL;
+ALTER TABLE ONLY users
+    DROP CONSTRAINT IF EXISTS fk_users_sso_provider;
+ALTER TABLE ONLY users
+    ADD CONSTRAINT fk_users_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE CASCADE;

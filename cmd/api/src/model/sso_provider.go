@@ -18,11 +18,11 @@ package model
 
 // SSOProviderType is the representation of the sso_provider_types enum declared in our database
 // Adding a new type will require an accompanying migration
-type SSOProviderType string
+type SSOProviderType int
 
 const (
-	SSOProviderTypeOIDC SSOProviderType = "oidc"
-	SSOProviderTypeSAML SSOProviderType = "saml"
+	SSOProviderTypeSAML SSOProviderType = 0
+	SSOProviderTypeOIDC SSOProviderType = 1
 )
 
 // SSOProvider is the common representation of an SSO provider that can be used to display high level information about that provider

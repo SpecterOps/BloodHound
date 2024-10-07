@@ -296,6 +296,8 @@ type SAMLProvider struct {
 	ServiceProviderMetadataURI   serde.URL `json:"sp_metadata_uri" gorm:"-"`
 	ServiceProviderACSURI        serde.URL `json:"sp_acs_uri" gorm:"-"`
 
+	SSOProviderID int `json:"sso_provider_id"`
+
 	Serial
 }
 

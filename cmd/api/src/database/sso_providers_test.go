@@ -37,17 +37,11 @@ func TestBloodhoundDB_CreateSSOProvider(t *testing.T) {
 	defer dbInst.Close(testCtx)
 
 	t.Run("successfully create an SSO provider", func(t *testing.T) {
-		result, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang", model.SessionAuthProviderSAML)
+		result, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang", model.SSOProviderTypeSAML)
 		require.NoError(t, err)
 
 		assert.Equal(t, "Bloodhound Gang", result.Name)
 		assert.Equal(t, "bloodhound-gang", result.Slug)
 		assert.Equal(t, model.SSOProviderTypeSAML, result.Type)
-	})
-
-	t.Run("error creating SSO provider, invalid SessionAuthProvider to SSOProviderType mapping", func(t *testing.T) {
-		_, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang", -1)
-		require.Error(t, err)
-		assert.ErrorContains(t, err, "error could not find a valid mapping")
 	})
 }

@@ -24,3 +24,11 @@ type OIDCProvider struct {
 
 	Serial
 }
+
+func (s OIDCProvider) AuditData() AuditData {
+	return AuditData{
+		"id":              s.ID,
+		"issuer":          s.Issuer,
+		"sso_provider_id": s.SSOProviderID,
+	}
+}
