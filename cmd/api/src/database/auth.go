@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"gorm.io/gorm"
 
 	"github.com/gofrs/uuid"
@@ -480,7 +481,7 @@ func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvi
 		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, samlProvider.Name, model.SSOProviderTypeSAML); err != nil {
 			return err
 		} else {
-			samlProvider.SSOProviderID = int(ssoProvider.ID)
+			samlProvider.SSOProviderID = null.Int32From(ssoProvider.ID)
 			return CheckError(tx.WithContext(ctx).Create(&samlProvider))
 		}
 	})
