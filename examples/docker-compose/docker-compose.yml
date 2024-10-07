@@ -31,7 +31,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-bloodhound} -d ${POSTGRES_DB:-bloodhound} -h 127.0.0.1 -p ${POSTGRES_PORT:-5432}"
+          "pg_isready -U ${POSTGRES_USER:-bloodhound} -d ${POSTGRES_DB:-bloodhound} -h 127.0.0.1 -p 5432"
         ]
       interval: 10s
       timeout: 5s
@@ -53,7 +53,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget -O /dev/null -q http://localhost:${NEO4J_WEB_PORT:-7474} || exit 1"
+          "wget -O /dev/null -q http://localhost:7474 || exit 1"
         ]
       interval: 10s
       timeout: 5s
