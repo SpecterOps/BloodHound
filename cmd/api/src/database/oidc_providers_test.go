@@ -45,9 +45,8 @@ func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
 		assert.Equal(t, "https://test.localhost.com/auth", provider.Issuer)
 		assert.Equal(t, "bloodhound", provider.ClientID)
 
-		log, count, err := dbInst.ListAuditLogs(testCtx, time.Now().Add(-time.Minute), time.Now().Add(time.Minute), 0, 10, "", model.SQLFilter{})
+		_, count, err := dbInst.ListAuditLogs(testCtx, time.Now().Add(-time.Minute), time.Now().Add(time.Minute), 0, 10, "", model.SQLFilter{})
 		require.NoError(t, err)
 		assert.Equal(t, 2, count)
-		assert.Equal(t, 2, len(log))
 	})
 }

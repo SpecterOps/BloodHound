@@ -86,7 +86,7 @@ func (s *BloodhoundDB) ListAuditLogs(ctx context.Context, before, after time.Tim
 	var (
 		auditLogs model.AuditLogs
 		result    *gorm.DB
-		cursor    = s.Scope(Paginate(offset, limit)).WithContext(ctx).Where("created_at between ? and ?", before, after)
+		cursor    = s.Scope(Paginate(offset, limit)).WithContext(ctx).Where("created_at between ? and ?", after, before)
 		count     int64
 	)
 
