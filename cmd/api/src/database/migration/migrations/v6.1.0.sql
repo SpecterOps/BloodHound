@@ -78,8 +78,17 @@ WHERE saml_providers.sso_provider_id IS NULL;
 
 -- Add the sso_provider to the users table
 ALTER TABLE ONLY users
-    ADD COLUMN sso_provider_id INTEGER NULL;
+    ADD COLUMN IF NOT EXISTS sso_provider_id INTEGER NULL;
 ALTER TABLE ONLY users
     DROP CONSTRAINT IF EXISTS fk_users_sso_provider;
 ALTER TABLE ONLY users
     ADD CONSTRAINT fk_users_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE CASCADE;
+
+-- Backfill users with their proper sso_provider when they have a saml_provider_id
+UPDATE users u
+SET sso_provider_id = (SELECT sso.id
+                       FROM saml_providers saml
+                                JOIN sso_providers sso ON sso.id = saml.sso_provider_id
+                       WHERE u.saml_provider_id = saml.id)
+WHERE sso_provider_id IS NULL
+  AND saml_provider_id IS NOT NULL;
