@@ -83,7 +83,7 @@ describe('CitrixRDPConfiguration', () => {
 
             await user.click(panelSwitch);
 
-            const panelDialogTitle = screen.getByText(dialogTitle, { exact: false });
+            const panelDialogTitle = await screen.findByText(dialogTitle, { exact: false });
             const panelDialogDescription = screen.getByText(/analysis has been added with citrix configuration/i);
 
             expect(panelSwitch).toBeInTheDocument();
@@ -95,11 +95,9 @@ describe('CitrixRDPConfiguration', () => {
 
             await user.click(cancelButton);
 
-            await waitFor(() => {
-                expect(panelDialogTitle).not.toBeInTheDocument();
-                expect(panelDialogDescription).not.toBeInTheDocument();
-                expect(panelSwitch).not.toBeChecked();
-            });
+            await waitFor(() => expect(panelDialogTitle).not.toBeInTheDocument());
+            expect(panelDialogDescription).not.toBeInTheDocument();
+            expect(panelSwitch).not.toBeChecked();
         });
 
         it('on clicking switch shows modal and when clicking confirm closes it and switch changes to enabled', async () => {
@@ -108,7 +106,7 @@ describe('CitrixRDPConfiguration', () => {
 
             await user.click(panelSwitch);
 
-            const panelDialogTitle = screen.getByText(dialogTitle, { exact: false });
+            const panelDialogTitle = await screen.findByText(dialogTitle, { exact: false });
             const panelDialogDescription = screen.getByText(/analysis has been added with citrix configuration/i);
 
             expect(panelSwitch).toBeInTheDocument();
@@ -120,11 +118,9 @@ describe('CitrixRDPConfiguration', () => {
 
             await user.click(confirmButton);
 
-            await waitFor(() => {
-                expect(panelDialogTitle).not.toBeInTheDocument();
-                expect(panelDialogDescription).not.toBeInTheDocument();
-                expect(panelSwitch).toBeChecked();
-            });
+            await waitFor(() => expect(panelDialogTitle).not.toBeInTheDocument());
+            expect(panelDialogDescription).not.toBeInTheDocument();
+            expect(panelSwitch).toBeChecked();
         });
     });
     describe('Click on switch to disable', () => {
@@ -139,7 +135,7 @@ describe('CitrixRDPConfiguration', () => {
 
             await user.click(panelSwitch);
 
-            const panelDialogTitle = screen.getByText(dialogTitle, { exact: false });
+            const panelDialogTitle = await screen.findByText(dialogTitle, { exact: false });
             const panelDialogDescription = screen.getByText(/analysis has been removed with citrix configuration/i);
 
             expect(panelSwitch).toBeInTheDocument();
@@ -151,11 +147,9 @@ describe('CitrixRDPConfiguration', () => {
 
             await user.click(cancelButton);
 
-            await waitFor(() => {
-                expect(panelDialogTitle).not.toBeInTheDocument();
-                expect(panelDialogDescription).not.toBeInTheDocument();
-                expect(panelSwitch).toBeChecked();
-            });
+            await waitFor(() => expect(panelDialogTitle).not.toBeInTheDocument());
+            expect(panelDialogDescription).not.toBeInTheDocument();
+            expect(panelSwitch).toBeChecked();
         });
         it('on clicking switch shows modal and when clicking confirm closes it and switch changes to disabled', async () => {
             const panelSwitch = screen.getByRole('switch');
@@ -163,7 +157,7 @@ describe('CitrixRDPConfiguration', () => {
 
             await user.click(panelSwitch);
 
-            const panelDialogTitle = screen.getByText(dialogTitle, { exact: false });
+            const panelDialogTitle = await screen.findByText(dialogTitle, { exact: false });
             const panelDialogDescription = screen.getByText(/analysis has been removed with citrix configuration/i);
 
             expect(panelSwitch).toBeInTheDocument();
@@ -175,11 +169,9 @@ describe('CitrixRDPConfiguration', () => {
 
             await user.click(confirmButton);
 
-            await waitFor(() => {
-                expect(panelDialogTitle).not.toBeInTheDocument();
-                expect(panelDialogDescription).not.toBeInTheDocument();
-                expect(panelSwitch).not.toBeChecked();
-            });
+            await waitFor(() => expect(panelDialogTitle).not.toBeInTheDocument());
+            expect(panelDialogDescription).not.toBeInTheDocument();
+            expect(panelSwitch).not.toBeChecked();
         });
     });
 });

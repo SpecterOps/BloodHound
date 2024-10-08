@@ -182,6 +182,7 @@ export type RiskDetailsRequest = {
     finding: string;
     skip: number;
     limit: number;
+    sort_by?: string;
     Accepted?: string;
 };
 

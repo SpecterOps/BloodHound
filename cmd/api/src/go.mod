@@ -46,6 +46,7 @@ require (
 	golang.org/x/crypto v0.24.0
 	gorm.io/driver/postgres v1.3.8
 	gorm.io/gorm v1.23.8
+	github.com/teambition/rrule-go v1.8.2
 )
 
 require (
