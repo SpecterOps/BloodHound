@@ -478,7 +478,7 @@ func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvi
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
 
 		// Create the associated SSO provider
-		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, samlProvider.Name, model.SSOProviderTypeSAML); err != nil {
+		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, samlProvider.Name, model.SessionAuthProviderSAML); err != nil {
 			return err
 		} else {
 			samlProvider.SSOProviderID = null.Int32From(ssoProvider.ID)

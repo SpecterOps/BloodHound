@@ -51,7 +51,7 @@ func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, issuer, cli
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
 
-		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, name, model.SSOProviderTypeOIDC); err != nil {
+		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, name, model.SessionAuthProviderOIDC); err != nil {
 			return err
 		} else {
 			oidcProvider.SSOProviderID = int(ssoProvider.ID)

@@ -66,7 +66,10 @@ ALTER TABLE ONLY saml_providers
     ADD CONSTRAINT fk_saml_provider_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE CASCADE;
 
 -- Backfill our sso_providers table with the existing data from saml_providers
-INSERT INTO sso_providers(name, slug, type) (SELECT name, lower(replace(name, ' ', '-')), 0
+-- The hardcoded type is determined by the AuthProvider
+-- See:
+-- https://github.com/SpecterOps/BloodHound/blob/main/cmd/api/src/model/auth.go#L565
+INSERT INTO sso_providers(name, slug, type) (SELECT name, lower(replace(name, ' ', '-')), 1
                                              FROM saml_providers
                                              WHERE sso_provider_id IS NULL)
 ON CONFLICT DO NOTHING;

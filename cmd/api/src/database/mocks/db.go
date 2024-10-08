@@ -304,7 +304,7 @@ func (mr *MockDatabaseMockRecorder) CreateSAMLIdentityProvider(arg0, arg1 interf
 }
 
 // CreateSSOProvider mocks base method.
-func (m *MockDatabase) CreateSSOProvider(arg0 context.Context, arg1 string, arg2 model.SSOProviderType) (model.SSOProvider, error) {
+func (m *MockDatabase) CreateSSOProvider(arg0 context.Context, arg1 string, arg2 model.SessionAuthProvider) (model.SSOProvider, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateSSOProvider", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.SSOProvider)

@@ -29,16 +29,16 @@ const (
 
 // SSOProviderData defines the methods required to interact with the sso_providers table
 type SSOProviderData interface {
-	CreateSSOProvider(ctx context.Context, name string, ssoProviderType model.SSOProviderType) (model.SSOProvider, error)
+	CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error)
 }
 
 // CreateSSOProvider creates an entry in the sso_providers table
 // A slug will be created for the SSO Provider using the name argument as a base. The name will be lower cased and all spaces are replaced with `-`
-func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, ssoProviderType model.SSOProviderType) (model.SSOProvider, error) {
+func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error) {
 	provider := model.SSOProvider{
 		Name: name,
 		Slug: strings.ToLower(strings.ReplaceAll(name, " ", "-")),
-		Type: ssoProviderType,
+		Type: authProvider,
 	}
 
 	return provider, CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))

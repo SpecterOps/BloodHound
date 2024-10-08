@@ -37,11 +37,11 @@ func TestBloodhoundDB_CreateSSOProvider(t *testing.T) {
 	defer dbInst.Close(testCtx)
 
 	t.Run("successfully create an SSO provider", func(t *testing.T) {
-		result, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang", model.SSOProviderTypeSAML)
+		result, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang", model.SessionAuthProviderSAML)
 		require.NoError(t, err)
 
 		assert.Equal(t, "Bloodhound Gang", result.Name)
 		assert.Equal(t, "bloodhound-gang", result.Slug)
-		assert.Equal(t, model.SSOProviderTypeSAML, result.Type)
+		assert.Equal(t, model.SessionAuthProviderSAML, result.Type)
 	})
 }
