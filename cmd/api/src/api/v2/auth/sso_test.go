@@ -26,6 +26,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -42,13 +43,13 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 				Serial: model.Serial{ID: 1},
 				Name:   "OIDC Provider 1",
 				Slug:   "oidc-provider-1",
-				Type:   model.SSOProviderTypeOIDC,
+				Type:   model.SessionAuthProviderOIDC,
 			},
 			{
 				Serial: model.Serial{ID: 2},
 				Name:   "SAML Provider 1",
 				Slug:   "saml-provider-1",
-				Type:   model.SSOProviderTypeSAML,
+				Type:   model.SessionAuthProviderSAML,
 			},
 		}
 
@@ -63,7 +64,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 			Name:          "SAML Provider 1",
 			DisplayName:   "SAML Provider One",
 			IssuerURI:     "https://saml-issuer1.com",
-			SSOProviderID: 2,
+			SSOProviderID: null.Int32From(2),
 		}
 
 		// default ordering and no filters
@@ -106,13 +107,13 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 				Serial: model.Serial{ID: 2},
 				Name:   "SAML Provider 1",
 				Slug:   "saml-provider-1",
-				Type:   model.SSOProviderTypeSAML,
+				Type:   model.SessionAuthProviderSAML,
 			},
 			{
 				Serial: model.Serial{ID: 1},
 				Name:   "OIDC Provider 1",
 				Slug:   "oidc-provider-1",
-				Type:   model.SSOProviderTypeOIDC,
+				Type:   model.SessionAuthProviderOIDC,
 			},
 		}
 
@@ -127,7 +128,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 			Name:          "SAML Provider 1",
 			DisplayName:   "SAML Provider One",
 			IssuerURI:     "https://saml-issuer1.com",
-			SSOProviderID: 2,
+			SSOProviderID: null.Int32From(2),
 		}
 
 		// sorting by name descending
@@ -170,7 +171,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 				Serial: model.Serial{ID: 1},
 				Name:   "OIDC Provider 1",
 				Slug:   "oidc-provider-1",
-				Type:   model.SSOProviderTypeOIDC,
+				Type:   model.SessionAuthProviderOIDC,
 			},
 		}
 

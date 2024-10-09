@@ -106,7 +106,7 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 				var details interface{}
 
 				switch ssoProvider.Type {
-				case model.SSOProviderTypeOIDC:
+				case model.SessionAuthProviderOIDC:
 					var oidcProvider model.OIDCProvider
 					if oidcProvider, err = s.db.GetOIDCProviderBySSOProviderID(ctx, int(ssoProvider.ID)); err != nil {
 						api.HandleDatabaseError(request, response, err)
@@ -114,7 +114,7 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 					} else {
 						details = oidcProvider
 					}
-				case model.SSOProviderTypeSAML:
+				case model.SessionAuthProviderSAML:
 					var samlProvider model.SAMLProvider
 					if samlProvider, err = bhsaml.GetSAMLProviderBySSOProviderID(s.db, ssoProvider.ID, ctx); err != nil {
 						api.HandleDatabaseError(request, response, err)
@@ -129,7 +129,7 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 				provider := AuthProvider{
 					ID:      ssoProvider.ID,
 					Name:    ssoProvider.Name,
-					Type:    string(ssoProvider.Type),
+					Type:    ssoProvider.Type.String(),
 					Slug:    ssoProvider.Slug,
 					Details: details,
 				}
