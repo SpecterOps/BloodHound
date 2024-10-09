@@ -303,6 +303,21 @@ func (mr *MockDatabaseMockRecorder) CreateSAMLIdentityProvider(arg0, arg1 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).CreateSAMLIdentityProvider), arg0, arg1)
 }
 
+// CreateSSOProvider mocks base method.
+func (m *MockDatabase) CreateSSOProvider(arg0 context.Context, arg1 string, arg2 model.SessionAuthProvider) (model.SSOProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSSOProvider", arg0, arg1, arg2)
+	ret0, _ := ret[0].(model.SSOProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSSOProvider indicates an expected call of CreateSSOProvider.
+func (mr *MockDatabaseMockRecorder) CreateSSOProvider(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSSOProvider", reflect.TypeOf((*MockDatabase)(nil).CreateSSOProvider), arg0, arg1, arg2)
+}
+
 // CreateSavedQuery mocks base method.
 func (m *MockDatabase) CreateSavedQuery(arg0 context.Context, arg1 uuid.UUID, arg2, arg3, arg4 string) (model.SavedQuery, error) {
 	m.ctrl.T.Helper()

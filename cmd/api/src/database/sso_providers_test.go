@@ -23,25 +23,25 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
+	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
+func TestBloodhoundDB_CreateSSOProvider(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
 	)
 	defer dbInst.Close(testCtx)
 
-	t.Run("successfully create an OIDC provider", func(t *testing.T) {
-		provider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com/auth", "bloodhound")
+	t.Run("successfully create an SSO provider", func(t *testing.T) {
+		result, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang", model.SessionAuthProviderSAML)
 		require.NoError(t, err)
 
-		assert.Equal(t, "test", provider.Name)
-		assert.Equal(t, "https://test.localhost.com/auth", provider.Issuer)
-		assert.Equal(t, "bloodhound", provider.ClientID)
+		assert.Equal(t, "Bloodhound Gang", result.Name)
+		assert.Equal(t, "bloodhound-gang", result.Slug)
+		assert.Equal(t, model.SessionAuthProviderSAML, result.Type)
 	})
 }

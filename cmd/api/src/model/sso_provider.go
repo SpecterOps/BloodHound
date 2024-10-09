@@ -16,10 +16,11 @@
 
 package model
 
-type OIDCProvider struct {
-	Name     string `json:"name"`
-	ClientID string `json:"client_id"`
-	Issuer   string `json:"issuer"`
+// SSOProvider is the common representation of an SSO provider that can be used to display high level information about that provider
+type SSOProvider struct {
+	Type SessionAuthProvider `json:"type"`
+	Name string              `json:"name"`
+	Slug string              `json:"slug"`
 
-	BigSerial
+	Serial
 }
