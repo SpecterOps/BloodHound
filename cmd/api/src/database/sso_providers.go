@@ -18,7 +18,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
@@ -28,34 +27,22 @@ const (
 	ssoProviderTableName = "sso_providers"
 )
 
-var (
-	ssoProviderTypeMapping = map[model.SessionAuthProvider]model.SSOProviderType{
-		model.SessionAuthProviderOIDC: model.SSOProviderTypeOIDC,
-		model.SessionAuthProviderSAML: model.SSOProviderTypeSAML,
-	}
-)
-
 // SSOProviderData defines the methods required to interact with the sso_providers table
 type SSOProviderData interface {
-	CreateSSOProvider(ctx context.Context, name string, authType model.SessionAuthProvider) (model.SSOProvider, error)
+	CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error)
 	GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error)
 }
 
 // CreateSSOProvider creates an entry in the sso_providers table
 // A slug will be created for the SSO Provider using the name argument as a base. The name will be lower cased and all spaces are replaced with `-`
-func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authType model.SessionAuthProvider) (model.SSOProvider, error) {
-	if ssoProviderType, ok := ssoProviderTypeMapping[authType]; !ok {
-		return model.SSOProvider{}, fmt.Errorf("error could not find a valid mapping from SessionAuthProvider to SSOProviderType: %d", authType)
-	} else {
-
-		provider := model.SSOProvider{
-			Name: name,
-			Slug: strings.ToLower(strings.ReplaceAll(name, " ", "-")),
-			Type: ssoProviderType,
-		}
-
-		return provider, CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))
+func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error) {
+	provider := model.SSOProvider{
+		Name: name,
+		Slug: strings.ToLower(strings.ReplaceAll(name, " ", "-")),
+		Type: authProvider,
 	}
+
+	return provider, CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))
 }
 
 func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error) {

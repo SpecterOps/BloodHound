@@ -295,7 +295,8 @@ type SAMLProvider struct {
 	ServiceProviderInitiationURI serde.URL `json:"sp_sso_uri" gorm:"-"`
 	ServiceProviderMetadataURI   serde.URL `json:"sp_metadata_uri" gorm:"-"`
 	ServiceProviderACSURI        serde.URL `json:"sp_acs_uri" gorm:"-"`
-	SSOProviderID                int32     `json:"sso_provider_id"`
+
+	SSOProviderID null.Int32 `json:"sso_provider_id"`
 
 	Serial
 }
@@ -466,6 +467,8 @@ type User struct {
 	// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
 	// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.
 	EULAAccepted bool `json:"eula_accepted"`
+
+	SSOProviderID null.Int32 `json:"sso_provider_id,omitempty"`
 
 	Unique
 }

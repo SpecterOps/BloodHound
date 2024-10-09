@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"gorm.io/gorm"
 
 	"github.com/gofrs/uuid"
@@ -464,7 +465,8 @@ func (s *BloodhoundDB) DeleteAuthSecret(ctx context.Context, authSecret model.Au
 	})
 }
 
-// CreateSAMLProvider creates a new saml_providers row using the data in the input struct
+// CreateSAMLIdentityProvider creates a new saml_providers row using the data in the input struct
+// This also creates the corresponding sso_provider entry
 // INSERT INTO saml_identity_providers (...) VALUES (...)
 func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error) {
 	auditEntry := model.AuditEntry{
@@ -473,7 +475,15 @@ func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvi
 	}
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Create(&samlProvider))
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+
+		// Create the associated SSO provider
+		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, samlProvider.Name, model.SessionAuthProviderSAML); err != nil {
+			return err
+		} else {
+			samlProvider.SSOProviderID = null.Int32From(ssoProvider.ID)
+			return CheckError(tx.WithContext(ctx).Create(&samlProvider))
+		}
 	})
 
 	return samlProvider, err

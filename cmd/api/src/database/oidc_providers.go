@@ -35,14 +35,21 @@ type OIDCProviderData interface {
 
 // CreateOIDCProvider creates a new entry for an OIDC provider as well as the associated SSO provider
 func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, issuer, clientID string) (model.OIDCProvider, error) {
-	oidcProvider := model.OIDCProvider{
-		ClientID: clientID,
-		Issuer:   issuer,
-	}
+	var (
+		oidcProvider = model.OIDCProvider{
+			ClientID: clientID,
+			Issuer:   issuer,
+		}
+
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionCreateOIDCIdentityProvider,
+			Model:  &oidcProvider, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
 
 	// Create both the sso_providers and oidc_providers rows in a single transaction
 	// If one of these requests errors, both changes will be rolled back
-	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
 
 		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, name, model.SessionAuthProviderOIDC); err != nil {
