@@ -29,6 +29,7 @@ const (
 
 // OIDCProviderData defines the interface required to interact with the oidc_providers table
 type OIDCProviderData interface {
+	GetOIDCProviderBySSOProviderID(ctx context.Context, ssoProviderID int) (model.OIDCProvider, error)
 	CreateOIDCProvider(ctx context.Context, name, issuer, clientID string) (model.OIDCProvider, error)
 }
 
@@ -60,4 +61,10 @@ func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, issuer, cli
 	})
 
 	return oidcProvider, err
+}
+
+func (s *BloodhoundDB) GetOIDCProviderBySSOProviderID(ctx context.Context, ssoProviderID int) (model.OIDCProvider, error) {
+	var oidcProvider model.OIDCProvider
+	result := s.db.WithContext(ctx).Table(oidcProvidersTableName).Where("sso_provider_id = ?", ssoProviderID).First(&oidcProvider)
+	return oidcProvider, CheckError(result)
 }

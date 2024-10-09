@@ -28,42 +28,42 @@ ON CONFLICT DO NOTHING;
 
 -- Add last analysis time to datapipe status so we can track scheduled analysis time properly
 ALTER TABLE datapipe_status
-    ADD COLUMN IF NOT EXISTS "last_analysis_run_at" TIMESTAMP with time zone;
+  ADD COLUMN IF NOT EXISTS "last_analysis_run_at" TIMESTAMP with time zone;
 
 -- SSO Provider
 CREATE TABLE IF NOT EXISTS sso_providers
 (
-    id         SERIAL PRIMARY KEY,
-    name       TEXT    NOT NULL,
-    slug       TEXT    NOT NULL,
-    type       INTEGER NOT NULL,
+  id         SERIAL PRIMARY KEY,
+  name       TEXT    NOT NULL,
+  slug       TEXT    NOT NULL,
+  type       INTEGER NOT NULL,
 
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
 
-    UNIQUE (name),
-    UNIQUE (slug)
+  UNIQUE (name),
+  UNIQUE (slug)
 );
 
 -- OIDC Provider
 CREATE TABLE IF NOT EXISTS oidc_providers
 (
-    id              SERIAL PRIMARY KEY,
-    client_id       TEXT                                                    NOT NULL,
-    issuer          TEXT                                                    NOT NULL,
-    sso_provider_id INTEGER REFERENCES sso_providers (id) ON DELETE CASCADE NULL,
+  id              SERIAL PRIMARY KEY,
+  client_id       TEXT                                                    NOT NULL,
+  issuer          TEXT                                                    NOT NULL,
+  sso_provider_id INTEGER REFERENCES sso_providers (id) ON DELETE CASCADE NULL,
 
-    updated_at      TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    created_at      TIMESTAMP WITH TIME ZONE DEFAULT now()
+  updated_at      TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  created_at      TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
 -- Create the reference from saml_providers to sso_providers
 ALTER TABLE ONLY saml_providers
-    ADD COLUMN IF NOT EXISTS sso_provider_id INTEGER NULL;
+  ADD COLUMN IF NOT EXISTS sso_provider_id INTEGER NULL;
 ALTER TABLE ONLY saml_providers
-    DROP CONSTRAINT IF EXISTS fk_saml_provider_sso_provider;
+  DROP CONSTRAINT IF EXISTS fk_saml_provider_sso_provider;
 ALTER TABLE ONLY saml_providers
-    ADD CONSTRAINT fk_saml_provider_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE CASCADE;
+  ADD CONSTRAINT fk_saml_provider_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE CASCADE;
 
 -- Backfill our sso_providers table with the existing data from saml_providers
 -- The hardcoded type is determined by the AuthProvider
@@ -81,17 +81,17 @@ WHERE saml_providers.sso_provider_id IS NULL;
 
 -- Add the sso_provider to the users table
 ALTER TABLE ONLY users
-    ADD COLUMN IF NOT EXISTS sso_provider_id INTEGER NULL;
+  ADD COLUMN IF NOT EXISTS sso_provider_id INTEGER NULL;
 ALTER TABLE ONLY users
-    DROP CONSTRAINT IF EXISTS fk_users_sso_provider;
+  DROP CONSTRAINT IF EXISTS fk_users_sso_provider;
 ALTER TABLE ONLY users
-    ADD CONSTRAINT fk_users_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE SET NULL;
+  ADD CONSTRAINT fk_users_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE SET NULL;
 
 -- Backfill users with their proper sso_provider when they have a saml_provider_id
 UPDATE users u
 SET sso_provider_id = (SELECT sso.id
                        FROM saml_providers saml
-                                JOIN sso_providers sso ON sso.id = saml.sso_provider_id
+                              JOIN sso_providers sso ON sso.id = saml.sso_provider_id
                        WHERE u.saml_provider_id = saml.id)
 WHERE sso_provider_id IS NULL
   AND saml_provider_id IS NOT NULL;

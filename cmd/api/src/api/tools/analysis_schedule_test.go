@@ -20,6 +20,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/headers"
@@ -27,9 +31,6 @@ import (
 	"github.com/specterops/bloodhound/src/api/tools"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestToolContainer_GetScheduledAnalysisConfiguration_Errors(t *testing.T) {
