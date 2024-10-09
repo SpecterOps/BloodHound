@@ -85,7 +85,7 @@ ALTER TABLE ONLY users
 ALTER TABLE ONLY users
     DROP CONSTRAINT IF EXISTS fk_users_sso_provider;
 ALTER TABLE ONLY users
-    ADD CONSTRAINT fk_users_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_users_sso_provider FOREIGN KEY (sso_provider_id) REFERENCES sso_providers (id) ON DELETE SET NULL;
 
 -- Backfill users with their proper sso_provider when they have a saml_provider_id
 UPDATE users u

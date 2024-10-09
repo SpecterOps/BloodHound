@@ -28,6 +28,7 @@ type OIDCProvider struct {
 func (s OIDCProvider) AuditData() AuditData {
 	return AuditData{
 		"id":              s.ID,
+		"client_id":       s.ClientID,
 		"issuer":          s.Issuer,
 		"sso_provider_id": s.SSOProviderID,
 	}
