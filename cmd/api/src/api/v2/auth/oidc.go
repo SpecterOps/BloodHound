@@ -59,8 +59,8 @@ func (s ManagementResource) DeleteOIDCProvider(response http.ResponseWriter, req
 		rawOIDCProviderID = mux.Vars(request)[api.URIPathVariableOIDCProviderID]
 	)
 
-	// Convert the incoming string url param to an int64
-	if oidcProviderID, err := strconv.ParseInt(rawOIDCProviderID, 10, 64); err != nil {
+	// Convert the incoming string url param to an int
+	if oidcProviderID, err := strconv.Atoi(rawOIDCProviderID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if err = s.db.DeleteOIDCProvider(request.Context(), oidcProviderID); errors.Is(err, database.ErrNotFound) {
 		// Handle error if requested record could not be found

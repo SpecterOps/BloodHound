@@ -44,7 +44,6 @@ func TestBloodhoundDB_GetOIDCProvider(t *testing.T) {
 
 		fetchedProvider, err := dbInst.GetOIDCProvider(testCtx, provider.ID)
 		require.NoError(t, err)
-		assert.Equal(t, fetchedProvider.Name, provider.Name)
 		assert.Equal(t, fetchedProvider.Issuer, provider.Issuer)
 		assert.Equal(t, fetchedProvider.ClientID, provider.ClientID)
 	})

@@ -539,7 +539,7 @@ func (mr *MockDatabaseMockRecorder) DeleteIngestTask(arg0, arg1 interface{}) *go
 }
 
 // DeleteOIDCProvider mocks base method.
-func (m *MockDatabase) DeleteOIDCProvider(arg0 context.Context, arg1 int64) error {
+func (m *MockDatabase) DeleteOIDCProvider(arg0 context.Context, arg1 int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteOIDCProvider", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -1066,7 +1066,7 @@ func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(arg0, arg1 int
 }
 
 // GetOIDCProvider mocks base method.
-func (m *MockDatabase) GetOIDCProvider(arg0 context.Context, arg1 int64) (model.OIDCProvider, error) {
+func (m *MockDatabase) GetOIDCProvider(arg0 context.Context, arg1 int) (model.OIDCProvider, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOIDCProvider", arg0, arg1)
 	ret0, _ := ret[0].(model.OIDCProvider)

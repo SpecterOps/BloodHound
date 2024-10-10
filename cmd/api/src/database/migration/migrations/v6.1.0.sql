@@ -95,6 +95,3 @@ SET sso_provider_id = (SELECT sso.id
                        WHERE u.saml_provider_id = saml.id)
 WHERE sso_provider_id IS NULL
   AND saml_provider_id IS NOT NULL;
-
-ALTER TABLE users ADD COLUMN oidc_provider_id BIGSERIAL;
-ALTER TABLE ONLY users ADD CONSTRAINT fk_users_oidc_provider FOREIGN KEY (oidc_provider_id) REFERENCES oidc_providers(id) ON DELETE CASCADE;
