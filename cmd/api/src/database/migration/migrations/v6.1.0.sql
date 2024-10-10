@@ -95,3 +95,25 @@ SET sso_provider_id = (SELECT sso.id
                        WHERE u.saml_provider_id = saml.id)
 WHERE sso_provider_id IS NULL
   AND saml_provider_id IS NOT NULL;
+
+-- Add updated posture page feature flag
+INSERT INTO
+    feature_flags (
+        created_at,
+        updated_at,
+        key,
+        name,
+        description,
+        enabled,
+        user_updatable
+    )
+VALUES
+    (
+        current_timestamp,
+        current_timestamp,
+        'updated_posture_page',
+        'Updated Posture Page',
+        'Enables the updated version of the posture page in the UI application',
+        false,
+        false
+    ) ON CONFLICT DO NOTHING;
