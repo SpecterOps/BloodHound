@@ -12881,15 +12881,14 @@
       },
       "query.entity.type": {
         "name": "type",
-        "description": "The type of return data requested. If no type is provided, query will default to `list`,\nbut invalid types will result in a `count` query. Some entity query endpoints do not\nsupport the `graph` type.\n",
+        "description": "The type of return data requested. If no type is provided, query will default to `list`.\nThe only supported type is `list`, but the unsupported `graph` type can be used.\nSome entity query endpoints do not support the `graph` type. For those interested in\nusing the undocumented graph type parameter, the response type is described in the schema\n`model.bh-graph.graph`.\n",
         "in": "query",
         "schema": {
           "type": "string",
           "default": "list",
           "enum": [
             "list",
-            "graph",
-            "count"
+            "graph"
           ]
         }
       },
@@ -14457,9 +14456,7 @@
           },
           "data": {
             "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
+            "additionalProperties": true
           },
           "glyphs": {
             "type": "array",
@@ -15711,55 +15708,37 @@
         }
       },
       "related-entity-query-results": {
-        "description": "**OK**\n\nThis endpoint returns a polymorphic response dependent upon which return type is requested\nby the `type` parameter.\n",
+        "description": "**OK**\n\nThis endpoint returns a response, dependent upon which return type is requested by the `type` parameter.\nThe only supported `type` parameter is `list`.\nWhile `list` is the only supported `type` parameter, the `graph` parameter can be used\nand will result in a different response structure then documented here.\nFor those interested in using the undocumented graph type parameter, the response type is described in the schema\n`model.bh-graph.graph`.\n",
         "content": {
           "application/json": {
             "schema": {
-              "oneOf": [
+              "allOf": [
                 {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/model.bh-graph.graph"
-                    },
-                    {
-                      "title": "graph"
-                    }
-                  ]
+                  "$ref": "#/components/schemas/api.response.pagination"
                 },
                 {
-                  "title": "count",
-                  "type": "integer"
-                },
-                {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/api.response.pagination"
-                    },
-                    {
-                      "title": "list",
-                      "type": "object",
-                      "properties": {
-                        "data": {
-                          "type": "array",
-                          "items": {
-                            "title": "paged-node-list-entry",
-                            "type": "object",
-                            "properties": {
-                              "objectID": {
-                                "type": "string"
-                              },
-                              "name": {
-                                "type": "string"
-                              },
-                              "label": {
-                                "type": "string"
-                              }
-                            }
+                  "title": "list",
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "title": "paged-node-list-entry",
+                        "type": "object",
+                        "properties": {
+                          "objectID": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
                           }
                         }
                       }
                     }
-                  ]
+                  }
                 }
               ]
             }

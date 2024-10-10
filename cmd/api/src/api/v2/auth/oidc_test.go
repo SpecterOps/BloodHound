@@ -20,20 +20,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-
-	"github.com/specterops/bloodhound/src/database"
-
-	"github.com/specterops/bloodhound/src/api"
-
-	"github.com/specterops/bloodhound/src/model"
-
-	"github.com/specterops/bloodhound/src/api/v2/auth"
-
-	"github.com/specterops/bloodhound/src/api/v2/apitest"
-	"github.com/specterops/bloodhound/src/utils/test"
-
 	"testing"
 
+	"github.com/specterops/bloodhound/src/api/v2/apitest"
+	"github.com/specterops/bloodhound/src/api/v2/auth"
+	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/utils/test"
 	"go.uber.org/mock/gomock"
 )
 
@@ -48,19 +42,17 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("successfully create a new OIDCProvider", func(t *testing.T) {
-		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/auth", "bloodhound").Return(model.OIDCProvider{
-			Name:     "",
-			ClientID: "",
-			Issuer:   "",
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "Bloodhound gang", "https://localhost/auth", "bloodhound").Return(model.OIDCProvider{
+			ClientID: "bloodhound",
+			Issuer:   "https://localhost/auth",
 		}, nil)
 
 		test.Request(t).
 			WithMethod(http.MethodPost).
 			WithURL(url).
 			WithBody(auth.CreateOIDCProviderRequest{
-				Name:   "test",
-				Issuer: "https://localhost/auth",
-
+				Name:     "Bloodhound gang",
+				Issuer:   "https://localhost/auth",
 				ClientID: "bloodhound",
 			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).
@@ -83,8 +75,9 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 			WithMethod(http.MethodPost).
 			WithURL(url).
 			WithBody(auth.CreateOIDCProviderRequest{
-				Name:   "test",
-				Issuer: "",
+				Name:     "test",
+				Issuer:   "1234:not:a:url",
+				ClientID: "bloodhound",
 			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).
 			Require().
@@ -111,9 +104,8 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 			WithMethod(http.MethodPost).
 			WithURL(url).
 			WithBody(auth.CreateOIDCProviderRequest{
-				Name:   "test",
-				Issuer: "https://localhost/auth",
-
+				Name:     "test",
+				Issuer:   "https://localhost/auth",
 				ClientID: "bloodhound",
 			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).

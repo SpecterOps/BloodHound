@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,19 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
-import { Typography } from '@mui/material';
+package model
 
-const Abuse: FC = () => {
-    return (
-        <>
-            <Typography variant='body2'>
-                Permissions on the parent of a child object may enable compromise of the child object through inherited
-                ACEs or linked GPOs.
-            </Typography>
-            <Typography variant='body2'>See the inbound edges on the parent object for details.</Typography>
-        </>
-    );
-};
+// OIDCProvider contains the data needed to initiate an OIDC secure login flow
+type OIDCProvider struct {
+	ClientID      string `json:"client_id"`
+	Issuer        string `json:"issuer"`
+	SSOProviderID int    `json:"sso_provider_id"`
 
-export default Abuse;
+	Serial
+}
+
+func (s OIDCProvider) AuditData() AuditData {
+	return AuditData{
+		"id":              s.ID,
+		"client_id":       s.ClientID,
+		"issuer":          s.Issuer,
+		"sso_provider_id": s.SSOProviderID,
+	}
+}
