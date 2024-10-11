@@ -17,33 +17,30 @@
 package api
 
 import (
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestParseOptionalBool(t *testing.T) {
 	result, err := ParseOptionalBool("true", false)
-	require.Equal(t, true, result)
 	require.NoError(t, err)
+	assert.Equal(t, true, result)
 }
 
 func TestParseOptionalBoolEmptyValue(t *testing.T) {
 	result, _ := ParseOptionalBool("", true)
-	require.Equal(t, true, result)
+	assert.Equal(t, true, result)
 }
 
 func TestParseOptionalBoolMisspelledValue(t *testing.T) {
 	result, err := ParseOptionalBool("trueee", false)
-	require.Equal(t, false, result)
-	require.Error(t, err)
+	assert.Error(t, err)
+	assert.Equal(t, false, result)
 }
 
 type TestStruct struct {
 	val int
-}
-
-func filter(testStruct TestStruct) bool {
-	return testStruct.val < 2
 }
 
 func TestFilterStructSlice(t *testing.T) {
@@ -52,6 +49,8 @@ func TestFilterStructSlice(t *testing.T) {
 		expected = []TestStruct{{val: 0}, {val: 1}}
 	)
 
-	result := FilterStructSlice(structs, filter)
-	require.ElementsMatch(t, expected, result)
+	result := FilterStructSlice(structs, func(testStruct TestStruct) bool {
+		return testStruct.val < 2
+	})
+	assert.ElementsMatch(t, expected, result)
 }

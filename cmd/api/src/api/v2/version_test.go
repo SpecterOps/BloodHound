@@ -22,6 +22,7 @@ import (
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"net/http"
@@ -36,16 +37,16 @@ func TestGetVersion(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/version"
-	req, err := http.NewRequestWithContext(context.Background(), "GET", endpoint, nil)
-	require.Nil(t, err)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, endpoint, nil)
+	require.NoError(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/version", v2.GetVersion).Methods("GET")
+	router.HandleFunc("/api/version", v2.GetVersion).Methods(http.MethodGet)
 
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, req)
 	require.Equal(t, http.StatusOK, response.Code)
-	require.Contains(t, response.Body.String(), "v2")
+	assert.Contains(t, response.Body.String(), "v2")
 }
