@@ -301,6 +301,10 @@ type SAMLProvider struct {
 	Serial
 }
 
+func (SAMLProvider) TableName() string {
+	return "saml_providers"
+}
+
 func (s SAMLProvider) AuditData() AuditData {
 	return AuditData{
 		"saml_id":                      s.ID,

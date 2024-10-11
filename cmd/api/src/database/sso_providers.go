@@ -46,10 +46,10 @@ func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authP
 }
 
 func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error) {
-	var (
-		providers []model.SSOProvider
-		query     = s.db.WithContext(ctx).Table(ssoProviderTableName)
-	)
+	var providers []model.SSOProvider
+
+	query := s.db.WithContext(ctx).Model(&model.SSOProvider{})
+
 	// Apply SQL filter if provided
 	if sqlFilter.SQLString != "" {
 		query = query.Where(sqlFilter.SQLString, sqlFilter.Params...)
@@ -62,6 +62,9 @@ func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sql
 		// Default ordering by created_at if no order is specified
 		query = query.Order("created_at")
 	}
+
+	// Preload the associated OIDC and SAML providers
+	query = query.Preload("OIDCProvider").Preload("SAMLProvider")
 
 	result := query.Find(&providers)
 	return providers, CheckError(result)

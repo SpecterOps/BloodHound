@@ -38,21 +38,6 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("successfully list auth providers without query parameters", func(t *testing.T) {
-		ssoProviders := []model.SSOProvider{
-			{
-				Serial: model.Serial{ID: 1},
-				Name:   "OIDC Provider 1",
-				Slug:   "oidc-provider-1",
-				Type:   model.SessionAuthProviderOIDC,
-			},
-			{
-				Serial: model.Serial{ID: 2},
-				Name:   "SAML Provider 1",
-				Slug:   "saml-provider-1",
-				Type:   model.SessionAuthProviderSAML,
-			},
-		}
-
 		oidcProvider := model.OIDCProvider{
 			SSOProviderID: 1,
 			ClientID:      "client-id-1",
@@ -67,15 +52,29 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 			SSOProviderID: null.Int32From(2),
 		}
 
+		ssoProviders := []model.SSOProvider{
+			{
+				Serial:       model.Serial{ID: 1},
+				Name:         "OIDC Provider 1",
+				Slug:         "oidc-provider-1",
+				Type:         model.SessionAuthProviderOIDC,
+				OIDCProvider: &oidcProvider,
+			},
+			{
+				Serial:       model.Serial{ID: 2},
+				Name:         "SAML Provider 1",
+				Slug:         "saml-provider-1",
+				Type:         model.SessionAuthProviderSAML,
+				SAMLProvider: &samlProvider,
+			},
+		}
+
 		// default ordering and no filters
 		mockDB.EXPECT().GetAllSSOProviders(
 			gomock.Any(),
 			"created_at",
 			model.SQLFilter{SQLString: "", Params: nil},
 		).Return(ssoProviders, nil)
-
-		mockDB.EXPECT().GetOIDCProviderBySSOProviderID(gomock.Any(), 1).Return(oidcProvider, nil)
-		mockDB.EXPECT().GetSAMLProviderBySSOProviderID(gomock.Any(), int32(2)).Return(samlProvider, nil)
 
 		endpoint := "/api/v2/sso-providers"
 
@@ -102,21 +101,6 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 	})
 
 	t.Run("successfully list auth providers with sorting", func(t *testing.T) {
-		ssoProviders := []model.SSOProvider{
-			{
-				Serial: model.Serial{ID: 2},
-				Name:   "SAML Provider 1",
-				Slug:   "saml-provider-1",
-				Type:   model.SessionAuthProviderSAML,
-			},
-			{
-				Serial: model.Serial{ID: 1},
-				Name:   "OIDC Provider 1",
-				Slug:   "oidc-provider-1",
-				Type:   model.SessionAuthProviderOIDC,
-			},
-		}
-
 		oidcProvider := model.OIDCProvider{
 			SSOProviderID: 1,
 			ClientID:      "client-id-1",
@@ -131,15 +115,29 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 			SSOProviderID: null.Int32From(2),
 		}
 
+		ssoProviders := []model.SSOProvider{
+			{
+				Serial:       model.Serial{ID: 2},
+				Name:         "SAML Provider 1",
+				Slug:         "saml-provider-1",
+				Type:         model.SessionAuthProviderSAML,
+				SAMLProvider: &samlProvider,
+			},
+			{
+				Serial:       model.Serial{ID: 1},
+				Name:         "OIDC Provider 1",
+				Slug:         "oidc-provider-1",
+				Type:         model.SessionAuthProviderOIDC,
+				OIDCProvider: &oidcProvider,
+			},
+		}
+
 		// sorting by name descending
 		mockDB.EXPECT().GetAllSSOProviders(
 			gomock.Any(),
 			"name desc",
 			model.SQLFilter{SQLString: "", Params: nil},
 		).Return(ssoProviders, nil)
-
-		mockDB.EXPECT().GetOIDCProviderBySSOProviderID(gomock.Any(), 1).Return(oidcProvider, nil)
-		mockDB.EXPECT().GetSAMLProviderBySSOProviderID(gomock.Any(), int32(2)).Return(samlProvider, nil)
 
 		endpoint := "/api/v2/sso-providers?sort_by=-name"
 
@@ -166,19 +164,19 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 	})
 
 	t.Run("successfully list auth providers with filtering", func(t *testing.T) {
-		ssoProviders := []model.SSOProvider{
-			{
-				Serial: model.Serial{ID: 1},
-				Name:   "OIDC Provider 1",
-				Slug:   "oidc-provider-1",
-				Type:   model.SessionAuthProviderOIDC,
-			},
-		}
-
 		oidcProvider := model.OIDCProvider{
 			SSOProviderID: 1,
 			ClientID:      "client-id-1",
 			Issuer:        "https://issuer1.com",
+		}
+		ssoProviders := []model.SSOProvider{
+			{
+				Serial:       model.Serial{ID: 1},
+				Name:         "OIDC Provider 1",
+				Slug:         "oidc-provider-1",
+				Type:         model.SessionAuthProviderOIDC,
+				OIDCProvider: &oidcProvider,
+			},
 		}
 
 		// filtering by name
@@ -190,8 +188,6 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 				Params:    []interface{}{"OIDC Provider 1"},
 			},
 		).Return(ssoProviders, nil)
-
-		mockDB.EXPECT().GetOIDCProviderBySSOProviderID(gomock.Any(), 1).Return(oidcProvider, nil)
 
 		endpoint := "/api/v2/sso-providers?name=eq:OIDC Provider 1"
 

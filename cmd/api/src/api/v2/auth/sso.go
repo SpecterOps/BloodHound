@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm/utils"
 )
@@ -50,7 +49,6 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 		queryFilterParser = model.NewQueryParameterFilterParser()
 	)
 
-	// Handle sorting
 	for _, column := range sortByColumns {
 		var descending bool
 		if strings.HasPrefix(column, "-") {
@@ -79,7 +77,6 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 		return
 	} else {
-		// Validate filters
 		for name, filters := range queryFilters {
 			if validPredicates, err := model.SSOProviderValidFilterPredicates(name); err != nil {
 				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
@@ -107,23 +104,19 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 
 				switch ssoProvider.Type {
 				case model.SessionAuthProviderOIDC:
-					var oidcProvider model.OIDCProvider
-					if oidcProvider, err = s.db.GetOIDCProviderBySSOProviderID(ctx, int(ssoProvider.ID)); err != nil {
-						api.HandleDatabaseError(request, response, err)
-						return
+					if ssoProvider.OIDCProvider != nil {
+						details = ssoProvider.OIDCProvider
 					} else {
-						details = oidcProvider
+						continue
 					}
 				case model.SessionAuthProviderSAML:
-					var samlProvider model.SAMLProvider
-					if samlProvider, err = bhsaml.GetSAMLProviderBySSOProviderID(s.db, ssoProvider.ID, ctx); err != nil {
-						api.HandleDatabaseError(request, response, err)
-						return
+					if ssoProvider.SAMLProvider != nil {
+						details = ssoProvider.SAMLProvider
 					} else {
-						details = samlProvider
+						continue
 					}
 				default:
-					continue // Skip unknown types
+					continue
 				}
 
 				provider := AuthProvider{
@@ -136,7 +129,6 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 				providers = append(providers, provider)
 			}
 
-			// Return the combined list
 			api.WriteBasicResponse(ctx, providers, http.StatusOK, response)
 		}
 	}

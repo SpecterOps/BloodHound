@@ -24,6 +24,9 @@ type SSOProvider struct {
 	Name string              `json:"name"`
 	Slug string              `json:"slug"`
 
+	OIDCProvider *OIDCProvider `json:"oidc_provider,omitempty" gorm:"foreignKey:SSOProviderID"`
+	SAMLProvider *SAMLProvider `json:"saml_provider,omitempty" gorm:"foreignKey:SSOProviderID"`
+
 	Serial
 }
 

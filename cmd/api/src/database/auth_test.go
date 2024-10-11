@@ -317,7 +317,7 @@ func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
 			DisplayName:     "provider name",
 			IssuerURI:       "https://idp.example.com/idp.xml",
 			SingleSignOnURI: "https://idp.example.com/sso",
-			SSOProviderID:   ssoProvider.ID,
+			SSOProviderID:   null.Int32From(ssoProvider.ID),
 		}
 
 		if newSAMLProvider, err = dbInst.CreateSAMLIdentityProvider(ctx, samlProvider); err != nil {
@@ -346,7 +346,7 @@ func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
 					DisplayName:     newSAMLProvider.DisplayName,
 					IssuerURI:       newSAMLProvider.IssuerURI,
 					SingleSignOnURI: newSAMLProvider.SingleSignOnURI,
-					SSOProviderID:   ssoProvider.ID,
+					SSOProviderID:   null.Int32From(ssoProvider.ID),
 				}
 
 				if err = dbInst.UpdateSAMLIdentityProvider(ctx, updatedSAMLProvider); err != nil {
