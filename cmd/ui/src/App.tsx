@@ -25,7 +25,7 @@ import {
     darkPalette,
     typography,
     components,
-    useFeatureFlags
+    useFeatureFlags,
 } from 'bh-shared-ui';
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
