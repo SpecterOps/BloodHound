@@ -100,32 +100,24 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 			return
 		} else {
 			for _, ssoProvider := range ssoProviders {
-				var details interface{}
+				provider := AuthProvider{
+					ID:   ssoProvider.ID,
+					Name: ssoProvider.Name,
+					Type: ssoProvider.Type.String(),
+					Slug: ssoProvider.Slug,
+				}
 
 				switch ssoProvider.Type {
 				case model.SessionAuthProviderOIDC:
 					if ssoProvider.OIDCProvider != nil {
-						details = ssoProvider.OIDCProvider
-					} else {
-						continue
+						provider.Details = ssoProvider.OIDCProvider
 					}
 				case model.SessionAuthProviderSAML:
 					if ssoProvider.SAMLProvider != nil {
-						details = ssoProvider.SAMLProvider
-					} else {
-						continue
+						provider.Details = ssoProvider.SAMLProvider
 					}
-				default:
-					continue
 				}
 
-				provider := AuthProvider{
-					ID:      ssoProvider.ID,
-					Name:    ssoProvider.Name,
-					Type:    ssoProvider.Type.String(),
-					Slug:    ssoProvider.Slug,
-					Details: details,
-				}
 				providers = append(providers, provider)
 			}
 

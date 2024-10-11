@@ -100,37 +100,38 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 		require.Equal(t, http.StatusOK, rr.Code)
 	})
 
+	oidcProvider := model.OIDCProvider{
+		SSOProviderID: 1,
+		ClientID:      "client-id-1",
+		Issuer:        "https://issuer1.com",
+	}
+
+	samlProvider := model.SAMLProvider{
+		Serial:        model.Serial{ID: 2},
+		Name:          "SAML Provider 1",
+		DisplayName:   "SAML Provider One",
+		IssuerURI:     "https://saml-issuer1.com",
+		SSOProviderID: null.Int32From(2),
+	}
+
+	ssoProviders := []model.SSOProvider{
+		{
+			Serial:       model.Serial{ID: 2},
+			Name:         "SAML Provider 1",
+			Slug:         "saml-provider-1",
+			Type:         model.SessionAuthProviderSAML,
+			SAMLProvider: &samlProvider,
+		},
+		{
+			Serial:       model.Serial{ID: 1},
+			Name:         "OIDC Provider 1",
+			Slug:         "oidc-provider-1",
+			Type:         model.SessionAuthProviderOIDC,
+			OIDCProvider: &oidcProvider,
+		},
+	}
+
 	t.Run("successfully list auth providers with sorting", func(t *testing.T) {
-		oidcProvider := model.OIDCProvider{
-			SSOProviderID: 1,
-			ClientID:      "client-id-1",
-			Issuer:        "https://issuer1.com",
-		}
-
-		samlProvider := model.SAMLProvider{
-			Serial:        model.Serial{ID: 2},
-			Name:          "SAML Provider 1",
-			DisplayName:   "SAML Provider One",
-			IssuerURI:     "https://saml-issuer1.com",
-			SSOProviderID: null.Int32From(2),
-		}
-
-		ssoProviders := []model.SSOProvider{
-			{
-				Serial:       model.Serial{ID: 2},
-				Name:         "SAML Provider 1",
-				Slug:         "saml-provider-1",
-				Type:         model.SessionAuthProviderSAML,
-				SAMLProvider: &samlProvider,
-			},
-			{
-				Serial:       model.Serial{ID: 1},
-				Name:         "OIDC Provider 1",
-				Slug:         "oidc-provider-1",
-				Type:         model.SessionAuthProviderOIDC,
-				OIDCProvider: &oidcProvider,
-			},
-		}
 
 		// sorting by name descending
 		mockDB.EXPECT().GetAllSSOProviders(
