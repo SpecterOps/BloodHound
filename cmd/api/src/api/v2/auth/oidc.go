@@ -17,10 +17,19 @@
 package auth
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils/validation"
+	"golang.org/x/oauth2"
 )
 
 // CreateOIDCProviderRequest represents the body of the CreateOIDCProvider endpoint
@@ -46,5 +55,44 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 		} else {
 			api.WriteBasicResponse(request.Context(), oidcProvider, http.StatusCreated, response)
 		}
+	}
+}
+
+func getRedirectURL(request *http.Request, provider model.SSOProvider) string {
+	hostUrl := *ctx.FromRequest(request).Host
+	return fmt.Sprintf("%s/api/v2/sso/%s/callback", hostUrl.String(), provider.Slug)
+}
+
+func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider, oidcProvider model.OIDCProvider) {
+	if state, err := config.GenerateRandomBase64String(77); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else if provider, err := oidc.NewProvider(request.Context(), oidcProvider.Issuer); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+	} else {
+		log.Debugf("provider generated endpoints %+v", provider.Endpoint())
+
+		conf := &oauth2.Config{
+			ClientID:    oidcProvider.ClientID,
+			Endpoint:    provider.Endpoint(),
+			RedirectURL: getRedirectURL(request, ssoProvider),
+		}
+
+		// use PKCE to protect against CSRF attacks
+		// https://www.ietf.org/archive/id/draft-ietf-oauth-security-topics-22.html#name-countermeasures-6
+		verifier := oauth2.GenerateVerifier()
+		log.Debugf("LOGIN HANDLER - pkce verifier %s\n", verifier)
+
+		// Store PKCE on web browser in secure cookie for retrieval in callback
+		api.SetSecureBrowserCookie(request, response, api.AuthPKCECookieName, verifier, time.Now().UTC().Add(time.Hour))
+
+		// Store State on web browser in secure cookie for retrieval in callback
+		api.SetSecureBrowserCookie(request, response, api.AuthStateCookieName, state, time.Now().UTC().Add(time.Hour))
+
+		// Redirect user to consent page to ask for permission for the scopes specified above.
+		redirectURL := conf.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
+		log.Debugf("Visit the URL for the auth dialog: %v", redirectURL)
+
+		response.Header().Add(headers.Location.String(), redirectURL)
+		response.WriteHeader(http.StatusFound)
 	}
 }
