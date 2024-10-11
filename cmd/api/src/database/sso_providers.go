@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
@@ -30,35 +31,11 @@ const (
 
 // SSOProviderData defines the methods required to interact with the sso_providers table
 type SSOProviderData interface {
-	GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error)
 	CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error)
 	DeleteSSOProvider(ctx context.Context, id int) error
+	GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error)
+	GetSSOProviderBySlug(ctx context.Context, slug string) (model.SSOProvider, error)
 	GetSSOProviderUsers(ctx context.Context, id int) (model.Users, error)
-}
-
-func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error) {
-	var providers []model.SSOProvider
-
-	query := s.db.WithContext(ctx).Model(&model.SSOProvider{})
-
-	// Apply SQL filter if provided
-	if sqlFilter.SQLString != "" {
-		query = query.Where(sqlFilter.SQLString, sqlFilter.Params...)
-	}
-
-	// Apply sorting order if provided
-	if order != "" {
-		query = query.Order(order)
-	} else {
-		// Default ordering by created_at if no order is specified
-		query = query.Order("created_at")
-	}
-
-	// Preload the associated OIDC and SAML providers
-	query = query.Preload("OIDCProvider").Preload("SAMLProvider")
-
-	result := query.Find(&providers)
-	return providers, CheckError(result)
 }
 
 // CreateSSOProvider creates an entry in the sso_providers table
@@ -111,6 +88,40 @@ func (s *BloodhoundDB) DeleteSSOProvider(ctx context.Context, id int) error {
 	})
 
 	return err
+}
+
+func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error) {
+	var providers []model.SSOProvider
+
+	query := s.db.WithContext(ctx).Model(&model.SSOProvider{})
+
+	// Apply SQL filter if provided
+	if sqlFilter.SQLString != "" {
+		query = query.Where(sqlFilter.SQLString, sqlFilter.Params...)
+	}
+
+	// Apply sorting order if provided
+	if order != "" {
+		query = query.Order(order)
+	} else {
+		// Default ordering by created_at if no order is specified
+		query = query.Order("created_at")
+	}
+
+	// Preload the associated OIDC and SAML providers
+	query = query.Preload("OIDCProvider").Preload("SAMLProvider")
+
+	result := query.Find(&providers)
+	return providers, CheckError(result)
+}
+
+func (s *BloodhoundDB) GetSSOProviderBySlug(ctx context.Context, slug string) (model.SSOProvider, error) {
+	var provider model.SSOProvider
+	if tx := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, name, slug, created_at, updated_at FROM %s WHERE slug = ?;", ssoProviderTableName), slug).Scan(&provider); tx.RowsAffected == 0 {
+		return provider, ErrNotFound
+	}
+
+	return provider, nil
 }
 
 // GetSSOProviderUsers returns all the users associated with a given sso provider
