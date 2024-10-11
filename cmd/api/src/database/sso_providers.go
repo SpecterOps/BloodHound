@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
@@ -31,6 +32,7 @@ const (
 type SSOProviderData interface {
 	CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error)
 	GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error)
+	GetSSOProviderBySlug(ctx context.Context, slug string) (model.SSOProvider, error)
 }
 
 // CreateSSOProvider creates an entry in the sso_providers table
@@ -68,4 +70,13 @@ func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sql
 
 	result := query.Find(&providers)
 	return providers, CheckError(result)
+}
+
+func (s *BloodhoundDB) GetSSOProviderBySlug(ctx context.Context, slug string) (model.SSOProvider, error) {
+	var provider model.SSOProvider
+	if tx := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, name, slug, created_at, updated_at FROM %s WHERE slug = %s;", ssoProviderTableName, slug)).Scan(&provider); tx.RowsAffected == 0 {
+		return provider, ErrNotFound
+	}
+
+	return provider, nil
 }
