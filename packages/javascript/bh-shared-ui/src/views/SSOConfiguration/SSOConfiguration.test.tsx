@@ -130,7 +130,7 @@ vi.mock('../../hooks/useFeatureFlags', () => {
 describe('SSOConfiguration', async () => {
     const addSnackbar = vi.fn();
     const useAppDispatch = vi.fn();
-    const { default: SSOConfiguration } = await MakeSSOConfiguration(addSnackbar, useAppDispatch);
+    const SSOConfiguration = MakeSSOConfiguration(addSnackbar, useAppDispatch);
 
     it('should eventually render previously configured SSO providers', async () => {
         const user = userEvent.setup();

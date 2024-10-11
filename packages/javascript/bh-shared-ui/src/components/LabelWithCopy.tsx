@@ -22,7 +22,7 @@ import { copyToClipboard } from '../utils';
 
 const LabelWithCopy: React.FC<{
     label: string;
-    valueToCopy: string;
+    valueToCopy: string | number;
     hoverOnly?: boolean;
 }> = ({ label, valueToCopy, hoverOnly = false }) => {
     const theme = useTheme();

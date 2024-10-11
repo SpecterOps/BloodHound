@@ -59,36 +59,35 @@ const MenuWithDropdown: React.FC<{ menuTitle: string; menuItems: MenuItems }> = 
     );
 };
 
+const MenuOrButton: React.FC<{ menuTitle: string; menuItems: MenuItems }> = ({ menuTitle, menuItems }) => {
+    if (menuItems.length > 1) {
+        return <MenuWithDropdown menuItems={menuItems} menuTitle={menuTitle} />;
+    } else if (menuItems.length === 1) {
+        return (
+            <Button
+                onClick={() => {
+                    menuItems[0].onClick();
+                }}>
+                {menuItems[0].title}
+            </Button>
+        );
+    }
+    return null;
+};
+
 const CreateMenu: React.FC<{
     createMenuTitle: string;
     menuItems: MenuItems;
     featureFlag?: string;
     featureFlagEnabledMenuItems?: MenuItems;
 }> = ({ createMenuTitle, menuItems, featureFlag, featureFlagEnabledMenuItems }) => {
-    const menuOrButton =
-        menuItems.length > 1 ? (
-            <MenuWithDropdown menuTitle={createMenuTitle} menuItems={menuItems} />
-        ) : (
-            <Button
-                onClick={() => {
-                    menuItems[0].onClick();
-                }}>
-                {createMenuTitle}
-            </Button>
+    const menuOrButton = <MenuOrButton menuTitle={createMenuTitle} menuItems={menuItems} />;
+
+    if (featureFlag !== undefined && !!featureFlagEnabledMenuItems) {
+        const featureFlagEnabledMenuOrButton = (
+            <MenuOrButton menuTitle={createMenuTitle} menuItems={featureFlagEnabledMenuItems} />
         );
 
-    if (featureFlag != undefined && !!featureFlagEnabledMenuItems) {
-        const featureFlagEnabledMenuOrButton =
-            featureFlagEnabledMenuItems.length > 1 ? (
-                <MenuWithDropdown menuTitle={createMenuTitle} menuItems={featureFlagEnabledMenuItems} />
-            ) : (
-                <Button
-                    onClick={() => {
-                        featureFlagEnabledMenuItems[0].onClick();
-                    }}>
-                    {featureFlagEnabledMenuItems[0].title}
-                </Button>
-            );
         return <FeatureFlag flagKey={featureFlag} enabled={featureFlagEnabledMenuOrButton} disabled={menuOrButton} />;
     } else {
         return menuOrButton;

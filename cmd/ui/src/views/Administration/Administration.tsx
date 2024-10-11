@@ -18,7 +18,7 @@ import { Box, CircularProgress, Container } from '@mui/material';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { GenericErrorBoundaryFallback, Permission, MakeSSOConfiguration } from 'bh-shared-ui';
+import { GenericErrorBoundaryFallback, Permission } from 'bh-shared-ui';
 import LeftNav from 'src/components/LeftNav';
 import {
     ROUTE_ADMINISTRATION_FILE_INGEST,
@@ -38,7 +38,9 @@ const Users = React.lazy(() => import('src/views/Users'));
 const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures'));
 const FileIngest = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.FileIngest })));
 const BloodHoundConfiguration = React.lazy(() => import('src/views/BloodHoundConfiguration'));
-const SSOConfiguration = React.lazy(() => MakeSSOConfiguration(addSnackbar, useAppDispatch));
+const SSOConfiguration = React.lazy(() =>
+    import('bh-shared-ui').then((module) => ({ default: module.MakeSSOConfiguration(addSnackbar, useAppDispatch) }))
+);
 
 const Administration: React.FC = () => {
     const sections = [
