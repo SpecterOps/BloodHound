@@ -34,11 +34,12 @@ import {
 import CreateOIDCProviderDialog from '../../components/CreateOIDCProviderDialog';
 import { useFeatureFlag } from '../../hooks';
 
-const MakeSSOConfiguration = async (
-    addSnackbar: (notification: string, key: string, options?: any) => void,
-    useAppDispatch: () => Dispatch<any>
-): Promise<{ default: FC }> => ({
-    default: () => {
+const MakeSSOConfiguration =
+    (
+        addSnackbar: (notification: string, key: string, options?: any) => void,
+        useAppDispatch: () => Dispatch<any>
+    ): FC =>
+    () => {
         /* Hooks */
         const theme = useTheme();
         const dispatch = useAppDispatch();
@@ -64,7 +65,7 @@ const MakeSSOConfiguration = async (
         );
 
         const ssoProviders = useMemo(() => {
-            var ssoProviders = listSSOProvidersQuery.data ?? [];
+            let ssoProviders = listSSOProvidersQuery.data ?? [];
 
             if (nameFilter) {
                 ssoProviders = ssoProviders.filter((ssoProvider) =>
@@ -269,7 +270,6 @@ const MakeSSOConfiguration = async (
                 />
             </>
         );
-    },
-});
+    };
 
 export default MakeSSOConfiguration;

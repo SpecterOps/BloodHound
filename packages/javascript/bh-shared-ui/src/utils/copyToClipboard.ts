@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const copyToClipboard = async (text: string) => {
-    await navigator.clipboard.writeText(text);
+export const copyToClipboard = async (text: string | number) => {
+    await navigator.clipboard.writeText(text.toString());
 };

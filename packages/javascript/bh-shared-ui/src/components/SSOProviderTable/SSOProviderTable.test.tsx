@@ -15,41 +15,28 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 import { render, screen } from '../../test-utils';
-
 import SSOProviderTable from './SSOProviderTable';
 
-interface ListSSOProvidersResponse {
-    id: number;
-    slug: string;
-    type: string;
-    name: string;
-    created_at: string;
-    updated_at: string;
-    deleted_at: {
-        Time: string;
-        Valid: boolean;
-    };
-}
-
-const samlProvider: ListSSOProvidersResponse = {
+const samlProvider: SSOProvider = {
     id: 1,
     slug: 'gotham-saml',
     name: 'Gotham SAML',
-    type: 'SAML',
+    type: 'saml',
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
-    deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
+    details: {} as SAMLProviderInfo,
 };
 
-const oidcProvider: ListSSOProvidersResponse = {
+const oidcProvider: SSOProvider = {
     id: 1,
     slug: 'gotham-oidc',
     name: 'Gotham OIDC',
-    type: 'OIDC',
+    type: 'oidc',
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
-    deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
+    details: {} as OIDCProviderInfo,
 };
 
 const ssoProviders = [samlProvider, oidcProvider];
@@ -79,7 +66,7 @@ describe('SSOProviderTable', () => {
 
     it('should sort by type', async () => {
         const user = userEvent.setup();
-        var typeSortOrder: 'asc' | 'desc' | undefined;
+        let typeSortOrder: 'asc' | 'desc' | undefined;
         const onToggleTypeSortOrder = () => {
             if (!typeSortOrder || typeSortOrder === 'desc') {
                 typeSortOrder = 'asc';
