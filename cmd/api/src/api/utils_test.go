@@ -39,11 +39,11 @@ func TestParseOptionalBoolMisspelledValue(t *testing.T) {
 	assert.Equal(t, false, result)
 }
 
-type TestStruct struct {
-	val int
-}
-
 func TestFilterStructSlice(t *testing.T) {
+	type TestStruct struct {
+		val int
+	}
+
 	var (
 		structs  = []TestStruct{{val: 0}, {val: 1}, {val: 2}, {val: 3}}
 		expected = []TestStruct{{val: 0}, {val: 1}}
