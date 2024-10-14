@@ -235,6 +235,28 @@ func ParseUserMiscData(user User) []IngestibleRelationship {
 		))
 	}
 
+	// CoerceToTGT / unconstrained delegation
+	uncondel, bool := user.Properties[strings.ToLower(ad.UnconstrainedDelegation.String())].(bool)
+	if bool && uncondel {
+		domainsid, str := user.Properties[strings.ToLower(ad.DomainSID.String())].(string)
+		if str {
+			data = append(data, NewIngestibleRelationship(
+				IngestibleSource{
+					Source:     user.ObjectIdentifier,
+					SourceType: ad.User,
+				},
+				IngestibleTarget{
+					Target:     domainsid,
+					TargetType: ad.Domain,
+				},
+				IngestibleRel{
+					RelProps: map[string]any{"isacl": false},
+					RelType:  ad.CoerceToTGT,
+				},
+			))
+		}
+	}
+
 	return data
 }
 
@@ -341,7 +363,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 	return parsedData
 }
 
-// ParseComputerMiscData parses AllowedToDelegate, AllowedToAct, HasSIDHistory,DumpSMSAPassword,DCFor and Sessions
+// ParseComputerMiscData parses AllowedToDelegate, AllowedToAct, HasSIDHistory, DumpSMSAPassword, DCFor, Sessions, and CoerceToTGT
 func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 	for _, target := range computer.AllowedToDelegate {
@@ -484,6 +506,28 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 				RelType:  ad.DCFor,
 			},
 		))
+	} else { // We do not want CoerceToTGT edges from DCs
+		uncondel, bool := computer.Properties[strings.ToLower(ad.UnconstrainedDelegation.String())].(bool)
+		if bool && uncondel {
+			domainsid, str := computer.Properties[strings.ToLower(ad.DomainSID.String())].(string)
+			if str {
+				relationships = append(relationships, NewIngestibleRelationship(
+					IngestibleSource{
+						Source:     computer.ObjectIdentifier,
+						SourceType: ad.Computer,
+					},
+					IngestibleTarget{
+						Target:     domainsid,
+						TargetType: ad.Domain,
+					},
+					IngestibleRel{
+						RelProps: map[string]any{"isacl": false},
+						RelType:  ad.CoerceToTGT,
+					},
+				))
+			}
+		}
+
 	}
 
 	return relationships
