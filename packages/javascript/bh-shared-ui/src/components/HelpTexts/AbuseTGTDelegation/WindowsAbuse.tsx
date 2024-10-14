@@ -94,7 +94,7 @@ const WindowsAbuse: FC = () => {
                 Use mimikatz to DCSync the target domain from the computer where the DC TGT was injected:
             </Typography>
             <Typography component={'pre'}>
-                {'lsadump::dcsync /domain:domain.local /user:EXTERNAL\\Administrator'}
+                {'lsadump::dcsync /domain:domain.local /user:DOMAIN\\Administrator'}
             </Typography>
         </>
     );
