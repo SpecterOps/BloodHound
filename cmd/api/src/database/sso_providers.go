@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
+	"gorm.io/gorm"
 )
 
 const (
@@ -30,6 +31,8 @@ const (
 // SSOProviderData defines the methods required to interact with the sso_providers table
 type SSOProviderData interface {
 	CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error)
+	DeleteSSOProvider(ctx context.Context, id int) error
+	DeleteSSOProviderByName(ctx context.Context, name string) error
 }
 
 // CreateSSOProvider creates an entry in the sso_providers table
@@ -42,4 +45,28 @@ func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authP
 	}
 
 	return provider, CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))
+}
+
+// DeleteSSOProvider deletes a sso_provider entry with a matching id
+func (s *BloodhoundDB) DeleteSSOProvider(ctx context.Context, id int) error {
+	var (
+		ssoProvider = model.SSOProvider{
+			Serial: model.Serial{ID: int32(id)},
+		}
+		auditEntry = model.AuditEntry{
+			Action: "DeleteSSOProvider",
+			Model:  &ssoProvider}
+	)
+
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Table(ssoProviderTableName).Where("id = ?", id).Delete(&model.SSOProvider{}))
+	})
+
+	return err
+}
+
+// DeleteSSOProviderByName deletes an entry in the sso_providers table given a matching name
+func (s *BloodhoundDB) DeleteSSOProviderByName(ctx context.Context, name string) error {
+	provider := model.SSOProvider{Name: name}
+	return CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Delete(&provider))
 }

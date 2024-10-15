@@ -24,3 +24,13 @@ type SSOProvider struct {
 
 	Serial
 }
+
+// AuditData returns the fields to log in the audit log
+func (s SSOProvider) AuditData() AuditData {
+	return AuditData{
+		"id":   s.ID,
+		"name": s.Name,
+		"slug": s.Slug,
+		"type": s.Type,
+	}
+}

@@ -95,3 +95,9 @@ SET sso_provider_id = (SELECT sso.id
                        WHERE u.saml_provider_id = saml.id)
 WHERE sso_provider_id IS NULL
   AND saml_provider_id IS NOT NULL;
+
+-- Set the user's saml_provider_id to null when an sso_provider or saml_provider is deleted
+ALTER TABLE ONLY users
+    DROP CONSTRAINT fk_users_saml_provider;
+ALTER TABLE ONLY users
+    ADD CONSTRAINT fk_users_saml_provider FOREIGN KEY (saml_provider_id) REFERENCES saml_providers (id) ON DELETE SET NULL;

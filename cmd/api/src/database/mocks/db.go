@@ -538,20 +538,6 @@ func (mr *MockDatabaseMockRecorder) DeleteIngestTask(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteIngestTask", reflect.TypeOf((*MockDatabase)(nil).DeleteIngestTask), arg0, arg1)
 }
 
-// DeleteOIDCProvider mocks base method.
-func (m *MockDatabase) DeleteOIDCProvider(arg0 context.Context, arg1 int) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOIDCProvider", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteOIDCProvider indicates an expected call of DeleteOIDCProvider.
-func (mr *MockDatabaseMockRecorder) DeleteOIDCProvider(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).DeleteOIDCProvider), arg0, arg1)
-}
-
 // DeleteSAMLProvider mocks base method.
 func (m *MockDatabase) DeleteSAMLProvider(arg0 context.Context, arg1 model.SAMLProvider) error {
 	m.ctrl.T.Helper()
@@ -564,6 +550,34 @@ func (m *MockDatabase) DeleteSAMLProvider(arg0 context.Context, arg1 model.SAMLP
 func (mr *MockDatabaseMockRecorder) DeleteSAMLProvider(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSAMLProvider", reflect.TypeOf((*MockDatabase)(nil).DeleteSAMLProvider), arg0, arg1)
+}
+
+// DeleteSSOProvider mocks base method.
+func (m *MockDatabase) DeleteSSOProvider(arg0 context.Context, arg1 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSSOProvider", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSSOProvider indicates an expected call of DeleteSSOProvider.
+func (mr *MockDatabaseMockRecorder) DeleteSSOProvider(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSSOProvider", reflect.TypeOf((*MockDatabase)(nil).DeleteSSOProvider), arg0, arg1)
+}
+
+// DeleteSSOProviderByName mocks base method.
+func (m *MockDatabase) DeleteSSOProviderByName(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSSOProviderByName", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSSOProviderByName indicates an expected call of DeleteSSOProviderByName.
+func (mr *MockDatabaseMockRecorder) DeleteSSOProviderByName(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSSOProviderByName", reflect.TypeOf((*MockDatabase)(nil).DeleteSSOProviderByName), arg0, arg1)
 }
 
 // DeleteSavedQuery mocks base method.

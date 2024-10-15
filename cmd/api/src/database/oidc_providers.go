@@ -31,7 +31,6 @@ const (
 type OIDCProviderData interface {
 	GetOIDCProvider(ctx context.Context, id int) (model.OIDCProvider, error)
 	CreateOIDCProvider(ctx context.Context, name, issuer, clientID string) (model.OIDCProvider, error)
-	DeleteOIDCProvider(ctx context.Context, id int) error
 }
 
 func (s *BloodhoundDB) GetOIDCProvider(ctx context.Context, id int) (model.OIDCProvider, error) {
@@ -70,14 +69,4 @@ func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, issuer, cli
 	})
 
 	return oidcProvider, err
-}
-
-// DeleteOIDCProvider deletes a oidc_provider matching the given id
-func (s *BloodhoundDB) DeleteOIDCProvider(ctx context.Context, id int) error {
-	result := s.db.WithContext(ctx).Table("oidc_providers").Where("id = ?", id).Delete(&model.OIDCProvider{})
-	if result.RowsAffected == 0 {
-		return ErrNotFound
-	} else {
-		return CheckError(result)
-	}
 }
