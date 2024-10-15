@@ -18,13 +18,14 @@ package tools
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/teambition/rrule-go"
-	"net/http"
-	"strings"
 )
 
 type ScheduledAnalysisConfiguration struct {

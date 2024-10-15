@@ -16,11 +16,50 @@
 
 package model
 
+import "fmt"
+
 // SSOProvider is the common representation of an SSO provider that can be used to display high level information about that provider
 type SSOProvider struct {
-	Type SessionAuthProvider `json:"type"`
+	Type SessionAuthProvider `json:"type" gorm:"column:type"`
 	Name string              `json:"name"`
 	Slug string              `json:"slug"`
 
+	OIDCProvider *OIDCProvider `json:"oidc_provider,omitempty" gorm:"foreignKey:SSOProviderID"`
+	SAMLProvider *SAMLProvider `json:"saml_provider,omitempty" gorm:"foreignKey:SSOProviderID"`
+
 	Serial
+}
+
+// Define sortable fields
+func SSOProviderSortableFields(field string) bool {
+	switch field {
+	case "id", "name", "slug", "type", "created_at", "updated_at":
+		return true
+	default:
+		return false
+	}
+}
+
+// Define valid filter predicates for each field
+func SSOProviderValidFilterPredicates(field string) ([]string, error) {
+	switch field {
+	case "id", "type":
+		return []string{string(Equals), string(NotEquals), string(GreaterThan), string(GreaterThanOrEquals), string(LessThan), string(LessThanOrEquals)}, nil
+	case "name", "slug":
+		return []string{string(Equals), string(NotEquals), string(ApproximatelyEquals)}, nil
+	case "created_at", "updated_at":
+		return []string{string(Equals), string(NotEquals), string(GreaterThan), string(GreaterThanOrEquals), string(LessThan), string(LessThanOrEquals)}, nil
+	default:
+		return nil, fmt.Errorf("the specified column cannot be filtered: %s", field)
+	}
+}
+
+// Define which fields are string type
+func SSOProviderIsStringField(field string) bool {
+	switch field {
+	case "name", "slug":
+		return true
+	default:
+		return false
+	}
 }
