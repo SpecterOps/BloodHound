@@ -75,7 +75,6 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 
 	if queryFilters, err = queryFilterParser.ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-		return
 	} else {
 		for name, filters := range queryFilters {
 			if validPredicates, err := model.SSOProviderValidFilterPredicates(name); err != nil {
