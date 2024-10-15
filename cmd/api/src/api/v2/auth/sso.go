@@ -33,9 +33,9 @@ func (s ManagementResource) DeleteSSOProvider(response http.ResponseWriter, requ
 	)
 
 	// Convert the incoming string url param to an int
-	if oidcProviderID, err := strconv.Atoi(rawSSOProviderID); err != nil {
+	if ssoProviderID, err := strconv.Atoi(rawSSOProviderID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if err = s.db.DeleteSSOProvider(request.Context(), oidcProviderID); errors.Is(err, database.ErrNotFound) {
+	} else if err = s.db.DeleteSSOProvider(request.Context(), ssoProviderID); errors.Is(err, database.ErrNotFound) {
 		// Handle error if requested record could not be found
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)
 	} else if err != nil {

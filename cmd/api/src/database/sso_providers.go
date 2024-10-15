@@ -66,7 +66,12 @@ func (s *BloodhoundDB) DeleteSSOProvider(ctx context.Context, id int) error {
 	)
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Table(ssoProviderTableName).Where("id = ?", id).Delete(&model.SSOProvider{}))
+		result := tx.Table(ssoProviderTableName).Where("id = ?", id).Delete(&model.SSOProvider{})
+		if result.RowsAffected == 0 {
+			return ErrNotFound
+		}
+
+		return CheckError(result)
 	})
 
 	return err
