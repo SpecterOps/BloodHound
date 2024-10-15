@@ -94,7 +94,6 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 
 		if sqlFilter, err = queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-			return
 		} else if ssoProviders, err = s.db.GetAllSSOProviders(ctx, strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
