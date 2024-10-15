@@ -115,11 +115,10 @@ services:
       retries: 5
       start_period: 30s
 
-  bh-api:
+  bh-api: &bh-api
     profiles:
       - dev
       - api-only
-      - sso
     build:
       context: tools/docker-compose
       dockerfile: api.Dockerfile
@@ -190,7 +189,14 @@ services:
       graph-db:
         condition: service_healthy
 
-  bh-authentik:
+  bh-api-sso:
+    <<: *bh-api
+    profiles:
+      - sso
+    links:
+      - authentik:authentik.localhost
+
+  authentik:
     profiles:
       - sso
       - sso-only
@@ -198,12 +204,12 @@ services:
     restart: unless-stopped
     command: server
     environment:
-      AUTHENTIK_REDIS__HOST: bh-authentik-valkey
-      AUTHENTIK_POSTGRESQL__HOST: bh-authentik-db
-      AUTHENTIK_POSTGRESQL__USER: ${BH_PG_USER:-authentik-bloodhound}
-      AUTHENTIK_POSTGRESQL__NAME: ${BH_PG_DB:-authentik-bloodhound}
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${BH_PG_PASS:-bloodhoundcommunityedition}
-      AUTHENTIK_SECRET_KEY: ${BH_ATK_SECRET:-bloodhoundcommunityedition}
+      AUTHENTIK_REDIS__HOST: authentik-valkey
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
+      AUTHENTIK_POSTGRESQL__USER: ${ATK_BH_PG_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__NAME: ${ATK_BH_PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${ATK_BH_PG_PASS:-bloodhoundcommunityedition}
+      AUTHENTIK_SECRET_KEY: ${ATK_BH_SECRET:-bloodhoundcommunityedition}
     labels:
       - traefik.enable=true
       - traefik.http.routers.authentik.rule=Host(`${BH_AUTHENTIK_HOSTNAME:-authentik.localhost}`)
@@ -213,10 +219,10 @@ services:
       - "${COMPOSE_PORT_HTTP:-9000}:9000"
       - "${COMPOSE_PORT_HTTPS:-9443}:9443"
     depends_on:
-      - bh-authentik-db
-      - bh-authentik-valkey
+      - authentik-db
+      - authentik-valkey
 
-  bh-authentik-worker:
+  authentik-worker:
     profiles:
       - sso
       - sso-only
@@ -224,17 +230,17 @@ services:
     restart: unless-stopped
     command: worker
     environment:
-      AUTHENTIK_REDIS__HOST: bh-authentik-valkey
-      AUTHENTIK_POSTGRESQL__HOST: bh-authentik-db
-      AUTHENTIK_POSTGRESQL__USER: ${BH_PG_USER:-authentik-bloodhound}
-      AUTHENTIK_POSTGRESQL__NAME: ${BH_PG_DB:-authentik-bloodhound}
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${BH_PG_PASS:-bloodhoundcommunityedition}
-      AUTHENTIK_SECRET_KEY: ${BH_ATK_SECRET:-bloodhoundcommunityedition}
+      AUTHENTIK_REDIS__HOST: authentik-valkey
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
+      AUTHENTIK_POSTGRESQL__USER: ${ATK_BH_PG_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__NAME: ${ATK_BH_PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${ATK_BH_PG_PASS:-bloodhoundcommunityedition}
+      AUTHENTIK_SECRET_KEY: ${ATK_BH_SECRET:-bloodhoundcommunityedition}
     depends_on:
-      - bh-authentik-db
-      - bh-authentik-valkey
+      - authentik-db
+      - authentik-valkey
 
-  bh-authentik-valkey:
+  authentik-valkey:
     profiles:
       - sso
       - sso-only
@@ -242,9 +248,9 @@ services:
     command: --save 60 1 --loglevel warning
     restart: unless-stopped
     volumes:
-      - bh-authentik-valkey:/data
+      - authentik-valkey:/data
 
-  bh-authentik-db:
+  authentik-db:
     profiles:
       - sso
       - sso-only
@@ -257,16 +263,16 @@ services:
       retries: 5
       timeout: 5s
     volumes:
-      - bh-authentik-db:/var/lib/postgresql/data
+      - authentik-db:/var/lib/postgresql/data
     environment:
-      POSTGRES_PASSWORD: ${BH_PG_PASS:-bloodhoundcommunityedition}
-      POSTGRES_USER: ${BH_PG_USER:-authentik-bloodhound}
-      POSTGRES_DB: ${BH_PG_DB:-authentik-bloodhound}
+      POSTGRES_PASSWORD: ${ATK_BH_PG_PASS:-bloodhoundcommunityedition}
+      POSTGRES_USER: ${ATK_BH_PG_USER:-authentik}
+      POSTGRES_DB: ${ATK_BH_PG_DB:-authentik}
 
 volumes:
   neo4j-data:
   postgres-data:
   go-pkg-mod:
   ui-cache:
-  bh-authentik-valkey:
-  bh-authentik-db:
+  authentik-valkey:
+  authentik-db:
