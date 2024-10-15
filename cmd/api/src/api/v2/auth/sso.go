@@ -97,7 +97,6 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 			return
 		} else if ssoProviders, err = s.db.GetAllSSOProviders(ctx, strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
-			return
 		} else {
 			for _, ssoProvider := range ssoProviders {
 				provider := AuthProvider{
