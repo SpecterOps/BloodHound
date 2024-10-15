@@ -14,12 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, Dispatch, FC, useCallback, useMemo, ChangeEvent } from 'react';
+import { useState, FC, useCallback, useMemo, ChangeEvent } from 'react';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Typography, Paper, TextField, useTheme } from '@mui/material';
 import { useMutation, useQuery } from 'react-query';
-import { OptionsObject } from 'notistack';
 import { CreateOIDCProvideRequest, SSOProvider } from 'js-client-library';
 import { apiClient } from '../../utils';
 import {
@@ -34,268 +33,249 @@ import {
 } from '../../components';
 import CreateOIDCProviderDialog from '../../components/CreateOIDCProviderDialog';
 import { useFeatureFlag } from '../../hooks';
+import { useNotifications } from '../../providers';
 
-const MakeSSOConfiguration =
-    (
-        addSnackbar: (notification: string, key: string, options?: OptionsObject) => void,
-        useAppDispatch: () => Dispatch<any>
-    ): FC =>
-    () => {
-        /* Hooks */
-        const theme = useTheme();
-        const dispatch = useAppDispatch();
-        const { data: flag } = useFeatureFlag('oidc_support');
+const SSOConfiguration: FC = () => {
+    /* Hooks */
+    const theme = useTheme();
+    const { addNotification } = useNotifications();
+    const { data: flag } = useFeatureFlag('oidc_support');
 
-        const [selectedSSOProviderId, setSelectedSSOProviderId] = useState<SSOProvider['id'] | undefined>();
-        const [ssoProviderIdToDelete, setSSOProviderIdToDelete] = useState<SSOProvider['id'] | undefined>();
-        const [dialogOpen, setDialogOpen] = useState<'SAML' | 'OIDC' | 'DELETE' | ''>('');
-        const [nameFilter, setNameFilter] = useState<string>('');
-        const [createProviderError, setCreateProviderError] = useState<string>('');
-        const [typeSortOrder, setTypeSortOrder] = useState<'asc' | 'desc' | undefined>();
+    const [selectedSSOProviderId, setSelectedSSOProviderId] = useState<SSOProvider['id'] | undefined>();
+    const [ssoProviderIdToDelete, setSSOProviderIdToDelete] = useState<SSOProvider['id'] | undefined>();
+    const [dialogOpen, setDialogOpen] = useState<'SAML' | 'OIDC' | 'DELETE' | ''>('');
+    const [nameFilter, setNameFilter] = useState<string>('');
+    const [createProviderError, setCreateProviderError] = useState<string>('');
+    const [typeSortOrder, setTypeSortOrder] = useState<'asc' | 'desc' | undefined>();
 
-        const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
-            apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
-        );
+    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
+        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
+    );
 
-        const deleteSSOProviderMutation = useMutation(
-            (ssoProviderId: SSOProvider['id']) => apiClient.deleteSSOProvider(ssoProviderId),
-            {
-                onSuccess: () => {
-                    dispatch(
-                        addSnackbar('SSO Provider successfully deleted!', 'deleteSSOProviderSuccess', {
-                            variant: 'success',
-                        })
-                    );
-                },
-                onError: (err: any) => {
-                    dispatch(
-                        addSnackbar(
-                            err?.response?.status === 404
-                                ? 'SSO Provider not found.'
-                                : 'Unable to delete sso provider. Please try again.',
-                            'deleteSSOProviderFailure',
-                            { variant: 'error' }
-                        )
-                    );
-                },
-            }
-        );
-
-        const ssoProviders = useMemo(() => {
-            let ssoProviders = listSSOProvidersQuery.data ?? [];
-
-            if (nameFilter) {
-                ssoProviders = ssoProviders.filter((ssoProvider) =>
-                    ssoProvider.name?.toLowerCase()?.includes(nameFilter)
-                );
-            }
-
-            if (typeSortOrder) {
-                ssoProviders = ssoProviders.sort((a, b) => {
-                    switch (typeSortOrder) {
-                        case 'asc':
-                            return a.type.localeCompare(b.type);
-                        case 'desc':
-                            return b.type.localeCompare(a.type);
-                    }
+    const deleteSSOProviderMutation = useMutation(
+        (ssoProviderId: SSOProvider['id']) => apiClient.deleteSSOProvider(ssoProviderId),
+        {
+            onSuccess: () => {
+                addNotification('SSO Provider successfully deleted!', 'deleteSSOProviderSuccess', {
+                    variant: 'success',
                 });
-            }
-
-            return ssoProviders;
-        }, [nameFilter, typeSortOrder, listSSOProvidersQuery.data]);
-
-        const selectedSSOProvider = useMemo(() => {
-            return listSSOProvidersQuery.data?.find(({ id }) => id === selectedSSOProviderId);
-        }, [selectedSSOProviderId, listSSOProvidersQuery.data]);
-
-        /* Event Handlers */
-
-        const openSAMLProviderDialog = useCallback(() => {
-            setDialogOpen('SAML');
-        }, []);
-
-        const openOIDCProviderDialog = useCallback(() => {
-            setDialogOpen('OIDC');
-        }, []);
-
-        const openDeleteProviderDialog = useCallback(() => {
-            setDialogOpen('DELETE');
-        }, []);
-
-        const closeDialog = () => {
-            setDialogOpen('');
-            setCreateProviderError('');
-        };
-
-        const onClickSSOProvider = useCallback((ssoProviderId: SSOProvider['id']) => {
-            setSelectedSSOProviderId(ssoProviderId);
-        }, []);
-
-        const onSelectDeleteSSOProvider = useCallback(
-            (ssoProviderId: SSOProvider['id']) => {
-                setSSOProviderIdToDelete(ssoProviderId);
-                openDeleteProviderDialog();
             },
-            [setSSOProviderIdToDelete]
-        );
-
-        const onDeleteSSOProvider = useCallback(
-            async (response: boolean) => {
-                let errored = false;
-                if (response && ssoProviderIdToDelete) {
-                    try {
-                        await deleteSSOProviderMutation.mutateAsync(ssoProviderIdToDelete);
-                    } catch (err: any) {
-                        if (err?.response?.status !== 404) {
-                            errored = true;
-                            console.error(err);
-                        }
-                    }
-                }
-                if (!errored) {
-                    closeDialog();
-                    deleteSSOProviderMutation.reset();
-                    listSSOProvidersQuery.refetch();
-                }
+            onError: (err: any) => {
+                addNotification(
+                    err?.response?.status === 404
+                        ? 'SSO Provider not found.'
+                        : 'Unable to delete sso provider. Please try again.',
+                    'deleteSSOProviderFailure',
+                    { variant: 'error' }
+                );
             },
-            [ssoProviderIdToDelete]
-        );
+        }
+    );
 
-        const toggleTypeSortOrder = useCallback(() => {
-            if (!typeSortOrder || typeSortOrder === 'desc') {
-                setTypeSortOrder('asc');
-            } else {
-                setTypeSortOrder('desc');
-            }
-        }, [typeSortOrder]);
+    const ssoProviders = useMemo(() => {
+        let ssoProviders = listSSOProvidersQuery.data ?? [];
 
-        const createSAMLProvider = async (samlProvider: CreateSAMLProviderFormInputs) => {
-            setCreateProviderError('');
-            try {
-                await apiClient.createSAMLProviderFromFile({ ...samlProvider, metadata: samlProvider.metadata[0] });
-                listSSOProvidersQuery.refetch();
-                closeDialog();
-            } catch (error) {
-                console.error(error);
-                setCreateProviderError('Unable to create new SAML Provider configuration. Please try again.');
-            }
-        };
+        if (nameFilter) {
+            ssoProviders = ssoProviders.filter((ssoProvider) => ssoProvider.name?.toLowerCase()?.includes(nameFilter));
+        }
 
-        const createOIDCProvider = useCallback(async (oidcProvider: CreateOIDCProvideRequest) => {
-            setCreateProviderError('');
-            try {
-                await apiClient.createOIDCProvider(oidcProvider);
-                listSSOProvidersQuery.refetch();
-                closeDialog();
-            } catch (error) {
-                console.error(error);
-                setCreateProviderError('Unable to create new OIDC Provider configuration. Please try again.');
-            }
-        }, []);
+        if (typeSortOrder) {
+            ssoProviders = ssoProviders.sort((a, b) => {
+                switch (typeSortOrder) {
+                    case 'asc':
+                        return a.type.localeCompare(b.type);
+                    case 'desc':
+                        return b.type.localeCompare(a.type);
+                }
+            });
+        }
 
-        const onChangeNameFilter = (e: ChangeEvent<HTMLInputElement>) => {
-            setNameFilter(e.target.value.toLowerCase());
-        };
+        return ssoProviders;
+    }, [nameFilter, typeSortOrder, listSSOProvidersQuery.data]);
 
-        /* Implementation */
+    const selectedSSOProvider = useMemo(() => {
+        return listSSOProvidersQuery.data?.find(({ id }) => id === selectedSSOProviderId);
+    }, [selectedSSOProviderId, listSSOProvidersQuery.data]);
 
-        return (
-            <>
-                <PageWithTitle
-                    title='SSO Configuration'
-                    data-testid='sso-configuration'
-                    pageDescription={
-                        <Typography variant='body2' paragraph>
-                            BloodHound supports SAML {flag?.enabled ? 'and OIDC ' : ''}for single sign-on (SSO). Learn
-                            how to deploy {flag?.enabled ? 'SSO' : 'SAML'} with BloodHound{' '}
-                            {DocumentationLinks.samlConfigDocLink}.
-                        </Typography>
-                    }>
-                    <Grid container spacing={theme.spacing(2)}>
-                        <Grid
-                            item
-                            display='flex'
-                            alignItems='center'
-                            justifyContent='end'
-                            minHeight='24px'
-                            mb={2}
-                            xs={12}>
-                            <CreateMenu
-                                createMenuTitle={`Create ${flag?.enabled ? '' : 'SAML '}Provider`}
-                                featureFlag='oidc_support'
-                                featureFlagEnabledMenuItems={[
-                                    { title: 'SAML Provider', onClick: openSAMLProviderDialog },
-                                    { title: 'OIDC Provider', onClick: openOIDCProviderDialog },
-                                ]}
-                                menuItems={[{ title: 'SAML Provider', onClick: openSAMLProviderDialog }]}
-                            />
-                        </Grid>
-                        <Grid item xs={6}>
-                            <Paper>
-                                <Box display='flex' justifyContent='space-between'>
-                                    <Box display='flex' alignItems='center' ml={theme.spacing(3)} pt={theme.spacing(2)}>
-                                        <Typography fontWeight='bold' variant='h5'>
-                                            Providers
-                                        </Typography>
-                                    </Box>
-                                    <Box display='flex' alignItems='center' mr={theme.spacing(3)}>
-                                        <TextField
-                                            onChange={onChangeNameFilter}
-                                            variant='standard'
-                                            label={
-                                                <Box>
-                                                    Search
-                                                    <FontAwesomeIcon
-                                                        icon={faSearch}
-                                                        size='sm'
-                                                        style={{ marginLeft: theme.spacing(1) }}
-                                                    />
-                                                </Box>
-                                            }
-                                        />
-                                    </Box>
-                                </Box>
-                                <SSOProviderTable
-                                    ssoProviders={ssoProviders}
-                                    loading={listSSOProvidersQuery.isLoading}
-                                    onClickSSOProvider={onClickSSOProvider}
-                                    onDeleteSSOProvider={onSelectDeleteSSOProvider}
-                                    typeSortOrder={typeSortOrder}
-                                    onToggleTypeSortOrder={toggleTypeSortOrder}
-                                />
-                            </Paper>
-                        </Grid>
-                        {selectedSSOProvider && (
-                            <Grid item xs={6}>
-                                <SSOProviderInfoPanel ssoProvider={selectedSSOProvider} />
-                            </Grid>
-                        )}
-                    </Grid>
-                </PageWithTitle>
-                <CreateSAMLProviderDialog
-                    open={dialogOpen === 'SAML'}
-                    error={createProviderError}
-                    onClose={closeDialog}
-                    onSubmit={createSAMLProvider}
-                />
-                <CreateOIDCProviderDialog
-                    open={dialogOpen === 'OIDC'}
-                    error={createProviderError}
-                    onClose={closeDialog}
-                    onSubmit={createOIDCProvider}
-                />
-                <ConfirmationDialog
-                    open={dialogOpen === 'DELETE'}
-                    title='Delete SSO Provider'
-                    text='Are you sure you wish to delete this SSO Provider? Any users which are currently configured to use this provider for authentication will no longer be able to access this application.'
-                    onClose={onDeleteSSOProvider}
-                    error={
-                        deleteSSOProviderMutation.isError ? 'An unexpected error has occurred. Please try again.' : ''
-                    }
-                    isLoading={deleteSSOProviderMutation.isLoading}
-                />
-            </>
-        );
+    /* Event Handlers */
+
+    const openSAMLProviderDialog = useCallback(() => {
+        setDialogOpen('SAML');
+    }, []);
+
+    const openOIDCProviderDialog = useCallback(() => {
+        setDialogOpen('OIDC');
+    }, []);
+
+    const openDeleteProviderDialog = useCallback(() => {
+        setDialogOpen('DELETE');
+    }, []);
+
+    const closeDialog = () => {
+        setDialogOpen('');
+        setCreateProviderError('');
     };
 
-export default MakeSSOConfiguration;
+    const onClickSSOProvider = useCallback((ssoProviderId: SSOProvider['id']) => {
+        setSelectedSSOProviderId(ssoProviderId);
+    }, []);
+
+    const onSelectDeleteSSOProvider = useCallback(
+        (ssoProviderId: SSOProvider['id']) => {
+            setSSOProviderIdToDelete(ssoProviderId);
+            openDeleteProviderDialog();
+        },
+        [setSSOProviderIdToDelete]
+    );
+
+    const onDeleteSSOProvider = useCallback(
+        async (response: boolean) => {
+            let errored = false;
+            if (response && ssoProviderIdToDelete) {
+                try {
+                    await deleteSSOProviderMutation.mutateAsync(ssoProviderIdToDelete);
+                } catch (err: any) {
+                    if (err?.response?.status !== 404) {
+                        errored = true;
+                        console.error(err);
+                    }
+                }
+            }
+            if (!errored) {
+                closeDialog();
+                deleteSSOProviderMutation.reset();
+                listSSOProvidersQuery.refetch();
+            }
+        },
+        [ssoProviderIdToDelete]
+    );
+
+    const toggleTypeSortOrder = useCallback(() => {
+        if (!typeSortOrder || typeSortOrder === 'desc') {
+            setTypeSortOrder('asc');
+        } else {
+            setTypeSortOrder('desc');
+        }
+    }, [typeSortOrder]);
+
+    const createSAMLProvider = async (samlProvider: CreateSAMLProviderFormInputs) => {
+        setCreateProviderError('');
+        try {
+            await apiClient.createSAMLProviderFromFile({ ...samlProvider, metadata: samlProvider.metadata[0] });
+            listSSOProvidersQuery.refetch();
+            closeDialog();
+        } catch (error) {
+            console.error(error);
+            setCreateProviderError('Unable to create new SAML Provider configuration. Please try again.');
+        }
+    };
+
+    const createOIDCProvider = useCallback(async (oidcProvider: CreateOIDCProvideRequest) => {
+        setCreateProviderError('');
+        try {
+            await apiClient.createOIDCProvider(oidcProvider);
+            listSSOProvidersQuery.refetch();
+            closeDialog();
+        } catch (error) {
+            console.error(error);
+            setCreateProviderError('Unable to create new OIDC Provider configuration. Please try again.');
+        }
+    }, []);
+
+    const onChangeNameFilter = (e: ChangeEvent<HTMLInputElement>) => {
+        setNameFilter(e.target.value.toLowerCase());
+    };
+
+    /* Implementation */
+
+    return (
+        <>
+            <PageWithTitle
+                title='SSO Configuration'
+                data-testid='sso-configuration'
+                pageDescription={
+                    <Typography variant='body2' paragraph>
+                        BloodHound supports SAML {flag?.enabled ? 'and OIDC ' : ''}for single sign-on (SSO). Learn how
+                        to deploy {flag?.enabled ? 'SSO' : 'SAML'} with BloodHound{' '}
+                        {DocumentationLinks.samlConfigDocLink}.
+                    </Typography>
+                }>
+                <Grid container spacing={theme.spacing(2)}>
+                    <Grid item display='flex' alignItems='center' justifyContent='end' minHeight='24px' mb={2} xs={12}>
+                        <CreateMenu
+                            createMenuTitle={`Create ${flag?.enabled ? '' : 'SAML '}Provider`}
+                            featureFlag='oidc_support'
+                            featureFlagEnabledMenuItems={[
+                                { title: 'SAML Provider', onClick: openSAMLProviderDialog },
+                                { title: 'OIDC Provider', onClick: openOIDCProviderDialog },
+                            ]}
+                            menuItems={[{ title: 'SAML Provider', onClick: openSAMLProviderDialog }]}
+                        />
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Paper>
+                            <Box display='flex' justifyContent='space-between'>
+                                <Box display='flex' alignItems='center' ml={theme.spacing(3)} pt={theme.spacing(2)}>
+                                    <Typography fontWeight='bold' variant='h5'>
+                                        Providers
+                                    </Typography>
+                                </Box>
+                                <Box display='flex' alignItems='center' mr={theme.spacing(3)}>
+                                    <TextField
+                                        onChange={onChangeNameFilter}
+                                        variant='standard'
+                                        label={
+                                            <Box>
+                                                Search
+                                                <FontAwesomeIcon
+                                                    icon={faSearch}
+                                                    size='sm'
+                                                    style={{ marginLeft: theme.spacing(1) }}
+                                                />
+                                            </Box>
+                                        }
+                                    />
+                                </Box>
+                            </Box>
+                            <SSOProviderTable
+                                ssoProviders={ssoProviders}
+                                loading={listSSOProvidersQuery.isLoading}
+                                onClickSSOProvider={onClickSSOProvider}
+                                onDeleteSSOProvider={onSelectDeleteSSOProvider}
+                                typeSortOrder={typeSortOrder}
+                                onToggleTypeSortOrder={toggleTypeSortOrder}
+                            />
+                        </Paper>
+                    </Grid>
+                    {selectedSSOProvider && (
+                        <Grid item xs={6}>
+                            <SSOProviderInfoPanel ssoProvider={selectedSSOProvider} />
+                        </Grid>
+                    )}
+                </Grid>
+            </PageWithTitle>
+            <CreateSAMLProviderDialog
+                open={dialogOpen === 'SAML'}
+                error={createProviderError}
+                onClose={closeDialog}
+                onSubmit={createSAMLProvider}
+            />
+            <CreateOIDCProviderDialog
+                open={dialogOpen === 'OIDC'}
+                error={createProviderError}
+                onClose={closeDialog}
+                onSubmit={createOIDCProvider}
+            />
+            <ConfirmationDialog
+                open={dialogOpen === 'DELETE'}
+                title='Delete SSO Provider'
+                text='Are you sure you wish to delete this SSO Provider? Any users which are currently configured to use this provider for authentication will no longer be able to access this application.'
+                onClose={onDeleteSSOProvider}
+                error={deleteSSOProviderMutation.isError ? 'An unexpected error has occurred. Please try again.' : ''}
+                isLoading={deleteSSOProviderMutation.isLoading}
+            />
+        </>
+    );
+};
+
+export default SSOConfiguration;

@@ -18,7 +18,7 @@ export { default as ApiExplorer } from './ApiExplorer';
 
 export { default as UserProfile } from './UserProfile';
 
-export { default as MakeSSOConfiguration } from './SSOConfiguration';
+export { default as SSOConfiguration } from './SSOConfiguration';
 
 export * from './Explore';
 
