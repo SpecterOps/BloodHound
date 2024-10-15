@@ -42,7 +42,7 @@ func TestBloodhoundDB_GetOIDCProvider(t *testing.T) {
 		provider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com/auth", "bloodhound")
 		require.NoError(t, err)
 
-		fetchedProvider, err := dbInst.GetOIDCProvider(testCtx, provider.ID)
+		fetchedProvider, err := dbInst.GetOIDCProvider(testCtx, int(provider.ID))
 		require.NoError(t, err)
 		assert.Equal(t, fetchedProvider.Issuer, provider.Issuer)
 		assert.Equal(t, fetchedProvider.ClientID, provider.ClientID)
@@ -72,25 +72,5 @@ func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
 		_, count, err := dbInst.ListAuditLogs(testCtx, time.Now().Add(-time.Minute), time.Now().Add(time.Minute), 0, 10, "", model.SQLFilter{})
 		require.NoError(t, err)
 		assert.Equal(t, 2, count)
-	})
-}
-
-func TestBloodhoundDB_DeleteOIDCProvider(t *testing.T) {
-	var (
-		testCtx = context.Background()
-		dbInst  = integration.SetupDB(t)
-	)
-	defer dbInst.Close(testCtx)
-
-	t.Run("successfully delete an OIDC provider", func(t *testing.T) {
-		provider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com/auth", "bloodhound")
-		require.NoError(t, err)
-
-		err = dbInst.DeleteOIDCProvider(testCtx, provider.ID)
-		require.NoError(t, err)
-
-		provider, err = dbInst.GetOIDCProvider(testCtx, provider.ID)
-		require.Error(t, err)
-		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 }

@@ -36,7 +36,7 @@ type OIDCProviderData interface {
 func (s *BloodhoundDB) GetOIDCProvider(ctx context.Context, id int) (model.OIDCProvider, error) {
 	var (
 		oidcProvider model.OIDCProvider
-		result       = s.db.WithContext(ctx).Table("oidc_providers").Where("id = ?", id).First(&oidcProvider)
+		result       = s.db.WithContext(ctx).Table(oidcProvidersTableName).Where("id = ?", id).First(&oidcProvider)
 	)
 	return oidcProvider, CheckError(result)
 }

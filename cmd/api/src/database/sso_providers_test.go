@@ -23,13 +23,14 @@ import (
 	"context"
 	"testing"
 
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestBloodhoundDB_CreateSSOProvider(t *testing.T) {
+func TestBloodhoundDB_CreateAndGetSSOProvider(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -43,5 +44,29 @@ func TestBloodhoundDB_CreateSSOProvider(t *testing.T) {
 		assert.Equal(t, "Bloodhound Gang", result.Name)
 		assert.Equal(t, "bloodhound-gang", result.Slug)
 		assert.Equal(t, model.SessionAuthProviderSAML, result.Type)
+
+		provider, err := dbInst.GetSSOProvider(testCtx, int(result.ID))
+		require.NoError(t, err)
+		assert.Equal(t, model.SessionAuthProviderSAML, provider.Type)
+	})
+}
+
+func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+	defer dbInst.Close(testCtx)
+
+	t.Run("successfully delete an SSO provider", func(t *testing.T) {
+		provider, err := dbInst.CreateSSOProvider(testCtx, "test", model.SessionAuthProviderSAML)
+		require.NoError(t, err)
+
+		err = dbInst.DeleteSSOProvider(testCtx, int(provider.ID))
+		require.NoError(t, err)
+
+		provider, err = dbInst.GetSSOProvider(testCtx, int(provider.ID))
+		require.Error(t, err)
+		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 }

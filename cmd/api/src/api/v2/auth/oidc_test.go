@@ -17,15 +17,12 @@
 package auth_test
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/api/v2/auth"
-	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils/test"
 	"go.uber.org/mock/gomock"
@@ -111,59 +108,5 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 			OnHandlerFunc(resources.CreateOIDCProvider).
 			Require().
 			ResponseStatusCode(http.StatusInternalServerError)
-	})
-}
-
-func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
-	var (
-		url               = "/api/v2/sso/providers/oidc/%s"
-		mockCtrl          = gomock.NewController(t)
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
-	)
-
-	t.Run("successfully delete an OIDCProvider", func(t *testing.T) {
-		mockDB.EXPECT().DeleteOIDCProvider(gomock.Any(), int64(1)).Return(nil)
-
-		test.Request(t).
-			WithMethod(http.MethodDelete).
-			WithURL(url, api.URIPathVariableOIDCProviderID).
-			WithURLPathVars(map[string]string{api.URIPathVariableOIDCProviderID: "1"}).
-			OnHandlerFunc(resources.DeleteOIDCProvider).
-			Require().
-			ResponseStatusCode(http.StatusOK)
-	})
-
-	t.Run("error invalid oidc_provider_id format", func(t *testing.T) {
-		test.Request(t).
-			WithMethod(http.MethodDelete).
-			WithURL(url, api.URIPathVariableOIDCProviderID).
-			WithURLPathVars(map[string]string{api.URIPathVariableOIDCProviderID: "bloodhound"}).
-			OnHandlerFunc(resources.DeleteOIDCProvider).
-			Require().
-			ResponseStatusCode(http.StatusBadRequest)
-	})
-
-	t.Run("error database error", func(t *testing.T) {
-		mockDB.EXPECT().DeleteOIDCProvider(gomock.Any(), int64(1)).Return(errors.New("an error"))
-
-		test.Request(t).
-			WithMethod(http.MethodDelete).
-			WithURL(url, api.URIPathVariableOIDCProviderID).
-			WithURLPathVars(map[string]string{api.URIPathVariableOIDCProviderID: "1"}).
-			OnHandlerFunc(resources.DeleteOIDCProvider).
-			Require().
-			ResponseStatusCode(http.StatusInternalServerError)
-	})
-
-	t.Run("error could not find oidc_provider by id", func(t *testing.T) {
-		mockDB.EXPECT().DeleteOIDCProvider(gomock.Any(), int64(1)).Return(database.ErrNotFound)
-
-		test.Request(t).
-			WithMethod(http.MethodDelete).
-			WithURL(url, api.URIPathVariableOIDCProviderID).
-			WithURLPathVars(map[string]string{api.URIPathVariableOIDCProviderID: "1"}).
-			OnHandlerFunc(resources.DeleteOIDCProvider).
-			Require().
-			ResponseStatusCode(http.StatusNotFound)
 	})
 }

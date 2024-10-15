@@ -30,9 +30,16 @@ const (
 
 // SSOProviderData defines the methods required to interact with the sso_providers table
 type SSOProviderData interface {
+	GetSSOProvider(ctx context.Context, id int) (model.SSOProvider, error)
 	CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error)
 	DeleteSSOProvider(ctx context.Context, id int) error
-	DeleteSSOProviderByName(ctx context.Context, name string) error
+}
+
+// GetSSOProvider gets an SSO Provider in the sso_providers table by the id given
+func (s *BloodhoundDB) GetSSOProvider(ctx context.Context, id int) (model.SSOProvider, error) {
+	var provider model.SSOProvider
+
+	return provider, CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Where("id = ?", id).First(&provider))
 }
 
 // CreateSSOProvider creates an entry in the sso_providers table
@@ -63,10 +70,4 @@ func (s *BloodhoundDB) DeleteSSOProvider(ctx context.Context, id int) error {
 	})
 
 	return err
-}
-
-// DeleteSSOProviderByName deletes an entry in the sso_providers table given a matching name
-func (s *BloodhoundDB) DeleteSSOProviderByName(ctx context.Context, name string) error {
-	provider := model.SSOProvider{Name: name}
-	return CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Delete(&provider))
 }

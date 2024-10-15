@@ -566,20 +566,6 @@ func (mr *MockDatabaseMockRecorder) DeleteSSOProvider(arg0, arg1 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSSOProvider", reflect.TypeOf((*MockDatabase)(nil).DeleteSSOProvider), arg0, arg1)
 }
 
-// DeleteSSOProviderByName mocks base method.
-func (m *MockDatabase) DeleteSSOProviderByName(arg0 context.Context, arg1 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSSOProviderByName", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteSSOProviderByName indicates an expected call of DeleteSSOProviderByName.
-func (mr *MockDatabaseMockRecorder) DeleteSSOProviderByName(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSSOProviderByName", reflect.TypeOf((*MockDatabase)(nil).DeleteSSOProviderByName), arg0, arg1)
-}
-
 // DeleteSavedQuery mocks base method.
 func (m *MockDatabase) DeleteSavedQuery(arg0 context.Context, arg1 int64) error {
 	m.ctrl.T.Helper()
@@ -1182,6 +1168,21 @@ func (m *MockDatabase) GetSAMLProviderUsers(arg0 context.Context, arg1 int32) (m
 func (mr *MockDatabaseMockRecorder) GetSAMLProviderUsers(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSAMLProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSAMLProviderUsers), arg0, arg1)
+}
+
+// GetSSOProvider mocks base method.
+func (m *MockDatabase) GetSSOProvider(arg0 context.Context, arg1 int) (model.SSOProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSSOProvider", arg0, arg1)
+	ret0, _ := ret[0].(model.SSOProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSSOProvider indicates an expected call of GetSSOProvider.
+func (mr *MockDatabaseMockRecorder) GetSSOProvider(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSSOProvider", reflect.TypeOf((*MockDatabase)(nil).GetSSOProvider), arg0, arg1)
 }
 
 // GetSavedQuery mocks base method.
