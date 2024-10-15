@@ -19,6 +19,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Typography, Paper, TextField, useTheme } from '@mui/material';
 import { useMutation, useQuery } from 'react-query';
+import { OptionsObject } from 'notistack';
 import { CreateOIDCProvideRequest, SSOProvider } from 'js-client-library';
 import { apiClient } from '../../utils';
 import {
@@ -36,7 +37,7 @@ import { useFeatureFlag } from '../../hooks';
 
 const MakeSSOConfiguration =
     (
-        addSnackbar: (notification: string, key: string, options?: any) => void,
+        addSnackbar: (notification: string, key: string, options?: OptionsObject) => void,
         useAppDispatch: () => Dispatch<any>
     ): FC =>
     () => {
@@ -46,9 +47,10 @@ const MakeSSOConfiguration =
         const { data: flag } = useFeatureFlag('oidc_support');
 
         const [selectedSSOProviderId, setSelectedSSOProviderId] = useState<SSOProvider['id'] | undefined>();
-        const [dialogOpen, setDialogOpen] = useState('');
-        const [nameFilter, setNameFilter] = useState('');
-        const [createProviderError, setCreateProviderError] = useState('');
+        const [ssoProviderIdToDelete, setSSOProviderIdToDelete] = useState<SSOProvider['id'] | undefined>();
+        const [dialogOpen, setDialogOpen] = useState<'SAML' | 'OIDC' | 'DELETE' | ''>('');
+        const [nameFilter, setNameFilter] = useState<string>('');
+        const [createProviderError, setCreateProviderError] = useState<string>('');
         const [typeSortOrder, setTypeSortOrder] = useState<'asc' | 'desc' | undefined>();
 
         const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
@@ -59,7 +61,22 @@ const MakeSSOConfiguration =
             (ssoProviderId: SSOProvider['id']) => apiClient.deleteSSOProvider(ssoProviderId),
             {
                 onSuccess: () => {
-                    dispatch(addSnackbar('SSO Provider successfully deleted!', 'deleteSSOProviderSuccess'));
+                    dispatch(
+                        addSnackbar('SSO Provider successfully deleted!', 'deleteSSOProviderSuccess', {
+                            variant: 'success',
+                        })
+                    );
+                },
+                onError: (err: any) => {
+                    dispatch(
+                        addSnackbar(
+                            err?.response?.status === 404
+                                ? 'SSO Provider not found.'
+                                : 'Unable to delete sso provider. Please try again.',
+                            'deleteSSOProviderFailure',
+                            { variant: 'error' }
+                        )
+                    );
                 },
             }
         );
@@ -114,12 +131,34 @@ const MakeSSOConfiguration =
             setSelectedSSOProviderId(ssoProviderId);
         }, []);
 
-        const onDeleteSSOProvider = useCallback(
+        const onSelectDeleteSSOProvider = useCallback(
             (ssoProviderId: SSOProvider['id']) => {
-                setSelectedSSOProviderId(ssoProviderId);
+                setSSOProviderIdToDelete(ssoProviderId);
                 openDeleteProviderDialog();
             },
-            [selectedSSOProvider]
+            [setSSOProviderIdToDelete]
+        );
+
+        const onDeleteSSOProvider = useCallback(
+            async (response: boolean) => {
+                let errored = false;
+                if (response && ssoProviderIdToDelete) {
+                    try {
+                        await deleteSSOProviderMutation.mutateAsync(ssoProviderIdToDelete);
+                    } catch (err: any) {
+                        if (err?.response?.status !== 404) {
+                            errored = true;
+                            console.error(err);
+                        }
+                    }
+                }
+                if (!errored) {
+                    closeDialog();
+                    deleteSSOProviderMutation.reset();
+                    listSSOProvidersQuery.refetch();
+                }
+            },
+            [ssoProviderIdToDelete]
         );
 
         const toggleTypeSortOrder = useCallback(() => {
@@ -220,7 +259,7 @@ const MakeSSOConfiguration =
                                     ssoProviders={ssoProviders}
                                     loading={listSSOProvidersQuery.isLoading}
                                     onClickSSOProvider={onClickSSOProvider}
-                                    onDeleteSSOProvider={onDeleteSSOProvider}
+                                    onDeleteSSOProvider={onSelectDeleteSSOProvider}
                                     typeSortOrder={typeSortOrder}
                                     onToggleTypeSortOrder={toggleTypeSortOrder}
                                 />
@@ -249,20 +288,7 @@ const MakeSSOConfiguration =
                     open={dialogOpen === 'DELETE'}
                     title='Delete SSO Provider'
                     text='Are you sure you wish to delete this SSO Provider? Any users which are currently configured to use this provider for authentication will no longer be able to access this application.'
-                    onClose={async (response) => {
-                        if (response && selectedSSOProviderId) {
-                            try {
-                                await deleteSSOProviderMutation.mutateAsync(selectedSSOProviderId);
-                                closeDialog();
-                                listSSOProvidersQuery.refetch();
-                            } catch (err) {
-                                console.error(err);
-                            }
-                        } else {
-                            closeDialog();
-                        }
-                        deleteSSOProviderMutation.reset();
-                    }}
+                    onClose={onDeleteSSOProvider}
                     error={
                         deleteSSOProviderMutation.isError ? 'An unexpected error has occurred. Please try again.' : ''
                     }
