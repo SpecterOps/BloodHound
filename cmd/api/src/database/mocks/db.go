@@ -779,6 +779,21 @@ func (mr *MockDatabaseMockRecorder) GetAllSAMLProviders(arg0 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSAMLProviders", reflect.TypeOf((*MockDatabase)(nil).GetAllSAMLProviders), arg0)
 }
 
+// GetAllSSOProviders mocks base method.
+func (m *MockDatabase) GetAllSSOProviders(arg0 context.Context, arg1 string, arg2 model.SQLFilter) ([]model.SSOProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllSSOProviders", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]model.SSOProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllSSOProviders indicates an expected call of GetAllSSOProviders.
+func (mr *MockDatabaseMockRecorder) GetAllSSOProviders(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSSOProviders", reflect.TypeOf((*MockDatabase)(nil).GetAllSSOProviders), arg0, arg1, arg2)
+}
+
 // GetAllUsers mocks base method.
 func (m *MockDatabase) GetAllUsers(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.Users, error) {
 	m.ctrl.T.Helper()
