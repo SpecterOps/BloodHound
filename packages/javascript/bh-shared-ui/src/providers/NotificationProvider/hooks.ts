@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useContext } from 'react';
+import { OptionsObject } from 'notistack';
 import { addNotification, dismissNotification, removeNotification } from './actions';
 import { NotificationsContext, NotificationsDispatchContext } from './NotificationsProvider';
 
@@ -24,9 +25,9 @@ export const useNotifications = () => {
 
     return {
         notifications,
-        addNotification: (notification: string, key?: string, options: any = {}) =>
-            dispatch!(addNotification(notification, key, options)),
-        dismissNotification: (key?: string) => dispatch!(dismissNotification(key)),
-        removeNotification: (key?: string) => dispatch!(removeNotification(key)),
+        addNotification: (notification: string, key?: string, options: OptionsObject = {}) =>
+            dispatch && dispatch(addNotification(notification, key, options)),
+        dismissNotification: (key?: string) => dispatch && dispatch(dismissNotification(key)),
+        removeNotification: (key?: string) => dispatch && dispatch(removeNotification(key)),
     };
 };

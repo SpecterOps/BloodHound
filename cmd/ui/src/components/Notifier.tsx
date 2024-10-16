@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
+import { SnackbarKey } from 'notistack';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, SvgIcon } from '@mui/material';
@@ -76,12 +76,12 @@ const Notifier: React.FC = () => {
                 ...options,
                 onClose: (event, reason, myKey) => {
                     if (options.onClose) {
-                        options.onClose(event, myKey, reason);
+                        options.onClose(event, reason, myKey);
                     }
                 },
-                onExited: (event, myKey: string) => {
+                onExited: (_, myKey: SnackbarKey) => {
                     dispatch(removeSnackbar(myKey));
-                    removeDisplayed(myKey);
+                    removeDisplayed(myKey.toString());
                 },
             });
 
