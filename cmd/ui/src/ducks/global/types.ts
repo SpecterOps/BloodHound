@@ -13,7 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { OptionsObject, SnackbarKey } from 'notistack';
+import { SnackbarKey } from 'notistack';
+import { Notification } from 'bh-shared-ui';
 
 const GLOBAL_ADD_SNACKBAR = 'app/global/ADDSNACKBAR';
 const GLOBAL_CLOSE_SNACKBAR = 'app/global/CLOSESNACKBAR';
@@ -44,13 +45,6 @@ export interface GlobalViewState {
     darkMode: boolean;
 }
 
-export interface Notification {
-    message: string;
-    key: string;
-    dismissed: boolean;
-    options: OptionsObject;
-}
-
 export interface GlobalOptionsState {
     domain: Domain | null;
     assetGroups: any[];
@@ -74,7 +68,7 @@ interface RemoveSnackbarAction {
 
 interface CloseSnackbarAction {
     type: typeof GLOBAL_CLOSE_SNACKBAR;
-    key: string;
+    key: SnackbarKey;
 }
 
 export interface SetDarkModeAction {
