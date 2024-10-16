@@ -204,6 +204,7 @@ services:
     restart: unless-stopped
     command: server
     environment:
+      AUTHENTIK_LISTEN__HTTP: 0.0.0.0:80
       AUTHENTIK_REDIS__HOST: authentik-valkey
       AUTHENTIK_POSTGRESQL__HOST: authentik-db
       AUTHENTIK_POSTGRESQL__USER: ${ATK_BH_PG_USER:-authentik}
@@ -214,9 +215,9 @@ services:
       - traefik.enable=true
       - traefik.http.routers.authentik.rule=Host(`${BH_AUTHENTIK_HOSTNAME:-authentik.localhost}`)
       - traefik.http.routers.authentik.service=authentik
-      - traefik.http.services.authentik.loadbalancer.server.port=9000
+      - traefik.http.services.authentik.loadbalancer.server.port=80
     ports:
-      - "${COMPOSE_PORT_HTTP:-9000}:9000"
+      - "${COMPOSE_PORT_HTTP:-9000}:80"
       - "${COMPOSE_PORT_HTTPS:-9443}:9443"
     depends_on:
       - authentik-db
