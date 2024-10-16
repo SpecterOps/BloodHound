@@ -155,11 +155,11 @@ describe('CreateMenu', () => {
                         { title: 'SAML Provider', onClick: openSAMLProviderDialog },
                         { title: 'OIDC Provider', onClick: openOIDCProviderDialog },
                     ]}
-                    menuItems={[{ title: 'SAML Provider', onClick: openSAMLProviderDialog }]}
+                    menuItems={[{ title: 'Create SAML Provider', onClick: openSAMLProviderDialog }]}
                 />
             );
 
-            expect(screen.getByRole('button', { name: /create provider/i })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /create saml provider/i })).toBeInTheDocument();
         });
 
         it('calls openSAMLProviderDialog when create provider button is clicked', async () => {
@@ -174,12 +174,12 @@ describe('CreateMenu', () => {
                         { title: 'SAML Provider', onClick: openSAMLProviderDialog },
                         { title: 'OIDC Provider', onClick: openOIDCProviderDialog },
                     ]}
-                    menuItems={[{ title: 'SAML Provider', onClick: openSAMLProviderDialog }]}
+                    menuItems={[{ title: 'Create SAML Provider', onClick: openSAMLProviderDialog }]}
                 />
             );
 
             // click button to open menu
-            await user.click(screen.getByRole('button', { name: /create provider/i }));
+            await user.click(screen.getByRole('button', { name: /create saml provider/i }));
 
             expect(openSAMLProviderDialog).toHaveBeenCalled();
         });

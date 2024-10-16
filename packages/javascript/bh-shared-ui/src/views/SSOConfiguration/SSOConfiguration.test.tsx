@@ -18,34 +18,35 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from '../../test-utils';
-import MakeSSOConfiguration from './SSOConfiguration';
+import SSOConfiguration from './SSOConfiguration';
+import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 
-const initialSAMLProvider: CreateSAMLProviderResponse = {
+const initialSAMLProvider: SSOProvider = {
     id: 1,
-    name: 'test-idp-1',
-    display_name: 'Test IDP 1',
-    idp_issuer_uri: 'http://test-idp-1:8081/metadata',
-    idp_sso_uri: 'http://test-idp-1.localhost/sso',
-    principal_attribute_mappings: null,
-    sp_issuer_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-1',
-    sp_sso_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-1/sso',
-    sp_metadata_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-1/metadata',
-    sp_acs_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-1/acs',
+    type: 'SAML',
+    slug: 'test-idp-1',
+    name: 'Test IDP 1',
+    details: {
+        idp_issuer_uri: 'http://test-idp-1:8081/metadata',
+        idp_sso_uri: 'http://test-idp-1.localhost/sso',
+        principal_attribute_mappings: null,
+        sp_issuer_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-1',
+        sp_sso_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-1/sso',
+        sp_metadata_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-1/metadata',
+        sp_acs_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-1/acs',
+    } as SAMLProviderInfo,
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
-    deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
 };
 
-const samlProviders = [initialSAMLProvider];
-let autoId = 1;
+const ssoProviders = [initialSAMLProvider];
 
-const getNewSAMLProvider = (): CreateSAMLProviderResponse => {
-    const now = new Date().toISOString();
-
-    const newSAMLProvider: CreateSAMLProviderResponse = {
-        id: ++autoId,
-        name: 'test-idp-2',
-        display_name: 'Test IDP 2',
+const newSAMLProvider: SSOProvider = {
+    id: 2,
+    type: 'SAML',
+    slug: 'test-idp-2',
+    name: 'Test IDP 2',
+    details: {
         idp_issuer_uri: 'http://test-idp-2:8081/metadata',
         idp_sso_uri: 'http://test-idp-2.localhost/sso',
         principal_attribute_mappings: null,
@@ -53,11 +54,9 @@ const getNewSAMLProvider = (): CreateSAMLProviderResponse => {
         sp_sso_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-2/sso',
         sp_metadata_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-2/metadata',
         sp_acs_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-2/acs',
-        created_at: now,
-        updated_at: now,
-        deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
-    };
-    return newSAMLProvider;
+    } as SAMLProviderInfo,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
 };
 
 interface CreateSAMLProviderBody {
@@ -78,27 +77,20 @@ interface CreateSAMLProviderResponse {
     sp_acs_uri: string;
     created_at: string;
     updated_at: string;
-    deleted_at: {
-        Time: string;
-        Valid: boolean;
-    };
 }
 
 const server = setupServer(
-    rest.get<{ saml_providers: CreateSAMLProviderResponse[] }>('/api/v2/saml', (req, res, ctx) => {
+    rest.get<any, any, ListSSOProvidersResponse>('/api/v2/sso-providers', (req, res, ctx) => {
         return res(
             ctx.json({
-                data: {
-                    saml_providers: samlProviders,
-                },
+                data: ssoProviders,
             })
         );
     }),
 
     rest.post<CreateSAMLProviderBody, any, CreateSAMLProviderResponse>('/api/v2/saml/providers', (req, res, ctx) => {
-        const newSAMLProvider = getNewSAMLProvider();
-        samlProviders.push(newSAMLProvider);
-        return res(ctx.json(newSAMLProvider));
+        ssoProviders.push(newSAMLProvider);
+        return res(ctx.json({ ...newSAMLProvider, ...(newSAMLProvider.details as SAMLProviderInfo) }));
     })
 );
 
@@ -128,10 +120,6 @@ vi.mock('../../hooks/useFeatureFlags', () => {
 });
 
 describe('SSOConfiguration', async () => {
-    const addSnackbar = vi.fn();
-    const useAppDispatch = vi.fn();
-    const SSOConfiguration = MakeSSOConfiguration(addSnackbar, useAppDispatch);
-
     it('should eventually render previously configured SSO providers', async () => {
         const user = userEvent.setup();
 
@@ -140,19 +128,20 @@ describe('SSOConfiguration', async () => {
         expect(await screen.findByText(initialSAMLProvider.name)).toBeInTheDocument();
         expect(await screen.findByText('SAML')).toBeInTheDocument();
 
-        await user.click(screen.getByRole('button', { name: 'test-idp-1' }));
+        await user.click(screen.getByRole('button', { name: initialSAMLProvider.name }));
 
-        expect(await screen.findByText(initialSAMLProvider.idp_sso_uri)).toBeInTheDocument();
-        expect(await screen.findByText(initialSAMLProvider.sp_sso_uri)).toBeInTheDocument();
-        expect(await screen.findByText(initialSAMLProvider.sp_acs_uri)).toBeInTheDocument();
-        expect(await screen.findByText(initialSAMLProvider.sp_metadata_uri)).toBeInTheDocument();
+        const initialSAMLDetails = initialSAMLProvider.details as SAMLProviderInfo;
+
+        expect(await screen.findByText(initialSAMLDetails.idp_sso_uri)).toBeInTheDocument();
+        expect(await screen.findByText(initialSAMLDetails.sp_sso_uri)).toBeInTheDocument();
+        expect(await screen.findByText(initialSAMLDetails.sp_acs_uri)).toBeInTheDocument();
+        expect(await screen.findByText(initialSAMLDetails.sp_metadata_uri)).toBeInTheDocument();
     });
 
     it('should allow user to create new SAML provder and then display it in the table', async () => {
         const user = userEvent.setup();
-        const newSAMLProvider = getNewSAMLProvider();
         const newSAMLProviderRequest: CreateSAMLProviderBody = {
-            name: newSAMLProvider.name,
+            name: newSAMLProvider.slug,
             metadata: new File([], 'new-saml-provider.xml'),
         };
 
@@ -173,9 +162,11 @@ describe('SSOConfiguration', async () => {
 
         await user.click(await screen.findByText(newSAMLProvider.name));
 
-        expect(await screen.findByText(newSAMLProvider.idp_sso_uri)).toBeInTheDocument();
-        expect(await screen.findByText(newSAMLProvider.sp_sso_uri)).toBeInTheDocument();
-        expect(await screen.findByText(newSAMLProvider.sp_acs_uri)).toBeInTheDocument();
-        expect(await screen.findByText(newSAMLProvider.sp_metadata_uri)).toBeInTheDocument();
+        const newSAMLDetails = newSAMLProvider.details as SAMLProviderInfo;
+
+        expect(await screen.findByText(newSAMLDetails.idp_sso_uri)).toBeInTheDocument();
+        expect(await screen.findByText(newSAMLDetails.sp_sso_uri)).toBeInTheDocument();
+        expect(await screen.findByText(newSAMLDetails.sp_acs_uri)).toBeInTheDocument();
+        expect(await screen.findByText(newSAMLDetails.sp_metadata_uri)).toBeInTheDocument();
     });
 });

@@ -209,7 +209,7 @@ const SSOConfiguration: FC = () => {
                                 { title: 'SAML Provider', onClick: openSAMLProviderDialog },
                                 { title: 'OIDC Provider', onClick: openOIDCProviderDialog },
                             ]}
-                            menuItems={[{ title: 'SAML Provider', onClick: openSAMLProviderDialog }]}
+                            menuItems={[{ title: 'Create SAML Provider', onClick: openSAMLProviderDialog }]}
                         />
                     </Grid>
                     <Grid item xs={6}>

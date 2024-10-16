@@ -177,7 +177,7 @@ export interface OIDCProviderInfo extends Serial {
 export interface SSOProvider extends Serial {
     name: string;
     slug: string;
-    type: 'oidc' | 'saml';
+    type: 'OIDC' | 'SAML';
     details: SAMLProviderInfo | OIDCProviderInfo;
 }
 

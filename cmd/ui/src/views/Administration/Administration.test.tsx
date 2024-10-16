@@ -46,8 +46,8 @@ describe('Administration', () => {
             ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES
         );
 
-        expect(await screen.findByRole('link', { name: 'SAML Configuration' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'SAML Configuration' })).toHaveAttribute(
+        expect(await screen.findByRole('link', { name: 'SSO Configuration' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'SSO Configuration' })).toHaveAttribute(
             'href',
             ROUTE_ADMINISTRATION_SSO_CONFIGURATION
         );
