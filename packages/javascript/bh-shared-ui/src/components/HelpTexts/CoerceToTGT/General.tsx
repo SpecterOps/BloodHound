@@ -35,7 +35,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
                 An attacker with control over {sourceName} can coerce a Tier Zero computer (e.g. DC) to authenticate
                 against {sourceName} and obtain the target's TGT. With the TGT of a DC, the attacker can perform DCSync
                 to compromise the domain. Alternatively, the TGT can be used to obtain admin access to the target host
-                using Kerberos S4U2Self.
+                with a shadow credentials + silver ticket attack or a resource-based constrained delegation attack.
             </Typography>
         </>
     );

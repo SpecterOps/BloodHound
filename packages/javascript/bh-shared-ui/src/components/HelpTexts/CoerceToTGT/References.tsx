@@ -41,8 +41,8 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener'
-                href='https://www.thehacker.recipes/ad/movement/kerberos/delegations/s4u2self-abuse'>
-                The Hackers Recipes: S4U2self abuse
+                href='https://www.thehacker.recipes/ad/movement/kerberos/delegations/rbcd'>
+                (RBCD) Resource-based constrained
             </Link>
             <br />
             <Link
