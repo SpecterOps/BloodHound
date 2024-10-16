@@ -25,6 +25,10 @@ type OIDCProvider struct {
 	Serial
 }
 
+func (OIDCProvider) TableName() string {
+	return "oidc_providers"
+}
+
 func (s OIDCProvider) AuditData() AuditData {
 	return AuditData{
 		"id":              s.ID,

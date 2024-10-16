@@ -70,3 +70,44 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 		require.ErrorIs(t, err, database.ErrNotFound)
 	})
 }
+
+func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+	defer dbInst.Close(testCtx)
+
+	t.Run("successfully list SSO providers with and without sorting", func(t *testing.T) {
+		// Create SSO providers
+		provider1, err := dbInst.CreateSSOProvider(testCtx, "First Provider", model.SessionAuthProviderSAML)
+		require.NoError(t, err)
+
+		provider2, err := dbInst.CreateSSOProvider(testCtx, "Second Provider", model.SessionAuthProviderOIDC)
+		require.NoError(t, err)
+
+		// Test default ordering (by created_at)
+		providers, err := dbInst.GetAllSSOProviders(testCtx, "", model.SQLFilter{})
+		require.NoError(t, err)
+		require.Len(t, providers, 2)
+		assert.Equal(t, provider1.ID, providers[0].ID)
+		assert.Equal(t, provider2.ID, providers[1].ID)
+
+		// Test ordering by name descending
+		providers, err = dbInst.GetAllSSOProviders(testCtx, "name desc", model.SQLFilter{})
+		require.NoError(t, err)
+		require.Len(t, providers, 2)
+		assert.Equal(t, provider2.ID, providers[0].ID)
+		assert.Equal(t, provider1.ID, providers[1].ID)
+
+		// Test filtering by name
+		sqlFilter := model.SQLFilter{
+			SQLString: "name = ?",
+			Params:    []interface{}{"First Provider"},
+		}
+		providers, err = dbInst.GetAllSSOProviders(testCtx, "", sqlFilter)
+		require.NoError(t, err)
+		require.Len(t, providers, 1)
+		assert.Equal(t, provider1.ID, providers[0].ID)
+	})
+}

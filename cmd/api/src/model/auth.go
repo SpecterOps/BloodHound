@@ -301,6 +301,10 @@ type SAMLProvider struct {
 	Serial
 }
 
+func (SAMLProvider) TableName() string {
+	return "saml_providers"
+}
+
 func (s SAMLProvider) AuditData() AuditData {
 	return AuditData{
 		"saml_id":                      s.ID,
@@ -571,6 +575,19 @@ const (
 	SessionAuthProviderSAML   SessionAuthProvider = 1
 	SessionAuthProviderOIDC   SessionAuthProvider = 2
 )
+
+func (s SessionAuthProvider) String() string {
+	switch s {
+	case SessionAuthProviderSecret:
+		return "Secret"
+	case SessionAuthProviderSAML:
+		return "SAML"
+	case SessionAuthProviderOIDC:
+		return "OIDC"
+	default:
+		return "Unknown"
+	}
+}
 
 type SessionFlagKey string
 
