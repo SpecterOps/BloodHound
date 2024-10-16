@@ -83,16 +83,18 @@ func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authP
 // DeleteSSOProvider deletes a sso_provider entry with a matching id
 func (s *BloodhoundDB) DeleteSSOProvider(ctx context.Context, id int) error {
 	var (
-		ssoProvider = model.SSOProvider{
-			Serial: model.Serial{ID: int32(id)},
-		}
-		auditEntry = model.AuditEntry{
+		ssoProvider, err = s.GetSSOProvider(ctx, id)
+		auditEntry       = model.AuditEntry{
 			Action: "DeleteSSOProvider",
 			Model:  &ssoProvider}
 	)
 
-	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		result := tx.Table(ssoProviderTableName).Where("id = ?", id).Delete(&model.SSOProvider{})
+	if err != nil {
+		return err
+	}
+
+	err = s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		result := tx.Table(ssoProviderTableName).Delete(ssoProvider)
 		if result.RowsAffected == 0 {
 			return ErrNotFound
 		}

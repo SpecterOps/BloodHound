@@ -271,7 +271,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 
 func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	var (
-		url               = "/api/v2/sso-providers/%s"
+		ssoDeleteURL      = "/api/v2/sso-providers/%s"
 		mockCtrl          = gomock.NewController(t)
 		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
 	)
@@ -281,7 +281,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 
 		test.Request(t).
 			WithMethod(http.MethodDelete).
-			WithURL(url, api.URIPathVariableSSOProviderID).
+			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
 			WithURLPathVars(map[string]string{api.URIPathVariableSSOProviderID: "1"}).
 			OnHandlerFunc(resources.DeleteSSOProvider).
 			Require().
@@ -291,7 +291,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	t.Run("error invalid sso_provider_id format", func(t *testing.T) {
 		test.Request(t).
 			WithMethod(http.MethodDelete).
-			WithURL(url, api.URIPathVariableSSOProviderID).
+			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
 			WithURLPathVars(map[string]string{api.URIPathVariableSSOProviderID: "bloodhound"}).
 			OnHandlerFunc(resources.DeleteSSOProvider).
 			Require().
@@ -303,7 +303,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 
 		test.Request(t).
 			WithMethod(http.MethodDelete).
-			WithURL(url, api.URIPathVariableSSOProviderID).
+			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
 			WithURLPathVars(map[string]string{api.URIPathVariableSSOProviderID: "1"}).
 			OnHandlerFunc(resources.DeleteSSOProvider).
 			Require().
@@ -315,7 +315,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 
 		test.Request(t).
 			WithMethod(http.MethodDelete).
-			WithURL(url, api.URIPathVariableSSOProviderID).
+			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
 			WithURLPathVars(map[string]string{api.URIPathVariableSSOProviderID: "1"}).
 			OnHandlerFunc(resources.DeleteSSOProvider).
 			Require().
