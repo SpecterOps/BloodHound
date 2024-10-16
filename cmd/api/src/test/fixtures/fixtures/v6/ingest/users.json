@@ -912,6 +912,8 @@
                 "sidhistory": []
             },
             "AllowedToDelegate": [],
+            "DomainSID": "S-1-5-21-3130019616-2776909439-2417379446",
+            "UnconstrainedDelegation": true,
             "PrimaryGroupSID": "S-1-5-21-3130019616-2776909439-2417379446-513",
             "HasSIDHistory": [],
             "SpnTargets": [],

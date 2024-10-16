@@ -236,25 +236,28 @@ func ParseUserMiscData(user User) []IngestibleRelationship {
 	}
 
 	// CoerceToTGT / unconstrained delegation
-	uncondel, bool := user.Properties[strings.ToLower(ad.UnconstrainedDelegation.String())].(bool)
-	if bool && uncondel {
-		domainsid, str := user.Properties[strings.ToLower(ad.DomainSID.String())].(string)
-		if str {
-			data = append(data, NewIngestibleRelationship(
-				IngestibleSource{
-					Source:     user.ObjectIdentifier,
-					SourceType: ad.User,
-				},
-				IngestibleTarget{
-					Target:     domainsid,
-					TargetType: ad.Domain,
-				},
-				IngestibleRel{
-					RelProps: map[string]any{"isacl": false},
-					RelType:  ad.CoerceToTGT,
-				},
-			))
+	uncondel := user.UnconstrainedDelegation
+	uncondelProps, _ := user.Properties[strings.ToLower(ad.UnconstrainedDelegation.String())].(bool) // SH v2.5.7 and earlier have unconstraineddelegation under 'Properties' only
+	if uncondel || uncondelProps {
+		domainsid := user.DomainSID
+		if domainsid == "" { // SH v2.5.7 and earlier have domainsid under 'Properties' only
+			domainsid, _ = user.Properties[strings.ToLower(ad.DomainSID.String())].(string)
 		}
+
+		data = append(data, NewIngestibleRelationship(
+			IngestibleSource{
+				Source:     user.ObjectIdentifier,
+				SourceType: ad.User,
+			},
+			IngestibleTarget{
+				Target:     domainsid,
+				TargetType: ad.Domain,
+			},
+			IngestibleRel{
+				RelProps: map[string]any{"isacl": false},
+				RelType:  ad.CoerceToTGT,
+			},
+		))
 	}
 
 	return data
@@ -507,27 +510,24 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 			},
 		))
 	} else { // We do not want CoerceToTGT edges from DCs
-		uncondel, bool := computer.Properties[strings.ToLower(ad.UnconstrainedDelegation.String())].(bool)
-		if bool && uncondel {
-			domainsid, str := computer.Properties[strings.ToLower(ad.DomainSID.String())].(string)
-			if str {
-				relationships = append(relationships, NewIngestibleRelationship(
-					IngestibleSource{
-						Source:     computer.ObjectIdentifier,
-						SourceType: ad.Computer,
-					},
-					IngestibleTarget{
-						Target:     domainsid,
-						TargetType: ad.Domain,
-					},
-					IngestibleRel{
-						RelProps: map[string]any{"isacl": false},
-						RelType:  ad.CoerceToTGT,
-					},
-				))
-			}
+		uncondel := computer.UnconstrainedDelegation
+		uncondelProps, _ := computer.Properties[strings.ToLower(ad.UnconstrainedDelegation.String())].(bool) // SH v2.5.7 and earlier have unconstraineddelegation under 'Properties' only
+		if uncondel || uncondelProps {
+			relationships = append(relationships, NewIngestibleRelationship(
+				IngestibleSource{
+					Source:     computer.ObjectIdentifier,
+					SourceType: ad.Computer,
+				},
+				IngestibleTarget{
+					Target:     computer.DomainSID,
+					TargetType: ad.Domain,
+				},
+				IngestibleRel{
+					RelProps: map[string]any{"isacl": false},
+					RelType:  ad.CoerceToTGT,
+				},
+			))
 		}
-
 	}
 
 	return relationships
