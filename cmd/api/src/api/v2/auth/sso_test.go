@@ -27,6 +27,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
+	bhceAuth "github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
@@ -296,6 +297,19 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 			OnHandlerFunc(resources.DeleteSSOProvider).
 			Require().
 			ResponseStatusCode(http.StatusBadRequest)
+	})
+
+	t.Run("error user cannot delete their own SSO provider", func(t *testing.T) {
+		test.Request(t).
+			WithMethod(http.MethodDelete).
+			WithContext(&ctx.Context{AuthCtx: bhceAuth.Context{
+				Owner: model.User{SSOProviderID: null.Int32From(1)},
+			}}).
+			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
+			WithURLPathVars(map[string]string{api.URIPathVariableSSOProviderID: "1"}).
+			OnHandlerFunc(resources.DeleteSSOProvider).
+			Require().
+			ResponseStatusCode(http.StatusConflict)
 	})
 
 	t.Run("error database error", func(t *testing.T) {

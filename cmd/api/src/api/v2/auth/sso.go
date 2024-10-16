@@ -24,7 +24,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm/utils"
 )
@@ -131,11 +134,14 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 func (s ManagementResource) DeleteSSOProvider(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawSSOProviderID = mux.Vars(request)[api.URIPathVariableSSOProviderID]
+		requestContext   = ctx.FromRequest(request)
 	)
 
 	// Convert the incoming string url param to an int
 	if ssoProviderID, err := strconv.Atoi(rawSSOProviderID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if user, isUser := auth.GetUserFromAuthCtx(requestContext.AuthCtx); isUser && user.SSOProviderID.Equal(null.Int32From(int32(ssoProviderID))) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "user may not delete their own SSO auth provider", request), response)
 	} else if err = s.db.DeleteSSOProvider(request.Context(), ssoProviderID); errors.Is(err, database.ErrNotFound) {
 		// Handle error if requested record could not be found
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)

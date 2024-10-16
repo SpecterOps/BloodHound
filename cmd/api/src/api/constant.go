@@ -59,6 +59,5 @@ const (
 	URIPathVariableTokenID                           = "token_id"
 	URIPathVariableUserID                            = "user_id"
 	URIPathVariableSavedQueryID                      = "saved_query_id"
-	URIPathVariableOIDCProviderID                    = "oidc_provider_id"
 	URIPathVariableSSOProviderID                     = "sso_provider_id"
 )

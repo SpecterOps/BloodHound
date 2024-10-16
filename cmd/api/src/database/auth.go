@@ -541,8 +541,13 @@ func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SA
 		Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
 	}
 
+	// Delete both the associated SSO Provider and the SAML Provider
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Delete(&provider))
+		if err := s.DeleteSSOProvider(ctx, int(provider.ID)); err != nil {
+			return err
+		} else {
+			return CheckError(tx.WithContext(ctx).Delete(&provider))
+		}
 	})
 }
 
