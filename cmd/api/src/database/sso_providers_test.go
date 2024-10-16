@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/assert"
@@ -58,16 +59,48 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 	)
 	defer dbInst.Close(testCtx)
 
-	t.Run("successfully delete an SSO provider", func(t *testing.T) {
-		provider, err := dbInst.CreateSSOProvider(testCtx, "test", model.SessionAuthProviderSAML)
+	t.Run("successfully delete an SSO provider associated with a SAML provider", func(t *testing.T) {
+		samlProvider, err := dbInst.CreateSAMLIdentityProvider(testCtx, model.SAMLProvider{Name: "test"})
 		require.NoError(t, err)
 
-		err = dbInst.DeleteSSOProvider(testCtx, int(provider.ID))
+		user, err := dbInst.CreateUser(testCtx, model.User{
+			SSOProviderID:  samlProvider.SSOProviderID,
+			SAMLProviderID: null.Int32From(samlProvider.ID),
+		})
 		require.NoError(t, err)
 
-		provider, err = dbInst.GetSSOProvider(testCtx, int(provider.ID))
+		err = dbInst.DeleteSSOProvider(testCtx, int(samlProvider.SSOProviderID.Int32))
+		require.NoError(t, err)
+
+		_, err = dbInst.GetSSOProvider(testCtx, int(samlProvider.SSOProviderID.Int32))
 		require.Error(t, err)
 		require.ErrorIs(t, err, database.ErrNotFound)
+
+		user, err = dbInst.GetUser(testCtx, user.ID)
+		require.NoError(t, err)
+		assert.Equal(t, null.NewInt32(0, false), user.SSOProviderID)
+		assert.Equal(t, null.NewInt32(0, false), user.SAMLProviderID)
+	})
+
+	t.Run("successfully delete an SSO provider associated with an OIDC provider", func(t *testing.T) {
+		oidcProvider, err := dbInst.CreateOIDCProvider(testCtx, "test", "test", "test")
+		require.NoError(t, err)
+
+		user, err := dbInst.CreateUser(testCtx, model.User{
+			SSOProviderID: null.Int32From(int32(oidcProvider.SSOProviderID)),
+		})
+		require.NoError(t, err)
+
+		err = dbInst.DeleteSSOProvider(testCtx, oidcProvider.SSOProviderID)
+		require.NoError(t, err)
+
+		_, err = dbInst.GetSSOProvider(testCtx, oidcProvider.SSOProviderID)
+		require.Error(t, err)
+		require.ErrorIs(t, err, database.ErrNotFound)
+
+		user, err = dbInst.GetUser(testCtx, user.ID)
+		require.NoError(t, err)
+		assert.Equal(t, null.NewInt32(0, false), user.SSOProviderID)
 	})
 }
 
