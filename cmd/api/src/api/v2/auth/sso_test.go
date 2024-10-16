@@ -269,7 +269,6 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 	})
 }
 
-
 func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	var (
 		url               = "/api/v2/sso-providers/%s"

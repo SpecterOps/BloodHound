@@ -24,6 +24,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm/utils"
 )

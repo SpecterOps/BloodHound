@@ -68,7 +68,6 @@ func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sql
 	return providers, CheckError(result)
 }
 
-
 // CreateSSOProvider creates an entry in the sso_providers table
 // A slug will be created for the SSO Provider using the name argument as a base. The name will be lower cased and all spaces are replaced with `-`
 func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error) {
