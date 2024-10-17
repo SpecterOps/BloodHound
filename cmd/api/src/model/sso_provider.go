@@ -32,11 +32,25 @@ type SSOProvider struct {
 
 // AuditData returns the fields to log in the audit log
 func (s SSOProvider) AuditData() AuditData {
+	var (
+		details any
+	)
+
+	switch s.Type {
+	case SessionAuthProviderSAML:
+		details = s.SAMLProvider
+		break
+	case SessionAuthProviderOIDC:
+		details = s.OIDCProvider
+		break
+	}
+
 	return AuditData{
-		"id":   s.ID,
-		"name": s.Name,
-		"slug": s.Slug,
-		"type": s.Type,
+		"id":      s.ID,
+		"name":    s.Name,
+		"slug":    s.Slug,
+		"type":    s.Type,
+		"details": details,
 	}
 }
 

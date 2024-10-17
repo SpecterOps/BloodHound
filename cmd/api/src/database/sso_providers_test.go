@@ -23,7 +23,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
@@ -45,10 +44,7 @@ func TestBloodhoundDB_CreateAndGetSSOProvider(t *testing.T) {
 		assert.Equal(t, "Bloodhound Gang", result.Name)
 		assert.Equal(t, "bloodhound-gang", result.Slug)
 		assert.Equal(t, model.SessionAuthProviderSAML, result.Type)
-
-		provider, err := dbInst.GetSSOProvider(testCtx, int(result.ID))
-		require.NoError(t, err)
-		assert.Equal(t, model.SessionAuthProviderSAML, provider.Type)
+		assert.NotEmpty(t, result.ID)
 	})
 }
 
@@ -73,10 +69,6 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 		err = dbInst.DeleteSSOProvider(testCtx, int(samlProvider.SSOProviderID.Int32))
 		require.NoError(t, err)
 
-		_, err = dbInst.GetSSOProvider(testCtx, int(samlProvider.SSOProviderID.Int32))
-		require.Error(t, err)
-		require.ErrorIs(t, err, database.ErrNotFound)
-
 		user, err = dbInst.GetUser(testCtx, user.ID)
 		require.NoError(t, err)
 		assert.Equal(t, null.NewInt32(0, false), user.SSOProviderID)
@@ -95,10 +87,6 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 
 		err = dbInst.DeleteSSOProvider(testCtx, oidcProvider.SSOProviderID)
 		require.NoError(t, err)
-
-		_, err = dbInst.GetSSOProvider(testCtx, oidcProvider.SSOProviderID)
-		require.Error(t, err)
-		require.ErrorIs(t, err, database.ErrNotFound)
 
 		user, err = dbInst.GetUser(testCtx, user.ID)
 		require.NoError(t, err)

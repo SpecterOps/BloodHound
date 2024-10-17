@@ -30,18 +30,10 @@ const (
 
 // SSOProviderData defines the methods required to interact with the sso_providers table
 type SSOProviderData interface {
-	GetSSOProvider(ctx context.Context, id int) (model.SSOProvider, error)
 	GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error)
 	CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error)
 	DeleteSSOProvider(ctx context.Context, id int) error
 	GetSSOProviderUsers(ctx context.Context, id int) (model.Users, error)
-}
-
-// GetSSOProvider gets an SSO Provider in the sso_providers table by the id given
-func (s *BloodhoundDB) GetSSOProvider(ctx context.Context, id int) (model.SSOProvider, error) {
-	var provider model.SSOProvider
-
-	return provider, CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Where("id = ?", id).First(&provider))
 }
 
 func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error) {
@@ -95,23 +87,27 @@ func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authP
 // DeleteSSOProvider deletes a sso_provider entry with a matching id
 func (s *BloodhoundDB) DeleteSSOProvider(ctx context.Context, id int) error {
 	var (
-		ssoProvider, err = s.GetSSOProvider(ctx, id)
-		auditEntry       = model.AuditEntry{
+		ssoProvider = model.SSOProvider{}
+		auditEntry  = model.AuditEntry{
 			Action: model.AuditLogActionDeleteSSOIdentityProvider,
-			Model:  &ssoProvider}
+			Model:  &ssoProvider,
+		}
 	)
 
-	if err != nil {
-		return err
+	// Populate the OIDCProvider and SAMLProvider fields, used in AuditData to log the details of the provider based on its type
+	if result := s.db.Preload("OIDCProvider").Preload("SAMLProvider").
+		Table(ssoProviderTableName).
+		Where("id = ?", id).
+		First(&ssoProvider); result.Error != nil {
+		return result.Error
 	}
 
-	err = s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		result := tx.Table(ssoProviderTableName).Delete(ssoProvider)
-		if result.RowsAffected == 0 {
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		if result := tx.Table(ssoProviderTableName).Delete(&ssoProvider); result.RowsAffected == 0 {
 			return ErrNotFound
+		} else {
+			return CheckError(result)
 		}
-
-		return CheckError(result)
 	})
 
 	return err

@@ -535,22 +535,6 @@ func (s *BloodhoundDB) GetSAMLProvider(ctx context.Context, id int32) (model.SAM
 	return samlProvider, CheckError(result)
 }
 
-func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SAMLProvider) error {
-	auditEntry := model.AuditEntry{
-		Action: model.AuditLogActionDeleteSAMLIdentityProvider,
-		Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
-	}
-
-	// Delete both the associated SSO Provider and the SAML Provider
-	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		if err := s.DeleteSSOProvider(ctx, int(provider.SSOProviderID.Int32)); err != nil {
-			return err
-		} else {
-			return CheckError(tx.WithContext(ctx).Delete(&provider))
-		}
-	})
-}
-
 // GetSAMLProviderUsers returns all users that are bound to the SAML provider ID provided
 // SELECT * FROM users WHERE saml_provider_id = ..
 func (s *BloodhoundDB) GetSAMLProviderUsers(ctx context.Context, id int32) (model.Users, error) {
