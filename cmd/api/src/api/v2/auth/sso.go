@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm/utils"
@@ -119,6 +121,29 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 			}
 
 			api.WriteBasicResponse(ctx, providers, http.StatusOK, response)
+		}
+	}
+}
+
+func (s ManagementResource) SSOLoginHandler(response http.ResponseWriter, request *http.Request) {
+	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableSSOProviderSlug]
+	log.Debugf("HERE I AM IN LOGIN - provider %s", ssoProviderSlug)
+
+	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		switch ssoProvider.Type {
+		case model.SessionAuthProviderSAML:
+			//todo handle saml login
+			return
+		case model.SessionAuthProviderOIDC:
+			if oidcProvider, err := s.db.GetOIDCProviderBySSOProviderID(request.Context(), ssoProvider.ID); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				s.OIDCLoginHandler(response, request, ssoProvider, oidcProvider)
+			}
+		default:
+			return
 		}
 	}
 }
