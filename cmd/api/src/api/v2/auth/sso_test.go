@@ -24,10 +24,16 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
+	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
+	"github.com/specterops/bloodhound/src/api/v2/auth"
+	bhceAuth "github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -262,5 +268,97 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 		router.ServeHTTP(rr, req)
 
 		require.Equal(t, http.StatusBadRequest, rr.Code)
+	})
+}
+
+func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
+	var (
+		ssoDeleteURL      = "/api/v2/sso-providers/%s"
+		mockCtrl          = gomock.NewController(t)
+		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+	)
+
+	t.Run("successfully delete an SSOProvider", func(t *testing.T) {
+		expectedUser := model.User{
+			PrincipalName: "tester",
+			SSOProviderID: null.Int32From(1),
+		}
+
+		mockDB.EXPECT().DeleteSSOProvider(gomock.Any(), 1).Return(nil)
+		mockDB.EXPECT().GetSSOProviderUsers(gomock.Any(), 1).Return(model.Users{
+			expectedUser,
+		}, nil)
+
+		test.Request(t).
+			WithMethod(http.MethodDelete).
+			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
+			WithURLPathVars(map[string]string{api.URIPathVariableSSOProviderID: "1"}).
+			OnHandlerFunc(resources.DeleteSSOProvider).
+			Require().
+			ResponseStatusCode(http.StatusOK).
+			ResponseJSONBody(auth.DeleteSSOProviderResponse{AffectedUsers: model.Users{
+				expectedUser,
+			}})
+	})
+
+	t.Run("error invalid sso_provider_id format", func(t *testing.T) {
+		test.Request(t).
+			WithMethod(http.MethodDelete).
+			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
+			WithURLPathVars(map[string]string{api.URIPathVariableSSOProviderID: "bloodhound"}).
+			OnHandlerFunc(resources.DeleteSSOProvider).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest)
+	})
+
+	t.Run("error user cannot delete their own SSO provider", func(t *testing.T) {
+		test.Request(t).
+			WithMethod(http.MethodDelete).
+			WithContext(&ctx.Context{AuthCtx: bhceAuth.Context{
+				Owner: model.User{SSOProviderID: null.Int32From(1)},
+			}}).
+			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
+			WithURLPathVars(map[string]string{api.URIPathVariableSSOProviderID: "1"}).
+			OnHandlerFunc(resources.DeleteSSOProvider).
+			Require().
+			ResponseStatusCode(http.StatusConflict)
+	})
+
+	t.Run("error when retrieving users of the sso provider", func(t *testing.T) {
+		mockDB.EXPECT().GetSSOProviderUsers(gomock.Any(), 1).Return(model.Users{}, errors.New("an error"))
+
+		test.Request(t).
+			WithMethod(http.MethodDelete).
+			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
+			WithURLPathVars(map[string]string{api.URIPathVariableSSOProviderID: "1"}).
+			OnHandlerFunc(resources.DeleteSSOProvider).
+			Require().
+			ResponseStatusCode(http.StatusInternalServerError)
+	})
+
+	t.Run("error when deleting sso providers", func(t *testing.T) {
+		mockDB.EXPECT().GetSSOProviderUsers(gomock.Any(), 1).Return(model.Users{}, nil)
+		mockDB.EXPECT().DeleteSSOProvider(gomock.Any(), 1).Return(errors.New("an error"))
+
+		test.Request(t).
+			WithMethod(http.MethodDelete).
+			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
+			WithURLPathVars(map[string]string{api.URIPathVariableSSOProviderID: "1"}).
+			OnHandlerFunc(resources.DeleteSSOProvider).
+			Require().
+			ResponseStatusCode(http.StatusInternalServerError)
+	})
+
+	t.Run("error could not find sso_provider by id", func(t *testing.T) {
+		mockDB.EXPECT().GetSSOProviderUsers(gomock.Any(), 1).Return(model.Users{}, nil)
+		mockDB.EXPECT().DeleteSSOProvider(gomock.Any(), 1).Return(database.ErrNotFound)
+
+		test.Request(t).
+			WithMethod(http.MethodDelete).
+			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
+			WithURLPathVars(map[string]string{api.URIPathVariableSSOProviderID: "1"}).
+			OnHandlerFunc(resources.DeleteSSOProvider).
+			Require().
+			ResponseStatusCode(http.StatusNotFound)
 	})
 }
