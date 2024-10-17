@@ -324,7 +324,20 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 			ResponseStatusCode(http.StatusConflict)
 	})
 
-	t.Run("error database error", func(t *testing.T) {
+	t.Run("error when retrieving users of the sso provider", func(t *testing.T) {
+		mockDB.EXPECT().GetSSOProviderUsers(gomock.Any(), 1).Return(model.Users{}, errors.New("an error"))
+
+		test.Request(t).
+			WithMethod(http.MethodDelete).
+			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
+			WithURLPathVars(map[string]string{api.URIPathVariableSSOProviderID: "1"}).
+			OnHandlerFunc(resources.DeleteSSOProvider).
+			Require().
+			ResponseStatusCode(http.StatusInternalServerError)
+	})
+
+	t.Run("error when deleting sso providers", func(t *testing.T) {
+		mockDB.EXPECT().GetSSOProviderUsers(gomock.Any(), 1).Return(model.Users{}, nil)
 		mockDB.EXPECT().DeleteSSOProvider(gomock.Any(), 1).Return(errors.New("an error"))
 
 		test.Request(t).
@@ -337,6 +350,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	})
 
 	t.Run("error could not find sso_provider by id", func(t *testing.T) {
+		mockDB.EXPECT().GetSSOProviderUsers(gomock.Any(), 1).Return(model.Users{}, nil)
 		mockDB.EXPECT().DeleteSSOProvider(gomock.Any(), 1).Return(database.ErrNotFound)
 
 		test.Request(t).
