@@ -543,7 +543,7 @@ func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SA
 
 	// Delete both the associated SSO Provider and the SAML Provider
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		if err := s.DeleteSSOProvider(ctx, int(provider.ID)); err != nil {
+		if err := s.DeleteSSOProvider(ctx, int(provider.SSOProviderID.Int32)); err != nil {
 			return err
 		} else {
 			return CheckError(tx.WithContext(ctx).Delete(&provider))

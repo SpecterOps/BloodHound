@@ -66,6 +66,7 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 		user, err := dbInst.CreateUser(testCtx, model.User{
 			SSOProviderID:  samlProvider.SSOProviderID,
 			SAMLProviderID: null.Int32From(samlProvider.ID),
+			PrincipalName:  userPrincipal,
 		})
 		require.NoError(t, err)
 
@@ -88,6 +89,7 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 
 		user, err := dbInst.CreateUser(testCtx, model.User{
 			SSOProviderID: null.Int32From(int32(oidcProvider.SSOProviderID)),
+			PrincipalName: user2Principal,
 		})
 		require.NoError(t, err)
 
@@ -142,5 +144,29 @@ func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, providers, 1)
 		assert.Equal(t, provider1.ID, providers[0].ID)
+	})
+}
+
+func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+	defer dbInst.Close(testCtx)
+
+	t.Run("successfully list SSO provider users", func(t *testing.T) {
+		provider, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang", model.SessionAuthProviderSAML)
+		require.NoError(t, err)
+
+		user, err := dbInst.CreateUser(testCtx, model.User{
+			SSOProviderID: null.Int32From(provider.ID),
+		})
+		require.NoError(t, err)
+
+		returnedUsers, err := dbInst.GetSSOProviderUsers(testCtx, int(provider.ID))
+		require.NoError(t, err)
+
+		require.Len(t, returnedUsers, 1)
+		assert.Equal(t, user.ID, returnedUsers[0].ID)
 	})
 }

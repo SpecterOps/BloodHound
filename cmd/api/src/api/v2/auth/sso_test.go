@@ -27,6 +27,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
+	"github.com/specterops/bloodhound/src/api/v2/auth"
 	bhceAuth "github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
@@ -278,7 +279,15 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	)
 
 	t.Run("successfully delete an SSOProvider", func(t *testing.T) {
+		expectedUser := model.User{
+			PrincipalName: "tester",
+			SSOProviderID: null.Int32From(1),
+		}
+
 		mockDB.EXPECT().DeleteSSOProvider(gomock.Any(), 1).Return(nil)
+		mockDB.EXPECT().GetSSOProviderUsers(gomock.Any(), 1).Return(model.Users{
+			expectedUser,
+		}, nil)
 
 		test.Request(t).
 			WithMethod(http.MethodDelete).
@@ -286,7 +295,10 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 			WithURLPathVars(map[string]string{api.URIPathVariableSSOProviderID: "1"}).
 			OnHandlerFunc(resources.DeleteSSOProvider).
 			Require().
-			ResponseStatusCode(http.StatusOK)
+			ResponseStatusCode(http.StatusOK).
+			ResponseJSONBody(auth.DeleteSSOProviderResponse{AffectedUsers: model.Users{
+				expectedUser,
+			}})
 	})
 
 	t.Run("error invalid sso_provider_id format", func(t *testing.T) {

@@ -130,6 +130,11 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 	}
 }
 
+// DeleteSSOProviderResponse represents the response returned to the user from DeleteSSOProvider
+type DeleteSSOProviderResponse struct {
+	AffectedUsers model.Users `json:"affected_users"`
+}
+
 // DeleteSSOProvider deletes a sso_provider with the matching id
 func (s ManagementResource) DeleteSSOProvider(response http.ResponseWriter, request *http.Request) {
 	var (
@@ -142,12 +147,15 @@ func (s ManagementResource) DeleteSSOProvider(response http.ResponseWriter, requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if user, isUser := auth.GetUserFromAuthCtx(requestContext.AuthCtx); isUser && user.SSOProviderID.Equal(null.Int32From(int32(ssoProviderID))) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "user may not delete their own SSO auth provider", request), response)
+	} else if providerUsers, err := s.db.GetSSOProviderUsers(request.Context(), ssoProviderID); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else if err = s.db.DeleteSSOProvider(request.Context(), ssoProviderID); errors.Is(err, database.ErrNotFound) {
-		// Handle error if requested record could not be found
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)
 	} else if err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		response.WriteHeader(http.StatusOK)
+		api.WriteJSONResponse(request.Context(), DeleteSSOProviderResponse{
+			AffectedUsers: providerUsers,
+		}, http.StatusOK, response)
 	}
 }

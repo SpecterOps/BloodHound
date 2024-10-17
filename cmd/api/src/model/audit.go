@@ -66,6 +66,9 @@ const (
 
 	AuditLogActionCreateOIDCIdentityProvider AuditLogAction = "CreateOIDCIdentityProvider"
 
+	AuditLogActionCreateSSOIdentityProvider AuditLogAction = "CreateSSOIdentityProvider"
+	AuditLogActionDeleteSSOIdentityProvider AuditLogAction = "DeleteSSOIdentityProvider"
+
 	AuditLogActionAcceptRisk   AuditLogAction = "AcceptRisk"
 	AuditLogActionUnacceptRisk AuditLogAction = "UnacceptRisk"
 

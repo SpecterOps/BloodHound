@@ -1200,6 +1200,21 @@ func (mr *MockDatabaseMockRecorder) GetSSOProvider(arg0, arg1 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSSOProvider", reflect.TypeOf((*MockDatabase)(nil).GetSSOProvider), arg0, arg1)
 }
 
+// GetSSOProviderUsers mocks base method.
+func (m *MockDatabase) GetSSOProviderUsers(arg0 context.Context, arg1 int) (model.Users, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSSOProviderUsers", arg0, arg1)
+	ret0, _ := ret[0].(model.Users)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSSOProviderUsers indicates an expected call of GetSSOProviderUsers.
+func (mr *MockDatabaseMockRecorder) GetSSOProviderUsers(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSSOProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSSOProviderUsers), arg0, arg1)
+}
+
 // GetSavedQuery mocks base method.
 func (m *MockDatabase) GetSavedQuery(arg0 context.Context, arg1 int64) (model.SavedQuery, error) {
 	m.ctrl.T.Helper()
