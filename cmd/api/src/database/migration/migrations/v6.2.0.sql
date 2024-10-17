@@ -48,5 +48,4 @@ ON CONFLICT DO NOTHING;
 -- Remove the GraphDBWrite permission from the Upload-Only role for 
 DELETE FROM roles_permissions 
 WHERE role_id = (SELECT id FROM roles WHERE roles.name = 'Upload-Only')
-AND permission_id = (SELECT id FROM permissions WHERE permissions.authority = 'graphdb' AND permissions.name = 'Write')
-ON CONFLICT DO NOTHING;;
+AND permission_id = (SELECT id FROM permissions WHERE permissions.authority = 'graphdb' AND permissions.name = 'Write');
