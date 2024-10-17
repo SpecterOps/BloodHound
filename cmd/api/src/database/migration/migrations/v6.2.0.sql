@@ -26,3 +26,27 @@ VALUES (current_timestamp,
 ON CONFLICT DO NOTHING;
 
 INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('graphdb', 'Ingest', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+
+-- Grant the Upload-Only user GraphDBIngest permissions
+INSERT INTO roles_permissions (role_id, permission_id)
+VALUES ((SELECT id FROM roles WHERE roles.name = 'Upload-Only'),
+        (SELECT id FROM permissions WHERE permissions.authority = 'graphdb' and permissions.name = 'Ingest'))
+ON CONFLICT DO NOTHING;
+
+-- Grant the Power User user GraphDBIngest permissions
+INSERT INTO roles_permissions (role_id, permission_id)
+VALUES ((SELECT id FROM roles WHERE roles.name = 'Power User'),
+        (SELECT id FROM permissions WHERE permissions.authority = 'graphdb' and permissions.name = 'Ingest'))
+ON CONFLICT DO NOTHING;
+
+-- Grant the Admininstrator user GraphDBIngest permissions
+INSERT INTO roles_permissions (role_id, permission_id)
+VALUES ((SELECT id FROM roles WHERE roles.name = 'Administrator'),
+        (SELECT id FROM permissions WHERE permissions.authority = 'graphdb' and permissions.name = 'Ingest'))
+ON CONFLICT DO NOTHING;
+
+-- Remove the GraphDBWrite permission from the Upload-Only role for 
+DELETE FROM roles_permissions 
+WHERE role_id = (SELECT id FROM roles WHERE roles.name = 'Upload-Only')
+AND permission_id = (SELECT id FROM permissions WHERE permissions.authority = 'graphdb' AND permissions.name = 'Write')
+ON CONFLICT DO NOTHING;;
