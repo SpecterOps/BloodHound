@@ -22,6 +22,7 @@ const (
 
 	// Cookie Keys
 	AuthTokenCookieName = "token"
+	AuthSessionCookieName = "session"
 	AuthStateCookieName = "state"
 	AuthPKCECookieName  = "pkce"
 
