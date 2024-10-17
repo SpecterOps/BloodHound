@@ -24,3 +24,5 @@ VALUES (current_timestamp,
         false,
         false)
 ON CONFLICT DO NOTHING;
+
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('graphdb', 'Ingest', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
