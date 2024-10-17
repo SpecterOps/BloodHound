@@ -71,6 +71,6 @@ func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
 
 		_, count, err := dbInst.ListAuditLogs(testCtx, time.Now().Add(-time.Minute), time.Now().Add(time.Minute), 0, 10, "", model.SQLFilter{})
 		require.NoError(t, err)
-		assert.Equal(t, 2, count)
+		assert.Equal(t, 4, count)
 	})
 }
