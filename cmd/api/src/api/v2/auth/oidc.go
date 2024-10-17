@@ -19,7 +19,6 @@ package auth
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/specterops/bloodhound/headers"
@@ -67,10 +66,11 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 	if state, err := config.GenerateRandomBase64String(77); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if provider, err := oidc.NewProvider(request.Context(), oidcProvider.Issuer); err != nil {
+		// This hits the /.well-known oidc configuration to generate the necessary endpoints for redirect dynamically
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+	} else if ssoLoginSession, err := s.ssoSessionStore.New(request, api.AuthSessionCookieName); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
-		log.Debugf("provider generated endpoints %+v", provider.Endpoint())
-
 		conf := &oauth2.Config{
 			ClientID:    oidcProvider.ClientID,
 			Endpoint:    provider.Endpoint(),
@@ -80,19 +80,83 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 		// use PKCE to protect against CSRF attacks
 		// https://www.ietf.org/archive/id/draft-ietf-oauth-security-topics-22.html#name-countermeasures-6
 		verifier := oauth2.GenerateVerifier()
-		log.Debugf("LOGIN HANDLER - pkce verifier %s\n", verifier)
 
-		// Store PKCE on web browser in secure cookie for retrieval in callback
-		api.SetSecureBrowserCookie(request, response, api.AuthPKCECookieName, verifier, time.Now().UTC().Add(time.Hour))
+		// Store PKCE and state in gorilla session
+		ssoLoginSession.Values[api.AuthPKCECookieName] = verifier
+		ssoLoginSession.Values[api.AuthStateCookieName] = state
+		// Save session
+		if err = ssoLoginSession.Save(request, response); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		} else {
+			// Redirect user to consent page to ask for permission for the scopes specified above.
+			redirectURL := conf.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
 
-		// Store State on web browser in secure cookie for retrieval in callback
-		api.SetSecureBrowserCookie(request, response, api.AuthStateCookieName, state, time.Now().UTC().Add(time.Hour))
+			response.Header().Add(headers.Location.String(), redirectURL)
+			response.WriteHeader(http.StatusFound)
+		}
+	}
+}
 
-		// Redirect user to consent page to ask for permission for the scopes specified above.
-		redirectURL := conf.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
-		log.Debugf("Visit the URL for the auth dialog: %v", redirectURL)
+func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider, oidcProvider model.OIDCProvider) {
+	var (
+		queryParams = request.URL.Query()
+		state       = queryParams[api.QueryParameterState]
+		code        = queryParams[api.QueryParameterCode]
+	)
 
-		response.Header().Add(headers.Location.String(), redirectURL)
-		response.WriteHeader(http.StatusFound)
+	gorillaSession, err := s.ssoSessionStore.Get(request, api.AuthSessionCookieName)
+	if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		return
+	}
+
+	// Delete session regardless of what happens below
+	defer func() {
+		gorillaSession.Options.MaxAge = -1
+		if err = gorillaSession.Save(request, response); err != nil {
+			log.Warnf("Error deleting session: %v", err)
+		}
+	}()
+
+	if len(code) == 0 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "missing code", request), response)
+	} else if pkceVerifier, ok := gorillaSession.Values[api.AuthPKCECookieName].(string); !ok {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "missing pkce verifier in session", request), response)
+	} else if len(state) == 0 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "missing state in callback", request), response)
+	} else if stateCookie, ok := gorillaSession.Values[api.AuthStateCookieName].(string); !ok || stateCookie != state[0] {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "missing or bad state", request), response)
+	} else if provider, err := oidc.NewProvider(request.Context(), oidcProvider.Issuer); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+	} else {
+		var (
+			oidcVerifier = provider.Verifier(&oidc.Config{ClientID: oidcProvider.ClientID})
+			oauth2Conf   = &oauth2.Config{
+				ClientID:    oidcProvider.ClientID,
+				Endpoint:    provider.Endpoint(),
+				RedirectURL: getRedirectURL(request, ssoProvider), // Required as verification check
+			}
+		)
+
+		if token, err := oauth2Conf.Exchange(request.Context(), code[0], oauth2.VerifierOption(pkceVerifier)); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
+		} else if rawIDToken, ok := token.Extra("id_token").(string); !ok { // Extract the ID Token from OAuth2 token
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "missing id token", request), response)
+		} else if idToken, err := oidcVerifier.Verify(request.Context(), rawIDToken); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid id token", request), response)
+		} else {
+			// Extract custom claims
+			var claims struct {
+				Name        string `json:"name"`
+				DisplayName string `json:"given_name"`
+				Email       string `json:"email"`
+				Verified    bool   `json:"email_verified"`
+			}
+			if err := idToken.Claims(&claims); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+			} else {
+				s.authenticator.CreateSSOSession(request, response, claims.Email, oidcProvider)
+			}
+		}
 	}
 }

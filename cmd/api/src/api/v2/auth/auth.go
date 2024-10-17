@@ -26,10 +26,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/antonlindstrom/pgstore"
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 	"github.com/pquerna/otp/totp"
 	"github.com/specterops/bloodhound/crypto"
@@ -62,9 +64,15 @@ type ManagementResource struct {
 	QueryParameterFilterParser model.QueryParameterFilterParser
 	authorizer                 auth.Authorizer   // Used for Permissions
 	authenticator              api.Authenticator // Used for secrets
+	ssoSessionStore            sessions.Store    // Used for Login through OIDC
 }
 
 func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator) ManagementResource {
+	sessionStore, err := pgstore.NewPGStore(fmt.Sprintf("%s %s", authConfig.Database.PostgreSQLConnectionString(), "sslmode=disable"), []byte(authConfig.Crypto.JWT.SigningKey))
+	if err != nil {
+		log.Fatalf("Failed to create postgres session store... %v", err)
+	}
+
 	return ManagementResource{
 		config:                     authConfig,
 		secretDigester:             authConfig.Crypto.Argon2.NewDigester(),
@@ -72,6 +80,7 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 		QueryParameterFilterParser: model.NewQueryParameterFilterParser(),
 		authorizer:                 authorizer,
 		authenticator:              authenticator,
+		ssoSessionStore:            sessionStore,
 	}
 }
 

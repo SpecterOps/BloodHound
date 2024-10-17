@@ -22,6 +22,7 @@ const (
 
 	// Cookie Keys
 	AuthTokenCookieName = "token"
+	AuthSessionCookieName = "session"
 	AuthStateCookieName = "state"
 	AuthPKCECookieName  = "pkce"
 
@@ -39,6 +40,8 @@ const (
 	QueryParameterHydrateDomains = "hydrate_domains"
 	QueryParameterHydrateOUs     = "hydrate_ous"
 	QueryParameterScope          = "scope"
+	QueryParameterState          = "state"
+	QueryParameterCode           = "code"
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"

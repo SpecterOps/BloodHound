@@ -54,6 +54,7 @@ require (
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
+	github.com/antonlindstrom/pgstore v0.0.0-20220421113606-e3a6e3fed12a // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -64,6 +65,8 @@ require (
 	github.com/go-pkgz/expirable-cache v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/gorilla/securecookie v1.1.1 // indirect
+	github.com/gorilla/sessions v1.2.1 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.14.3 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
