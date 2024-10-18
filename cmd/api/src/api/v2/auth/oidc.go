@@ -19,9 +19,8 @@ package auth
 import (
 	"net/http"
 
-	"github.com/specterops/bloodhound/src/utils/validation"
-
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
 // CreateOIDCProviderRequest represents the body of the CreateOIDCProvider endpoint

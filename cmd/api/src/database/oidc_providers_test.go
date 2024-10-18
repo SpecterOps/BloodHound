@@ -25,9 +25,8 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -44,9 +43,10 @@ func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
 
 		assert.Equal(t, "https://test.localhost.com/auth", provider.Issuer)
 		assert.Equal(t, "bloodhound", provider.ClientID)
+		assert.NotEmpty(t, provider.ID)
 
 		_, count, err := dbInst.ListAuditLogs(testCtx, time.Now().Add(-time.Minute), time.Now().Add(time.Minute), 0, 10, "", model.SQLFilter{})
 		require.NoError(t, err)
-		assert.Equal(t, 2, count)
+		assert.Equal(t, 4, count)
 	})
 }
