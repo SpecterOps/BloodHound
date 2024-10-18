@@ -185,6 +185,18 @@ func testRoleAccess(t *testing.T, roleName string) {
 			}
 		}),
 
+		lab.TestCase(fmt.Sprintf("%s be able to access GraphDBWrite endpoints", testCondition(role, auth.Permissions().GraphDBWrite)), func(assert *require.Assertions, harness *lab.Harness) {
+			userClient, ok := lab.Unpack(harness, userClientFixture)
+			assert.True(ok)
+
+			_, err := userClient.RequestAnalysis()
+			if role.Permissions.Has(auth.Permissions().GraphDBWrite) {
+				assert.Nil(err)
+			} else {
+				requireForbidden(assert, err)
+			}
+		}),
+
 		lab.TestCase(fmt.Sprintf("%s be able to access GraphDBIngest endpoints", testCondition(role, auth.Permissions().GraphDBIngest)), func(assert *require.Assertions, harness *lab.Harness) {
 			userClient, ok := lab.Unpack(harness, userClientFixture)
 			assert.True(ok)
