@@ -29,16 +29,7 @@ const (
 
 // OIDCProviderData defines the interface required to interact with the oidc_providers table
 type OIDCProviderData interface {
-	GetOIDCProvider(ctx context.Context, id int) (model.OIDCProvider, error)
 	CreateOIDCProvider(ctx context.Context, name, issuer, clientID string) (model.OIDCProvider, error)
-}
-
-func (s *BloodhoundDB) GetOIDCProvider(ctx context.Context, id int) (model.OIDCProvider, error) {
-	var (
-		oidcProvider model.OIDCProvider
-		result       = s.db.WithContext(ctx).Table(oidcProvidersTableName).Where("id = ?", id).First(&oidcProvider)
-	)
-	return oidcProvider, CheckError(result)
 }
 
 // CreateOIDCProvider creates a new entry for an OIDC provider as well as the associated SSO provider

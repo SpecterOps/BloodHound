@@ -24,36 +24,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestBloodhoundDB_GetOIDCProvider(t *testing.T) {
-	var (
-		testCtx = context.Background()
-		dbInst  = integration.SetupDB(t)
-	)
-	defer dbInst.Close(testCtx)
-
-	t.Run("successfully get an OIDC provider", func(t *testing.T) {
-		provider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com/auth", "bloodhound")
-		require.NoError(t, err)
-
-		fetchedProvider, err := dbInst.GetOIDCProvider(testCtx, int(provider.ID))
-		require.NoError(t, err)
-		assert.Equal(t, fetchedProvider.Issuer, provider.Issuer)
-		assert.Equal(t, fetchedProvider.ClientID, provider.ClientID)
-	})
-
-	t.Run("error OIDC provider not found", func(t *testing.T) {
-		_, err := dbInst.GetOIDCProvider(testCtx, 1234)
-		require.Error(t, err)
-		assert.ErrorIs(t, err, database.ErrNotFound)
-	})
-}
 
 func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
 	var (
@@ -68,6 +43,7 @@ func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
 
 		assert.Equal(t, "https://test.localhost.com/auth", provider.Issuer)
 		assert.Equal(t, "bloodhound", provider.ClientID)
+		assert.NotEmpty(t, provider.ID)
 
 		_, count, err := dbInst.ListAuditLogs(testCtx, time.Now().Add(-time.Minute), time.Now().Add(time.Minute), 0, 10, "", model.SQLFilter{})
 		require.NoError(t, err)
