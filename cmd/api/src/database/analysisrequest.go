@@ -86,7 +86,7 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, requestType model
 	} else {
 		// Analysis request existed, we only want to overwrite if request is for a deletion request, otherwise ignore additional requests
 		if analReq.RequestType == model.AnalysisRequestAnalysis && requestType == model.AnalysisRequestDeletion {
-			updateSql := `update analysis_request_switch set requested_by = ?, request_type = ?, requested_at = ? limit 1;`
+			updateSql := `update analysis_request_switch set requested_by = ?, request_type = ?, requested_at = ?;`
 			tx := s.db.WithContext(ctx).Exec(updateSql, requestedBy, requestType, time.Now().UTC())
 			return tx.Error
 		}
