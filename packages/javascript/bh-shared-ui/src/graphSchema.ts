@@ -84,6 +84,7 @@ export enum ActiveDirectoryRelationshipKind {
     Contains = 'Contains',
     GPLink = 'GPLink',
     AllowedToDelegate = 'AllowedToDelegate',
+    CoerceToTGT = 'CoerceToTGT',
     GetChanges = 'GetChanges',
     GetChangesAll = 'GetChangesAll',
     GetChangesInFilteredSet = 'GetChangesInFilteredSet',
@@ -169,6 +170,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'GPLink';
         case ActiveDirectoryRelationshipKind.AllowedToDelegate:
             return 'AllowedToDelegate';
+        case ActiveDirectoryRelationshipKind.CoerceToTGT:
+            return 'CoerceToTGT';
         case ActiveDirectoryRelationshipKind.GetChanges:
             return 'GetChanges';
         case ActiveDirectoryRelationshipKind.GetChangesAll:
@@ -625,6 +628,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
+        ActiveDirectoryRelationshipKind.CoerceToTGT,
         ActiveDirectoryRelationshipKind.TrustedBy,
         ActiveDirectoryRelationshipKind.AllowedToAct,
         ActiveDirectoryRelationshipKind.AdminTo,
