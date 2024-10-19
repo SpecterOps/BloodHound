@@ -770,7 +770,7 @@ RelationshipKinds: [
 	AZMGAddSecret,
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
-	SyncedToADUser,
+	SyncedToADUser
 ]
 
 AppRoleTransitRelationshipKinds: [
