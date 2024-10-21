@@ -139,7 +139,7 @@
         },
         {
             "id": "n2",
-            "type": "RemoteInteractiveLogonPrivilege",
+            "type": "RemoteInteractiveLogonRight",
             "style": {},
             "properties": {},
             "fromId": "n1",
