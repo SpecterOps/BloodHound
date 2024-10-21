@@ -189,7 +189,7 @@ func testRoleAccess(t *testing.T, roleName string) {
 			userClient, ok := lab.Unpack(harness, userClientFixture)
 			assert.True(ok)
 
-			_, err := userClient.CreateAssetGroup(v2.AssetGroupCreateRequest{Name: "test"})
+			_, err := userClient.CreateAssetGroup(v2.CreateAssetGroupRequest{Name: "test"})
 			if role.Permissions.Has(auth.Permissions().GraphDBWrite) {
 				assert.Nil(err)
 			} else {
