@@ -94,7 +94,6 @@ func convertDomainData(domain ein.Domain, converted *ConvertedData) {
 	domainTrustData := ein.ParseDomainTrusts(domain)
 	converted.RelProps = append(converted.RelProps, domainTrustData.TrustRelationships...)
 	converted.NodeProps = append(converted.NodeProps, domainTrustData.ExtraNodeProps...)
-
 }
 
 func convertGPOData(gpo ein.GPO, converted *ConvertedData) {
