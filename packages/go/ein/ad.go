@@ -17,6 +17,7 @@
 package ein
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -40,10 +41,56 @@ func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
 		itemProps = make(map[string]any)
 	}
 
+	if itemType == ad.Domain {
+		convertInvalidDomainProperties(itemProps)
+	}
+
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
 		PropertyMap: itemProps,
 		Label:       itemType,
+	}
+}
+
+func convertInvalidDomainProperties(itemProps map[string]any) {
+	convertStringPropertyToInt(itemProps, "machineaccountquota")
+	convertStringPropertyToInt(itemProps, "minpwdlength")
+	convertStringPropertyToInt(itemProps, "pwdproperties")
+	convertStringPropertyToInt(itemProps, "pwdhistorylength")
+	convertStringPropertyToInt(itemProps, "lockoutthreshold")
+
+	if rawProperty, ok := itemProps["expirepasswordsonsmartcardonlyaccounts"]; ok {
+		switch converted := rawProperty.(type) {
+		case string:
+			if final, err := strconv.ParseBool(converted); err != nil {
+				delete(itemProps, "expirepasswordsonsmartcardonlyaccounts")
+			} else {
+				itemProps["expirepasswordsonsmartcardonlyaccounts"] = final
+			}
+		case bool:
+		//pass
+		default:
+			log.Debugf("Removing %s with type %T", converted)
+			delete(itemProps, "expirepasswordsonsmartcardonlyaccounts")
+		}
+	}
+}
+
+func convertStringPropertyToInt(itemProps map[string]any, keyName string) {
+	if rawProperty, ok := itemProps[keyName]; ok {
+		switch converted := rawProperty.(type) {
+		case string:
+			if final, err := strconv.Atoi(converted); err != nil {
+				delete(itemProps, keyName)
+			} else {
+				itemProps[keyName] = final
+			}
+		case int:
+		//pass
+		default:
+			log.Debugf("Removing %s with type %T", keyName, converted)
+			delete(itemProps, keyName)
+		}
 	}
 }
 
@@ -284,6 +331,21 @@ func ParseGpLinks(links []GPLink, itemIdentifier string, itemType graph.Kind) []
 func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 	parsedData := ParsedDomainTrustData{}
 	for _, trust := range domain.Trusts {
+		var finalTrustAttributes int
+		switch converted := trust.TrustAttributes.(type) {
+		case string:
+			if i, err := strconv.Atoi(converted); err != nil {
+				log.Errorf("Error converting trust attributes %s to int", converted)
+			} else {
+				finalTrustAttributes = i
+			}
+		case int:
+			finalTrustAttributes = converted
+		default:
+			log.Errorf("Error converting trust attributes %s to int", converted)
+			finalTrustAttributes = 0
+		}
+
 		parsedData.ExtraNodeProps = append(parsedData.ExtraNodeProps, IngestibleNode{
 			PropertyMap: map[string]any{"name": trust.TargetDomainName},
 			ObjectID:    trust.TargetDomainSid,
@@ -306,7 +368,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 						"isacl":                false,
 						"sidfiltering":         trust.SidFilteringEnabled,
 						"tgtdelegationenabled": trust.TGTDelegationEnabled,
-						"trustattributes":      trust.TrustAttributes,
+						"trustattributes":      finalTrustAttributes,
 						"trusttype":            trust.TrustType,
 						"transitive":           trust.IsTransitive},
 					RelType: ad.TrustedBy,
@@ -329,7 +391,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 						"isacl":                false,
 						"sidfiltering":         trust.SidFilteringEnabled,
 						"tgtdelegationenabled": trust.TGTDelegationEnabled,
-						"trustattributes":      trust.TrustAttributes,
+						"trustattributes":      finalTrustAttributes,
 						"trusttype":            trust.TrustType,
 						"transitive":           trust.IsTransitive},
 					RelType: ad.TrustedBy,
