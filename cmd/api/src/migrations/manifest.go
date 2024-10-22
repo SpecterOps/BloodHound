@@ -47,6 +47,40 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	}
 }
 
+// Version_620_Migration is intended to rename the RemoteInteractiveLogonPrivilege edge to RemoteInteractiveLogonRight
+// See: https://specterops.atlassian.net/browse/BED-4428
+func Version_620_Migration(db graph.Database) error {
+	defer log.LogAndMeasure(log.LevelInfo, "Migration to rename RemoteInteractiveLogonPrivilege edges")()
+
+	// MATCH p=(n:Base)-[:RemoteInteractiveLogonPrivilege]->(m:Base) RETURN p
+	targetCriteria := query.And(
+		query.Kind(query.Start(), ad.Entity),
+		query.Kind(query.Relationship(), graph.StringKind("RemoteInteractiveLogonPrivilege")),
+		query.Kind(query.End(), ad.Entity),
+	)
+
+	edgeProperties := graph.NewProperties()
+	edgeProperties.Set(common.LastSeen.String(), time.Now().UTC())
+
+	//Get all RemoteInteractiveLogonPrivilege edges, use the start/end ids to insert new edges, and delete the old ones
+	return db.BatchOperation(context.Background(), func(batch graph.Batch) error {
+		rels, err := ops.FetchRelationships(batch.Relationships().Filter(targetCriteria))
+		if err != nil {
+			return err
+		}
+
+		for _, rel := range rels {
+			if err := batch.CreateRelationshipByIDs(rel.StartID, rel.EndID, ad.RemoteInteractiveLogonRight, edgeProperties); err != nil {
+				return err
+			} else if err := batch.DeleteRelationship(rel.ID); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
 // Version_513_Migration covers a bug discovered in ingest that would result in nodes containing more than one valid
 // kind. For example, the following query should return no results: (n:Base) where (n:User and n:Computer) return n
 // but, at time of writing, due to the ingest defect several environments will return results for this query.
@@ -284,6 +318,10 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 5, Minor: 13, Patch: 0},
 		Execute: Version_513_Migration,
+	},
+	{
+		Version: version.Version{Major: 6, Minor: 2, Patch: 0},
+		Execute: Version_620_Migration,
 	},
 }
 
