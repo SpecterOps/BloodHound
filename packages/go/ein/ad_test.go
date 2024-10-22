@@ -70,3 +70,49 @@ func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
 	assert.Equal(t, 1, props["lockoutthreshold"])
 	assert.Equal(t, false, props["expirepasswordsonsmartcardonlyaccounts"])
 }
+
+func TestParseDomainTrusts_TrustAttributesFix(t *testing.T) {
+	domainObject := ein.Domain{
+		IngestBase:   ein.IngestBase{},
+		ChildObjects: nil,
+		Trusts:       make([]ein.Trust, 0),
+		Links:        nil,
+	}
+
+	domainObject.Trusts = append(domainObject.Trusts, ein.Trust{
+		TargetDomainSid:      "abc123",
+		IsTransitive:         false,
+		TrustDirection:       ein.TrustDirectionInbound,
+		TrustType:            "abc",
+		SidFilteringEnabled:  false,
+		TargetDomainName:     "abc456",
+		TGTDelegationEnabled: false,
+		TrustAttributes:      "12345",
+	})
+
+	result := ein.ParseDomainTrusts(domainObject)
+	assert.Len(t, result.TrustRelationships, 1)
+
+	rel := result.TrustRelationships[0]
+	assert.Contains(t, rel.RelProps, "trustattributes")
+	assert.Equal(t, rel.RelProps["trustattributes"], 12345)
+
+	domainObject.Trusts = make([]ein.Trust, 0)
+	domainObject.Trusts = append(domainObject.Trusts, ein.Trust{
+		TargetDomainSid:      "abc123",
+		IsTransitive:         false,
+		TrustDirection:       ein.TrustDirectionInbound,
+		TrustType:            "abc",
+		SidFilteringEnabled:  false,
+		TargetDomainName:     "abc456",
+		TGTDelegationEnabled: false,
+		TrustAttributes:      12345,
+	})
+
+	result = ein.ParseDomainTrusts(domainObject)
+	assert.Len(t, result.TrustRelationships, 1)
+
+	rel = result.TrustRelationships[0]
+	assert.Contains(t, rel.RelProps, "trustattributes")
+	assert.Equal(t, rel.RelProps["trustattributes"], 12345)
+}
