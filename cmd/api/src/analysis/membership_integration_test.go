@@ -84,10 +84,10 @@ func TestResolveAllGroupMemberships(t *testing.T) {
 
 		test.RequireNilErr(t, err)
 
-		require.Equal(t, 3, int(memberships.Cardinality(harness.RDP.DomainGroupA.ID.Uint32()).Cardinality()))
-		require.Equal(t, 1, int(memberships.Cardinality(harness.RDP.DomainGroupB.ID.Uint32()).Cardinality()))
-		require.Equal(t, 1, int(memberships.Cardinality(harness.RDP.DomainGroupC.ID.Uint32()).Cardinality()))
-		require.Equal(t, 1, int(memberships.Cardinality(harness.RDP.DomainGroupD.ID.Uint32()).Cardinality()))
-		require.Equal(t, 2, int(memberships.Cardinality(harness.RDP.DomainGroupE.ID.Uint32()).Cardinality()))
+		require.Equal(t, 3, int(memberships.Cardinality(harness.RDP.DomainGroupA.ID.Uint64()).Cardinality()))
+		require.Equal(t, 1, int(memberships.Cardinality(harness.RDP.DomainGroupB.ID.Uint64()).Cardinality()))
+		require.Equal(t, 1, int(memberships.Cardinality(harness.RDP.DomainGroupC.ID.Uint64()).Cardinality()))
+		require.Equal(t, 1, int(memberships.Cardinality(harness.RDP.DomainGroupD.ID.Uint64()).Cardinality()))
+		require.Equal(t, 2, int(memberships.Cardinality(harness.RDP.DomainGroupE.ID.Uint64()).Cardinality()))
 	})
 }

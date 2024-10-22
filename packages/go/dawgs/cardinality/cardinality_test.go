@@ -25,17 +25,17 @@ import (
 )
 
 func TestDuplexToGraphIDs(t *testing.T) {
-	uint32IDs := []uint32{1, 2, 3, 4, 5}
-	duplex := cardinality.NewBitmap32()
-	duplex.Add(uint32IDs...)
+	uintIDs := []uint64{1, 2, 3, 4, 5}
+	duplex := cardinality.NewBitmap64()
+	duplex.Add(uintIDs...)
 
-	ids := cardinality.DuplexToGraphIDs(duplex)
+	ids := graph.DuplexToGraphIDs(duplex)
 
-	for _, uint32ID := range uint32IDs {
+	for _, uintID := range uintIDs {
 		found := false
 
 		for _, id := range ids {
-			if id.Uint32() == uint32ID {
+			if id.Uint64() == uintID {
 				found = true
 				break
 			}
@@ -55,7 +55,7 @@ func TestNodeSetToDuplex(t *testing.T) {
 		},
 	}
 
-	duplex := cardinality.NodeSetToDuplex(nodes)
+	duplex := graph.NodeSetToDuplex(nodes)
 
 	require.True(t, duplex.Contains(1))
 	require.True(t, duplex.Contains(2))

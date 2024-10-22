@@ -33,7 +33,7 @@ import (
 )
 
 func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
-	results := cardinality.NewBitmap32()
+	results := cardinality.NewBitmap64()
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
@@ -53,7 +53,7 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		}
 	}
 
-	results.Each(func(value uint32) bool {
+	results.Each(func(value uint64) bool {
 		channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 			FromID: graph.ID(value),
 			ToID:   domain.ID,
@@ -130,14 +130,14 @@ func ADCSESC1Path1Pattern(domainID graph.ID) traversal.PatternContinuation {
 		))
 }
 
-func ADCSESC1Path2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+func ADCSESC1Path2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
 	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 		query.Kind(query.Relationship(), ad.MemberOf),
 		query.Kind(query.End(), ad.Group),
 	)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.Enroll),
-			query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
+			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(enterpriseCAs)...),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
@@ -181,8 +181,8 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		paths              = graph.PathSet{}
 		candidateSegments  = map[graph.ID][]*graph.PathSegment{}
-		path1EnterpriseCAs = cardinality.NewBitmap32()
-		path2EnterpriseCAs = cardinality.NewBitmap32()
+		path1EnterpriseCAs = cardinality.NewBitmap64()
+		path2EnterpriseCAs = cardinality.NewBitmap64()
 		lock               = &sync.Mutex{}
 	)
 
@@ -231,7 +231,7 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 				lock.Lock()
 				candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
-				path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
+				path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
 				lock.Unlock()
 
 				return nil
@@ -253,7 +253,7 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 				lock.Lock()
 				candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
-				path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
+				path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
 				lock.Unlock()
 
 				return nil
@@ -267,7 +267,7 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	path1EnterpriseCAs.And(path2EnterpriseCAs)
 
 	// Render paths from the segments
-	path1EnterpriseCAs.Each(func(value uint32) bool {
+	path1EnterpriseCAs.Each(func(value uint64) bool {
 		for _, segment := range candidateSegments[graph.ID(value)] {
 			paths.AddPath(segment.Path())
 		}

@@ -300,26 +300,26 @@ func createOrUpdateWellKnownLink(tx graph.Transaction, startNode *graph.Node, en
 
 // CalculateCrossProductNodeSets finds the intersection of the given sets of nodes.
 // See CalculateCrossProductNodeSetsDoc.md for explaination of the specialGroups (Authenticated Users and Everyone) and why we treat them the way we do
-func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, groupExpansions impact.PathAggregator, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint32] {
+func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, groupExpansions impact.PathAggregator, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
 	if len(nodeSlices) < 2 {
 		log.Errorf("Cross products require at least 2 nodesets")
-		return cardinality.NewBitmap32()
+		return cardinality.NewBitmap64()
 	}
 
 	//The intention is that the node sets being passed into this function contain all the first degree principals for control
 	var (
 		//Temporary storage for first degree and unrolled sets without auth users/everyone
-		firstDegreeSets []cardinality.Duplex[uint32]
-		unrolledSets    []cardinality.Duplex[uint32]
+		firstDegreeSets []cardinality.Duplex[uint64]
+		unrolledSets    []cardinality.Duplex[uint64]
 
 		//This is the set we use as a reference set to check against checkset
-		unrolledRefSet = cardinality.NewBitmap32()
+		unrolledRefSet = cardinality.NewBitmap64()
 
 		//This is the set we use to aggregate multiple sets together it should have all the valid principals from all other sets at this point
-		checkSet = cardinality.NewBitmap32()
+		checkSet = cardinality.NewBitmap64()
 
 		//This is our set of entities that have the complete cross product of permissions
-		resultEntities = cardinality.NewBitmap32()
+		resultEntities = cardinality.NewBitmap64()
 	)
 
 	//Get the IDs of the Auth. Users and Everyone groups
@@ -332,18 +332,18 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 	//Unroll all nodesets
 	for _, nodeSlice := range nodeSlices {
 		var (
-			firstDegreeSet = cardinality.NewBitmap32()
-			unrolledSet    = cardinality.NewBitmap32()
+			firstDegreeSet = cardinality.NewBitmap64()
+			unrolledSet    = cardinality.NewBitmap64()
 		)
 
 		for _, entity := range nodeSlice {
-			entityID := entity.ID.Uint32()
+			entityID := entity.ID.Uint64()
 
 			firstDegreeSet.Add(entityID)
 			unrolledSet.Add(entityID)
 
 			if entity.Kinds.ContainsOneOf(ad.Group, ad.LocalGroup) {
-				unrolledSet.Or(groupExpansions.Cardinality(entity.ID.Uint32()).(cardinality.Duplex[uint32]))
+				unrolledSet.Or(groupExpansions.Cardinality(entity.ID.Uint64()))
 			}
 		}
 
@@ -351,7 +351,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 		hasSpecialGroup := false
 
 		for _, specialGroup := range specialGroups {
-			if unrolledSet.Contains(specialGroup.ID.Uint32()) {
+			if unrolledSet.Contains(specialGroup.ID.Uint64()) {
 				hasSpecialGroup = true
 				break
 			}
@@ -367,7 +367,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 	if len(firstDegreeSets) == 0 {
 		for _, nodeSet := range nodeSlices {
 			for _, entity := range nodeSet {
-				resultEntities.Add(entity.ID.Uint32())
+				resultEntities.Add(entity.ID.Uint64())
 			}
 		}
 
@@ -384,7 +384,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 	}
 
 	//Check first degree principals in our reference set (firstDegreeSets[0]) first
-	firstDegreeSets[0].Each(func(id uint32) bool {
+	firstDegreeSets[0].Each(func(id uint64) bool {
 		if checkSet.Contains(id) {
 			resultEntities.Add(id)
 		} else {
@@ -396,8 +396,8 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 
 	//Find all the groups in our secondary targets and map them to their cardinality in our expansions
 	//Saving off to a map to prevent multiple lookups on the expansions
-	tempMap := map[uint32]uint64{}
-	unrolledRefSet.Each(func(id uint32) bool {
+	tempMap := map[uint64]uint64{}
+	unrolledRefSet.Each(func(id uint64) bool {
 		//If group expansions contains this ID and its cardinality is > 0, it's a group/localgroup
 		idCardinality := groupExpansions.Cardinality(id).Cardinality()
 		if idCardinality > 0 {
@@ -408,7 +408,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 	})
 
 	//Save the map keys to a new slice, this represents our list of groups in the expansion
-	keys := make([]uint32, 0, len(tempMap))
+	keys := make([]uint64, 0, len(tempMap))
 
 	for key := range tempMap {
 		keys = append(keys, key)
@@ -437,7 +437,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 		}
 	}
 
-	unrolledRefSet.Each(func(remainder uint32) bool {
+	unrolledRefSet.Each(func(remainder uint64) bool {
 		if checkSet.Contains(remainder) {
 			resultEntities.Add(remainder)
 		}

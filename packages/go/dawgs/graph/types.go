@@ -16,7 +16,10 @@
 
 package graph
 
-import "github.com/specterops/bloodhound/dawgs/util/size"
+import (
+	"github.com/specterops/bloodhound/dawgs/cardinality"
+	"github.com/specterops/bloodhound/dawgs/util/size"
+)
 
 // IndexedSlice is a structure maps a comparable key to a value that implements size.Sizable.
 type IndexedSlice[K comparable, V any] struct {
@@ -163,4 +166,39 @@ func (s *IndexedSlice[K, V]) Each(delegate func(key K, value V) bool) {
 			break
 		}
 	}
+}
+
+// DuplexToGraphIDs takes a Duplex provider and returns a slice of graph IDs.
+func DuplexToGraphIDs[T uint32 | uint64](provider cardinality.Duplex[T]) []ID {
+	ids := make([]ID, 0, provider.Cardinality())
+
+	provider.Each(func(value T) bool {
+		ids = append(ids, ID(value))
+		return true
+	})
+
+	return ids
+
+}
+
+// NodeSetToDuplex takes a graph NodeSet and returns a Duplex provider that contains all node IDs.
+func NodeSetToDuplex(nodes NodeSet) cardinality.Duplex[uint64] {
+	duplex := cardinality.NewBitmap64()
+
+	for nodeID := range nodes {
+		duplex.Add(nodeID.Uint64())
+	}
+
+	return duplex
+}
+
+// NodeSetToDuplex takes a graph NodeSet and returns a Duplex provider that contains all node IDs.
+func NodeIDsToDuplex(nodeIDs []ID) cardinality.Duplex[uint64] {
+	duplex := cardinality.NewBitmap64()
+
+	for _, nodeID := range nodeIDs {
+		duplex.Add(nodeID.Uint64())
+	}
+
+	return duplex
 }

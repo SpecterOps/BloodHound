@@ -70,8 +70,8 @@ func TestAggregator_Cardinality(t *testing.T) {
 		node11to10Terminal = idDescend(node11Segment, node10)
 
 		// Make sure to use an exact cardinality container (bitset in this case)
-		agg = impact.NewIDA(func() cardinality.Provider[uint32] {
-			return cardinality.NewBitmap32()
+		agg = impact.NewIDA(func() cardinality.Provider[uint64] {
+			return cardinality.NewBitmap64()
 		})
 	)
 
@@ -84,7 +84,7 @@ func TestAggregator_Cardinality(t *testing.T) {
 	agg.AddShortcut(node7to3Shortcut)
 	agg.AddShortcut(node8to10Shortcut)
 
-	nodeImpact := agg.Cardinality(2).(cardinality.Duplex[uint32])
+	nodeImpact := agg.Cardinality(2).(cardinality.Duplex[uint64])
 
 	assert.Equal(t, 4, int(agg.Resolved().Cardinality()))
 
@@ -104,7 +104,7 @@ func TestAggregator_Cardinality(t *testing.T) {
 	require.True(t, nodeImpact.Contains(6))
 	require.True(t, nodeImpact.Contains(8))
 
-	nodeImpact = agg.Cardinality(1).(cardinality.Duplex[uint32])
+	nodeImpact = agg.Cardinality(1).(cardinality.Duplex[uint64])
 
 	require.Equal(t, 5, int(agg.Resolved().Cardinality()))
 
@@ -124,7 +124,7 @@ func TestAggregator_Cardinality(t *testing.T) {
 	require.True(t, nodeImpact.Contains(9))
 	require.True(t, nodeImpact.Contains(10))
 
-	nodeImpact = agg.Cardinality(11).(cardinality.Duplex[uint32])
+	nodeImpact = agg.Cardinality(11).(cardinality.Duplex[uint64])
 
 	require.Equal(t, 7, int(agg.Resolved().Cardinality()))
 
@@ -148,7 +148,7 @@ func TestAggregator_Cardinality(t *testing.T) {
 	require.True(t, nodeImpact.Contains(10))
 
 	// Validate cached resolutions are correct
-	nodeImpact = agg.Cardinality(2).(cardinality.Duplex[uint32])
+	nodeImpact = agg.Cardinality(2).(cardinality.Duplex[uint64])
 
 	require.Equal(t, 8, int(nodeImpact.Cardinality()))
 

@@ -34,14 +34,14 @@ import (
 )
 
 func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	if ok := cache.HasUPNCertMappingInForest(domain.ID.Uint32()); !ok {
+	if ok := cache.HasUPNCertMappingInForest(domain.ID.Uint64()); !ok {
 		return nil
 	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaEnrollers) == 0 {
 		return nil
 	} else {
-		results := cardinality.NewBitmap32()
+		results := cardinality.NewBitmap64()
 
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC10(template, false); err != nil {
@@ -62,12 +62,12 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 					log.Warnf("Error getting start nodes for esc10a attacker nodes: %v", err)
 					continue
 				} else {
-					results.Or(cardinality.NodeIDsToDuplex(attackers))
+					results.Or(graph.NodeIDsToDuplex(attackers))
 				}
 			}
 		}
 
-		results.Each(func(value uint32) bool {
+		results.Each(func(value uint64) bool {
 			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
@@ -80,14 +80,14 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 }
 
 func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
-	if ok := cache.HasUPNCertMappingInForest(domain.ID.Uint32()); !ok {
+	if ok := cache.HasUPNCertMappingInForest(domain.ID.Uint64()); !ok {
 		return nil
 	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID); len(ecaEnrollers) == 0 {
 		return nil
 	} else {
-		results := cardinality.NewBitmap32()
+		results := cardinality.NewBitmap64()
 
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC10(template, true); err != nil {
@@ -105,12 +105,12 @@ func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analy
 					log.Warnf("Error getting start nodes for esc10b attacker nodes: %v", err)
 					continue
 				} else {
-					results.Or(cardinality.NodeIDsToDuplex(attackers))
+					results.Or(graph.NodeIDsToDuplex(attackers))
 				}
 			}
 		}
 
-		results.Each(func(value uint32) bool {
+		results.Each(func(value uint64) bool {
 			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,

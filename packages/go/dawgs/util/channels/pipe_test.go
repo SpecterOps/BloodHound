@@ -91,14 +91,14 @@ func TestBufferedPipe_DumpOnContextCancel(t *testing.T) {
 func TestBufferedPipe_HappyPath(t *testing.T) {
 	var (
 		ctx, done        = context.WithTimeout(context.Background(), time.Second*5)
-		writerC, readerC = channels.BufferedPipe[uint32](ctx)
+		writerC, readerC = channels.BufferedPipe[uint64](ctx)
 	)
 
 	// Ensure that the context done function is always called
 	defer done()
 
 	// Submit the values first to demonstrate buffering
-	for i := uint32(0); i < numValuesToSend; i++ {
+	for i := uint64(0); i < numValuesToSend; i++ {
 		require.True(t, channels.Submit(ctx, writerC, i))
 	}
 
@@ -107,7 +107,7 @@ func TestBufferedPipe_HappyPath(t *testing.T) {
 
 	var (
 		workerWG = &sync.WaitGroup{}
-		seen     = cardinality.ThreadSafeDuplex(cardinality.NewBitmap32())
+		seen     = cardinality.ThreadSafeDuplex(cardinality.NewBitmap64())
 	)
 
 	for workerID := 0; workerID < 10; workerID++ {
@@ -128,7 +128,7 @@ func TestBufferedPipe_HappyPath(t *testing.T) {
 
 	workerWG.Wait()
 
-	for i := uint32(0); i < numValuesToSend; i++ {
+	for i := uint64(0); i < numValuesToSend; i++ {
 		require.True(t, seen.Contains(i))
 	}
 }

@@ -34,7 +34,7 @@ import (
 
 func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
 	// 1.
-	principals := cardinality.NewBitmap32()
+	principals := cardinality.NewBitmap64()
 	publishedTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID)
 	domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String()
 	if err != nil {
@@ -129,7 +129,7 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		}
 	}
 
-	principals.Each(func(value uint32) bool {
+	principals.Each(func(value uint64) bool {
 		channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 			FromID: graph.ID(value),
 			ToID:   domain.ID,
@@ -229,15 +229,15 @@ func findPathsToDomainThroughCertTemplateWithGenericAll(
 	db graph.Database,
 	startNodes graph.NodeSet,
 	domainID graph.ID,
-	enrollAndNTAuthECAs cardinality.Duplex[uint32],
-) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint32], error) {
+	enrollAndNTAuthECAs cardinality.Duplex[uint64],
+) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint64], error) {
 
 	var (
 		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		lock          = &sync.Mutex{}
 
 		certTemplateSegments = map[graph.ID][]*graph.PathSegment{}
-		certTemplates        = cardinality.NewBitmap32()
+		certTemplates        = cardinality.NewBitmap64()
 	)
 
 	// p1: use the enterpriseCA nodes to gather the set of cert templates with an inbound `GenericAll`
@@ -260,7 +260,7 @@ func findPathsToDomainThroughCertTemplateWithGenericAll(
 					lock.Lock()
 
 					certTemplateSegments[certTemplate.ID] = append(certTemplateSegments[certTemplate.ID], terminal)
-					certTemplates.Add(certTemplate.ID.Uint32())
+					certTemplates.Add(certTemplate.ID.Uint64())
 
 					lock.Unlock()
 
@@ -280,8 +280,8 @@ func findPathsToDomainThroughCertTemplateWithGenericWrite(
 	db graph.Database,
 	startNodes graph.NodeSet,
 	domainID graph.ID,
-	enrollAndNTAuthECAs cardinality.Duplex[uint32],
-) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint32], error) {
+	enrollAndNTAuthECAs cardinality.Duplex[uint64],
+) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint64], error) {
 
 	var (
 		inboundEdgeToCertTemplate = ad.GenericWrite
@@ -297,8 +297,8 @@ func findPathsToDomainThroughCertTemplateWithWritePKINameFlag(
 	db graph.Database,
 	startNodes graph.NodeSet,
 	domainID graph.ID,
-	enrollAndNTAuthECAs cardinality.Duplex[uint32],
-) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint32], error) {
+	enrollAndNTAuthECAs cardinality.Duplex[uint64],
+) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint64], error) {
 
 	var (
 		inboundEdgeToCertTemplate = ad.WritePKINameFlag
@@ -322,8 +322,8 @@ func findPathsToDomainThroughCertTemplateWithWritePKIEnrollmentFlag(
 	db graph.Database,
 	startNodes graph.NodeSet,
 	domainID graph.ID,
-	enrollAndNTAuthECAs cardinality.Duplex[uint32],
-) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint32], error) {
+	enrollAndNTAuthECAs cardinality.Duplex[uint64],
+) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint64], error) {
 
 	var (
 		inboundEdgeToCertTemplate = ad.WritePKIEnrollmentFlag
@@ -346,17 +346,17 @@ func traversalToDomainThroughCertTemplate(
 	db graph.Database,
 	startNodes graph.NodeSet,
 	domainID graph.ID,
-	enrollAndNTAuthECAs cardinality.Duplex[uint32],
+	enrollAndNTAuthECAs cardinality.Duplex[uint64],
 	inboundEdgeToCertTemplate graph.Kind,
 	criteriaForCertTemplate graph.Criteria,
-) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint32], error) {
+) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint64], error) {
 
 	var (
 		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		lock          = &sync.Mutex{}
 
 		certTemplateSegments = map[graph.ID][]*graph.PathSegment{}
-		certTemplates        = cardinality.NewBitmap32()
+		certTemplates        = cardinality.NewBitmap64()
 	)
 
 	for _, n := range startNodes.Slice() {
@@ -373,7 +373,7 @@ func traversalToDomainThroughCertTemplate(
 
 					lock.Lock()
 					certTemplateSegments[certTemplate.ID] = append(certTemplateSegments[certTemplate.ID], terminal)
-					certTemplates.Add(certTemplate.ID.Uint32())
+					certTemplates.Add(certTemplate.ID.Uint64())
 					lock.Unlock()
 
 					return nil
@@ -415,15 +415,15 @@ func findPathsToDomainThroughCertTemplateWithBothPKIFlags(
 	db graph.Database,
 	startNodes graph.NodeSet,
 	domainID graph.ID,
-	enrollAndNTAuthECAs cardinality.Duplex[uint32],
-) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint32], error) {
+	enrollAndNTAuthECAs cardinality.Duplex[uint64],
+) (map[graph.ID][]*graph.PathSegment, cardinality.Duplex[uint64], error) {
 
 	var (
 		traversalInst = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		lock          = &sync.Mutex{}
 
 		certTemplateSegments = map[graph.ID][]*graph.PathSegment{}
-		certTemplates        = cardinality.NewBitmap32()
+		certTemplates        = cardinality.NewBitmap64()
 	)
 
 	// p9: use the enterpriseCA nodes to gather the set of cert templates with an inbound `WritePKIEnrollmentFlag`
@@ -441,7 +441,7 @@ func findPathsToDomainThroughCertTemplateWithBothPKIFlags(
 
 					lock.Lock()
 					certTemplateSegments[certTemplate.ID] = append(certTemplateSegments[certTemplate.ID], terminal)
-					certTemplates.Add(certTemplate.ID.Uint32())
+					certTemplates.Add(certTemplate.ID.Uint64())
 					lock.Unlock()
 
 					return nil
@@ -510,7 +510,7 @@ func findPathToDomainThroughEnterpriseCAsTrustedForNTAuth(
 	domainID graph.ID,
 ) (
 	map[graph.ID][]*graph.PathSegment,
-	cardinality.Duplex[uint32],
+	cardinality.Duplex[uint64],
 	error,
 ) {
 	var (
@@ -518,7 +518,7 @@ func findPathToDomainThroughEnterpriseCAsTrustedForNTAuth(
 		lock          = &sync.Mutex{}
 
 		enrollAndNTAuthECASegments = map[graph.ID][]*graph.PathSegment{}
-		enrollAndNTAuthECAs        = cardinality.NewBitmap32()
+		enrollAndNTAuthECAs        = cardinality.NewBitmap64()
 	)
 
 	for _, n := range startNodes.Slice() {
@@ -533,7 +533,7 @@ func findPathToDomainThroughEnterpriseCAsTrustedForNTAuth(
 							})
 
 						lock.Lock()
-						enrollAndNTAuthECAs.Add(enterpriseCA.ID.Uint32())
+						enrollAndNTAuthECAs.Add(enterpriseCA.ID.Uint64())
 						enrollAndNTAuthECASegments[enterpriseCA.ID] = append(enrollAndNTAuthECASegments[enterpriseCA.ID], terminal)
 						lock.Unlock()
 
@@ -598,12 +598,12 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		endNode    *graph.Node
 		startNodes = graph.NodeSet{}
 
-		enrollAndNTAuthECAs cardinality.Duplex[uint32]
+		enrollAndNTAuthECAs cardinality.Duplex[uint64]
 		domainID            = edge.EndID
 		paths               = graph.PathSet{}
 
 		enrollAndNTAuthECASegments = map[graph.ID][]*graph.PathSegment{}
-		finalECAs                  = cardinality.NewBitmap32()
+		finalECAs                  = cardinality.NewBitmap64()
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -648,7 +648,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	} else {
 		certTemplateIDs.Each(
-			func(value uint32) bool {
+			func(value uint64) bool {
 				// add the paths which satisfy p1-p2 requirements
 				for _, segment := range pathsToDomain[graph.ID(value)] {
 					paths.AddPath(segment.Path())
@@ -656,7 +656,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
 					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
 						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-							finalECAs.Add(end.ID.Uint32())
+							finalECAs.Add(end.ID.Uint64())
 							return false
 						}
 						return true
@@ -673,7 +673,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	} else {
 		certTemplateIDs.Each(
-			func(value uint32) bool {
+			func(value uint64) bool {
 				// add the paths which satisfy p3, p4, and p5 requirements
 				for _, segment := range pathsToDomain[graph.ID(value)] {
 					paths.AddPath(segment.Path())
@@ -681,7 +681,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
 					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
 						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-							finalECAs.Add(end.ID.Uint32())
+							finalECAs.Add(end.ID.Uint64())
 							return false
 						}
 						return true
@@ -698,7 +698,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	} else {
 		certTemplateIDs.Each(
-			func(value uint32) bool {
+			func(value uint64) bool {
 				// add the paths which satisfy p6, p7, and p8 requirements
 				for _, segment := range pathsToDomain[graph.ID(value)] {
 					paths.AddPath(segment.Path())
@@ -706,7 +706,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
 					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
 						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-							finalECAs.Add(end.ID.Uint32())
+							finalECAs.Add(end.ID.Uint64())
 							return false
 						}
 						return true
@@ -723,7 +723,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	} else {
 		certTemplateIDs.Each(
-			func(value uint32) bool {
+			func(value uint64) bool {
 				// add the paths which satisfy p9, p10, and p11 requirements
 				for _, segment := range pathsToDomain[graph.ID(value)] {
 					paths.AddPath(segment.Path())
@@ -731,7 +731,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
 					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
 						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-							finalECAs.Add(end.ID.Uint32())
+							finalECAs.Add(end.ID.Uint64())
 							return false
 						}
 						return true
@@ -748,7 +748,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return nil, err
 	} else {
 		certTemplateIDs.Each(
-			func(value uint32) bool {
+			func(value uint64) bool {
 				// add the paths which satisfy p12, p13, p14, p15 requirements
 				for _, segment := range pathsToDomain[graph.ID(value)] {
 					paths.AddPath(segment.Path())
@@ -756,7 +756,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
 					segment.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
 						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-							finalECAs.Add(end.ID.Uint32())
+							finalECAs.Add(end.ID.Uint64())
 							return false
 						}
 						return true
@@ -771,7 +771,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	// if we have found paths already, materialize the paths we found from the enterprise CAs -> NTAuthStore -> Domain
 	if paths.Len() > 0 {
 		finalECAs.Each(
-			func(value uint32) bool {
+			func(value uint64) bool {
 				for _, segment := range enrollAndNTAuthECASegments[graph.ID(value)] {
 					paths.AddPath(segment.Path())
 				}
@@ -807,7 +807,7 @@ func ntAuthStoreToDomainTraversal(domainId graph.ID) traversal.PatternContinuati
 }
 
 // This traversal goes from principal -> domain via a cert template that has an inbound edge(s) corresponding to whatever `priveleges` are provided
-func certTemplateWithPrivelegesToDomainTraversal(priveleges graph.Kinds, domainID graph.ID, enrollAndNTAuthECAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+func certTemplateWithPrivelegesToDomainTraversal(priveleges graph.Kinds, domainID graph.ID, enrollAndNTAuthECAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
@@ -821,7 +821,7 @@ func certTemplateWithPrivelegesToDomainTraversal(priveleges graph.Kinds, domainI
 			)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
-			query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enrollAndNTAuthECAs)...),
+			query.InIDs(query.End(), graph.DuplexToGraphIDs(enrollAndNTAuthECAs)...),
 			query.Kind(query.End(), ad.EnterpriseCA),
 		)).
 		OutboundWithDepth(0, 0, query.And(
@@ -839,7 +839,7 @@ func certTemplateWithPrivelegesToDomainTraversal(priveleges graph.Kinds, domainI
 			))
 }
 
-func certTemplateWithEnrollmentRightsTraversal(certTemplates cardinality.Duplex[uint32], criteria graph.Criteria) traversal.PatternContinuation {
+func certTemplateWithEnrollmentRightsTraversal(certTemplates cardinality.Duplex[uint64], criteria graph.Criteria) traversal.PatternContinuation {
 	// start with outbound group membership of any depth
 	initialTraversal := traversal.NewPattern().
 		OutboundWithDepth(0, 0,
@@ -852,19 +852,19 @@ func certTemplateWithEnrollmentRightsTraversal(certTemplates cardinality.Duplex[
 		return initialTraversal.Outbound(
 			query.And(
 				query.KindIn(query.Relationship(), ad.Enroll, ad.AllExtendedRights),
-				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(certTemplates)...),
+				query.InIDs(query.End(), graph.DuplexToGraphIDs(certTemplates)...),
 			))
 	} else {
 		return initialTraversal.Outbound(
 			query.And(
 				query.KindIn(query.Relationship(), ad.Enroll, ad.AllExtendedRights),
-				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(certTemplates)...),
+				query.InIDs(query.End(), graph.DuplexToGraphIDs(certTemplates)...),
 				criteria,
 			))
 	}
 }
 
-func certTemplateWithPKINameFlagTraversal(certTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
+func certTemplateWithPKINameFlagTraversal(certTemplates cardinality.Duplex[uint64]) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
@@ -874,7 +874,7 @@ func certTemplateWithPKINameFlagTraversal(certTemplates cardinality.Duplex[uint3
 		Outbound(
 			query.And(
 				query.KindIn(query.Relationship(), ad.WritePKINameFlag),
-				query.InIDs(query.End(), cardinality.DuplexToGraphIDs(certTemplates)...),
+				query.InIDs(query.End(), graph.DuplexToGraphIDs(certTemplates)...),
 				// ct.authenticationenabled == true
 				query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
 				query.Or(

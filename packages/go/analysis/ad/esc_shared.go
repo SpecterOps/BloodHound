@@ -298,12 +298,12 @@ func findNodesByCertThumbprint(certThumbprint string, tx graph.Transaction, kind
 	}))
 }
 
-func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, groupExpansions impact.PathAggregator) cardinality.Duplex[uint32] {
-	var bitmap = cardinality.NewBitmap32()
+func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, groupExpansions impact.PathAggregator) cardinality.Duplex[uint64] {
+	var bitmap = cardinality.NewBitmap64()
 
 	for _, controller := range nodes {
 		if controller.Kinds.ContainsOneOf(ad.Group) {
-			groupExpansions.Cardinality(controller.ID.Uint32()).(cardinality.Duplex[uint32]).Each(func(id uint32) bool {
+			groupExpansions.Cardinality(controller.ID.Uint64()).(cardinality.Duplex[uint64]).Each(func(id uint64) bool {
 				//Check group expansions against each id, if cardinality is 0 than its not a group
 				if groupExpansions.Cardinality(id).Cardinality() == 0 {
 					bitmap.Add(id)
@@ -311,7 +311,7 @@ func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, groupExpansions i
 				return true
 			})
 		} else {
-			bitmap.Add(controller.ID.Uint32())
+			bitmap.Add(controller.ID.Uint64())
 		}
 	}
 
@@ -359,29 +359,29 @@ func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
 	}
 }
 
-func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint32], certTemplate *graph.Node) (cardinality.Duplex[uint32], error) {
+func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint64], certTemplate *graph.Node) (cardinality.Duplex[uint64], error) {
 	if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.KindIn(query.Node(), ad.User),
-			query.InIDs(query.NodeID(), cardinality.DuplexToGraphIDs(bitmap)...),
+			query.InIDs(query.NodeID(), graph.DuplexToGraphIDs(bitmap)...),
 		)
 	})); err != nil {
 		if !graph.IsErrNotFound(err) {
 			return nil, err
 		}
 	} else if len(userNodes) > 0 && !certTemplateValidForUserVictim(certTemplate) {
-		bitmap.Xor(cardinality.NodeSetToDuplex(userNodes))
+		bitmap.Xor(graph.NodeSetToDuplex(userNodes))
 	}
 
 	return bitmap, nil
 }
 
-func getVictimBitmap(groupExpansions impact.PathAggregator, certTemplateControllers, ecaControllers []*graph.Node, specialGroupHasTemplateEnroll, specialGroupHasECAEnroll bool) cardinality.Duplex[uint32] {
+func getVictimBitmap(groupExpansions impact.PathAggregator, certTemplateControllers, ecaControllers []*graph.Node, specialGroupHasTemplateEnroll, specialGroupHasECAEnroll bool) cardinality.Duplex[uint64] {
 	// Expand controllers for the eca + template completely because we don't do group shortcutting here
 	var (
 		templateBitmap = expandNodeSliceToBitmapWithoutGroups(certTemplateControllers, groupExpansions)
 		ecaBitmap      = expandNodeSliceToBitmapWithoutGroups(ecaControllers, groupExpansions)
-		victimBitmap   = cardinality.NewBitmap32()
+		victimBitmap   = cardinality.NewBitmap64()
 	)
 
 	// If no special group has enroll neither the template or eca then return the common nodes among the enrollers
