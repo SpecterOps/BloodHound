@@ -336,6 +336,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		case string:
 			if i, err := strconv.Atoi(converted); err != nil {
 				log.Errorf("Error converting trust attributes %s to int", converted)
+				finalTrustAttributes = 0
 			} else {
 				finalTrustAttributes = i
 			}
