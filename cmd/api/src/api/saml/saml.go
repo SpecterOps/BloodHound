@@ -20,13 +20,14 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
-	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/src/database/types"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/src/database/types"
 
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
