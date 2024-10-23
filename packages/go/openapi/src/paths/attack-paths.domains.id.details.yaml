@@ -25,7 +25,6 @@ parameters:
 get:
   operationId: ListDomainAttackPathsDetails
   summary: List domain attack paths details
-  # !!!!!!!! New Description !!!!!!!
   description: |
     Lists detailed data about attack paths for a domain. 
     

@@ -17,9 +17,19 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/specterops/bloodhound/src/model"
+)
+
+var (
+	ErrColumnUnfilterable          = errors.New("the specified column cannot be filtered")
+	ErrFilterPredicateNotSupported = errors.New("the specified filter predicate is not supported for this column")
+	ErrNoFindingType               = errors.New("no finding type specified")
+	ErrColumnFormatNotSupported    = errors.New("column format does not support sorting")
+	ErrInvalidFindingType          = errors.New("invalid finding type specified")
+	ErrInvalidAcceptedFilter       = errors.New("invalid finding type specified")
 )
 
 type Filterable interface {
