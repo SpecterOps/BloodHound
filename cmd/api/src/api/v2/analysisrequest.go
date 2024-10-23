@@ -20,13 +20,12 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/specterops/bloodhound/src/model/appcfg"
-
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 )
 
 const ErrAnalysisScheduledMode = "analysis is configured to run on a schedule, unable to run just in time"

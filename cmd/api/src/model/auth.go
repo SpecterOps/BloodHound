@@ -296,7 +296,13 @@ type SAMLProvider struct {
 	ServiceProviderMetadataURI   serde.URL `json:"sp_metadata_uri" gorm:"-"`
 	ServiceProviderACSURI        serde.URL `json:"sp_acs_uri" gorm:"-"`
 
+	SSOProviderID null.Int32 `json:"sso_provider_id"`
+
 	Serial
+}
+
+func (SAMLProvider) TableName() string {
+	return "saml_providers"
 }
 
 func (s SAMLProvider) AuditData() AuditData {
@@ -466,6 +472,8 @@ type User struct {
 	// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.
 	EULAAccepted bool `json:"eula_accepted"`
 
+	SSOProviderID null.Int32 `json:"sso_provider_id,omitempty"`
+
 	Unique
 }
 
@@ -565,7 +573,21 @@ type SessionAuthProvider int
 const (
 	SessionAuthProviderSecret SessionAuthProvider = 0
 	SessionAuthProviderSAML   SessionAuthProvider = 1
+	SessionAuthProviderOIDC   SessionAuthProvider = 2
 )
+
+func (s SessionAuthProvider) String() string {
+	switch s {
+	case SessionAuthProviderSecret:
+		return "Secret"
+	case SessionAuthProviderSAML:
+		return "SAML"
+	case SessionAuthProviderOIDC:
+		return "OIDC"
+	default:
+		return "Unknown"
+	}
+}
 
 type SessionFlagKey string
 

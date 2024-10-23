@@ -134,6 +134,7 @@ type Database interface {
 	DeleteSAMLProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 
 	// SSO
+	SSOProviderData
 	OIDCProviderData
 
 	// Sessions
