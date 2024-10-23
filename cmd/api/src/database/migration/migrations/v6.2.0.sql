@@ -45,7 +45,7 @@ VALUES ((SELECT id FROM roles WHERE roles.name = 'Administrator'),
         (SELECT id FROM permissions WHERE permissions.authority = 'graphdb' and permissions.name = 'Ingest'))
 ON CONFLICT DO NOTHING;
 
--- Remove the GraphDBWrite permission from the Upload-Only role for 
+-- Remove the GraphDBWrite permission from the Upload-Only role
 DELETE FROM roles_permissions 
 WHERE role_id = (SELECT id FROM roles WHERE roles.name = 'Upload-Only')
 AND permission_id = (SELECT id FROM permissions WHERE permissions.authority = 'graphdb' AND permissions.name = 'Write');
