@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/src/database/types"
 	"net/http"
 	"net/url"
 	"strings"
@@ -266,22 +268,62 @@ func domainValue(host url.URL) string {
 	}
 }
 
+func (s ProviderResource) auditSAMLLogin(requestContext context.Context, user model.User, status model.AuditLogEntryStatus, err error) error {
+	if commitID, idErr := uuid.NewV4(); idErr != nil {
+		return fmt.Errorf("failed to generate commit ID: %w", idErr)
+	} else {
+		bhCtx := ctx.Get(requestContext)
+		auditLog := model.AuditLog{
+			Action:          model.AuditLogActionLoginAttempt,
+			Fields:          types.JSONUntypedObject{"username": user.PrincipalName},
+			RequestID:       bhCtx.RequestID,
+			SourceIpAddress: bhCtx.RequestIP,
+			Status:          status,
+			CommitID:        commitID,
+		}
+
+		if user.PrincipalName != "" {
+			auditLog.ActorID = user.ID.String()
+			auditLog.ActorName = user.PrincipalName
+			auditLog.ActorEmail = user.EmailAddress.ValueOrZero()
+		}
+
+		if status == model.AuditLogStatusFailure && err != nil {
+			auditLog.Fields["error"] = err.Error()
+		}
+
+		return s.db.CreateAuditLog(requestContext, auditLog)
+	}
+}
+
 func (s ProviderResource) createSessionFromAssertion(request *http.Request, response http.ResponseWriter, expires time.Time, assertion *saml.Assertion) {
 	hostURL := *ctx.FromRequest(request).Host
 
+	// Look up the user and create an intent audit log
 	if user, err := s.lookupSAMLUser(request.Context(), assertion); err != nil {
 		log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", s.serviceProvider.Config.Name, err)
+
+		if !errors.Is(err, ErrorUserNotFound) && !errors.Is(err, ErrorSAMLAssertion) {
+			if auditErr := s.auditSAMLLogin(request.Context(), user, model.AuditLogStatusFailure, err); auditErr != nil {
+				log.Errorf("[SAML] Failed to audit failed login: %v", auditErr)
+			}
+		}
 
 		switch {
 		case errors.Is(err, ErrorSAMLAssertion):
 			s.writeAPIErrorResponse(request, response, http.StatusBadRequest, "session assertion does not meet the requirements for user lookup")
 		case errors.Is(err, ErrorUserNotFound), errors.Is(err, ErrorUserNotAuthorizedForProvider):
-			// This is a tiny bit more descriptive for the end user without leaking any sensitive information
 			s.writeAPIErrorResponse(request, response, http.StatusForbidden, "user is not allowed")
 		default:
 			s.writeAPIErrorResponse(request, response, http.StatusInternalServerError, "session creation failure")
 		}
+	} else if auditErr := s.auditSAMLLogin(request.Context(), user, model.AuditLogStatusIntent, nil); auditErr != nil {
+		log.Errorf("[SAML] Failed to audit login intent: %v", auditErr)
 	} else if sessionJWT, err := s.authenticator.CreateSession(request.Context(), user, s.serviceProvider.Config); err != nil {
+		if auditErr := s.auditSAMLLogin(request.Context(), user, model.AuditLogStatusFailure, err); auditErr != nil {
+			log.Errorf("[SAML] Failed to audit failed authentication: %v", auditErr)
+		}
+
 		if locationURL := api.URLJoinPath(hostURL, api.UserDisabledPath); errors.Is(err, ErrorUserDisabled) {
 			response.Header().Add(headers.Location.String(), locationURL.String())
 			response.WriteHeader(http.StatusFound)
@@ -289,6 +331,8 @@ func (s ProviderResource) createSessionFromAssertion(request *http.Request, resp
 			log.Errorf("[SAML] Failed to create user session for SAML provider %s: %v", s.serviceProvider.Config.Name, err)
 			s.writeAPIErrorResponse(request, response, http.StatusInternalServerError, "session creation failure")
 		}
+	} else if auditErr := s.auditSAMLLogin(request.Context(), user, model.AuditLogStatusSuccess, nil); auditErr != nil {
+		log.Errorf("[SAML] Failed to audit successful login: %v", auditErr)
 	} else {
 		locationURL := api.URLJoinPath(hostURL, api.UserInterfacePath)
 
