@@ -53,30 +53,37 @@ func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
 }
 
 func convertInvalidDomainProperties(itemProps map[string]any) {
-	convertStringPropertyToInt(itemProps, "machineaccountquota")
-	convertStringPropertyToInt(itemProps, "minpwdlength")
-	convertStringPropertyToInt(itemProps, "pwdproperties")
-	convertStringPropertyToInt(itemProps, "pwdhistorylength")
-	convertStringPropertyToInt(itemProps, "lockoutthreshold")
+	convertProperty(itemProps, "machineaccountquota", stringToInt)
+	convertProperty(itemProps, "minpwdlength", stringToInt)
+	convertProperty(itemProps, "pwdproperties", stringToInt)
+	convertProperty(itemProps, "pwdhistorylength", stringToInt)
+	convertProperty(itemProps, "lockoutthreshold", stringToInt)
+	convertProperty(itemProps, "expirepasswordsonsmartcardonlyaccounts", stringToBool)
+}
 
-	if rawProperty, ok := itemProps["expirepasswordsonsmartcardonlyaccounts"]; ok {
+func convertProperty(itemProps map[string]any, keyName string, conversionFunction func(map[string]any, string)) {
+	conversionFunction(itemProps, keyName)
+}
+
+func stringToBool(itemProps map[string]any, keyName string) {
+	if rawProperty, ok := itemProps[keyName]; ok {
 		switch converted := rawProperty.(type) {
 		case string:
 			if final, err := strconv.ParseBool(converted); err != nil {
-				delete(itemProps, "expirepasswordsonsmartcardonlyaccounts")
+				delete(itemProps, keyName)
 			} else {
-				itemProps["expirepasswordsonsmartcardonlyaccounts"] = final
+				itemProps[keyName] = final
 			}
 		case bool:
 		//pass
 		default:
 			log.Debugf("Removing %s with type %T", converted)
-			delete(itemProps, "expirepasswordsonsmartcardonlyaccounts")
+			delete(itemProps, keyName)
 		}
 	}
 }
 
-func convertStringPropertyToInt(itemProps map[string]any, keyName string) {
+func stringToInt(itemProps map[string]any, keyName string) {
 	if rawProperty, ok := itemProps[keyName]; ok {
 		switch converted := rawProperty.(type) {
 		case string:
