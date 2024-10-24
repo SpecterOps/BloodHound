@@ -28,12 +28,14 @@ import (
 
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -266,46 +268,78 @@ func domainValue(host url.URL) string {
 	}
 }
 
+// In createSessionFromAssertion:
 func (s ProviderResource) createSessionFromAssertion(request *http.Request, response http.ResponseWriter, expires time.Time, assertion *saml.Assertion) {
-	hostURL := *ctx.FromRequest(request).Host
+	var (
+		hostURL      = *ctx.FromRequest(request).Host
+		commitID     uuid.UUID
+		user         model.User
+		sessionJWT   string
+		loginRequest api.LoginRequest
+		err          error
+	)
 
-	if user, err := s.lookupSAMLUser(request.Context(), assertion); err != nil {
+	if commitID, err = uuid.NewV4(); err != nil {
+		log.Errorf("[SAML] Failed to generate commit ID: %v", err)
+		s.writeAPIErrorResponse(request, response, http.StatusInternalServerError, "session creation failure")
+	} else if user, err = s.lookupSAMLUser(request.Context(), assertion); err != nil {
+		// Only call AuditLogin if user is valid (not empty)
+		if !errors.Is(err, ErrorUserNotFound) && !errors.Is(err, ErrorSAMLAssertion) && user.PrincipalName != "" {
+			loginRequest = api.LoginRequest{
+				LoginMethod: auth.ProviderTypeSAML,
+				Username:    user.PrincipalName,
+			}
+			s.authenticator.(api.Authenticator).AuditLogin(request.Context(), commitID, user, loginRequest, model.AuditLogStatusFailure, err)
+		}
+
 		log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", s.serviceProvider.Config.Name, err)
 
 		switch {
 		case errors.Is(err, ErrorSAMLAssertion):
 			s.writeAPIErrorResponse(request, response, http.StatusBadRequest, "session assertion does not meet the requirements for user lookup")
 		case errors.Is(err, ErrorUserNotFound), errors.Is(err, ErrorUserNotAuthorizedForProvider):
-			// This is a tiny bit more descriptive for the end user without leaking any sensitive information
 			s.writeAPIErrorResponse(request, response, http.StatusForbidden, "user is not allowed")
 		default:
 			s.writeAPIErrorResponse(request, response, http.StatusInternalServerError, "session creation failure")
 		}
-	} else if sessionJWT, err := s.authenticator.CreateSession(request.Context(), user, s.serviceProvider.Config); err != nil {
-		if locationURL := api.URLJoinPath(hostURL, api.UserDisabledPath); errors.Is(err, ErrorUserDisabled) {
+	} else {
+		// Log the intent to authenticate
+		loginRequest = api.LoginRequest{
+			LoginMethod: auth.ProviderTypeSAML,
+			Username:    user.PrincipalName,
+		}
+		s.authenticator.(api.Authenticator).AuditLogin(request.Context(), commitID, user, loginRequest, model.AuditLogStatusIntent, nil)
+
+		if sessionJWT, err = s.authenticator.CreateSession(request.Context(), user, s.serviceProvider.Config); err != nil {
+			s.authenticator.(api.Authenticator).AuditLogin(request.Context(), commitID, user, loginRequest, model.AuditLogStatusFailure, err)
+
+			if locationURL := api.URLJoinPath(hostURL, api.UserDisabledPath); errors.Is(err, ErrorUserDisabled) {
+				response.Header().Add(headers.Location.String(), locationURL.String())
+				response.WriteHeader(http.StatusFound)
+			} else {
+				log.Errorf("[SAML] Failed to create user session for SAML provider %s: %v", s.serviceProvider.Config.Name, err)
+				s.writeAPIErrorResponse(request, response, http.StatusInternalServerError, "session creation failure")
+			}
+		} else {
+			// Log successful authentication
+			s.authenticator.(api.Authenticator).AuditLogin(request.Context(), commitID, user, loginRequest, model.AuditLogStatusSuccess, nil)
+
+			locationURL := api.URLJoinPath(hostURL, api.UserInterfacePath)
+
+			http.SetCookie(response, &http.Cookie{
+				Name:     api.AuthTokenCookieName,
+				Value:    sessionJWT,
+				Expires:  expires,
+				Secure:   hostURL.Scheme == "https",
+				SameSite: sameSiteValue(hostURL),
+				Path:     "/",
+				Domain:   domainValue(hostURL),
+			})
+
+			// Redirect back to the UI landing page
 			response.Header().Add(headers.Location.String(), locationURL.String())
 			response.WriteHeader(http.StatusFound)
-		} else {
-			log.Errorf("[SAML] Failed to create user session for SAML provider %s: %v", s.serviceProvider.Config.Name, err)
-			s.writeAPIErrorResponse(request, response, http.StatusInternalServerError, "session creation failure")
 		}
-	} else {
-		locationURL := api.URLJoinPath(hostURL, api.UserInterfacePath)
-
-		// Set the token cookie
-		http.SetCookie(response, &http.Cookie{
-			Name:     api.AuthTokenCookieName,
-			Value:    sessionJWT,
-			Expires:  expires,
-			Secure:   hostURL.Scheme == "https",
-			SameSite: sameSiteValue(hostURL),
-			Path:     "/",
-			Domain:   domainValue(hostURL),
-		})
-
-		// Redirect back to the UI landing page
-		response.Header().Add(headers.Location.String(), locationURL.String())
-		response.WriteHeader(http.StatusFound)
 	}
 }
 

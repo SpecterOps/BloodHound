@@ -21,7 +21,7 @@ package ad
 
 import (
 	"errors"
-
+  
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 

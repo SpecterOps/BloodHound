@@ -35,8 +35,8 @@ import (
 
 const (
 	ProviderTypeSecret = "secret"
-
-	HMAC_SHA2_256 = "hmac-sha2-256"
+	ProviderTypeSAML   = "saml"
+	HMAC_SHA2_256      = "hmac-sha2-256"
 )
 
 type SessionData struct {
