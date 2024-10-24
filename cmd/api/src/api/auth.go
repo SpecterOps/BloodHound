@@ -300,7 +300,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 	}
 }
 
-func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter, name, value string, expires time.Time) {
+func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter, name, value string, expires time.Time, httpOnly bool) {
 	var (
 		hostURL       = *ctx.FromRequest(request).Host
 		sameSiteValue = http.SameSiteDefaultMode
@@ -323,6 +323,7 @@ func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter,
 		Value:    value,
 		Expires:  expires,
 		Secure:   hostURL.Scheme == "https",
+		HttpOnly: httpOnly,
 		SameSite: sameSiteValue,
 		Path:     "/",
 		Domain:   domainValue,
