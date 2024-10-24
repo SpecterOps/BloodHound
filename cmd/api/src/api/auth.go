@@ -301,6 +301,10 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 	}
 }
 
+func DeleteBrowserCookie(request *http.Request, response http.ResponseWriter, name string) {
+	SetSecureBrowserCookie(request, response, name, "", time.Now().UTC(), false)
+}
+
 func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter, name, value string, expires time.Time, httpOnly bool) {
 	var (
 		hostURL       = *ctx.FromRequest(request).Host
@@ -352,6 +356,10 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 			}
 		case model.OIDCProvider:
 			//todo connect to db provider table
+
+			// Delete pre-auth cookies regardless
+			DeleteBrowserCookie(request, response, AuthPKCECookieName)
+			DeleteBrowserCookie(request, response, AuthStateCookieName)
 			break
 		case model.AuthSecret:
 			WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusBadRequest, "invalid auth provider", request), response)
@@ -372,7 +380,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 			locationURL := URLJoinPath(hostURL, UserInterfacePath)
 
 			// Set the token cookie
-			SetSecureBrowserCookie(request, response, AuthTokenCookieName, sessionJWT, time.Now().UTC().Add(s.cfg.AuthSessionTTL()))
+			SetSecureBrowserCookie(request, response, AuthTokenCookieName, sessionJWT, time.Now().UTC().Add(s.cfg.AuthSessionTTL()), false)
 
 			// Redirect back to the UI landing page
 			response.Header().Add(headers.Location.String(), locationURL.String())

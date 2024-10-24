@@ -180,7 +180,6 @@ func (s ManagementResource) SSOLoginHandler(response http.ResponseWriter, reques
 
 func (s ManagementResource) SSOCallbackHandler(response http.ResponseWriter, request *http.Request) {
 	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableSSOProviderSlug]
-	log.Debugf("HERE I AM IN CALLBACK - provider %s", ssoProviderSlug)
 
 	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
 		api.HandleDatabaseError(request, response, err)
