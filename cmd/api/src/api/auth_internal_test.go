@@ -110,7 +110,7 @@ func TestAuditLogin(t *testing.T) {
 	expectedAuditLog := buildAuditLog(testCtx, testyUser, loginRequest, model.AuditLogStatusSuccess, nil)
 
 	mockDB.EXPECT().CreateAuditLog(testCtx, expectedAuditLog)
-	a.auditLogin(testCtx, commitId, testyUser, loginRequest, model.AuditLogStatusSuccess, nil)
+	a.AuditLogin(testCtx, commitId, testyUser, loginRequest, model.AuditLogStatusSuccess, nil)
 }
 
 func TestAuditLogin_UserNotFound(t *testing.T) {
@@ -123,7 +123,7 @@ func TestAuditLogin_UserNotFound(t *testing.T) {
 	expectedAuditLog := buildAuditLog(testCtx, model.User{}, loginRequest, model.AuditLogStatusFailure, ErrInvalidAuth)
 
 	mockDB.EXPECT().CreateAuditLog(testCtx, expectedAuditLog)
-	a.auditLogin(testCtx, commitId, model.User{}, loginRequest, model.AuditLogStatusFailure, ErrInvalidAuth)
+	a.AuditLogin(testCtx, commitId, model.User{}, loginRequest, model.AuditLogStatusFailure, ErrInvalidAuth)
 }
 
 func TestValidateRequestSignature(t *testing.T) {
