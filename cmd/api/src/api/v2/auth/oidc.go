@@ -23,7 +23,6 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -69,8 +68,6 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 	} else if provider, err := oidc.NewProvider(request.Context(), oidcProvider.Issuer); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
-		log.Debugf("provider generated endpoints %+v", provider.Endpoint())
-
 		conf := &oauth2.Config{
 			ClientID:    oidcProvider.ClientID,
 			Endpoint:    provider.Endpoint(),
@@ -80,7 +77,6 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 		// use PKCE to protect against CSRF attacks
 		// https://www.ietf.org/archive/id/draft-ietf-oauth-security-topics-22.html#name-countermeasures-6
 		verifier := oauth2.GenerateVerifier()
-		log.Debugf("LOGIN HANDLER - pkce verifier %s\n", verifier)
 
 		// Store PKCE on web browser in secure cookie for retrieval in callback
 		api.SetSecureBrowserCookie(request, response, api.AuthPKCECookieName, verifier, time.Now().UTC().Add(time.Hour))
@@ -90,7 +86,6 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 
 		// Redirect user to consent page to ask for permission for the scopes specified above.
 		redirectURL := conf.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
-		log.Debugf("Visit the URL for the auth dialog: %v", redirectURL)
 
 		response.Header().Add(headers.Location.String(), redirectURL)
 		response.WriteHeader(http.StatusFound)
