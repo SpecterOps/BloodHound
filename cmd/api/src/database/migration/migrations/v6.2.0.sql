@@ -49,3 +49,9 @@ ON CONFLICT DO NOTHING;
 DELETE FROM roles_permissions 
 WHERE role_id = (SELECT id FROM roles WHERE roles.name = 'Upload-Only')
 AND permission_id = (SELECT id FROM permissions WHERE permissions.authority = 'graphdb' AND permissions.name = 'Write');
+
+-- Set the user's saml_provider_id to null when an sso_provider or saml_provider is deleted
+ALTER TABLE ONLY users
+    DROP CONSTRAINT IF EXISTS fk_users_saml_provider;
+ALTER TABLE ONLY users
+    ADD CONSTRAINT fk_users_saml_provider FOREIGN KEY (saml_provider_id) REFERENCES saml_providers (id) ON DELETE SET NULL;
