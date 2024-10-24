@@ -99,7 +99,7 @@ func (s *BloodhoundDB) DeleteSSOProvider(ctx context.Context, id int) error {
 		Table(ssoProviderTableName).
 		Where("id = ?", id).
 		First(&ssoProvider); result.Error != nil {
-		return result.Error
+		return CheckError(result)
 	}
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
