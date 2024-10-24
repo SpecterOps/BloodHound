@@ -22,11 +22,9 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm/utils"
@@ -149,7 +147,7 @@ func (s ManagementResource) DeleteSSOProvider(response http.ResponseWriter, requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "user may not delete their own SSO auth provider", request), response)
 	} else if providerUsers, err := s.db.GetSSOProviderUsers(request.Context(), ssoProviderID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err = s.db.DeleteSSOProvider(request.Context(), ssoProviderID); errors.Is(err, database.ErrNotFound) {
+	} else if err = s.db.DeleteSSOProvider(request.Context(), ssoProviderID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteJSONResponse(request.Context(), DeleteSSOProviderResponse{
