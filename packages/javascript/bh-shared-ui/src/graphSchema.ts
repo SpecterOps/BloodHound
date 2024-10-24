@@ -105,7 +105,7 @@ export enum ActiveDirectoryRelationshipKind {
     AddKeyCredentialLink = 'AddKeyCredentialLink',
     LocalToComputer = 'LocalToComputer',
     MemberOfLocalGroup = 'MemberOfLocalGroup',
-    RemoteInteractiveLogonPrivilege = 'RemoteInteractiveLogonPrivilege',
+    RemoteInteractiveLogonRight = 'RemoteInteractiveLogonRight',
     SyncLAPSPassword = 'SyncLAPSPassword',
     WriteAccountRestrictions = 'WriteAccountRestrictions',
     WriteGPLink = 'WriteGPLink',
@@ -211,8 +211,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'LocalToComputer';
         case ActiveDirectoryRelationshipKind.MemberOfLocalGroup:
             return 'MemberOfLocalGroup';
-        case ActiveDirectoryRelationshipKind.RemoteInteractiveLogonPrivilege:
-            return 'RemoteInteractiveLogonPrivilege';
+        case ActiveDirectoryRelationshipKind.RemoteInteractiveLogonRight:
+            return 'RemoteInteractiveLogonRight';
         case ActiveDirectoryRelationshipKind.SyncLAPSPassword:
             return 'SyncLAPSPassword';
         case ActiveDirectoryRelationshipKind.WriteAccountRestrictions:

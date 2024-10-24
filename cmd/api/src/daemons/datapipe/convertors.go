@@ -49,7 +49,7 @@ func convertComputerData(computer ein.Computer, converted *ConvertedData) {
 		}
 
 		if userRight.Privilege == ein.UserRightRemoteInteractiveLogon {
-			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.RemoteInteractiveLogonPrivilege)...)
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.RemoteInteractiveLogonRight)...)
 			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
 		}
 	}

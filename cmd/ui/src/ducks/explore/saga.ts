@@ -112,7 +112,7 @@ function* runSearchQuery(payload: SearchRequest): SagaIterator {
 function* runPathfindingQuery(payload: PathfindingRequest): SagaIterator {
     const standardExclusions = [
         ActiveDirectoryRelationshipKind.LocalToComputer,
-        ActiveDirectoryRelationshipKind.RemoteInteractiveLogonPrivilege,
+        ActiveDirectoryRelationshipKind.RemoteInteractiveLogonRight,
         ActiveDirectoryRelationshipKind.MemberOfLocalGroup,
         ActiveDirectoryRelationshipKind.GetChanges,
         ActiveDirectoryRelationshipKind.GetChangesAll,
