@@ -143,14 +143,15 @@ func TestBloodhoundDB_GetSSOProviderBySlug(t *testing.T) {
 	defer dbInst.Close(testCtx)
 
 	t.Run("successfully get sso provider by slug", func(t *testing.T) {
-		newProvider, err := dbInst.CreateSSOProvider(testCtx, "Gotham Net", model.SessionAuthProviderOIDC)
-		require.NoError(t, err)
+		newProvider, err := dbInst.CreateOIDCProvider(testCtx, "Gotham Net", "https://test.localhost.com/auth", "gotham-net")
+		require.Nil(t, err)
 
 		provider, err := dbInst.GetSSOProviderBySlug(testCtx, "gotham-net")
 		require.Nil(t, err)
-		require.Equal(t, newProvider.ID, provider.ID)
-		require.Equal(t, newProvider.Name, provider.Name)
-		require.Equal(t, newProvider.Slug, provider.Slug)
+		require.EqualValues(t, newProvider.SSOProviderID, provider.ID)
+		require.NotNil(t, provider.OIDCProvider)
+		require.Equal(t, newProvider.ClientID, provider.OIDCProvider.ClientID)
+		require.Equal(t, newProvider.Issuer, provider.OIDCProvider.Issuer)
 	})
 }
 

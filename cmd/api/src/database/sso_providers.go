@@ -18,7 +18,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
@@ -117,11 +116,9 @@ func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sql
 
 func (s *BloodhoundDB) GetSSOProviderBySlug(ctx context.Context, slug string) (model.SSOProvider, error) {
 	var provider model.SSOProvider
-	if tx := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, name, slug, created_at, updated_at FROM %s WHERE slug = ?;", ssoProviderTableName), slug).Scan(&provider); tx.RowsAffected == 0 {
-		return provider, ErrNotFound
-	}
+	result := s.db.WithContext(ctx).Preload("OIDCProvider").Preload("SAMLProvider").Where("slug = ?", slug).Find(&provider)
 
-	return provider, nil
+	return provider, CheckError(result)
 }
 
 // GetSSOProviderUsers returns all the users associated with a given sso provider
