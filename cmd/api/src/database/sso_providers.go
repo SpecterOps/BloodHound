@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
+	"gorm.io/gorm"
 )
 
 const (
@@ -29,20 +30,10 @@ const (
 
 // SSOProviderData defines the methods required to interact with the sso_providers table
 type SSOProviderData interface {
-	CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error)
 	GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error)
-}
-
-// CreateSSOProvider creates an entry in the sso_providers table
-// A slug will be created for the SSO Provider using the name argument as a base. The name will be lower cased and all spaces are replaced with `-`
-func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error) {
-	provider := model.SSOProvider{
-		Name: name,
-		Slug: strings.ToLower(strings.ReplaceAll(name, " ", "-")),
-		Type: authProvider,
-	}
-
-	return provider, CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Create(&provider))
+	CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error)
+	DeleteSSOProvider(ctx context.Context, id int) error
+	GetSSOProviderUsers(ctx context.Context, id int) (model.Users, error)
 }
 
 func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error) {
@@ -68,4 +59,65 @@ func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sql
 
 	result := query.Find(&providers)
 	return providers, CheckError(result)
+}
+
+// CreateSSOProvider creates an entry in the sso_providers table
+// A slug will be created for the SSO Provider using the name argument as a base. The name will be lower cased and all spaces are replaced with `-`
+func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error) {
+	var (
+		provider = model.SSOProvider{
+			Name: name,
+			Slug: strings.ToLower(strings.ReplaceAll(name, " ", "-")),
+			Type: authProvider,
+		}
+
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionCreateSSOIdentityProvider,
+			Model:  &provider,
+		}
+	)
+
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Table(ssoProviderTableName).Create(&provider))
+	})
+
+	return provider, err
+}
+
+// DeleteSSOProvider deletes a sso_provider entry with a matching id
+func (s *BloodhoundDB) DeleteSSOProvider(ctx context.Context, id int) error {
+	var (
+		ssoProvider = model.SSOProvider{}
+		auditEntry  = model.AuditEntry{
+			Action: model.AuditLogActionDeleteSSOIdentityProvider,
+			Model:  &ssoProvider,
+		}
+	)
+
+	// Populate the OIDCProvider and SAMLProvider fields, used in AuditData to log the details of the provider based on its type
+	if result := s.db.Preload("OIDCProvider").Preload("SAMLProvider").
+		Table(ssoProviderTableName).
+		Where("id = ?", id).
+		First(&ssoProvider); result.Error != nil {
+		return CheckError(result)
+	}
+
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		if result := tx.Table(ssoProviderTableName).Delete(&ssoProvider); result.RowsAffected == 0 {
+			return ErrNotFound
+		} else {
+			return CheckError(result)
+		}
+	})
+
+	return err
+}
+
+// GetSSOProviderUsers returns all the users associated with a given sso provider
+func (s *BloodhoundDB) GetSSOProviderUsers(ctx context.Context, id int) (model.Users, error) {
+	var (
+		users model.Users
+	)
+
+	return users, CheckError(s.db.WithContext(ctx).Table("users").Where("sso_provider_id = ?", id).Find(&users))
 }

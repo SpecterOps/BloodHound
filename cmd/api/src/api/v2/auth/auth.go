@@ -161,19 +161,6 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 	}
 }
 
-func (s ManagementResource) disassociateUsersFromSAMLProvider(request *http.Request, providerUsers model.Users) error {
-	for _, user := range providerUsers {
-		user.SAMLProvider = nil
-		user.SAMLProviderID = null.NewInt32(0, false)
-
-		if err := s.db.UpdateUser(request.Context(), user); err != nil {
-			return api.FormatDatabaseError(err)
-		}
-	}
-
-	return nil
-}
-
 func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, request *http.Request) {
 	var (
 		identityProvider model.SAMLProvider
@@ -189,9 +176,7 @@ func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "user may not delete their own SAML auth provider", request), response)
 	} else if providerUsers, err := s.db.GetSAMLProviderUsers(request.Context(), identityProvider.ID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err := s.disassociateUsersFromSAMLProvider(request, providerUsers); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if err := s.db.DeleteSAMLProvider(request.Context(), identityProvider); err != nil {
+	} else if err := s.db.DeleteSSOProvider(request.Context(), int(identityProvider.SSOProviderID.Int32)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), v2.DeleteSAMLProviderResponse{

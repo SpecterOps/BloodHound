@@ -62,8 +62,9 @@ func registerV2Auth(cfg config.Configuration, db database.Database, permissions 
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saml/providers/{%s}", api.URIPathVariableSAMLProviderID), managementResource.DeleteSAMLProvider).RequirePermissions(permissions.AuthManageProviders),
 
 		// SSO
-		routerInst.POST("/api/v2/sso-providers/oidc", managementResource.CreateOIDCProvider).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.GET("/api/v2/sso-providers", managementResource.ListAuthProviders).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport),
+		routerInst.POST("/api/v2/sso-providers/oidc", managementResource.CreateOIDCProvider).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
+		routerInst.DELETE(fmt.Sprintf("/api/v2/sso-providers/{%s}", api.URIPathVariableSSOProviderID), managementResource.DeleteSSOProvider).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
 
 		// Permissions
 		routerInst.GET("/api/v2/permissions", managementResource.ListPermissions).RequirePermissions(permissions.AuthManageSelf),
