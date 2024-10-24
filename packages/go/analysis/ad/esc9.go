@@ -33,9 +33,9 @@ import (
 )
 
 func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	results := cardinality.NewBitmap32()
+	results := cardinality.NewBitmap64()
 
-	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint32()); !ok {
+	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint64()); !ok {
 		return nil
 	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
@@ -61,12 +61,12 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 					log.Warnf("Error getting start nodes for esc9a attacker nodes: %v", err)
 					continue
 				} else {
-					results.Or(cardinality.NodeIDsToDuplex(attackers))
+					results.Or(graph.NodeIDsToDuplex(attackers))
 				}
 			}
 		}
 
-		results.Each(func(value uint32) bool {
+		results.Each(func(value uint64) bool {
 			return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
@@ -79,9 +79,9 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 }
 
 func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	results := cardinality.NewBitmap32()
+	results := cardinality.NewBitmap64()
 
-	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint32()); !ok {
+	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint64()); !ok {
 		return nil
 	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
@@ -104,12 +104,12 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 					log.Warnf("Error getting start nodes for esc9a attacker nodes: %v", err)
 					continue
 				} else {
-					results.Or(cardinality.NodeIDsToDuplex(attackers))
+					results.Or(graph.NodeIDsToDuplex(attackers))
 				}
 			}
 		}
 
-		results.Each(func(value uint32) bool {
+		results.Each(func(value uint64) bool {
 			return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,

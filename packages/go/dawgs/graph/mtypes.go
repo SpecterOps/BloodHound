@@ -14,18 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package cardinality
+package graph
 
 import (
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"sync"
-
-	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
-type KindBitmaps map[string]Duplex[uint32]
+type KindBitmaps map[string]cardinality.Duplex[uint64]
 
-func (s KindBitmaps) Get(kinds ...graph.Kind) Duplex[uint32] {
-	bitmap := NewBitmap32()
+func (s KindBitmaps) Get(kinds ...Kind) cardinality.Duplex[uint64] {
+	bitmap := cardinality.NewBitmap64()
 
 	if len(kinds) == 0 {
 		for _, kindBitmap := range s {
@@ -42,14 +41,14 @@ func (s KindBitmaps) Get(kinds ...graph.Kind) Duplex[uint32] {
 	return bitmap
 }
 
-func (s KindBitmaps) Count(kinds ...graph.Kind) uint64 {
+func (s KindBitmaps) Count(kinds ...Kind) uint64 {
 	return s.Get(kinds...).Cardinality()
 }
 
 func (s KindBitmaps) Or(bitmaps KindBitmaps) {
 	for kindStr, leftBitmap := range bitmaps {
 		if rightBitmap, hasRightBitmap := s[kindStr]; !hasRightBitmap {
-			newRightBitmap := NewBitmap32()
+			newRightBitmap := cardinality.NewBitmap64()
 			newRightBitmap.Or(leftBitmap)
 
 			s[kindStr] = newRightBitmap
@@ -59,7 +58,7 @@ func (s KindBitmaps) Or(bitmaps KindBitmaps) {
 	}
 }
 
-func (s KindBitmaps) AddSets(nodeSets ...graph.NodeSet) {
+func (s KindBitmaps) AddSets(nodeSets ...NodeSet) {
 	for _, nodeSet := range nodeSets {
 		for _, node := range nodeSet {
 			s.AddIDToKinds(node.ID, node.Kinds)
@@ -67,8 +66,8 @@ func (s KindBitmaps) AddSets(nodeSets ...graph.NodeSet) {
 	}
 }
 
-func (s KindBitmaps) OrAll() Duplex[uint32] {
-	all := NewBitmap32()
+func (s KindBitmaps) OrAll() cardinality.Duplex[uint64] {
+	all := cardinality.NewBitmap64()
 
 	for _, bitmap := range s {
 		all.Or(bitmap)
@@ -77,9 +76,9 @@ func (s KindBitmaps) OrAll() Duplex[uint32] {
 	return all
 }
 
-func (s KindBitmaps) Contains(node *graph.Node) bool {
+func (s KindBitmaps) Contains(node *Node) bool {
 	for _, bitmap := range s {
-		if bitmap.Contains(node.ID.Uint32()) {
+		if bitmap.Contains(node.ID.Uint64()) {
 			return true
 		}
 	}
@@ -87,11 +86,11 @@ func (s KindBitmaps) Contains(node *graph.Node) bool {
 	return false
 }
 
-func (s KindBitmaps) AddDuplexToKind(ids Duplex[uint32], kind graph.Kind) {
+func (s KindBitmaps) AddDuplexToKind(ids cardinality.Duplex[uint64], kind Kind) {
 	kindStr := kind.String()
 
 	if bitmap, hasBitmap := s[kindStr]; !hasBitmap {
-		newBitmap := NewBitmap32()
+		newBitmap := cardinality.NewBitmap64()
 		newBitmap.Or(ids)
 
 		s[kindStr] = newBitmap
@@ -100,14 +99,14 @@ func (s KindBitmaps) AddDuplexToKind(ids Duplex[uint32], kind graph.Kind) {
 	}
 }
 
-func (s KindBitmaps) AddIDToKind(id graph.ID, kind graph.Kind) {
+func (s KindBitmaps) AddIDToKind(id ID, kind Kind) {
 	var (
-		nodeID  = id.Uint32()
+		nodeID  = id.Uint64()
 		kindStr = kind.String()
 	)
 
 	if bitmap, hasBitmap := s[kindStr]; !hasBitmap {
-		newBitmap := NewBitmap32()
+		newBitmap := cardinality.NewBitmap64()
 		newBitmap.Add(nodeID)
 
 		s[kindStr] = newBitmap
@@ -116,14 +115,14 @@ func (s KindBitmaps) AddIDToKind(id graph.ID, kind graph.Kind) {
 	}
 }
 
-func (s KindBitmaps) AddIDToKinds(id graph.ID, kinds graph.Kinds) {
-	nodeID := id.Uint32()
+func (s KindBitmaps) AddIDToKinds(id ID, kinds Kinds) {
+	nodeID := id.Uint64()
 
 	for _, kind := range kinds {
 		kindStr := kind.String()
 
 		if bitmap, hasBitmap := s[kindStr]; !hasBitmap {
-			newBitmap := NewBitmap32()
+			newBitmap := cardinality.NewBitmap64()
 			newBitmap.Add(nodeID)
 
 			s[kindStr] = newBitmap
@@ -133,7 +132,7 @@ func (s KindBitmaps) AddIDToKinds(id graph.ID, kinds graph.Kinds) {
 	}
 }
 
-func (s KindBitmaps) AddNodes(nodes ...*graph.Node) {
+func (s KindBitmaps) AddNodes(nodes ...*Node) {
 	for _, node := range nodes {
 		s.AddIDToKinds(node.ID, node.Kinds)
 	}
@@ -146,20 +145,20 @@ type ThreadSafeKindBitmap struct {
 
 func NewThreadSafeKindBitmap() *ThreadSafeKindBitmap {
 	return &ThreadSafeKindBitmap{
-		bitmaps: map[string]Duplex[uint32]{},
+		bitmaps: map[string]cardinality.Duplex[uint64]{},
 		rwLock:  &sync.RWMutex{},
 	}
 }
 
-func (s ThreadSafeKindBitmap) Count(kinds ...graph.Kind) uint64 {
+func (s ThreadSafeKindBitmap) Count(kinds ...Kind) uint64 {
 	return s.Get(kinds...).Cardinality()
 }
 
-func (s ThreadSafeKindBitmap) Get(kinds ...graph.Kind) Duplex[uint32] {
+func (s ThreadSafeKindBitmap) Get(kinds ...Kind) cardinality.Duplex[uint64] {
 	s.rwLock.RLock()
 	defer s.rwLock.RUnlock()
 
-	bitmap := NewBitmap32()
+	bitmap := cardinality.NewBitmap64()
 
 	if len(kinds) == 0 {
 		for _, kindBitmap := range s.bitmaps {
@@ -176,7 +175,7 @@ func (s ThreadSafeKindBitmap) Get(kinds ...graph.Kind) Duplex[uint32] {
 	return bitmap
 }
 
-func (s ThreadSafeKindBitmap) Cardinality(kinds ...graph.Kind) uint64 {
+func (s ThreadSafeKindBitmap) Cardinality(kinds ...Kind) uint64 {
 	return s.Get(kinds...).Cardinality()
 }
 
@@ -192,7 +191,7 @@ func (s ThreadSafeKindBitmap) Clone() *ThreadSafeKindBitmap {
 	return clone
 }
 
-func (s ThreadSafeKindBitmap) Contains(kind graph.Kind, value uint32) bool {
+func (s ThreadSafeKindBitmap) Contains(kind Kind, value uint64) bool {
 	s.rwLock.RLock()
 	defer s.rwLock.RUnlock()
 
@@ -203,28 +202,28 @@ func (s ThreadSafeKindBitmap) Contains(kind graph.Kind, value uint32) bool {
 	return false
 }
 
-func (s ThreadSafeKindBitmap) Add(kind graph.Kind, value uint32) {
+func (s ThreadSafeKindBitmap) Add(kind Kind, value uint64) {
 	s.rwLock.Lock()
 	defer s.rwLock.Unlock()
 
 	if kindBitmap, hasKind := s.bitmaps[kind.String()]; hasKind {
 		kindBitmap.Add(value)
 	} else {
-		kindBitmap = NewBitmap32()
+		kindBitmap = cardinality.NewBitmap64()
 		kindBitmap.Add(value)
 
 		s.bitmaps[kind.String()] = kindBitmap
 	}
 }
 
-func (s ThreadSafeKindBitmap) CheckedAdd(kind graph.Kind, value uint32) bool {
+func (s ThreadSafeKindBitmap) CheckedAdd(kind Kind, value uint64) bool {
 	s.rwLock.Lock()
 	defer s.rwLock.Unlock()
 
 	if kindBitmap, hasKind := s.bitmaps[kind.String()]; hasKind {
 		return kindBitmap.CheckedAdd(value)
 	} else {
-		kindBitmap = NewBitmap32()
+		kindBitmap = cardinality.NewBitmap64()
 		kindBitmap.Add(value)
 
 		s.bitmaps[kind.String()] = kindBitmap

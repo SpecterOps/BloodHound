@@ -128,7 +128,7 @@ func (s ID) Int64() int64 {
 }
 
 func (s ID) Sizeof() size.Size {
-	return size.Size(unsafe.Sizeof(s.Uint32()))
+	return size.Size(unsafe.Sizeof(s))
 }
 
 // String formats the int64 value of the ID as a string.

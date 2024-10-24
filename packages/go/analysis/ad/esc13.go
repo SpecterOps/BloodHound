@@ -21,7 +21,6 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/RoaringBitmap/roaring"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -61,7 +60,7 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				} else {
 					for _, group := range groupNodes.Slice() {
 						if groupIsContainedOrTrusted(tx, group, domain) {
-							filtered.Each(func(value uint32) bool {
+							filtered.Each(func(value uint64) bool {
 								channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 									FromID: graph.ID(value),
 									ToID:   group.ID,
@@ -82,12 +81,12 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 func groupIsContainedOrTrusted(tx graph.Transaction, group, domain *graph.Node) bool {
 	var (
 		matchFound    = false
-		visitedBitmap = roaring.New()
+		visitedBitmap = cardinality.NewBitmap64()
 		traversalPlan = ops.TraversalPlan{
 			Root:      group,
 			Direction: graph.DirectionInbound,
 			ExpansionFilter: func(segment *graph.PathSegment) bool {
-				return visitedBitmap.CheckedAdd(segment.Node.ID.Uint32())
+				return visitedBitmap.CheckedAdd(segment.Node.ID.Uint64())
 			},
 			BranchQuery: func() graph.Criteria {
 				return query.KindIn(query.Relationship(), ad.Contains, ad.TrustedBy)
@@ -199,13 +198,13 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		traversalInst          = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		paths                  = graph.PathSet{}
 		path1CandidateSegments = map[graph.ID][]*graph.PathSegment{}
-		path1EnterpriseCAs     = cardinality.NewBitmap32()
-		path1DomainNodes       = cardinality.NewBitmap32()
-		path1CertTemplates     = cardinality.NewBitmap32()
+		path1EnterpriseCAs     = cardinality.NewBitmap64()
+		path1DomainNodes       = cardinality.NewBitmap64()
+		path1CertTemplates     = cardinality.NewBitmap64()
 		path2CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		path3CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		path4CandidateSegments = map[graph.ID][]*graph.PathSegment{}
-		path2EnterpriseCAs     = cardinality.NewBitmap32()
+		path2EnterpriseCAs     = cardinality.NewBitmap64()
 		lock                   = &sync.Mutex{}
 	)
 
@@ -258,9 +257,9 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 
 				lock.Lock()
 				path1CandidateSegments[enterpriseCANode.ID] = append(path1CandidateSegments[enterpriseCANode.ID], terminal)
-				path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
-				path1DomainNodes.Add(domainNode.ID.Uint32())
-				path1CertTemplates.Add(certTemplate.ID.Uint32())
+				path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
+				path1DomainNodes.Add(domainNode.ID.Uint64())
+				path1CertTemplates.Add(certTemplate.ID.Uint64())
 				lock.Unlock()
 				return nil
 			}),
@@ -273,7 +272,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 	for _, n := range startNodes.Slice() {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: n,
-			Driver: adcsESC13Path2Pattern(cardinality.DuplexToGraphIDs(path1EnterpriseCAs), cardinality.DuplexToGraphIDs(path1DomainNodes)).Do(func(terminal *graph.PathSegment) error {
+			Driver: adcsESC13Path2Pattern(graph.DuplexToGraphIDs(path1EnterpriseCAs), graph.DuplexToGraphIDs(path1DomainNodes)).Do(func(terminal *graph.PathSegment) error {
 				var enterpriseCANode *graph.Node
 				terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
 					if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
@@ -283,7 +282,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 				})
 				lock.Lock()
 				path2CandidateSegments[enterpriseCANode.ID] = append(path2CandidateSegments[enterpriseCANode.ID], terminal)
-				path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
+				path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
 				lock.Unlock()
 
 				return nil
@@ -296,7 +295,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 	//Manifest P3 keyed to cert template nodes
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: endNode,
-		Driver: adcsESC13Path3Pattern(cardinality.DuplexToGraphIDs(path1CertTemplates)).Do(func(terminal *graph.PathSegment) error {
+		Driver: adcsESC13Path3Pattern(graph.DuplexToGraphIDs(path1CertTemplates)).Do(func(terminal *graph.PathSegment) error {
 			certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 				return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
 			})

@@ -46,7 +46,7 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return nil
 	} else {
 		var (
-			tempResults           = cardinality.NewBitmap32()
+			tempResults           = cardinality.NewBitmap64()
 			validCertTemplates    []*graph.Node
 			enterpriseCAEnrollers = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
 		)
@@ -67,7 +67,7 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		}
 
 		filterTempResultsForESC6(tx, domainsid, tempResults, groupExpansions, validCertTemplates, cache).Each(
-			func(value uint32) bool {
+			func(value uint64) bool {
 				return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 					FromID: graph.ID(value),
 					ToID:   domain.ID,
@@ -86,13 +86,13 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return err
 	} else if !isUserSpecifiesSanEnabled {
 		return nil
-	} else if ok := cache.HasUPNCertMappingInForest(domain.ID.Uint32()); !ok {
+	} else if ok := cache.HasUPNCertMappingInForest(domain.ID.Uint64()); !ok {
 		return nil
 	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
 		var (
-			tempResults           = cardinality.NewBitmap32()
+			tempResults           = cardinality.NewBitmap64()
 			validCertTemplates    []*graph.Node
 			enterpriseCAEnrollers = cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
 		)
@@ -120,7 +120,7 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		}
 
 		filterTempResultsForESC6(tx, domainsid, tempResults, groupExpansions, validCertTemplates, cache).Each(
-			func(value uint32) bool {
+			func(value uint64) bool {
 				return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 					FromID: graph.ID(value),
 					ToID:   domain.ID,
@@ -131,10 +131,10 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	return nil
 }
 
-func filterTempResultsForESC6(tx graph.Transaction, domainsid string, tempResults cardinality.Duplex[uint32], groupExpansions impact.PathAggregator, validCertTemplates []*graph.Node, cache ADCSCache) cardinality.Duplex[uint32] {
-	principalsEnabledForESC6 := cardinality.NewBitmap32()
+func filterTempResultsForESC6(tx graph.Transaction, domainsid string, tempResults cardinality.Duplex[uint64], groupExpansions impact.PathAggregator, validCertTemplates []*graph.Node, cache ADCSCache) cardinality.Duplex[uint64] {
+	principalsEnabledForESC6 := cardinality.NewBitmap64()
 
-	tempResults.Each(func(value uint32) bool {
+	tempResults.Each(func(value uint64) bool {
 		sourceID := graph.ID(value)
 
 		if resultNode, err := tx.Nodes().Filter(query.Equals(query.NodeID(), sourceID)).First(); err != nil {
@@ -165,7 +165,7 @@ func filterTempResultsForESC6(tx graph.Transaction, domainsid string, tempResult
 }
 
 func principalControlsCertTemplate(tx graph.Transaction, domainsid string, principal, certTemplate *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache) bool {
-	principalID := principal.ID.Uint32()
+	principalID := principal.ID.Uint64()
 
 	if expandedCertTemplateControllers := cache.GetExpandedCertTemplateControllers(certTemplate.ID); expandedCertTemplateControllers.Contains(principalID) {
 		return true
@@ -257,8 +257,8 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		paths              = graph.PathSet{}
 		path1Segments      = map[graph.ID][]*graph.PathSegment{}
 		path2Segments      = []*graph.PathSegment{}
-		path1EnterpriseCAs = cardinality.NewBitmap32()
-		finalEnterpriseCAs = cardinality.NewBitmap32()
+		path1EnterpriseCAs = cardinality.NewBitmap64()
+		finalEnterpriseCAs = cardinality.NewBitmap64()
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -303,7 +303,7 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 							})
 
 						lock.Lock()
-						path1EnterpriseCAs.Add(enterpriseCA.ID.Uint32())
+						path1EnterpriseCAs.Add(enterpriseCA.ID.Uint64())
 						path1Segments[enterpriseCA.ID] = append(path1Segments[enterpriseCA.ID], terminal)
 						lock.Unlock()
 
@@ -351,7 +351,7 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 						// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
 						terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
 							if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-								finalEnterpriseCAs.Add(end.ID.Uint32())
+								finalEnterpriseCAs.Add(end.ID.Uint64())
 								return false
 							}
 							return true
@@ -364,7 +364,7 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	if paths.Len() > 0 {
-		finalEnterpriseCAs.Each(func(value uint32) bool {
+		finalEnterpriseCAs.Each(func(value uint64) bool {
 			for _, segment := range path1Segments[graph.ID(value)] {
 				paths.AddPath(segment.Path())
 			}
@@ -446,7 +446,7 @@ func ADCSESC6Path2Pattern(domainId graph.ID) traversal.PatternContinuation {
 		))
 }
 
-func ADCSESC6Path3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint32], edgeKind graph.Kind) traversal.PatternContinuation {
+func ADCSESC6Path3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint64], edgeKind graph.Kind) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		OutboundWithDepth(0, 0, query.And(
 			query.Kind(query.Relationship(), ad.MemberOf),
@@ -459,7 +459,7 @@ func ADCSESC6Path3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[ui
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
-			query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
+			query.InIDs(query.End(), graph.DuplexToGraphIDs(enterpriseCAs)...),
 			query.Kind(query.End(), ad.EnterpriseCA),
 		)).
 		OutboundWithDepth(0, 0, query.And(

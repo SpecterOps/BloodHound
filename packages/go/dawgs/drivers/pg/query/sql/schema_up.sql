@@ -71,7 +71,7 @@ create extension if not exists intarray;
 -- corresponding table partitions for the node and edge tables.
 create table if not exists graph
 (
-  id   serial,
+  id   bigserial,
   name varchar(256) not null,
   primary key (id),
   unique (name)
@@ -106,7 +106,7 @@ $$;
 -- contain a disjunction of up to 8 kinds for creating clique subsets without requiring edges.
 create table if not exists node
 (
-  id         serial      not null,
+  id         bigserial   not null,
   graph_id   integer     not null,
   kind_ids   smallint[8] not null,
   properties jsonb       not null,
@@ -147,12 +147,12 @@ $$;
 -- The edge table is a partitioned table view that partitions over the graph ID that each edge belongs to.
 create table if not exists edge
 (
-  id         serial   not null,
-  graph_id   integer  not null,
-  start_id   integer  not null,
-  end_id     integer  not null,
-  kind_id    smallint not null,
-  properties jsonb    not null,
+  id         bigserial not null,
+  graph_id   integer   not null,
+  start_id   bigint    not null,
+  end_id     bigint    not null,
+  kind_id    smallint  not null,
+  properties jsonb     not null,
 
   primary key (id, graph_id),
   foreign key (graph_id) references graph (id) on delete cascade,
@@ -378,7 +378,7 @@ $$
                    strict;
 
 create
-  or replace function public.get_node(id_in int4)
+  or replace function public.get_node(id_in int8)
   returns setof node as
 $$
 select *
@@ -396,7 +396,7 @@ $$
 begin
   if pg_typeof(target) = 'node'::regtype then
     return target.properties -> property_name;
-  elsif pg_typeof(target) = 'int4'::regtype then
+  elsif pg_typeof(target) = 'int8'::regtype then
     return (select n.properties -> property_name from node n where n.id = target limit 1);
   else
     raise exception 'Invalid argument type: %', pg_typeof(target) using hint = 'Type must be either node or edge';
@@ -432,12 +432,12 @@ create or replace function public.asp_harness(primer_query text, recursive_query
   -- | `path`      | Int4[]  | Array of edges in order of traversal.                                                  |
   returns table
           (
-            root_id   int4,
-            next_id   int4,
+            root_id   int8,
+            next_id   int8,
             depth     int4,
             satisfied bool,
             is_cycle  bool,
-            path      int4[]
+            path      int8[]
           )
 as
 $$
@@ -447,23 +447,23 @@ begin
   -- Define two tables to represent pathspace of the recursive expansion. These are temporary and as such are unlogged.
   create temporary table pathspace
   (
-    root_id   int4   not null,
-    next_id   int4   not null,
+    root_id   int8   not null,
+    next_id   int8   not null,
     depth     int4   not null,
     satisfied bool   not null,
     is_cycle  bool   not null,
-    path      int4[] not null,
+    path      int8[] not null,
     primary key (path)
   ) on commit drop;
 
   create temporary table next_pathspace
   (
-    root_id   int4   not null,
-    next_id   int4   not null,
+    root_id   int8   not null,
+    next_id   int8   not null,
     depth     int4   not null,
     satisfied bool   not null,
     is_cycle  bool   not null,
-    path      int4[] not null,
+    path      int8[] not null,
     primary key (path)
   ) on commit drop;
 
@@ -517,7 +517,7 @@ $$
   language plpgsql volatile
                    strict;
 
-create or replace function public.edges_to_path(path variadic int4[]) returns pathComposite as
+create or replace function public.edges_to_path(path variadic int8[]) returns pathComposite as
 $$
 select row (array_agg(distinct (n.id, n.kind_ids, n.properties)::nodeComposite)::nodeComposite[],
          array_agg(distinct (r.id, r.start_id, r.end_id, r.kind_id, r.properties)::edgeComposite)::edgeComposite[])::pathComposite
