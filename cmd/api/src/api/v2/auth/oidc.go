@@ -126,8 +126,6 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		} else if idToken, err := oidcVerifier.Verify(request.Context(), rawIDToken); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid id token", request), response)
 		} else {
-			log.Debugf("GOT A TOKEN %+v\n", token)
-			log.Debugf("ID TOKEN %+v\n", rawIDToken)
 			// Extract custom claims
 			var claims struct {
 				Name        string `json:"name"`
@@ -138,7 +136,6 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 			if err := idToken.Claims(&claims); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 			} else {
-				log.Debugf("ID CLAIMS %+v\n", claims)
 				s.authenticator.CreateSSOSession(request, response, claims.Email, oidcProvider)
 			}
 		}
