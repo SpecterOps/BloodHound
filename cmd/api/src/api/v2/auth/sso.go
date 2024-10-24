@@ -187,15 +187,15 @@ func (s ManagementResource) SSOCallbackHandler(response http.ResponseWriter, req
 		switch ssoProvider.Type {
 		case model.SessionAuthProviderSAML:
 			//todo handle saml callback
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotImplemented, api.ErrorResponseDetailsNotImplemented, request), response)
 		case model.SessionAuthProviderOIDC:
-			if oidcProvider, err := s.db.GetOIDCProviderBySSOProviderID(request.Context(), ssoProvider.ID); err != nil {
-				api.HandleDatabaseError(request, response, err)
+			if ssoProvider.OIDCProvider == nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 			} else {
-				s.OIDCCallbackHandler(response, request, ssoProvider, oidcProvider)
+				s.OIDCCallbackHandler(response, request, ssoProvider, *ssoProvider.OIDCProvider)
 			}
 		default:
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotImplemented, api.ErrorResponseDetailsNotImplemented, request), response)
 		}
 	}
 }

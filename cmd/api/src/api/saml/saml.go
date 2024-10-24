@@ -348,16 +348,7 @@ func (s ProviderResource) serveAssertionConsumerService(response http.ResponseWr
 			s.writeAPIErrorResponse(request, response, http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid)
 		} else if principalName, err := s.getSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
 			log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", s.serviceProvider.Config.Name, err)
-
-			switch {
-			case errors.Is(err, ErrorSAMLAssertion):
-				s.writeAPIErrorResponse(request, response, http.StatusBadRequest, "session assertion does not meet the requirements for user lookup")
-			case errors.Is(err, ErrorUserNotFound), errors.Is(err, ErrorUserNotAuthorizedForProvider):
-				// This is a tiny bit more descriptive for the end user without leaking any sensitive information
-				s.writeAPIErrorResponse(request, response, http.StatusForbidden, "user is not allowed")
-			default:
-				s.writeAPIErrorResponse(request, response, http.StatusInternalServerError, "session creation failure")
-			}
+			s.writeAPIErrorResponse(request, response, http.StatusBadRequest, "session assertion does not meet the requirements for user lookup")
 		} else {
 			s.authenticator.CreateSSOSession(request, response, principalName, s.serviceProvider.Config)
 		}
