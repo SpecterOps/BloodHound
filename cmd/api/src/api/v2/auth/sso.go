@@ -150,8 +150,6 @@ func (s ManagementResource) DeleteSSOProvider(response http.ResponseWriter, requ
 	} else if providerUsers, err := s.db.GetSSOProviderUsers(request.Context(), ssoProviderID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if err = s.db.DeleteSSOProvider(request.Context(), ssoProviderID); errors.Is(err, database.ErrNotFound) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)
-	} else if err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteJSONResponse(request.Context(), DeleteSSOProviderResponse{
