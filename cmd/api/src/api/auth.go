@@ -69,6 +69,7 @@ type Authenticator interface {
 	ValidateRequestSignature(tokenID uuid.UUID, request *http.Request, serverTime time.Time) (auth.Context, int, error)
 	CreateSession(ctx context.Context, user model.User, authProvider any) (string, error)
 	ValidateSession(ctx context.Context, jwtTokenString string) (auth.Context, error)
+	AuditLogin(ctx context.Context, commitID uuid.UUID, user model.User, loginRequest LoginRequest, status model.AuditLogEntryStatus, loginError error)
 }
 
 type authenticator struct {
@@ -89,7 +90,7 @@ func NewAuthenticator(cfg config.Configuration, db database.Database, ctxInitial
 	}
 }
 
-func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.UUID, user model.User, loginRequest LoginRequest, status model.AuditLogEntryStatus, loginError error) {
+func (s authenticator) AuditLogin(requestContext context.Context, commitID uuid.UUID, user model.User, loginRequest LoginRequest, status model.AuditLogEntryStatus, loginError error) {
 	bhCtx := ctx.Get(requestContext)
 	auditLog := model.AuditLog{
 		Action:          model.AuditLogActionLoginAttempt,
@@ -147,15 +148,15 @@ func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRe
 		return LoginDetails{}, err
 	}
 
-	s.auditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusIntent, err)
+	s.AuditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusIntent, err)
 
 	user, sessionToken, err = s.validateSecretLogin(ctx, loginRequest)
 
 	if err != nil {
-		s.auditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusFailure, err)
+		s.AuditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusFailure, err)
 		return LoginDetails{}, err
 	} else {
-		s.auditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusSuccess, err)
+		s.AuditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusSuccess, err)
 		return LoginDetails{
 			User:         user,
 			SessionToken: sessionToken,

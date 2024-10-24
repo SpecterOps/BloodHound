@@ -56,6 +56,18 @@ func (m *MockAuthenticator) EXPECT() *MockAuthenticatorMockRecorder {
 	return m.recorder
 }
 
+// AuditLogin mocks base method.
+func (m *MockAuthenticator) AuditLogin(arg0 context.Context, arg1 uuid.UUID, arg2 model.User, arg3 api.LoginRequest, arg4 model.AuditLogEntryStatus, arg5 error) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AuditLogin", arg0, arg1, arg2, arg3, arg4, arg5)
+}
+
+// AuditLogin indicates an expected call of AuditLogin.
+func (mr *MockAuthenticatorMockRecorder) AuditLogin(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuditLogin", reflect.TypeOf((*MockAuthenticator)(nil).AuditLogin), arg0, arg1, arg2, arg3, arg4, arg5)
+}
+
 // CreateSession mocks base method.
 func (m *MockAuthenticator) CreateSession(arg0 context.Context, arg1 model.User, arg2 interface{}) (string, error) {
 	m.ctrl.T.Helper()

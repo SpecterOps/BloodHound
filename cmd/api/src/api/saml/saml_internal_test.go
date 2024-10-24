@@ -19,6 +19,7 @@ package saml
 import (
 	"context"
 	"fmt"
+	"github.com/gofrs/uuid"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -57,7 +58,6 @@ func TestProviderResource_createSessionFromAssertion(t *testing.T) {
 					ID: 1,
 				},
 			},
-
 			SAMLProviderID: null.Int32From(1),
 		}
 
@@ -88,9 +88,8 @@ func TestProviderResource_createSessionFromAssertion(t *testing.T) {
 	var (
 		expires               = time.Now().UTC().Add(time.Hour)
 		response              = httptest.NewRecorder()
-		expectedCookieContent = fmt.Sprintf("token=fake; Path=/; Expires=%s; Secure; SameSite=Strict", expires.Format(http.TimeFormat))
-
-		testAssertion = &saml.Assertion{
+		expectedCookieContent = fmt.Sprintf("token=%s; Path=/; Expires=%s; Secure; SameSite=Strict", goodJWT, expires.Format(http.TimeFormat))
+		testAssertion         = &saml.Assertion{
 			AttributeStatements: []saml.AttributeStatement{
 				{
 					Attributes: []saml.Attribute{
@@ -111,16 +110,31 @@ func TestProviderResource_createSessionFromAssertion(t *testing.T) {
 		}
 	)
 
-	httpRequest, _ := http.NewRequestWithContext(context.WithValue(context.TODO(), ctx.ValueKey, &ctx.Context{Host: &resource.cfg.RootURL.URL}), http.MethodPost, "http://localhost", nil)
+	httpRequest, _ := http.NewRequestWithContext(
+		context.WithValue(context.TODO(), ctx.ValueKey, &ctx.Context{Host: &resource.cfg.RootURL.URL}),
+		http.MethodPost, "http://localhost", nil,
+	)
 
 	// Test happy path
 	mockDB.EXPECT().LookupUser(gomock.Any(), goodUsername).Return(goodUser, nil)
 
-	// Expect the audit log for the login intent and the successful login
-	mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	var actualCommitID uuid.UUID
 
-	// Expect the session creation call
+	mockAuthenticator.EXPECT().
+		AuditLogin(gomock.Any(), gomock.AssignableToTypeOf(uuid.UUID{}), goodUser, gomock.Any(), model.AuditLogStatusIntent, nil).
+		DoAndReturn(func(ctx context.Context, commitID uuid.UUID, user model.User, loginRequest api.LoginRequest, status model.AuditLogEntryStatus, err error) error {
+			actualCommitID = commitID
+			return nil
+		})
+
 	mockAuthenticator.EXPECT().CreateSession(gomock.Any(), goodUser, gomock.Any()).Return(goodJWT, nil)
+
+	mockAuthenticator.EXPECT().
+		AuditLogin(gomock.Any(), gomock.AssignableToTypeOf(uuid.UUID{}), goodUser, gomock.Any(), model.AuditLogStatusSuccess, nil).
+		DoAndReturn(func(ctx context.Context, commitID uuid.UUID, user model.User, loginRequest api.LoginRequest, status model.AuditLogEntryStatus, err error) error {
+			require.Equal(t, actualCommitID, commitID, "commitID should be the same in both AuditLogin calls")
+			return nil
+		})
 
 	resource.createSessionFromAssertion(httpRequest, response, expires, testAssertion)
 
