@@ -79,10 +79,10 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 		verifier := oauth2.GenerateVerifier()
 
 		// Store PKCE on web browser in secure cookie for retrieval in callback
-		api.SetSecureBrowserCookie(request, response, api.AuthPKCECookieName, verifier, time.Now().UTC().Add(time.Hour))
+		api.SetSecureBrowserCookie(request, response, api.AuthPKCECookieName, verifier, time.Now().UTC().Add(time.Minute*7), true)
 
 		// Store State on web browser in secure cookie for retrieval in callback
-		api.SetSecureBrowserCookie(request, response, api.AuthStateCookieName, state, time.Now().UTC().Add(time.Hour))
+		api.SetSecureBrowserCookie(request, response, api.AuthStateCookieName, state, time.Now().UTC().Add(time.Minute*7), true)
 
 		// Redirect user to consent page to ask for permission for the scopes specified above.
 		redirectURL := conf.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
