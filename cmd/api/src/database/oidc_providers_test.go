@@ -50,3 +50,20 @@ func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
 		assert.Equal(t, 4, count)
 	})
 }
+
+func TestBloodhoundDB_GetOIDCProviderBySSOProviderID(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+	defer dbInst.Close(testCtx)
+
+	t.Run("successfully get an OIDC provider", func(t *testing.T) {
+		newProvider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com/auth", "gotham-net")
+		require.Nil(t, err)
+
+		provider, err := dbInst.GetOIDCProviderBySSOProviderID(testCtx, int32(newProvider.SSOProviderID))
+		require.Nil(t, err)
+		assert.Equal(t, newProvider.ClientID, provider.ClientID)
+	})
+}
