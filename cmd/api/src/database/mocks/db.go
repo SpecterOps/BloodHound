@@ -1066,21 +1066,6 @@ func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(arg0, arg1 int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestAssetGroupCollection", reflect.TypeOf((*MockDatabase)(nil).GetLatestAssetGroupCollection), arg0, arg1)
 }
 
-// GetOIDCProviderBySSOProviderID mocks base method.
-func (m *MockDatabase) GetOIDCProviderBySSOProviderID(arg0 context.Context, arg1 int32) (model.OIDCProvider, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOIDCProviderBySSOProviderID", arg0, arg1)
-	ret0, _ := ret[0].(model.OIDCProvider)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetOIDCProviderBySSOProviderID indicates an expected call of GetOIDCProviderBySSOProviderID.
-func (mr *MockDatabaseMockRecorder) GetOIDCProviderBySSOProviderID(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOIDCProviderBySSOProviderID", reflect.TypeOf((*MockDatabase)(nil).GetOIDCProviderBySSOProviderID), arg0, arg1)
-}
-
 // GetPermission mocks base method.
 func (m *MockDatabase) GetPermission(arg0 context.Context, arg1 int) (model.Permission, error) {
 	m.ctrl.T.Helper()
