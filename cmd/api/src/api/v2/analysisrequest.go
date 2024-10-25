@@ -54,7 +54,7 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 	if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if config.Enabled {
-		api.WriteErrorResponse(request.Context(), ErrAnalysisScheduledMode, response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrAnalysisScheduledMode, request), response)
 	} else if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
