@@ -28,6 +28,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -297,6 +298,36 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 			return authContext, http.StatusOK, nil
 		}
 	}
+}
+
+func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter, name, value string, expires time.Time, httpOnly bool) {
+	var (
+		hostURL       = *ctx.FromRequest(request).Host
+		sameSiteValue = http.SameSiteDefaultMode
+		domainValue   string
+	)
+
+	if hostURL.Scheme == "https" {
+		sameSiteValue = http.SameSiteStrictMode
+	}
+
+	// NOTE: Set-Cookie should generally have the Domain field blank to ensure the cookie is only included with requests against the host, excluding subdomains; however,
+	// most browsers will ignore Set-Cookie headers from localhost responses if the Domain field is not set explicitly.
+	if strings.Contains(hostURL.Hostname(), "localhost") {
+		domainValue = hostURL.Hostname()
+	}
+
+	// Set the token cookie
+	http.SetCookie(response, &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Expires:  expires,
+		Secure:   hostURL.Scheme == "https",
+		HttpOnly: httpOnly,
+		SameSite: sameSiteValue,
+		Path:     "/",
+		Domain:   domainValue,
+	})
 }
 
 func (s authenticator) CreateSession(ctx context.Context, user model.User, authProvider any) (string, error) {

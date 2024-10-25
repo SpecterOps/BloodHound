@@ -135,6 +135,26 @@ func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 	})
 }
 
+func TestBloodhoundDB_GetSSOProviderBySlug(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+	defer dbInst.Close(testCtx)
+
+	t.Run("successfully get sso provider by slug", func(t *testing.T) {
+		newProvider, err := dbInst.CreateOIDCProvider(testCtx, "Gotham Net", "https://test.localhost.com/auth", "gotham-net")
+		require.Nil(t, err)
+
+		provider, err := dbInst.GetSSOProviderBySlug(testCtx, "gotham-net")
+		require.Nil(t, err)
+		require.EqualValues(t, newProvider.SSOProviderID, provider.ID)
+		require.NotNil(t, provider.OIDCProvider)
+		require.Equal(t, newProvider.ClientID, provider.OIDCProvider.ClientID)
+		require.Equal(t, newProvider.Issuer, provider.OIDCProvider.Issuer)
+	})
+}
+
 func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
 	var (
 		testCtx = context.Background()
