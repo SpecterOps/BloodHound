@@ -411,7 +411,7 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 		userSession.AuthProviderID = typedAuthProvider.ID
 	case model.OIDCProvider:
 		userSession.AuthProviderType = model.SessionAuthProviderOIDC
-		userSession.AuthProviderID = int32(typedAuthProvider.ID)
+		userSession.AuthProviderID = typedAuthProvider.ID
 	default:
 		return "", errors.New("invalid auth provider")
 	}
