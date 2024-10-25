@@ -117,7 +117,7 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 					}
 				case model.SessionAuthProviderSAML:
 					if ssoProvider.SAMLProvider != nil {
-						provider.Details = bhsaml.FormatSAMLProviderURLs(request.Context(), *ssoProvider.SAMLProvider)
+						provider.Details = bhsaml.FormatSAMLProviderURLs(request.Context(), *ssoProvider.SAMLProvider)[0]
 					}
 				}
 
