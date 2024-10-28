@@ -82,7 +82,7 @@ func buildAuditLog(testCtx context.Context, user model.User, loginRequest LoginR
 		Action:          model.AuditLogActionLoginAttempt,
 		ActorName:       user.PrincipalName,
 		ActorEmail:      user.EmailAddress.ValueOrZero(),
-		Fields:          types.JSONUntypedObject{"username": loginRequest.Username},
+		Fields:          types.JSONUntypedObject{"username": loginRequest.Username, "auth_type": loginRequest.LoginMethod},
 		RequestID:       bhCtx.RequestID,
 		SourceIpAddress: bhCtx.RequestIP,
 		Status:          status,
