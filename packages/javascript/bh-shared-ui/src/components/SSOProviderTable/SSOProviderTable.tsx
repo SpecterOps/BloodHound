@@ -126,12 +126,16 @@ const SSOProviderTable: FC<{
                                 Provider Name
                             </TableCell>
                             <TableCell sx={{ fontWeight: 'bold', backgroundColor: theme.palette.background.paper }}>
-                                <TableSortLabel
-                                    active={!!typeSortOrder}
-                                    direction={typeSortOrder}
-                                    onClick={onToggleTypeSortOrder}>
-                                    Type
-                                </TableSortLabel>
+                                {ssoProviders.length > 1 && !loading ? (
+                                    <TableSortLabel
+                                        active={!!typeSortOrder}
+                                        direction={typeSortOrder}
+                                        onClick={onToggleTypeSortOrder}>
+                                        Type
+                                    </TableSortLabel>
+                                ) : (
+                                    'Type'
+                                )}
                             </TableCell>
                         </TableRow>
                     </TableHead>
@@ -152,7 +156,7 @@ const SSOProviderTable: FC<{
                         }}>
                         {loading ? (
                             <TableRow>
-                                <TableCell>
+                                <TableCell padding='checkbox'>
                                     <Skeleton />
                                 </TableCell>
                                 <TableCell>
