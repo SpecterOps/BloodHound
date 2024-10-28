@@ -173,8 +173,8 @@ const SSOProviderTable: FC<{
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            ssoProviders.map((ssoProvider, i) => (
-                                <TableRow key={i}>
+                            ssoProviders.map((ssoProvider) => (
+                                <TableRow key={ssoProvider.id}>
                                     <TableCell align='center' padding='checkbox'>
                                         <SSOProviderTableActionsMenu
                                             onDeleteSSOProvider={() => onDeleteSSOProvider(ssoProvider.id)}
