@@ -98,7 +98,6 @@ func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sql
 	if sqlFilter.SQLString != "" {
 		query = query.Where(sqlFilter.SQLString, sqlFilter.Params...)
 	}
-
 	// Apply sorting order if provided
 	if order != "" {
 		query = query.Order(order)

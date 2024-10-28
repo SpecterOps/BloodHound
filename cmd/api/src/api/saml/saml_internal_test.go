@@ -95,7 +95,6 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 			expectedCookieContent = fmt.Sprintf("token=.*; Path=/; Expires=%s; Secure; SameSite=Strict", expires.Format(http.TimeFormat))
 		)
 
-		// Expect intent and success audit logs
 		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
 			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
 			require.Equal(t, username, log.Fields["username"])
@@ -116,8 +115,11 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 	t.Run("Forbidden 403 if user isn't in db", func(t *testing.T) {
 		response := httptest.NewRecorder()
 
-		// Only expect one audit log since we don't log for non-existent users
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{}, database.ErrNotFound)
+		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
+			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
+			require.Equal(t, username, log.Fields["username"])
+		})
 
 		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
@@ -130,7 +132,6 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 	t.Run("Forbidden 403 if user isn't associated with a SAML Provider", func(t *testing.T) {
 		response := httptest.NewRecorder()
 
-		// Expect intent and failure audit logs
 		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
 			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
 			require.Equal(t, username, log.Fields["username"])
@@ -148,12 +149,11 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 	t.Run("Forbidden 403 if user isn't associated with specified SAML Provider", func(t *testing.T) {
 		response := httptest.NewRecorder()
 
-		// Expect intent and failure audit logs
 		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
 			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
 			require.Equal(t, username, log.Fields["username"])
 			if log.Status == model.AuditLogStatusFailure {
-				require.Equal(t, ErrorUserNotAuthorizedForProvider.Error(), log.Fields["error"].(error).Error())
+				require.Equal(t, api.ErrorUserNotAuthorizedForProvider.Error(), log.Fields["error"].(error).Error())
 			}
 		})
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{
