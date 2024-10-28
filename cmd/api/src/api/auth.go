@@ -49,7 +49,7 @@ const (
 	ErrInvalidAuth                    = errors.Error("invalid authentication")
 	ErrNoUserSecret                   = errors.Error("user does not have a secret auth provider registered")
 	ErrUserDisabled                   = errors.Error("user disabled")
-	ErrorUserNotAuthorizedForProvider = errors.Error("User not authorized for this provider")
+	ErrorUserNotAuthorizedForProvider = errors.Error("user not authorized for this provider")
 	ErrorInvalidAuthProvider          = errors.Error("invalid auth provider")
 )
 
