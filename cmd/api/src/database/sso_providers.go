@@ -100,7 +100,7 @@ func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sql
 		query = query.Where(sqlFilter.SQLString, sqlFilter.Params...)
 	}
 
-	// Backwards compatability when FF is disabled
+	// Backwards compatibility when FF is disabled
 	if oidcFeatureFlag, err := s.GetFlagByKey(ctx, appcfg.FeatureOIDCSupport); err != nil {
 		return providers, err
 	} else if !oidcFeatureFlag.Enabled {
