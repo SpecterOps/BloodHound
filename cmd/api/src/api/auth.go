@@ -46,9 +46,10 @@ import (
 )
 
 const (
-	ErrInvalidAuth  = errors.Error("invalid authentication")
-	ErrNoUserSecret = errors.Error("user does not have a secret auth provider registered")
-	ErrUserDisabled = errors.Error("user disabled")
+	ErrInvalidAuth                    = errors.Error("invalid authentication")
+	ErrNoUserSecret                   = errors.Error("user does not have a secret auth provider registered")
+	ErrUserDisabled                   = errors.Error("user disabled")
+	ErrorUserNotAuthorizedForProvider = errors.Error("User not authorized for this provider")
 )
 
 func parseRequestDate(rawDate string) (time.Time, error) {
@@ -339,53 +340,86 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 	var (
 		hostURL    = *ctx.FromRequest(request).Host
 		requestCtx = request.Context()
+		commitID   uuid.UUID
+		user       model.User
+		err        error
 	)
 
-	if user, err := s.db.LookupUser(requestCtx, principalNameOrEmail); err != nil {
+	// Generate commit ID for audit logging
+	if commitID, err = uuid.NewV4(); err != nil {
+		log.Errorf("Error generating commit ID for login: %s", err)
+		WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusInternalServerError, "session creation failure", request), response)
+		return
+	}
+
+	// Create login request for audit
+	loginRequest := LoginRequest{
+		Username: principalNameOrEmail,
+	}
+
+	if user, err = s.db.LookupUser(requestCtx, principalNameOrEmail); err != nil {
+		// Only audit if we found a valid user
 		if !errors.Is(err, database.ErrNotFound) {
+			s.auditLogin(requestCtx, commitID, user, loginRequest, model.AuditLogStatusFailure, err)
 			HandleDatabaseError(request, response, err)
 		} else {
-			WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
+			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
 		}
-	} else {
-		switch typedAuthProvider := authProvider.(type) {
-		case model.SAMLProvider:
-			if !user.SAMLProviderID.Valid || typedAuthProvider.ID != user.SAMLProvider.ID {
-				WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
-				return
-			}
-		case model.OIDCProvider:
-			//todo connect to db provider table
+		return
+	}
 
-			// Delete pre-auth cookies regardless
-			DeleteBrowserCookie(request, response, AuthPKCECookieName)
-			DeleteBrowserCookie(request, response, AuthStateCookieName)
-			break
-		case model.AuthSecret:
-			WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusBadRequest, "invalid auth provider", request), response)
-			return
-		default:
-			WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusBadRequest, "invalid auth provider", request), response)
+	// Log the intent to authenticate
+	s.auditLogin(requestCtx, commitID, user, loginRequest, model.AuditLogStatusIntent, nil)
+
+	switch typedAuthProvider := authProvider.(type) {
+	case model.SAMLProvider:
+		if !user.SAMLProviderID.Valid || typedAuthProvider.ID != user.SAMLProvider.ID {
+			//loginRequest.LoginMethod = auth.ProviderTypeSAML
+			s.auditLogin(requestCtx, commitID, user, loginRequest, model.AuditLogStatusFailure, ErrorUserNotAuthorizedForProvider)
+			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
 			return
 		}
+		loginRequest.LoginMethod = auth.ProviderTypeSAML
 
-		if sessionJWT, err := s.CreateSession(requestCtx, user, authProvider); err != nil {
-			if locationURL := URLJoinPath(hostURL, UserDisabledPath); errors.Is(err, ErrUserDisabled) {
-				response.Header().Add(headers.Location.String(), locationURL.String())
-				response.WriteHeader(http.StatusFound)
-			} else {
-				WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, "session creation failure", request), response)
-			}
-		} else {
-			locationURL := URLJoinPath(hostURL, UserInterfacePath)
+	case model.OIDCProvider:
+		// Delete pre-auth cookies regardless
+		DeleteBrowserCookie(request, response, AuthPKCECookieName)
+		DeleteBrowserCookie(request, response, AuthStateCookieName)
+		loginRequest.LoginMethod = auth.ProviderTypeOIDC
+		break
 
-			// Set the token cookie
-			SetSecureBrowserCookie(request, response, AuthTokenCookieName, sessionJWT, time.Now().UTC().Add(s.cfg.AuthSessionTTL()), false)
+	case model.AuthSecret:
+		s.auditLogin(requestCtx, commitID, user, loginRequest, model.AuditLogStatusFailure, errors.New("invalid auth provider"))
+		WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusBadRequest, "invalid auth provider", request), response)
+		return
 
-			// Redirect back to the UI landing page
+	default:
+		s.auditLogin(requestCtx, commitID, user, loginRequest, model.AuditLogStatusFailure, errors.New("invalid auth provider"))
+		WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusBadRequest, "invalid auth provider", request), response)
+		return
+	}
+
+	if sessionJWT, err := s.CreateSession(requestCtx, user, authProvider); err != nil {
+		s.auditLogin(requestCtx, commitID, user, loginRequest, model.AuditLogStatusFailure, err)
+
+		if locationURL := URLJoinPath(hostURL, UserDisabledPath); errors.Is(err, ErrUserDisabled) {
 			response.Header().Add(headers.Location.String(), locationURL.String())
 			response.WriteHeader(http.StatusFound)
+		} else {
+			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusInternalServerError, "session creation failure", request), response)
 		}
+	} else {
+		// Log successful authentication
+		s.auditLogin(requestCtx, commitID, user, loginRequest, model.AuditLogStatusSuccess, nil)
+
+		locationURL := URLJoinPath(hostURL, UserInterfacePath)
+
+		// Set the token cookie
+		SetSecureBrowserCookie(request, response, AuthTokenCookieName, sessionJWT, time.Now().UTC().Add(s.cfg.AuthSessionTTL()), false)
+
+		// Redirect back to the UI landing page
+		response.Header().Add(headers.Location.String(), locationURL.String())
+		response.WriteHeader(http.StatusFound)
 	}
 }
 
