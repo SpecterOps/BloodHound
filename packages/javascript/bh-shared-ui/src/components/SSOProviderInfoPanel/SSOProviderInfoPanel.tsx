@@ -15,12 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Paper, Box, Typography, useTheme } from '@mui/material';
-import React from 'react';
+import { FC } from 'react';
+import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 import { Field, FieldsContainer, usePaneStyles, useHeaderStyles } from '../../views/Explore';
 import LabelWithCopy from '../LabelWithCopy';
-import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 
-const SAMLProviderInfoPanel: React.FC<{
+const SAMLProviderInfoPanel: FC<{
     samlProviderDetails: SAMLProviderInfo;
 }> = ({ samlProviderDetails }) => (
     <FieldsContainer>
@@ -45,7 +45,7 @@ const SAMLProviderInfoPanel: React.FC<{
     </FieldsContainer>
 );
 
-const OIDCProviderInfoPanel: React.FC<{
+const OIDCProviderInfoPanel: FC<{
     oidcProviderDetails: OIDCProviderInfo;
 }> = ({ oidcProviderDetails }) => (
     <FieldsContainer>
@@ -60,7 +60,7 @@ const OIDCProviderInfoPanel: React.FC<{
     </FieldsContainer>
 );
 
-const SSOProviderInfoPanel: React.FC<{
+const SSOProviderInfoPanel: FC<{
     ssoProvider: SSOProvider;
 }> = ({ ssoProvider }) => {
     const theme = useTheme();

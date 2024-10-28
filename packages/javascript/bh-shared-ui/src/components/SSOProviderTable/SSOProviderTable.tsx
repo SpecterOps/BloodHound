@@ -36,7 +36,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { faEllipsisVertical, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import withStyles from '@mui/styles/withStyles';
-import React, { useCallback } from 'react';
+import { FC, useState, MouseEventHandler } from 'react';
 import { SSOProvider } from 'js-client-library';
 
 const StyledMenu = withStyles({
@@ -58,25 +58,25 @@ const StyledMenu = withStyles({
     />
 ));
 
-const SSOProviderTableActionsMenu: React.FC<{
+const SSOProviderTableActionsMenu: FC<{
     onDeleteSSOProvider: () => void;
 }> = ({ onDeleteSSOProvider }) => {
     /* Hooks */
 
-    const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
     /* Event Handlers */
 
-    const handleOnOpen: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    const handleOnOpen: MouseEventHandler<HTMLButtonElement> = (event) => {
         setAnchorEl(event.currentTarget);
     };
 
     /* Implementation */
 
-    const onClickDeleteSSOProvider = useCallback(() => {
+    const onClickDeleteSSOProvider = () => {
         onDeleteSSOProvider();
         setAnchorEl(null);
-    }, []);
+    };
 
     return (
         <>
@@ -101,7 +101,7 @@ const SSOProviderTableActionsMenu: React.FC<{
     );
 };
 
-const SSOProviderTable: React.FC<{
+const SSOProviderTable: FC<{
     ssoProviders: SSOProvider[];
     loading: boolean;
     onDeleteSSOProvider: (ssoProviderId: SSOProvider['id']) => void;

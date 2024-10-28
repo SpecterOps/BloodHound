@@ -16,11 +16,11 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, Dialog, DialogTitle, DialogContent, DialogActions, Grid, TextField } from '@mui/material';
-import { useCallback } from 'react';
+import { FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { CreateOIDCProvideRequest } from 'js-client-library';
 
-const CreateOIDCProviderDialog: React.FC<{
+const CreateOIDCProviderDialog: FC<{
     open: boolean;
     error?: string;
     onClose: () => void;
@@ -39,10 +39,10 @@ const CreateOIDCProviderDialog: React.FC<{
         },
     });
 
-    const handleClose = useCallback(() => {
+    const handleClose = () => {
         onClose();
         reset();
-    }, []);
+    };
 
     return (
         <Dialog

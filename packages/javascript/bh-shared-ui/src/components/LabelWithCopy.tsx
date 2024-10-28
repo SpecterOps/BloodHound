@@ -17,10 +17,10 @@
 import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
 import { faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useCallback, useState } from 'react';
+import { FC, useState } from 'react';
 import { copyToClipboard } from '../utils';
 
-const LabelWithCopy: React.FC<{
+const LabelWithCopy: FC<{
     label: string;
     valueToCopy: string | number;
     hoverOnly?: boolean;
@@ -32,7 +32,7 @@ const LabelWithCopy: React.FC<{
     const handleMouseEnter = () => setHoverActive(true);
     const handleMouseLeave = () => setHoverActive(false);
 
-    const handleCopy = useCallback(async () => {
+    const handleCopy = async () => {
         setCopied(true);
 
         await copyToClipboard(valueToCopy);
@@ -40,7 +40,7 @@ const LabelWithCopy: React.FC<{
         setTimeout(() => {
             setCopied(false);
         }, 1000);
-    }, []);
+    };
 
     return (
         <Box

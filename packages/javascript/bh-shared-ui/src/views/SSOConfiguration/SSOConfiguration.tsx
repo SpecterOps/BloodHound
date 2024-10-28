@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, FC, useCallback, useMemo, ChangeEvent } from 'react';
+import { useState, FC, useMemo, ChangeEvent } from 'react';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Typography, Paper, TextField, useTheme } from '@mui/material';
@@ -99,64 +99,58 @@ const SSOConfiguration: FC = () => {
 
     /* Event Handlers */
 
-    const openSAMLProviderDialog = useCallback(() => {
+    const openSAMLProviderDialog = () => {
         setDialogOpen('SAML');
-    }, []);
+    };
 
-    const openOIDCProviderDialog = useCallback(() => {
+    const openOIDCProviderDialog = () => {
         setDialogOpen('OIDC');
-    }, []);
+    };
 
-    const openDeleteProviderDialog = useCallback(() => {
+    const openDeleteProviderDialog = () => {
         setDialogOpen('DELETE');
-    }, []);
+    };
 
     const closeDialog = () => {
         setDialogOpen('');
         setCreateProviderError('');
     };
 
-    const onClickSSOProvider = useCallback((ssoProviderId: SSOProvider['id']) => {
+    const onClickSSOProvider = (ssoProviderId: SSOProvider['id']) => {
         setSelectedSSOProviderId(ssoProviderId);
-    }, []);
+    };
 
-    const onSelectDeleteSSOProvider = useCallback(
-        (ssoProviderId: SSOProvider['id']) => {
-            setSSOProviderIdToDelete(ssoProviderId);
-            openDeleteProviderDialog();
-        },
-        [setSSOProviderIdToDelete]
-    );
+    const onSelectDeleteSSOProvider = (ssoProviderId: SSOProvider['id']) => {
+        setSSOProviderIdToDelete(ssoProviderId);
+        openDeleteProviderDialog();
+    };
 
-    const onDeleteSSOProvider = useCallback(
-        async (response: boolean) => {
-            let errored = false;
-            if (response && ssoProviderIdToDelete) {
-                try {
-                    await deleteSSOProviderMutation.mutateAsync(ssoProviderIdToDelete);
-                } catch (err: any) {
-                    if (err?.response?.status !== 404) {
-                        errored = true;
-                        console.error(err);
-                    }
+    const onDeleteSSOProvider = async (response: boolean) => {
+        let errored = false;
+        if (response && ssoProviderIdToDelete) {
+            try {
+                await deleteSSOProviderMutation.mutateAsync(ssoProviderIdToDelete);
+            } catch (err: any) {
+                if (err?.response?.status !== 404) {
+                    errored = true;
+                    console.error(err);
                 }
             }
-            if (!errored) {
-                closeDialog();
-                deleteSSOProviderMutation.reset();
-                listSSOProvidersQuery.refetch();
-            }
-        },
-        [ssoProviderIdToDelete]
-    );
+        }
+        if (!errored) {
+            closeDialog();
+            deleteSSOProviderMutation.reset();
+            listSSOProvidersQuery.refetch();
+        }
+    };
 
-    const toggleTypeSortOrder = useCallback(() => {
+    const toggleTypeSortOrder = () => {
         if (!typeSortOrder || typeSortOrder === 'desc') {
             setTypeSortOrder('asc');
         } else {
             setTypeSortOrder('desc');
         }
-    }, [typeSortOrder]);
+    };
 
     const createSAMLProvider = async (samlProvider: CreateSAMLProviderFormInputs) => {
         setCreateProviderError('');
@@ -170,7 +164,7 @@ const SSOConfiguration: FC = () => {
         }
     };
 
-    const createOIDCProvider = useCallback(async (oidcProvider: CreateOIDCProvideRequest) => {
+    const createOIDCProvider = async (oidcProvider: CreateOIDCProvideRequest) => {
         setCreateProviderError('');
         try {
             await apiClient.createOIDCProvider(oidcProvider);
@@ -180,7 +174,7 @@ const SSOConfiguration: FC = () => {
             console.error(error);
             setCreateProviderError('Unable to create new OIDC Provider configuration. Please try again.');
         }
-    }, []);
+    };
 
     const onChangeNameFilter = (e: ChangeEvent<HTMLInputElement>) => {
         setNameFilter(e.target.value.toLowerCase());
