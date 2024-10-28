@@ -131,6 +131,7 @@ func AzurePostProcessedRelationships() []graph.Kind {
 		azure.AZMGAddSecret,
 		azure.AZMGGrantAppRoles,
 		azure.AZMGGrantRole,
+		azure.SyncedToADUser,
 	}
 }
 
