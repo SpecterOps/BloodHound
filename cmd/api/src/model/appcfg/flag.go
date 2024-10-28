@@ -25,7 +25,6 @@ import (
 // AvailableFlags has been removed and the db feature_flags table is the source of truth. Feature flag defaults should be added via migration *.sql files.
 const (
 	FeatureButterflyAnalysis          = "butterfly_analysis"
-	FeatureAnalyzeHybridPaths         = "analyze_hybrid_paths"
 	FeatureEnableSAMLSSO              = "enable_saml_sso"
 	FeatureScopeCollectionByOU        = "scope_collection_by_ou"
 	FeatureAzureSupport               = "azure_support"
