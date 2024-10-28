@@ -47,7 +47,7 @@ func TestDatapipeStatus(t *testing.T) {
 
 	// when `SetDatapipeStatus` is called with `true` for the `updateAnalysisTime` parameter, assert that the time is no longer null
 	require.True(t, status.LastCompleteAnalysisAt.IsZero())
-	err = db.SetDatapipeStatus(testCtx, model.DatapipeStatusAnalyzing, true)
+	err = db.SetDatapipeStatus(testCtx, model.DatapipeStatusIdle, true)
 	require.Nil(t, err)
 	status, err = db.GetDatapipeStatus(testCtx)
 	require.Nil(t, err)

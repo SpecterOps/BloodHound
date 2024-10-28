@@ -22,6 +22,8 @@ const (
 
 	// Cookie Keys
 	AuthTokenCookieName = "token"
+	AuthStateCookieName = "state"
+	AuthPKCECookieName  = "pkce"
 
 	// UserInterfacePath is the static path to the UI landing page
 	UserInterfacePath = "/ui"
@@ -37,6 +39,8 @@ const (
 	QueryParameterHydrateDomains = "hydrate_domains"
 	QueryParameterHydrateOUs     = "hydrate_ous"
 	QueryParameterScope          = "scope"
+	QueryParameterState          = "state"
+	QueryParameterCode           = "code"
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"
@@ -59,4 +63,6 @@ const (
 	URIPathVariableTokenID                           = "token_id"
 	URIPathVariableUserID                            = "user_id"
 	URIPathVariableSavedQueryID                      = "saved_query_id"
+	URIPathVariableSSOProviderID                     = "sso_provider_id"
+	URIPathVariableSSOProviderSlug                   = "sso_provider_slug"
 )

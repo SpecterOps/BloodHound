@@ -28,6 +28,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -68,6 +69,7 @@ type Authenticator interface {
 	ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error
 	ValidateRequestSignature(tokenID uuid.UUID, request *http.Request, serverTime time.Time) (auth.Context, int, error)
 	CreateSession(ctx context.Context, user model.User, authProvider any) (string, error)
+	CreateSSOSession(request *http.Request, response http.ResponseWriter, principalNameOrEmail string, authProvider any)
 	ValidateSession(ctx context.Context, jwtTokenString string) (auth.Context, error)
 }
 
@@ -299,6 +301,94 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 	}
 }
 
+func DeleteBrowserCookie(request *http.Request, response http.ResponseWriter, name string) {
+	SetSecureBrowserCookie(request, response, name, "", time.Now().UTC(), false)
+}
+
+func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter, name, value string, expires time.Time, httpOnly bool) {
+	var (
+		hostURL       = *ctx.FromRequest(request).Host
+		sameSiteValue = http.SameSiteDefaultMode
+		domainValue   string
+	)
+
+	if hostURL.Scheme == "https" {
+		sameSiteValue = http.SameSiteStrictMode
+	}
+
+	// NOTE: Set-Cookie should generally have the Domain field blank to ensure the cookie is only included with requests against the host, excluding subdomains; however,
+	// most browsers will ignore Set-Cookie headers from localhost responses if the Domain field is not set explicitly.
+	if strings.Contains(hostURL.Hostname(), "localhost") {
+		domainValue = hostURL.Hostname()
+	}
+
+	// Set the token cookie
+	http.SetCookie(response, &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Expires:  expires,
+		Secure:   hostURL.Scheme == "https",
+		HttpOnly: httpOnly,
+		SameSite: sameSiteValue,
+		Path:     "/",
+		Domain:   domainValue,
+	})
+}
+
+func (s authenticator) CreateSSOSession(request *http.Request, response http.ResponseWriter, principalNameOrEmail string, authProvider any) {
+	var (
+		hostURL    = *ctx.FromRequest(request).Host
+		requestCtx = request.Context()
+	)
+
+	if user, err := s.db.LookupUser(requestCtx, principalNameOrEmail); err != nil {
+		if !errors.Is(err, database.ErrNotFound) {
+			HandleDatabaseError(request, response, err)
+		} else {
+			WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
+		}
+	} else {
+		switch typedAuthProvider := authProvider.(type) {
+		case model.SAMLProvider:
+			if !user.SAMLProviderID.Valid || typedAuthProvider.ID != user.SAMLProvider.ID {
+				WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
+				return
+			}
+		case model.OIDCProvider:
+			//todo connect to db provider table
+
+			// Delete pre-auth cookies regardless
+			DeleteBrowserCookie(request, response, AuthPKCECookieName)
+			DeleteBrowserCookie(request, response, AuthStateCookieName)
+			break
+		case model.AuthSecret:
+			WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusBadRequest, "invalid auth provider", request), response)
+			return
+		default:
+			WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusBadRequest, "invalid auth provider", request), response)
+			return
+		}
+
+		if sessionJWT, err := s.CreateSession(requestCtx, user, authProvider); err != nil {
+			if locationURL := URLJoinPath(hostURL, UserDisabledPath); errors.Is(err, ErrUserDisabled) {
+				response.Header().Add(headers.Location.String(), locationURL.String())
+				response.WriteHeader(http.StatusFound)
+			} else {
+				WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, "session creation failure", request), response)
+			}
+		} else {
+			locationURL := URLJoinPath(hostURL, UserInterfacePath)
+
+			// Set the token cookie
+			SetSecureBrowserCookie(request, response, AuthTokenCookieName, sessionJWT, time.Now().UTC().Add(s.cfg.AuthSessionTTL()), false)
+
+			// Redirect back to the UI landing page
+			response.Header().Add(headers.Location.String(), locationURL.String())
+			response.WriteHeader(http.StatusFound)
+		}
+	}
+}
+
 func (s authenticator) CreateSession(ctx context.Context, user model.User, authProvider any) (string, error) {
 	if user.IsDisabled {
 		return "", ErrUserDisabled
@@ -316,10 +406,14 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 	case model.AuthSecret:
 		userSession.AuthProviderType = model.SessionAuthProviderSecret
 		userSession.AuthProviderID = typedAuthProvider.ID
-
 	case model.SAMLProvider:
 		userSession.AuthProviderType = model.SessionAuthProviderSAML
 		userSession.AuthProviderID = typedAuthProvider.ID
+	case model.OIDCProvider:
+		userSession.AuthProviderType = model.SessionAuthProviderOIDC
+		userSession.AuthProviderID = typedAuthProvider.ID
+	default:
+		return "", errors.New("invalid auth provider")
 	}
 
 	if newSession, err := s.db.CreateUserSession(ctx, userSession); err != nil {

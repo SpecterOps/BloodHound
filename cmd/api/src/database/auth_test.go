@@ -353,9 +353,9 @@ func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
 				user.SAMLProviderID = null.Int32{}
 				if err = dbInst.UpdateUser(ctx, user); err != nil {
 					t.Fatalf("Failed to update user: %v", err)
-				} else if err = dbInst.DeleteSAMLProvider(ctx, newSAMLProvider); err != nil {
+				} else if err = dbInst.DeleteSSOProvider(ctx, int(newSAMLProvider.SSOProviderID.Int32)); err != nil {
 					t.Fatalf("Failed to delete SAML provider: %v", err)
-				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteSAMLIdentityProvider, "saml_name", "provider"); err != nil {
+				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteSSOIdentityProvider, "name", "provider"); err != nil {
 					t.Fatalf("Failed to validate DeleteSAMLIdentityProvider audit logs:\n%v", err)
 				}
 			}
