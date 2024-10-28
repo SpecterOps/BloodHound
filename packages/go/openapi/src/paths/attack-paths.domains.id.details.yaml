@@ -28,7 +28,7 @@ get:
   description: |
     Lists detailed data about attack paths for a domain. 
     
-    __Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, and `ExposurePercentage` will have a value other than zero when butterfly analysis is enabled.
+    __Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.
   tags:
     - Attack Paths
     - Enterprise
@@ -136,7 +136,6 @@ get:
                               properties:
                                 Accepted:
                                   type: boolean
-          # !!!!! New examples !!!!! 
           examples:
             Butterfly Relationship Finding:
               summary: "Butterfly Relationship Finding"
