@@ -21,6 +21,7 @@ package pg_test
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/src/test"
 	"testing"
 
 	"github.com/specterops/bloodhound/dawgs"
@@ -102,7 +103,8 @@ func TestPG(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	require.Nil(t, graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+	test.RequireNilErr(t, graphDB.AssertSchema(ctx, graphschema.DefaultGraphSchema()))
+	test.RequireNilErr(t, graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Query("match p = (s:User)-[*..]->(:Computer) return p", nil).Error()
 	}))
 }

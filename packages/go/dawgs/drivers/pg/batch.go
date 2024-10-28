@@ -151,7 +151,7 @@ func (s *batch) flushNodeCreateBuffer() error {
 func (s *batch) flushNodeCreateBufferWithIDs() error {
 	var (
 		numCreates    = len(s.nodeCreateBuffer)
-		nodeIDs       = make([]uint32, numCreates)
+		nodeIDs       = make([]uint64, numCreates)
 		kindIDSlices  = make([]string, numCreates)
 		kindIDEncoder = Int2ArrayEncoder{
 			buffer: &bytes.Buffer{},
@@ -160,7 +160,7 @@ func (s *batch) flushNodeCreateBufferWithIDs() error {
 	)
 
 	for idx, nextNode := range s.nodeCreateBuffer {
-		nodeIDs[idx] = nextNode.ID.Uint32()
+		nodeIDs[idx] = nextNode.ID.Uint64()
 
 		if mappedKindIDs, missingKinds := s.schemaManager.MapKinds(nextNode.Kinds); len(missingKinds) > 0 {
 			return fmt.Errorf("unable to map kinds %v", missingKinds)
@@ -402,22 +402,22 @@ func (s *batch) tryFlushRelationshipUpdateByBuffer() error {
 }
 
 type relationshipCreateBatch struct {
-	startIDs         []uint32
-	endIDs           []uint32
+	startIDs         []uint64
+	endIDs           []uint64
 	edgeKindIDs      []int16
 	edgePropertyBags []pgtype.JSONB
 }
 
 func newRelationshipCreateBatch(size int) *relationshipCreateBatch {
 	return &relationshipCreateBatch{
-		startIDs:         make([]uint32, 0, size),
-		endIDs:           make([]uint32, 0, size),
+		startIDs:         make([]uint64, 0, size),
+		endIDs:           make([]uint64, 0, size),
 		edgeKindIDs:      make([]int16, 0, size),
 		edgePropertyBags: make([]pgtype.JSONB, 0, size),
 	}
 }
 
-func (s *relationshipCreateBatch) Add(startID, endID uint32, edgeKindID int16) {
+func (s *relationshipCreateBatch) Add(startID, endID uint64, edgeKindID int16) {
 	s.startIDs = append(s.startIDs, startID)
 	s.edgeKindIDs = append(s.edgeKindIDs, edgeKindID)
 	s.endIDs = append(s.endIDs, endID)
@@ -436,17 +436,17 @@ func (s *relationshipCreateBatch) EncodeProperties(edgePropertiesBatch []*graph.
 }
 
 type relationshipCreateBatchBuilder struct {
-	keyToEdgeID             map[string]uint32
+	keyToEdgeID             map[string]uint64
 	relationshipUpdateBatch *relationshipCreateBatch
-	edgePropertiesIndex     map[uint32]int
+	edgePropertiesIndex     map[uint64]int
 	edgePropertiesBatch     []*graph.Properties
 }
 
 func newRelationshipCreateBatchBuilder(size int) *relationshipCreateBatchBuilder {
 	return &relationshipCreateBatchBuilder{
-		keyToEdgeID:             map[string]uint32{},
+		keyToEdgeID:             map[string]uint64{},
 		relationshipUpdateBatch: newRelationshipCreateBatch(size),
-		edgePropertiesIndex:     map[uint32]int{},
+		edgePropertiesIndex:     map[uint64]int{},
 	}
 }
 
@@ -467,9 +467,9 @@ func (s *relationshipCreateBatchBuilder) Add(kindMapper KindMapper, edge *graph.
 		s.edgePropertiesBatch[existingPropertiesIdx].Merge(edge.Properties)
 	} else {
 		var (
-			startID        = edge.StartID.Uint32()
-			edgeID         = edge.ID.Uint32()
-			endID          = edge.EndID.Uint32()
+			startID        = edge.StartID.Uint64()
+			edgeID         = edge.ID.Uint64()
+			endID          = edge.EndID.Uint64()
 			edgeProperties = edge.Properties.Clone()
 		)
 

@@ -19,9 +19,9 @@ package azure
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"strings"
 
-	"github.com/RoaringBitmap/roaring"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -739,19 +739,19 @@ func resetPassword(_ context.Context, _ graph.Database, operation analysis.StatT
 				if targets, err := resetPasswordEndNodeBitmapForRole(role, roleAssignments); err != nil {
 					return fmt.Errorf("unable to continue processing azresetpassword for tenant node %d: %w", tenant.ID, err)
 				} else {
-					iter := targets.Iterator()
-					for iter.HasNext() {
+					targets.Each(func(nextID uint64) bool {
 						nextJob := analysis.CreatePostRelationshipJob{
 							FromID: role.ID,
-							ToID:   graph.ID(iter.Next()),
+							ToID:   graph.ID(nextID),
 							Kind:   azure.ResetPassword,
 						}
 
 						if !channels.Submit(ctx, outC, nextJob) {
-							return nil
+							return false
 						}
 
-					}
+						return true
+					})
 				}
 			}
 		}
@@ -759,13 +759,13 @@ func resetPassword(_ context.Context, _ graph.Database, operation analysis.StatT
 	})
 }
 
-func resetPasswordEndNodeBitmapForRole(role *graph.Node, roleAssignments RoleAssignments) (*roaring.Bitmap, error) {
+func resetPasswordEndNodeBitmapForRole(role *graph.Node, roleAssignments RoleAssignments) (cardinality.Duplex[uint64], error) {
 	if roleTemplateIDProp := role.Properties.Get(azure.RoleTemplateID.String()); roleTemplateIDProp.IsNil() {
 		return nil, fmt.Errorf("role node %d is missing property %s", role.ID, azure.RoleTemplateID)
 	} else if roleTemplateID, err := roleTemplateIDProp.String(); err != nil {
 		return nil, fmt.Errorf("role node %d property %s is not a string", role.ID, azure.RoleTemplateID)
 	} else {
-		result := roaring.New()
+		result := cardinality.NewBitmap64()
 		switch roleTemplateID {
 		case azure.CompanyAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole, azure.PartnerTier2SupportRole:
 			result.Or(roleAssignments.Users())
@@ -792,57 +792,59 @@ func resetPasswordEndNodeBitmapForRole(role *graph.Node, roleAssignments RoleAss
 
 func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		iter := roleAssignments.PrincipalsWithRole(azure.CompanyAdministratorRole).Iterator()
-		for iter.HasNext() {
+		roleAssignments.PrincipalsWithRole(azure.CompanyAdministratorRole).Each(func(nextID uint64) bool {
 			nextJob := analysis.CreatePostRelationshipJob{
-				FromID: graph.ID(iter.Next()),
+				FromID: graph.ID(nextID),
 				ToID:   tenant.ID,
 				Kind:   azure.GlobalAdmin,
 			}
 
 			if !channels.Submit(ctx, outC, nextJob) {
-				return nil
+				return false
 			}
 
-		}
+			return true
+		})
+
 		return nil
 	})
 }
 
 func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		iter := roleAssignments.PrincipalsWithRole(azure.PrivilegedRoleAdministratorRole).Iterator()
-		for iter.HasNext() {
+		roleAssignments.PrincipalsWithRole(azure.PrivilegedRoleAdministratorRole).Each(func(nextID uint64) bool {
 			nextJob := analysis.CreatePostRelationshipJob{
-				FromID: graph.ID(iter.Next()),
+				FromID: graph.ID(nextID),
 				ToID:   tenant.ID,
 				Kind:   azure.PrivilegedRoleAdmin,
 			}
 
 			if !channels.Submit(ctx, outC, nextJob) {
-				return nil
+				return false
 			}
 
-		}
+			return true
+		})
+
 		return nil
 	})
 }
 
 func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		iter := roleAssignments.PrincipalsWithRole(azure.PrivilegedAuthenticationAdministratorRole).Iterator()
-		for iter.HasNext() {
+		roleAssignments.PrincipalsWithRole(azure.PrivilegedAuthenticationAdministratorRole).Each(func(nextID uint64) bool {
 			nextJob := analysis.CreatePostRelationshipJob{
-				FromID: graph.ID(iter.Next()),
+				FromID: graph.ID(nextID),
 				ToID:   tenant.ID,
 				Kind:   azure.PrivilegedAuthAdmin,
 			}
 
 			if !channels.Submit(ctx, outC, nextJob) {
-				return nil
+				return false
 			}
 
-		}
+			return true
+		})
 
 		return nil
 	})
@@ -855,19 +857,20 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 		innerGroupID := tenantGroupID
 		innerGroup := tenantGroup
 		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			iter := roleAssignments.UsersWithRole(AddMemberAllGroupsTargetRoles()...).Iterator()
-			for iter.HasNext() {
+			roleAssignments.UsersWithRole(AddMemberAllGroupsTargetRoles()...).Each(func(nextID uint64) bool {
 				nextJob := analysis.CreatePostRelationshipJob{
-					FromID: graph.ID(iter.Next()),
+					FromID: graph.ID(nextID),
 					ToID:   innerGroupID,
 					Kind:   azure.AddMembers,
 				}
 
 				if !channels.Submit(ctx, outC, nextJob) {
-					return nil
+					return false
 				}
 
-			}
+				return true
+			})
+
 			return nil
 		})
 
@@ -879,19 +882,19 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 					return err
 				}
 			} else if !isRoleAssignable {
-				iter := roleAssignments.UsersWithRole(AddMemberGroupNotRoleAssignableTargetRoles()...).Iterator()
-				for iter.HasNext() {
+				roleAssignments.UsersWithRole(AddMemberGroupNotRoleAssignableTargetRoles()...).Each(func(nextID uint64) bool {
 					nextJob := analysis.CreatePostRelationshipJob{
-						FromID: graph.ID(iter.Next()),
+						FromID: graph.ID(nextID),
 						ToID:   innerGroupID,
 						Kind:   azure.AddMembers,
 					}
 
 					if !channels.Submit(ctx, outC, nextJob) {
-						return nil
+						return false
 					}
 
-				}
+					return true
+				})
 			}
 
 			return nil
