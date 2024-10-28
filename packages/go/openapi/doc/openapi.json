@@ -12175,6 +12175,7 @@
           {
             "name": "finding",
             "in": "query",
+            "required": true,
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
             }

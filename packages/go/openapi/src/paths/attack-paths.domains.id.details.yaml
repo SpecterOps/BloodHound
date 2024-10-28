@@ -35,6 +35,7 @@ get:
   parameters:
     - name: finding
       in: query
+      required: true
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
     - name: sort_by
