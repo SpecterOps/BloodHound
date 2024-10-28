@@ -36,7 +36,7 @@ import (
 )
 
 func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca2, domain *graph.Node, cache ADCSCache) error {
-	results := cardinality.NewBitmap32()
+	results := cardinality.NewBitmap64()
 	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
 		return nil
@@ -130,7 +130,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		}
 	}
 
-	results.Each(func(value uint32) bool {
+	results.Each(func(value uint64) bool {
 		channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 			FromID: graph.ID(value),
 			ToID:   domain.ID,
@@ -421,11 +421,11 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		path6_7CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		path8CandidateSegments   = map[graph.ID][]*graph.PathSegment{}
 		lock                     = &sync.Mutex{}
-		path1CertTemplates       = cardinality.NewBitmap32()
-		path2CertTemplates       = cardinality.NewBitmap32()
-		enterpriseCANodes        = cardinality.NewBitmap32()
+		path1CertTemplates       = cardinality.NewBitmap64()
+		path2CertTemplates       = cardinality.NewBitmap64()
+		enterpriseCANodes        = cardinality.NewBitmap64()
 		enterpriseCASegments     = map[graph.ID][]*graph.PathSegment{}
-		path2CandidateTemplates  = cardinality.NewBitmap32()
+		path2CandidateTemplates  = cardinality.NewBitmap64()
 		enrollOnBehalfOfPaths    graph.PathSet
 	)
 
@@ -469,7 +469,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 				lock.Lock()
 				enterpriseCASegments[enterpriseCANode.ID] = append(enterpriseCASegments[enterpriseCANode.ID], terminal)
-				enterpriseCANodes.Add(enterpriseCANode.ID.Uint32())
+				enterpriseCANodes.Add(enterpriseCANode.ID.Uint64())
 				lock.Unlock()
 
 				return nil
@@ -494,7 +494,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				// Check that CT is valid for user start nodes
 				userStartNode := startNode.Kinds.ContainsOneOf(ad.User)
 				if !userStartNode || certTemplateValidForUserVictim(certTemplateNode) {
-					path1CertTemplates.Add(certTemplateNode.ID.Uint32())
+					path1CertTemplates.Add(certTemplateNode.ID.Uint64())
 				}
 				lock.Unlock()
 
@@ -508,7 +508,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if p, err := ops.FetchPathSet(tx.Relationships().Filter(
 			query.And(
-				query.InIDs(query.StartID(), cardinality.DuplexToGraphIDs(path1CertTemplates)...),
+				query.InIDs(query.StartID(), graph.DuplexToGraphIDs(path1CertTemplates)...),
 				query.KindIn(query.Relationship(), ad.EnrollOnBehalfOf),
 				query.KindIn(query.End(), ad.CertTemplate)),
 		)); err != nil {
@@ -522,7 +522,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	for _, path := range enrollOnBehalfOfPaths {
-		path2CandidateTemplates.Add(path.Terminal().ID.Uint32())
+		path2CandidateTemplates.Add(path.Terminal().ID.Uint64())
 	}
 
 	//Use our enterprise ca + candidate templates as filters for the third query (P2)
@@ -536,7 +536,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 				lock.Lock()
 				path2CandidateSegments[certTemplateNode.ID] = append(path2CandidateSegments[certTemplateNode.ID], terminal)
-				path2CertTemplates.Add(certTemplateNode.ID.Uint32())
+				path2CertTemplates.Add(certTemplateNode.ID.Uint64())
 				lock.Unlock()
 
 				return nil
@@ -597,11 +597,11 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		ct1 := p3.Root()
 		ct2 := p3.Terminal()
 
-		if !path1CertTemplates.Contains(ct1.ID.Uint32()) {
+		if !path1CertTemplates.Contains(ct1.ID.Uint64()) {
 			continue
 		}
 
-		if !path2CertTemplates.Contains(ct2.ID.Uint32()) {
+		if !path2CertTemplates.Contains(ct2.ID.Uint64()) {
 			continue
 		}
 
@@ -610,12 +610,12 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 		for _, p1 := range p1paths {
 			eca1 := p1.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) && enterpriseCANodes.Contains(nextSegment.Node.ID.Uint32())
+				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) && enterpriseCANodes.Contains(nextSegment.Node.ID.Uint64())
 			})
 
 			for _, p2 := range p2paths {
 				eca2 := p2.Search(func(nextSegment *graph.PathSegment) bool {
-					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) && enterpriseCANodes.Contains(nextSegment.Node.ID.Uint32())
+					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) && enterpriseCANodes.Contains(nextSegment.Node.ID.Uint64())
 				})
 
 				// Verify P6 and P7 paths exists
@@ -673,7 +673,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	return paths, nil
 }
 
-func ADCSESC3Path1Pattern(enterpriseCAs cardinality.Duplex[uint32]) traversal.PatternContinuation {
+func ADCSESC3Path1Pattern(enterpriseCAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
 	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 		query.Kind(query.Relationship(), ad.MemberOf),
 		query.Kind(query.End(), ad.Group),
@@ -694,12 +694,12 @@ func ADCSESC3Path1Pattern(enterpriseCAs cardinality.Duplex[uint32]) traversal.Pa
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
-			query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...),
+			query.InIDs(query.End(), graph.DuplexToGraphIDs(enterpriseCAs)...),
 			query.Kind(query.End(), ad.EnterpriseCA),
 		))
 }
 
-func ADCSESC3Path2Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
+func ADCSESC3Path2Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates cardinality.Duplex[uint64]) traversal.PatternContinuation {
 	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 		query.Kind(query.Relationship(), ad.MemberOf),
 		query.Kind(query.End(), ad.Group),
@@ -709,12 +709,12 @@ func ADCSESC3Path2Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates c
 			query.KindIn(query.End(), ad.CertTemplate),
 			query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
 			query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
-			query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(candidateTemplates)...),
+			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(candidateTemplates)...),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.KindIn(query.End(), ad.EnterpriseCA),
-			query.InIDs(query.End(), cardinality.DuplexToGraphIDs(enterpriseCAs)...))).
+			query.InIDs(query.End(), graph.DuplexToGraphIDs(enterpriseCAs)...))).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
 			query.Kind(query.End(), ad.NTAuthStore),
@@ -752,13 +752,13 @@ func ADCSESC3Path6_7Pattern(domainId graph.ID) traversal.PatternContinuation {
 		))
 }
 
-func ADCSESC3Path8Pattern(candidateTemplates cardinality.Duplex[uint32]) traversal.PatternContinuation {
+func ADCSESC3Path8Pattern(candidateTemplates cardinality.Duplex[uint64]) traversal.PatternContinuation {
 	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 		query.Kind(query.Relationship(), ad.MemberOf),
 		query.Kind(query.End(), ad.Group),
 	)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.DelegatedEnrollmentAgent),
-			query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(candidateTemplates)...),
+			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(candidateTemplates)...),
 		))
 }

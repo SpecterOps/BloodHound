@@ -60,8 +60,8 @@ func node(nodeKinds ...graph.Kind) *graph.Node {
 	return graph.NewNode(getNextID(), nil, nodeKinds...)
 }
 
-func requireImpact(t *testing.T, agg impact.Aggregator, nodeID uint32, containedNodes ...uint32) {
-	nodeImpact := agg.Cardinality(nodeID).(cardinality.Duplex[uint32])
+func requireImpact(t *testing.T, agg impact.Aggregator, nodeID uint64, containedNodes ...uint64) {
+	nodeImpact := agg.Cardinality(nodeID).(cardinality.Duplex[uint64])
 
 	if int(nodeImpact.Cardinality()) != len(containedNodes) {
 		t.Fatalf("Expected node %d to contain %d impacting nodes but saw %d: %v", int(nodeID), len(containedNodes), int(nodeImpact.Cardinality()), nodeImpact.Slice())
@@ -93,8 +93,8 @@ func TestAggregator_NonImpactingShortcut(t *testing.T) {
 		node2Segment         = descend(rootSegment, node2)
 		node1ToNode2Shortcut = descend(node2Segment, node1)
 
-		agg = impact.NewAggregator(func() cardinality.Provider[uint32] {
-			return cardinality.NewBitmap32()
+		agg = impact.NewAggregator(func() cardinality.Provider[uint64] {
+			return cardinality.NewBitmap64()
 		})
 	)
 
@@ -152,8 +152,8 @@ func TestAggregator_Impact(t *testing.T) {
 		node11to10Terminal = descend(node11Segment, node10)
 
 		// Make sure to use an exact cardinality container (bitset in this case)
-		agg = impact.NewAggregator(func() cardinality.Provider[uint32] {
-			return cardinality.NewBitmap32()
+		agg = impact.NewAggregator(func() cardinality.Provider[uint64] {
+			return cardinality.NewBitmap64()
 		})
 	)
 
