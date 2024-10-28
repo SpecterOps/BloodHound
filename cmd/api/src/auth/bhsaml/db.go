@@ -25,7 +25,7 @@ import (
 	"github.com/specterops/bloodhound/src/serde"
 )
 
-func formatSAMLProviderURLs(requestContext context.Context, samlProviders ...model.SAMLProvider) model.SAMLProviders {
+func FormatSAMLProviderURLs(requestContext context.Context, samlProviders ...model.SAMLProvider) model.SAMLProviders {
 	for idx := 0; idx < len(samlProviders); idx++ {
 		providerURLs := FormatServiceProviderURLs(*ctx.Get(requestContext).Host, samlProviders[idx].Name)
 
@@ -42,7 +42,7 @@ func GetSAMLProviderByName(db database.Database, name string, requestContext con
 	if samlProvider, err := db.LookupSAMLProviderByName(requestContext, name); err != nil {
 		return model.SAMLProvider{}, err
 	} else {
-		return formatSAMLProviderURLs(requestContext, samlProvider)[0], nil
+		return FormatSAMLProviderURLs(requestContext, samlProvider)[0], nil
 	}
 }
 
@@ -50,7 +50,7 @@ func GetSAMLProviderByID(db database.Database, id int32, requestContext context.
 	if samlProvider, err := db.GetSAMLProvider(requestContext, id); err != nil {
 		return model.SAMLProvider{}, err
 	} else {
-		return formatSAMLProviderURLs(requestContext, samlProvider)[0], nil
+		return FormatSAMLProviderURLs(requestContext, samlProvider)[0], nil
 	}
 }
 
@@ -58,6 +58,6 @@ func GetAllSAMLProviders(db database.Database, requestContext context.Context) (
 	if samlProviders, err := db.GetAllSAMLProviders(requestContext); err != nil {
 		return nil, err
 	} else {
-		return formatSAMLProviderURLs(requestContext, samlProviders...), nil
+		return FormatSAMLProviderURLs(requestContext, samlProviders...), nil
 	}
 }

@@ -120,7 +120,7 @@ type DeleteRelationshipJob struct {
 	ID   graph.ID
 }
 
-func DeleteTransitEdges(ctx context.Context, db graph.Database, fromKind, toKind graph.Kind, targetRelationships ...graph.Kind) (*AtomicPostProcessingStats, error) {
+func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships ...graph.Kind) (*AtomicPostProcessingStats, error) {
 	defer log.Measure(log.LevelInfo, "Finished deleting transit edges")()
 
 	var (
@@ -134,9 +134,9 @@ func DeleteTransitEdges(ctx context.Context, db graph.Database, fromKind, toKind
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			fetchedRelationshipIDs, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
 				return query.And(
-					query.Kind(query.Start(), fromKind),
+					query.KindIn(query.Start(), baseKinds...),
 					query.Kind(query.Relationship(), closureKindCopy),
-					query.Kind(query.End(), toKind),
+					query.KindIn(query.End(), baseKinds...),
 				)
 			}))
 
