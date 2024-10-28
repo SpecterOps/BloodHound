@@ -19,12 +19,12 @@ package ops
 import (
 	"context"
 	"errors"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"sync"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util"
+	"github.com/specterops/bloodhound/dawgs/util/channels"
 )
 
 var (

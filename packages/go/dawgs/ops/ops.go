@@ -565,4 +565,3 @@ func ParallelFetchNodes(ctx context.Context, db graph.Database, criteria graph.C
 		return parallelFetchNodes(ctx, db, largestNodeID, criteria, numWorkers)
 	}
 }
-
