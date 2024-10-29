@@ -447,21 +447,21 @@ func FetchLocalGroupMembership(tx graph.Transaction, computer graph.ID, groupSuf
 	}
 }
 
-func FetchRemoteInteractiveLogonPrivilegedEntities(tx graph.Transaction, computerId graph.ID) (graph.NodeSet, error) {
+func FetchRemoteInteractiveLogonRightEntities(tx graph.Transaction, computerId graph.ID) (graph.NodeSet, error) {
 	return ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
-			query.Kind(query.Relationship(), ad.RemoteInteractiveLogonPrivilege),
+			query.Kind(query.Relationship(), ad.RemoteInteractiveLogonRight),
 			query.Equals(query.EndID(), computerId),
 		)
 	}))
 }
 
-func HasRemoteInteractiveLogonPrivilege(tx graph.Transaction, groupId, computerId graph.ID) bool {
+func HasRemoteInteractiveLogonRight(tx graph.Transaction, groupId, computerId graph.ID) bool {
 	if _, err := tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Equals(query.StartID(), groupId),
 			query.Equals(query.EndID(), computerId),
-			query.Kind(query.Relationship(), ad.RemoteInteractiveLogonPrivilege),
+			query.Kind(query.Relationship(), ad.RemoteInteractiveLogonRight),
 		)
 	}).First(); err != nil {
 		return false
@@ -551,7 +551,7 @@ func ComputerHasURACollection(tx graph.Transaction, computerID graph.ID) bool {
 func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer graph.ID, localGroupExpansions impact.PathAggregator) (cardinality.Duplex[uint64], error) {
 	rdpLocalGroupMembers := localGroupExpansions.Cardinality(rdpLocalGroup.ID.Uint64()).(cardinality.Duplex[uint64])
 	// Shortcut opportunity: see if the RDP group has RIL privilege. If it does, get the first degree members and return those ids, since everything in RDP group has CanRDP privs. No reason to look any further
-	if HasRemoteInteractiveLogonPrivilege(tx, rdpLocalGroup.ID, computer) {
+	if HasRemoteInteractiveLogonRight(tx, rdpLocalGroup.ID, computer) {
 		firstDegreeMembers := cardinality.NewBitmap64()
 
 		return firstDegreeMembers, tx.Relationships().Filter(
@@ -566,7 +566,7 @@ func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer
 			}
 			return cursor.Error()
 		})
-	} else if baseRilEntities, err := FetchRemoteInteractiveLogonPrivilegedEntities(tx, computer); err != nil {
+	} else if baseRilEntities, err := FetchRemoteInteractiveLogonRightEntities(tx, computer); err != nil {
 		return nil, err
 	} else {
 		var (

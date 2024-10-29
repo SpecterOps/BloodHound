@@ -1108,8 +1108,8 @@ AddKeyCredentialLink: types.#Kind & {
 	schema: "active_directory"
 }
 
-RemoteInteractiveLogonPrivilege: types.#Kind & {
-	symbol: "RemoteInteractiveLogonPrivilege"
+RemoteInteractiveLogonRight: types.#Kind & {
+	symbol: "RemoteInteractiveLogonRight"
 	schema: "active_directory"
 }
 
@@ -1329,7 +1329,7 @@ RelationshipKinds: [
 	AddKeyCredentialLink,
 	LocalToComputer,
 	MemberOfLocalGroup,
-	RemoteInteractiveLogonPrivilege,
+	RemoteInteractiveLogonRight,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
 	WriteGPLink,

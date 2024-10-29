@@ -115,9 +115,9 @@ func TestFetchRemoteDesktopUsersBitmapForComputer(t *testing.T) {
 			return nil
 		}))
 
-		// Create a RemoteInteractiveLogonPrivilege relationship from the RDP local group to the computer to test our most common case
+		// Create a RemoteInteractiveLogonRight relationship from the RDP local group to the computer to test our most common case
 		require.Nil(t, db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-			_, err := tx.CreateRelationshipByIDs(harness.RDP.RDPLocalGroup.ID, harness.RDP.Computer.ID, ad.RemoteInteractiveLogonPrivilege, graph.NewProperties())
+			_, err := tx.CreateRelationshipByIDs(harness.RDP.RDPLocalGroup.ID, harness.RDP.Computer.ID, ad.RemoteInteractiveLogonRight, graph.NewProperties())
 			return err
 		}))
 
@@ -169,9 +169,9 @@ func TestFetchRDPEntityBitmapForComputer(t *testing.T) {
 			return nil
 		}))
 
-		// Create a RemoteInteractiveLogonPrivilege relationship from the RDP local group to the computer to test our most common case
+		// Create a RemoteInteractiveLogonRight relationship from the RDP local group to the computer to test our most common case
 		require.Nil(t, db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
-			_, err := tx.CreateRelationshipByIDs(harness.RDPHarnessWithCitrix.RDPLocalGroup.ID, harness.RDPHarnessWithCitrix.Computer.ID, ad.RemoteInteractiveLogonPrivilege, graph.NewProperties())
+			_, err := tx.CreateRelationshipByIDs(harness.RDPHarnessWithCitrix.RDPLocalGroup.ID, harness.RDPHarnessWithCitrix.Computer.ID, ad.RemoteInteractiveLogonRight, graph.NewProperties())
 			return err
 		}))
 

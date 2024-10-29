@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
@@ -97,6 +98,13 @@ func (s *BloodhoundDB) GetAllSSOProviders(ctx context.Context, order string, sql
 	// Apply SQL filter if provided
 	if sqlFilter.SQLString != "" {
 		query = query.Where(sqlFilter.SQLString, sqlFilter.Params...)
+	}
+
+	// Backwards compatibility when FF is disabled
+	if oidcFeatureFlag, err := s.GetFlagByKey(ctx, appcfg.FeatureOIDCSupport); err != nil {
+		return providers, err
+	} else if !oidcFeatureFlag.Enabled {
+		query = query.Where("type = ?", model.SessionAuthProviderSAML)
 	}
 
 	// Apply sorting order if provided
