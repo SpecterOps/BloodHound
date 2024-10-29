@@ -27,6 +27,7 @@ import (
 	"github.com/crewjam/saml"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -98,6 +99,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
 			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
 			require.Equal(t, username, log.Fields["username"])
+			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
 		})
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(user, nil)
 		mockDB.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
@@ -119,8 +121,11 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
 			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
 			require.Equal(t, username, log.Fields["username"])
+			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
+			if log.Status == model.AuditLogStatusFailure {
+				require.Equal(t, database.ErrNotFound, log.Fields["error"])
+			}
 		})
-
 		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
@@ -135,7 +140,12 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
 			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
 			require.Equal(t, username, log.Fields["username"])
+			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
+			if log.Status == model.AuditLogStatusFailure {
+				require.Equal(t, api.ErrorUserNotAuthorizedForProvider, log.Fields["error"])
+			}
 		})
+
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{}, nil)
 
 		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
@@ -152,6 +162,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
 			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
 			require.Equal(t, username, log.Fields["username"])
+			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
 			if log.Status == model.AuditLogStatusFailure {
 				require.Equal(t, api.ErrorUserNotAuthorizedForProvider.Error(), log.Fields["error"].(error).Error())
 			}

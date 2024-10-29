@@ -93,11 +93,11 @@ func NewAuthenticator(cfg config.Configuration, db database.Database, ctxInitial
 	}
 }
 
-func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.UUID, user model.User, loginRequest LoginRequest, status model.AuditLogEntryStatus, loginError error) {
+func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.UUID, status model.AuditLogEntryStatus, user model.User, fields types.JSONUntypedObject) {
 	bhCtx := ctx.Get(requestContext)
 	auditLog := model.AuditLog{
 		Action:          model.AuditLogActionLoginAttempt,
-		Fields:          types.JSONUntypedObject{"username": loginRequest.Username, "auth_type": loginRequest.LoginMethod},
+		Fields:          fields,
 		RequestID:       bhCtx.RequestID,
 		SourceIpAddress: bhCtx.RequestIP,
 		Status:          status,
@@ -110,11 +110,10 @@ func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.
 		auditLog.ActorEmail = user.EmailAddress.ValueOrZero()
 	}
 
-	if status == model.AuditLogStatusFailure {
-		auditLog.Fields["error"] = loginError
+	err := s.db.CreateAuditLog(requestContext, auditLog)
+	if err != nil {
+		log.Warnf("failed to write login audit log %+v", err)
 	}
-
-	s.db.CreateAuditLog(requestContext, auditLog)
 }
 
 func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest LoginRequest) (model.User, string, error) {
@@ -138,32 +137,25 @@ func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest Log
 }
 
 func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error) {
-	var (
-		commitID     uuid.UUID
-		err          error
-		sessionToken string
-		user         model.User
-	)
+	auditLogFields := types.JSONUntypedObject{"username": loginRequest.Username, "auth_type": auth.ProviderTypeSecret}
 
-	commitID, err = uuid.NewV4()
-	if err != nil {
+	if commitID, err := uuid.NewV4(); err != nil {
 		log.Errorf("Error generating commit ID for login: %s", err)
 		return LoginDetails{}, err
-	}
-
-	s.auditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusIntent, err)
-
-	user, sessionToken, err = s.validateSecretLogin(ctx, loginRequest)
-
-	if err != nil {
-		s.auditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusFailure, err)
-		return LoginDetails{}, err
 	} else {
-		s.auditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusSuccess, err)
-		return LoginDetails{
-			User:         user,
-			SessionToken: sessionToken,
-		}, nil
+		s.auditLogin(ctx, commitID, model.AuditLogStatusIntent, model.User{}, auditLogFields)
+
+		if user, sessionToken, err := s.validateSecretLogin(ctx, loginRequest); err != nil {
+			auditLogFields["error"] = err
+			s.auditLogin(ctx, commitID, model.AuditLogStatusFailure, user, auditLogFields)
+			return LoginDetails{}, err
+		} else {
+			s.auditLogin(ctx, commitID, model.AuditLogStatusSuccess, user, auditLogFields)
+			return LoginDetails{
+				User:         user,
+				SessionToken: sessionToken,
+			}, nil
+		}
 	}
 }
 
@@ -337,27 +329,26 @@ func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter,
 	})
 }
 
+// authProvider should be either model.SAMLProvider or model.OIDCProvider
 func (s authenticator) CreateSSOSession(request *http.Request, response http.ResponseWriter, principalNameOrEmail string, authProvider any) {
 	var (
-		hostURL      = *ctx.FromRequest(request).Host
-		requestCtx   = request.Context()
-		commitID     uuid.UUID
-		user         model.User
-		err          error
-		loginRequest = LoginRequest{
-			Username: principalNameOrEmail,
-		}
+		hostURL    = *ctx.FromRequest(request).Host
+		requestCtx = request.Context()
+		err        error
 
-		loginOutcome = model.AuditLogStatusFailure
-		loginError   error
+		user model.User
+
+		commitID        uuid.UUID
+		auditLogFields  = types.JSONUntypedObject{"username": principalNameOrEmail}
+		auditLogOutcome = model.AuditLogStatusFailure
 	)
 
 	// Set LoginAttempt method for audit logs
 	switch authProvider.(type) {
 	case model.SAMLProvider:
-		loginRequest.LoginMethod = auth.ProviderTypeSAML
+		auditLogFields["auth_type"] = auth.ProviderTypeSAML
 	case model.OIDCProvider:
-		loginRequest.LoginMethod = auth.ProviderTypeOIDC
+		auditLogFields["auth_type"] = auth.ProviderTypeOIDC
 	}
 
 	// Generate commit ID for audit logging
@@ -368,63 +359,62 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 	}
 
 	// Log the intent to authenticate
-	s.auditLogin(requestCtx, commitID, user, loginRequest, model.AuditLogStatusIntent, nil)
+	s.auditLogin(requestCtx, commitID, model.AuditLogStatusIntent, user, auditLogFields)
 
 	// Log authentication success or failure
 	defer func() {
-		s.auditLogin(requestCtx, commitID, user, loginRequest, loginOutcome, loginError)
+		s.auditLogin(requestCtx, commitID, auditLogOutcome, user, auditLogFields)
 	}()
 
-	if user, err = s.db.LookupUser(requestCtx, principalNameOrEmail); err != nil {
+	if user, err := s.db.LookupUser(requestCtx, principalNameOrEmail); err != nil {
+		auditLogFields["error"] = err
 		if !errors.Is(err, database.ErrNotFound) {
 			HandleDatabaseError(request, response, err)
 		} else {
 			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
 		}
-		loginError = err
-		return
-	}
+	} else {
+		switch typedAuthProvider := authProvider.(type) {
+		case model.SAMLProvider:
+			if !user.SAMLProviderID.Valid || typedAuthProvider.ID != user.SAMLProvider.ID {
+				auditLogFields["error"] = ErrorUserNotAuthorizedForProvider
+				WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
+				return
+			}
 
-	switch typedAuthProvider := authProvider.(type) {
-	case model.SAMLProvider:
-		if !user.SAMLProviderID.Valid || typedAuthProvider.ID != user.SAMLProvider.ID {
-			loginError = ErrorUserNotAuthorizedForProvider
-			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
+		case model.OIDCProvider:
+			//todo connect to db provider table
+
+			// Delete pre-auth cookies regardless
+			DeleteBrowserCookie(request, response, AuthPKCECookieName)
+			DeleteBrowserCookie(request, response, AuthStateCookieName)
+
+		default:
+			auditLogFields["error"] = ErrorInvalidAuthProvider
+			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusBadRequest, ErrorInvalidAuthProvider.Error(), request), response)
 			return
 		}
 
-	case model.OIDCProvider:
-		//todo connect to db provider table
+		if sessionJWT, err := s.CreateSession(requestCtx, user, authProvider); err != nil {
+			auditLogFields["error"] = err
+			if locationURL := URLJoinPath(hostURL, UserDisabledPath); errors.Is(err, ErrUserDisabled) {
+				response.Header().Add(headers.Location.String(), locationURL.String())
+				response.WriteHeader(http.StatusFound)
+			} else {
+				WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusInternalServerError, "session creation failure", request), response)
+			}
+		} else {
+			auditLogOutcome = model.AuditLogStatusSuccess
 
-		// Delete pre-auth cookies regardless
-		DeleteBrowserCookie(request, response, AuthPKCECookieName)
-		DeleteBrowserCookie(request, response, AuthStateCookieName)
+			locationURL := URLJoinPath(hostURL, UserInterfacePath)
 
-	default:
-		loginError = ErrorInvalidAuthProvider
-		WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusBadRequest, "invalid auth provider", request), response)
-		return
-	}
+			// Set the token cookie
+			SetSecureBrowserCookie(request, response, AuthTokenCookieName, sessionJWT, time.Now().UTC().Add(s.cfg.AuthSessionTTL()), false)
 
-	if sessionJWT, err := s.CreateSession(requestCtx, user, authProvider); err != nil {
-		loginError = err
-		if locationURL := URLJoinPath(hostURL, UserDisabledPath); errors.Is(err, ErrUserDisabled) {
+			// Redirect back to the UI landing page
 			response.Header().Add(headers.Location.String(), locationURL.String())
 			response.WriteHeader(http.StatusFound)
-		} else {
-			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusInternalServerError, "session creation failure", request), response)
 		}
-	} else {
-		loginOutcome = model.AuditLogStatusSuccess
-
-		locationURL := URLJoinPath(hostURL, UserInterfacePath)
-
-		// Set the token cookie
-		SetSecureBrowserCookie(request, response, AuthTokenCookieName, sessionJWT, time.Now().UTC().Add(s.cfg.AuthSessionTTL()), false)
-
-		// Redirect back to the UI landing page
-		response.Header().Add(headers.Location.String(), locationURL.String())
-		response.WriteHeader(http.StatusFound)
 	}
 }
 
@@ -452,7 +442,7 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 		userSession.AuthProviderType = model.SessionAuthProviderOIDC
 		userSession.AuthProviderID = typedAuthProvider.ID
 	default:
-		return "", errors.New("invalid auth provider")
+		return "", ErrorInvalidAuthProvider
 	}
 
 	if newSession, err := s.db.CreateUserSession(ctx, userSession); err != nil {
