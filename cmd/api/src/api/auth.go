@@ -344,11 +344,15 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 	)
 
 	// Set LoginAttempt method for audit logs
-	switch authProvider.(type) {
+	switch typedAuthProvider := authProvider.(type) {
 	case model.SAMLProvider:
 		auditLogFields["auth_type"] = auth.ProviderTypeSAML
+		auditLogFields["saml_provider_id"] = typedAuthProvider.ID
+		auditLogFields["sso_provider_id"] = typedAuthProvider.SSOProviderID
 	case model.OIDCProvider:
 		auditLogFields["auth_type"] = auth.ProviderTypeOIDC
+		auditLogFields["oidc_provider_id"] = typedAuthProvider.ID
+		auditLogFields["sso_provider_id"] = typedAuthProvider.SSOProviderID
 	}
 
 	// Generate commit ID for audit logging
@@ -366,7 +370,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 		s.auditLogin(requestCtx, commitID, auditLogOutcome, user, auditLogFields)
 	}()
 
-	if user, err := s.db.LookupUser(requestCtx, principalNameOrEmail); err != nil {
+	if user, err = s.db.LookupUser(requestCtx, principalNameOrEmail); err != nil {
 		auditLogFields["error"] = err
 		if !errors.Is(err, database.ErrNotFound) {
 			HandleDatabaseError(request, response, err)
