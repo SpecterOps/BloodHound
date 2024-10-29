@@ -19,7 +19,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Typography, Paper, TextField, useTheme } from '@mui/material';
 import { useMutation, useQuery } from 'react-query';
-import { CreateOIDCProvideRequest, SSOProvider } from 'js-client-library';
+import { CreateOIDCProviderRequest, SSOProvider } from 'js-client-library';
 import { apiClient } from '../../utils';
 import {
     CreateSAMLProviderDialog,
@@ -164,7 +164,7 @@ const SSOConfiguration: FC = () => {
         }
     };
 
-    const createOIDCProvider = async (oidcProvider: CreateOIDCProvideRequest) => {
+    const createOIDCProvider = async (oidcProvider: CreateOIDCProviderRequest) => {
         setCreateProviderError('');
         try {
             await apiClient.createOIDCProvider(oidcProvider);

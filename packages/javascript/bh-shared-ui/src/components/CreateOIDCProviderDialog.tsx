@@ -18,26 +18,31 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, Dialog, DialogTitle, DialogContent, DialogActions, Grid, TextField } from '@mui/material';
 import { FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { CreateOIDCProvideRequest } from 'js-client-library';
+import { CreateOIDCProviderRequest } from 'js-client-library';
 
 const CreateOIDCProviderDialog: FC<{
     open: boolean;
     error?: string;
     onClose: () => void;
-    onSubmit: (data: CreateOIDCProvideRequest) => void;
-}> = ({ open, error, onClose, onSubmit }) => {
+    onSubmit: (data: CreateOIDCProviderRequest) => void;
+}> = ({ open, error, onClose, onSubmit: _onSubmit }) => {
     const {
         control,
         handleSubmit,
         reset,
         formState: { errors },
-    } = useForm<CreateOIDCProvideRequest>({
+    } = useForm<CreateOIDCProviderRequest>({
         defaultValues: {
             name: '',
             client_id: '',
             issuer: '',
         },
     });
+
+    const onSubmit = (data: CreateOIDCProviderRequest) => {
+        _onSubmit(data);
+        reset();
+    };
 
     const handleClose = () => {
         onClose();

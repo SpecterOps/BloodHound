@@ -654,7 +654,7 @@ class BHEAPIClient {
     deleteSSOProvider = (ssoProviderId: types.SSOProvider['id'], options?: types.RequestOptions) =>
         this.baseClient.delete(`/api/v2/sso-providers/${ssoProviderId}`, options);
 
-    createOIDCProvider = (oidcProvider: types.CreateOIDCProvideRequest) =>
+    createOIDCProvider = (oidcProvider: types.CreateOIDCProviderRequest) =>
         this.baseClient.post(`/api/v2/sso-providers/oidc`, oidcProvider);
 
     listSSOProviders = (options?: types.RequestOptions) =>
