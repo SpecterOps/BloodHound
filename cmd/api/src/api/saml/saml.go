@@ -51,9 +51,7 @@ const (
 )
 
 const (
-	ErrorUserNotFound                 = errors.Error("User not found")
-	ErrorSAMLAssertion                = errors.Error("SAML assertion error")
-	ErrorUserNotAuthorizedForProvider = errors.Error("User not authorized for this provider")
+	ErrorSAMLAssertion = errors.Error("SAML assertion error")
 )
 
 type WriteAPIErrorResponse func(request *http.Request, response http.ResponseWriter, statusCode int, message string)

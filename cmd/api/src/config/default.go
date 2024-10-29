@@ -18,7 +18,6 @@ package config
 
 import (
 	"fmt"
-
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 
 	"github.com/specterops/bloodhound/src/serde"
