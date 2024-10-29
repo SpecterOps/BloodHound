@@ -18,12 +18,12 @@ package azure
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/graphschema/ad"
 
 	"github.com/specterops/bloodhound/analysis"
 	azureAnalysis "github.com/specterops/bloodhound/analysis/azure"
 	"github.com/specterops/bloodhound/analysis/hybrid"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 )
 

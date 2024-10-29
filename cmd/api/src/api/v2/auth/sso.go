@@ -17,7 +17,6 @@
 package auth
 
 import (
-	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"net/http"
 	"strconv"
 	"strings"
@@ -25,6 +24,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"

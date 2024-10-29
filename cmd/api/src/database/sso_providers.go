@@ -18,10 +18,10 @@ package database
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/src/model/appcfg"
 	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"gorm.io/gorm"
 )
 
