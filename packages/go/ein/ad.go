@@ -46,10 +46,24 @@ func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
 		convertInvalidDomainProperties(itemProps)
 	}
 
+	convertOwnsEdgeToProperty(item, itemProps)
+
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
 		PropertyMap: itemProps,
 		Label:       itemType,
+	}
+}
+
+// This function is to support our new method of doing Owns edges and makes older data sets backwards compatible
+func convertOwnsEdgeToProperty(item IngestBase, itemProps map[string]any) {
+	for _, ace := range item.Aces {
+		if rightName, err := analysis.ParseKind(ace.RightName); err != nil {
+			continue
+		} else if rightName.Is(ad.Owns) {
+			itemProps[ad.OwnerSid.String()] = ace.PrincipalSID
+			return
+		}
 	}
 }
 
@@ -199,6 +213,10 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 			continue
 		} else if !ad.IsACLKind(rightKind) {
 			slog.Error(fmt.Sprintf("Non-ace edge type given to process aces: %s", ace.RightName))
+			continue
+		} else if rightKind.Is(ad.Owns) {
+			// Owns aces are moving to post-processing. This indicates an older data set which we should ignore the owns edge from, as the ownersid
+			// property will be added during ingest of the node
 			continue
 		} else {
 			converted = append(converted, NewIngestibleRelationship(

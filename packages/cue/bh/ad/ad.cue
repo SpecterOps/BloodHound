@@ -28,7 +28,7 @@ RelationshipKinds: [...types.#Kind]
 ACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
 InboundRelationshipKinds: [...types.#Kind]
-OutboundRelationshipKinds: [...types.#Kind] 
+OutboundRelationshipKinds: [...types.#Kind]
 EdgeCompositionRelationships: [...types.#Kind]
 
 // Property name enumerations
@@ -740,6 +740,13 @@ MinPwdLength: types.#StringEnum & {
 	representation: "minpwdlength"
 }
 
+OwnerSid: types.#StringEnum & {
+ 	symbol: "OwnerSid"
+ 	schema: "ad"
+ 	name: "Owner SID"
+ 	representation: "ownersid"
+}
+
 SMBSigning: types.#StringEnum & {
 	symbol: "SMBSigning"
 	schema: "ad"
@@ -883,6 +890,8 @@ Properties: [
 	MinPwdAge,
 	MaxPwdAge,
 	LockoutDuration,
+	LockoutObservationWindow,
+	OwnerSid,
 	LockoutObservationWindow,
 	SMBSigning,
 	WebClientRunning,
