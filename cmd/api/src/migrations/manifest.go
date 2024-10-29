@@ -293,7 +293,7 @@ var Manifest = []Migration{
 				if err := tx.Relationships().Filterf(func() graph.Criteria {
 					return query.And(
 						query.Or(
-							query.Kind(query.Relationship(), ad.RemoteInteractiveLogonRight),
+							query.Kind(query.Relationship(), graph.StringKind("RemoteInteractiveLogonPrivilege")),
 							query.Kind(query.Relationship(), ad.LocalToComputer),
 							query.Kind(query.Relationship(), ad.MemberOfLocalGroup),
 						),
