@@ -735,6 +735,13 @@ MinPwdLength: types.#StringEnum & {
 	representation: "minpwdlength"
 }
 
+OwnerSid: types.#StringEnum & {
+ 	symbol: "OwnerSid"
+ 	schema: "ad"
+ 	name: "Owner SID"
+ 	representation: "ownersid"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -836,7 +843,8 @@ Properties: [
 	MinPwdAge,
 	MaxPwdAge,
 	LockoutDuration,
-	LockoutObservationWindow
+	LockoutObservationWindow,
+	OwnerSid
 ]
 
 // Kinds
