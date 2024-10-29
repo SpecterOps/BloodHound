@@ -58,6 +58,7 @@ func PostProcessedRelationships() []graph.Kind {
 		ad.ADCSESC9a,
 		ad.ADCSESC13,
 		ad.EnrollOnBehalfOf,
+		ad.SyncedToEntraUser,
 	}
 }
 
@@ -77,7 +78,7 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, groupExpansion
 					return err
 				} else {
 					for _, computer := range computers {
-						lapsSyncers.Each(func(value uint32) bool {
+						lapsSyncers.Each(func(value uint64) bool {
 							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 								FromID: graph.ID(value),
 								ToID:   computer,
@@ -110,7 +111,7 @@ func PostDCSync(ctx context.Context, db graph.Database, groupExpansions impact.P
 				} else if dcSyncers.Cardinality() == 0 {
 					return nil
 				} else {
-					dcSyncers.Each(func(value uint32) bool {
+					dcSyncers.Each(func(value uint64) bool {
 						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 							FromID: graph.ID(value),
 							ToID:   innerDomain.ID,
@@ -177,7 +178,7 @@ func fetchCollectedDomainNodes(ctx context.Context, db graph.Database) ([]*graph
 	})
 }
 
-func getLAPSSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions impact.PathAggregator) (cardinality.Duplex[uint32], error) {
+func getLAPSSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions impact.PathAggregator) (cardinality.Duplex[uint64], error) {
 	var (
 		getChangesQuery         = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
 		getChangesFilteredQuery = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesInFilteredSet)
@@ -197,7 +198,7 @@ func getLAPSSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions im
 	}
 }
 
-func getDCSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions impact.PathAggregator) (cardinality.Duplex[uint32], error) {
+func getDCSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions impact.PathAggregator) (cardinality.Duplex[uint64], error) {
 	var (
 		getChangesQuery    = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
 		getChangesAllQuery = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChangesAll)
@@ -469,15 +470,15 @@ func HasRemoteInteractiveLogonRight(tx graph.Transaction, groupId, computerId gr
 	return true
 }
 
-func FetchLocalGroupBitmapForComputer(tx graph.Transaction, computer graph.ID, suffix string) (cardinality.Duplex[uint32], error) {
+func FetchLocalGroupBitmapForComputer(tx graph.Transaction, computer graph.ID, suffix string) (cardinality.Duplex[uint64], error) {
 	if members, err := FetchLocalGroupMembership(tx, computer, suffix); err != nil {
 		if graph.IsErrNotFound(err) {
-			return cardinality.NewBitmap32(), nil
+			return cardinality.NewBitmap64(), nil
 		}
 
 		return nil, err
 	} else {
-		return cardinality.NodeSetToDuplex(members), nil
+		return graph.NodeSetToDuplex(members), nil
 	}
 }
 
@@ -492,9 +493,9 @@ func ExpandAllRDPLocalGroups(ctx context.Context, db graph.Database) (impact.Pat
 	))
 }
 
-func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool, citrixEnabled bool) (cardinality.Duplex[uint32], error) {
+func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool, citrixEnabled bool) (cardinality.Duplex[uint64], error) {
 	if remoteDesktopUsers, err := FetchRemoteDesktopUsersBitmapForComputer(tx, computer, localGroupExpansions, enforceURA); err != nil {
-		return cardinality.NewBitmap32(), err
+		return cardinality.NewBitmap64(), err
 	} else if remoteDesktopUsers.Cardinality() == 0 || !citrixEnabled {
 		return remoteDesktopUsers, nil
 	} else {
@@ -504,10 +505,10 @@ func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID,
 				// "Direct Access Users" is a group that Citrix creates.  If the group does not exist, then the computer does not have Citrix installed and post-processing logic can continue by enumerating the "Remote Desktop Users" AD group.
 				return remoteDesktopUsers, nil
 			}
-			return cardinality.NewBitmap32(), err
+			return cardinality.NewBitmap64(), err
 		} else {
-			if dauGroupMembers, ok := localGroupExpansions.Cardinality(directAccessUsersGroup.ID.Uint32()).(cardinality.Duplex[uint32]); !ok {
-				return cardinality.NewBitmap32(), errors.New("type assertion failed in FetchCanRDPEntityBitmapForComputer")
+			if dauGroupMembers, ok := localGroupExpansions.Cardinality(directAccessUsersGroup.ID.Uint64()).(cardinality.Duplex[uint64]); !ok {
+				return cardinality.NewBitmap64(), errors.New("type assertion failed in FetchCanRDPEntityBitmapForComputer")
 			} else {
 				dauGroupMembers.And(remoteDesktopUsers)
 				return dauGroupMembers, nil
@@ -517,10 +518,10 @@ func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID,
 }
 
 // returns a bitmap containing the ID's of all entities that have RDP privileges to the specified computer via membership to the "Remote Desktop Users" AD group
-func FetchRemoteDesktopUsersBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool) (cardinality.Duplex[uint32], error) {
+func FetchRemoteDesktopUsersBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool) (cardinality.Duplex[uint64], error) {
 	if rdpLocalGroup, err := FetchComputerLocalGroupBySIDSuffix(tx, computer, RDPGroupSuffix); err != nil {
 		if graph.IsErrNotFound(err) {
-			return cardinality.NewBitmap32(), nil
+			return cardinality.NewBitmap64(), nil
 		}
 
 		return nil, err
@@ -547,11 +548,11 @@ func ComputerHasURACollection(tx graph.Transaction, computerID graph.ID) bool {
 	}
 }
 
-func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer graph.ID, localGroupExpansions impact.PathAggregator) (cardinality.Duplex[uint32], error) {
-	rdpLocalGroupMembers := localGroupExpansions.Cardinality(rdpLocalGroup.ID.Uint32()).(cardinality.Duplex[uint32])
+func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer graph.ID, localGroupExpansions impact.PathAggregator) (cardinality.Duplex[uint64], error) {
+	rdpLocalGroupMembers := localGroupExpansions.Cardinality(rdpLocalGroup.ID.Uint64()).(cardinality.Duplex[uint64])
 	// Shortcut opportunity: see if the RDP group has RIL privilege. If it does, get the first degree members and return those ids, since everything in RDP group has CanRDP privs. No reason to look any further
 	if HasRemoteInteractiveLogonRight(tx, rdpLocalGroup.ID, computer) {
-		firstDegreeMembers := cardinality.NewBitmap32()
+		firstDegreeMembers := cardinality.NewBitmap64()
 
 		return firstDegreeMembers, tx.Relationships().Filter(
 			query.And(
@@ -561,7 +562,7 @@ func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer
 			),
 		).FetchTriples(func(cursor graph.Cursor[graph.RelationshipTripleResult]) error {
 			for result := range cursor.Chan() {
-				firstDegreeMembers.Add(result.StartID.Uint32())
+				firstDegreeMembers.Add(result.StartID.Uint64())
 			}
 			return cursor.Error()
 		})
@@ -569,17 +570,17 @@ func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer
 		return nil, err
 	} else {
 		var (
-			rdpEntities      = cardinality.NewBitmap32()
-			secondaryTargets = cardinality.NewBitmap32()
+			rdpEntities      = cardinality.NewBitmap64()
+			secondaryTargets = cardinality.NewBitmap64()
 		)
 
 		// Attempt 2: look at each RIL entity directly and see if it has membership to the RDP group. If not, and it's a group, expand its membership for further processing
 		for _, entity := range baseRilEntities {
-			if rdpLocalGroupMembers.Contains(entity.ID.Uint32()) {
+			if rdpLocalGroupMembers.Contains(entity.ID.Uint64()) {
 				// If we have membership to the RDP group, then this is a valid CanRDP entity
-				rdpEntities.Add(entity.ID.Uint32())
+				rdpEntities.Add(entity.ID.Uint64())
 			} else if entity.Kinds.ContainsOneOf(ad.Group, ad.LocalGroup) {
-				secondaryTargets.Or(localGroupExpansions.Cardinality(entity.ID.Uint32()).(cardinality.Duplex[uint32]))
+				secondaryTargets.Or(localGroupExpansions.Cardinality(entity.ID.Uint64()).(cardinality.Duplex[uint64]))
 			}
 		}
 

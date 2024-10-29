@@ -131,7 +131,6 @@ type Database interface {
 	GetAllSAMLProviders(ctx context.Context) (model.SAMLProviders, error)
 	GetSAMLProvider(ctx context.Context, id int32) (model.SAMLProvider, error)
 	GetSAMLProviderUsers(ctx context.Context, id int32) (model.Users, error)
-	DeleteSAMLProvider(ctx context.Context, samlProvider model.SAMLProvider) error
 
 	// SSO
 	SSOProviderData

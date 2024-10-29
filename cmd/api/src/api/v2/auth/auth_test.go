@@ -242,11 +242,10 @@ func TestManagementResource_DeleteSAMLProvider(t *testing.T) {
 
 	mockDB.EXPECT().GetSAMLProvider(gomock.Any(), goodSAMLProvider.ID).Return(goodSAMLProvider, nil)
 	mockDB.EXPECT().GetSAMLProvider(gomock.Any(), samlProviderWithUsers.ID).Return(samlProviderWithUsers, nil)
-	mockDB.EXPECT().DeleteSAMLProvider(gomock.Any(), gomock.Eq(goodSAMLProvider)).Return(nil)
-	mockDB.EXPECT().DeleteSAMLProvider(gomock.Any(), gomock.Eq(samlProviderWithUsers)).Return(nil)
+	mockDB.EXPECT().DeleteSSOProvider(gomock.Any(), gomock.Eq(int(goodSAMLProvider.SSOProviderID.Int32))).Return(nil)
+	mockDB.EXPECT().DeleteSSOProvider(gomock.Any(), gomock.Eq(int(samlProviderWithUsers.SSOProviderID.Int32))).Return(nil)
 	mockDB.EXPECT().GetSAMLProviderUsers(gomock.Any(), goodSAMLProvider.ID).Return(nil, nil)
 	mockDB.EXPECT().GetSAMLProviderUsers(gomock.Any(), samlProviderWithUsers.ID).Return(model.Users{samlEnabledUser}, nil)
-	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Eq(samlEnabledUser)).Return(nil)
 
 	// Happy path
 	test.Request(t).

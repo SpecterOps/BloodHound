@@ -39,6 +39,9 @@ const (
 
 func tryParsePrivateKey(key string) (*rsa.PrivateKey, error) {
 	keyBlock, _ := pem.Decode([]byte(key))
+	if keyBlock == nil {
+		return nil, fmt.Errorf("unsupported key type")
+	}
 
 	if pkcs8PrivateKey, err := x509.ParsePKCS8PrivateKey(keyBlock.Bytes); err == nil {
 		if rsaPrivateKey, ok := pkcs8PrivateKey.(*rsa.PrivateKey); !ok {

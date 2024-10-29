@@ -62,8 +62,11 @@ func registerV2Auth(cfg config.Configuration, db database.Database, permissions 
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saml/providers/{%s}", api.URIPathVariableSAMLProviderID), managementResource.DeleteSAMLProvider).RequirePermissions(permissions.AuthManageProviders),
 
 		// SSO
-		routerInst.POST("/api/v2/sso-providers/oidc", managementResource.CreateOIDCProvider).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.GET("/api/v2/sso-providers", managementResource.ListAuthProviders).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport),
+		routerInst.POST("/api/v2/sso-providers/oidc", managementResource.CreateOIDCProvider).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
+		routerInst.DELETE(fmt.Sprintf("/api/v2/sso-providers/{%s}", api.URIPathVariableSSOProviderID), managementResource.DeleteSSOProvider).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
+		routerInst.GET(fmt.Sprintf("/api/v2/sso/{%s}/login", api.URIPathVariableSSOProviderSlug), managementResource.SSOLoginHandler).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport),
+		routerInst.GET(fmt.Sprintf("/api/v2/sso/{%s}/callback", api.URIPathVariableSSOProviderSlug), managementResource.SSOCallbackHandler).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport),
 
 		// Permissions
 		routerInst.GET("/api/v2/permissions", managementResource.ListPermissions).RequirePermissions(permissions.AuthManageSelf),
@@ -110,9 +113,9 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 	// Collection File Upload API
 	routerInst.GET("/api/v2/file-upload", resources.ListFileUploadJobs).RequireAuth()
 	routerInst.GET("/api/v2/file-upload/accepted-types", resources.ListAcceptedFileUploadTypes).RequireAuth()
-	routerInst.POST("/api/v2/file-upload/start", resources.StartFileUploadJob).RequirePermissions(permissions.GraphDBWrite)
-	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessFileUpload).RequirePermissions(permissions.GraphDBWrite)
-	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndFileUploadJob).RequirePermissions(permissions.GraphDBWrite)
+	routerInst.POST("/api/v2/file-upload/start", resources.StartFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
+	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessFileUpload).RequirePermissions(permissions.GraphDBIngest)
+	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
 
 	router.With(middleware.DefaultRateLimitMiddleware,
 		// Version API
