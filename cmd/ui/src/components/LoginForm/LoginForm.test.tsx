@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { render, screen } from 'src/test-utils';
 
-import LoginForm from './LoginForm.tsx';
+import LoginForm from './LoginForm';
 
 describe('LoginForm', () => {
     it('should render', () => {

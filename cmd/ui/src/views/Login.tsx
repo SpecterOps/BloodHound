@@ -118,7 +118,10 @@ const Login: React.FC = () => {
         return (
             <LoginPage>
                 <LoginViaSSOForm
-                    providers={listSSOProvidersQuery.data?.map(provider => ({name: provider.name, slug: provider.slug}))}
+                    providers={listSSOProvidersQuery.data?.map((provider) => ({
+                        name: provider.name,
+                        slug: provider.slug,
+                    }))}
                     onSubmit={handleSubmitLoginViaSSOForm}
                     onCancel={resetForm}
                 />

@@ -19,7 +19,7 @@ import { Box, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/mater
 import React from 'react';
 
 interface LoginViaSSOFormProps {
-    providers:  { name: string; slug: string }[] | undefined;
+    providers: { name: string; slug: string }[] | undefined;
     onSubmit: (redirectURL: string) => void;
     onCancel: () => void;
 }

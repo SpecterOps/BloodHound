@@ -16,7 +16,7 @@
 
 import userEvent from '@testing-library/user-event';
 import { act, render, screen } from 'src/test-utils';
-import LoginViaSSOForm from './LoginViaSSOForm.tsx';
+import LoginViaSSOForm from './LoginViaSSOForm';
 
 const testSSOProviders = [
     {
