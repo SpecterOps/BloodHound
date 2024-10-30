@@ -165,14 +165,9 @@ func (s ManagementResource) SSOLoginHandler(response http.ResponseWriter, reques
 	} else {
 		switch ssoProvider.Type {
 		case model.SessionAuthProviderSAML:
-			//todo handle saml login
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotImplemented, api.ErrorResponseDetailsNotImplemented, request), response)
+			s.SAMLLoginHandler(response, request, ssoProvider)
 		case model.SessionAuthProviderOIDC:
-			if ssoProvider.OIDCProvider == nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-			} else {
-				s.OIDCLoginHandler(response, request, ssoProvider, *ssoProvider.OIDCProvider)
-			}
+			s.OIDCLoginHandler(response, request, ssoProvider)
 		default:
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotImplemented, api.ErrorResponseDetailsNotImplemented, request), response)
 		}
@@ -187,14 +182,9 @@ func (s ManagementResource) SSOCallbackHandler(response http.ResponseWriter, req
 	} else {
 		switch ssoProvider.Type {
 		case model.SessionAuthProviderSAML:
-			//todo handle saml callback
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotImplemented, api.ErrorResponseDetailsNotImplemented, request), response)
+			s.SAMLCallbackHandler(response, request, ssoProvider)
 		case model.SessionAuthProviderOIDC:
-			if ssoProvider.OIDCProvider == nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-			} else {
-				s.OIDCCallbackHandler(response, request, ssoProvider, *ssoProvider.OIDCProvider)
-			}
+			s.OIDCCallbackHandler(response, request, ssoProvider)
 		default:
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotImplemented, api.ErrorResponseDetailsNotImplemented, request), response)
 		}
