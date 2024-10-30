@@ -30,11 +30,10 @@ import {
     Skeleton,
     Typography,
 } from '@mui/material';
-import { PageWithTitle } from 'bh-shared-ui';
+import { PageWithTitle, Flag, useFeatureFlags, useToggleFeatureFlag } from 'bh-shared-ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setDarkMode } from 'src/ducks/global/actions';
-import { Flag, useFeatureFlags, useToggleFeatureFlag } from 'src/hooks/useFeatureFlags';
 import { useAppDispatch } from 'src/store';
 
 export const EarlyAccessFeatureToggle: React.FC<{

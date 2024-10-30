@@ -25,6 +25,7 @@ import {
     darkPalette,
     typography,
     components,
+    useFeatureFlags,
 } from 'bh-shared-ui';
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
@@ -34,7 +35,6 @@ import { unstable_HistoryRouter as BrowserRouter, useLocation } from 'react-rout
 import Header from 'src/components/Header';
 import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN, ROUTE_USER_DISABLED } from 'src/ducks/global/routes';
-import { useFeatureFlags } from 'src/hooks/useFeatureFlags';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import Content from 'src/views/Content';

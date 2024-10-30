@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { render, screen } from 'src/test-utils';
 import { EarlyAccessFeatureToggle } from './EarlyAccessFeatures';
-import { Flag } from 'src/hooks/useFeatureFlags';
+import { Flag } from 'bh-shared-ui';
 
 describe('EarlyAccessFeatureToggle', () => {
     it('renders', () => {

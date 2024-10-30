@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 import { RequestOptions } from 'js-client-library';
 import { UseQueryOptions, UseQueryResult, useMutation, useQuery, useQueryClient } from 'react-query';
-import { apiClient } from 'bh-shared-ui';
+import { apiClient } from '../utils';
 
 export type Flag = {
     id: number;

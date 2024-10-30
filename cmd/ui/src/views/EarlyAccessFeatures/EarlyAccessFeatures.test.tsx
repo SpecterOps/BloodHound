@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { Flag } from 'src/hooks/useFeatureFlags';
+import { Flag } from 'bh-shared-ui';
 import { act, render, screen } from 'src/test-utils';
 import EarlyAccessFeatures from '.';
 

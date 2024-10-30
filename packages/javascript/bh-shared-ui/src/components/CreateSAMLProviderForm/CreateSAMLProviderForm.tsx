@@ -26,7 +26,7 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { useState } from 'react';
+import { useState, FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 export interface CreateSAMLProviderFormInputs {
@@ -34,7 +34,7 @@ export interface CreateSAMLProviderFormInputs {
     metadata: FileList;
 }
 
-const CreateSAMLProviderForm: React.FC<{
+const CreateSAMLProviderForm: FC<{
     error?: string;
     onClose: () => void;
     onSubmit: (data: CreateSAMLProviderFormInputs) => void;
