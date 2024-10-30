@@ -12182,7 +12182,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are `domain_sid`, `index`, `AcceptedUntil`, `id`, `created_at`, `updated_at`, `deleted_at`, `exposure_percent`, `impact_percent`. Relationship risks can be sorted on `FromPrincipal` and `ToPrincipal` in addition to the sortable columns for List Risks.",
+            "description": "Sortable columns are `domain_sid`, `index`, `AcceptedUntil`, `id`, `created_at`, `updated_at`, `deleted_at`, `exposure_percentage`, `impact_percentage`. Relationship risks can be sorted on `FromPrincipal` and `ToPrincipal` in addition to the sortable columns for List Risks.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
