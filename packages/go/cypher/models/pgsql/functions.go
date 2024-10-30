@@ -38,5 +38,6 @@ const (
 	FunctionUnnest                 Identifier = "unnest"
 	FunctionJSONBSet               Identifier = "jsonb_set"
 	FunctionCount                  Identifier = "count"
+	FunctionStringToArray          Identifier = "string_to_array"
 	FunctionEdgesToPath            Identifier = "edges_to_path"
 )
