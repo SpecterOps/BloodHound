@@ -31,14 +31,13 @@ import ListItemText from '@mui/material/ListItemText';
 import Menu, { MenuProps } from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import withStyles from '@mui/styles/withStyles';
-import { EnterpriseIcon } from 'bh-shared-ui';
+import { EnterpriseIcon, FeatureFlag } from 'bh-shared-ui';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/ducks/global/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import FeatureFlag from './FeatureFlag';
 
 interface Props {
     anchorEl: null | HTMLElement;

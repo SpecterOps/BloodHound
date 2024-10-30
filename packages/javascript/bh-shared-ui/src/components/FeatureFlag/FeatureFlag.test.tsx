@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, waitForElementToBeRemoved } from 'src/test-utils';
+import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
 import FeatureFlag from './FeatureFlag';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useFeatureFlag } from 'src/hooks/useFeatureFlags';
+import { useFeatureFlag } from '../../hooks/useFeatureFlags';
 
 type FeatureFlagProps = {
     flagKey: string;
