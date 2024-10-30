@@ -15,16 +15,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { render, screen } from 'src/test-utils';
+import { render, screen } from 'bhce/cmd/ui/src/test-utils';
 
-import LoginForm from './LoginForm';
+import LoginForm from './LoginForm.tsx';
 
 describe('LoginForm', () => {
     it('should render', () => {
         const testOnSubmit = vi.fn();
         const testOnLoginViaSAML = vi.fn();
 
-        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSAML={testOnLoginViaSAML} />);
+        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSSO={testOnLoginViaSAML} />);
 
         expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
@@ -39,7 +39,7 @@ describe('LoginForm', () => {
         const testEmailAddress = 'user@example.com';
         const testPassword = 'password';
 
-        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSAML={testOnLoginViaSAML} />);
+        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSSO={testOnLoginViaSAML} />);
 
         await user.type(screen.getByLabelText(/email address/i), testEmailAddress);
         await user.type(screen.getByLabelText(/password/i), testPassword);
@@ -52,7 +52,7 @@ describe('LoginForm', () => {
         const testOnSubmit = vi.fn();
         const testOnLoginViaSAML = vi.fn();
 
-        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSAML={testOnLoginViaSAML} />);
+        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSSO={testOnLoginViaSAML} />);
 
         await user.click(screen.getByRole('button', { name: /login via sso/i }));
         expect(testOnLoginViaSAML).toHaveBeenCalled();
@@ -62,7 +62,7 @@ describe('LoginForm', () => {
         const testOnSubmit = vi.fn();
         const testOnLoginViaSAML = vi.fn();
 
-        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSAML={testOnLoginViaSAML} loading={true} />);
+        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSSO={testOnLoginViaSAML} loading={true} />);
 
         expect(screen.getByRole('button', { name: /logging in$/i })).toBeDisabled();
         expect(screen.getByRole('button', { name: /login via sso/i })).toBeDisabled();

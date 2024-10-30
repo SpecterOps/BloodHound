@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import LoginForm from './LoginForm';
+import LoginForm from './LoginForm.tsx';
 
 export default LoginForm;

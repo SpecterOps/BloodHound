@@ -17,7 +17,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import LoginForm from 'src/components/LoginForm';
-import LoginViaSAMLForm from 'src/components/LoginViaSAMLForm';
+import LoginViaSSOForm from 'src/components/LoginViaSSOForm';
 import LoginPage from 'src/components/LoginPage';
 import { useQuery, useQueryClient } from 'react-query';
 import { apiClient } from 'bh-shared-ui';
@@ -36,7 +36,7 @@ const Login: React.FC = () => {
 
     const authState = useAppSelector((state) => state.auth);
 
-    const [useSAML, setUseSAML] = useState(false);
+    const [useSSO, setUseSSO] = useState(false);
 
     const [lastUsername, setLastUsername] = useState('');
 
@@ -47,13 +47,13 @@ const Login: React.FC = () => {
         queryClient.clear();
     }, [queryClient]);
 
-    const listSAMLSignOnEndpointsQuery = useQuery(['listSAMLSignOnEndpoints'], ({ signal }) =>
-        apiClient.listSAMLSignOnEndpoints({ signal }).then((res) => res.data.data.endpoints)
+    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
+        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
     );
 
     /* Event Handlers */
     const resetForm = () => {
-        setUseSAML(false);
+        setUseSSO(false);
         setLastUsername('');
         setLastPassword('');
         dispatch(logout());
@@ -69,7 +69,7 @@ const Login: React.FC = () => {
         dispatch(loginAction({ username: lastUsername, password: lastPassword, otp }));
     };
 
-    const handleSubmitLoginViaSAMLForm = (redirectURL: string) => {
+    const handleSubmitLoginViaSSOForm = (redirectURL: string) => {
         window.location.assign(redirectURL);
     };
 
@@ -78,7 +78,7 @@ const Login: React.FC = () => {
     // Redirect if already logged in
     if (authState.sessionToken !== null && authState.user !== null) return <Navigate to={ROUTE_HOME} />;
 
-    if (listSAMLSignOnEndpointsQuery.isLoading) {
+    if (listSSOProvidersQuery.isLoading) {
         return (
             <LoginPage>
                 <Box textAlign='center'>
@@ -106,7 +106,7 @@ const Login: React.FC = () => {
         );
     }
 
-    if (listSAMLSignOnEndpointsQuery.isError || listSAMLSignOnEndpointsQuery.data?.length === 0) {
+    if (listSSOProvidersQuery.isError || listSSOProvidersQuery?.data?.length === 0) {
         return (
             <LoginPage>
                 <LoginForm onSubmit={handleSubmitLoginForm} loading={authState.loginLoading} />
@@ -114,12 +114,12 @@ const Login: React.FC = () => {
         );
     }
 
-    if (useSAML) {
+    if (useSSO) {
         return (
             <LoginPage>
-                <LoginViaSAMLForm
-                    providers={listSAMLSignOnEndpointsQuery.data}
-                    onSubmit={handleSubmitLoginViaSAMLForm}
+                <LoginViaSSOForm
+                    providers={listSSOProvidersQuery.data?.map(provider => ({name: provider.name, slug: provider.slug}))}
+                    onSubmit={handleSubmitLoginViaSSOForm}
                     onCancel={resetForm}
                 />
             </LoginPage>
@@ -130,7 +130,7 @@ const Login: React.FC = () => {
         <LoginPage>
             <LoginForm
                 onSubmit={handleSubmitLoginForm}
-                onLoginViaSAML={() => setUseSAML(true)}
+                onLoginViaSSO={() => setUseSSO(true)}
                 loading={authState.loginLoading}
             />
         </LoginPage>

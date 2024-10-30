@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import LoginViaSAMLForm from './LoginViaSAMLForm';
+import LoginViaSSOForm from './LoginViaSSOForm.tsx';
 
-export default LoginViaSAMLForm;
+export default LoginViaSSOForm;

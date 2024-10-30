@@ -18,13 +18,13 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
 import React from 'react';
 
-interface LoginViaSAMLFormProps {
-    providers: { name: string; initiation_url: string }[];
+interface LoginViaSSOFormProps {
+    providers:  { name: string; slug: string }[] | undefined;
     onSubmit: (redirectURL: string) => void;
     onCancel: () => void;
 }
 
-const LoginViaSAMLForm: React.FC<LoginViaSAMLFormProps> = ({ providers, onSubmit, onCancel }) => {
+const LoginViaSSOForm: React.FC<LoginViaSSOFormProps> = ({ providers, onSubmit, onCancel }) => {
     /* Hooks */
     const [redirectURL, setRedirectURL] = React.useState('');
 
@@ -53,8 +53,8 @@ const LoginViaSAMLForm: React.FC<LoginViaSAMLFormProps> = ({ providers, onSubmit
                             label='Choose your SSO Provider'
                             onChange={(e) => setRedirectURL(e.target.value as string)}
                             fullWidth>
-                            {providers.map((provider) => (
-                                <MenuItem key={provider.name} value={provider.initiation_url}>
+                            {providers?.map((provider) => (
+                                <MenuItem key={provider.name} value={`/api/v2/sso/${provider.slug}/login`}>
                                     {provider.name}
                                 </MenuItem>
                             ))}
@@ -76,4 +76,4 @@ const LoginViaSAMLForm: React.FC<LoginViaSAMLFormProps> = ({ providers, onSubmit
     );
 };
 
-export default LoginViaSAMLForm;
+export default LoginViaSSOForm;

@@ -20,11 +20,11 @@ import React, { useState } from 'react';
 
 interface LoginFormProps {
     onSubmit: (username: string, password: string) => void;
-    onLoginViaSAML?: () => void;
+    onLoginViaSSO?: () => void;
     loading?: boolean;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onLoginViaSAML, loading = false }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onLoginViaSSO: onLoginViaSSO, loading = false }) => {
     /* Hooks */
     const [username, setUsername] = useState('');
 
@@ -68,13 +68,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onLoginViaSAML, loading
                         {loading ? 'LOGGING IN' : 'LOGIN'}
                     </Button>
                 </Grid>
-                {onLoginViaSAML !== undefined && (
+                {onLoginViaSSO !== undefined && (
                     <Grid item xs={8}>
                         <Button
                             size='large'
                             type='button'
                             variant={'secondary'}
-                            onClick={onLoginViaSAML}
+                            onClick={onLoginViaSSO}
                             className='w-full'
                             disabled={loading}>
                             LOGIN VIA SSO
