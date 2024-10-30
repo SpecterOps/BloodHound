@@ -78,7 +78,7 @@ describe('LoginViaSSOForm', () => {
         await user.click(screen.getByText(testSSOProviders[0].name));
         expect(screen.getByRole('button', { name: /continue$/i })).not.toBeDisabled();
         await user.click(screen.getByRole('button', { name: /continue$/i }));
-        expect(testOnSubmit).toHaveBeenCalledWith(`/api/v2/sso-providers/${testSSOProviders[0].slug}/login`);
+        expect(testOnSubmit).toHaveBeenCalledWith(`/api/v2/sso/${testSSOProviders[0].slug}/login`);
     });
 
     it('should call onCancel when cancel button clicked', async () => {
