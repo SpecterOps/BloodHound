@@ -51,6 +51,10 @@ export const CommonSearches: CommonSearchType[] = [
                 description: 'Locations of Tier Zero / High Value objects',
                 cypher: `MATCH p = (:Domain)-[:Contains*1..]->(n:Base)\nWHERE 'admin_tier_0' IN split(n.system_tags, ' ')\nRETURN p\nLIMIT 1000`,
             },
+            {
+                description: 'Map OU structure',
+                cypher: `MATCH p = (:Domain)-[:Contains*1..]->(n:OU)\nRETURN p\nLIMIT 1000`,
+            },
         ],
     },
     {
