@@ -16,7 +16,7 @@
 
 import { Dialog, DialogTitle } from '@mui/material';
 import React from 'react';
-import { NewUser } from 'src/ducks/auth/types';
+import { NewUser } from 'bh-shared-ui';
 import CreateUserForm from './CreateUserForm';
 
 const CreateUserDialog: React.FC<{

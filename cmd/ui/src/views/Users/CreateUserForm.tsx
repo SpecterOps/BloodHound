@@ -32,8 +32,7 @@ import {
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { apiClient } from 'bh-shared-ui';
-import { NewUser } from 'src/ducks/auth/types';
+import { apiClient, NewUser } from 'bh-shared-ui';
 
 const CreateUserForm: React.FC<{
     onCancel: () => void;

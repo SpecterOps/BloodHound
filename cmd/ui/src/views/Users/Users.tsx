@@ -34,13 +34,13 @@ import {
 import { PutUserAuthSecretRequest, UpdateUserRequest } from 'js-client-library';
 import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
-import { NewUser } from 'src/ducks/auth/types';
+import { NewUser } from 'bh-shared-ui';
 import { addSnackbar } from 'src/ducks/global/actions';
 import useToggle from 'src/hooks/useToggle';
 import { User } from 'src/hooks/useUsers';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import CreateUserDialog from 'src/views/Users/CreateUserDialog';
-import UpdateUserDialog from 'src/views/Users/UpdateUserDialog';
+import { UpdateUserDialog } from 'bh-shared-ui';
 import UserActionsMenu from 'src/views/Users/UserActionsMenu';
 
 const Users = () => {

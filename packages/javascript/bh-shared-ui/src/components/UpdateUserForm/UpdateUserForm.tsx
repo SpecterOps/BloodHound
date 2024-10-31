@@ -32,8 +32,8 @@ import {
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { apiClient } from 'bh-shared-ui';
-import { UpdatedUser } from 'src/ducks/auth/types';
+import { apiClient } from '../../utils';
+import { UpdatedUser } from '../../ducks';
 
 const UpdateUserForm: React.FC<{
     onCancel: () => void;

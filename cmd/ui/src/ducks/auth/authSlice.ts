@@ -21,9 +21,9 @@ import { PutUserAuthSecretRequest } from 'js-client-library';
 
 import type { AppDispatch, AppState } from 'src/store';
 import { addSnackbar } from '../global/actions';
-import * as types from './types';
+import { AuthState, getSelfResponse, } from 'bh-shared-ui/src/ducks';
 
-export const initialState: types.AuthState = {
+export const initialState: AuthState = {
     isInitialized: false,
     loginLoading: false,
     loginError: null,
@@ -84,7 +84,7 @@ export const logout = createAsyncThunk('auth/logout', async () => {
 });
 
 export const initialize = createAsyncThunk<
-    types.getSelfResponse,
+    getSelfResponse,
     void,
     {
         dispatch: AppDispatch;
@@ -108,7 +108,7 @@ export const initialize = createAsyncThunk<
 });
 
 export const updateExpiredPassword = createAsyncThunk<
-    types.getSelfResponse,
+    getSelfResponse,
     PutUserAuthSecretRequest,
     {
         dispatch: AppDispatch;
