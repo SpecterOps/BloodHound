@@ -189,13 +189,6 @@ IsACL: types.#StringEnum & {
 	representation: "isacl"
 }
 
-LimitedRightsCreated: types.#StringEnum & {
-	symbol:         "LimitedRightsCreated"
-	schema:         "ad"
-	name:           "Limited Rights Created"
-	representation: "limitedrightscreated"
-}
-
 IsInherited: types.#StringEnum & {
 	symbol:         "IsInherited"
 	schema:         "ad"
@@ -796,7 +789,6 @@ Properties: [
 	HighValue,
 	BlocksInheritance,
 	IsACL,
-	LimitedRightsCreated,
 	IsInherited,
 	IsACLProtected,
 	IsDeleted,

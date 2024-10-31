@@ -41,7 +41,6 @@ func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.Pa
 				query.And(
 					query.Kind(query.Relationship(), ad.OwnsRaw),
 					query.Kind(query.Start(), ad.Entity),
-					query.Equals(query.RelationshipProperty(ad.LimitedRightsCreated.String()), false),
 				),
 			).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 				for rel := range cursor.Chan() {
@@ -93,7 +92,6 @@ func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.Pa
 				query.And(
 					query.Kind(query.Relationship(), ad.WriteOwnerRaw),
 					query.Kind(query.Start(), ad.Entity),
-					query.Equals(query.RelationshipProperty(ad.LimitedRightsCreated.String()), false),
 				),
 			).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 				for rel := range cursor.Chan() {

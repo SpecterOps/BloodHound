@@ -337,7 +337,6 @@ export enum ActiveDirectoryKindProperties {
     HighValue = 'highvalue',
     BlocksInheritance = 'blocksinheritance',
     IsACL = 'isacl',
-    LimitedRightsCreated = 'limitedrightscreated',
     IsInherited = 'isinherited',
     IsACLProtected = 'isaclprotected',
     IsDeleted = 'isdeleted',
@@ -471,8 +470,6 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Blocks GPO Inheritance';
         case ActiveDirectoryKindProperties.IsACL:
             return 'Is ACL';
-        case ActiveDirectoryKindProperties.LimitedRightsCreated:
-            return 'Limited Rights Created';
         case ActiveDirectoryKindProperties.IsInherited:
             return 'Is Inherited';
         case ActiveDirectoryKindProperties.IsACLProtected:
