@@ -163,6 +163,7 @@ func (s *PasswordExpiration) UnmarshalJSON(data []byte) error {
 
 		return nil
 	}
+
 }
 
 func GetPasswordExpiration(ctx context.Context, service ParameterService) time.Duration {

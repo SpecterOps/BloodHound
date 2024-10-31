@@ -42,6 +42,13 @@ func NewBitmap64() Duplex[uint64] {
 	}
 }
 
+func NewBitmap64With(values ...uint64) Duplex[uint64] {
+	duplex := NewBitmap64()
+	duplex.Add(values...)
+
+	return duplex
+}
+
 func (s bitmap64) Clear() {
 	s.bitmap.Clear()
 }
@@ -131,5 +138,21 @@ func (s bitmap64) Cardinality() uint64 {
 func (s bitmap64) Clone() Duplex[uint64] {
 	return bitmap64{
 		bitmap: s.bitmap.Clone(),
+	}
+}
+
+func (s bitmap64) AndNot(provider Provider[uint64]) {
+	switch typedProvider := provider.(type) {
+	case bitmap64:
+		s.bitmap.AndNot(typedProvider.bitmap)
+
+	case Duplex[uint64]:
+		s.Each(func(nextValue uint64) bool {
+			if typedProvider.Contains(nextValue) {
+				s.Remove(nextValue)
+			}
+
+			return true
+		})
 	}
 }

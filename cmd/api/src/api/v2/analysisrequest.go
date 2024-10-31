@@ -18,7 +18,6 @@ package v2
 
 import (
 	"database/sql"
-	"github.com/specterops/bloodhound/src/model/appcfg"
 	"net/http"
 
 	"github.com/specterops/bloodhound/errors"
@@ -26,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 )
 
 const ErrAnalysisScheduledMode = "analysis is configured to run on a schedule, unable to run just in time"
@@ -54,7 +54,7 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 	if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if config.Enabled {
-		api.WriteErrorResponse(request.Context(), ErrAnalysisScheduledMode, response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrAnalysisScheduledMode, request), response)
 	} else if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return

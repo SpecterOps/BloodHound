@@ -24,10 +24,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/crewjam/saml"
 	"github.com/specterops/bloodhound/headers"
-
 	"github.com/specterops/bloodhound/src/api"
-	apimocks "github.com/specterops/bloodhound/src/api/mocks"
+	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -36,131 +36,158 @@ import (
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/serde"
-
-	"github.com/crewjam/saml"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
-func TestProviderResource_createSessionFromAssertion(t *testing.T) {
-	const (
-		badUsername  = "bad"
-		goodUsername = "good"
-		goodJWT      = "fake"
-	)
-
+func TestAuth_CreateSSOSession(t *testing.T) {
 	var (
-		goodUser = model.User{
-			PrincipalName: goodUsername,
+		username = "harls"
+		user     = model.User{
+			PrincipalName: username,
 			SAMLProvider: &model.SAMLProvider{
-				Serial: model.Serial{
-					ID: 1,
-				},
+				Serial: model.Serial{ID: 1},
 			},
-
 			SAMLProviderID: null.Int32From(1),
 		}
 
 		mockCtrl          = gomock.NewController(t)
 		mockDB            = dbmocks.NewMockDatabase(mockCtrl)
-		mockAuthenticator = apimocks.NewMockAuthenticator(mockCtrl)
-		resource          = ProviderResource{
-			db:            mockDB,
-			authenticator: mockAuthenticator,
-			serviceProvider: bhsaml.ServiceProvider{
+		testAuthenticator = api.NewAuthenticator(config.Configuration{}, mockDB, dbmocks.NewMockAuthContextInitializer(mockCtrl))
+
+		resource = NewProviderResource(
+			mockDB,
+			config.Configuration{RootURL: serde.MustParseURL("https://example.com")},
+			bhsaml.ServiceProvider{
 				Config: model.SAMLProvider{
-					Serial: model.Serial{
-						ID: 1,
-					},
+					Serial: model.Serial{ID: 1},
 				},
 			},
-			cfg: config.Configuration{
-				RootURL: serde.MustParseURL("https://example.com"),
-			},
-			writeAPIErrorResponse: func(request *http.Request, response http.ResponseWriter, statusCode int, message string) {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(statusCode, message, request), response)
-			},
-		}
-	)
-
-	defer mockCtrl.Finish()
-
-	var (
-		expires               = time.Now().UTC().Add(time.Hour)
-		response              = httptest.NewRecorder()
-		expectedCookieContent = fmt.Sprintf("token=fake; Path=/; Expires=%s; Secure; SameSite=Strict", expires.Format(http.TimeFormat))
+			func(request *http.Request, response http.ResponseWriter, statusCode int, message string) {},
+		)
 
 		testAssertion = &saml.Assertion{
-			AttributeStatements: []saml.AttributeStatement{
-				{
-					Attributes: []saml.Attribute{
-						{
-							FriendlyName: "uid",
-							Name:         bhsaml.XMLSOAPClaimsEmailAddress,
-							NameFormat:   bhsaml.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{
-								{
-									Type:  bhsaml.XMLTypeString,
-									Value: goodUsername,
-								},
-							},
-						},
-					},
-				},
-			},
+			AttributeStatements: []saml.AttributeStatement{{
+				Attributes: []saml.Attribute{{
+					FriendlyName: "uid",
+					Name:         bhsaml.XMLSOAPClaimsEmailAddress,
+					NameFormat:   bhsaml.ObjectIDAttributeNameFormat,
+					Values: []saml.AttributeValue{{
+						Type:  bhsaml.XMLTypeString,
+						Value: username,
+					}},
+				}},
+			}},
 		}
 	)
+	defer mockCtrl.Finish()
 
-	httpRequest, _ := http.NewRequestWithContext(context.WithValue(context.TODO(), ctx.ValueKey, &ctx.Context{Host: &resource.cfg.RootURL.URL}), http.MethodPost, "http://localhost", nil)
+	httpRequest, _ := http.NewRequestWithContext(
+		context.WithValue(context.TODO(), ctx.ValueKey, &ctx.Context{Host: &resource.cfg.RootURL.URL}),
+		http.MethodPost,
+		"http://localhost",
+		nil,
+	)
 
-	// Test happy path
-	mockDB.EXPECT().LookupUser(gomock.Any(), goodUsername).Return(goodUser, nil)
-	mockAuthenticator.EXPECT().CreateSession(gomock.Any(), goodUser, gomock.Any()).Return(goodJWT, nil)
+	t.Run("successfully create sso session", func(t *testing.T) {
+		var (
+			response              = httptest.NewRecorder()
+			expires               = time.Now().UTC()
+			expectedCookieContent = fmt.Sprintf("token=.*; Path=/; Expires=%s; Secure; SameSite=Strict", expires.Format(http.TimeFormat))
+		)
 
-	resource.createSessionFromAssertion(httpRequest, response, expires, testAssertion)
+		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
+			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
+			require.Equal(t, username, log.Fields["username"])
+			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
+		})
+		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(user, nil)
+		mockDB.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
 
-	require.Equal(t, expectedCookieContent, response.Header().Get(headers.SetCookie.String()))
-	require.Equal(t, "https://example.com/ui", response.Header().Get(headers.Location.String()))
-	require.Equal(t, http.StatusFound, response.Code)
+		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		require.Nil(t, err)
 
-	// Change the assertion statement attribute to the bad username to assert we get a 403
-	testAssertion.AttributeStatements[0].Attributes[0].Values[0].Value = badUsername
+		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, resource.serviceProvider.Config)
 
-	mockDB.EXPECT().LookupUser(gomock.Any(), badUsername).Return(model.User{}, database.ErrNotFound)
+		require.Regexp(t, expectedCookieContent, response.Header().Get(headers.SetCookie.String()))
+		require.Equal(t, "https://example.com/ui", response.Header().Get(headers.Location.String()))
+		require.Equal(t, http.StatusFound, response.Code)
+	})
 
-	response = httptest.NewRecorder()
+	t.Run("Forbidden 403 if user isn't in db", func(t *testing.T) {
+		response := httptest.NewRecorder()
 
-	resource.createSessionFromAssertion(httpRequest, response, expires, testAssertion)
-	require.Equal(t, http.StatusForbidden, response.Code)
+		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{}, database.ErrNotFound)
+		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
+			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
+			require.Equal(t, username, log.Fields["username"])
+			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
+			if log.Status == model.AuditLogStatusFailure {
+				require.Equal(t, database.ErrNotFound, log.Fields["error"])
+			}
+		})
+		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		require.Nil(t, err)
 
-	// Change the db return to a user that isn't associated with a SAML Provider
-	mockDB.EXPECT().LookupUser(gomock.Any(), badUsername).Return(model.User{}, nil)
+		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, resource.serviceProvider.Config)
 
-	response = httptest.NewRecorder()
+		require.Equal(t, http.StatusForbidden, response.Code)
+	})
 
-	resource.createSessionFromAssertion(httpRequest, response, expires, testAssertion)
-	require.Equal(t, http.StatusForbidden, response.Code)
+	t.Run("Forbidden 403 if user isn't associated with a SAML Provider", func(t *testing.T) {
+		response := httptest.NewRecorder()
 
-	// Change the db return to a user that isn't associated with this SAML Provider
-	mockDB.EXPECT().LookupUser(gomock.Any(), badUsername).Return(model.User{
-		SAMLProviderID: null.Int32From(2),
-		SAMLProvider: &model.SAMLProvider{
-			Serial: model.Serial{
-				ID: 2,
+		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
+			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
+			require.Equal(t, username, log.Fields["username"])
+			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
+			if log.Status == model.AuditLogStatusFailure {
+				require.Equal(t, api.ErrorUserNotAuthorizedForProvider, log.Fields["error"])
+			}
+		})
+
+		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{}, nil)
+
+		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		require.Nil(t, err)
+
+		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, resource.serviceProvider.Config)
+
+		require.Equal(t, http.StatusForbidden, response.Code)
+	})
+
+	t.Run("Forbidden 403 if user isn't associated with specified SAML Provider", func(t *testing.T) {
+		response := httptest.NewRecorder()
+
+		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
+			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
+			require.Equal(t, username, log.Fields["username"])
+			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
+			if log.Status == model.AuditLogStatusFailure {
+				require.Equal(t, api.ErrorUserNotAuthorizedForProvider.Error(), log.Fields["error"].(error).Error())
+			}
+		})
+		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{
+			SAMLProviderID: null.Int32From(2),
+			SAMLProvider: &model.SAMLProvider{
+				Serial: model.Serial{
+					ID: 2,
+				},
 			},
-		},
-	}, nil)
+		}, nil)
 
-	response = httptest.NewRecorder()
+		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		require.Nil(t, err)
 
-	resource.createSessionFromAssertion(httpRequest, response, expires, testAssertion)
-	require.Equal(t, http.StatusForbidden, response.Code)
+		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, resource.serviceProvider.Config)
 
-	// Remove the assertion statement attribute for the username
-	testAssertion.AttributeStatements[0].Attributes[0].Values = nil
+		require.Equal(t, http.StatusForbidden, response.Code)
+	})
 
-	response = httptest.NewRecorder()
+	t.Run("Correctly fails with SAML assertion error if assertion is invalid", func(t *testing.T) {
+		testAssertion.AttributeStatements[0].Attributes[0].Values = nil
 
-	resource.createSessionFromAssertion(httpRequest, response, expires, testAssertion)
-	require.Equal(t, http.StatusBadRequest, response.Code)
+		_, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		require.ErrorIs(t, err, ErrorSAMLAssertion)
+	})
 }

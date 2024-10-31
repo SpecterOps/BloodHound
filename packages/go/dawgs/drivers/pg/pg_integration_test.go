@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/integration/utils"
 	"github.com/stretchr/testify/require"
 )
@@ -102,7 +103,8 @@ func TestPG(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	require.Nil(t, graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+	test.RequireNilErr(t, graphDB.AssertSchema(ctx, graphschema.DefaultGraphSchema()))
+	test.RequireNilErr(t, graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Query("match p = (s:User)-[*..]->(:Computer) return p", nil).Error()
 	}))
 }

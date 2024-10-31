@@ -531,7 +531,7 @@ func (s *RDPHarness2) Setup(testCtx *GraphTestContext) {
 	s.UserB = testCtx.NewActiveDirectoryUser("UserB", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.UserC = testCtx.NewActiveDirectoryUser("UserC", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 
-	testCtx.NewRelationship(s.RDPLocalGroup, s.Computer, ad.RemoteInteractiveLogonPrivilege)
+	testCtx.NewRelationship(s.RDPLocalGroup, s.Computer, ad.RemoteInteractiveLogonRight)
 	testCtx.NewRelationship(s.RDPLocalGroup, s.Computer, ad.LocalToComputer)
 	testCtx.NewRelationship(s.RDPDomainUsersGroup, s.RDPLocalGroup, ad.MemberOfLocalGroup)
 	testCtx.NewRelationship(s.UserA, s.RDPDomainUsersGroup, ad.MemberOf)
@@ -593,40 +593,40 @@ func (s *RDPHarness) Setup(testCtx *GraphTestContext) {
 	s.DomainGroupF = testCtx.NewActiveDirectoryGroup("Domain Group F", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 
 	testCtx.NewRelationship(s.EliUser, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
-	testCtx.NewRelationship(s.EliUser, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.EliUser, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.DomainGroupA, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
-	testCtx.NewRelationship(s.DomainGroupA, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupA, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.JohnUser, s.DomainGroupA, ad.MemberOf, DefaultRelProperties)
 	testCtx.NewRelationship(s.RDPDomainUsersGroup, s.DomainGroupA, ad.MemberOf, DefaultRelProperties)
 	testCtx.NewRelationship(s.JohnUser, s.RDPDomainUsersGroup, ad.MemberOf, DefaultRelProperties)
 	testCtx.NewRelationship(s.RohanUser, s.RDPDomainUsersGroup, ad.MemberOf, DefaultRelProperties)
 
-	testCtx.NewRelationship(s.DomainGroupF, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupF, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 	testCtx.NewRelationship(s.RohanUser, s.DomainGroupF, ad.MemberOf, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.AndyUser, s.DomainGroupB, ad.MemberOf, DefaultRelProperties)
 	testCtx.NewRelationship(s.DomainGroupB, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
-	testCtx.NewRelationship(s.DomainGroupB, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupB, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.IrshadUser, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
 	testCtx.NewRelationship(s.IrshadUser, s.DomainGroupD, ad.MemberOf, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.DomainGroupD, s.DomainGroupE, ad.MemberOf, DefaultRelProperties)
 
-	testCtx.NewRelationship(s.DomainGroupE, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupE, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.DomainGroupC, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
 	testCtx.NewRelationship(s.DillonUser, s.DomainGroupC, ad.MemberOf, DefaultRelProperties)
-	testCtx.NewRelationship(s.DillonUser, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.DillonUser, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.UliUser, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
 	testCtx.NewRelationship(s.UliUser, s.LocalGroupA, ad.MemberOfLocalGroup, DefaultRelProperties)
 	testCtx.NewRelationship(s.LocalGroupA, s.Computer, ad.LocalToComputer, DefaultRelProperties)
-	testCtx.NewRelationship(s.LocalGroupA, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.LocalGroupA, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
-	testCtx.NewRelationship(s.AlyxUser, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.AlyxUser, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.RDPLocalGroup, s.Computer, ad.LocalToComputer, DefaultRelProperties)
 }
@@ -689,40 +689,40 @@ func (s *RDPHarnessWithCitrix) Setup(testCtx *GraphTestContext) {
 	s.DomainGroupF = testCtx.NewActiveDirectoryGroup("Domain Group F", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 
 	testCtx.NewRelationship(s.EliUser, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
-	testCtx.NewRelationship(s.EliUser, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.EliUser, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.DomainGroupA, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
-	testCtx.NewRelationship(s.DomainGroupA, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupA, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.JohnUser, s.DomainGroupA, ad.MemberOf, DefaultRelProperties)
 	testCtx.NewRelationship(s.DomainUsersGroup, s.DomainGroupA, ad.MemberOf, DefaultRelProperties)
 	testCtx.NewRelationship(s.JohnUser, s.DomainUsersGroup, ad.MemberOf, DefaultRelProperties)
 	testCtx.NewRelationship(s.RohanUser, s.DomainUsersGroup, ad.MemberOf, DefaultRelProperties)
 
-	testCtx.NewRelationship(s.DomainGroupF, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupF, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 	testCtx.NewRelationship(s.RohanUser, s.DomainGroupF, ad.MemberOf, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.AndyUser, s.DomainGroupB, ad.MemberOf, DefaultRelProperties)
 	testCtx.NewRelationship(s.DomainGroupB, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
-	testCtx.NewRelationship(s.DomainGroupB, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupB, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.IrshadUser, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
 	testCtx.NewRelationship(s.IrshadUser, s.DomainGroupD, ad.MemberOf, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.DomainGroupD, s.DomainGroupE, ad.MemberOf, DefaultRelProperties)
 
-	testCtx.NewRelationship(s.DomainGroupE, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupE, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.DomainGroupC, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
 	testCtx.NewRelationship(s.DillonUser, s.DomainGroupC, ad.MemberOf, DefaultRelProperties)
-	testCtx.NewRelationship(s.DillonUser, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.DillonUser, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.UliUser, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
 	testCtx.NewRelationship(s.UliUser, s.LocalGroupA, ad.MemberOfLocalGroup, DefaultRelProperties)
 	testCtx.NewRelationship(s.LocalGroupA, s.Computer, ad.LocalToComputer, DefaultRelProperties)
-	testCtx.NewRelationship(s.LocalGroupA, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.LocalGroupA, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
-	testCtx.NewRelationship(s.AlyxUser, s.Computer, ad.RemoteInteractiveLogonPrivilege, DefaultRelProperties)
+	testCtx.NewRelationship(s.AlyxUser, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.RDPLocalGroup, s.Computer, ad.LocalToComputer, DefaultRelProperties)
 
