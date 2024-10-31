@@ -34,6 +34,7 @@ type SSOProviderData interface {
 	CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error)
 	DeleteSSOProvider(ctx context.Context, id int) error
 	GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error)
+	GetSSOProviderByID(ctx context.Context, id int) (model.SSOProvider, error)
 	GetSSOProviderBySlug(ctx context.Context, slug string) (model.SSOProvider, error)
 	GetSSOProviderUsers(ctx context.Context, id int) (model.Users, error)
 }
@@ -136,4 +137,10 @@ func (s *BloodhoundDB) GetSSOProviderUsers(ctx context.Context, id int) (model.U
 	)
 
 	return users, CheckError(s.db.WithContext(ctx).Table("users").Where("sso_provider_id = ?", id).Find(&users))
+}
+
+// GetSSOProviderByID returns an SSO Provider associated with the given id
+func (s *BloodhoundDB) GetSSOProviderByID(ctx context.Context, id int) (model.SSOProvider, error) {
+	var provider model.SSOProvider
+	return provider, CheckError(s.db.WithContext(ctx).Table(ssoProviderTableName).Where("id = ?", id).First(&provider))
 }
