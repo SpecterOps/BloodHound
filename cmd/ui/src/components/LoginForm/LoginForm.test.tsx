@@ -22,9 +22,9 @@ import LoginForm from './LoginForm';
 describe('LoginForm', () => {
     it('should render', () => {
         const testOnSubmit = vi.fn();
-        const testOnLoginViaSAML = vi.fn();
+        const testOnLoginViaSSO = vi.fn();
 
-        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSSO={testOnLoginViaSAML} />);
+        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSSO={testOnLoginViaSSO} />);
 
         expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
@@ -35,11 +35,11 @@ describe('LoginForm', () => {
     it('should call onSubmit with email address and password when login button clicked', async () => {
         const user = userEvent.setup();
         const testOnSubmit = vi.fn();
-        const testOnLoginViaSAML = vi.fn();
+        const testOnLoginViaSSO = vi.fn();
         const testEmailAddress = 'user@example.com';
         const testPassword = 'password';
 
-        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSSO={testOnLoginViaSAML} />);
+        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSSO={testOnLoginViaSSO} />);
 
         await user.type(screen.getByLabelText(/email address/i), testEmailAddress);
         await user.type(screen.getByLabelText(/password/i), testPassword);
@@ -50,19 +50,19 @@ describe('LoginForm', () => {
     it('should call onLoginViaSAML when login via sso button clicked', async () => {
         const user = userEvent.setup();
         const testOnSubmit = vi.fn();
-        const testOnLoginViaSAML = vi.fn();
+        const testOnLoginViaSSO = vi.fn();
 
-        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSSO={testOnLoginViaSAML} />);
+        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSSO={testOnLoginViaSSO} />);
 
         await user.click(screen.getByRole('button', { name: /login via sso/i }));
-        expect(testOnLoginViaSAML).toHaveBeenCalled();
+        expect(testOnLoginViaSSO).toHaveBeenCalled();
     });
 
     it('buttons are disabled while loading', () => {
         const testOnSubmit = vi.fn();
-        const testOnLoginViaSAML = vi.fn();
+        const testOnLoginViaSSO = vi.fn();
 
-        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSSO={testOnLoginViaSAML} loading={true} />);
+        render(<LoginForm onSubmit={testOnSubmit} onLoginViaSSO={testOnLoginViaSSO} loading={true} />);
 
         expect(screen.getByRole('button', { name: /logging in$/i })).toBeDisabled();
         expect(screen.getByRole('button', { name: /login via sso/i })).toBeDisabled();
