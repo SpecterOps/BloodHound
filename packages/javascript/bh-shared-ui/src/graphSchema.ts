@@ -140,6 +140,10 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC10b = 'ADCSESC10b',
     ADCSESC13 = 'ADCSESC13',
     SyncedToEntraUser = 'SyncedToEntraUser',
+    WriteOwnerLimitedRights = 'WriteOwnerLimitedRights',
+    WriteOwnerRaw = 'WriteOwnerRaw',
+    OwnsLimitedRights = 'OwnsLimitedRights',
+    OwnsRaw = 'OwnsRaw',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -281,6 +285,14 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC13';
         case ActiveDirectoryRelationshipKind.SyncedToEntraUser:
             return 'SyncedToEntraUser';
+        case ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights:
+            return 'WriteOwnerLimitedRights';
+        case ActiveDirectoryRelationshipKind.WriteOwnerRaw:
+            return 'WriteOwnerRaw';
+        case ActiveDirectoryRelationshipKind.OwnsLimitedRights:
+            return 'OwnsLimitedRights';
+        case ActiveDirectoryRelationshipKind.OwnsRaw:
+            return 'OwnsRaw';
         default:
             return undefined;
     }
@@ -325,6 +337,8 @@ export enum ActiveDirectoryKindProperties {
     HighValue = 'highvalue',
     BlocksInheritance = 'blocksinheritance',
     IsACL = 'isacl',
+    LimitedRightsCreated = 'limitedrightscreated',
+    IsInherited = 'isinherited',
     IsACLProtected = 'isaclprotected',
     IsDeleted = 'isdeleted',
     Enforced = 'enforced',
@@ -402,6 +416,8 @@ export enum ActiveDirectoryKindProperties {
     LockoutDuration = 'lockoutduration',
     LockoutObservationWindow = 'lockoutobservationwindow',
     OwnerSid = 'ownersid',
+    GMSA = 'gmsa',
+    MSA = 'msa',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -455,6 +471,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Blocks GPO Inheritance';
         case ActiveDirectoryKindProperties.IsACL:
             return 'Is ACL';
+        case ActiveDirectoryKindProperties.LimitedRightsCreated:
+            return 'Limited Rights Created';
+        case ActiveDirectoryKindProperties.IsInherited:
+            return 'Is Inherited';
         case ActiveDirectoryKindProperties.IsACLProtected:
             return 'ACL Inheritance Denied';
         case ActiveDirectoryKindProperties.IsDeleted:
@@ -609,6 +629,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Lockout Observation Window';
         case ActiveDirectoryKindProperties.OwnerSid:
             return 'Owner SID';
+        case ActiveDirectoryKindProperties.GMSA:
+            return 'GMSA';
+        case ActiveDirectoryKindProperties.MSA:
+            return 'MSA';
         default:
             return undefined;
     }
@@ -662,6 +686,8 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC13,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SyncedToEntraUser,
+        ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
+        ActiveDirectoryRelationshipKind.OwnsLimitedRights,
     ];
 }
 export enum AzureNodeKind {
