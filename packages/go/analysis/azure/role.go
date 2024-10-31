@@ -19,9 +19,9 @@ package azure
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"slices"
 
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"

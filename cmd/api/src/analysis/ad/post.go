@@ -18,12 +18,12 @@ package ad
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/graphschema/azure"
 
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/azure"
 )
 
 func Post(ctx context.Context, db graph.Database, adcsEnabled bool, citrixEnabled bool) (*analysis.AtomicPostProcessingStats, error) {

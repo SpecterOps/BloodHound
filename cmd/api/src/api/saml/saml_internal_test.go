@@ -27,6 +27,7 @@ import (
 	"github.com/crewjam/saml"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -81,7 +82,12 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	httpRequest, _ := http.NewRequestWithContext(context.WithValue(context.TODO(), ctx.ValueKey, &ctx.Context{Host: &resource.cfg.RootURL.URL}), http.MethodPost, "http://localhost", nil)
+	httpRequest, _ := http.NewRequestWithContext(
+		context.WithValue(context.TODO(), ctx.ValueKey, &ctx.Context{Host: &resource.cfg.RootURL.URL}),
+		http.MethodPost,
+		"http://localhost",
+		nil,
+	)
 
 	t.Run("successfully create sso session", func(t *testing.T) {
 		var (
@@ -90,10 +96,15 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 			expectedCookieContent = fmt.Sprintf("token=.*; Path=/; Expires=%s; Secure; SameSite=Strict", expires.Format(http.TimeFormat))
 		)
 
+		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
+			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
+			require.Equal(t, username, log.Fields["username"])
+			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
+		})
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(user, nil)
 		mockDB.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
 
-		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		principalName, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
 		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, resource.serviceProvider.Config)
@@ -105,9 +116,17 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 
 	t.Run("Forbidden 403 if user isn't in db", func(t *testing.T) {
 		response := httptest.NewRecorder()
-		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{}, database.ErrNotFound)
 
-		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{}, database.ErrNotFound)
+		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
+			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
+			require.Equal(t, username, log.Fields["username"])
+			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
+			if log.Status == model.AuditLogStatusFailure {
+				require.Equal(t, database.ErrNotFound, log.Fields["error"])
+			}
+		})
+		principalName, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
 		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, resource.serviceProvider.Config)
@@ -117,9 +136,19 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 
 	t.Run("Forbidden 403 if user isn't associated with a SAML Provider", func(t *testing.T) {
 		response := httptest.NewRecorder()
+
+		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
+			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
+			require.Equal(t, username, log.Fields["username"])
+			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
+			if log.Status == model.AuditLogStatusFailure {
+				require.Equal(t, api.ErrorUserNotAuthorizedForProvider, log.Fields["error"])
+			}
+		})
+
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{}, nil)
 
-		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		principalName, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
 		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, resource.serviceProvider.Config)
@@ -129,6 +158,15 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 
 	t.Run("Forbidden 403 if user isn't associated with specified SAML Provider", func(t *testing.T) {
 		response := httptest.NewRecorder()
+
+		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
+			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
+			require.Equal(t, username, log.Fields["username"])
+			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
+			if log.Status == model.AuditLogStatusFailure {
+				require.Equal(t, api.ErrorUserNotAuthorizedForProvider.Error(), log.Fields["error"].(error).Error())
+			}
+		})
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{
 			SAMLProviderID: null.Int32From(2),
 			SAMLProvider: &model.SAMLProvider{
@@ -138,19 +176,18 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 			},
 		}, nil)
 
-		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		principalName, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
 		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, resource.serviceProvider.Config)
 
 		require.Equal(t, http.StatusForbidden, response.Code)
-
 	})
 
 	t.Run("Correctly fails with SAML assertion error if assertion is invalid", func(t *testing.T) {
 		testAssertion.AttributeStatements[0].Attributes[0].Values = nil
 
-		_, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		_, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.ErrorIs(t, err, ErrorSAMLAssertion)
 	})
 }

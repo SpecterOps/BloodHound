@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,5 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './SAMLProviderTableActionMenu';
-export { default } from './SAMLProviderTableActionMenu';
+import CreateMenu from './CreateMenu';
+
+export default CreateMenu;
