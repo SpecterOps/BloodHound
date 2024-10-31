@@ -17,7 +17,7 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
 import React from 'react';
-import {SSOProvider} from "js-client-library";
+import { SSOProvider } from 'js-client-library';
 
 interface LoginViaSSOFormProps {
     providers: SSOProvider[] | undefined;

@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { act, render, screen } from '../../test-utils';
 import LoginViaSSOForm from './LoginViaSSOForm';
-import {SSOProvider} from "js-client-library";
+import { SSOProvider } from 'js-client-library';
 
 const testSSOProviders: SSOProvider[] = [
     {
@@ -25,39 +25,39 @@ const testSSOProviders: SSOProvider[] = [
         slug: 'test-slug-1',
         type: 'OIDC',
         details: {
-            client_id: "",
-            issuer: "",
+            client_id: '',
+            issuer: '',
             sso_provider_id: 2,
             id: 1,
-            created_at: "",
-            updated_at: "",
+            created_at: '',
+            updated_at: '',
         },
         id: 1,
-        created_at: "",
-        updated_at: "",
+        created_at: '',
+        updated_at: '',
     },
     {
         name: 'sso-provider-2',
         slug: 'test-slug-2',
         type: 'SAML',
         details: {
-            name: "",
-            display_name: "",
-            idp_issuer_uri: "",
-            idp_sso_uri: "",
+            name: '',
+            display_name: '',
+            idp_issuer_uri: '',
+            idp_sso_uri: '',
             principal_attribute_mappings: null,
-            sp_issuer_uri: "",
-            sp_metadata_uri: "",
-            sp_acs_uri: "",
-            sp_sso_uri: "",
+            sp_issuer_uri: '',
+            sp_metadata_uri: '',
+            sp_acs_uri: '',
+            sp_sso_uri: '',
             sso_provider_id: 1,
             id: 1,
-            created_at: "",
-            updated_at: "",
+            created_at: '',
+            updated_at: '',
         },
         id: 2,
-        created_at: "",
-        updated_at: "",
+        created_at: '',
+        updated_at: '',
     },
 ];
 
