@@ -24,7 +24,7 @@ interface LoginFormProps {
     loading?: boolean;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onLoginViaSSO: onLoginViaSSO, loading = false }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onLoginViaSSO, loading = false }) => {
     /* Hooks */
     const [username, setUsername] = useState('');
 
