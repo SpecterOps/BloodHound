@@ -140,8 +140,8 @@ func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.Pa
 			})
 		})
 
+		return &operation.Stats, operation.Done()
 	}
-	return nil, nil
 }
 
 func isTargetNodeComputerDerived(node *graph.Node) (bool, error) {
