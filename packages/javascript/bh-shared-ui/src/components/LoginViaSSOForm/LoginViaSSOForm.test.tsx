@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { act, render, screen } from 'src/test-utils';
+import { act, render, screen } from '../../test-utils';
 import LoginViaSSOForm from './LoginViaSSOForm';
 import {SSOProvider} from "js-client-library";
 

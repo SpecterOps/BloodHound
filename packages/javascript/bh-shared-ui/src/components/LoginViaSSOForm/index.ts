@@ -14,6 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import LoginViaSSOForm from './LoginViaSSOForm';
-
-export default LoginViaSSOForm;
+export * from './LoginViaSSOForm';
+export { default } from './LoginViaSSOForm';

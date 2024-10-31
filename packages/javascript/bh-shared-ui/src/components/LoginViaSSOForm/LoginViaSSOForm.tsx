@@ -55,7 +55,7 @@ const LoginViaSSOForm: React.FC<LoginViaSSOFormProps> = ({ providers, onSubmit, 
                             onChange={(e) => setRedirectURL(e.target.value as string)}
                             fullWidth>
                             {providers?.map((provider) => (
-                                <MenuItem key={provider.name} value={`/api/v2/sso/${provider.slug}/login`}>
+                                <MenuItem key={provider.id} value={`/api/v2/sso/${provider.slug}/login`}>
                                     {provider.name}
                                 </MenuItem>
                             ))}

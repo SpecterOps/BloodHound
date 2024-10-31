@@ -14,19 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, {useEffect, useState} from 'react';
+import {Navigate} from 'react-router-dom';
 import LoginForm from 'src/components/LoginForm';
-import LoginViaSSOForm from 'src/components/LoginViaSSOForm';
 import LoginPage from 'src/components/LoginPage';
-import { useQuery, useQueryClient } from 'react-query';
-import { apiClient } from 'bh-shared-ui';
-import { Box, CircularProgress } from '@mui/material';
-import { OneTimePasscodeForm } from 'bh-shared-ui';
+import {useQuery, useQueryClient} from 'react-query';
+import {apiClient} from 'bh-shared-ui';
+import {Box, CircularProgress} from '@mui/material';
+import {OneTimePasscodeForm, LoginViaSSOForm} from 'bh-shared-ui';
 
-import { login as loginAction, logout } from 'src/ducks/auth/authSlice';
-import { ROUTE_HOME, ROUTE_USER_DISABLED } from 'src/ducks/global/routes';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import {login as loginAction, logout} from 'src/ducks/auth/authSlice';
+import {ROUTE_HOME, ROUTE_USER_DISABLED} from 'src/ducks/global/routes';
+import {useAppDispatch, useAppSelector} from 'src/store';
 
 const Login: React.FC = () => {
     /* Hooks */
@@ -47,8 +46,8 @@ const Login: React.FC = () => {
         queryClient.clear();
     }, [queryClient]);
 
-    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
-        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
+    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({signal}) =>
+        apiClient.listSSOProviders({signal}).then((res) => res.data.data)
     );
 
     /* Event Handlers */
@@ -62,11 +61,11 @@ const Login: React.FC = () => {
     const handleSubmitLoginForm = async (username: string, password: string) => {
         setLastUsername(username);
         setLastPassword(password);
-        dispatch(loginAction({ username, password }));
+        dispatch(loginAction({username, password}));
     };
 
     const handleSubmitLoginWithOneTimePasscodeForm = async (otp: string) => {
-        dispatch(loginAction({ username: lastUsername, password: lastPassword, otp }));
+        dispatch(loginAction({username: lastUsername, password: lastPassword, otp}));
     };
 
     const handleSubmitLoginViaSSOForm = (redirectURL: string) => {
@@ -76,13 +75,13 @@ const Login: React.FC = () => {
     /* Implementation */
 
     // Redirect if already logged in
-    if (authState.sessionToken !== null && authState.user !== null) return <Navigate to={ROUTE_HOME} />;
+    if (authState.sessionToken !== null && authState.user !== null) return <Navigate to={ROUTE_HOME}/>;
 
     if (listSSOProvidersQuery.isLoading) {
         return (
             <LoginPage>
                 <Box textAlign='center'>
-                    <CircularProgress />
+                    <CircularProgress/>
                 </Box>
             </LoginPage>
         );
@@ -90,7 +89,7 @@ const Login: React.FC = () => {
 
     const userIsDisabled = authState.loginError?.response?.status === 403 || false;
     if (userIsDisabled) {
-        return <Navigate to={ROUTE_USER_DISABLED} />;
+        return <Navigate to={ROUTE_USER_DISABLED}/>;
     }
 
     const oneTimePasscodeRequired = authState.loginError?.response?.status === 400 || false;
@@ -109,7 +108,7 @@ const Login: React.FC = () => {
     if (listSSOProvidersQuery.isError || listSSOProvidersQuery?.data?.length === 0) {
         return (
             <LoginPage>
-                <LoginForm onSubmit={handleSubmitLoginForm} loading={authState.loginLoading} />
+                <LoginForm onSubmit={handleSubmitLoginForm} loading={authState.loginLoading}/>
             </LoginPage>
         );
     }
@@ -118,10 +117,7 @@ const Login: React.FC = () => {
         return (
             <LoginPage>
                 <LoginViaSSOForm
-                    providers={listSSOProvidersQuery.data?.map((provider) => ({
-                        name: provider.name,
-                        slug: provider.slug,
-                    }))}
+                    providers={listSSOProvidersQuery.data}
                     onSubmit={handleSubmitLoginViaSSOForm}
                     onCancel={resetForm}
                 />
