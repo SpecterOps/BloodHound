@@ -468,20 +468,10 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 	}
 }
 
-func (s ManagementResource) updateUser(response http.ResponseWriter, request *http.Request, user model.User) {
-	if err := s.db.UpdateUser(request.Context(), user); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		response.WriteHeader(http.StatusOK)
-	}
-}
-
 func (s ManagementResource) ensureUserHasNoAuthSecret(ctx context.Context, user model.User) error {
 	if user.AuthSecret != nil {
 		if err := s.db.DeleteAuthSecret(ctx, *user.AuthSecret); err != nil {
 			return api.FormatDatabaseError(err)
-		} else {
-			return nil
 		}
 	}
 
@@ -538,18 +528,32 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 				api.HandleDatabaseError(request, response, err)
 			} else {
 				// Ensure that the AuthSecret reference is nil and that the SAML provider is set
-				user.AuthSecret = nil
-				user.SAMLProvider = &provider
 				user.SAMLProviderID = null.Int32From(samlProviderID)
-
-				s.updateUser(response, request, user)
+				user.SSOProviderID = null.Int32From(provider.SSOProviderID.Int32)
+			}
+		} else if updateUserRequest.SSOProviderID != "" {
+			if ssoProviderID, err := serde.ParseInt32(updateUserRequest.SSOProviderID); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SSO Provider ID must be a number: %v", err.Error()), request), response)
+			} else if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), int(ssoProviderID)); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				user.SSOProviderID = null.Int32From(ssoProviderID)
+				if ssoProvider.Type == model.SessionAuthProviderSAML && ssoProvider.SAMLProvider != nil {
+					user.SAMLProviderID = null.Int32From(ssoProvider.SAMLProvider.ID)
+				}
 			}
 		} else {
-			// Default SAMLProviderID to null if the update request contains no SAMLProviderID
+			// Default SAMLProviderID and SSOProviderID to null if the update request contains no SAMLProviderID and SSOProviderID
 			user.SAMLProviderID = null.NewInt32(0, false)
-			user.SAMLProvider = nil
+			user.SSOProviderID = null.NewInt32(0, false)
+		}
 
-			s.updateUser(response, request, user)
+		if err := s.db.UpdateUser(request.Context(), user); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			response.WriteHeader(http.StatusOK)
 		}
 	}
 }

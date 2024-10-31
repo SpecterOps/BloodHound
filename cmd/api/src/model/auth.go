@@ -470,9 +470,9 @@ type User struct {
 	IsDisabled     bool          `json:"is_disabled"`
 	// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
 	// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.
-	EULAAccepted bool `json:"eula_accepted"`
-
-	SSOProviderID null.Int32 `json:"sso_provider_id,omitempty"`
+	EULAAccepted  bool         `json:"eula_accepted"`
+	SSOProvider   *SSOProvider `json:"-" `
+	SSOProviderID null.Int32   `json:"sso_provider_id,omitempty"`
 
 	Unique
 }

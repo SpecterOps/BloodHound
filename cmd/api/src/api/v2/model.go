@@ -65,6 +65,7 @@ type UpdateUserRequest struct {
 	Principal      string  `json:"principal"`
 	Roles          []int32 `json:"roles"`
 	SAMLProviderID string  `json:"saml_provider_id"`
+	SSOProviderID  string  `json:"sso_provider_id"`
 	IsDisabled     bool    `json:"is_disabled"`
 }
 
