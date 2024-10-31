@@ -207,10 +207,10 @@ type WriteOwnerLimitedCache struct {
 
 func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []IngestibleRelationship {
 	var (
-		converted                   = make([]IngestibleRelationship, 0)
-		writeOwnerLimitedPrincipals = make([]WriteOwnerLimitedCache, 0)
-		ownerLimitedPrivs           = make([]string, 0)
-		ownerPrincipalInfo          IngestibleSource
+		converted                            = make([]IngestibleRelationship, 0)
+		potentialWriteOwnerLimitedPrincipals = make([]WriteOwnerLimitedCache, 0)
+		ownerLimitedPrivs                    = make([]string, 0)
+		ownerPrincipalInfo                   IngestibleSource
 	)
 
 	for _, ace := range aces {
@@ -229,7 +229,7 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 		} else if strings.HasSuffix(ace.PrincipalSID, "S-1-3-4") {
 			ownerLimitedPrivs = append(ownerLimitedPrivs, rightKind.String())
 		} else if rightKind.Is(ad.WriteOwner) || rightKind.Is(ad.WriteOwnerRaw) {
-			writeOwnerLimitedPrincipals = append(writeOwnerLimitedPrincipals, ace.GetCachedValue())
+			potentialWriteOwnerLimitedPrincipals = append(potentialWriteOwnerLimitedPrincipals, ace.GetCachedValue())
 		} else {
 			converted = append(converted, NewIngestibleRelationship(
 				IngestibleSource{
@@ -248,20 +248,9 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 		}
 	}
 
+	//TODO: When inheritance hashes are added, add them to these aces
 	if len(ownerLimitedPrivs) > 0 {
-		for _, limitedPrincipal := range writeOwnerLimitedPrincipals {
-			converted = append(converted, NewIngestibleRelationship(
-				limitedPrincipal.SourceData,
-				IngestibleTarget{
-					Target:     targetID,
-					TargetType: targetType,
-				},
-				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): false, ad.LimitedRightsCreated.String(): true},
-					RelType:  ad.WriteOwnerRaw,
-				},
-			))
-
+		for _, limitedPrincipal := range potentialWriteOwnerLimitedPrincipals {
 			converted = append(converted, NewIngestibleRelationship(
 				limitedPrincipal.SourceData,
 				IngestibleTarget{
@@ -283,18 +272,6 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 					TargetType: targetType,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): false, ad.LimitedRightsCreated.String(): true},
-					RelType:  ad.OwnsRaw,
-				},
-			))
-
-			converted = append(converted, NewIngestibleRelationship(
-				ownerPrincipalInfo,
-				IngestibleTarget{
-					Target:     targetID,
-					TargetType: targetType,
-				},
-				IngestibleRel{
 					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): false, "privileges": ownerLimitedPrivs},
 					RelType:  ad.OwnsLimitedRights,
 				},
@@ -309,13 +286,13 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 					TargetType: targetType,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): false, ad.LimitedRightsCreated.String(): false},
+					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): false},
 					RelType:  ad.OwnsRaw,
 				},
 			))
 		}
 
-		for _, limitedPrincipal := range writeOwnerLimitedPrincipals {
+		for _, limitedPrincipal := range potentialWriteOwnerLimitedPrincipals {
 			converted = append(converted, NewIngestibleRelationship(
 				limitedPrincipal.SourceData,
 				IngestibleTarget{
@@ -323,7 +300,7 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 					TargetType: targetType,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): false, ad.LimitedRightsCreated.String(): false},
+					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): limitedPrincipal.IsInherited},
 					RelType:  ad.WriteOwnerRaw,
 				},
 			))
