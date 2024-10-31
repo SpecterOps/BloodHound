@@ -385,14 +385,12 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 				WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
 				return
 			}
-
 		case model.OIDCProvider:
 			//todo connect to db provider table
 
 			// Delete pre-auth cookies regardless
 			DeleteBrowserCookie(request, response, AuthPKCECookieName)
 			DeleteBrowserCookie(request, response, AuthStateCookieName)
-
 		default:
 			auditLogFields["error"] = ErrorInvalidAuthProvider
 			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusBadRequest, ErrorInvalidAuthProvider.Error(), request), response)

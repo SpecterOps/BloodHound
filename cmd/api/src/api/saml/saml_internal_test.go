@@ -104,7 +104,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(user, nil)
 		mockDB.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
 
-		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		principalName, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
 		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, resource.serviceProvider.Config)
@@ -126,7 +126,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 				require.Equal(t, database.ErrNotFound, log.Fields["error"])
 			}
 		})
-		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		principalName, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
 		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, resource.serviceProvider.Config)
@@ -148,7 +148,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{}, nil)
 
-		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		principalName, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
 		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, resource.serviceProvider.Config)
@@ -176,7 +176,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 			},
 		}, nil)
 
-		principalName, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		principalName, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
 		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, resource.serviceProvider.Config)
@@ -187,7 +187,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 	t.Run("Correctly fails with SAML assertion error if assertion is invalid", func(t *testing.T) {
 		testAssertion.AttributeStatements[0].Attributes[0].Values = nil
 
-		_, err := resource.getSAMLUserPrincipalNameFromAssertion(testAssertion)
+		_, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.ErrorIs(t, err, ErrorSAMLAssertion)
 	})
 }
