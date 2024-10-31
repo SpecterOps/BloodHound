@@ -14,18 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React, {useEffect, useState} from 'react';
-import {Navigate} from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import LoginForm from 'src/components/LoginForm';
 import LoginPage from 'src/components/LoginPage';
-import {useQuery, useQueryClient} from 'react-query';
-import {apiClient} from 'bh-shared-ui';
-import {Box, CircularProgress} from '@mui/material';
-import {OneTimePasscodeForm, LoginViaSSOForm} from 'bh-shared-ui';
+import { useQuery, useQueryClient } from 'react-query';
+import { apiClient } from 'bh-shared-ui';
+import { Box, CircularProgress } from '@mui/material';
+import { OneTimePasscodeForm, LoginViaSSOForm } from 'bh-shared-ui';
 
-import {login as loginAction, logout} from 'src/ducks/auth/authSlice';
-import {ROUTE_HOME, ROUTE_USER_DISABLED} from 'src/ducks/global/routes';
-import {useAppDispatch, useAppSelector} from 'src/store';
+import { login as loginAction, logout } from 'src/ducks/auth/authSlice';
+import { ROUTE_HOME, ROUTE_USER_DISABLED } from 'src/ducks/global/routes';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 const Login: React.FC = () => {
     /* Hooks */
