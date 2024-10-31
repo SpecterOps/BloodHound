@@ -168,4 +168,7 @@ export { default as UpdateUserDialog } from './UpdateUserDialog';
 export * from './UpdateUserForm'
 export { default as UpdateUserForm } from './UpdateUserForm';
 
+export * from './LoginViaSSOForm';
+export { default as LoginViaSSOForm } from './LoginViaSSOForm';
+
 export { default as ApiVersion } from './ApiVersion';
