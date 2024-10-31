@@ -162,10 +162,10 @@ export { default as WebGLDisabledAlert } from './WebGLDisabledAlert';
 export * from './DocumentationLinks';
 export { default as DocumentationLinks } from './DocumentationLinks';
 
-export * from './UpdateUserDialog'
+export * from './UpdateUserDialog';
 export { default as UpdateUserDialog } from './UpdateUserDialog';
 
-export * from './UpdateUserForm'
+export * from './UpdateUserForm';
 export { default as UpdateUserForm } from './UpdateUserForm';
 
 export * from './LoginViaSSOForm';

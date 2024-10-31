@@ -708,7 +708,7 @@ class BHEAPIClient {
             emailAddress: string;
             principal: string;
             roles: number[];
-            SAMLProviderId?: string;
+            SSOProviderId?: string;
             password?: string;
             needsPasswordReset?: boolean;
         },
@@ -722,7 +722,7 @@ class BHEAPIClient {
                 email_address: user.emailAddress,
                 principal: user.principal,
                 roles: user.roles,
-                saml_provider_id: user.SAMLProviderId,
+                sso_provider_id: user.SSOProviderId,
                 secret: user.password,
                 needs_password_reset: user.needsPasswordReset,
             },
@@ -738,7 +738,7 @@ class BHEAPIClient {
                 email_address: user.emailAddress,
                 principal: user.principal,
                 roles: user.roles,
-                saml_provider_id: user.SAMLProviderId,
+                sso_provider_id: user.SSOProviderId,
                 is_disabled: user.is_disabled,
             },
             options

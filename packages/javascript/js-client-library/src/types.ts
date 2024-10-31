@@ -314,6 +314,7 @@ export interface UpdateUserRequest {
     principal: string;
     roles: number[];
     SAMLProviderId?: string;
+    SSOProviderId?: number;
     is_disabled?: boolean;
 }
 

@@ -70,8 +70,8 @@ const Users = () => {
         apiClient.listUsers({ signal }).then((res) => res.data.data.users)
     );
 
-    const listSAMLProvidersQuery = useQuery(['listSAMLProviders'], ({ signal }) =>
-        apiClient.listSAMLProviders({ signal }).then((res) => res.data.data.saml_providers)
+    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
+        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
     );
 
     const createUserMutation = useMutation((newUser: NewUser) => apiClient.createUser(newUser), {
@@ -87,9 +87,9 @@ const Users = () => {
             onSuccess: (response, updatedUser) => {
                 dispatch(addSnackbar('User updated successfully!', 'updateUserSuccess'));
                 const selectedUser = find(listUsersQuery.data, (user) => user.id === selectedUserId);
-                // if the user previously had a SAML Provider ID but does not have one after the update then show the
+                // if the user previously had a SSO Provider ID but does not have one after the update then show the
                 // password reset dialog with the "Force Password Reset?" input defaulted to checked
-                if (selectedUser?.saml_provider_id !== null && isEmpty(updatedUser.SAMLProviderId)) {
+                if (selectedUser?.sso_provider_id !== null && isEmpty(updatedUser.SSOProviderId)) {
                     setNeedsPasswordReset(true);
                     toggleResetUserPasswordDialog();
                 }
@@ -109,7 +109,7 @@ const Users = () => {
                 principal: user.principal_name || '',
                 firstName: user.first_name || '',
                 lastName: user.last_name || '',
-                SAMLProviderId: user.saml_provider_id?.toString() || '',
+                SSOProviderId: user.sso_provider_id?.toString() || '',
                 roles: user.roles?.map((role: any) => role.id) || [],
                 is_disabled: true,
             };
@@ -134,7 +134,7 @@ const Users = () => {
                 principal: user.principal_name || '',
                 firstName: user.first_name || '',
                 lastName: user.last_name || '',
-                SAMLProviderId: user.saml_provider_id?.toString() || '',
+                SSOProviderId: user.sso_provider_id?.toString() || '',
                 roles: user.roles?.map((role: any) => role.id) || [],
                 is_disabled: false,
             };
@@ -185,8 +185,8 @@ const Users = () => {
         }
     );
 
-    const SAMLProvidersMap =
-        listSAMLProvidersQuery.data?.reduce((acc: any, val: any) => {
+    const SSOProvidersMap =
+        listSSOProvidersQuery.data?.reduce((acc: any, val: any) => {
             acc[val.id] = val;
             return acc;
         }, {}) || {};
@@ -213,8 +213,8 @@ const Users = () => {
     };
 
     const getAuthMethodText = (user: any): JSX.Element => {
-        if (user.saml_provider_id)
-            return <span>{`SAML: ${SAMLProvidersMap[user.saml_provider_id]?.name || user.saml_provider_id}`}</span>;
+        if (user.sso_provider_id)
+            return <span>{`SSO: ${SSOProvidersMap[user.sso_provider_id]?.name || user.sso_provider_id}`}</span>;
         if (user.AuthSecret?.totp_activated)
             return <span style={{ whiteSpace: 'pre-wrap' }}>{'Username / Password\nMFA Enabled'}</span>;
         return <span>Username / Password</span>;
@@ -235,7 +235,7 @@ const Users = () => {
             onOpen={(e, userId) => {
                 setSelectedUserId(userId);
             }}
-            showPasswordOptions={user.saml_provider_id === null || user.saml_provider_id === undefined}
+            showPasswordOptions={user.sso_provider_id === null || user.sso_provider_id === undefined}
             showAuthMgmtButtons={user.id !== self?.id}
             showDisableMfaButton={user.AuthSecret?.totp_activated}
             userDisabled={user.is_disabled}

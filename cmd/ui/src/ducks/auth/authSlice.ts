@@ -21,7 +21,7 @@ import { PutUserAuthSecretRequest } from 'js-client-library';
 
 import type { AppDispatch, AppState } from 'src/store';
 import { addSnackbar } from '../global/actions';
-import { AuthState, getSelfResponse, } from 'bh-shared-ui/src/ducks';
+import { AuthState, getSelfResponse } from 'bh-shared-ui/src/ducks';
 
 export const initialState: AuthState = {
     isInitialized: false,

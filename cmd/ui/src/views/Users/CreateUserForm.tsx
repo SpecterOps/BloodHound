@@ -53,7 +53,7 @@ const CreateUserForm: React.FC<{
             lastName: '',
             password: '',
             needsPasswordReset: false,
-            SAMLProviderId: '',
+            SSOProviderId: '',
             roles: [1],
         },
     });
@@ -62,7 +62,7 @@ const CreateUserForm: React.FC<{
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
-            setValue('SAMLProviderId', '');
+            setValue('SSOProviderId', '');
         }
     }, [authenticationMethod, setValue]);
 
@@ -70,8 +70,8 @@ const CreateUserForm: React.FC<{
         apiClient.getRoles({ signal }).then((res) => res.data.data.roles)
     );
 
-    const listSAMLProvidersQuery = useQuery(['listSAMLProviders'], ({ signal }) =>
-        apiClient.listSAMLProviders({ signal }).then((res) => res.data.data.saml_providers)
+    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
+        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
     );
 
     const handleCancel: React.MouseEventHandler<HTMLButtonElement> = (e) => {
@@ -81,7 +81,7 @@ const CreateUserForm: React.FC<{
 
     return (
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
-            {!(getRolesQuery.isLoading || listSAMLProvidersQuery.isLoading) && (
+            {!(getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) && (
                 <>
                     <DialogContent>
                         <Grid container spacing={2}>
@@ -188,8 +188,8 @@ const CreateUserForm: React.FC<{
                                             fullWidth
                                             data-testid='create-user-dialog_select-authentication-method'>
                                             <MenuItem value='password'>Username / Password</MenuItem>
-                                            {listSAMLProvidersQuery.data.length > 0 && (
-                                                <MenuItem value='saml'>SAML</MenuItem>
+                                            {(listSSOProvidersQuery.data && listSSOProvidersQuery?.data?.length > 0) && (
+                                                <MenuItem value='sso'>SSO</MenuItem>
                                             )}
                                         </Select>
                                     </FormControl>
@@ -253,18 +253,18 @@ const CreateUserForm: React.FC<{
                                 ) : (
                                     <Grid item xs={12}>
                                         <Controller
-                                            name='SAMLProviderId'
+                                            name='SSOProviderId'
                                             control={control}
                                             defaultValue=''
                                             rules={{
-                                                required: 'SAML Provider is required',
+                                                required: 'SSO Provider is required',
                                             }}
                                             render={({ field: { onChange, onBlur, value, ref } }) => (
-                                                <FormControl error={!!errors.SAMLProviderId}>
+                                                <FormControl error={!!errors.SSOProviderId}>
                                                     <InputLabel
-                                                        id='SAMLProviderId-label'
+                                                        id='SSOProviderId-label'
                                                         sx={{ ml: '-14px', mt: '8px' }}>
-                                                        SAML Provider
+                                                        SSO Provider
                                                     </InputLabel>
                                                     <Select
                                                         onChange={
@@ -273,21 +273,21 @@ const CreateUserForm: React.FC<{
                                                         onBlur={onBlur}
                                                         value={value}
                                                         ref={ref}
-                                                        labelId='SAMLProviderId-label'
-                                                        id='SAMLProviderId'
-                                                        name='SAMLProviderId'
+                                                        labelId='SSOProviderId-label'
+                                                        id='SSOProviderId'
+                                                        name='SSOProviderId'
                                                         variant='standard'
                                                         fullWidth
-                                                        data-testid='create-user-dialog_select-saml-provider'>
-                                                        {listSAMLProvidersQuery.data.map((SAMLProvider: any) => (
+                                                        data-testid='create-user-dialog_select-sso-provider'>
+                                                        {listSSOProvidersQuery?.data?.map((SSOProvider: any) => (
                                                             <MenuItem
-                                                                value={SAMLProvider.id.toString()}
-                                                                key={SAMLProvider.id}>
-                                                                {SAMLProvider.name}
+                                                                value={SSOProvider.id.toString()}
+                                                                key={SSOProvider.id}>
+                                                                {SSOProvider.name}
                                                             </MenuItem>
                                                         ))}
                                                     </Select>
-                                                    <FormHelperText>{errors.SAMLProviderId?.message}</FormHelperText>
+                                                    <FormHelperText>{errors.SSOProviderId?.message}</FormHelperText>
                                                 </FormControl>
                                             )}
                                         />

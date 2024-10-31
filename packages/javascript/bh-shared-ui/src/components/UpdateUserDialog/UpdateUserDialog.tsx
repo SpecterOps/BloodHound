@@ -17,7 +17,7 @@
 import { Dialog, DialogTitle } from '@mui/material';
 import React from 'react';
 import UpdateUserForm from '../UpdateUserForm';
-import {UpdatedUser} from "../../ducks";
+import { UpdatedUser } from '../../ducks';
 
 const UpdateUserDialog: React.FC<{
     open: boolean;
