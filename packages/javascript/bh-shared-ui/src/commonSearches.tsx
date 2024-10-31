@@ -109,7 +109,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Kerberoastable users with most privileges',
-                cypher: `MATCH (u:User)\nOPTIONAL MATCH (u)-[:AdminTo]->(c1:Computer)\nOPTIONAL MATCH (u)-[:MemberOf*1..]->(:Group)-[:AdminTo]->(c2:Computer)\nWITH u,COLLECT(c1) + COLLECT(c2) AS tempVar\nUNWIND tempVar AS comps\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH "-502"\nRETURN u\nLIMIT 100`,
+                cypher: `MATCH (u:User)\nOPTIONAL MATCH (u)-[:AdminTo]->(c1:Computer)\nOPTIONAL MATCH (u)-[:MemberOf*1..]->(:Group)-[:AdminTo]->(c2:Computer)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH "-502"\nWITH u,COLLECT(c1) + COLLECT(c2) AS tempVar\nUNWIND tempVar AS comps\nRETURN u\nLIMIT 100`,
             },
             {
                 description: 'AS-REP Roastable users (DontReqPreAuth)',
