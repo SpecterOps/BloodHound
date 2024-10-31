@@ -101,19 +101,19 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Kerberoastable members of Tier Zero / High Value groups',
-                cypher: `MATCH p=shortestPath((n:User)-[:MemberOf]->(g:Group))\nWHERE 'admin_tier_0' IN split(g.system_tags, ' ') AND n.hasspn=true\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((n:User)-[:MemberOf]->(g:Group))\nWHERE 'admin_tier_0' IN split(g.system_tags, ' ') AND n.hasspn=true\nAND n.enabled = true\nAND NOT n.objectid ENDS WITH "-502"\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'All Kerberoastable users',
-                cypher: 'MATCH (n:User)\nWHERE n.hasspn=true\nRETURN n\nLIMIT 100',
+                cypher: 'MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH "-502"\nRETURN u\nLIMIT 100',
             },
             {
                 description: 'Kerberoastable users with most privileges',
-                cypher: `MATCH (u:User {hasspn:true})\nOPTIONAL MATCH (u)-[:AdminTo]->(c1:Computer)\nOPTIONAL MATCH (u)-[:MemberOf*1..]->(:Group)-[:AdminTo]->(c2:Computer)\nWITH u,COLLECT(c1) + COLLECT(c2) AS tempVar\nUNWIND tempVar AS comps\nRETURN u\nLIMIT 100`,
+                cypher: `MATCH (u:User)\nOPTIONAL MATCH (u)-[:AdminTo]->(c1:Computer)\nOPTIONAL MATCH (u)-[:MemberOf*1..]->(:Group)-[:AdminTo]->(c2:Computer)\nWITH u,COLLECT(c1) + COLLECT(c2) AS tempVar\nUNWIND tempVar AS comps\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH "-502"\nRETURN u\nLIMIT 100`,
             },
             {
                 description: 'AS-REP Roastable users (DontReqPreAuth)',
-                cypher: `MATCH (u:User)\nWHERE u.dontreqpreauth = true\nRETURN u\nLIMIT 100`,
+                cypher: `MATCH (u:User)\nWHERE u.dontreqpreauth = true\nAND u.enabled = true\nRETURN u\nLIMIT 100`,
             },
         ],
     },
