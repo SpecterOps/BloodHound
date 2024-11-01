@@ -486,6 +486,7 @@ func (s *User) AuditData() AuditData {
 		"email_address":    s.EmailAddress.ValueOrZero(),
 		"roles":            s.Roles.IDs(),
 		"saml_provider_id": s.SAMLProviderID.ValueOrZero(),
+		"sso_provider_id":  s.SSOProviderID.ValueOrZero(),
 		"is_disabled":      s.IsDisabled,
 		"eula_accepted":    s.EULAAccepted,
 	}
@@ -562,6 +563,7 @@ func (s Users) GetValidFilterPredicatesAsStrings(column string) ([]string, error
 func UserSessionAssociations() []string {
 	return []string{
 		"User.SAMLProvider",
+		"User.SSOProvider",
 		"User.AuthSecret",
 		"User.AuthTokens",
 		"User.Roles.Permissions",
