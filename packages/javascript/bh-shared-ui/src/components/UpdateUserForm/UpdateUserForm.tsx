@@ -115,7 +115,7 @@ const UpdateUserForm: React.FC<{
                 roles: getUserQuery.data.roles?.map((role: any) => role.id) || [],
             }}
             roles={getRolesQuery.data}
-            SSOProviders={listSSOProvidersQuery?.data}
+            SSOProviders={listSSOProvidersQuery.data}
             isLoading={isLoading}
             error={error}
         />

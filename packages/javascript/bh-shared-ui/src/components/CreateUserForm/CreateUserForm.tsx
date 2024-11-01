@@ -178,7 +178,7 @@ const CreateUserForm: React.FC<{
                                             fullWidth
                                             data-testid='create-user-dialog_select-authentication-method'>
                                             <MenuItem value='password'>Username / Password</MenuItem>
-                                            {listSSOProvidersQuery?.data && listSSOProvidersQuery?.data?.length > 0 && (
+                                            {listSSOProvidersQuery.data && listSSOProvidersQuery.data?.length > 0 && (
                                                 <MenuItem value='sso'>SSO</MenuItem>
                                             )}
                                         </Select>
@@ -245,7 +245,6 @@ const CreateUserForm: React.FC<{
                                         <Controller
                                             name='SSOProviderId'
                                             control={control}
-                                            defaultValue={listSSOProvidersQuery?.data?.at(0)?.id}
                                             rules={{
                                                 required: 'SSO Provider is required',
                                             }}
@@ -269,7 +268,7 @@ const CreateUserForm: React.FC<{
                                                         variant='standard'
                                                         fullWidth
                                                         data-testid='create-user-dialog_select-sso-provider'>
-                                                        {listSSOProvidersQuery?.data?.map(
+                                                        {listSSOProvidersQuery.data?.map(
                                                             (SSOProvider: SSOProvider) => (
                                                                 <MenuItem value={SSOProvider?.id} key={SSOProvider?.id}>
                                                                     {SSOProvider?.name}
