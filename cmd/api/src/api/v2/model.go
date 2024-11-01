@@ -24,6 +24,7 @@ import (
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/serde"
@@ -59,14 +60,14 @@ type ListSAMLProvidersResponse struct {
 }
 
 type UpdateUserRequest struct {
-	FirstName      string  `json:"first_name"`
-	LastName       string  `json:"last_name"`
-	EmailAddress   string  `json:"email_address"`
-	Principal      string  `json:"principal"`
-	Roles          []int32 `json:"roles"`
-	SAMLProviderID string  `json:"saml_provider_id"`
-	SSOProviderID  string  `json:"sso_provider_id"`
-	IsDisabled     bool    `json:"is_disabled"`
+	FirstName      string     `json:"first_name"`
+	LastName       string     `json:"last_name"`
+	EmailAddress   string     `json:"email_address"`
+	Principal      string     `json:"principal"`
+	Roles          []int32    `json:"roles"`
+	SAMLProviderID string     `json:"saml_provider_id"`
+	SSOProviderID  null.Int32 `json:"sso_provider_id"`
+	IsDisabled     bool       `json:"is_disabled"`
 }
 
 type CreateUserRequest struct {

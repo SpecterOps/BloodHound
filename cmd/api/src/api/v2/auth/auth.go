@@ -475,20 +475,21 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		if createUserRequest.SAMLProviderID != "" {
 			if samlProviderID, err := serde.ParseInt32(createUserRequest.SAMLProviderID); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
+				return
 			} else if samlProvider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
 				log.Errorf("Error while attempting to fetch SAML provider %d: %v", createUserRequest.SAMLProviderID, err)
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else {
 				userTemplate.SAMLProviderID = null.Int32From(samlProvider.ID)
 				userTemplate.SSOProviderID = null.Int32From(samlProvider.SSOProviderID.Int32)
 			}
-		} else if createUserRequest.SSOProviderID != "" {
-			if ssoProviderID, err := serde.ParseInt32(createUserRequest.SSOProviderID); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SSO Provider ID must be a number: %v", err.Error()), request), response)
-			} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), int(ssoProviderID)); err != nil {
+		} else if createUserRequest.SSOProviderID.Valid {
+			if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), createUserRequest.SSOProviderID.Int32); err != nil {
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else {
-				userTemplate.SSOProviderID = null.Int32From(ssoProviderID)
+				userTemplate.SSOProviderID = createUserRequest.SSOProviderID
 				if ssoProvider.Type == model.SessionAuthProviderSAML {
 					if ssoProvider.SAMLProvider != nil {
 						userTemplate.SAMLProviderID = null.Int32From(ssoProvider.SAMLProvider.ID)
@@ -563,24 +564,27 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			// We're setting a SAML provider. If the user has an associated secret the secret will be removed.
 			if samlProviderID, err := serde.ParseInt32(updateUserRequest.SAMLProviderID); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
+				return
 			} else if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else if provider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else {
 				// Ensure that the AuthSecret reference is nil and that the SAML provider is set
 				user.SAMLProviderID = null.Int32From(samlProviderID)
 				user.SSOProviderID = null.Int32From(provider.SSOProviderID.Int32)
 			}
-		} else if updateUserRequest.SSOProviderID != "" {
-			if ssoProviderID, err := serde.ParseInt32(updateUserRequest.SSOProviderID); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SSO Provider ID must be a number: %v", err.Error()), request), response)
-			} else if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
+		} else if updateUserRequest.SSOProviderID.Valid {
+			if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
 				api.HandleDatabaseError(request, response, err)
-			} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), int(ssoProviderID)); err != nil {
+				return
+			} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), updateUserRequest.SSOProviderID.Int32); err != nil {
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else {
-				user.SSOProviderID = null.Int32From(ssoProviderID)
+				user.SSOProviderID = updateUserRequest.SSOProviderID
 				if ssoProvider.Type == model.SessionAuthProviderSAML {
 					if ssoProvider.SAMLProvider != nil {
 						user.SAMLProviderID = null.Int32From(ssoProvider.SAMLProvider.ID)

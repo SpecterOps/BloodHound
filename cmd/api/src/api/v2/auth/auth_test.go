@@ -57,7 +57,7 @@ import (
 const (
 	samlProviderPathFmt           = "/api/v2/saml/providers/%d"
 	updateUserSecretPathFmt       = "/api/v2/auth/users/%s/secret"
-	ssoProviderID                 = 123
+	ssoProviderID           int32 = 123
 	samlProviderID          int32 = 1234
 	samlProviderIDStr             = "1234"
 )
@@ -222,7 +222,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 			WithBody(v2.UpdateUserRequest{
 				Principal:     "tester",
 				Roles:         goodRoles,
-				SSOProviderID: "123",
+				SSOProviderID: null.Int32From(123),
 			}).
 			OnHandlerFunc(resources.UpdateUser).
 			Require().

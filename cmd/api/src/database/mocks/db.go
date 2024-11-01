@@ -1157,7 +1157,7 @@ func (mr *MockDatabaseMockRecorder) GetSAMLProviderUsers(arg0, arg1 interface{})
 }
 
 // GetSSOProviderById mocks base method.
-func (m *MockDatabase) GetSSOProviderById(arg0 context.Context, arg1 int) (model.SSOProvider, error) {
+func (m *MockDatabase) GetSSOProviderById(arg0 context.Context, arg1 int32) (model.SSOProvider, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSSOProviderById", arg0, arg1)
 	ret0, _ := ret[0].(model.SSOProvider)

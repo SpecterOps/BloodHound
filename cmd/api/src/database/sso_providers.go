@@ -34,9 +34,9 @@ type SSOProviderData interface {
 	CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider) (model.SSOProvider, error)
 	DeleteSSOProvider(ctx context.Context, id int) error
 	GetAllSSOProviders(ctx context.Context, order string, sqlFilter model.SQLFilter) ([]model.SSOProvider, error)
+	GetSSOProviderById(ctx context.Context, id int32) (model.SSOProvider, error)
 	GetSSOProviderBySlug(ctx context.Context, slug string) (model.SSOProvider, error)
 	GetSSOProviderUsers(ctx context.Context, id int) (model.Users, error)
-	GetSSOProviderById(ctx context.Context, id int) (model.SSOProvider, error)
 }
 
 // CreateSSOProvider creates an entry in the sso_providers table
@@ -139,9 +139,9 @@ func (s *BloodhoundDB) GetSSOProviderUsers(ctx context.Context, id int) (model.U
 	return users, CheckError(s.db.WithContext(ctx).Table("users").Where("sso_provider_id = ?", id).Find(&users))
 }
 
-func (s *BloodhoundDB) GetSSOProviderById(ctx context.Context, id int) (model.SSOProvider, error) {
+func (s *BloodhoundDB) GetSSOProviderById(ctx context.Context, id int32) (model.SSOProvider, error) {
 	var provider model.SSOProvider
-	result := s.db.WithContext(ctx).Preload("OIDCProvider").Preload("SAMLProvider").Table("sso_providers").Where("id = ?", id).Find(&provider)
+	result := s.db.WithContext(ctx).Preload("OIDCProvider").Preload("SAMLProvider").Table(ssoProviderTableName).Where("id = ?", id).First(&provider)
 
 	return provider, CheckError(result)
 }

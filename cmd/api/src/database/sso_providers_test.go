@@ -187,3 +187,25 @@ func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
 		assert.Equal(t, user.ID, returnedUsers[0].ID)
 	})
 }
+
+func TestBloodhoundDB_GetSSOProviderById(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+	)
+	defer dbInst.Close(testCtx)
+
+	t.Run("successfully get sso provider by id", func(t *testing.T) {
+		newSamlProvider, err := dbInst.CreateSAMLIdentityProvider(testCtx, model.SAMLProvider{
+			Name:        "someName",
+			DisplayName: "someName",
+		})
+		require.NoError(t, err)
+
+		provider, err := dbInst.GetSSOProviderById(testCtx, newSamlProvider.SSOProviderID.Int32)
+		require.Nil(t, err)
+
+		require.EqualValues(t, newSamlProvider.SSOProviderID.Int32, provider.ID)
+		require.NotNil(t, provider.SAMLProvider)
+	})
+}
