@@ -17,8 +17,9 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from 'src/test-utils';
+import { render, screen, waitFor } from '../../test-utils';
 import UpdateUserDialog from './UpdateUserDialog';
+import {SSOProvider} from "js-client-library";
 
 const testRoles = [
     { id: 1, name: 'Role 1' },
@@ -27,11 +28,99 @@ const testRoles = [
     { id: 4, name: 'Role 4' },
 ];
 
-const testSAMLProviders = [
-    { id: 1, name: 'saml-provider-1' },
-    { id: 2, name: 'saml-provider-2' },
-    { id: 3, name: 'saml-provider-3' },
-    { id: 4, name: 'saml-provider-4' },
+const testSSOProviders: SSOProvider[] = [
+    {
+        name: 'saml-provider-1',
+        slug: 'saml-provider-1',
+        type: 'SAML',
+        details: {
+            name: 'saml-provider',
+            display_name: 'saml-provider',
+            idp_issuer_uri: 'urn:saml-provider.com',
+            idp_sso_uri: 'https://saml-provider.com/saml',
+            principal_attribute_mappings: null,
+            sp_issuer_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider',
+            sp_sso_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/sso',
+            sp_metadata_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/metadata',
+            sp_acs_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/acs',
+            sso_provider_id: 1,
+            id: 1,
+            created_at: '2024-01-01T12:00:00Z',
+            updated_at: '2024-01-01T12:00:00Z',
+        },
+        id: 1,
+        created_at: '2024-01-01T12:00:00Z',
+        updated_at: '2024-01-01T12:00:00Z',
+    },
+    {
+        name: 'saml-provider-2',
+        slug: 'saml-provider-2',
+        type: 'SAML',
+        details: {
+            name: 'saml-provider',
+            display_name: 'saml-provider',
+            idp_issuer_uri: 'urn:saml-provider.com',
+            idp_sso_uri: 'https://saml-provider.com/saml',
+            principal_attribute_mappings: null,
+            sp_issuer_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider',
+            sp_sso_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/sso',
+            sp_metadata_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/metadata',
+            sp_acs_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/acs',
+            sso_provider_id: 1,
+            id: 1,
+            created_at: '2024-01-01T12:00:00Z',
+            updated_at: '2024-01-01T12:00:00Z',
+        },
+        id: 2,
+        created_at: '2024-01-01T12:00:00Z',
+        updated_at: '2024-01-01T12:00:00Z',
+    },
+    {
+        name: 'saml-provider-3',
+        slug: 'saml-provider-3',
+        type: 'SAML',
+        details: {
+            name: 'saml-provider',
+            display_name: 'saml-provider',
+            idp_issuer_uri: 'urn:saml-provider.com',
+            idp_sso_uri: 'https://saml-provider.com/saml',
+            principal_attribute_mappings: null,
+            sp_issuer_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider',
+            sp_sso_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/sso',
+            sp_metadata_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/metadata',
+            sp_acs_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/acs',
+            sso_provider_id: 1,
+            id: 1,
+            created_at: '2024-01-01T12:00:00Z',
+            updated_at: '2024-01-01T12:00:00Z',
+        },
+        id: 3,
+        created_at: '2024-01-01T12:00:00Z',
+        updated_at: '2024-01-01T12:00:00Z',
+    },
+    {
+        name: 'saml-provider-4',
+        slug: 'saml-provider-4',
+        type: 'SAML',
+        details: {
+            name: 'saml-provider',
+            display_name: 'saml-provider',
+            idp_issuer_uri: 'urn:saml-provider.com',
+            idp_sso_uri: 'https://saml-provider.com/saml',
+            principal_attribute_mappings: null,
+            sp_issuer_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider',
+            sp_sso_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/sso',
+            sp_metadata_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/metadata',
+            sp_acs_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/acs',
+            sso_provider_id: 1,
+            id: 1,
+            created_at: '2024-01-01T12:00:00Z',
+            updated_at: '2024-01-01T12:00:00Z',
+        },
+        id: 4,
+        created_at: '2024-01-01T12:00:00Z',
+        updated_at: '2024-01-01T12:00:00Z',
+    },
 ];
 
 const testUser = {
@@ -61,12 +150,10 @@ const server = setupServer(
             })
         );
     }),
-    rest.get('/api/v2/saml', (req, res, ctx) => {
+    rest.get('/api/v2/sso-providers', (req, res, ctx) => {
         return res(
             ctx.json({
-                data: {
-                    saml_providers: testSAMLProviders,
-                },
+                data: testSSOProviders,
             })
         );
     }),
@@ -196,23 +283,23 @@ describe('UpdateUserDialog', () => {
         }
     });
 
-    it('should display all available SAML providers', async () => {
+    it('should display all available SSO providers', async () => {
         const { user } = setup();
 
         await user.click(await screen.findByLabelText('Authentication Method'));
 
-        await user.click(await screen.findByRole('option', { name: 'SAML' }));
+        await user.click(await screen.findByRole('option', { name: 'SSO' }));
 
         expect(screen.queryByLabelText('Initial Password')).not.toBeInTheDocument();
 
         expect(screen.queryByLabelText('Force Password Reset?')).not.toBeInTheDocument();
 
-        expect(screen.getByLabelText('SAML Provider')).toBeInTheDocument();
+        expect(screen.getByLabelText('SSO Provider')).toBeInTheDocument();
 
-        await user.click(screen.getByLabelText('SAML Provider'));
+        await user.click(screen.getByLabelText('SSO Provider'));
 
-        for (const SAMLProvider of testSAMLProviders) {
-            expect(await screen.findByRole('option', { name: SAMLProvider.name })).toBeInTheDocument();
+        for (const SSOProvider of testSSOProviders) {
+            expect(await screen.findByRole('option', { name: SSOProvider.name })).toBeInTheDocument();
         }
     });
 
@@ -230,7 +317,7 @@ describe('UpdateUserDialog', () => {
         expect(await screen.findByText('An unexpected error occurred. Please try again.')).toBeInTheDocument();
     });
 
-    it('should clear out the saml provider id from submission data when the authentication method is changed', async () => {
+    it('should clear out the sso provider id from submission data when the authentication method is changed', async () => {
         const { user, testUser, testOnSave } = setup();
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
@@ -248,17 +335,17 @@ describe('UpdateUserDialog', () => {
         await user.type(screen.getByLabelText('Last Name'), testUser.lastName);
 
         await user.click(await screen.findByLabelText('Authentication Method'));
-        await user.click(await screen.findByRole('option', { name: 'SAML' }));
+        await user.click(await screen.findByRole('option', { name: 'SSO' }));
 
-        await user.click(screen.getByLabelText('SAML Provider'));
-        await user.click(await screen.findByRole('option', { name: testSAMLProviders[0].name }));
+        await user.click(screen.getByLabelText('SSO Provider'));
+        await user.click(await screen.findByRole('option', { name: testSSOProviders[0].name }));
 
         await user.click(await screen.findByLabelText('Authentication Method'));
         await user.click(await screen.findByRole('option', { name: 'Username / Password' }));
 
         await user.click(saveButton);
 
-        await waitFor(() => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ SAMLProviderId: '' })), {
+        await waitFor(() => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ SSOProviderId: '' })), {
             timeout: 30000,
         });
     });

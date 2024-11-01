@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from 'src/test-utils';
+import { render, screen, waitFor } from '../../test-utils';
 import CreateUserDialog from './CreateUserDialog';
 
 const testRoles = [
@@ -27,7 +27,7 @@ const testRoles = [
     { id: 4, name: 'Role 4' },
 ];
 
-const testSAMLProviders = [
+const testSSOProviders = [
     { id: 1, name: 'saml-provider-1' },
     { id: 2, name: 'saml-provider-2' },
     { id: 3, name: 'saml-provider-3' },
@@ -48,7 +48,7 @@ const server = setupServer(
         return res(
             ctx.json({
                 data: {
-                    saml_providers: testSAMLProviders,
+                    saml_providers: testSSOProviders,
                 },
             })
         );
@@ -183,7 +183,7 @@ describe('CreateUserDialog', () => {
         }
     });
 
-    it('should display all available SAML providers', async () => {
+    it('should display all available SSO providers', async () => {
         const { user } = setup();
 
         await user.click(await screen.findByLabelText('Authentication Method'));
@@ -194,12 +194,12 @@ describe('CreateUserDialog', () => {
 
         expect(screen.queryByLabelText('Force Password Reset?')).not.toBeInTheDocument();
 
-        expect(screen.getByLabelText('SAML Provider')).toBeInTheDocument();
+        expect(screen.getByLabelText('SSO Provider')).toBeInTheDocument();
 
-        await user.click(screen.getByLabelText('SAML Provider'));
+        await user.click(screen.getByLabelText('SSO Provider'));
 
-        for (const SAMLProvider of testSAMLProviders) {
-            expect(await screen.findByRole('option', { name: SAMLProvider.name })).toBeInTheDocument();
+        for (const SSOProvider of testSSOProviders) {
+            expect(await screen.findByRole('option', { name: SSOProvider.name })).toBeInTheDocument();
         }
     });
 
@@ -217,7 +217,7 @@ describe('CreateUserDialog', () => {
         expect(await screen.findByText('An unexpected error occurred. Please try again.')).toBeInTheDocument();
     });
 
-    it('should clear out the saml provider id from submission data when the authentication method is changed', async () => {
+    it('should clear out the SSO Provider id from submission data when the authentication method is changed', async () => {
         const { user, testUser, testOnSave } = setup();
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
@@ -230,8 +230,8 @@ describe('CreateUserDialog', () => {
         await user.click(await screen.findByLabelText('Authentication Method'));
         await user.click(await screen.findByRole('option', { name: 'SAML' }));
 
-        await user.click(screen.getByLabelText('SAML Provider'));
-        await user.click(await screen.findByRole('option', { name: testSAMLProviders[0].name }));
+        await user.click(screen.getByLabelText('SSO Provider'));
+        await user.click(await screen.findByRole('option', { name: testSSOProviders[0].name }));
 
         await user.click(await screen.findByLabelText('Authentication Method'));
         await user.click(await screen.findByRole('option', { name: 'Username / Password' }));
@@ -239,6 +239,6 @@ describe('CreateUserDialog', () => {
 
         await user.click(saveButton);
 
-        expect(testOnSave).toBeCalledWith(expect.objectContaining({ SAMLProviderId: '' }));
+        expect(testOnSave).toBeCalledWith(expect.objectContaining({ SSOProviderId: '' }));
     });
 });
