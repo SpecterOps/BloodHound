@@ -19,15 +19,12 @@ package auth
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/crewjam/saml"
-	"github.com/crewjam/saml/samlsp"
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -37,7 +34,6 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
@@ -75,142 +71,6 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 	}
 }
 
-func (s ManagementResource) SAMLLoginRedirect(response http.ResponseWriter, request *http.Request) {
-	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableServiceProviderName]
-
-	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		bheCtx := ctx.FromRequest(request)
-		redirectURL := api.URLJoinPath(*bheCtx.Host, fmt.Sprintf("/api/v2/sso/%s/login", ssoProvider.Slug))
-		http.Redirect(response, request, redirectURL.String(), http.StatusFound)
-	}
-}
-
-func (s ManagementResource) SAMLCallbackRedirect(response http.ResponseWriter, request *http.Request) {
-	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableServiceProviderName]
-
-	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		bheCtx := ctx.FromRequest(request)
-		redirectURL := api.URLJoinPath(*bheCtx.Host, fmt.Sprintf("/api/v2/sso/%s/callback", ssoProvider.Slug))
-		http.Redirect(response, request, redirectURL.String(), http.StatusTemporaryRedirect)
-	}
-}
-
-func (s ManagementResource) ListSAMLSignOnEndpoints(response http.ResponseWriter, request *http.Request) {
-	if samlProviders, err := bhsaml.GetAllSAMLProviders(s.db, request.Context()); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		var (
-			samlSignOnEndpoints = make([]v2.SAMLSignOnEndpoint, len(samlProviders))
-			requestContext      = ctx.Get(request.Context())
-		)
-
-		for idx, samlProvider := range samlProviders {
-			providerURLs := bhsaml.FormatServiceProviderURLs(*requestContext.Host, samlProviders[idx].Name)
-
-			samlSignOnEndpoints[idx].Name = samlProvider.Name
-			samlSignOnEndpoints[idx].InitiationURL = serde.FromURL(providerURLs.SingleSignOnService)
-		}
-
-		api.WriteBasicResponse(request.Context(), v2.ListSAMLSignOnEndpointsResponse{
-			Endpoints: samlSignOnEndpoints,
-		}, http.StatusOK, response)
-	}
-}
-
-func (s ManagementResource) ListSAMLProviders(response http.ResponseWriter, request *http.Request) {
-	if samlProviders, err := bhsaml.GetAllSAMLProviders(s.db, request.Context()); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), v2.ListSAMLProvidersResponse{SAMLProviders: samlProviders}, http.StatusOK, response)
-	}
-}
-
-func (s ManagementResource) GetSAMLProvider(response http.ResponseWriter, request *http.Request) {
-	pathVars := mux.Vars(request)
-
-	if rawProviderID, hasID := pathVars[api.URIPathVariableSAMLProviderID]; !hasID {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
-	} else if providerID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if provider, err := s.db.GetSAMLProvider(request.Context(), int32(providerID)); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		// Format the service provider uri's in response
-		provider = bhsaml.FormatSAMLProviderURLs(request.Context(), provider)[0]
-
-		api.WriteBasicResponse(request.Context(), provider, http.StatusOK, response)
-	}
-}
-
-func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWriter, request *http.Request) {
-	var samlIdentityProvider model.SAMLProvider
-
-	if err := request.ParseMultipartForm(api.DefaultAPIPayloadReadLimitBytes); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if providerNames, hasProviderName := request.MultipartForm.Value["name"]; !hasProviderName {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"name\" parameter", request), response)
-	} else if numProviderNames := len(providerNames); numProviderNames == 0 || numProviderNames > 1 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"name\" parameter", request), response)
-	} else if metadataXMLFileHandles, hasMetadataXML := request.MultipartForm.File["metadata"]; !hasMetadataXML {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"metadata\" parameter", request), response)
-	} else if numHeaders := len(metadataXMLFileHandles); numHeaders == 0 || numHeaders > 1 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"metadata\" parameter", request), response)
-	} else if metadataXMLReader, err := metadataXMLFileHandles[0].Open(); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else {
-		defer metadataXMLReader.Close()
-
-		if metadataXML, err := io.ReadAll(metadataXMLReader); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if metadata, err := samlsp.ParseMetadata(metadataXML); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if ssoDescriptor, err := bhsaml.GetIDPSingleSignOnDescriptor(metadata, saml.HTTPPostBinding); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if ssoURL, err := bhsaml.GetIDPSingleSignOnServiceURL(ssoDescriptor, saml.HTTPPostBinding); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
-		} else {
-			samlIdentityProvider.Name = providerNames[0]
-			samlIdentityProvider.DisplayName = providerNames[0]
-			samlIdentityProvider.MetadataXML = metadataXML
-			samlIdentityProvider.IssuerURI = metadata.EntityID
-			samlIdentityProvider.SingleSignOnURI = ssoURL
-
-			if newSAMLProvider, err := s.db.CreateSAMLIdentityProvider(request.Context(), samlIdentityProvider); err != nil {
-				api.HandleDatabaseError(request, response, err)
-			} else {
-				api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
-			}
-		}
-	}
-}
-
-func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, request *http.Request) {
-	var (
-		identityProvider model.SAMLProvider
-		rawProviderID    = mux.Vars(request)[api.URIPathVariableSAMLProviderID]
-		requestContext   = ctx.FromRequest(request)
-	)
-
-	if providerID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if identityProvider, err = s.db.GetSAMLProvider(request.Context(), int32(providerID)); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if user, isUser := auth.GetUserFromAuthCtx(requestContext.AuthCtx); isUser && int64(user.SAMLProviderID.Int32) == providerID {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "user may not delete their own SAML auth provider", request), response)
-	} else if providerUsers, err := s.db.GetSAMLProviderUsers(request.Context(), identityProvider.ID); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if err := s.db.DeleteSSOProvider(request.Context(), int(identityProvider.SSOProviderID.Int32)); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), v2.DeleteSAMLProviderResponse{
-			AffectedUsers: providerUsers,
-		}, http.StatusOK, response)
-	}
-}
 func (s ManagementResource) ListPermissions(response http.ResponseWriter, request *http.Request) {
 	var (
 		order         []string

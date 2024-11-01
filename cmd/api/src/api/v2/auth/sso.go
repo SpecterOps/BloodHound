@@ -24,7 +24,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
@@ -43,8 +42,8 @@ type AuthProvider struct {
 // ListAuthProviders lists all available SSO providers (SAML and OIDC) with sorting and filtering
 func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, request *http.Request) {
 	var (
-		ctx               = request.Context()
-		queryParams       = request.URL.Query()
+		requestCtx  = request.Context()
+		queryParams = request.URL.Query()
 		sortByColumns     = queryParams[api.QueryParameterSortBy]
 		order             []string
 		queryFilters      model.QueryParameterFilterMap
@@ -63,7 +62,7 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 		}
 
 		if !model.SSOProviderSortableFields(column) {
-			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
+			api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 			return
 		}
 
@@ -80,16 +79,16 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 	}
 
 	if queryFilters, err = queryFilterParser.ParseQueryParameterFilters(request); err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else {
 		for name, filters := range queryFilters {
 			if validPredicates, err := model.SSOProviderValidFilterPredicates(name); err != nil {
-				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 				return
 			} else {
 				for i, filter := range filters {
 					if !utils.Contains(validPredicates, string(filter.Operator)) {
-						api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsFilterPredicateNotSupported, request), response)
+						api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsFilterPredicateNotSupported, request), response)
 						return
 					}
 					queryFilters[name][i].IsStringData = model.SSOProviderIsStringField(filter.Name)
@@ -98,8 +97,8 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 		}
 
 		if sqlFilter, err = queryFilters.BuildSQLFilter(); err != nil {
-			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-		} else if ssoProviders, err = s.db.GetAllSSOProviders(ctx, strings.Join(order, ", "), sqlFilter); err != nil {
+			api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if ssoProviders, err = s.db.GetAllSSOProviders(requestCtx, strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			for _, ssoProvider := range ssoProviders {
@@ -117,14 +116,15 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 					}
 				case model.SessionAuthProviderSAML:
 					if ssoProvider.SAMLProvider != nil {
-						provider.Details = bhsaml.FormatSAMLProviderURLs(request.Context(), *ssoProvider.SAMLProvider)[0]
+						ssoProvider.SAMLProvider.FormatSAMLProviderURLs(*ctx.Get(requestCtx).Host)
+						provider.Details = ssoProvider.SAMLProvider
 					}
 				}
 
 				providers = append(providers, provider)
 			}
 
-			api.WriteBasicResponse(ctx, providers, http.StatusOK, response)
+			api.WriteBasicResponse(requestCtx, providers, http.StatusOK, response)
 		}
 	}
 }

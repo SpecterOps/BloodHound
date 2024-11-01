@@ -24,7 +24,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/serde"
 )
 
 const PermissionURIScheme = "permission"
@@ -274,47 +273,6 @@ func (s AuthSecret) AuditData() AuditData {
 		"secret_expires_at": s.ExpiresAt.UTC(),
 	}
 }
-
-type SAMLProvider struct {
-	Name            string `json:"name" gorm:"unique;index"`
-	DisplayName     string `json:"display_name"`
-	IssuerURI       string `json:"idp_issuer_uri"`
-	SingleSignOnURI string `json:"idp_sso_uri"`
-	MetadataXML     []byte `json:"-"`
-
-	// PrincipalAttributeMapping is an array of OID or XML Namespace element mapping strings that can be used to map a
-	// SAML assertion to a user in the database.
-	//
-	// For example: ["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", "urn:oid:0.9.2342.19200300.100.1.3"]
-	PrincipalAttributeMappings []string `json:"principal_attribute_mappings" gorm:"type:text[];column:ous"`
-
-	// The below values generated values that point a client to SAML related resources hosted on the BloodHound instance
-	// and should not be persisted to the database due to the fact that the URLs rely on the Host header that the user is
-	// using to communicate to the API
-	ServiceProviderIssuerURI     serde.URL `json:"sp_issuer_uri" gorm:"-"`
-	ServiceProviderInitiationURI serde.URL `json:"sp_sso_uri" gorm:"-"`
-	ServiceProviderMetadataURI   serde.URL `json:"sp_metadata_uri" gorm:"-"`
-	ServiceProviderACSURI        serde.URL `json:"sp_acs_uri" gorm:"-"`
-
-	SSOProviderID null.Int32 `json:"sso_provider_id"`
-
-	Serial
-}
-
-func (SAMLProvider) TableName() string {
-	return "saml_providers"
-}
-
-func (s SAMLProvider) AuditData() AuditData {
-	return AuditData{
-		"saml_id":                      s.ID,
-		"saml_name":                    s.Name,
-		"principal_attribute_mappings": s.PrincipalAttributeMappings,
-		"idp_url":                      s.IssuerURI,
-	}
-}
-
-type SAMLProviders []SAMLProvider
 
 func RoleAssociations() []string {
 	return []string{
