@@ -318,4 +318,16 @@ export interface UpdateUserRequest {
     is_disabled?: boolean;
 }
 
+export interface CreateUserRequest {
+    firstName: string;
+    lastName: string;
+    emailAddress: string;
+    principal: string;
+    roles: number[];
+    SAMLProviderId?: string;
+    SSOProviderId?: number;
+    password?: string;
+    needsPasswordReset?: boolean;
+}
+
 export type UpdateConfigurationRequest = ConfigurationPayload;

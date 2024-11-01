@@ -17,18 +17,18 @@
 import { Dialog, DialogTitle } from '@mui/material';
 import React from 'react';
 import UpdateUserForm from '../UpdateUserForm';
-import { UpdatedUser } from '../../ducks';
+import {UpdateUserRequest} from "js-client-library";
 
 const UpdateUserDialog: React.FC<{
     open: boolean;
     onClose: () => void;
     onExited?: () => void;
-    onSave: (user: UpdatedUser) => Promise<any>;
+    onSave: (user: UpdateUserRequest) => Promise<any>;
     userId: string;
     isLoading: boolean;
     error: any;
 }> = ({ open, onClose, onExited, userId, onSave, isLoading, error }) => {
-    const handleOnSave = (user: UpdatedUser) => {
+    const handleOnSave = (user: UpdateUserRequest) => {
         onSave(user)
             .then(() => {
                 onClose();

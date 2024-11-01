@@ -32,11 +32,12 @@ import {
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { apiClient, NewUser } from 'bh-shared-ui';
+import { apiClient } from 'bh-shared-ui';
+import { CreateUserRequest } from "js-client-library";
 
 const CreateUserForm: React.FC<{
     onCancel: () => void;
-    onSubmit: (user: NewUser) => void;
+    onSubmit: (user: CreateUserRequest) => void;
     isLoading: boolean;
     error: any;
 }> = ({ onCancel, onSubmit, isLoading, error }) => {
@@ -45,24 +46,13 @@ const CreateUserForm: React.FC<{
         handleSubmit,
         setValue,
         formState: { errors },
-    } = useForm({
-        defaultValues: {
-            emailAddress: '',
-            principal: '',
-            firstName: '',
-            lastName: '',
-            password: '',
-            needsPasswordReset: false,
-            SSOProviderId: '',
-            roles: [1],
-        },
-    });
+    } = useForm<CreateUserRequest>();
 
     const [authenticationMethod, setAuthenticationMethod] = React.useState<string>('password');
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
-            setValue('SSOProviderId', '');
+            setValue('SSOProviderId', undefined);
         }
     }, [authenticationMethod, setValue]);
 
@@ -255,7 +245,7 @@ const CreateUserForm: React.FC<{
                                         <Controller
                                             name='SSOProviderId'
                                             control={control}
-                                            defaultValue=''
+                                            defaultValue={undefined}
                                             rules={{
                                                 required: 'SSO Provider is required',
                                             }}
@@ -271,7 +261,7 @@ const CreateUserForm: React.FC<{
                                                             onChange as (event: SelectChangeEvent<string>) => void
                                                         }
                                                         onBlur={onBlur}
-                                                        value={value}
+                                                        value={value?.toString()}
                                                         ref={ref}
                                                         labelId='SSOProviderId-label'
                                                         id='SSOProviderId'
@@ -281,7 +271,7 @@ const CreateUserForm: React.FC<{
                                                         data-testid='create-user-dialog_select-sso-provider'>
                                                         {listSSOProvidersQuery?.data?.map((SSOProvider: any) => (
                                                             <MenuItem
-                                                                value={SSOProvider.id.toString()}
+                                                                value={SSOProvider.id}
                                                                 key={SSOProvider.id}>
                                                                 {SSOProvider.name}
                                                             </MenuItem>

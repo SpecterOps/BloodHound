@@ -31,10 +31,9 @@ import {
     Disable2FADialog,
     PageWithTitle,
 } from 'bh-shared-ui';
-import { PutUserAuthSecretRequest, UpdateUserRequest } from 'js-client-library';
+import {CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest} from 'js-client-library';
 import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
-import { NewUser } from 'bh-shared-ui';
 import { addSnackbar } from 'src/ducks/global/actions';
 import useToggle from 'src/hooks/useToggle';
 import { User } from 'src/hooks/useUsers';
@@ -74,7 +73,7 @@ const Users = () => {
         apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
     );
 
-    const createUserMutation = useMutation((newUser: NewUser) => apiClient.createUser(newUser), {
+    const createUserMutation = useMutation((newUser: CreateUserRequest) => apiClient.createUser(newUser), {
         onSuccess: () => {
             dispatch(addSnackbar('User created successfully!', 'createUserSuccess'));
             listUsersQuery.refetch();

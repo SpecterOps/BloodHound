@@ -79,7 +79,6 @@ export interface NewUser {
     principal: string;
     roles: number[];
     SAMLProviderId?: string;
-    SSOProviderId?: string;
     password?: string;
     needsPasswordReset?: boolean;
 }

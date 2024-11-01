@@ -701,19 +701,7 @@ class BHEAPIClient {
     getUser = (userId: string, options?: types.RequestOptions) =>
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);
 
-    createUser = (
-        user: {
-            firstName: string;
-            lastName: string;
-            emailAddress: string;
-            principal: string;
-            roles: number[];
-            SSOProviderId?: string;
-            password?: string;
-            needsPasswordReset?: boolean;
-        },
-        options?: types.RequestOptions
-    ) =>
+    createUser = ( user: types.CreateUserRequest, options?: types.RequestOptions) =>
         this.baseClient.post(
             '/api/v2/bloodhound-users',
             {

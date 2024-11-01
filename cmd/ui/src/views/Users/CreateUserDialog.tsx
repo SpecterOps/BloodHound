@@ -16,18 +16,18 @@
 
 import { Dialog, DialogTitle } from '@mui/material';
 import React from 'react';
-import { NewUser } from 'bh-shared-ui';
 import CreateUserForm from './CreateUserForm';
+import { CreateUserRequest } from "js-client-library";
 
 const CreateUserDialog: React.FC<{
     open: boolean;
     onClose: () => void;
     onExited?: () => void;
-    onSave: (user: NewUser) => Promise<any>;
+    onSave: (user: CreateUserRequest) => Promise<any>;
     isLoading: boolean;
     error: any;
 }> = ({ open, onClose, onExited, onSave, isLoading, error }) => {
-    const handleOnSave = (user: NewUser) => {
+    const handleOnSave = (user: CreateUserRequest) => {
         onSave(user)
             .then(() => {
                 onClose();

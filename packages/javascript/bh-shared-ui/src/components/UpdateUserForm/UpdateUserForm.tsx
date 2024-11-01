@@ -33,12 +33,11 @@ import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
-import { UpdatedUser } from '../../ducks';
-import {SSOProvider} from "js-client-library";
+import { SSOProvider, UpdateUserRequest } from "js-client-library";
 
 const UpdateUserForm: React.FC<{
     onCancel: () => void;
-    onSubmit: (user: UpdatedUser) => void;
+    onSubmit: (user: UpdateUserRequest) => void;
     userId: string;
     isLoading: boolean;
     error: any;
@@ -125,15 +124,8 @@ const UpdateUserForm: React.FC<{
 
 const UpdateUserFormInner: React.FC<{
     onCancel: () => void;
-    onSubmit: (user: UpdatedUser) => void;
-    initialData: {
-        emailAddress: string;
-        principal: string;
-        firstName: string;
-        lastName: string;
-        SSOProviderId?: string;
-        roles: number[];
-    };
+    onSubmit: (user: UpdateUserRequest) => void;
+    initialData: UpdateUserRequest;
     roles: any[];
     SSOProviders?: SSOProvider[];
     isLoading: boolean;
@@ -156,7 +148,7 @@ const UpdateUserFormInner: React.FC<{
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
-            setValue('SSOProviderId', '');
+            setValue('SSOProviderId', undefined);
         }
     }, [authenticationMethod, setValue]);
 
@@ -291,7 +283,7 @@ const UpdateUserFormInner: React.FC<{
                                             <Select
                                                 onChange={onChange as (event: SelectChangeEvent<string>) => void}
                                                 onBlur={onBlur}
-                                                value={value}
+                                                value={value?.toString()}
                                                 ref={ref}
                                                 labelId='SSOProviderId-label'
                                                 id='SSOProviderId'
