@@ -33,7 +33,7 @@ import usePermissions from 'src/hooks/usePermissions/usePermissions';
 
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const QA = React.lazy(() => import('src/views/QA'));
-const Users = React.lazy(() => import('src/views/Users'));
+const Users = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.Users })));
 const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures'));
 const FileIngest = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.FileIngest })));
 const BloodHoundConfiguration = React.lazy(() => import('src/views/BloodHoundConfiguration'));

@@ -25,25 +25,23 @@ import {
     DocumentationLinks,
     Header,
     PasswordDialog,
-    LuxonFormat,
     UserTokenManagementDialog,
-    apiClient,
     Disable2FADialog,
     PageWithTitle,
-} from 'bh-shared-ui';
+    UpdateUserDialog,
+    CreateUserDialog
+} from '../../components';
+import { apiClient, LuxonFormat } from "../../utils";
 import {CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest} from 'js-client-library';
 import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
-import { addSnackbar } from 'src/ducks/global/actions';
-import useToggle from 'src/hooks/useToggle';
-import { User } from 'src/hooks/useUsers';
-import { useAppDispatch, useAppSelector } from 'src/store';
-import CreateUserDialog from 'src/views/Users/CreateUserDialog';
-import { UpdateUserDialog } from 'bh-shared-ui';
-import UserActionsMenu from 'src/views/Users/UserActionsMenu';
+import { useToggle } from '../../hooks';
+import { User } from '../../hooks/useUsers';
+import UserActionsMenu from '../../components/UserActionsMenu';
+import { useNotifications }  from "../../providers";
 
 const Users = () => {
-    const dispatch = useAppDispatch();
+    const { addNotification } = useNotifications();
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [createUserDialogOpen, toggleCreateUserDialog] = useToggle(false);
     const [updateUserDialogOpen, toggleUpdateUserDialog] = useToggle(false);
@@ -58,12 +56,12 @@ const Users = () => {
     const [disable2FAError, setDisable2FAError] = useState('');
     const [disable2FASecret, setDisable2FASecret] = useState('');
 
-    const self = useAppSelector((state) => state.auth.user);
-    const hasSelectedSelf = useMemo(() => self?.id === selectedUserId!, [selectedUserId, self?.id]);
 
     const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
         apiClient.getSelf({ signal }).then((res) => res.data.data)
     );
+
+    const hasSelectedSelf = useMemo(() => getSelfQuery.data?.id === selectedUserId!, [selectedUserId, getSelfQuery.data?.id]);
 
     const listUsersQuery = useQuery(['listUsers'], ({ signal }) =>
         apiClient.listUsers({ signal }).then((res) => res.data.data.users)
@@ -75,7 +73,7 @@ const Users = () => {
 
     const createUserMutation = useMutation((newUser: CreateUserRequest) => apiClient.createUser(newUser), {
         onSuccess: () => {
-            dispatch(addSnackbar('User created successfully!', 'createUserSuccess'));
+            addNotification('User created successfully!', 'createUserSuccess');
             listUsersQuery.refetch();
         },
     });
@@ -84,7 +82,7 @@ const Users = () => {
         (updatedUser: UpdateUserRequest) => apiClient.updateUser(selectedUserId!, updatedUser),
         {
             onSuccess: (response, updatedUser) => {
-                dispatch(addSnackbar('User updated successfully!', 'updateUserSuccess'));
+                addNotification('User updated successfully!', 'updateUserSuccess');
                 const selectedUser = find(listUsersQuery.data, (user) => user.id === selectedUserId);
                 // if the user previously had a SSO Provider ID but does not have one after the update then show the
                 // password reset dialog with the "Force Password Reset?" input defaulted to checked
@@ -116,7 +114,7 @@ const Users = () => {
         },
         {
             onSuccess: () => {
-                dispatch(addSnackbar('User disabled successfully!', 'disableUserSuccess'));
+                addNotification('User disabled successfully!', 'disableUserSuccess');
                 listUsersQuery.refetch();
             },
         }
@@ -141,7 +139,7 @@ const Users = () => {
         },
         {
             onSuccess: () => {
-                dispatch(addSnackbar('User enabled successfully!', 'enableUserSuccess'));
+                addNotification('User enabled successfully!', 'enableUserSuccess');
                 listUsersQuery.refetch();
             },
         }
@@ -149,14 +147,14 @@ const Users = () => {
 
     const deleteUserMutation = useMutation((userId: string) => apiClient.deleteUser(userId), {
         onSuccess: () => {
-            dispatch(addSnackbar('User deleted successfully!', 'deleteUserSuccess'));
+            addNotification('User deleted successfully!', 'deleteUserSuccess');
             listUsersQuery.refetch();
         },
     });
 
     const expireUserPasswordMutation = useMutation((userId: string) => apiClient.expireUserAuthSecret(userId), {
         onSuccess: () => {
-            dispatch(addSnackbar('User password expired successfully!', 'expireUserPasswordSuccess'));
+            addNotification('User password expired successfully!', 'expireUserPasswordSuccess');
         },
     });
 
@@ -165,20 +163,18 @@ const Users = () => {
             apiClient.putUserAuthSecret(userId, payload),
         {
             onSuccess: () => {
-                dispatch(addSnackbar('User password updated successfully!', 'updateUserPasswordSuccess'));
+                addNotification('User password updated successfully!', 'updateUserPasswordSuccess');
                 toggleResetUserPasswordDialog();
             },
             onSettled: () => setNeedsPasswordReset(false),
             onError: (error: any) => {
                 if (error.response?.status == 403) {
-                    dispatch(
-                        addSnackbar(
+                    addNotification(
                             'Current password invalid. Password update failed.',
                             'UpdateUserPasswordCurrentPasswordInvalidError'
-                        )
                     );
                 } else {
-                    dispatch(addSnackbar('Password failed to update.', 'UpdateUserPasswordError'));
+                    addNotification('Password failed to update.', 'UpdateUserPasswordError');
                 }
             },
         }
@@ -235,7 +231,7 @@ const Users = () => {
                 setSelectedUserId(userId);
             }}
             showPasswordOptions={user.sso_provider_id === null || user.sso_provider_id === undefined}
-            showAuthMgmtButtons={user.id !== self?.id}
+            showAuthMgmtButtons={user.id !== getSelfQuery.data.id}
             showDisableMfaButton={user.AuthSecret?.totp_activated}
             userDisabled={user.is_disabled}
             onUpdateUser={toggleUpdateUserDialog}
@@ -367,7 +363,7 @@ const Users = () => {
                         .disenrollMFA(selectedUserId!, { secret })
                         .then(() => {
                             setDisable2FADialogOpen(false);
-                            dispatch(addSnackbar('User MFA disabled successfully!', 'disableUserMfaSuccess'));
+                            addNotification('User MFA disabled successfully!', 'disableUserMfaSuccess');
                             setDisable2FASecret('');
                             listUsersQuery.refetch();
                         })

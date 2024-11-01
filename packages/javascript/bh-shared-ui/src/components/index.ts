@@ -171,4 +171,10 @@ export { default as UpdateUserForm } from './UpdateUserForm';
 export * from './LoginViaSSOForm';
 export { default as LoginViaSSOForm } from './LoginViaSSOForm';
 
+export * from './CreateUserForm';
+export { default as CreateUserForm } from './CreateUserForm';
+
+export * from './CreateUserDialog';
+export { default as CreateUserDialog } from './CreateUserDialog';
+
 export { default as ApiVersion } from './ApiVersion';

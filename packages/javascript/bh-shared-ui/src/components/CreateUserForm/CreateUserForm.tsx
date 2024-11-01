@@ -32,7 +32,7 @@ import {
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { apiClient } from 'bh-shared-ui';
+import { apiClient} from "../../utils";
 import { CreateUserRequest } from "js-client-library";
 
 const CreateUserForm: React.FC<{

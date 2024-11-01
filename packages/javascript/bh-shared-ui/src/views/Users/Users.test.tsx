@@ -16,7 +16,7 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, within } from 'src/test-utils';
+import { render, screen, within } from '../../test-utils';
 import Users from '.';
 import userEvent from '@testing-library/user-event';
 

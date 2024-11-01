@@ -20,6 +20,8 @@ export { default as useOnClickOutside } from './useOnClickOutside';
 
 export { default as useDebouncedValue } from './useDebouncedValue';
 
+export { default as useToggle } from './useToggle';
+
 export * from './useConfiguration';
 
 export * from './useDataQualityStats';
@@ -33,3 +35,5 @@ export * from './useFileIngest';
 export * from './useSavedQueries';
 
 export * from './useSearch';
+
+export * from './useToggle';
