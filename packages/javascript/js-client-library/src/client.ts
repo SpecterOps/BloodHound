@@ -31,6 +31,8 @@ import {
     ListFileTypesForIngestResponse,
     PaginatedResponse,
     PostureResponse,
+    PostureFindingTrendsResponse,
+    PostureHistoryResponse,
     SavedQuery,
     StartFileIngestResponse,
     UpdateConfigurationResponse,
@@ -161,6 +163,7 @@ class BHEAPIClient {
         this.baseClient.get<AssetGroupResponse>('/api/v2/asset-groups', options);
 
     /* analysis */
+
     getComboTreeGraph = (domainId: string, nodeId: string | null = null, options?: types.RequestOptions) =>
         this.baseClient.get(
             `/api/v2/meta-trees/${domainId}`,
@@ -270,6 +273,47 @@ class BHEAPIClient {
             Object.assign(
                 {
                     params: params,
+                },
+                options
+            )
+        );
+    };
+
+    getPostureFindingTrends = (
+        start: Date,
+        end: Date,
+        domainSID: string,
+        sort_by?: string,
+        options?: types.RequestOptions
+    ) => {
+        return this.baseClient.get<PostureFindingTrendsResponse>(
+            `/api/v2/finding-trends/${domainSID}`,
+            Object.assign(
+                {
+                    start: start?.toISOString(),
+                    end: end?.toISOString(),
+                    sort_by,
+                },
+                options
+            )
+        );
+    };
+
+    getPostureHistory = (
+        start: Date,
+        end: Date,
+        domainSID: string,
+        dataType: string,
+        partition_by?: string,
+        options?: types.RequestOptions
+    ) => {
+        return this.baseClient.get<PostureHistoryResponse>(
+            `/api/v2/posture-history/${domainSID}/${dataType}`,
+            Object.assign(
+                {
+                    start: start?.toISOString(),
+                    end: end?.toISOString(),
+                    partition_by,
                 },
                 options
             )
