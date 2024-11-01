@@ -1037,6 +1037,20 @@ export function CommonNodeKindToDisplay(value: CommonNodeKind): string | undefin
             return undefined;
     }
 }
+export enum CommonRelationshipKind {
+    AllADAttacks = 'ALL_AD_ATTACKS',
+    AllAZAttacks = 'ALL_AZ_ATTACKS',
+}
+export function CommonRelationshipKindToDisplay(value: CommonRelationshipKind): string | undefined {
+    switch (value) {
+        case CommonRelationshipKind.AllADAttacks:
+            return 'AllADAttacks';
+        case CommonRelationshipKind.AllAZAttacks:
+            return 'AllAZAttacks';
+        default:
+            return undefined;
+    }
+}
 export enum CommonKindProperties {
     ObjectID = 'objectid',
     Name = 'name',

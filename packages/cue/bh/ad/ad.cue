@@ -1363,7 +1363,7 @@ RelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
-	SyncedToEntraUser,
+	SyncedToEntraUser
 ]
 
 // ACL Relationships
