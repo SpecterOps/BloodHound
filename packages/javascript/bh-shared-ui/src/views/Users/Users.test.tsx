@@ -22,7 +22,7 @@ import userEvent from '@testing-library/user-event';
 import {SSOProvider} from "js-client-library";
 
 const testAuthenticatedUser = {
-    saml_provider_id: null,
+    sso_provider_id: null,
     AuthSecret: {
         digest_method: 'argon2',
         expires_at: '2025-01-01T12:00:00Z',
@@ -57,7 +57,7 @@ const testAuthenticatedUser = {
 };
 
 const testMarshallLaw = {
-    saml_provider_id: 1,
+    sso_provider_id: 1,
     AuthSecret: {
         digest_method: 'argon2',
         expires_at: '2025-01-01T12:00:00Z',
@@ -177,7 +177,7 @@ const server = setupServer(
         return res(ctx.json({ data: testRoles }));
     }),
     rest.patch('/api/v2/bloodhound-users/1', (req, res, ctx) => {
-        return res(ctx.json({ data: { ...testMarshallLaw, saml_provider_id: null, AuthSecret: null } }));
+        return res(ctx.json({ data: { ...testMarshallLaw, sso_provider_id: null, AuthSecret: null } }));
     })
 );
 

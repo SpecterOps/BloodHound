@@ -21,9 +21,9 @@ import { addNotification } from '../providers/NotificationProvider/actions';
 
 export type User = {
     id: string;
-    saml_provider_id: number | null;
+    sso_provider_id: number | null;
     AuthSecret: any;
-    Roles: Role[];
+    roles: Role[];
     first_name: string | null;
     last_name: string | null;
     email_address: string | null;

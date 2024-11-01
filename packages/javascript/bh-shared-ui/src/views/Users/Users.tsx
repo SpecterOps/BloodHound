@@ -57,7 +57,7 @@ const Users = () => {
     const [disable2FASecret, setDisable2FASecret] = useState('');
 
     const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
-        apiClient.getSelf({ signal }).then((res) => res.data.data)
+        apiClient.getSelf({ signal }).then((res) => res.data?.data)
     );
 
     const hasSelectedSelf = useMemo(
@@ -66,11 +66,11 @@ const Users = () => {
     );
 
     const listUsersQuery = useQuery(['listUsers'], ({ signal }) =>
-        apiClient.listUsers({ signal }).then((res) => res.data.data.users)
+        apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)
     );
 
     const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
-        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
+        apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
     );
 
     const createUserMutation = useMutation((newUser: CreateUserRequest) => apiClient.createUser(newUser), {

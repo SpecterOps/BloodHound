@@ -33,7 +33,7 @@ import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
-import { CreateUserRequest } from 'js-client-library';
+import { CreateUserRequest, SSOProvider } from 'js-client-library';
 
 const CreateUserForm: React.FC<{
     onCancel: () => void;
@@ -57,11 +57,11 @@ const CreateUserForm: React.FC<{
     }, [authenticationMethod, setValue]);
 
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
-        apiClient.getRoles({ signal }).then((res) => res.data.data.roles)
+        apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)
     );
 
     const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
-        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
+        apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
     );
 
     const handleCancel: React.MouseEventHandler<HTMLButtonElement> = (e) => {
@@ -245,7 +245,7 @@ const CreateUserForm: React.FC<{
                                         <Controller
                                             name='SSOProviderId'
                                             control={control}
-                                            defaultValue={undefined}
+                                            defaultValue={listSSOProvidersQuery?.data?.at(0)?.id}
                                             rules={{
                                                 required: 'SSO Provider is required',
                                             }}
@@ -269,9 +269,9 @@ const CreateUserForm: React.FC<{
                                                         variant='standard'
                                                         fullWidth
                                                         data-testid='create-user-dialog_select-sso-provider'>
-                                                        {listSSOProvidersQuery?.data?.map((SSOProvider: any) => (
-                                                            <MenuItem value={SSOProvider.id} key={SSOProvider.id}>
-                                                                {SSOProvider.name}
+                                                        {listSSOProvidersQuery?.data?.map((SSOProvider: SSOProvider) => (
+                                                            <MenuItem value={SSOProvider?.id} key={SSOProvider?.id}>
+                                                                {SSOProvider?.name}
                                                             </MenuItem>
                                                         ))}
                                                     </Select>
