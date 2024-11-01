@@ -19,7 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from '../../test-utils';
 import UpdateUserDialog from './UpdateUserDialog';
-import {SSOProvider} from "js-client-library";
+import { SSOProvider } from 'js-client-library';
 
 const testRoles = [
     { id: 1, name: 'Role 1' },
@@ -345,8 +345,11 @@ describe('UpdateUserDialog', () => {
 
         await user.click(saveButton);
 
-        await waitFor(() => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ SSOProviderId: undefined })), {
-            timeout: 30000,
-        });
+        await waitFor(
+            () => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ SSOProviderId: undefined })),
+            {
+                timeout: 30000,
+            }
+        );
     });
 });

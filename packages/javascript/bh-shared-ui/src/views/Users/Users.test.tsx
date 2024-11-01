@@ -19,7 +19,7 @@ import { setupServer } from 'msw/node';
 import { render, screen, within } from '../../test-utils';
 import Users from '.';
 import userEvent from '@testing-library/user-event';
-import {SSOProvider} from "js-client-library";
+import { SSOProvider } from 'js-client-library';
 
 const testAuthenticatedUser = {
     sso_provider_id: null,
