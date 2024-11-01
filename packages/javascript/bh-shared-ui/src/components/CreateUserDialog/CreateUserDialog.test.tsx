@@ -44,12 +44,10 @@ const server = setupServer(
             })
         );
     }),
-    rest.get('/api/v2/saml', (req, res, ctx) => {
+    rest.get('/api/v2/sso-providers', (req, res, ctx) => {
         return res(
             ctx.json({
-                data: {
-                    saml_providers: testSSOProviders,
-                },
+                data: testSSOProviders,
             })
         );
     })
@@ -188,7 +186,7 @@ describe('CreateUserDialog', () => {
 
         await user.click(await screen.findByLabelText('Authentication Method'));
 
-        await user.click(await screen.findByRole('option', { name: 'SAML' }));
+        await user.click(await screen.findByRole('option', { name: 'SSO' }));
 
         expect(screen.queryByLabelText('Initial Password')).not.toBeInTheDocument();
 
@@ -228,7 +226,7 @@ describe('CreateUserDialog', () => {
         await user.type(screen.getByLabelText('Last Name'), testUser.lastName);
 
         await user.click(await screen.findByLabelText('Authentication Method'));
-        await user.click(await screen.findByRole('option', { name: 'SAML' }));
+        await user.click(await screen.findByRole('option', { name: 'SSO' }));
 
         await user.click(screen.getByLabelText('SSO Provider'));
         await user.click(await screen.findByRole('option', { name: testSSOProviders[0].name }));
@@ -239,6 +237,6 @@ describe('CreateUserDialog', () => {
 
         await user.click(saveButton);
 
-        expect(testOnSave).toBeCalledWith(expect.objectContaining({ SSOProviderId: '' }));
+        expect(testOnSave).toBeCalledWith(expect.objectContaining({ SSOProviderId: undefined }));
     });
 });

@@ -345,7 +345,7 @@ describe('UpdateUserDialog', () => {
 
         await user.click(saveButton);
 
-        await waitFor(() => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ SSOProviderId: '' })), {
+        await waitFor(() => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ SSOProviderId: undefined })), {
             timeout: 30000,
         });
     });
