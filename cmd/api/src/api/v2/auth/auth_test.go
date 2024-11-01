@@ -56,8 +56,8 @@ import (
 
 const (
 	samlProviderPathFmt           = "/api/v2/saml/providers/%d"
-	updateUserPathFmt             = "/api/v2/auth/users/%s"
 	updateUserSecretPathFmt       = "/api/v2/auth/users/%s/secret"
+	ssoProviderID                 = 123
 	samlProviderID          int32 = 1234
 	samlProviderIDStr             = "1234"
 )
@@ -174,44 +174,60 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Eq(goodRoles)).Return(model.Roles{}, nil).AnyTimes()
-	mockDB.EXPECT().GetUser(gomock.Any(), badUserID).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
-	mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{}, nil)
-	mockDB.EXPECT().GetSAMLProvider(gomock.Any(), samlProviderID).Return(model.SAMLProvider{}, nil).Times(2)
-	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil).Times(2)
-	mockDB.EXPECT().DeleteAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
+	t.Run("Successfully update user with deprecated saml provider", func(t *testing.T) {
+		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Eq(goodRoles)).Return(model.Roles{}, nil)
+		mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{}, nil)
+		mockDB.EXPECT().GetSAMLProvider(gomock.Any(), samlProviderID).Return(model.SAMLProvider{}, nil)
+		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
-	// Happy path
-	test.Request(t).
-		WithMethod(http.MethodPut).
-		WithURL(fmt.Sprintf(updateUserPathFmt, goodUserID.String())). //nolint:govet // Ignore non-constant format string failure because it's test code
-		WithURLPathVars(map[string]string{
-			"user_id": goodUserID.String(),
-		}).
-		WithBody(v2.UpdateUserRequest{
-			Principal:      "tester",
-			Roles:          goodRoles,
-			SAMLProviderID: samlProviderIDStr,
-		}).
-		OnHandlerFunc(resources.UpdateUser).
-		Require().
-		ResponseStatusCode(http.StatusOK)
+		test.Request(t).
+			WithURLPathVars(map[string]string{"user_id": goodUserID.String()}).
+			WithBody(v2.UpdateUserRequest{
+				Principal:      "tester",
+				Roles:          goodRoles,
+				SAMLProviderID: samlProviderIDStr,
+			}).
+			OnHandlerFunc(resources.UpdateUser).
+			Require().
+			ResponseStatusCode(http.StatusOK)
+	})
 
-	// Negative path where a user already has an auth secret set
-	test.Request(t).
-		WithMethod(http.MethodPut).
-		WithURL(fmt.Sprintf(updateUserPathFmt, badUserID.String())). //nolint:govet // Ignore non-constant format string failure because it's test code
-		WithURLPathVars(map[string]string{
-			"user_id": badUserID.String(),
-		}).
-		WithBody(v2.UpdateUserRequest{
-			Principal:      "tester",
-			Roles:          goodRoles,
-			SAMLProviderID: samlProviderIDStr,
-		}).
-		OnHandlerFunc(resources.UpdateUser).
-		Require().
-		ResponseStatusCode(http.StatusOK)
+	t.Run("Fails if auth secret set", func(t *testing.T) {
+		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Eq(goodRoles)).Return(model.Roles{}, nil)
+		mockDB.EXPECT().GetUser(gomock.Any(), badUserID).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
+		mockDB.EXPECT().GetSAMLProvider(gomock.Any(), samlProviderID).Return(model.SAMLProvider{}, nil)
+		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
+		mockDB.EXPECT().DeleteAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
+
+		test.Request(t).
+			WithURLPathVars(map[string]string{"user_id": badUserID.String()}).
+			WithBody(v2.UpdateUserRequest{
+				Principal:      "tester",
+				Roles:          goodRoles,
+				SAMLProviderID: samlProviderIDStr,
+			}).
+			OnHandlerFunc(resources.UpdateUser).
+			Require().
+			ResponseStatusCode(http.StatusOK)
+	})
+
+	t.Run("Successful user update with sso provider-saml", func(t *testing.T) {
+		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Eq(goodRoles)).Return(model.Roles{}, nil)
+		mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{}, nil)
+		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), ssoProviderID).Return(model.SSOProvider{}, nil)
+		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
+
+		test.Request(t).
+			WithURLPathVars(map[string]string{"user_id": goodUserID.String()}).
+			WithBody(v2.UpdateUserRequest{
+				Principal:     "tester",
+				Roles:         goodRoles,
+				SSOProviderID: "123",
+			}).
+			OnHandlerFunc(resources.UpdateUser).
+			Require().
+			ResponseStatusCode(http.StatusOK)
+	})
 }
 
 func TestManagementResource_DeleteSAMLProvider(t *testing.T) {

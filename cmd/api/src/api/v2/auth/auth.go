@@ -480,6 +480,23 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				api.HandleDatabaseError(request, response, err)
 			} else {
 				userTemplate.SAMLProviderID = null.Int32From(samlProvider.ID)
+				userTemplate.SSOProviderID = null.Int32From(samlProvider.SSOProviderID.Int32)
+			}
+		} else if createUserRequest.SSOProviderID != "" {
+			if ssoProviderID, err := serde.ParseInt32(createUserRequest.SSOProviderID); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SSO Provider ID must be a number: %v", err.Error()), request), response)
+			} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), int(ssoProviderID)); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				userTemplate.SSOProviderID = null.Int32From(ssoProviderID)
+				if ssoProvider.Type == model.SessionAuthProviderSAML {
+					if ssoProvider.SAMLProvider != nil {
+						userTemplate.SAMLProviderID = null.Int32From(ssoProvider.SAMLProvider.ID)
+					}
+				} else {
+					userTemplate.SAMLProvider = nil
+					userTemplate.SAMLProviderID = null.NewInt32(0, false)
+				}
 			}
 		}
 
@@ -564,12 +581,18 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 				api.HandleDatabaseError(request, response, err)
 			} else {
 				user.SSOProviderID = null.Int32From(ssoProviderID)
-				if ssoProvider.Type == model.SessionAuthProviderSAML && ssoProvider.SAMLProvider != nil {
-					user.SAMLProviderID = null.Int32From(ssoProvider.SAMLProvider.ID)
+				if ssoProvider.Type == model.SessionAuthProviderSAML {
+					if ssoProvider.SAMLProvider != nil {
+						user.SAMLProviderID = null.Int32From(ssoProvider.SAMLProvider.ID)
+					}
+				} else {
+					user.SAMLProvider = nil
+					user.SAMLProviderID = null.NewInt32(0, false)
 				}
 			}
 		} else {
 			// Default SAMLProviderID and SSOProviderID to null if the update request contains no SAMLProviderID and SSOProviderID
+			user.SAMLProvider = nil
 			user.SAMLProviderID = null.NewInt32(0, false)
 			user.SSOProviderID = null.NewInt32(0, false)
 		}
