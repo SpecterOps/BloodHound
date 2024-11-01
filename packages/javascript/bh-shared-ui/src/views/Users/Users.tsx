@@ -233,7 +233,7 @@ const Users = () => {
                 setSelectedUserId(userId);
             }}
             showPasswordOptions={user.sso_provider_id === null || user.sso_provider_id === undefined}
-            showAuthMgmtButtons={user.id !== getSelfQuery.data.id}
+            showAuthMgmtButtons={user.id !== getSelfQuery.data?.id}
             showDisableMfaButton={user.AuthSecret?.totp_activated}
             userDisabled={user.is_disabled}
             onUpdateUser={toggleUpdateUserDialog}
