@@ -143,7 +143,15 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Shortest paths to Domain Admins',
-                cypher: `MATCH p=shortestPath((n)-[:${adTransitEdgeTypes}*1..]->(g:Group))\nWHERE g.objectid ENDS WITH '-512' AND n<>g\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((n:Base)-[:${adTransitEdgeTypes}*1..]->(g:Group))\nWHERE g.objectid ENDS WITH '-512' AND n<>g\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                description: 'Shortest paths from Owned objects to Tier Zero',
+                cypher: `// MANY TO MANY SHORTEST PATH QUERIES USE EXCESSIVE SYSTEM RESOURCES AND TYPICALLY WILL NOT COMPLETE\n// UNCOMMENT THE FOLLOWING LINES BY REMOVING THE DOUBLE FORWARD SLASHES AT YOUR OWN RISK\n// MATCH p=shortestPath((n)-[:${adTransitEdgeTypes}*1..]->(m))\n// WHERE "admin_tier_0" IN split(m.system_tags, ' ') AND n<>m\n// AND "owned" IN split(n.system_tags,' ')\n// RETURN p\n// LIMIT 1000`,
+            },
+            {
+                description: 'Shortest paths from Owned objects',
+                cypher: `MATCH p=shortestPath((n:Base)-[:${adTransitEdgeTypes}*1..]->(g:Base))\nWHERE 'owned' IN split(n.system_tags,' ') AND n<>g\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
