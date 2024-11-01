@@ -17,7 +17,7 @@
 import { PutUserAuthSecretRequest, RequestOptions } from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils';
-import { addNotification } from "../providers/NotificationProvider/actions";
+import { addNotification } from '../providers/NotificationProvider/actions';
 
 export type User = {
     id: string;

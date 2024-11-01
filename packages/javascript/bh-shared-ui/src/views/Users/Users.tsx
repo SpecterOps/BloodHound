@@ -29,16 +29,16 @@ import {
     Disable2FADialog,
     PageWithTitle,
     UpdateUserDialog,
-    CreateUserDialog
+    CreateUserDialog,
 } from '../../components';
-import { apiClient, LuxonFormat } from "../../utils";
-import {CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest} from 'js-client-library';
+import { apiClient, LuxonFormat } from '../../utils';
+import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest } from 'js-client-library';
 import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
 import { useToggle } from '../../hooks';
 import { User } from '../../hooks/useUsers';
 import UserActionsMenu from '../../components/UserActionsMenu';
-import { useNotifications }  from "../../providers";
+import { useNotifications } from '../../providers';
 
 const Users = () => {
     const { addNotification } = useNotifications();
@@ -56,12 +56,14 @@ const Users = () => {
     const [disable2FAError, setDisable2FAError] = useState('');
     const [disable2FASecret, setDisable2FASecret] = useState('');
 
-
     const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
         apiClient.getSelf({ signal }).then((res) => res.data.data)
     );
 
-    const hasSelectedSelf = useMemo(() => getSelfQuery.data?.id === selectedUserId!, [selectedUserId, getSelfQuery.data?.id]);
+    const hasSelectedSelf = useMemo(
+        () => getSelfQuery.data?.id === selectedUserId!,
+        [selectedUserId, getSelfQuery.data?.id]
+    );
 
     const listUsersQuery = useQuery(['listUsers'], ({ signal }) =>
         apiClient.listUsers({ signal }).then((res) => res.data.data.users)
@@ -170,8 +172,8 @@ const Users = () => {
             onError: (error: any) => {
                 if (error.response?.status == 403) {
                     addNotification(
-                            'Current password invalid. Password update failed.',
-                            'UpdateUserPasswordCurrentPasswordInvalidError'
+                        'Current password invalid. Password update failed.',
+                        'UpdateUserPasswordCurrentPasswordInvalidError'
                     );
                 } else {
                     addNotification('Password failed to update.', 'UpdateUserPasswordError');

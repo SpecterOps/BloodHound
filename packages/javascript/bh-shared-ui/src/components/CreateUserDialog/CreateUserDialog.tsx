@@ -17,7 +17,7 @@
 import { Dialog, DialogTitle } from '@mui/material';
 import React from 'react';
 import CreateUserForm from '../CreateUserForm';
-import { CreateUserRequest } from "js-client-library";
+import { CreateUserRequest } from 'js-client-library';
 
 const CreateUserDialog: React.FC<{
     open: boolean;

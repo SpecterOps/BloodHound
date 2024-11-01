@@ -32,8 +32,8 @@ import {
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { apiClient} from "../../utils";
-import { CreateUserRequest } from "js-client-library";
+import { apiClient } from '../../utils';
+import { CreateUserRequest } from 'js-client-library';
 
 const CreateUserForm: React.FC<{
     onCancel: () => void;
@@ -178,7 +178,7 @@ const CreateUserForm: React.FC<{
                                             fullWidth
                                             data-testid='create-user-dialog_select-authentication-method'>
                                             <MenuItem value='password'>Username / Password</MenuItem>
-                                            {(listSSOProvidersQuery.data && listSSOProvidersQuery?.data?.length > 0) && (
+                                            {listSSOProvidersQuery.data && listSSOProvidersQuery?.data?.length > 0 && (
                                                 <MenuItem value='sso'>SSO</MenuItem>
                                             )}
                                         </Select>
@@ -270,9 +270,7 @@ const CreateUserForm: React.FC<{
                                                         fullWidth
                                                         data-testid='create-user-dialog_select-sso-provider'>
                                                         {listSSOProvidersQuery?.data?.map((SSOProvider: any) => (
-                                                            <MenuItem
-                                                                value={SSOProvider.id}
-                                                                key={SSOProvider.id}>
+                                                            <MenuItem value={SSOProvider.id} key={SSOProvider.id}>
                                                                 {SSOProvider.name}
                                                             </MenuItem>
                                                         ))}

@@ -33,7 +33,7 @@ import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
-import { SSOProvider, UpdateUserRequest } from "js-client-library";
+import { SSOProvider, UpdateUserRequest } from 'js-client-library';
 
 const UpdateUserForm: React.FC<{
     onCancel: () => void;
@@ -260,7 +260,9 @@ const UpdateUserFormInner: React.FC<{
                                             fullWidth
                                             data-testid='update-user-dialog_select-authentication-method'>
                                             <MenuItem value='password'>Username / Password</MenuItem>
-                                            {(SSOProviders && SSOProviders.length > 0) && <MenuItem value='sso'>SSO</MenuItem>}
+                                            {SSOProviders && SSOProviders.length > 0 && (
+                                                <MenuItem value='sso'>SSO</MenuItem>
+                                            )}
                                         </Select>
                                     </FormControl>
                                 )}

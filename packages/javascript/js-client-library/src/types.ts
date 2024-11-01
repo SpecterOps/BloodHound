@@ -318,7 +318,7 @@ export interface UpdateUserRequest {
     is_disabled?: boolean;
 }
 
-export interface CreateUserRequest extends Omit<UpdateUserRequest, "is_disabled"> {
+export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'> {
     password?: string;
     needsPasswordReset?: boolean;
 }
