@@ -481,14 +481,6 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			} else {
 				userTemplate.SAMLProviderID = null.Int32From(samlProvider.ID)
 			}
-		} else if createUserRequest.SSOProviderID.Valid {
-			if ssoProvider, err := s.db.GetSSOProviderByID(request.Context(), int(createUserRequest.SSOProviderID.Int32)); err != nil {
-				log.Errorf("Error while attempting to fetch SSO provider users: %v", err)
-				api.HandleDatabaseError(request, response, err)
-				return
-			} else {
-				userTemplate.SSOProviderID = null.Int32From(ssoProvider.ID)
-			}
 		}
 
 		if newUser, err := s.db.CreateUser(request.Context(), userTemplate); err != nil {
