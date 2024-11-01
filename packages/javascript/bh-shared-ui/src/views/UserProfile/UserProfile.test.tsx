@@ -99,7 +99,7 @@ describe('UserProfile', () => {
                 name: 'Test Role',
             },
         ],
-        saml_provider_id: null,
+        sso_provider_id: null,
     };
 
     beforeEach(async () => {
