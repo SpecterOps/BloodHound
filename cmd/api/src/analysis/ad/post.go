@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/graphschema/azure"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -40,6 +41,8 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled bool, citrixEnable
 		return &aggregateStats, err
 	} else if adcsStats, err := adAnalysis.PostADCS(ctx, db, groupExpansions, adcsEnabled); err != nil {
 		return &aggregateStats, err
+	} else if ownsStats, err := adAnalysis.PostOwnsAndWriteOwner(ctx, db, groupExpansions); err != nil {
+		return &ownsStats, err
 	} else {
 		aggregateStats.Merge(stats)
 		aggregateStats.Merge(syncLAPSStats)
