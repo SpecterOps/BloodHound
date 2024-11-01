@@ -203,7 +203,7 @@ func TestBloodhoundDB_GetSSOProviderById(t *testing.T) {
 		require.NoError(t, err)
 
 		provider, err := dbInst.GetSSOProviderById(testCtx, newSamlProvider.SSOProviderID.Int32)
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		require.EqualValues(t, newSamlProvider.SSOProviderID.Int32, provider.ID)
 		require.NotNil(t, provider.SAMLProvider)

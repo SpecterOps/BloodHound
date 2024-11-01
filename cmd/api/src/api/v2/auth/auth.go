@@ -482,7 +482,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				return
 			} else {
 				userTemplate.SAMLProviderID = null.Int32From(samlProvider.ID)
-				userTemplate.SSOProviderID = null.Int32From(samlProvider.SSOProviderID.Int32)
+				userTemplate.SSOProviderID = samlProvider.SSOProviderID
 			}
 		} else if createUserRequest.SSOProviderID.Valid {
 			if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), createUserRequest.SSOProviderID.Int32); err != nil {
@@ -574,7 +574,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			} else {
 				// Ensure that the AuthSecret reference is nil and that the SAML provider is set
 				user.SAMLProviderID = null.Int32From(samlProviderID)
-				user.SSOProviderID = null.Int32From(provider.SSOProviderID.Int32)
+				user.SSOProviderID = provider.SSOProviderID
 			}
 		} else if updateUserRequest.SSOProviderID.Valid {
 			if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
