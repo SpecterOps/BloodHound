@@ -415,17 +415,19 @@ func UserAssociations() []string {
 }
 
 type User struct {
-	SAMLProviderID null.Int32    `json:"saml_provider_id,omitempty"`
-	SAMLProvider   *SAMLProvider `json:"-" `
-	AuthSecret     *AuthSecret   `gorm:"constraint:OnDelete:CASCADE;"`
-	AuthTokens     AuthTokens    `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
-	Roles          Roles         `json:"roles" gorm:"many2many:users_roles"`
-	FirstName      null.String   `json:"first_name"`
-	LastName       null.String   `json:"last_name"`
-	EmailAddress   null.String   `json:"email_address"`
-	PrincipalName  string        `json:"principal_name" gorm:"unique;index"`
-	LastLogin      time.Time     `json:"last_login"`
-	IsDisabled     bool          `json:"is_disabled"`
+	// Todo delete all references to this
+	SAMLProviderID null.Int32 `json:"saml_provider_id,omitempty"`
+	// Todo delete all references to this
+	SAMLProvider  *SAMLProvider `json:"-" `
+	AuthSecret    *AuthSecret   `gorm:"constraint:OnDelete:CASCADE;"`
+	AuthTokens    AuthTokens    `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
+	Roles         Roles         `json:"roles" gorm:"many2many:users_roles"`
+	FirstName     null.String   `json:"first_name"`
+	LastName      null.String   `json:"last_name"`
+	EmailAddress  null.String   `json:"email_address"`
+	PrincipalName string        `json:"principal_name" gorm:"unique;index"`
+	LastLogin     time.Time     `json:"last_login"`
+	IsDisabled    bool          `json:"is_disabled"`
 	// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
 	// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.
 	EULAAccepted  bool         `json:"eula_accepted"`

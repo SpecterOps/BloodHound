@@ -42,11 +42,11 @@ import (
 func TestAuth_CreateSSOSession(t *testing.T) {
 	var (
 		gothamSAML = model.SAMLProvider{Serial: model.Serial{ID: 1}}
+		gothamSSO  = model.SSOProvider{SAMLProvider: &gothamSAML, Serial: model.Serial{ID: 1}, Type: model.SessionAuthProviderSAML}
 		username   = "harls"
 		user       = model.User{
-			PrincipalName:  username,
-			SAMLProvider:   &gothamSAML,
-			SAMLProviderID: null.Int32From(1),
+			PrincipalName: username,
+			SSOProviderID: null.Int32From(1),
 		}
 
 		mockCtrl          = gomock.NewController(t)
@@ -96,7 +96,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		principalName, err := gothamSAML.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
-		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSAML)
+		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSSO)
 
 		require.Regexp(t, expectedCookieContent, response.Header().Get(headers.SetCookie.String()))
 		require.Equal(t, "https://example.com/ui", response.Header().Get(headers.Location.String()))
@@ -118,7 +118,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		principalName, err := gothamSAML.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
-		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSAML)
+		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSSO)
 
 		require.Equal(t, http.StatusForbidden, response.Code)
 	})
@@ -140,7 +140,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		principalName, err := gothamSAML.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
-		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSAML)
+		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSSO)
 
 		require.Equal(t, http.StatusForbidden, response.Code)
 	})
@@ -168,7 +168,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		principalName, err := gothamSAML.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
-		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSAML)
+		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSSO)
 
 		require.Equal(t, http.StatusForbidden, response.Code)
 	})
