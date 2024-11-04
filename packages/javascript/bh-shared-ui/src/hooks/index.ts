@@ -35,5 +35,3 @@ export * from './useFileIngest';
 export * from './useSavedQueries';
 
 export * from './useSearch';
-
-export * from './useToggle';
