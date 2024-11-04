@@ -46,7 +46,18 @@ const CreateUserForm: React.FC<{
         handleSubmit,
         setValue,
         formState: { errors },
-    } = useForm<CreateUserRequest>();
+    } = useForm<CreateUserRequest>({
+        defaultValues: {
+            emailAddress: '',
+            principal: '',
+            firstName: '',
+            lastName: '',
+            password: '',
+            needsPasswordReset: false,
+            SSOProviderId: undefined,
+            roles: [1],
+        }
+    });
 
     const [authenticationMethod, setAuthenticationMethod] = React.useState<string>('password');
 
@@ -55,6 +66,7 @@ const CreateUserForm: React.FC<{
             setValue('SSOProviderId', undefined);
         }
     }, [authenticationMethod, setValue]);
+
 
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
         apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)

@@ -287,6 +287,7 @@ const UpdateUserFormInner: React.FC<{
                                                 onBlur={onBlur}
                                                 value={value?.toString()}
                                                 ref={ref}
+                                                defaultValue={''}
                                                 labelId='SSOProviderId-label'
                                                 id='SSOProviderId'
                                                 name='SSOProviderId'
