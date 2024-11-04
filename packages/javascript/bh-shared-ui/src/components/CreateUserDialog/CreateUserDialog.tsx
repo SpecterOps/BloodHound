@@ -27,8 +27,16 @@ const CreateUserDialog: React.FC<{
     isLoading: boolean;
     error: any;
 }> = ({ open, onClose, onExited, onSave, isLoading, error }) => {
-    const handleOnSave = (user: CreateUserRequest) => {
-        onSave(user)
+    const handleOnSave = (user: Omit<CreateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined }) => {
+        let parsedSSOProviderId: number | undefined = undefined;
+        if (user.SSOProviderId) {
+            parsedSSOProviderId = parseInt(user.SSOProviderId);
+        }
+
+        onSave({
+            ...user,
+            SSOProviderId: parsedSSOProviderId,
+        })
             .then(() => {
                 onClose();
             })

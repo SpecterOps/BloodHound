@@ -35,9 +35,11 @@ import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
 import { CreateUserRequest, SSOProvider } from 'js-client-library';
 
+type CreateUserRequestForm = Omit<CreateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
+
 const CreateUserForm: React.FC<{
     onCancel: () => void;
-    onSubmit: (user: CreateUserRequest) => void;
+    onSubmit: (user: CreateUserRequestForm) => void;
     isLoading: boolean;
     error: any;
 }> = ({ onCancel, onSubmit, isLoading, error }) => {
@@ -46,7 +48,7 @@ const CreateUserForm: React.FC<{
         handleSubmit,
         setValue,
         formState: { errors },
-    } = useForm<CreateUserRequest>({
+    } = useForm<CreateUserRequestForm>({
         defaultValues: {
             emailAddress: '',
             principal: '',
@@ -54,19 +56,18 @@ const CreateUserForm: React.FC<{
             lastName: '',
             password: '',
             needsPasswordReset: false,
-            SSOProviderId: undefined,
             roles: [1],
-        }
+            SSOProviderId: '',
+        },
     });
 
     const [authenticationMethod, setAuthenticationMethod] = React.useState<string>('password');
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
-            setValue('SSOProviderId', undefined);
+            setValue('SSOProviderId', '');
         }
     }, [authenticationMethod, setValue]);
-
 
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
         apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)
@@ -273,7 +274,7 @@ const CreateUserForm: React.FC<{
                                                         }
                                                         defaultValue={''}
                                                         onBlur={onBlur}
-                                                        value={value?.toString()}
+                                                        value={value}
                                                         ref={ref}
                                                         labelId='SSOProviderId-label'
                                                         id='SSOProviderId'
