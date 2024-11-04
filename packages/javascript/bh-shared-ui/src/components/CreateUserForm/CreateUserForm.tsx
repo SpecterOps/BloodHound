@@ -179,7 +179,7 @@ const CreateUserForm: React.FC<{
                                             data-testid='create-user-dialog_select-authentication-method'>
                                             <MenuItem value='password'>Username / Password</MenuItem>
                                             {listSSOProvidersQuery.data && listSSOProvidersQuery.data?.length > 0 && (
-                                                <MenuItem value='sso'>SSO</MenuItem>
+                                                <MenuItem value='sso'>Single sign-on (SSO)</MenuItem>
                                             )}
                                         </Select>
                                     </FormControl>
