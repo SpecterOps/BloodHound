@@ -293,7 +293,7 @@ const UpdateUserFormInner: React.FC<{
                                                 variant='standard'
                                                 fullWidth
                                                 data-testid='update-user-dialog_select-sso-provider'>
-                                                {SSOProviders?.map((SSOProvider: any) => (
+                                                {SSOProviders?.map((SSOProvider: SSOProvider) => (
                                                     <MenuItem value={SSOProvider.id.toString()} key={SSOProvider.id}>
                                                         {SSOProvider.name}
                                                     </MenuItem>

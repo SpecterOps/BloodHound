@@ -17,7 +17,7 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Paper, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import {
     ConfirmationDialog,
@@ -60,10 +60,7 @@ const Users = () => {
         apiClient.getSelf({ signal }).then((res) => res.data?.data)
     );
 
-    const hasSelectedSelf = useMemo(
-        () => getSelfQuery.data?.id === selectedUserId!,
-        [selectedUserId, getSelfQuery.data?.id]
-    );
+    const hasSelectedSelf = getSelfQuery.data?.id === selectedUserId!;
 
     const listUsersQuery = useQuery(['listUsers'], ({ signal }) =>
         apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)

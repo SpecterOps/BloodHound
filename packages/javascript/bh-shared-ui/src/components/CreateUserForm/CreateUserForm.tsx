@@ -269,8 +269,8 @@ const CreateUserForm: React.FC<{
                                                         fullWidth
                                                         data-testid='create-user-dialog_select-sso-provider'>
                                                         {listSSOProvidersQuery.data?.map((SSOProvider: SSOProvider) => (
-                                                            <MenuItem value={SSOProvider?.id} key={SSOProvider?.id}>
-                                                                {SSOProvider?.name}
+                                                            <MenuItem value={SSOProvider.id} key={SSOProvider.id}>
+                                                                {SSOProvider.name}
                                                             </MenuItem>
                                                         ))}
                                                     </Select>
