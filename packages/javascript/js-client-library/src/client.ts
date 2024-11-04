@@ -35,6 +35,7 @@ import {
     StartFileIngestResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
+    GetFindingTrendsResponse,
 } from './responses';
 import * as types from './types';
 
@@ -533,6 +534,22 @@ class BHEAPIClient {
                 options
             )
         );
+
+    getFindingTrends = <T = any, K = string>(
+        domainId: string,
+        from?: Date,
+        to?: Date,
+        sortBy?: string,
+        options?: types.RequestOptions
+    ) =>
+        this.baseClient.get<GetFindingTrendsResponse<T, K>>(`/api/v2/domains/${domainId}/finding-trends`, {
+            params: {
+                start: from?.toISOString(),
+                end: to?.toISOString(),
+                sort_by: sortBy,
+            },
+            ...options,
+        });
 
     changeRiskAcceptance = (
         attackPathId: string,
