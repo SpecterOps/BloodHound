@@ -104,7 +104,8 @@ type PostureFindingTrend = {
     finding: string;
     start_count: number;
     end_count: number;
-    severity: string;
+    severity: number;
+    severity_label: string;
 };
 
 export type PostureFindingTrendsResponse = { findings: PostureFindingTrend[]; total_start: number; total_end: number };
