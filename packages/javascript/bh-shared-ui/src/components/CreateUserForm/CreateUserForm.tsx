@@ -259,6 +259,7 @@ const CreateUserForm: React.FC<{
                                                         onChange={
                                                             onChange as (event: SelectChangeEvent<string>) => void
                                                         }
+                                                        defaultValue={''}
                                                         onBlur={onBlur}
                                                         value={value?.toString()}
                                                         ref={ref}
