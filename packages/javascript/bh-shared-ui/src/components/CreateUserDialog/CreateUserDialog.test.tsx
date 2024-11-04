@@ -261,7 +261,7 @@ describe('CreateUserDialog', () => {
 
         await user.click(screen.getByLabelText('SSO Provider'));
 
-        for (const SSOProvider of testSSOProviders.data) {
+        for (const SSOProvider of testSSOProviders) {
             expect(await screen.findByRole('option', { name: SSOProvider.name })).toBeInTheDocument();
         }
     });
@@ -294,7 +294,7 @@ describe('CreateUserDialog', () => {
         await user.click(await screen.findByRole('option', { name: 'Single sign-on (SSO)' }));
 
         await user.click(screen.getByLabelText('SSO Provider'));
-        await user.click(await screen.findByRole('option', { name: testSSOProviders.data[0].name }));
+        await user.click(await screen.findByRole('option', { name: testSSOProviders[0].name }));
 
         await user.click(await screen.findByLabelText('Authentication Method'));
         await user.click(await screen.findByRole('option', { name: 'Username / Password' }));
