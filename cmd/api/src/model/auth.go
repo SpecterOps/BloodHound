@@ -470,9 +470,9 @@ type User struct {
 	IsDisabled     bool          `json:"is_disabled"`
 	// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
 	// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.
-	EULAAccepted bool `json:"eula_accepted"`
-
-	SSOProviderID null.Int32 `json:"sso_provider_id,omitempty"`
+	EULAAccepted  bool         `json:"eula_accepted"`
+	SSOProvider   *SSOProvider `json:"-" `
+	SSOProviderID null.Int32   `json:"sso_provider_id,omitempty"`
 
 	Unique
 }
@@ -486,6 +486,7 @@ func (s *User) AuditData() AuditData {
 		"email_address":    s.EmailAddress.ValueOrZero(),
 		"roles":            s.Roles.IDs(),
 		"saml_provider_id": s.SAMLProviderID.ValueOrZero(),
+		"sso_provider_id":  s.SSOProviderID.ValueOrZero(),
 		"is_disabled":      s.IsDisabled,
 		"eula_accepted":    s.EULAAccepted,
 	}
@@ -562,6 +563,7 @@ func (s Users) GetValidFilterPredicatesAsStrings(column string) ([]string, error
 func UserSessionAssociations() []string {
 	return []string{
 		"User.SAMLProvider",
+		"User.SSOProvider",
 		"User.AuthSecret",
 		"User.AuthTokens",
 		"User.Roles.Permissions",
