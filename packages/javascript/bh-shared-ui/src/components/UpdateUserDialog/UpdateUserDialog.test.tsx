@@ -19,7 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from '../../test-utils';
 import UpdateUserDialog from './UpdateUserDialog';
-import { SSOProvider } from 'js-client-library';
+import { ListSSOProvidersResponse, SSOProvider } from 'js-client-library';
 
 const testRoles = [
     { id: 1, name: 'Role 1' },
@@ -150,7 +150,7 @@ const server = setupServer(
             })
         );
     }),
-    rest.get('/api/v2/sso-providers', (req, res, ctx) => {
+    rest.get<any, any, ListSSOProvidersResponse>('/api/v2/sso-providers', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: testSSOProviders,

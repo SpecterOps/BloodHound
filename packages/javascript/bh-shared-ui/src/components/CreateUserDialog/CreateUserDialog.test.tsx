@@ -19,6 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from '../../test-utils';
 import CreateUserDialog from './CreateUserDialog';
+import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 
 const testRoles = [
     { id: 1, name: 'Role 1' },
@@ -27,11 +28,75 @@ const testRoles = [
     { id: 4, name: 'Role 4' },
 ];
 
-const testSSOProviders = [
-    { id: 1, name: 'saml-provider-1' },
-    { id: 2, name: 'saml-provider-2' },
-    { id: 3, name: 'saml-provider-3' },
-    { id: 4, name: 'saml-provider-4' },
+const testSSOProviders: SSOProvider[] = [
+    {
+        id: 1,
+        name: 'saml-provider-1',
+        slug: 'saml-provider-1',
+        type: 'SAML',
+        details: {
+            idp_issuer_uri: '',
+            idp_sso_uri: '',
+            principal_attribute_mappings: null,
+            sp_issuer_uri: '',
+            sp_sso_uri: '',
+            sp_metadata_uri: '',
+            sp_acs_uri: '',
+        } as SAMLProviderInfo,
+        created_at: '',
+        updated_at: '',
+    },
+    {
+        id: 2,
+        name: 'saml-provider-2',
+        slug: 'saml-provider-2',
+        type: 'SAML',
+        details: {
+            idp_issuer_uri: '',
+            idp_sso_uri: '',
+            principal_attribute_mappings: null,
+            sp_issuer_uri: '',
+            sp_sso_uri: '',
+            sp_metadata_uri: '',
+            sp_acs_uri: '',
+        } as SAMLProviderInfo,
+        created_at: '',
+        updated_at: '',
+    },
+    {
+        id: 3,
+        name: 'saml-provider-3',
+        slug: 'saml-provider-3',
+        type: 'SAML',
+        details: {
+            idp_issuer_uri: '',
+            idp_sso_uri: '',
+            principal_attribute_mappings: null,
+            sp_issuer_uri: '',
+            sp_sso_uri: '',
+            sp_metadata_uri: '',
+            sp_acs_uri: '',
+        } as SAMLProviderInfo,
+        created_at: '',
+        updated_at: '',
+    },
+    {
+        id: 4,
+        name: 'saml-provider-4',
+        slug: 'saml-provider-4',
+        type: 'SAML',
+        details: {
+            idp_issuer_uri: '',
+            idp_sso_uri: '',
+            principal_attribute_mappings: null,
+            sp_issuer_uri: '',
+            sp_sso_uri: '',
+            sp_metadata_uri: '',
+            sp_acs_uri: '',
+        } as SAMLProviderInfo,
+        created_at: '',
+        updated_at: '',
+    },
 ];
 
 const server = setupServer(
@@ -44,7 +109,7 @@ const server = setupServer(
             })
         );
     }),
-    rest.get('/api/v2/sso-providers', (req, res, ctx) => {
+    rest.get<any, any, ListSSOProvidersResponse>('/api/v2/sso-providers', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: testSSOProviders,
@@ -196,7 +261,7 @@ describe('CreateUserDialog', () => {
 
         await user.click(screen.getByLabelText('SSO Provider'));
 
-        for (const SSOProvider of testSSOProviders) {
+        for (const SSOProvider of testSSOProviders.data) {
             expect(await screen.findByRole('option', { name: SSOProvider.name })).toBeInTheDocument();
         }
     });
@@ -229,7 +294,7 @@ describe('CreateUserDialog', () => {
         await user.click(await screen.findByRole('option', { name: 'Single sign-on (SSO)' }));
 
         await user.click(screen.getByLabelText('SSO Provider'));
-        await user.click(await screen.findByRole('option', { name: testSSOProviders[0].name }));
+        await user.click(await screen.findByRole('option', { name: testSSOProviders.data[0].name }));
 
         await user.click(await screen.findByLabelText('Authentication Method'));
         await user.click(await screen.findByRole('option', { name: 'Username / Password' }));

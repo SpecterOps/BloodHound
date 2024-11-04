@@ -19,7 +19,7 @@ import { setupServer } from 'msw/node';
 import { render, screen, within } from '../../test-utils';
 import Users from '.';
 import userEvent from '@testing-library/user-event';
-import { SSOProvider } from 'js-client-library';
+import { ListSSOProvidersResponse, SSOProvider } from 'js-client-library';
 
 const testAuthenticatedUser = {
     sso_provider_id: null,
@@ -166,7 +166,7 @@ const server = setupServer(
             })
         );
     }),
-    rest.get('/api/v2/sso-providers', (req, res, ctx) => {
+    rest.get<any, any, ListSSOProvidersResponse>('/api/v2/sso-providers', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: testSSOProviders,
