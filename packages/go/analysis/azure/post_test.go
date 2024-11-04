@@ -18,10 +18,11 @@ package azure_test
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"testing"
 
 	"github.com/bloodhoundad/azurehound/v2/constants"
+	"github.com/specterops/bloodhound/analysis/azure"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	graph_mocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/dawgs/util/size"
@@ -29,8 +30,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-
-	"github.com/specterops/bloodhound/analysis/azure"
 )
 
 var (

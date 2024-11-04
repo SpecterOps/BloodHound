@@ -75,6 +75,30 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 	}
 }
 
+func (s ManagementResource) SAMLLoginRedirect(response http.ResponseWriter, request *http.Request) {
+	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableServiceProviderName]
+
+	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		bheCtx := ctx.FromRequest(request)
+		redirectURL := api.URLJoinPath(*bheCtx.Host, fmt.Sprintf("/api/v2/sso/%s/login", ssoProvider.Slug))
+		http.Redirect(response, request, redirectURL.String(), http.StatusFound)
+	}
+}
+
+func (s ManagementResource) SAMLCallbackRedirect(response http.ResponseWriter, request *http.Request) {
+	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableServiceProviderName]
+
+	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		bheCtx := ctx.FromRequest(request)
+		redirectURL := api.URLJoinPath(*bheCtx.Host, fmt.Sprintf("/api/v2/sso/%s/callback", ssoProvider.Slug))
+		http.Redirect(response, request, redirectURL.String(), http.StatusTemporaryRedirect)
+	}
+}
+
 func (s ManagementResource) ListSAMLSignOnEndpoints(response http.ResponseWriter, request *http.Request) {
 	if samlProviders, err := bhsaml.GetAllSAMLProviders(s.db, request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)

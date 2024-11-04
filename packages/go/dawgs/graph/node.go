@@ -18,11 +18,11 @@ package graph
 
 import (
 	"encoding/json"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"math"
 	"sync"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 )
 

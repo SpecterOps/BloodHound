@@ -17,9 +17,10 @@
 package graph
 
 import (
+	"sync"
+
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/util/size"
-	"sync"
 )
 
 type KindBitmaps map[string]cardinality.Duplex[uint64]

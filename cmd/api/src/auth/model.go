@@ -35,6 +35,8 @@ import (
 
 const (
 	ProviderTypeSecret = "secret"
+	ProviderTypeSAML   = "saml"
+	ProviderTypeOIDC   = "oidc"
 
 	HMAC_SHA2_256 = "hmac-sha2-256"
 )

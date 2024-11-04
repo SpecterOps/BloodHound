@@ -17,10 +17,11 @@
 package ein_test
 
 import (
+	"testing"
+
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {

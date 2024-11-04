@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { OptionsObject } from 'notistack';
 import { Notification } from './model';
 
 export enum ActionType {
@@ -27,7 +28,7 @@ export type Dismiss = { type: ActionType.Dismiss; key?: string };
 export type Remove = { type: ActionType.Remove; key?: string };
 export type NotificationAction = Add | Dismiss | Remove;
 
-export const addNotification = (notification: string, key?: string, options: any = {}): Add => {
+export const addNotification = (notification: string, key?: string, options: OptionsObject = {}): Add => {
     return {
         type: ActionType.Add,
         value: {

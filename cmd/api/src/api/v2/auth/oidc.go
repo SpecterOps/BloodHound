@@ -62,14 +62,16 @@ func getRedirectURL(request *http.Request, provider model.SSOProvider) string {
 	return fmt.Sprintf("%s/api/v2/sso/%s/callback", hostUrl.String(), provider.Slug)
 }
 
-func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider, oidcProvider model.OIDCProvider) {
-	if state, err := config.GenerateRandomBase64String(77); err != nil {
+func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
+	if ssoProvider.OIDCProvider == nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+	} else if state, err := config.GenerateRandomBase64String(77); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-	} else if provider, err := oidc.NewProvider(request.Context(), oidcProvider.Issuer); err != nil {
+	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
 		conf := &oauth2.Config{
-			ClientID:    oidcProvider.ClientID,
+			ClientID:    ssoProvider.OIDCProvider.ClientID,
 			Endpoint:    provider.Endpoint(),
 			RedirectURL: getRedirectURL(request, ssoProvider),
 		}
@@ -92,14 +94,16 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 	}
 }
 
-func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider, oidcProvider model.OIDCProvider) {
+func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	var (
 		queryParams = request.URL.Query()
 		state       = queryParams[api.QueryParameterState]
 		code        = queryParams[api.QueryParameterCode]
 	)
 
-	if len(code) == 0 {
+	if ssoProvider.OIDCProvider == nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+	} else if len(code) == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "missing code", request), response)
 	} else if pkceVerifier, err := request.Cookie(api.AuthPKCECookieName); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "missing pkce verifier", request), response)
@@ -107,13 +111,13 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "missing state", request), response)
 	} else if stateCookie, err := request.Cookie(api.AuthStateCookieName); err != nil || stateCookie.Value != state[0] {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "bad state", request), response)
-	} else if provider, err := oidc.NewProvider(request.Context(), oidcProvider.Issuer); err != nil {
+	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
 		var (
-			oidcVerifier = provider.Verifier(&oidc.Config{ClientID: oidcProvider.ClientID})
+			oidcVerifier = provider.Verifier(&oidc.Config{ClientID: ssoProvider.OIDCProvider.ClientID})
 			oauth2Conf   = &oauth2.Config{
-				ClientID:    oidcProvider.ClientID,
+				ClientID:    ssoProvider.OIDCProvider.ClientID,
 				Endpoint:    provider.Endpoint(),
 				RedirectURL: getRedirectURL(request, ssoProvider), // Required as verification check
 			}
@@ -136,7 +140,7 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 			if err := idToken.Claims(&claims); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 			} else {
-				s.authenticator.CreateSSOSession(request, response, claims.Email, oidcProvider)
+				s.authenticator.CreateSSOSession(request, response, claims.Email, *ssoProvider.OIDCProvider)
 			}
 		}
 	}

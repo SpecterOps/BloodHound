@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -107,6 +108,14 @@ func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 		require.NoError(t, err)
 
 		provider2, err := dbInst.CreateSSOProvider(testCtx, "Second Provider", model.SessionAuthProviderOIDC)
+		require.NoError(t, err)
+
+		// Enable the OIDC feature flag
+		oidcFlag, err := dbInst.GetFlagByKey(testCtx, appcfg.FeatureOIDCSupport)
+		require.NoError(t, err)
+		oidcFlag.Enabled = true
+
+		err = dbInst.SetFlag(testCtx, oidcFlag)
 		require.NoError(t, err)
 
 		// Test default ordering (by created_at)
