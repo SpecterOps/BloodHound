@@ -48,7 +48,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 			).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 				for rel := range cursor.Chan() {
 
-					// If ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1), check if the target node is a computer or derived object (MSA or GMSA)
+					// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
 					if anyEnforced {
 						if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
 							continue
@@ -68,7 +68,9 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 									Kind:          ad.Owns,
 									RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): rel.Properties.GetOrDefault(ad.IsInherited.String(), false)},
 								}
+
 							} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
+								// Check if the target node is a computer or derived object (MSA or GMSA)
 								continue
 
 							} else if (isComputerDerived && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
