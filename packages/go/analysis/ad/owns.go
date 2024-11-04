@@ -19,6 +19,7 @@ package ad
 import (
 	"context"
 	"fmt"
+
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -29,13 +30,15 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 )
 
-func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
+func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (analysis.AtomicPostProcessingStats, error) {
 	if dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching dsheuristics values for postowner: %w", err)
+		return analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
 	} else if adminGroupIds, err := FetchAdminGroupIds(ctx, db, groupExpansions); err != nil {
-		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching admin group ids values for postowner: %w", err)
+		return analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching admin group ids values for postownsandwriteowner: %w", err)
 	} else {
-		operation := analysis.NewPostRelationshipOperation(ctx, db, "PostOwnerWriteOwner")
+		operation := analysis.NewPostRelationshipOperation(ctx, db, "PostOwnsAndWriteOwner")
+
+		// Get all source nodes of Owns ACEs (i.e., owning principals) where the target node has no ACEs granting explicit permissions to OWNER RIGHTS
 		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 			return tx.Relationships().Filter(
 				query.And(
@@ -44,6 +47,8 @@ func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.Pa
 				),
 			).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 				for rel := range cursor.Chan() {
+
+					// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
 					if anyEnforced {
 						if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
 							continue
@@ -55,6 +60,7 @@ func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.Pa
 								enforced = false
 							}
 
+							// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the Owns edge
 							if !enforced {
 								outC <- analysis.CreatePostRelationshipJob{
 									FromID:        rel.StartID,
@@ -62,9 +68,14 @@ func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.Pa
 									Kind:          ad.Owns,
 									RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): rel.Properties.GetOrDefault(ad.IsInherited.String(), false)},
 								}
+
 							} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
+								// Check if the target node is a computer or derived object (MSA or GMSA)
 								continue
+
 							} else if (isComputerDerived && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
+								// If the target node is a computer or derived object, add the Owns edge if the owning principal is a member of DA/EA (or is either group's SID)
+								// If the target node is NOT a computer or derived object, add the Owns edge
 								outC <- analysis.CreatePostRelationshipJob{
 									FromID:        rel.StartID,
 									ToID:          rel.EndID,
@@ -74,6 +85,7 @@ func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.Pa
 							}
 						}
 					} else {
+						// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1), we can skip this analysis and just add the Owns relationship
 						outC <- analysis.CreatePostRelationshipJob{
 							FromID:        rel.StartID,
 							ToID:          rel.EndID,
@@ -87,6 +99,7 @@ func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.Pa
 			})
 		})
 
+		// Get all source nodes of WriteOwner ACEs where the target node has no ACEs granting explicit permissions to OWNER RIGHTS
 		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 			return tx.Relationships().Filter(
 				query.And(
@@ -95,6 +108,8 @@ func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.Pa
 				),
 			).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 				for rel := range cursor.Chan() {
+
+					// If any domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1), check if the target node is a computer or derived object (MSA or GMSA)
 					if anyEnforced {
 						if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
 							continue
@@ -105,7 +120,6 @@ func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.Pa
 							if !ok {
 								enforced = false
 							}
-
 							if !enforced {
 								outC <- analysis.CreatePostRelationshipJob{
 									FromID:        rel.StartID,
@@ -115,7 +129,9 @@ func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.Pa
 								}
 							} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
 								continue
+
 							} else if !isComputerDerived {
+								// If the target node is NOT a computer or derived object, add the WriteOwner edge
 								outC <- analysis.CreatePostRelationshipJob{
 									FromID:        rel.StartID,
 									ToID:          rel.EndID,
@@ -125,6 +141,7 @@ func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.Pa
 							}
 						}
 					} else {
+						// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1), we can skip this analysis and just add the WriteOwner relationship
 						outC <- analysis.CreatePostRelationshipJob{
 							FromID:        rel.StartID,
 							ToID:          rel.EndID,
@@ -138,7 +155,7 @@ func PostOwner(ctx context.Context, db graph.Database, groupExpansions impact.Pa
 			})
 		})
 
-		return &operation.Stats, operation.Done()
+		return operation.Stats, operation.Done()
 	}
 }
 
