@@ -207,10 +207,11 @@ type WriteOwnerLimitedCache struct {
 
 func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []IngestibleRelationship {
 	var (
-		converted                            = make([]IngestibleRelationship, 0)
-		potentialWriteOwnerLimitedPrincipals = make([]WriteOwnerLimitedCache, 0)
-		ownerLimitedPrivs                    = make([]string, 0)
 		ownerPrincipalInfo                   IngestibleSource
+		ownerLimitedPrivs                    = make([]string, 0)
+		writeOwnerLimitedPrivs               = make([]string, 0)
+		potentialWriteOwnerLimitedPrincipals = make([]WriteOwnerLimitedCache, 0)
+		converted                            = make([]IngestibleRelationship, 0)
 	)
 
 	for _, ace := range aces {
@@ -224,13 +225,26 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 		} else if !ad.IsACLKind(rightKind) {
 			slog.Error(fmt.Sprintf("Non-ace edge type given to process aces: %s", ace.RightName))
 			continue
+
 		} else if rightKind.Is(ad.Owns) || rightKind.Is(ad.OwnsRaw) {
+			// Get Owner SID from ACE granting Owns permission
 			ownerPrincipalInfo = ace.GetCachedValue().SourceData
+
 		} else if strings.HasSuffix(ace.PrincipalSID, "S-1-3-4") {
+			// Cache ACEs where the OWNER RIGHTS SID is granted explicit abusable permissions
 			ownerLimitedPrivs = append(ownerLimitedPrivs, rightKind.String())
+
+			if ace.IsInherited {
+				// If the ACE is inherited, it is abusable by principals with WriteOwner permission
+				writeOwnerLimitedPrivs = append(writeOwnerLimitedPrivs, rightKind.String())
+			}
+
 		} else if rightKind.Is(ad.WriteOwner) || rightKind.Is(ad.WriteOwnerRaw) {
+			// Cache ACEs where WriteOwner permission is granted
 			potentialWriteOwnerLimitedPrincipals = append(potentialWriteOwnerLimitedPrincipals, ace.GetCachedValue())
+
 		} else {
+			// Create edges for all other ACEs
 			converted = append(converted, NewIngestibleRelationship(
 				IngestibleSource{
 					Source:     ace.PrincipalSID,
@@ -249,7 +263,11 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 	}
 
 	//TODO: When inheritance hashes are added, add them to these aces
+
+	// Process permissions granted to the OWNER RIGHTS SID if any were found
 	if len(ownerLimitedPrivs) > 0 {
+
+		// For every principal granted WriteOwner permission, create a WriteOwnerLimitedRights edge
 		for _, limitedPrincipal := range potentialWriteOwnerLimitedPrincipals {
 			converted = append(converted, NewIngestibleRelationship(
 				limitedPrincipal.SourceData,
@@ -257,13 +275,16 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 					Target:     targetID,
 					TargetType: targetType,
 				},
+
+				// Create an edge property containing an array of all INHERITED abusable permissions granted to the OWNER RIGHTS SID
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): limitedPrincipal.IsInherited, "privileges": ownerLimitedPrivs},
+					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): limitedPrincipal.IsInherited, "privileges": writeOwnerLimitedPrivs},
 					RelType:  ad.WriteOwnerLimitedRights,
 				},
 			))
 		}
 
+		// Create an OwnsLimitedRights edge containing all abusable permissions granted to the OWNER RIGHTS SID
 		if ownerPrincipalInfo.Source != "" {
 			converted = append(converted, NewIngestibleRelationship(
 				ownerPrincipalInfo,
@@ -271,6 +292,8 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 					Target:     targetID,
 					TargetType: targetType,
 				},
+
+				// Owns is never inherited
 				IngestibleRel{
 					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): false, "privileges": ownerLimitedPrivs},
 					RelType:  ad.OwnsLimitedRights,
@@ -278,6 +301,9 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 			))
 		}
 	} else {
+		// If no permissions in the ACL are granted to the OWNER RIGHTS SID
+
+		// Create a non-traversable OwnsRaw edge for post-processing
 		if ownerPrincipalInfo.Source != "" {
 			converted = append(converted, NewIngestibleRelationship(
 				ownerPrincipalInfo,
@@ -285,6 +311,8 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 					Target:     targetID,
 					TargetType: targetType,
 				},
+
+				// Owns is never inherited
 				IngestibleRel{
 					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): false},
 					RelType:  ad.OwnsRaw,
@@ -292,6 +320,7 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 			))
 		}
 
+		// Create a non-traversable WriteOwnerRaw edge for post-processing
 		for _, limitedPrincipal := range potentialWriteOwnerLimitedPrincipals {
 			converted = append(converted, NewIngestibleRelationship(
 				limitedPrincipal.SourceData,
