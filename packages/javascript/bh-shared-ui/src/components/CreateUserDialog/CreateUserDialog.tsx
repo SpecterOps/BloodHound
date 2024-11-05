@@ -16,7 +16,7 @@
 
 import { Dialog, DialogTitle } from '@mui/material';
 import React from 'react';
-import CreateUserForm from '../CreateUserForm';
+import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
 import { CreateUserRequest } from 'js-client-library';
 
 const CreateUserDialog: React.FC<{
@@ -27,7 +27,7 @@ const CreateUserDialog: React.FC<{
     isLoading: boolean;
     error: any;
 }> = ({ open, onClose, onExited, onSave, isLoading, error }) => {
-    const handleOnSave = (user: Omit<CreateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined }) => {
+    const handleOnSave = (user: CreateUserRequestForm) => {
         let parsedSSOProviderId: number | undefined = undefined;
         if (user.SSOProviderId) {
             parsedSSOProviderId = parseInt(user.SSOProviderId);

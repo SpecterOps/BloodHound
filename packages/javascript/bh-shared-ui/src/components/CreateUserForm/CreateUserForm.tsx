@@ -35,7 +35,7 @@ import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
 import { CreateUserRequest, SSOProvider } from 'js-client-library';
 
-type CreateUserRequestForm = Omit<CreateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
+export type CreateUserRequestForm = Omit<CreateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 
 const CreateUserForm: React.FC<{
     onCancel: () => void;
