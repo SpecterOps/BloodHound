@@ -35,9 +35,11 @@ import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
 import { SSOProvider, UpdateUserRequest } from 'js-client-library';
 
+export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
+
 const UpdateUserForm: React.FC<{
     onCancel: () => void;
-    onSubmit: (user: UpdateUserRequest) => void;
+    onSubmit: (user: UpdateUserRequestForm) => void;
     userId: string;
     isLoading: boolean;
     error: any;
@@ -124,8 +126,8 @@ const UpdateUserForm: React.FC<{
 
 const UpdateUserFormInner: React.FC<{
     onCancel: () => void;
-    onSubmit: (user: UpdateUserRequest) => void;
-    initialData: UpdateUserRequest;
+    onSubmit: (user: UpdateUserRequestForm) => void;
+    initialData: UpdateUserRequestForm;
     roles: any[];
     SSOProviders?: SSOProvider[];
     isLoading: boolean;
@@ -137,7 +139,7 @@ const UpdateUserFormInner: React.FC<{
         setValue,
         formState: { errors },
         watch,
-    } = useForm({
+    } = useForm<UpdateUserRequestForm & { authenticationMethod: 'sso' | 'password' }>({
         defaultValues: {
             ...initialData,
             authenticationMethod: initialData.SSOProviderId ? 'sso' : 'password',

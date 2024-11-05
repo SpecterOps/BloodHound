@@ -34,7 +34,6 @@ import {
 import { apiClient, LuxonFormat } from '../../utils';
 import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest } from 'js-client-library';
 import find from 'lodash/find';
-import isEmpty from 'lodash/isEmpty';
 import { useToggle } from '../../hooks';
 import { User } from '../../hooks/useUsers';
 import UserActionsMenu from '../../components/UserActionsMenu';
@@ -85,7 +84,7 @@ const Users = () => {
                 const selectedUser = find(listUsersQuery.data, (user) => user.id === selectedUserId);
                 // if the user previously had a SSO Provider ID but does not have one after the update then show the
                 // password reset dialog with the "Force Password Reset?" input defaulted to checked
-                if (selectedUser?.sso_provider_id !== null && isEmpty(updatedUser.SSOProviderId)) {
+                if (selectedUser?.sso_provider_id !== null && !updatedUser.SSOProviderId) {
                     setNeedsPasswordReset(true);
                     toggleResetUserPasswordDialog();
                 }

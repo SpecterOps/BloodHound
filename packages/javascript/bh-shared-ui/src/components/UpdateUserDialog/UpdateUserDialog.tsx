@@ -16,7 +16,7 @@
 
 import { Dialog, DialogTitle } from '@mui/material';
 import React from 'react';
-import UpdateUserForm from '../UpdateUserForm';
+import UpdateUserForm, { UpdateUserRequestForm } from '../UpdateUserForm';
 import { UpdateUserRequest } from 'js-client-library';
 
 const UpdateUserDialog: React.FC<{
@@ -28,8 +28,16 @@ const UpdateUserDialog: React.FC<{
     isLoading: boolean;
     error: any;
 }> = ({ open, onClose, onExited, userId, onSave, isLoading, error }) => {
-    const handleOnSave = (user: UpdateUserRequest) => {
-        onSave(user)
+    const handleOnSave = (user: UpdateUserRequestForm) => {
+        let parsedSSOProviderId: number | undefined = undefined;
+        if (user.SSOProviderId) {
+            parsedSSOProviderId = parseInt(user.SSOProviderId);
+        }
+
+        onSave({
+            ...user,
+            SSOProviderId: parsedSSOProviderId,
+        })
             .then(() => {
                 onClose();
             })
