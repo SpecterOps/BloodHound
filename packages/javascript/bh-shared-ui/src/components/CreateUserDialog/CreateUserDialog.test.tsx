@@ -251,7 +251,7 @@ describe('CreateUserDialog', () => {
 
         await user.click(await screen.findByLabelText('Authentication Method'));
 
-        await user.click(await screen.findByRole('option', { name: 'Single sign-on (SSO)' }));
+        await user.click(await screen.findByRole('option', { name: 'Single Sign-On (SSO)' }));
 
         expect(screen.queryByLabelText('Initial Password')).not.toBeInTheDocument();
 
@@ -291,7 +291,7 @@ describe('CreateUserDialog', () => {
         await user.type(screen.getByLabelText('Last Name'), testUser.lastName);
 
         await user.click(await screen.findByLabelText('Authentication Method'));
-        await user.click(await screen.findByRole('option', { name: 'Single sign-on (SSO)' }));
+        await user.click(await screen.findByRole('option', { name: 'Single Sign-On (SSO)' }));
 
         await user.click(screen.getByLabelText('SSO Provider'));
         await user.click(await screen.findByRole('option', { name: testSSOProviders[0].name }));
