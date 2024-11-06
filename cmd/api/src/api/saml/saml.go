@@ -147,9 +147,9 @@ type ProviderResource struct {
 	cfg                   config.Configuration
 	authenticator         api.Authenticator
 	serviceProvider       bhsaml.ServiceProvider
-	requestTracker        samlsp.RequestTracker
+	RequestTracker        samlsp.RequestTracker
 	bindingType           string
-	responseBindingType   string
+	ResponseBindingType   string
 	writeAPIErrorResponse WriteAPIErrorResponse
 }
 
@@ -159,18 +159,18 @@ func NewProviderResource(db database.Database, cfg config.Configuration, service
 		cfg:                   cfg,
 		authenticator:         api.NewAuthenticator(cfg, db, database.NewContextInitializer(db)),
 		serviceProvider:       serviceProvider,
-		requestTracker:        bhsaml.NewCookieRequestTracker(serviceProvider),
+		RequestTracker:        bhsaml.NewCookieRequestTracker(serviceProvider),
 		writeAPIErrorResponse: writeAPIErrorResponse,
 
 		// This is intentionally left empty - see SAML binding types
 		bindingType:         "",
-		responseBindingType: saml.HTTPPostBinding,
+		ResponseBindingType: saml.HTTPPostBinding,
 	}
 }
 
 func (s ProviderResource) getTrackedRequestIDs(request *http.Request) []string {
 	var (
-		trackedRequests = s.requestTracker.GetTrackedRequests(request)
+		trackedRequests = s.RequestTracker.GetTrackedRequests(request)
 		requestIDs      = make([]string, len(trackedRequests))
 	)
 
@@ -212,7 +212,7 @@ func (s ProviderResource) emailAttributeNames() []string {
 	return []string{bhsaml.ObjectIDEmail, bhsaml.XMLSOAPClaimsEmailAddress}
 }
 
-func (s ProviderResource) getSAMLUserPrincipalNameFromAssertion(assertion *saml.Assertion) (string, error) {
+func (s ProviderResource) GetSAMLUserPrincipalNameFromAssertion(assertion *saml.Assertion) (string, error) {
 	for _, attrStmt := range assertion.AttributeStatements {
 		for _, attr := range attrStmt.Attributes {
 			for _, value := range attr.Values {
@@ -252,7 +252,7 @@ func (s ProviderResource) ServeHTTP(response http.ResponseWriter, request *http.
 	}
 }
 
-func (s ProviderResource) bindingTypeAndLocation() (string, string) {
+func (s ProviderResource) BindingTypeAndLocation() (string, string) {
 	var binding, bindingLocation string
 
 	if s.bindingType != "" {
@@ -273,15 +273,15 @@ func (s ProviderResource) bindingTypeAndLocation() (string, string) {
 
 // HandleStartAuthFlow is called to start the SAML authentication process.
 func (s ProviderResource) serveStartAuthFlow(response http.ResponseWriter, request *http.Request) {
-	binding, bindingLocation := s.bindingTypeAndLocation()
+	binding, bindingLocation := s.BindingTypeAndLocation()
 	// relayState is limited to 80 bytes but also must be integrity protected.
 	// this means that we cannot use a JWT because it is way too long. Instead,
 	// we set a signed cookie that encodes the original URL which we'll check
 	// against the SAML response when we get it.
-	if authReq, err := s.serviceProvider.MakeAuthenticationRequest(bindingLocation, binding, s.responseBindingType); err != nil {
+	if authReq, err := s.serviceProvider.MakeAuthenticationRequest(bindingLocation, binding, s.ResponseBindingType); err != nil {
 		log.Errorf("[SAML] Failed creating SAML authentication request: %v", err)
 		s.writeAPIErrorResponse(request, response, http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError)
-	} else if relayState, err := s.requestTracker.TrackRequest(response, request, authReq.ID); err != nil {
+	} else if relayState, err := s.RequestTracker.TrackRequest(response, request, authReq.ID); err != nil {
 		log.Errorf("[SAML] Failed to create a valid relay state token for SAML provider %s: %v", s.serviceProvider.EntityID, err)
 		http.Error(response, err.Error(), http.StatusInternalServerError)
 	} else {
@@ -344,7 +344,7 @@ func (s ProviderResource) serveAssertionConsumerService(response http.ResponseWr
 			}
 
 			s.writeAPIErrorResponse(request, response, http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid)
-		} else if principalName, err := s.getSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
+		} else if principalName, err := s.GetSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
 			log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", s.serviceProvider.Config.Name, err)
 			s.writeAPIErrorResponse(request, response, http.StatusBadRequest, "session assertion does not meet the requirements for user lookup")
 		} else {
