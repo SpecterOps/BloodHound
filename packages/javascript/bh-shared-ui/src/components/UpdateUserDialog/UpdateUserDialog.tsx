@@ -16,19 +16,28 @@
 
 import { Dialog, DialogTitle } from '@mui/material';
 import React from 'react';
-import { NewUser } from 'src/ducks/auth/types';
-import CreateUserForm from './CreateUserForm';
+import UpdateUserForm, { UpdateUserRequestForm } from '../UpdateUserForm';
+import { UpdateUserRequest } from 'js-client-library';
 
-const CreateUserDialog: React.FC<{
+const UpdateUserDialog: React.FC<{
     open: boolean;
     onClose: () => void;
     onExited?: () => void;
-    onSave: (user: NewUser) => Promise<any>;
+    onSave: (user: UpdateUserRequest) => Promise<any>;
+    userId: string;
     isLoading: boolean;
     error: any;
-}> = ({ open, onClose, onExited, onSave, isLoading, error }) => {
-    const handleOnSave = (user: NewUser) => {
-        onSave(user)
+}> = ({ open, onClose, onExited, userId, onSave, isLoading, error }) => {
+    const handleOnSave = (user: UpdateUserRequestForm) => {
+        let parsedSSOProviderId: number | undefined = undefined;
+        if (user.SSOProviderId) {
+            parsedSSOProviderId = parseInt(user.SSOProviderId);
+        }
+
+        onSave({
+            ...user,
+            SSOProviderId: parsedSSOProviderId,
+        })
             .then(() => {
                 onClose();
             })
@@ -42,17 +51,24 @@ const CreateUserDialog: React.FC<{
             maxWidth={'sm'}
             onClose={onClose}
             disableEscapeKeyDown
+            keepMounted={false}
             PaperProps={{
-                //@ts-ignore
-                'data-testid': 'create-user-dialog',
+                // @ts-ignore
+                'data-testid': 'update-user-dialog',
             }}
             TransitionProps={{
                 onExited,
             }}>
-            <DialogTitle>{'Create User'}</DialogTitle>
-            <CreateUserForm onCancel={onClose} onSubmit={handleOnSave} isLoading={isLoading} error={error} />
+            <DialogTitle>{'Update User'}</DialogTitle>
+            <UpdateUserForm
+                onCancel={onClose}
+                onSubmit={handleOnSave}
+                userId={userId}
+                isLoading={isLoading}
+                error={error}
+            />
         </Dialog>
     );
 };
 
-export default CreateUserDialog;
+export default UpdateUserDialog;

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as axios from 'axios';
-import { ConfigurationPayload } from './utils/config';
+import { ConfigurationPayload } from './utils';
 
 export type RequestOptions = axios.AxiosRequestConfig;
 
@@ -313,8 +313,14 @@ export interface UpdateUserRequest {
     emailAddress: string;
     principal: string;
     roles: number[];
-    SAMLProviderId?: string;
+    SAMLProviderId?: string; // deprecated: this is left to maintain backwards compatability, please use SSOProviderId instead
+    SSOProviderId?: number;
     is_disabled?: boolean;
+}
+
+export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'> {
+    password?: string;
+    needsPasswordReset?: boolean;
 }
 
 export type UpdateConfigurationRequest = ConfigurationPayload;

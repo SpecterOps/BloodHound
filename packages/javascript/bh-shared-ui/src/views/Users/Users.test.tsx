@@ -16,12 +16,13 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, within } from 'src/test-utils';
+import { render, screen, within } from '../../test-utils';
 import Users from '.';
 import userEvent from '@testing-library/user-event';
+import { ListSSOProvidersResponse, SSOProvider } from 'js-client-library';
 
 const testAuthenticatedUser = {
-    saml_provider_id: null,
+    sso_provider_id: null,
     AuthSecret: {
         digest_method: 'argon2',
         expires_at: '2025-01-01T12:00:00Z',
@@ -56,7 +57,7 @@ const testAuthenticatedUser = {
 };
 
 const testMarshallLaw = {
-    saml_provider_id: 1,
+    sso_provider_id: 1,
     AuthSecret: {
         digest_method: 'argon2',
         expires_at: '2025-01-01T12:00:00Z',
@@ -92,21 +93,29 @@ const testMarshallLaw = {
 
 const testBloodHoundUsers = [testAuthenticatedUser, testMarshallLaw];
 
-const testSAMLProviders = [
+const testSSOProviders: SSOProvider[] = [
     {
         name: 'saml-provider',
-        display_name: 'saml-provider',
-        idp_issuer_uri: 'urn:saml-provider.com',
-        idp_sso_uri: 'https://saml-provider.com/saml',
-        principal_attribute_mappings: null,
-        sp_issuer_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider',
-        sp_sso_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/sso',
-        sp_metadata_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/metadata',
-        sp_acs_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/acs',
+        slug: 'saml-provider',
+        type: 'SAML',
+        details: {
+            name: 'saml-provider',
+            display_name: 'saml-provider',
+            idp_issuer_uri: 'urn:saml-provider.com',
+            idp_sso_uri: 'https://saml-provider.com/saml',
+            principal_attribute_mappings: null,
+            sp_issuer_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider',
+            sp_sso_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/sso',
+            sp_metadata_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/metadata',
+            sp_acs_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/acs',
+            sso_provider_id: 1,
+            id: 1,
+            created_at: '2024-01-01T12:00:00Z',
+            updated_at: '2024-01-01T12:00:00Z',
+        },
         id: 1,
         created_at: '2024-01-01T12:00:00Z',
         updated_at: '2024-01-01T12:00:00Z',
-        deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
     },
 ];
 
@@ -157,12 +166,10 @@ const server = setupServer(
             })
         );
     }),
-    rest.get('/api/v2/saml', (req, res, ctx) => {
+    rest.get<any, any, ListSSOProvidersResponse>('/api/v2/sso-providers', (req, res, ctx) => {
         return res(
             ctx.json({
-                data: {
-                    saml_providers: testSAMLProviders,
-                },
+                data: testSSOProviders,
             })
         );
     }),
@@ -170,7 +177,7 @@ const server = setupServer(
         return res(ctx.json({ data: testRoles }));
     }),
     rest.patch('/api/v2/bloodhound-users/1', (req, res, ctx) => {
-        return res(ctx.json({ data: { ...testMarshallLaw, saml_provider_id: null, AuthSecret: null } }));
+        return res(ctx.json({ data: { ...testMarshallLaw, sso_provider_id: null, AuthSecret: null } }));
     })
 );
 
@@ -198,7 +205,7 @@ describe('Users', () => {
         expect(within(testUserRow).getByText('2024-01-01 04:00 PST (GMT-0800)')).toBeInTheDocument();
         expect(within(testUserRow).getByText('User')).toBeInTheDocument();
         expect(within(testUserRow).getByText('Active')).toBeInTheDocument();
-        expect(within(testUserRow).getByText(`SAML: ${testSAMLProviders[0].name}`)).toBeInTheDocument();
+        expect(within(testUserRow).getByText(`SSO: ${testSSOProviders[0].name}`)).toBeInTheDocument();
         expect(within(testUserRow).getByRole('button')).toBeInTheDocument();
 
         // open the update user dialog for Marshall

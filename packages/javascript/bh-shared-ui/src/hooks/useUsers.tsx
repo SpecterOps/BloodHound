@@ -16,15 +16,14 @@
 
 import { PutUserAuthSecretRequest, RequestOptions } from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { apiClient } from 'bh-shared-ui';
-import { addSnackbar } from 'src/ducks/global/actions';
-import { useAppDispatch } from 'src/store';
+import { apiClient } from '../utils';
+import { addNotification } from '../providers/NotificationProvider/actions';
 
 export type User = {
     id: string;
-    saml_provider_id: number | null;
+    sso_provider_id: number | null;
     AuthSecret: any;
-    Roles: Role[];
+    roles: Role[];
     first_name: string | null;
     last_name: string | null;
     email_address: string | null;
@@ -100,11 +99,10 @@ export const useGetUsers = () => useQuery(userKeys.all, ({ signal }) => getUsers
 
 export const useCreateUser = () => {
     const queryClient = useQueryClient();
-    const dispatch = useAppDispatch();
 
     return useMutation(createUser, {
         onSuccess: () => {
-            dispatch(addSnackbar('User created successfully!', 'createUserSuccess'));
+            addNotification('User created successfully!', 'createUserSuccess');
             queryClient.invalidateQueries(userKeys.all);
         },
     });
@@ -112,11 +110,10 @@ export const useCreateUser = () => {
 
 export const useUpdateUser = () => {
     const queryClient = useQueryClient();
-    const dispatch = useAppDispatch();
 
     return useMutation(updateUser, {
         onSuccess: () => {
-            dispatch(addSnackbar('User updated successfully!', 'updateUserSuccess'));
+            addNotification('User updated successfully!', 'updateUserSuccess');
             queryClient.invalidateQueries(userKeys.all);
         },
     });
@@ -124,11 +121,10 @@ export const useUpdateUser = () => {
 
 export const useDeleteUser = () => {
     const queryClient = useQueryClient();
-    const dispatch = useAppDispatch();
 
     return useMutation(deleteUser, {
         onSuccess: () => {
-            dispatch(addSnackbar('User deleted successfully!', 'deleteUserSuccess'));
+            addNotification('User deleted successfully!', 'deleteUserSuccess');
             queryClient.invalidateQueries(userKeys.all);
         },
     });
@@ -136,11 +132,10 @@ export const useDeleteUser = () => {
 
 export const useExpireUserPassword = () => {
     const queryClient = useQueryClient();
-    const dispatch = useAppDispatch();
 
     return useMutation(expireUserPassword, {
         onSuccess: () => {
-            dispatch(addSnackbar('User password expired successfully!', 'expireUserPasswordSuccess'));
+            addNotification('User password expired successfully!', 'expireUserPasswordSuccess');
             queryClient.invalidateQueries(userKeys.all);
         },
     });
@@ -148,11 +143,10 @@ export const useExpireUserPassword = () => {
 
 export const useUpdateUserPassword = () => {
     const queryClient = useQueryClient();
-    const dispatch = useAppDispatch();
 
     return useMutation(updateUserPassword, {
         onSuccess: () => {
-            dispatch(addSnackbar('User password updated successfully!', 'updateUserPasswordSuccess'));
+            addNotification('User password updated successfully!', 'updateUserPasswordSuccess');
             queryClient.invalidateQueries(userKeys.all);
         },
     });
