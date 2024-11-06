@@ -610,6 +610,24 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 				})
 			}
 
+		case cypher.ToUpperFunction:
+			if typedExpression.NumArguments() > 1 {
+				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
+			} else if argument, err := s.treeTranslator.Pop(); err != nil {
+				s.SetError(err)
+			} else {
+				if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+					// Rewrite the property lookup operator with a JSON text field lookup
+					propertyLookup.Operator = pgsql.OperatorJSONTextField
+				}
+
+				s.treeTranslator.Push(pgsql.FunctionCall{
+					Function:   pgsql.FunctionToUpper,
+					Parameters: []pgsql.Expression{argument},
+					CastType:   pgsql.Text,
+				})
+			}
+
 		default:
 			s.SetErrorf("unknown cypher function: %s", typedExpression.Name)
 		}
