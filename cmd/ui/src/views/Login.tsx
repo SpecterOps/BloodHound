@@ -104,7 +104,7 @@ const Login: React.FC = () => {
         );
     }
 
-    if (listSSOProvidersQuery.isError || listSSOProvidersQuery?.data?.length === 0) {
+    if (listSSOProvidersQuery.isError || listSSOProvidersQuery.data?.length === 0) {
         return (
             <LoginPage>
                 <LoginForm onSubmit={handleSubmitLoginForm} loading={authState.loginLoading} />
