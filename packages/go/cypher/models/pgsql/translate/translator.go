@@ -564,6 +564,34 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 				})
 			}
 
+		case cypher.StringSplitToArrayFunction:
+			if typedExpression.NumArguments() != 2 {
+				s.SetError(fmt.Errorf("expected two arguments for cypher function %s", typedExpression.Name))
+			} else if delimiter, err := s.treeTranslator.Pop(); err != nil {
+				s.SetError(err)
+			} else if splitReference, err := s.treeTranslator.Pop(); err != nil {
+				s.SetError(err)
+			} else {
+				if _, hasHint := GetTypeHint(splitReference); !hasHint {
+					// Do our best to coerce the type into text
+					if typedSplitRef, err := TypeCastExpression(splitReference, pgsql.Text); err != nil {
+						s.SetError(err)
+					} else {
+						s.treeTranslator.Push(pgsql.FunctionCall{
+							Function:   pgsql.FunctionStringToArray,
+							Parameters: []pgsql.Expression{typedSplitRef, delimiter},
+							CastType:   pgsql.TextArray,
+						})
+					}
+				} else {
+					s.treeTranslator.Push(pgsql.FunctionCall{
+						Function:   pgsql.FunctionStringToArray,
+						Parameters: []pgsql.Expression{splitReference, delimiter},
+						CastType:   pgsql.TextArray,
+					})
+				}
+			}
+
 		case cypher.ToLowerFunction:
 			if typedExpression.NumArguments() > 1 {
 				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
