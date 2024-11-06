@@ -241,6 +241,25 @@ func lookupRequiresElementType(typeHint pgsql.DataType, operator pgsql.Operator,
 	return false
 }
 
+func TypeCastExpression(expression pgsql.Expression, dataType pgsql.DataType) (pgsql.Expression, error) {
+	if propertyLookup, isPropertyLookup := asPropertyLookup(expression); isPropertyLookup {
+		var lookupTypeHint = dataType
+
+		if lookupRequiresElementType(dataType, propertyLookup.Operator, propertyLookup.ROperand) {
+			// Take the base type of the array type hint: <unit> in <collection>
+			if arrayBaseType, err := dataType.ArrayBaseType(); err != nil {
+				return nil, err
+			} else {
+				lookupTypeHint = arrayBaseType
+			}
+		}
+
+		return rewritePropertyLookupOperator(propertyLookup, lookupTypeHint), nil
+	}
+
+	return pgsql.NewTypeCast(expression, dataType), nil
+}
+
 func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression, expressionTypeHint pgsql.DataType) error {
 	if leftPropertyLookup, isPropertyLookup := asPropertyLookup(expression.LOperand); isPropertyLookup {
 		if lookupRequiresElementType(expressionTypeHint, expression.Operator, expression.ROperand) {

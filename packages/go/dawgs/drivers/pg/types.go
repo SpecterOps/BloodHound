@@ -23,9 +23,9 @@ import (
 )
 
 type edgeComposite struct {
-	ID         int32
-	StartID    int32
-	EndID      int32
+	ID         int64
+	StartID    int64
+	EndID      int64
 	KindID     int16
 	Properties map[string]any
 }
@@ -114,7 +114,7 @@ func (s *edgeComposite) ToRelationship(kindMapper KindMapper, relationship *grap
 }
 
 type nodeComposite struct {
-	ID         int32
+	ID         int64
 	KindIDs    []int16
 	Properties map[string]any
 }
