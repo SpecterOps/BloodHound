@@ -313,7 +313,7 @@ export interface UpdateUserRequest {
     emailAddress: string;
     principal: string;
     roles: number[];
-    SAMLProviderId?: string;
+    SAMLProviderId?: string; // deprecated: this is left to maintain backwards compatability, please use SSOProviderId instead
     SSOProviderId?: number;
     is_disabled?: boolean;
 }

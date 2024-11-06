@@ -65,7 +65,7 @@ const CreateUserForm: React.FC<{
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
-            setValue('SSOProviderId', '');
+            setValue('SSOProviderId', undefined);
         }
     }, [authenticationMethod, setValue]);
 
@@ -192,7 +192,7 @@ const CreateUserForm: React.FC<{
                                             data-testid='create-user-dialog_select-authentication-method'>
                                             <MenuItem value='password'>Username / Password</MenuItem>
                                             {listSSOProvidersQuery.data && listSSOProvidersQuery.data?.length > 0 && (
-                                                <MenuItem value='sso'>Single sign-on (SSO)</MenuItem>
+                                                <MenuItem value='sso'>Single Sign-On (SSO)</MenuItem>
                                             )}
                                         </Select>
                                     </FormControl>
@@ -324,7 +324,7 @@ const CreateUserForm: React.FC<{
                                                 {getRolesQuery.isLoading ? (
                                                     <MenuItem value={1}>Loading...</MenuItem>
                                                 ) : (
-                                                    getRolesQuery?.data?.map((role: any) => (
+                                                    getRolesQuery.data?.map((role: any) => (
                                                         <MenuItem key={role.id} value={role.id.toString()}>
                                                             {role.name}
                                                         </MenuItem>

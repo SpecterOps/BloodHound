@@ -263,7 +263,7 @@ const UpdateUserFormInner: React.FC<{
                                             data-testid='update-user-dialog_select-authentication-method'>
                                             <MenuItem value='password'>Username / Password</MenuItem>
                                             {SSOProviders && SSOProviders.length > 0 && (
-                                                <MenuItem value='sso'>Single sign-on (SSO)</MenuItem>
+                                                <MenuItem value='sso'>Single Sign-On (SSO)</MenuItem>
                                             )}
                                         </Select>
                                     </FormControl>
