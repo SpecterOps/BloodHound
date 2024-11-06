@@ -56,6 +56,8 @@ func serviceProviderFactory(ctx context.Context, cfg config.Configuration, samlP
 	} else if idpMetadata, err := samlsp.ParseMetadata(samlProvider.MetadataXML); err != nil {
 		return bhsaml.ServiceProvider{}, fmt.Errorf("failed to parse metadata XML for service provider %s: %w", samlProvider.Name, err)
 	} else {
+		// This is required to populate the samlProvider.ServiceProviderIssuerURI
+		samlProvider = bhsaml.FormatSAMLProviderURLs(ctx, samlProvider)[0]
 		return bhsaml.NewServiceProvider(samlProvider, bhsaml.FormatServiceProviderURLs(*bhCtx.Get(ctx).Host, samlProvider.Name), samlsp.Options{
 			EntityID:          samlProvider.ServiceProviderIssuerURI.String(),
 			URL:               samlProvider.ServiceProviderIssuerURI.AsURL(),
