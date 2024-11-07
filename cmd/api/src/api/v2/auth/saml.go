@@ -169,7 +169,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 				log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", serviceProvider.Config.Name, err)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "session assertion does not meet the requirements for user lookup", request), response)
 			} else {
-				s.authenticator.CreateSSOSession(request, response, principalName, *ssoProvider.SAMLProvider)
+				s.authenticator.CreateSSOSession(request, response, principalName, ssoProvider)
 			}
 		}
 	}
