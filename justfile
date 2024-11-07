@@ -139,6 +139,18 @@ bh-api-only *ARGS='up':
 bh-ui-only *ARGS='up':
   @docker compose --profile ui-only -f docker-compose.dev.yml {{ARGS}}
 
+# run docker compose commands for the pg-only profile (Default: up)
+pg-only *ARGS='up':
+  @docker compose --profile pg-only -f docker-compose.dev.yml {{ARGS}}
+
+# run docker compose commands for the BH dev profile with SSO IDP Authentik (Default: up)
+bh-sso *ARGS='up':
+  @docker compose --profile sso -f docker-compose.dev.yml {{ARGS}}
+
+# run docker compose commands for the SSO IDP Authentik only (Default: up)
+bh-sso-only *ARGS='up':
+  @docker compose --profile sso-only -f docker-compose.dev.yml {{ARGS}}
+
 # run docker compose commands for the BH testing databases (Default: up)
 bh-testing *ARGS='up -d':
   @docker compose --project-name bh-testing -f docker-compose.testing.yml {{ARGS}}

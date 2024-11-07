@@ -208,7 +208,7 @@ type Trust struct {
 	SidFilteringEnabled  bool
 	TargetDomainName     string
 	TGTDelegationEnabled bool
-	TrustAttributes      string
+	TrustAttributes      any
 }
 
 type GPLink struct {

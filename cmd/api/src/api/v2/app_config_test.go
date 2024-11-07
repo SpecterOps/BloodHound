@@ -180,6 +180,12 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 	})
 
 	t.Run("Error from DB", func(t *testing.T) {
+		appConfigRequest = v2.AppConfigUpdateRequest{
+			Key: appcfg.ReconciliationKey,
+			Value: map[string]any{
+				"enabled": true,
+			},
+		}
 		mockDB.EXPECT().
 			SetConfigurationParameter(gomock.Any(), gomock.Any()).
 			Return(fmt.Errorf("database error"))
@@ -198,6 +204,13 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 	})
 
 	t.Run("Success", func(t *testing.T) {
+		appConfigRequest = v2.AppConfigUpdateRequest{
+			Key: appcfg.ReconciliationKey,
+			Value: map[string]any{
+				"enabled": true,
+			},
+		}
+
 		mockDB.EXPECT().
 			SetConfigurationParameter(gomock.Any(), gomock.Any()).
 			Return(nil)

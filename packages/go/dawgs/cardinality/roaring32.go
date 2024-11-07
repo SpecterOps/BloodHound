@@ -142,3 +142,19 @@ func (s bitmap32) Clone() Duplex[uint32] {
 		bitmap: s.bitmap.Clone(),
 	}
 }
+
+func (s bitmap32) AndNot(provider Provider[uint32]) {
+	switch typedProvider := provider.(type) {
+	case bitmap32:
+		s.bitmap.AndNot(typedProvider.bitmap)
+
+	case Duplex[uint32]:
+		s.Each(func(nextValue uint32) bool {
+			if typedProvider.Contains(nextValue) {
+				s.Remove(nextValue)
+			}
+
+			return true
+		})
+	}
+}

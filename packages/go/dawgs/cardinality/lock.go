@@ -46,6 +46,13 @@ func (s threadSafeDuplex[T]) Add(values ...T) {
 	s.provider.Add(values...)
 }
 
+func (s threadSafeDuplex[T]) AndNot(other Provider[T]) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.provider.AndNot(other)
+}
+
 func (s threadSafeDuplex[T]) Remove(value T) {
 	s.lock.Lock()
 	defer s.lock.Unlock()

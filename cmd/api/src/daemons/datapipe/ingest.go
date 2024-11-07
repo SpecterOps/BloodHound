@@ -35,6 +35,7 @@ import (
 
 const (
 	IngestCountThreshold = 500
+	ReconcileProperty    = "reconcile"
 )
 
 func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, adcsEnabled bool) error {
@@ -134,40 +135,44 @@ func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata
 	return nil
 }
 
-func IngestNode(batch graph.Batch, nowUTC time.Time, identityKind graph.Kind, nextNode ein.IngestibleNode) error {
-	//Ensure object id is upper case
-	nextNode.ObjectID = strings.ToUpper(nextNode.ObjectID)
+func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowUTC time.Time) map[string]any {
+	delete(properties, ReconcileProperty)
+	properties[common.LastSeen.String()] = nowUTC
+	properties[common.ObjectID.String()] = strings.ToUpper(objectID)
 
-	nextNode.PropertyMap[common.LastSeen.String()] = nowUTC
-	nextNode.PropertyMap[common.ObjectID.String()] = nextNode.ObjectID
-
-	//Ensure that name, operatingsystem, and distinguishedname properties are upper case
-	if rawName, hasName := nextNode.PropertyMap[common.Name.String()]; hasName && rawName != nil {
+	// Ensure that name, operatingsystem, and distinguishedname properties are upper case
+	if rawName, hasName := properties[common.Name.String()]; hasName && rawName != nil {
 		if name, typeMatches := rawName.(string); typeMatches {
-			nextNode.PropertyMap[common.Name.String()] = strings.ToUpper(name)
+			properties[common.Name.String()] = strings.ToUpper(name)
 		} else {
 			log.Errorf("Bad type found for node name property during ingest. Expected string, got %T", rawName)
 		}
 	}
 
-	if rawOS, hasOS := nextNode.PropertyMap[common.OperatingSystem.String()]; hasOS && rawOS != nil {
+	if rawOS, hasOS := properties[common.OperatingSystem.String()]; hasOS && rawOS != nil {
 		if os, typeMatches := rawOS.(string); typeMatches {
-			nextNode.PropertyMap[common.OperatingSystem.String()] = strings.ToUpper(os)
+			properties[common.OperatingSystem.String()] = strings.ToUpper(os)
 		} else {
 			log.Errorf("Bad type found for node operating system property during ingest. Expected string, got %T", rawOS)
 		}
 	}
 
-	if rawDN, hasDN := nextNode.PropertyMap[ad.DistinguishedName.String()]; hasDN && rawDN != nil {
+	if rawDN, hasDN := properties[ad.DistinguishedName.String()]; hasDN && rawDN != nil {
 		if dn, typeMatches := rawDN.(string); typeMatches {
-			nextNode.PropertyMap[ad.DistinguishedName.String()] = strings.ToUpper(dn)
+			properties[ad.DistinguishedName.String()] = strings.ToUpper(dn)
 		} else {
 			log.Errorf("Bad type found for node distinguished name property during ingest. Expected string, got %T", rawDN)
 		}
 	}
 
+	return properties
+}
+
+func IngestNode(batch graph.Batch, nowUTC time.Time, identityKind graph.Kind, nextNode ein.IngestibleNode) error {
+	normalizedProperties := NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, nowUTC)
+
 	return batch.UpdateNodeBy(graph.NodeUpdate{
-		Node:         graph.PrepareNode(graph.AsProperties(nextNode.PropertyMap), nextNode.Label),
+		Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nextNode.Label),
 		IdentityKind: identityKind,
 		IdentityProperties: []string{
 			common.ObjectID.String(),

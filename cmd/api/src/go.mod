@@ -22,12 +22,14 @@ require (
 	github.com/beevik/etree v1.2.0
 	github.com/bloodhoundad/azurehound/v2 v2.0.1
 	github.com/channelmeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61
+	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/crewjam/saml v0.4.14
 	github.com/didip/tollbooth/v6 v6.1.2
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/gobeam/stringy v0.0.6
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/golang/mock v1.6.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/schema v1.4.1
@@ -40,10 +42,12 @@ require (
 	github.com/prometheus/client_golang v1.16.0
 	github.com/russellhaering/goxmldsig v1.4.0
 	github.com/stretchr/testify v1.9.0
+	github.com/teambition/rrule-go v1.8.2
 	github.com/unrolled/secure v1.13.0
 	github.com/zenazn/goji v1.0.1
 	go.uber.org/mock v0.2.0
-	golang.org/x/crypto v0.24.0
+	golang.org/x/crypto v0.25.0
+	golang.org/x/oauth2 v0.23.0
 	gorm.io/driver/postgres v1.3.8
 	gorm.io/gorm v1.23.8
 )
@@ -56,6 +60,7 @@ require (
 	github.com/crewjam/httperr v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
 	github.com/go-pkgz/expirable-cache v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
@@ -78,7 +83,7 @@ require (
 	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.11.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
-	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect

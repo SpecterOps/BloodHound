@@ -49,7 +49,7 @@ func convertComputerData(computer ein.Computer, converted *ConvertedData) {
 		}
 
 		if userRight.Privilege == ein.UserRightRemoteInteractiveLogon {
-			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.RemoteInteractiveLogonPrivilege)...)
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.RemoteInteractiveLogonRight)...)
 			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
 		}
 	}
@@ -94,7 +94,6 @@ func convertDomainData(domain ein.Domain, converted *ConvertedData) {
 	domainTrustData := ein.ParseDomainTrusts(domain)
 	converted.RelProps = append(converted.RelProps, domainTrustData.TrustRelationships...)
 	converted.NodeProps = append(converted.NodeProps, domainTrustData.ExtraNodeProps...)
-
 }
 
 func convertGPOData(gpo ein.GPO, converted *ConvertedData) {

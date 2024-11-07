@@ -21,95 +21,96 @@ package ad
 
 import (
 	"errors"
+
 	graph "github.com/specterops/bloodhound/dawgs/graph"
 )
 
 var (
-	Entity                          = graph.StringKind("Base")
-	User                            = graph.StringKind("User")
-	Computer                        = graph.StringKind("Computer")
-	Group                           = graph.StringKind("Group")
-	GPO                             = graph.StringKind("GPO")
-	OU                              = graph.StringKind("OU")
-	Container                       = graph.StringKind("Container")
-	Domain                          = graph.StringKind("Domain")
-	LocalGroup                      = graph.StringKind("ADLocalGroup")
-	LocalUser                       = graph.StringKind("ADLocalUser")
-	AIACA                           = graph.StringKind("AIACA")
-	RootCA                          = graph.StringKind("RootCA")
-	EnterpriseCA                    = graph.StringKind("EnterpriseCA")
-	NTAuthStore                     = graph.StringKind("NTAuthStore")
-	CertTemplate                    = graph.StringKind("CertTemplate")
-	IssuancePolicy                  = graph.StringKind("IssuancePolicy")
-	Owns                            = graph.StringKind("Owns")
-	GenericAll                      = graph.StringKind("GenericAll")
-	GenericWrite                    = graph.StringKind("GenericWrite")
-	WriteOwner                      = graph.StringKind("WriteOwner")
-	WriteDACL                       = graph.StringKind("WriteDacl")
-	MemberOf                        = graph.StringKind("MemberOf")
-	ForceChangePassword             = graph.StringKind("ForceChangePassword")
-	AllExtendedRights               = graph.StringKind("AllExtendedRights")
-	AddMember                       = graph.StringKind("AddMember")
-	HasSession                      = graph.StringKind("HasSession")
-	Contains                        = graph.StringKind("Contains")
-	GPLink                          = graph.StringKind("GPLink")
-	AllowedToDelegate               = graph.StringKind("AllowedToDelegate")
-	GetChanges                      = graph.StringKind("GetChanges")
-	GetChangesAll                   = graph.StringKind("GetChangesAll")
-	GetChangesInFilteredSet         = graph.StringKind("GetChangesInFilteredSet")
-	TrustedBy                       = graph.StringKind("TrustedBy")
-	AllowedToAct                    = graph.StringKind("AllowedToAct")
-	AdminTo                         = graph.StringKind("AdminTo")
-	CanPSRemote                     = graph.StringKind("CanPSRemote")
-	CanRDP                          = graph.StringKind("CanRDP")
-	ExecuteDCOM                     = graph.StringKind("ExecuteDCOM")
-	HasSIDHistory                   = graph.StringKind("HasSIDHistory")
-	AddSelf                         = graph.StringKind("AddSelf")
-	DCSync                          = graph.StringKind("DCSync")
-	ReadLAPSPassword                = graph.StringKind("ReadLAPSPassword")
-	ReadGMSAPassword                = graph.StringKind("ReadGMSAPassword")
-	DumpSMSAPassword                = graph.StringKind("DumpSMSAPassword")
-	SQLAdmin                        = graph.StringKind("SQLAdmin")
-	AddAllowedToAct                 = graph.StringKind("AddAllowedToAct")
-	WriteSPN                        = graph.StringKind("WriteSPN")
-	AddKeyCredentialLink            = graph.StringKind("AddKeyCredentialLink")
-	LocalToComputer                 = graph.StringKind("LocalToComputer")
-	MemberOfLocalGroup              = graph.StringKind("MemberOfLocalGroup")
-	RemoteInteractiveLogonPrivilege = graph.StringKind("RemoteInteractiveLogonPrivilege")
-	SyncLAPSPassword                = graph.StringKind("SyncLAPSPassword")
-	WriteAccountRestrictions        = graph.StringKind("WriteAccountRestrictions")
-	WriteGPLink                     = graph.StringKind("WriteGPLink")
-	RootCAFor                       = graph.StringKind("RootCAFor")
-	DCFor                           = graph.StringKind("DCFor")
-	PublishedTo                     = graph.StringKind("PublishedTo")
-	ManageCertificates              = graph.StringKind("ManageCertificates")
-	ManageCA                        = graph.StringKind("ManageCA")
-	DelegatedEnrollmentAgent        = graph.StringKind("DelegatedEnrollmentAgent")
-	Enroll                          = graph.StringKind("Enroll")
-	HostsCAService                  = graph.StringKind("HostsCAService")
-	WritePKIEnrollmentFlag          = graph.StringKind("WritePKIEnrollmentFlag")
-	WritePKINameFlag                = graph.StringKind("WritePKINameFlag")
-	NTAuthStoreFor                  = graph.StringKind("NTAuthStoreFor")
-	TrustedForNTAuth                = graph.StringKind("TrustedForNTAuth")
-	EnterpriseCAFor                 = graph.StringKind("EnterpriseCAFor")
-	IssuedSignedBy                  = graph.StringKind("IssuedSignedBy")
-	GoldenCert                      = graph.StringKind("GoldenCert")
-	EnrollOnBehalfOf                = graph.StringKind("EnrollOnBehalfOf")
-	OIDGroupLink                    = graph.StringKind("OIDGroupLink")
-	ExtendedByPolicy                = graph.StringKind("ExtendedByPolicy")
-	ADCSESC1                        = graph.StringKind("ADCSESC1")
-	ADCSESC3                        = graph.StringKind("ADCSESC3")
-	ADCSESC4                        = graph.StringKind("ADCSESC4")
-	ADCSESC5                        = graph.StringKind("ADCSESC5")
-	ADCSESC6a                       = graph.StringKind("ADCSESC6a")
-	ADCSESC6b                       = graph.StringKind("ADCSESC6b")
-	ADCSESC7                        = graph.StringKind("ADCSESC7")
-	ADCSESC9a                       = graph.StringKind("ADCSESC9a")
-	ADCSESC9b                       = graph.StringKind("ADCSESC9b")
-	ADCSESC10a                      = graph.StringKind("ADCSESC10a")
-	ADCSESC10b                      = graph.StringKind("ADCSESC10b")
-	ADCSESC13                       = graph.StringKind("ADCSESC13")
-	SyncedToEntraUser               = graph.StringKind("SyncedToEntraUser")
+	Entity                      = graph.StringKind("Base")
+	User                        = graph.StringKind("User")
+	Computer                    = graph.StringKind("Computer")
+	Group                       = graph.StringKind("Group")
+	GPO                         = graph.StringKind("GPO")
+	OU                          = graph.StringKind("OU")
+	Container                   = graph.StringKind("Container")
+	Domain                      = graph.StringKind("Domain")
+	LocalGroup                  = graph.StringKind("ADLocalGroup")
+	LocalUser                   = graph.StringKind("ADLocalUser")
+	AIACA                       = graph.StringKind("AIACA")
+	RootCA                      = graph.StringKind("RootCA")
+	EnterpriseCA                = graph.StringKind("EnterpriseCA")
+	NTAuthStore                 = graph.StringKind("NTAuthStore")
+	CertTemplate                = graph.StringKind("CertTemplate")
+	IssuancePolicy              = graph.StringKind("IssuancePolicy")
+	Owns                        = graph.StringKind("Owns")
+	GenericAll                  = graph.StringKind("GenericAll")
+	GenericWrite                = graph.StringKind("GenericWrite")
+	WriteOwner                  = graph.StringKind("WriteOwner")
+	WriteDACL                   = graph.StringKind("WriteDacl")
+	MemberOf                    = graph.StringKind("MemberOf")
+	ForceChangePassword         = graph.StringKind("ForceChangePassword")
+	AllExtendedRights           = graph.StringKind("AllExtendedRights")
+	AddMember                   = graph.StringKind("AddMember")
+	HasSession                  = graph.StringKind("HasSession")
+	Contains                    = graph.StringKind("Contains")
+	GPLink                      = graph.StringKind("GPLink")
+	AllowedToDelegate           = graph.StringKind("AllowedToDelegate")
+	GetChanges                  = graph.StringKind("GetChanges")
+	GetChangesAll               = graph.StringKind("GetChangesAll")
+	GetChangesInFilteredSet     = graph.StringKind("GetChangesInFilteredSet")
+	TrustedBy                   = graph.StringKind("TrustedBy")
+	AllowedToAct                = graph.StringKind("AllowedToAct")
+	AdminTo                     = graph.StringKind("AdminTo")
+	CanPSRemote                 = graph.StringKind("CanPSRemote")
+	CanRDP                      = graph.StringKind("CanRDP")
+	ExecuteDCOM                 = graph.StringKind("ExecuteDCOM")
+	HasSIDHistory               = graph.StringKind("HasSIDHistory")
+	AddSelf                     = graph.StringKind("AddSelf")
+	DCSync                      = graph.StringKind("DCSync")
+	ReadLAPSPassword            = graph.StringKind("ReadLAPSPassword")
+	ReadGMSAPassword            = graph.StringKind("ReadGMSAPassword")
+	DumpSMSAPassword            = graph.StringKind("DumpSMSAPassword")
+	SQLAdmin                    = graph.StringKind("SQLAdmin")
+	AddAllowedToAct             = graph.StringKind("AddAllowedToAct")
+	WriteSPN                    = graph.StringKind("WriteSPN")
+	AddKeyCredentialLink        = graph.StringKind("AddKeyCredentialLink")
+	LocalToComputer             = graph.StringKind("LocalToComputer")
+	MemberOfLocalGroup          = graph.StringKind("MemberOfLocalGroup")
+	RemoteInteractiveLogonRight = graph.StringKind("RemoteInteractiveLogonRight")
+	SyncLAPSPassword            = graph.StringKind("SyncLAPSPassword")
+	WriteAccountRestrictions    = graph.StringKind("WriteAccountRestrictions")
+	WriteGPLink                 = graph.StringKind("WriteGPLink")
+	RootCAFor                   = graph.StringKind("RootCAFor")
+	DCFor                       = graph.StringKind("DCFor")
+	PublishedTo                 = graph.StringKind("PublishedTo")
+	ManageCertificates          = graph.StringKind("ManageCertificates")
+	ManageCA                    = graph.StringKind("ManageCA")
+	DelegatedEnrollmentAgent    = graph.StringKind("DelegatedEnrollmentAgent")
+	Enroll                      = graph.StringKind("Enroll")
+	HostsCAService              = graph.StringKind("HostsCAService")
+	WritePKIEnrollmentFlag      = graph.StringKind("WritePKIEnrollmentFlag")
+	WritePKINameFlag            = graph.StringKind("WritePKINameFlag")
+	NTAuthStoreFor              = graph.StringKind("NTAuthStoreFor")
+	TrustedForNTAuth            = graph.StringKind("TrustedForNTAuth")
+	EnterpriseCAFor             = graph.StringKind("EnterpriseCAFor")
+	IssuedSignedBy              = graph.StringKind("IssuedSignedBy")
+	GoldenCert                  = graph.StringKind("GoldenCert")
+	EnrollOnBehalfOf            = graph.StringKind("EnrollOnBehalfOf")
+	OIDGroupLink                = graph.StringKind("OIDGroupLink")
+	ExtendedByPolicy            = graph.StringKind("ExtendedByPolicy")
+	ADCSESC1                    = graph.StringKind("ADCSESC1")
+	ADCSESC3                    = graph.StringKind("ADCSESC3")
+	ADCSESC4                    = graph.StringKind("ADCSESC4")
+	ADCSESC5                    = graph.StringKind("ADCSESC5")
+	ADCSESC6a                   = graph.StringKind("ADCSESC6a")
+	ADCSESC6b                   = graph.StringKind("ADCSESC6b")
+	ADCSESC7                    = graph.StringKind("ADCSESC7")
+	ADCSESC9a                   = graph.StringKind("ADCSESC9a")
+	ADCSESC9b                   = graph.StringKind("ADCSESC9b")
+	ADCSESC10a                  = graph.StringKind("ADCSESC10a")
+	ADCSESC10b                  = graph.StringKind("ADCSESC10b")
+	ADCSESC13                   = graph.StringKind("ADCSESC13")
+	SyncedToEntraUser           = graph.StringKind("SyncedToEntraUser")
 )
 
 type Property string
@@ -178,6 +179,7 @@ const (
 	SchemaVersion                           Property = "schemaversion"
 	RequiresManagerApproval                 Property = "requiresmanagerapproval"
 	AuthenticationEnabled                   Property = "authenticationenabled"
+	SchannelAuthenticationEnabled           Property = "schannelauthenticationenabled"
 	EnrolleeSuppliesSubject                 Property = "enrolleesuppliessubject"
 	CertificateApplicationPolicy            Property = "certificateapplicationpolicy"
 	CertificateNameFlag                     Property = "certificatenameflag"
@@ -218,7 +220,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationEnabled, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributes, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationEnabled, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributes, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -348,6 +350,8 @@ func ParseProperty(source string) (Property, error) {
 		return RequiresManagerApproval, nil
 	case "authenticationenabled":
 		return AuthenticationEnabled, nil
+	case "schannelauthenticationenabled":
+		return SchannelAuthenticationEnabled, nil
 	case "enrolleesuppliessubject":
 		return EnrolleeSuppliesSubject, nil
 	case "certificateapplicationpolicy":
@@ -554,6 +558,8 @@ func (s Property) String() string {
 		return string(RequiresManagerApproval)
 	case AuthenticationEnabled:
 		return string(AuthenticationEnabled)
+	case SchannelAuthenticationEnabled:
+		return string(SchannelAuthenticationEnabled)
 	case EnrolleeSuppliesSubject:
 		return string(EnrolleeSuppliesSubject)
 	case CertificateApplicationPolicy:
@@ -760,6 +766,8 @@ func (s Property) Name() string {
 		return "Requires Manager Approval"
 	case AuthenticationEnabled:
 		return "Authentication Enabled"
+	case SchannelAuthenticationEnabled:
+		return "Schannel Authentication Enabled"
 	case EnrolleeSuppliesSubject:
 		return "Enrollee Supplies Subject"
 	case CertificateApplicationPolicy:
@@ -850,7 +858,7 @@ func Nodes() []graph.Kind {
 	return []graph.Kind{Entity, User, Computer, Group, GPO, OU, Container, Domain, LocalGroup, LocalUser, AIACA, RootCA, EnterpriseCA, NTAuthStore, CertTemplate, IssuancePolicy}
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonPrivilege, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, RootCAFor, DCFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, OIDGroupLink, ExtendedByPolicy, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6a, ADCSESC6b, ADCSESC7, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToEntraUser}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonRight, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, RootCAFor, DCFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, OIDGroupLink, ExtendedByPolicy, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC5, ADCSESC6a, ADCSESC6b, ADCSESC7, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToEntraUser}
 }
 func ACLRelationships() []graph.Kind {
 	return []graph.Kind{AllExtendedRights, ForceChangePassword, AddMember, AddAllowedToAct, GenericAll, WriteDACL, WriteOwner, GenericWrite, ReadLAPSPassword, ReadGMSAPassword, Owns, AddSelf, WriteSPN, AddKeyCredentialLink, GetChanges, GetChangesAll, GetChangesInFilteredSet, WriteAccountRestrictions, WriteGPLink, SyncLAPSPassword, DCSync, ManageCertificates, ManageCA, Enroll, WritePKIEnrollmentFlag, WritePKINameFlag}

@@ -25,14 +25,20 @@ import (
 )
 
 func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus, updateAnalysisTime bool) error {
-
-	updateSql := "UPDATE datapipe_status SET status = ?, updated_at = ?"
 	now := time.Now().UTC()
+	// All queries will update the status and table update time
+	updateSql := "UPDATE datapipe_status SET status = ?, updated_at = ?"
 
-	if updateAnalysisTime {
+	if status == model.DatapipeStatusAnalyzing {
+		// Updates last run anytime we start analysis
+		updateSql += ", last_analysis_run_at = ?;"
+		return s.db.WithContext(ctx).Exec(updateSql, status, now, now).Error
+	} else if updateAnalysisTime {
+		// Updates last completed when analysis is set to complete
 		updateSql += ", last_complete_analysis_at = ?;"
 		return s.db.WithContext(ctx).Exec(updateSql, status, now, now).Error
 	} else {
+		// Otherwise, only update status and last update to the table
 		updateSql += ";"
 		return s.db.WithContext(ctx).Exec(updateSql, status, now).Error
 	}
@@ -42,7 +48,7 @@ func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.Datap
 func (s *BloodhoundDB) GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error) {
 	var datapipeStatus model.DatapipeStatusWrapper
 
-	if tx := s.db.WithContext(ctx).Raw("SELECT status, updated_at, last_complete_analysis_at FROM datapipe_status LIMIT 1;").Scan(&datapipeStatus); tx.RowsAffected == 0 {
+	if tx := s.db.WithContext(ctx).Raw("SELECT status, updated_at, last_complete_analysis_at, last_analysis_run_at FROM datapipe_status LIMIT 1;").Scan(&datapipeStatus); tx.RowsAffected == 0 {
 		return datapipeStatus, sql.ErrNoRows
 	}
 

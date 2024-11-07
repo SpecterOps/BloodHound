@@ -17,6 +17,7 @@
 import { FC } from 'react';
 import { Link, Typography } from '@mui/material';
 import { EdgeInfoProps } from '../index';
+import CodeController from '../CodeController/CodeController';
 
 const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = ({
     sourceName,
@@ -1019,8 +1020,123 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     </Typography>
                 </>
             );
+        case 'Container':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        To change the ownership of the object, you may use the Set-DomainObjectOwner function in
+                        PowerView.
+                    </Typography>
+                    <Typography variant='body2'>
+                        You may need to authenticate to the Domain Controller as{' '}
+                        {sourceType === 'User'
+                            ? `${sourceName} if you are not running a process as that user`
+                            : `a member of ${sourceName} if you are not running a process as a member`}
+                        . To do this in conjunction with Set-DomainObjectOwner, first create a PSCredential object
+                        (these examples comes from the PowerView help documentation):
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {"$SecPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force\n" +
+                            "$Cred = New-Object System.Management.Automation.PSCredential('TESTLAB\\dfm.a', $SecPassword)"}
+                    </Typography>
+                    <Typography variant='body2'>
+                        Then, use Set-DomainObjectOwner, optionally specifying $Cred if you are not already running a
+                        process as a member of (the group that holds this ACE):
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {'Set-DomainObjectOwner -Credential $Cred -TargetIdentity dfm -OwnerIdentity harmj0y'}
+                    </Typography>
+                    <Typography variant='body2'>
+                        Now with ownership of the container object, you may grant yourself the GenericAll permission
+                        inherited to child objects.
+                    </Typography>
+                    <Typography variant='body2'>This can be done with PowerShell:</Typography>
+                    <CodeController>
+                        {`$containerDN = "CN=USERS,DC=DUMPSTER,DC=FIRE"
+                        $principalName = "principal"     # SAM account name of principal
+                        
+                        # Find the certificate template
+                        $template = [ADSI]"LDAP://$containerDN"
+                        
+                        # Construct the ACE
+                        $account = New-Object System.Security.Principal.NTAccount($principalName)
+                        $sid = $account.Translate([System.Security.Principal.SecurityIdentifier])
+                        $ace = New-Object DirectoryServices.ActiveDirectoryAccessRule(
+                            $sid,
+                            [System.DirectoryServices.ActiveDirectoryRights]::GenericAll,
+                            [System.Security.AccessControl.AccessControlType]::Allow,
+                            [System.DirectoryServices.ActiveDirectorySecurityInheritance]::Descendents
+                        )
+                        # Add the new ACE to the ACL
+                        $acl = $template.psbase.ObjectSecurity
+                        $acl.AddAccessRule($ace)
+                        $template.psbase.CommitChanges()`}
+                    </CodeController>
+                </>
+            );
+        case 'CertTemplate':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With WriteOwner permission on a certificate template, you can grant yourself ownership over the
+                        object to then grant yourself GenericAll. With GenericAll, you may be able to perform an ESC4
+                        attack by modifying the template's attributes. BloodHound will in that case create an ADCSESC4
+                        edge from the principal to the forest domain node.
+                    </Typography>
+                </>
+            );
+        case 'EnterpriseCA':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With WriteOwner permission on an enterprise CA, you can grant yourself ownership over the object
+                        to then grant yourself GenericAll. With GenericAll, you can publish certificate templates to the
+                        enterprise CA by adding the CN name of the template in the enterprise CA object's
+                        certificateTemplates attribute. This action may enable you to perform an ADCS domain escalation.
+                    </Typography>
+                </>
+            );
+        case 'RootCA':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With WriteOwner permission on a root CA, you can grant yourself ownership over the object to
+                        then grant yourself GenericAll. With GenericAll, you can make a rogue certificate trusted as a
+                        root CA in the AD forest by adding the certificate in the root CA object's cACertificate
+                        attribute. This action may enable you to perform an ADCS domain escalation.
+                    </Typography>
+                </>
+            );
+        case 'NTAuthStore':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With WriteOwner permission on a NTAuth store, you can grant yourself ownership over the object
+                        to then grant yourself GenericAll. With GenericAll, you can make an enterprise CA certificate
+                        trusted for NT (domain) authentication in the AD forest by adding the certificate in the root CA
+                        object's cACertificate attribute. This action may enable you to perform an ADCS domain
+                        escalation.
+                    </Typography>
+                </>
+            );
+        case 'IssuancePolicy':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With WriteOwner permission on an issuance policy object, you can grant yourself ownership over
+                        the object to then grant yourself GenericAll. With GenericAll, you create a OID group link to a
+                        targeted group by adding the group's distinguishedName in the msDS-OIDToGroupLink attribute of
+                        the issuance policy object. This action may enable you to gain membership of the group through
+                        an ADCS ESC13 attack.
+                    </Typography>
+                </>
+            );
         default:
-            return null;
+            return (
+                <>
+                    <Typography variant='body2'>No abuse information available for this node type.</Typography>
+                </>
+            );
     }
 };
 

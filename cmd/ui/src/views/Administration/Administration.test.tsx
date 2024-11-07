@@ -19,7 +19,7 @@ import {
     ROUTE_ADMINISTRATION_DATA_QUALITY,
     ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
     ROUTE_ADMINISTRATION_MANAGE_USERS,
-    ROUTE_ADMINISTRATION_SAML_CONFIGURATION,
+    ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
 } from 'src/ducks/global/routes';
 import { render, screen } from 'src/test-utils';
 import Administration from './Administration';
@@ -46,10 +46,10 @@ describe('Administration', () => {
             ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES
         );
 
-        expect(await screen.findByRole('link', { name: 'SAML Configuration' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'SAML Configuration' })).toHaveAttribute(
+        expect(await screen.findByRole('link', { name: 'SSO Configuration' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'SSO Configuration' })).toHaveAttribute(
             'href',
-            ROUTE_ADMINISTRATION_SAML_CONFIGURATION
+            ROUTE_ADMINISTRATION_SSO_CONFIGURATION
         );
     });
 

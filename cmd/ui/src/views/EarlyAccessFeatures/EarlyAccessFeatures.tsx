@@ -30,11 +30,10 @@ import {
     Skeleton,
     Typography,
 } from '@mui/material';
-import { PageWithTitle } from 'bh-shared-ui';
+import { PageWithTitle, Flag, useFeatureFlags, useToggleFeatureFlag } from 'bh-shared-ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setDarkMode } from 'src/ducks/global/actions';
-import { Flag, useFeatureFlags, useToggleFeatureFlag } from 'src/hooks/useFeatureFlags';
 import { useAppDispatch } from 'src/store';
 
 export const EarlyAccessFeatureToggle: React.FC<{
@@ -48,16 +47,19 @@ export const EarlyAccessFeatureToggle: React.FC<{
 
     return (
         <Paper>
-            <Box p={2} display='flex' justifyContent='space-between' flexWrap='wrap' style={{ rowGap: '1rem' }}>
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
                 <Box overflow='hidden'>
                     <Typography variant='h6'>{flag.name}</Typography>
                     <Typography variant='body1'>{flag.description}</Typography>
                 </Box>
-                <Box>
-                    <Button disabled={disabled} onClick={handleOnClick}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {/* TODO: replace style prop with TW classes once TW is added */}
+                    <Button disabled={disabled} onClick={handleOnClick} style={{ width: '132px' }}>
                         <Box display={'flex'} alignItems={'center'}>
-                            {flag.enabled ? <FontAwesomeIcon icon={faCheckCircle} fixedWidth /> : null}
-                            <Typography ml='8px'>{flag.enabled ? 'Enabled' : 'Disabled'}</Typography>
+                            {flag.enabled ? (
+                                <FontAwesomeIcon style={{ marginRight: '8px' }} icon={faCheckCircle} fixedWidth />
+                            ) : null}
+                            <Typography>{flag.enabled ? 'Enabled' : 'Disabled'}</Typography>
                         </Box>
                     </Button>
                 </Box>

@@ -15,8 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as axios from 'axios';
+import { ConfigurationPayload } from './utils/config';
 
 export type RequestOptions = axios.AxiosRequestConfig;
+
+export interface Serial {
+    id: number;
+    created_at: string;
+    updated_at: string;
+}
 
 export interface CreateAssetGroupRequest {
     name: string;
@@ -142,6 +149,42 @@ export interface PutUserAuthSecretRequest {
     needsPasswordReset: boolean;
 }
 
+export interface CreateOIDCProviderRequest {
+    name: string;
+    client_id: string;
+    issuer: string;
+}
+
+export interface SAMLProviderInfo extends Serial {
+    name: string;
+    display_name: string;
+    idp_issuer_uri: string;
+    idp_sso_uri: string;
+    principal_attribute_mappings: string[] | null;
+    sp_issuer_uri: string;
+    sp_sso_uri: string;
+    sp_metadata_uri: string;
+    sp_acs_uri: string;
+    sso_provider_id: number;
+}
+
+export interface OIDCProviderInfo extends Serial {
+    client_id: string;
+    issuer: string;
+    sso_provider_id: number;
+}
+
+export interface SSOProvider extends Serial {
+    name: string;
+    slug: string;
+    type: 'OIDC' | 'SAML';
+    details: SAMLProviderInfo | OIDCProviderInfo;
+}
+
+export interface ListSSOProvidersResponse {
+    data: SSOProvider[];
+}
+
 export interface LoginRequest {
     login_method: string;
     secret: string;
@@ -181,6 +224,7 @@ export type RiskDetailsRequest = {
     finding: string;
     skip: number;
     limit: number;
+    sort_by?: string;
     Accepted?: string;
 };
 
@@ -272,3 +316,5 @@ export interface UpdateUserRequest {
     SAMLProviderId?: string;
     is_disabled?: boolean;
 }
+
+export type UpdateConfigurationRequest = ConfigurationPayload;

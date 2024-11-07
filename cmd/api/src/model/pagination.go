@@ -31,5 +31,6 @@ func AllPaginationQueryParameters() []string {
 		PaginationQueryParameterLimit,
 		PaginationQueryParameterBefore,
 		PaginationQueryParameterOffset,
+		PaginationQueryParameterSkip,
 		PaginationQueryParameterSortBy}
 }

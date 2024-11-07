@@ -62,7 +62,11 @@ const (
 
 	AuditLogActionCreateSAMLIdentityProvider AuditLogAction = "CreateSAMLIdentityProvider"
 	AuditLogActionUpdateSAMLIdentityProvider AuditLogAction = "UpdateSAMLIdentityProvider"
-	AuditLogActionDeleteSAMLIdentityProvider AuditLogAction = "DeleteSAMLIdentityProvider"
+
+	AuditLogActionCreateOIDCIdentityProvider AuditLogAction = "CreateOIDCIdentityProvider"
+
+	AuditLogActionCreateSSOIdentityProvider AuditLogAction = "CreateSSOIdentityProvider"
+	AuditLogActionDeleteSSOIdentityProvider AuditLogAction = "DeleteSSOIdentityProvider"
 
 	AuditLogActionAcceptRisk   AuditLogAction = "AcceptRisk"
 	AuditLogActionUnacceptRisk AuditLogAction = "UnacceptRisk"
@@ -73,6 +77,8 @@ const (
 	AuditLogActionDeleteBloodhoundData AuditLogAction = "DeleteBloodhoundData"
 
 	AuditLogActionMutateGraph AuditLogAction = "MutateGraph"
+
+	AuditLogActionUpdateParameter AuditLogAction = "UpdateParameter"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration

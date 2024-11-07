@@ -45,7 +45,6 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/serde"
-	"github.com/specterops/bloodhound/src/utils"
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
@@ -73,6 +72,30 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 		QueryParameterFilterParser: model.NewQueryParameterFilterParser(),
 		authorizer:                 authorizer,
 		authenticator:              authenticator,
+	}
+}
+
+func (s ManagementResource) SAMLLoginRedirect(response http.ResponseWriter, request *http.Request) {
+	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableServiceProviderName]
+
+	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		bheCtx := ctx.FromRequest(request)
+		redirectURL := api.URLJoinPath(*bheCtx.Host, fmt.Sprintf("/api/v2/sso/%s/login", ssoProvider.Slug))
+		http.Redirect(response, request, redirectURL.String(), http.StatusFound)
+	}
+}
+
+func (s ManagementResource) SAMLCallbackRedirect(response http.ResponseWriter, request *http.Request) {
+	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableServiceProviderName]
+
+	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		bheCtx := ctx.FromRequest(request)
+		redirectURL := api.URLJoinPath(*bheCtx.Host, fmt.Sprintf("/api/v2/sso/%s/callback", ssoProvider.Slug))
+		http.Redirect(response, request, redirectURL.String(), http.StatusTemporaryRedirect)
 	}
 }
 
@@ -162,19 +185,6 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 	}
 }
 
-func (s ManagementResource) disassociateUsersFromSAMLProvider(request *http.Request, providerUsers model.Users) error {
-	for _, user := range providerUsers {
-		user.SAMLProvider = nil
-		user.SAMLProviderID = null.NewInt32(0, false)
-
-		if err := s.db.UpdateUser(request.Context(), user); err != nil {
-			return api.FormatDatabaseError(err)
-		}
-	}
-
-	return nil
-}
-
 func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, request *http.Request) {
 	var (
 		identityProvider model.SAMLProvider
@@ -190,9 +200,7 @@ func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "user may not delete their own SAML auth provider", request), response)
 	} else if providerUsers, err := s.db.GetSAMLProviderUsers(request.Context(), identityProvider.ID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err := s.disassociateUsersFromSAMLProvider(request, providerUsers); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if err := s.db.DeleteSAMLProvider(request.Context(), identityProvider); err != nil {
+	} else if err := s.db.DeleteSSOProvider(request.Context(), int(identityProvider.SSOProviderID.Int32)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), v2.DeleteSAMLProviderResponse{
@@ -443,17 +451,15 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 
 		if createUserRequest.Secret != "" {
 			if errs := validation.Validate(createUserRequest.SetUserSecretRequest); errs != nil {
-				msg := strings.Join(utils.Errors(errs).AsStringSlice(), ", ")
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, msg, request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 				return
 			} else if secretDigest, err := s.secretDigester.Digest(createUserRequest.Secret); err != nil {
 				log.Errorf("Error while attempting to digest secret for user: %v", err)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 				return
-			} else if passwordExpiration, err := appcfg.GetPasswordExpiration(request.Context(), s.db); err != nil {
-				log.Errorf("Error while attempting to fetch password expiration window: %v", err)
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 			} else {
+				passwordExpiration := appcfg.GetPasswordExpiration(request.Context(), s.db)
+
 				userTemplate.AuthSecret = &model.AuthSecret{
 					Digest:       secretDigest.String(),
 					DigestMethod: s.secretDigester.Method(),
@@ -469,11 +475,29 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		if createUserRequest.SAMLProviderID != "" {
 			if samlProviderID, err := serde.ParseInt32(createUserRequest.SAMLProviderID); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
+				return
 			} else if samlProvider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
 				log.Errorf("Error while attempting to fetch SAML provider %d: %v", createUserRequest.SAMLProviderID, err)
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else {
 				userTemplate.SAMLProviderID = null.Int32From(samlProvider.ID)
+				userTemplate.SSOProviderID = samlProvider.SSOProviderID
+			}
+		} else if createUserRequest.SSOProviderID.Valid {
+			if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), createUserRequest.SSOProviderID.Int32); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else {
+				userTemplate.SSOProviderID = createUserRequest.SSOProviderID
+				if ssoProvider.Type == model.SessionAuthProviderSAML {
+					if ssoProvider.SAMLProvider != nil {
+						userTemplate.SAMLProviderID = null.Int32From(ssoProvider.SAMLProvider.ID)
+					}
+				} else {
+					userTemplate.SAMLProvider = nil
+					userTemplate.SAMLProviderID = null.NewInt32(0, false)
+				}
 			}
 		}
 
@@ -486,20 +510,10 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 	}
 }
 
-func (s ManagementResource) updateUser(response http.ResponseWriter, request *http.Request, user model.User) {
-	if err := s.db.UpdateUser(request.Context(), user); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		response.WriteHeader(http.StatusOK)
-	}
-}
-
 func (s ManagementResource) ensureUserHasNoAuthSecret(ctx context.Context, user model.User) error {
 	if user.AuthSecret != nil {
 		if err := s.db.DeleteAuthSecret(ctx, *user.AuthSecret); err != nil {
 			return api.FormatDatabaseError(err)
-		} else {
-			return nil
 		}
 	}
 
@@ -550,24 +564,47 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			// We're setting a SAML provider. If the user has an associated secret the secret will be removed.
 			if samlProviderID, err := serde.ParseInt32(updateUserRequest.SAMLProviderID); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
+				return
 			} else if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else if provider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else {
 				// Ensure that the AuthSecret reference is nil and that the SAML provider is set
-				user.AuthSecret = nil
-				user.SAMLProvider = &provider
 				user.SAMLProviderID = null.Int32From(samlProviderID)
-
-				s.updateUser(response, request, user)
+				user.SSOProviderID = provider.SSOProviderID
+			}
+		} else if updateUserRequest.SSOProviderID.Valid {
+			if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), updateUserRequest.SSOProviderID.Int32); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else {
+				user.SSOProviderID = updateUserRequest.SSOProviderID
+				if ssoProvider.Type == model.SessionAuthProviderSAML {
+					if ssoProvider.SAMLProvider != nil {
+						user.SAMLProviderID = null.Int32From(ssoProvider.SAMLProvider.ID)
+					}
+				} else {
+					user.SAMLProvider = nil
+					user.SAMLProviderID = null.NewInt32(0, false)
+				}
 			}
 		} else {
-			// Default SAMLProviderID to null if the update request contains no SAMLProviderID
-			user.SAMLProviderID = null.NewInt32(0, false)
+			// Default SAMLProviderID and SSOProviderID to null if the update request contains no SAMLProviderID and SSOProviderID
 			user.SAMLProvider = nil
+			user.SAMLProviderID = null.NewInt32(0, false)
+			user.SSOProviderID = null.NewInt32(0, false)
+		}
 
-			s.updateUser(response, request, user)
+		if err := s.db.UpdateUser(request.Context(), user); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			response.WriteHeader(http.StatusOK)
 		}
 	}
 }
@@ -646,8 +683,7 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 	} else if err := api.ReadJSONRequestPayloadLimited(&setUserSecretRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if errs := validation.Validate(setUserSecretRequest); errs != nil {
-		msg := strings.Join(utils.Errors(errs).AsStringSlice(), ", ")
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, msg, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 	} else if targetUser, err := s.db.GetUser(request.Context(), targetUserID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if targetUser.SAMLProviderID.Valid {
@@ -662,10 +698,8 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 			}
 		}
 
-		if passwordExpiration, err := appcfg.GetPasswordExpiration(request.Context(), s.db); err != nil {
-			log.Errorf("Error while attempting to fetch password expiration window: %v", err)
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseCodeInternalServerError, request), response)
-		} else if secretDigest, err := s.secretDigester.Digest(setUserSecretRequest.Secret); err != nil {
+		passwordExpiration := appcfg.GetPasswordExpiration(request.Context(), s.db)
+		if secretDigest, err := s.secretDigester.Digest(setUserSecretRequest.Secret); err != nil {
 			log.Errorf("Error while attempting to digest secret for user: %v", err)
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		} else {

@@ -205,19 +205,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "oneOf": [
-                        {
-                          "$ref": "#/components/schemas/model.user"
-                        },
-                        {
-                          "$ref": "#/components/schemas/model.client"
-                        }
-                      ]
-                    }
-                  }
+                  "$ref": "#/components/schemas/api.response.authenticated-requester"
                 }
               }
             }
@@ -9373,32 +9361,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/api.response.pagination"
-                    },
-                    {
-                      "$ref": "#/components/schemas/api.response.time-window"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "data": {
-                          "type": "array",
-                          "items": {
-                            "oneOf": [
-                              {
-                                "$ref": "#/components/schemas/model.ad-data-quality-aggregation"
-                              },
-                              {
-                                "$ref": "#/components/schemas/model.azure-data-quality-aggregation"
-                              }
-                            ]
-                          }
-                        }
-                      }
-                    }
-                  ]
+                  "$ref": "#/components/schemas/api.response.data-quality-platform-aggregate"
                 }
               }
             }
@@ -12203,7 +12166,7 @@
       "get": {
         "operationId": "ListDomainAttackPathsDetails",
         "summary": "List domain attack paths details",
-        "description": "Lists detailed data about attack paths for a domain.",
+        "description": "Lists detailed data about attack paths for a domain. \n\n__Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.\n",
         "tags": [
           "Attack Paths",
           "Enterprise"
@@ -12212,13 +12175,14 @@
           {
             "name": "finding",
             "in": "query",
+            "required": true,
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
             }
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are `domain_sid`, `index`, `AcceptedUntil`, `id`, `created_at`, `updated_at`, `deleted_at`. Relationship risks can be sorted on `FromPrincipal` and `ToPrincipal` in addition to the sortable columns for List Risks.",
+            "description": "Sortable columns are `domain_sid`, `index`, `AcceptedUntil`, `id`, `created_at`, `updated_at`, `deleted_at`, `exposure_percentage`, `impact_percentage`. Relationship risks can be sorted on `FromPrincipal` and `ToPrincipal` in addition to the sortable columns for List Risks.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -12292,6 +12256,7 @@
           },
           {
             "name": "Finding",
+            "deprecated": true,
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -12395,6 +12360,186 @@
                       ]
                     }
                   ]
+                },
+                "examples": {
+                  "Butterfly Relationship Finding": {
+                    "summary": "Butterfly Relationship Finding",
+                    "description": "When the butterfly analysis feature flag is on, impact count/percentage and exposure count/percentage will have a value other than zero.",
+                    "value": {
+                      "count": 0,
+                      "skip": 0,
+                      "limit": 0,
+                      "data": [
+                        {
+                          "id": 0,
+                          "created_at": "2024-08-28T21:21:40.845Z",
+                          "updated_at": "2024-08-28T21:21:40.845Z",
+                          "deleted_at": {
+                            "time": "2024-08-28T21:21:40.845Z",
+                            "valid": true
+                          },
+                          "FromPrincipal": "string",
+                          "ToPrincipal": "string",
+                          "FromPrincipalProps": {
+                            "additionalProp1": {},
+                            "additionalProp2": {},
+                            "additionalProp3": {}
+                          },
+                          "FromPrincipalKind": "string",
+                          "ToPrincipalProps": {
+                            "additionalProp1": {},
+                            "additionalProp2": {},
+                            "additionalProp3": {}
+                          },
+                          "ToPrincipalKind": "string",
+                          "RelProps": {
+                            "additionalProp1": {},
+                            "additionalProp2": {},
+                            "additionalProp3": {}
+                          },
+                          "ComboGraphRelationID": {
+                            "int64": 0,
+                            "valid": true
+                          },
+                          "Finding": "string",
+                          "DomainSID": "string",
+                          "PrincipalHash": "string",
+                          "AcceptedUntil": "2024-08-28T21:21:40.845Z",
+                          "ImpactPercentage": 12,
+                          "ImpactCount": 2,
+                          "ExposurePercentage": 24,
+                          "ExposureCount": 4,
+                          "Severity": "high",
+                          "Accepted": true
+                        }
+                      ]
+                    }
+                  },
+                  "Metatree Relationship Finding": {
+                    "summary": "Metatree Relationship Finding",
+                    "description": "When the butterfly analysis feature flag is off and metatree is running, impact count/percentage and exposure count/percentage will have a value of zero.",
+                    "value": {
+                      "count": 0,
+                      "skip": 0,
+                      "limit": 0,
+                      "data": [
+                        {
+                          "id": 0,
+                          "created_at": "2024-08-28T21:21:40.845Z",
+                          "updated_at": "2024-08-28T21:21:40.845Z",
+                          "deleted_at": {
+                            "time": "2024-08-28T21:21:40.845Z",
+                            "valid": true
+                          },
+                          "FromPrincipal": "string",
+                          "ToPrincipal": "string",
+                          "FromPrincipalProps": {
+                            "additionalProp1": {},
+                            "additionalProp2": {},
+                            "additionalProp3": {}
+                          },
+                          "FromPrincipalKind": "string",
+                          "ToPrincipalProps": {
+                            "additionalProp1": {},
+                            "additionalProp2": {},
+                            "additionalProp3": {}
+                          },
+                          "ToPrincipalKind": "string",
+                          "RelProps": {
+                            "additionalProp1": {},
+                            "additionalProp2": {},
+                            "additionalProp3": {}
+                          },
+                          "ComboGraphRelationID": {
+                            "int64": 0,
+                            "valid": true
+                          },
+                          "Finding": "string",
+                          "DomainSID": "string",
+                          "PrincipalHash": "string",
+                          "AcceptedUntil": "2024-08-28T21:21:40.845Z",
+                          "ImpactPercentage": 0,
+                          "ImpactCount": 0,
+                          "ExposurePercentage": 0,
+                          "ExposureCount": 0,
+                          "Severity": "",
+                          "Accepted": true
+                        }
+                      ]
+                    }
+                  },
+                  "Butterfly List Finding": {
+                    "summary": "Butterfly List Finding",
+                    "description": "When the butterfly analysis feature flag is on, impact count/percentage and exposure count/percentage will have a value other than zero.",
+                    "value": {
+                      "count": "0,",
+                      "skip": "0,",
+                      "limit": "0,",
+                      "data": [
+                        {
+                          "id": 0,
+                          "created_at": "2024-08-28T21:42:18.844Z",
+                          "updated_at": "2024-08-28T21:42:18.844Z",
+                          "deleted_at": {
+                            "time": "2024-08-28T21:42:18.844Z",
+                            "valid": true
+                          },
+                          "Principal": "string",
+                          "PrincipalKind": "string",
+                          "Finding": "string",
+                          "DomainSID": "string",
+                          "Props": {
+                            "additionalProp1": {},
+                            "additionalProp2": {},
+                            "additionalProp3": {}
+                          },
+                          "accepted_until": "2024-08-28T21:42:18.844Z",
+                          "ImpactPercentage": 12,
+                          "ImpactCount": 2,
+                          "ExposurePercentage": 24,
+                          "ExposureCount": 4,
+                          "Severity": "high",
+                          "Accepted": true
+                        }
+                      ]
+                    }
+                  },
+                  "Metatree List Finding": {
+                    "summary": "Metatree List Finding",
+                    "description": "When the butterfly analysis feature flag is off and metatree is running, impact count/percentage and exposure count/percentage will have a value of zero.",
+                    "value": {
+                      "count": "0,",
+                      "skip": "0,",
+                      "limit": "0,",
+                      "data": [
+                        {
+                          "id": 0,
+                          "created_at": "2024-08-28T21:42:18.844Z",
+                          "updated_at": "2024-08-28T21:42:18.844Z",
+                          "deleted_at": {
+                            "time": "2024-08-28T21:42:18.844Z",
+                            "valid": true
+                          },
+                          "Principal": "string",
+                          "PrincipalKind": "string",
+                          "Finding": "string",
+                          "DomainSID": "string",
+                          "Props": {
+                            "additionalProp1": {},
+                            "additionalProp2": {},
+                            "additionalProp3": {}
+                          },
+                          "accepted_until": "2024-08-28T21:42:18.844Z",
+                          "ImpactPercentage": 0,
+                          "ImpactCount": 0,
+                          "ExposurePercentage": 0,
+                          "ExposureCount": 0,
+                          "Severity": "",
+                          "Accepted": true
+                        }
+                      ]
+                    }
+                  }
                 }
               }
             }
@@ -12574,19 +12719,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "oneOf": [
-                        {
-                          "$ref": "#/components/schemas/model.list-finding"
-                        },
-                        {
-                          "$ref": "#/components/schemas/model.relationship-finding"
-                        }
-                      ]
-                    }
-                  }
+                  "$ref": "#/components/schemas/api.response.finding"
                 }
               }
             }
@@ -12638,6 +12771,7 @@
           {
             "name": "from",
             "deprecated": true,
+            "x-go-name": "fromDeprecated",
             "description": "Lower bound for created_at; to return posture stats starting at a specific date/time",
             "in": "query",
             "schema": {
@@ -12648,6 +12782,7 @@
           {
             "name": "to",
             "deprecated": true,
+            "x-go-name": "toDeprecated",
             "description": "Upper bound for created_at; to return posture stats upto a specific date/time",
             "in": "query",
             "schema": {
@@ -12924,15 +13059,14 @@
       },
       "query.entity.type": {
         "name": "type",
-        "description": "The type of return data requested. If no type is provided, query will default to `list`,\nbut invalid types will result in a `count` query. Some entity query endpoints do not\nsupport the `graph` type.\n",
+        "description": "The type of return data requested. If no type is provided, query will default to `list`.\nThe only supported type is `list`, but the unsupported `graph` type can be used.\nSome entity query endpoints do not support the `graph` type. For those interested in\nusing the undocumented graph type parameter, the response type is described in the schema\n`model.bh-graph.graph`.\n",
         "in": "query",
         "schema": {
           "type": "string",
           "default": "list",
           "enum": [
             "list",
-            "graph",
-            "count"
+            "graph"
           ]
         }
       },
@@ -13157,12 +13291,10 @@
             "readOnly": true
           },
           "deleted_at": {
+            "readOnly": true,
             "allOf": [
               {
                 "$ref": "#/components/schemas/null.time"
-              },
-              {
-                "readOnly": true
               }
             ]
           }
@@ -13294,22 +13426,18 @@
             "type": "object",
             "properties": {
               "saml_provider_id": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.int32"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "AuthSecret": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/model.auth-secret"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13321,32 +13449,21 @@
                 }
               },
               "first_name": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "last_name": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": false
-                  }
-                ]
+                "$ref": "#/components/schemas/null.string"
               },
               "email_address": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13457,22 +13574,18 @@
             "type": "object",
             "properties": {
               "user_id": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.uuid"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "name": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13633,22 +13746,18 @@
                 "readOnly": true
               },
               "event_id": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.int32"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "status": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/enum.job-status"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13667,12 +13776,10 @@
                 "readOnly": true
               },
               "log_path": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13784,32 +13891,26 @@
                 }
               },
               "token": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/model.auth-token"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "current_job_id": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.int64"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "current_job": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/model.client-scheduled-job"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13819,12 +13920,10 @@
                 "readOnly": true
               },
               "domain_controller": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -13833,28 +13932,39 @@
                 "readOnly": true
               },
               "user_sid": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.string"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
               "type": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/enum.client-type"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               }
             }
           }
         ]
+      },
+      "api.response.authenticated-requester": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/model.user"
+              },
+              {
+                "$ref": "#/components/schemas/model.client"
+              }
+            ]
+          }
+        }
       },
       "model.saml-provider": {
         "allOf": [
@@ -14196,12 +14306,10 @@
                 "readOnly": true
               },
               "status": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/enum.audit-log-status"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               }
@@ -14526,9 +14634,7 @@
           },
           "data": {
             "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
+            "additionalProperties": true
           },
           "glyphs": {
             "type": "array",
@@ -14827,12 +14933,10 @@
             "type": "object",
             "properties": {
               "shared_to_user_id": {
+                "readOnly": true,
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.uuid"
-                  },
-                  {
-                    "readOnly": true
                   }
                 ]
               },
@@ -15112,6 +15216,34 @@
               "run_id": {
                 "type": "string",
                 "format": "uuid"
+              }
+            }
+          }
+        ]
+      },
+      "api.response.data-quality-platform-aggregate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/api.response.pagination"
+          },
+          {
+            "$ref": "#/components/schemas/api.response.time-window"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/model.ad-data-quality-aggregation"
+                    },
+                    {
+                      "$ref": "#/components/schemas/model.azure-data-quality-aggregation"
+                    }
+                  ]
+                }
               }
             }
           }
@@ -15445,6 +15577,32 @@
               "AcceptedUntil": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "ImpactPercentage": {
+                "type": "number",
+                "format": "double"
+              },
+              "ImpactCount": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "ExposurePercentage": {
+                "type": "number",
+                "format": "double"
+              },
+              "ExposureCount": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "Severity": {
+                "type": "string",
+                "enum": [
+                  "critical",
+                  "high",
+                  "moderate",
+                  "low",
+                  ""
+                ]
               }
             }
           }
@@ -15482,6 +15640,32 @@
               "accepted_until": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "ImpactPercentage": {
+                "type": "number",
+                "format": "double"
+              },
+              "ImpactCount": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "ExposurePercentage": {
+                "type": "number",
+                "format": "double"
+              },
+              "ExposureCount": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "Severity": {
+                "type": "string",
+                "enum": [
+                  "critical",
+                  "high",
+                  "moderate",
+                  "low",
+                  ""
+                ]
               }
             }
           }
@@ -15517,6 +15701,21 @@
             }
           }
         ]
+      },
+      "api.response.finding": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/model.list-finding"
+              },
+              {
+                "$ref": "#/components/schemas/model.relationship-finding"
+              }
+            ]
+          }
+        }
       },
       "model.risk-posture-stat": {
         "allOf": [
@@ -15739,55 +15938,37 @@
         }
       },
       "related-entity-query-results": {
-        "description": "**OK**\n\nThis endpoint returns a polymorphic response dependent upon which return type is requested\nby the `type` parameter.\n",
+        "description": "**OK**\n\nThis endpoint returns a response, dependent upon which return type is requested by the `type` parameter.\nThe only supported `type` parameter is `list`.\nWhile `list` is the only supported `type` parameter, the `graph` parameter can be used\nand will result in a different response structure then documented here.\nFor those interested in using the undocumented graph type parameter, the response type is described in the schema\n`model.bh-graph.graph`.\n",
         "content": {
           "application/json": {
             "schema": {
-              "oneOf": [
+              "allOf": [
                 {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/model.bh-graph.graph"
-                    },
-                    {
-                      "title": "graph"
-                    }
-                  ]
+                  "$ref": "#/components/schemas/api.response.pagination"
                 },
                 {
-                  "title": "count",
-                  "type": "integer"
-                },
-                {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/api.response.pagination"
-                    },
-                    {
-                      "title": "list",
-                      "type": "object",
-                      "properties": {
-                        "data": {
-                          "type": "array",
-                          "items": {
-                            "title": "paged-node-list-entry",
-                            "type": "object",
-                            "properties": {
-                              "objectID": {
-                                "type": "string"
-                              },
-                              "name": {
-                                "type": "string"
-                              },
-                              "label": {
-                                "type": "string"
-                              }
-                            }
+                  "title": "list",
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "title": "paged-node-list-entry",
+                        "type": "object",
+                        "properties": {
+                          "objectID": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
                           }
                         }
                       }
                     }
-                  ]
+                  }
                 }
               ]
             }

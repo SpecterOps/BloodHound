@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"gorm.io/gorm"
 
 	"github.com/gofrs/uuid"
@@ -104,7 +105,7 @@ func (s *BloodhoundDB) GetAllRoles(ctx context.Context, order string, filter mod
 		cursor = cursor.Order(order)
 	}
 	if filter.SQLString != "" {
-		cursor = cursor.Where(filter.SQLString, filter.Params)
+		cursor = cursor.Where(filter.SQLString, filter.Params...)
 	}
 
 	return roles, CheckError(cursor.Find(&roles))
@@ -145,7 +146,7 @@ func (s *BloodhoundDB) GetAllPermissions(ctx context.Context, order string, filt
 	}
 
 	if filter.SQLString != "" {
-		cursor = cursor.Where(filter.SQLString, filter.Params)
+		cursor = cursor.Where(filter.SQLString, filter.Params...)
 	}
 
 	return permissions, CheckError(cursor.Find(&permissions))
@@ -299,7 +300,7 @@ func (s *BloodhoundDB) GetAllUsers(ctx context.Context, order string, filter mod
 	}
 
 	if filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params).Find(&users)
+		result = cursor.Where(filter.SQLString, filter.Params...).Find(&users)
 	} else {
 		result = cursor.Find(&users)
 	}
@@ -393,7 +394,7 @@ func (s *BloodhoundDB) GetAllAuthTokens(ctx context.Context, order string, filte
 	}
 
 	if filter.SQLString != "" {
-		cursor = cursor.Where(filter.SQLString, filter.Params)
+		cursor = cursor.Where(filter.SQLString, filter.Params...)
 	}
 
 	return tokens, CheckError(cursor.Find(&tokens))
@@ -464,7 +465,8 @@ func (s *BloodhoundDB) DeleteAuthSecret(ctx context.Context, authSecret model.Au
 	})
 }
 
-// CreateSAMLProvider creates a new saml_providers row using the data in the input struct
+// CreateSAMLIdentityProvider creates a new saml_providers row using the data in the input struct
+// This also creates the corresponding sso_provider entry
 // INSERT INTO saml_identity_providers (...) VALUES (...)
 func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error) {
 	auditEntry := model.AuditEntry{
@@ -473,7 +475,15 @@ func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvi
 	}
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Create(&samlProvider))
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+
+		// Create the associated SSO provider
+		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, samlProvider.Name, model.SessionAuthProviderSAML); err != nil {
+			return err
+		} else {
+			samlProvider.SSOProviderID = null.Int32From(ssoProvider.ID)
+			return CheckError(tx.WithContext(ctx).Create(&samlProvider))
+		}
 	})
 
 	return samlProvider, err
@@ -523,17 +533,6 @@ func (s *BloodhoundDB) GetSAMLProvider(ctx context.Context, id int32) (model.SAM
 	)
 
 	return samlProvider, CheckError(result)
-}
-
-func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SAMLProvider) error {
-	auditEntry := model.AuditEntry{
-		Action: model.AuditLogActionDeleteSAMLIdentityProvider,
-		Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
-	}
-
-	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Delete(&provider))
-	})
 }
 
 // GetSAMLProviderUsers returns all users that are bound to the SAML provider ID provided

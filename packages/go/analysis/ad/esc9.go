@@ -33,13 +33,13 @@ import (
 )
 
 func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	results := cardinality.NewBitmap32()
+	results := cardinality.NewBitmap64()
 
-	if _, ok := cache.HasWeakCertBindingInForest[domain.ID]; !ok {
+	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint64()); !ok {
 		return nil
-	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaEnrollers) == 0 {
 		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
@@ -48,11 +48,11 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateEnrollers, ok := cache.CertTemplateEnrollers[template.ID]; !ok {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
-				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaControllers)
+				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(eca.ID))
 
 				if filteredVictims, err := filterUserDNSResults(tx, victimBitmap, template); err != nil {
 					log.Warnf("Error filtering users from victims for esc9a: %v", err)
@@ -61,12 +61,12 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 					log.Warnf("Error getting start nodes for esc9a attacker nodes: %v", err)
 					continue
 				} else {
-					results.Or(cardinality.NodeIDsToDuplex(attackers))
+					results.Or(graph.NodeIDsToDuplex(attackers))
 				}
 			}
 		}
 
-		results.Each(func(value uint32) bool {
+		results.Each(func(value uint64) bool {
 			return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
@@ -79,13 +79,13 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 }
 
 func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	results := cardinality.NewBitmap32()
+	results := cardinality.NewBitmap64()
 
-	if _, ok := cache.HasWeakCertBindingInForest[domain.ID]; !ok {
+	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint64()); !ok {
 		return nil
-	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaEnrollers) == 0 {
 		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
@@ -94,22 +94,22 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateEnrollers, ok := cache.CertTemplateEnrollers[template.ID]; !ok {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
-				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaControllers)
+				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(eca.ID))
 
 				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
 					log.Warnf("Error getting start nodes for esc9a attacker nodes: %v", err)
 					continue
 				} else {
-					results.Or(cardinality.NodeIDsToDuplex(attackers))
+					results.Or(graph.NodeIDsToDuplex(attackers))
 				}
 			}
 		}
 
-		results.Each(func(value uint32) bool {
+		results.Each(func(value uint64) bool {
 			return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,

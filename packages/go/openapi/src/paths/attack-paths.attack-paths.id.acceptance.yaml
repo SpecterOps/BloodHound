@@ -51,12 +51,7 @@ put:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              data:
-                oneOf:
-                  - $ref: './../schemas/model.list-finding.yaml'
-                  - $ref: './../schemas/model.relationship-finding.yaml'
+            $ref: './../schemas/api.response.finding.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

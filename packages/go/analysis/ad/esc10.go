@@ -34,14 +34,14 @@ import (
 )
 
 func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	if _, ok := cache.HasUPNCertMappingInForest[domain.ID]; !ok {
+	if ok := cache.HasUPNCertMappingInForest(domain.ID.Uint64()); !ok {
 		return nil
-	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaEnrollers) == 0 {
 		return nil
 	} else {
-		results := cardinality.NewBitmap32()
+		results := cardinality.NewBitmap64()
 
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC10(template, false); err != nil {
@@ -49,11 +49,11 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateEnrollers, ok := cache.CertTemplateEnrollers[template.ID]; !ok {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
-				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaControllers)
+				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(eca.ID))
 
 				if filteredVictims, err := filterUserDNSResults(tx, victimBitmap, template); err != nil {
 					log.Warnf("Error filtering users from victims for esc9a: %v", err)
@@ -62,12 +62,12 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 					log.Warnf("Error getting start nodes for esc10a attacker nodes: %v", err)
 					continue
 				} else {
-					results.Or(cardinality.NodeIDsToDuplex(attackers))
+					results.Or(graph.NodeIDsToDuplex(attackers))
 				}
 			}
 		}
 
-		results.Each(func(value uint32) bool {
+		results.Each(func(value uint64) bool {
 			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
@@ -80,14 +80,14 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 }
 
 func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
-	if _, ok := cache.HasUPNCertMappingInForest[domain.ID]; !ok {
+	if ok := cache.HasUPNCertMappingInForest(domain.ID.Uint64()); !ok {
 		return nil
-	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[enterpriseCA.ID]; !ok {
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[enterpriseCA.ID]; !ok {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID); len(ecaEnrollers) == 0 {
 		return nil
 	} else {
-		results := cardinality.NewBitmap32()
+		results := cardinality.NewBitmap64()
 
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC10(template, true); err != nil {
@@ -95,22 +95,22 @@ func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analy
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateEnrollers, ok := cache.CertTemplateEnrollers[template.ID]; !ok {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
-				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaControllers)
+				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(enterpriseCA.ID))
 
 				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
 					log.Warnf("Error getting start nodes for esc10b attacker nodes: %v", err)
 					continue
 				} else {
-					results.Or(cardinality.NodeIDsToDuplex(attackers))
+					results.Or(graph.NodeIDsToDuplex(attackers))
 				}
 			}
 		}
 
-		results.Each(func(value uint32) bool {
+		results.Each(func(value uint64) bool {
 			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
@@ -127,9 +127,9 @@ func isCertTemplateValidForESC10(ct *graph.Node, scenarioB bool) (bool, error) {
 		return false, err
 	} else if reqManagerApproval {
 		return false, nil
-	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
+	} else if schannelAuthenticationEnabled, err := schannelAuthenticationEnabled(ct); err != nil {
 		return false, err
-	} else if !authenticationEnabled {
+	} else if !schannelAuthenticationEnabled {
 		return false, nil
 	} else if enrolleeSuppliesSubject, err := ct.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil {
 		return false, err
@@ -200,7 +200,12 @@ func adcsESC10Path1Pattern(domainID graph.ID, edgeKind graph.Kind) traversal.Pat
 				query.KindIn(query.Relationship(), ad.GenericAll, ad.Enroll, ad.AllExtendedRights),
 				query.Kind(query.End(), ad.CertTemplate),
 				query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
-				query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+				query.Or(
+					query.Equals(query.EndProperty(ad.SchannelAuthenticationEnabled.String()), true),
+					query.Equals(query.Size(query.EndProperty(ad.EffectiveEKUs.String())), 0),
+					query.InInverted(query.EndProperty(ad.EffectiveEKUs.String()), "1.3.6.1.5.5.7.3.2"),
+					query.InInverted(query.EndProperty(ad.EffectiveEKUs.String()), "2.5.29.37.0"),
+				),
 				query.Equals(query.EndProperty(ad.EnrolleeSuppliesSubject.String()), false),
 				getESC10CertTemplateCriteria(edgeKind),
 				query.Or(
@@ -249,7 +254,7 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 	MATCH (n {objectid:'S-1-5-21-3933516454-2894985453-2515407000-500'})-[:ADCSESC10a]->(d:Domain {objectid:'S-1-5-21-3933516454-2894985453-2515407000'})
 	MATCH p1 = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(m)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 	WHERE ct.requiresmanagerapproval = false
-	  AND ct.authenticationenabled = true
+	  AND ct.schannelauthenticationenabled = true
 	  AND ct.enrolleesuppliessubject = false
 	  AND (ct.subjectaltrequireupn = true OR ct.subjectaltrequirespn = true)
 	  AND (
@@ -271,7 +276,7 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 	MATCH (n {objectid:'S-1-5-21-3933516454-2894985453-2515407000-500'})-[:ADCSESC10b]->(d:Domain {objectid:'S-1-5-21-3933516454-2894985453-2515407000'})
 	MATCH p1 = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(m:Computer)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 	WHERE ct.requiresmanagerapproval = false
-	AND ct.authenticationenabled = true
+	AND ct.schannelauthenticationenabled = true
 	AND ct.enrolleesuppliessubject = False
 	AND ct.subjectaltrequiredns = true
 	AND (

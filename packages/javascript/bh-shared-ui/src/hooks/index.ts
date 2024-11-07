@@ -20,12 +20,16 @@ export { default as useOnClickOutside } from './useOnClickOutside';
 
 export { default as useDebouncedValue } from './useDebouncedValue';
 
-export * from './useSearch';
+export * from './useConfiguration';
 
 export * from './useDataQualityStats';
 
-export * from './useSavedQueries';
+export * from './useFeatureFlags';
+
+export * from './useFetchEntityProperties';
 
 export * from './useFileIngest';
 
-export * from './useFetchEntityProperties';
+export * from './useSavedQueries';
+
+export * from './useSearch';

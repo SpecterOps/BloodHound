@@ -16,13 +16,28 @@ BloodHound CE is created and maintained by the [BloodHound Enterprise Team](http
 ## Running BloodHound Community Edition
 Docker Compose is the easiest way to get up and running with BloodHound CE. Instructions below describe how to install and upgrade your deployment.
 
+### System Requirements
+BloodHound CE deploys in a traditional multi-tier container architecture consisting of databases, application, and UI layers. 
+
+**Minimum specifications:**
+
+- 4GB of RAM
+- 4 processor cores
+- 10GB hard disk space
+
+**For large environments (>50,000 users):**
+
+- 96GB of RAM
+- 12 processor cores
+- 50GB hard disk space
+
 ### Deploy BloodHound CE
 Deploying BloodHound CE quickly with the following steps:
 
 1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/). Docker Desktop includes Docker Compose as part of the installation.
-2. Download the [Docker Compose YAML file](examples/docker-compose/docker-compose.yaml) and save it to a directory where you'd like to run BloodHound. You can do this from a terminal application with `curl -L https://ghst.ly/getbhce`.
+2. Download the [Docker Compose YAML file](examples/docker-compose/docker-compose.yml) and save it to a directory where you'd like to run BloodHound. You can do this from a terminal application with `curl -L https://ghst.ly/getbhce`.
    > On Windows: Execute the command in CMD, or use `curl.exe` instead of `curl` in PowerShell.
-3. Navigate to the folder with the saved `docker-compose.yaml` file and run `docker compose pull && docker compose up`.
+3. Navigate to the folder with the saved `docker-compose.yml` file and run `docker compose pull && docker compose up`.
 4. Locate the randomly generated password in the terminal output of Docker Compose.
 5. In a browser, navigate to `http://localhost:8080/ui/login`. Login with a username of `admin` and the randomly generated password from the logs.
 
@@ -31,7 +46,7 @@ Deploying BloodHound CE quickly with the following steps:
 ### Upgrade BloodHound CE
 Once installed, upgrade BloodHound CE to the latest version with the following steps:
 
-1. Navigate to the folder with the saved `docker-compose.yaml` file and run `docker compose pull && docker compose up`.
+1. Navigate to the folder with the saved `docker-compose.yml` file and run `docker compose pull && docker compose up`.
 2. In a browser, navigate to `http://localhost:8080/ui/login` and log in with your previously configured username and password.
 
 ### Importing sample data

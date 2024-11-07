@@ -34,3 +34,23 @@ allOf:
       accepted_until:
         type: string
         format: date-time
+      ImpactPercentage: 
+        type: number
+        format: double
+      ImpactCount: 
+        type: integer
+        format: int64
+      ExposurePercentage:
+        type: number
+        format: double
+      ExposureCount:
+        type: integer
+        format: int64
+      Severity:
+        type: string
+        enum:
+          - critical
+          - high
+          - moderate
+          - low
+          - ""

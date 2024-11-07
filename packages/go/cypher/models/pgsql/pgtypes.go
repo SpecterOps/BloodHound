@@ -92,6 +92,7 @@ const (
 	Text                     DataType = "text"
 	TextArray                DataType = "text[]"
 	JSONB                    DataType = "jsonb"
+	JSONBArray               DataType = "jsonb[]"
 	Date                     DataType = "date"
 	TimeWithTimeZone         DataType = "time with time zone"
 	TimeWithoutTimeZone      DataType = "time without time zone"
@@ -271,10 +272,10 @@ var CompositeTypes = []DataType{NodeComposite, NodeCompositeArray, EdgeComposite
 func NegotiateValue(value any) (any, error) {
 	switch typedValue := value.(type) {
 	case graph.ID:
-		return typedValue.Uint32(), nil
+		return typedValue.Uint64(), nil
 
 	case []graph.ID:
-		return graph.IDsToUint32Slice(typedValue), nil
+		return graph.IDsToUint64Slice(typedValue), nil
 
 	default:
 		return value, nil

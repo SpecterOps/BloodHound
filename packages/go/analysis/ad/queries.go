@@ -1417,7 +1417,7 @@ func FetchLocalGroupCompleteness(tx graph.Transaction, domainSIDs ...string) (fl
 		var (
 			activeComputerCount           = float64(computers.Len())
 			activeComputerCountWithAdmins = float64(0)
-			computerBmp                   = cardinality.NewBitmap32()
+			computerBmp                   = cardinality.NewBitmap64()
 		)
 
 		if err := tx.Relationships().Filterf(func() graph.Criteria {
@@ -1427,7 +1427,7 @@ func FetchLocalGroupCompleteness(tx graph.Transaction, domainSIDs ...string) (fl
 			)
 		}).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 			for rel := range cursor.Chan() {
-				computerBmp.Add(rel.EndID.Uint32())
+				computerBmp.Add(rel.EndID.Uint64())
 			}
 
 			return nil
@@ -1699,12 +1699,12 @@ func fetchFirstDegreeNodes(tx graph.Transaction, targetNode *graph.Node, relKind
 	))
 }
 
-func FetchAttackersForEscalations9and10(tx graph.Transaction, victimBitmap cardinality.Duplex[uint32], scenarioB bool) ([]graph.ID, error) {
+func FetchAttackersForEscalations9and10(tx graph.Transaction, victimBitmap cardinality.Duplex[uint64], scenarioB bool) ([]graph.ID, error) {
 	if attackers, err := ops.FetchStartNodeIDs(tx.Relationships().Filterf(func() graph.Criteria {
 		criteria := query.And(
 			query.KindIn(query.Start(), ad.Group, ad.User, ad.Computer),
 			query.KindIn(query.Relationship(), ad.GenericAll, ad.GenericWrite, ad.Owns, ad.WriteOwner, ad.WriteDACL),
-			query.InIDs(query.EndID(), cardinality.DuplexToGraphIDs(victimBitmap)...),
+			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(victimBitmap)...),
 		)
 		if scenarioB {
 			return query.And(criteria, query.KindIn(query.End(), ad.Computer))
@@ -1721,4 +1721,17 @@ func FetchCertTemplateCAs(tx graph.Transaction, certTemplate *graph.Node) (graph
 	return ops.FetchEndNodes(tx.Relationships().Filter(
 		FilterPublishedCAs(certTemplate),
 	))
+}
+
+func FetchAuthUsersAndEveryoneGroups(tx graph.Transaction, domainSID string) (graph.NodeSet, error) {
+	return ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Node(), ad.Group),
+			query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
+			query.Or(
+				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), AuthenticatedUsersSuffix),
+				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), EveryoneSuffix),
+			),
+		)
+	}))
 }

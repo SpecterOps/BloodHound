@@ -17,126 +17,65 @@
 import { faCropAlt, faEye } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, MenuItem } from '@mui/material';
-import { useSetSettings, useSigma } from '@react-sigma/core';
-import { GraphMenu, GraphButton, GraphButtonProps, exportToJson } from 'bh-shared-ui';
-import { random } from 'graphology-layout';
-import forceAtlas2 from 'graphology-layout-forceatlas2';
+import { GraphMenu, GraphButton } from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import { FC } from 'react';
-import { resetCamera } from 'src/ducks/graph/utils';
-import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { useAppSelector } from 'src/store';
 
 interface GraphButtonsProps {
-    rankDirection?: RankDirection;
-    options?: GraphButtonOptions;
-    nonLayoutButtons?: GraphButtonProps[];
+    onReset: () => void;
+    onRunStandardLayout: () => void;
+    onRunSequentialLayout: () => void;
+    onExportJson: () => void;
+    onSearchCurrentResults: () => void;
+    onShowAllLabels: () => void;
+    onHideAllLabels: () => void;
+    onHideNodeLabels: () => void;
+    onHideEdgeLabels: () => void;
+    isCurrentSearchOpen: boolean;
 }
 
-export type GraphButtonOptions = {
-    standard: boolean;
-    sequential: boolean;
-};
-
-const GraphButtons: FC<GraphButtonsProps> = ({ rankDirection, options, nonLayoutButtons }) => {
-    if (isEmpty(options)) options = { standard: false, sequential: false };
-    const { standard, sequential } = options;
-
+const GraphButtons: FC<GraphButtonsProps> = ({
+    onReset,
+    onRunStandardLayout,
+    onRunSequentialLayout,
+    onExportJson,
+    onSearchCurrentResults,
+    onShowAllLabels,
+    onHideAllLabels,
+    onHideNodeLabels,
+    onHideEdgeLabels,
+    isCurrentSearchOpen,
+}) => {
     const exportableGraphState = useAppSelector((state) => state.explore.export);
 
-    const sigma = useSigma();
-    const graph = sigma.getGraph();
-    const setSettings = useSetSettings();
-    const { assign: assignDagre } = layoutDagre(
-        {
-            graph: {
-                rankdir: rankDirection || RankDirection.LEFT_RIGHT,
-                ranksep: rankDirection === RankDirection.LEFT_RIGHT ? 500 : 50,
-            },
-        },
-        graph
-    );
-
-    const runSequentialLayout = (): void => {
-        assignDagre();
-        resetCamera(sigma);
-    };
-
-    const runStandardLayout = (): void => {
-        random.assign(graph, { scale: 1000 });
-        forceAtlas2.assign(graph, {
-            iterations: 128,
-            settings: {
-                scalingRatio: 1000,
-                barnesHutOptimize: true,
-            },
-        });
-        resetCamera(sigma);
-    };
-
-    const showAllLabels = (): void => {
-        setSettings ({
-            renderLabels: true,
-            renderEdgeLabels: true,
-        })
-        resetCamera(sigma);
-    }
-
-    const hideAllLabels = (): void => {
-        setSettings ({
-            renderLabels: false,
-            renderEdgeLabels: false,
-        })
-        resetCamera(sigma);
-    }
-
-    const hideNodeLabels = (): void => {
-        setSettings({ renderLabels: false });
-        resetCamera(sigma);
-    }
-
-    const hideEdgeLabels = (): void => {
-        setSettings({ renderEdgeLabels: false });
-        resetCamera(sigma);
-    }
-
-
-    const reset = (): void => {
-        resetCamera(sigma);
-    };
-
     return (
-        <Box display={'flex'} gap={1} mt={2} ml={2}>
-            <GraphButton onClick={reset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
+        <Box display={'flex'} gap={1}>
+            <GraphButton onClick={onReset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
 
             <GraphMenu label={<FontAwesomeIcon icon={faEye} />}>
-               <MenuItem onClick={showAllLabels}>Show all labels</MenuItem>
-               <MenuItem onClick={hideAllLabels}>Hide all labels</MenuItem>
-               <MenuItem onClick={hideNodeLabels}>Hide node labels</MenuItem>
-               <MenuItem onClick={hideEdgeLabels}>Hide edge labels</MenuItem>
+                <MenuItem onClick={onShowAllLabels}>Show all labels</MenuItem>
+                <MenuItem onClick={onHideAllLabels}>Hide all labels</MenuItem>
+                <MenuItem onClick={onHideNodeLabels}>Hide node labels</MenuItem>
+                <MenuItem onClick={onHideEdgeLabels}>Hide edge labels</MenuItem>
             </GraphMenu>
 
             <GraphMenu label='Layout'>
-                {sequential && <MenuItem onClick={runSequentialLayout}>Sequential</MenuItem>}
-                {standard && <MenuItem onClick={runStandardLayout}>Standard</MenuItem>}
+                <MenuItem onClick={onRunSequentialLayout}>Sequential</MenuItem>
+                <MenuItem onClick={onRunStandardLayout}>Standard</MenuItem>
             </GraphMenu>
 
             <GraphMenu label='Export'>
-                <MenuItem
-                    onClick={(e) => exportToJson(e, exportableGraphState)}
-                    disabled={isEmpty(exportableGraphState)}>
+                <MenuItem onClick={onExportJson} disabled={isEmpty(exportableGraphState)}>
                     JSON
                 </MenuItem>
             </GraphMenu>
 
-            {nonLayoutButtons?.map((props, index) => (
-                <GraphButton
-                    key={index}
-                    onClick={props.onClick}
-                    displayText={props.displayText}
-                    disabled={props.disabled}
-                />
-            ))}
+            <GraphButton
+                onClick={onSearchCurrentResults}
+                displayText={'Search Current Results'}
+                disabled={isCurrentSearchOpen}
+            />
         </Box>
     );
 };
