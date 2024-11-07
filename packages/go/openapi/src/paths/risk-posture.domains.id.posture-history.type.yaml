@@ -1,0 +1,76 @@
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+  - name: domain_id
+    description: Domain ID
+    in: path
+    required: true
+    schema:
+      type: string
+  - name: data_type
+    description: The type of posture data to return
+    in: path
+    required: true
+    schema:
+      type: string
+      enum:
+        - findings
+        - exposure
+        - assets
+get:
+  operationId: PostureHistoryForDomain
+  summary: Get Posture History
+  description: Gets posture data count changes over a time period
+  tags:
+    - Risk Posture
+    - Enterprise
+  parameters:
+    - name: start
+      description: Beginning datetime of range (inclusive) in RFC-3339 format; Defaults
+        to current datetime minus 30 days
+      in: query
+      schema:
+        type: string
+        format: date-time
+    - name: end
+      description: Ending datetime of range (exclusive) in RFC-3339 format; Defaults
+        to current datetime
+      in: query
+      schema:
+        type: string
+        format: date-time
+    - $ref: './../parameters/query.partition-by.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: './../schemas/api.response.time-window.yaml'
+              - $ref: './../schemas/api.response.partition.yaml'
+              - type: object
+                properties:
+                  data:
+                    allOf:
+                    - type: object
+                      properties:
+                        data_type:
+                          type: string
+                          enum:
+                            - findings
+                            - exposure
+                            - assets
+                    - $ref: './../schemas/model.components.aggregation.yaml'
+
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

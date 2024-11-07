@@ -660,6 +660,8 @@ paths:
   # risk posture
   /api/v2/posture-stats:
     $ref: './paths/risk-posture.posture-stats.yaml'
+  /api/v2/domains/{domain_id}/posture-history/{data_type}:
+    $ref: './paths/risk-posture.domains.id.posture-history.type.yaml'
 
   # meta entity
   /api/v2/meta/{object_id}:
