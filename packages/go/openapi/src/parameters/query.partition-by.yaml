@@ -1,0 +1,5 @@
+name: partition_by
+description: This query parameter is used to quantize time-series data by aggregating datapoints into one datapoint per time period.
+in: query
+schema:
+  $ref: './../schemas/api.params.query.partition-by.yaml'

@@ -1,0 +1,25 @@
+type: object
+properties:
+  aggregation_data:
+    type: array
+    items:
+      type: object
+      properties:
+        min:
+          type: integer
+          readOnly: true
+        max:
+          type: integer
+          readOnly: true
+        average:
+          type: integer
+          readOnly: true
+        count:
+          type: integer
+          readOnly: true
+        date:
+          type: string
+          format: date-time
+          readOnly: true
+      readOnly: true
+    readOnly: true

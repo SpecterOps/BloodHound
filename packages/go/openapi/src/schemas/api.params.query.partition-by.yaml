@@ -1,0 +1,6 @@
+type: string
+description: Time period used for quantizing datapoints in time-series data.
+enum:
+  - day
+  - week
+  - month
