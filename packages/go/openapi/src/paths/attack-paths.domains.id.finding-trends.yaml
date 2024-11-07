@@ -1,0 +1,81 @@
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+  - name: domain_id
+    description: Domain ID
+    in: path
+    required: true
+    schema:
+      type: string
+get:
+  operationId: FindingTrendsForDomain
+  summary: List finding trends
+  description: Lists findings and their changes in between two dates for a domain
+  tags:
+    - Attack Paths
+    - Enterprise
+  parameters:
+    # - name: sort_by
+    #   description: Sortable columns are composite_risk, start_count, end_count, change.
+    #   in: query
+    #   schema:
+    #     $ref: './../schemas/api.params.query.sort-by.yaml'
+    - name: start
+      description: Beginning datetime of range (inclusive) in RFC-3339 format; Defaults
+        to current datetime minus 30 days
+      in: query
+      schema:
+        type: string
+        format: date-time
+    - name: end
+      description: Ending datetime of range (exclusive) in RFC-3339 format; Defaults
+        to current datetime
+      in: query
+      schema:
+        type: string
+        format: date-time
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: './../schemas/api.response.time-window.yaml'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      findings:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            DomainSID:
+                              type: string
+                            Finding:
+                              type: string
+                            CompositeRisk:
+                              type: number
+                              format: double
+                            FindingCountStart:
+                              type: integer
+                            FindingCountEnd:
+                              type: integer
+                      TotalFindingCountStart:
+                        type: integer
+                      TotalFindingCountEnd:
+                        type: integer
+
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
