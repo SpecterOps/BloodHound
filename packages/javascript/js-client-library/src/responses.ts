@@ -221,16 +221,3 @@ export type ConfigurationWithMetadata<T> = TimestampFields &
 export type GetConfigurationResponse = BasicResponse<ConfigurationWithMetadata<ConfigurationPayload>[]>;
 
 export type UpdateConfigurationResponse = BasicResponse<ConfigurationPayload>;
-
-export type FindingTrend<T, K = string> = {
-    Finding: T;
-    StartCount: number;
-    EndCount: number;
-    Severity: K;
-};
-
-export type GetFindingTrendsResponse<T, K> = BasicResponse<{
-    Findings: Array<FindingTrend<T, K>>;
-    TotalStart: number;
-    TotalEnd: number;
-}>;
