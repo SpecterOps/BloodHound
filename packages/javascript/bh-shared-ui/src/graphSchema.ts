@@ -417,6 +417,7 @@ export enum ActiveDirectoryKindProperties {
     OwnerSid = 'ownersid',
     GMSA = 'gmsa',
     MSA = 'msa',
+    DoesAnyAceGrantOwnerRights = 'doesanyacegrantownerrights',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -630,6 +631,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'GMSA';
         case ActiveDirectoryKindProperties.MSA:
             return 'MSA';
+        case ActiveDirectoryKindProperties.DoesAnyAceGrantOwnerRights:
+            return 'Does Any ACE Grant Owner Rights';
         default:
             return undefined;
     }

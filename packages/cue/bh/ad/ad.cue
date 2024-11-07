@@ -763,6 +763,13 @@ MSA: types.#StringEnum & {
  	representation: "msa"
 }
 
+DoesAnyAceGrantOwnerRights: types.#StringEnum & {
+ 	symbol: "DoesAnyAceGrantOwnerRights"
+ 	schema: "ad"
+ 	name: "Does Any ACE Grant Owner Rights"
+ 	representation: "doesanyacegrantownerrights"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -868,7 +875,8 @@ Properties: [
 	LockoutObservationWindow,
 	OwnerSid,
 	GMSA,
-	MSA
+	MSA,
+	DoesAnyAceGrantOwnerRights
 ]
 
 // Kinds
