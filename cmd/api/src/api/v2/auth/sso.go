@@ -18,6 +18,8 @@ package auth
 
 import (
 	"net/http"
+	"net/url"
+	"path"
 	"strconv"
 	"strings"
 
@@ -27,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/serde"
 	"gorm.io/gorm/utils"
 )
 
@@ -37,13 +40,24 @@ type AuthProvider struct {
 	Type    string      `json:"type"`
 	Slug    string      `json:"slug"`
 	Details interface{} `json:"details"`
+
+	LoginUri    serde.URL `json:"login_uri"`
+	CallbackUri serde.URL `json:"callback_uri"`
+}
+
+func (s *AuthProvider) FormatProviderURLs(hostUrl url.URL) {
+	root := hostUrl
+	root.Path = path.Join("/api/v2/sso/", s.Slug)
+
+	s.LoginUri = serde.FromURL(*root.JoinPath("login"))
+	s.CallbackUri = serde.FromURL(*root.JoinPath("callback"))
 }
 
 // ListAuthProviders lists all available SSO providers (SAML and OIDC) with sorting and filtering
 func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, request *http.Request) {
 	var (
-		requestCtx  = request.Context()
-		queryParams = request.URL.Query()
+		requestCtx        = request.Context()
+		queryParams       = request.URL.Query()
 		sortByColumns     = queryParams[api.QueryParameterSortBy]
 		order             []string
 		queryFilters      model.QueryParameterFilterMap
@@ -108,6 +122,9 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 					Type: ssoProvider.Type.String(),
 					Slug: ssoProvider.Slug,
 				}
+
+				// Format callback url from host
+				provider.FormatProviderURLs(*ctx.Get(requestCtx).Host)
 
 				switch ssoProvider.Type {
 				case model.SessionAuthProviderOIDC:
