@@ -18,6 +18,7 @@ package translate
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/log"
 
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
@@ -544,10 +545,55 @@ func (s *ExpressionTreeTranslator) PopBinaryExpression(operator pgsql.Operator) 
 	}
 }
 
-func (s *ExpressionTreeTranslator) PopPushBinaryExpression(operator pgsql.Operator) error {
+func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operator pgsql.Operator) error {
 	if newExpression, err := s.PopBinaryExpression(operator); err != nil {
 		return err
 	} else {
+		// Switch to handle entity type references
+		switch typedLOperand := newExpression.LOperand.(type) {
+		case pgsql.Identifier:
+			// If the left side is an identifier we need to inspect the type of the identifier bound in our scope
+			if boundLOperand, bound := scope.Lookup(typedLOperand); !bound {
+				return fmt.Errorf("unknown identifier %s", typedLOperand)
+			} else {
+				switch typedROperand := newExpression.ROperand.(type) {
+				case pgsql.Identifier:
+					// If the right side is an identifier, inspect to see if the identifiers are an entity comparison.
+					// For example: match (n1)-[]->(n2) where n1 <> n2 return n2
+					if boundROperand, bound := scope.Lookup(typedROperand); !bound {
+						return fmt.Errorf("unknown identifier %s", typedROperand)
+					} else {
+						switch boundLOperand.DataType {
+						case pgsql.NodeComposite:
+							switch boundROperand.DataType {
+							case pgsql.NodeComposite, pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
+							default:
+								return fmt.Errorf("invalid comparison between types %s and %s", boundLOperand.DataType, boundROperand.DataType)
+							}
+
+							// If this is a node entity comparison of some kind then the AST must be rewritten to use identity properties
+							newExpression.LOperand = pgsql.CompoundIdentifier{typedLOperand, pgsql.ColumnID}
+							newExpression.ROperand = pgsql.CompoundIdentifier{typedROperand, pgsql.ColumnID}
+
+						case pgsql.EdgeComposite:
+							switch boundROperand.DataType {
+							case pgsql.EdgeComposite, pgsql.ExpansionEdge:
+							default:
+								return fmt.Errorf("invalid comparison between types %s and %s", boundLOperand.DataType, boundROperand.DataType)
+							}
+
+							// If this is an edge entity comparison of some kind then the AST must be rewritten to use identity properties
+							newExpression.LOperand = pgsql.CompoundIdentifier{typedLOperand, pgsql.ColumnID}
+							newExpression.ROperand = pgsql.CompoundIdentifier{typedROperand, pgsql.ColumnID}
+
+						case pgsql.PathComposite:
+							return fmt.Errorf("invalid comparison for path identifier %s", typedLOperand)
+						}
+					}
+				}
+			}
+		}
+
 		switch operator {
 		case pgsql.OperatorContains:
 			switch typedLOperand := newExpression.LOperand.(type) {
@@ -868,7 +914,7 @@ func (s *ExpressionTreeTranslator) PushOperator(operator pgsql.Operator) {
 	}
 }
 
-func (s *ExpressionTreeTranslator) PopPushOperator(operator pgsql.Operator) error {
+func (s *ExpressionTreeTranslator) PopPushOperator(scope *Scope, operator pgsql.Operator) error {
 	// Track this operator for expression tree extraction and look to see if it's a candidate for rewriting
 	switch operator {
 	case pgsql.OperatorAnd:
@@ -886,5 +932,5 @@ func (s *ExpressionTreeTranslator) PopPushOperator(operator pgsql.Operator) erro
 		s.disjunctionDepth -= 1
 	}
 
-	return s.PopPushBinaryExpression(operator)
+	return s.PopPushBinaryExpression(scope, operator)
 }

@@ -717,7 +717,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 	case *cypher.PropertyLookup:
 		switch currentState := s.currentState(); currentState {
 		case StateTranslatingNestedExpression:
-			if err := s.treeTranslator.PopPushOperator(pgsql.OperatorPropertyLookup); err != nil {
+			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorPropertyLookup); err != nil {
 				s.SetError(err)
 			}
 
@@ -737,7 +737,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 	case *cypher.PartialComparison:
 		switch currentState := s.currentState(); currentState {
 		case StateTranslatingNestedExpression:
-			if err := s.treeTranslator.PopPushOperator(pgsql.Operator(typedExpression.Operator)); err != nil {
+			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.Operator(typedExpression.Operator)); err != nil {
 				s.SetError(err)
 			}
 
@@ -748,7 +748,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 	case *cypher.PartialArithmeticExpression:
 		switch currentState := s.currentState(); currentState {
 		case StateTranslatingNestedExpression:
-			if err := s.treeTranslator.PopPushOperator(pgsql.Operator(typedExpression.Operator)); err != nil {
+			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.Operator(typedExpression.Operator)); err != nil {
 				s.SetError(err)
 			}
 
@@ -760,7 +760,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		switch currentState := s.currentState(); currentState {
 		case StateTranslatingNestedExpression:
 			for idx := 0; idx < typedExpression.Len()-1; idx++ {
-				if err := s.treeTranslator.PopPushOperator(pgsql.OperatorOr); err != nil {
+				if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorOr); err != nil {
 					s.SetError(err)
 				}
 			}
@@ -773,7 +773,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		switch currentState := s.currentState(); currentState {
 		case StateTranslatingNestedExpression:
 			for idx := 0; idx < typedExpression.Len()-1; idx++ {
-				if err := s.treeTranslator.PopPushOperator(pgsql.OperatorAnd); err != nil {
+				if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorAnd); err != nil {
 					s.SetError(err)
 				}
 			}

@@ -285,7 +285,7 @@ func NegotiateValue(value any) (any, error) {
 func ValueToDataType(value any) (DataType, error) {
 	switch typedValue := value.(type) {
 	case time.Time:
-		if typedValue.Location() != nil && typedValue.Location().String() != time.Local.String(){
+		if typedValue.Location() != nil && typedValue.Location().String() != time.Local.String() {
 			return TimestampWithTimeZone, nil
 		}
 

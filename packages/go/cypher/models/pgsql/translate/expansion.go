@@ -108,20 +108,32 @@ func (s *Translator) buildAllShortestPathsExpansionRoot(part *PatternPart, trave
 
 	expansion.ProjectionStatement.Projection = traversalStep.Expansion.Value.Projection
 
-	if leftNodeConstraints, err := consumeConstraintsFrom(pgsql.AsIdentifierSet(traversalStep.LeftNode.Identifier), s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
+	if terminalNode, err := traversalStep.TerminalNode(); err != nil {
 		return pgsql.Query{}, err
-	} else if rightNodeConstraints, err := consumeConstraintsFrom(pgsql.AsIdentifierSet(traversalStep.RightNode.Identifier), s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
+	} else if rootNode, err := traversalStep.RootNode(); err != nil {
 		return pgsql.Query{}, err
-	} else if edgeConstraints, err := consumeConstraintsFrom(traversalStep.Expansion.Value.Frame.Visible, s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
+	} else if rootNodeConstraints, err := consumeConstraintsFrom(pgsql.AsIdentifierSet(rootNode.Identifier), s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
+		return pgsql.Query{}, err
+	} else if terminalNodeConstraints, err := consumeConstraintsFrom(pgsql.AsIdentifierSet(terminalNode.Identifier), s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
 		return pgsql.Query{}, err
 	} else {
-		// Set the edge constraints in the primer and recursive select where clauses
-		expansion.PrimerStatement.Where = edgeConstraints.Expression
-		expansion.RecursiveStatement.Where = pgsql.OptionalAnd(edgeConstraints.Expression, expansion.RecursiveStatement.Where)
+		// The exclusion below is done at this step in the process since the recursive descent portion of the query no longer has
+		// a reference to `n0` and any dependent interaction between `n0` and `n1` would require an additional join. By not
+		// consuming the remaining constraints for `n0` and `n1`, they become visible up in the outer select of the recursive CTE.
+		recursiveVisible := traversalStep.Expansion.Value.Frame.Visible.Copy()
+		recursiveVisible.Remove(rootNode.Identifier)
+
+		if edgeConstraints, err := consumeConstraintsFrom(recursiveVisible, s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
+			return pgsql.Query{}, err
+		} else {
+			// Set the edge constraints in the primer and recursive select where clauses
+			expansion.PrimerStatement.Where = edgeConstraints.Expression
+			expansion.RecursiveStatement.Where = pgsql.OptionalAnd(edgeConstraints.Expression, expansion.RecursiveStatement.Where)
+		}
 
 		if leftNodeJoinConstraint, err := leftNodeTraversalStepConstraint(traversalStep); err != nil {
 			return pgsql.Query{}, err
-		} else if leftNodeJoinCondition, err := ConjoinExpressions([]pgsql.Expression{leftNodeConstraints.Expression, leftNodeJoinConstraint}); err != nil {
+		} else if leftNodeJoinCondition, err := ConjoinExpressions([]pgsql.Expression{rootNodeConstraints.Expression, leftNodeJoinConstraint}); err != nil {
 			return pgsql.Query{}, err
 		} else if rightNodeJoinCondition, err := rightNodeTraversalStepConstraint(traversalStep); err != nil {
 			return pgsql.Query{}, err
@@ -252,8 +264,8 @@ func (s *Translator) buildAllShortestPathsExpansionRoot(part *PatternPart, trave
 		}
 
 		// If there are terminal constraints, project them as part of the projections
-		if rightNodeConstraints.Expression != nil {
-			if terminalCriteriaProjection, err := pgsql.As[pgsql.SelectItem](rightNodeConstraints.Expression); err != nil {
+		if terminalNodeConstraints.Expression != nil {
+			if terminalCriteriaProjection, err := pgsql.As[pgsql.SelectItem](terminalNodeConstraints.Expression); err != nil {
 				return pgsql.Query{}, err
 			} else {
 				expansion.PrimerStatement.Projection = []pgsql.SelectItem{
@@ -449,20 +461,32 @@ func (s *Translator) buildExpansionPatternRoot(part *PatternPart, traversalStep 
 
 	expansion.ProjectionStatement.Projection = traversalStep.Expansion.Value.Projection
 
-	if leftNodeConstraints, err := consumeConstraintsFrom(pgsql.AsIdentifierSet(traversalStep.LeftNode.Identifier), s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
+	if terminalNode, err := traversalStep.TerminalNode(); err != nil {
 		return pgsql.Query{}, err
-	} else if rightNodeConstraints, err := consumeConstraintsFrom(pgsql.AsIdentifierSet(traversalStep.RightNode.Identifier), s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
+	} else if rootNode, err := traversalStep.RootNode(); err != nil {
 		return pgsql.Query{}, err
-	} else if edgeConstraints, err := consumeConstraintsFrom(traversalStep.Expansion.Value.Frame.Visible, s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
+	} else if rootNodeConstraints, err := consumeConstraintsFrom(pgsql.AsIdentifierSet(rootNode.Identifier), s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
+		return pgsql.Query{}, err
+	} else if terminalNodeConstraints, err := consumeConstraintsFrom(pgsql.AsIdentifierSet(terminalNode.Identifier), s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
 		return pgsql.Query{}, err
 	} else {
-		// Set the edge constraints in the primer and recursive select where clauses
-		expansion.PrimerStatement.Where = edgeConstraints.Expression
-		expansion.RecursiveStatement.Where = pgsql.OptionalAnd(edgeConstraints.Expression, expansion.RecursiveStatement.Where)
+		// The exclusion below is done at this step in the process since the recursive descent portion of the query no longer has
+		// a reference to `n0` and any dependent interaction between `n0` and `n1` would require an additional join. By not
+		// consuming the remaining constraints for `n0` and `n1`, they become visible up in the outer select of the recursive CTE.
+		recursiveVisible := traversalStep.Expansion.Value.Frame.Visible.Copy()
+		recursiveVisible.Remove(rootNode.Identifier)
+
+		if edgeConstraints, err := consumeConstraintsFrom(recursiveVisible, s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
+			return pgsql.Query{}, err
+		} else {
+			// Set the edge constraints in the primer and recursive select where clauses
+			expansion.PrimerStatement.Where = edgeConstraints.Expression
+			expansion.RecursiveStatement.Where = pgsql.OptionalAnd(edgeConstraints.Expression, expansion.RecursiveStatement.Where)
+		}
 
 		if leftNodeJoinConstraint, err := leftNodeTraversalStepConstraint(traversalStep); err != nil {
 			return pgsql.Query{}, err
-		} else if leftNodeJoinCondition, err := ConjoinExpressions([]pgsql.Expression{leftNodeConstraints.Expression, leftNodeJoinConstraint}); err != nil {
+		} else if leftNodeJoinCondition, err := ConjoinExpressions([]pgsql.Expression{rootNodeConstraints.Expression, leftNodeJoinConstraint}); err != nil {
 			return pgsql.Query{}, err
 		} else if rightNodeJoinCondition, err := rightNodeTraversalStepConstraint(traversalStep); err != nil {
 			return pgsql.Query{}, err
@@ -592,8 +616,8 @@ func (s *Translator) buildExpansionPatternRoot(part *PatternPart, traversalStep 
 		}
 
 		// If there are terminal constraints, project them as part of the projections
-		if rightNodeConstraints.Expression != nil {
-			if terminalCriteriaProjection, err := pgsql.As[pgsql.SelectItem](rightNodeConstraints.Expression); err != nil {
+		if terminalNodeConstraints.Expression != nil {
+			if terminalCriteriaProjection, err := pgsql.As[pgsql.SelectItem](terminalNodeConstraints.Expression); err != nil {
 				return pgsql.Query{}, err
 			} else {
 				expansion.PrimerStatement.Projection = []pgsql.SelectItem{
@@ -634,8 +658,15 @@ func (s *Translator) buildExpansionPatternRoot(part *PatternPart, traversalStep 
 					),
 				}
 
-				// Make sure to only accept paths that are satisfied
-				expansion.ProjectionStatement.Where = pgsql.CompoundIdentifier{traversalStep.Expansion.Value.Binding.Identifier, expansionSatisfied}
+				// Constraints that target the terminal node may crop up here where it's finally in scope. Additionally,
+				// only accept paths that are marked satisfied from the recursive descent CTE
+				if constraints, err := consumeConstraintsFrom(traversalStep.Expansion.Value.Frame.Visible, s.treeTranslator.IdentifierConstraints); err != nil {
+					return pgsql.Query{}, err
+				} else if projectionConstraints, err := ConjoinExpressions([]pgsql.Expression{pgsql.CompoundIdentifier{traversalStep.Expansion.Value.Binding.Identifier, expansionSatisfied}, constraints.Expression}); err != nil {
+					return pgsql.Query{}, err
+				} else {
+					expansion.ProjectionStatement.Where = projectionConstraints
+				}
 			}
 		} else {
 			expansion.PrimerStatement.Projection = []pgsql.SelectItem{
@@ -738,7 +769,9 @@ func (s *Translator) buildExpansionPatternStep(part *PatternPart, traversalStep 
 
 	expansion.ProjectionStatement.Projection = traversalStep.Expansion.Value.Projection
 
-	if rightNodeConstraints, err := consumeConstraintsFrom(pgsql.AsIdentifierSet(traversalStep.RightNode.Identifier), s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
+	if terminalNode, err := traversalStep.TerminalNode(); err != nil {
+		return pgsql.Query{}, err
+	} else if terminalNodeConstraints, err := consumeConstraintsFrom(pgsql.AsIdentifierSet(terminalNode.Identifier), s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
 		return pgsql.Query{}, err
 	} else if edgeConstraints, err := consumeConstraintsFrom(traversalStep.Expansion.Value.Frame.Visible, s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
 		return pgsql.Query{}, err
@@ -881,8 +914,8 @@ func (s *Translator) buildExpansionPatternStep(part *PatternPart, traversalStep 
 		}
 
 		// If there are terminal constraints, project them as part of the recursive lookup
-		if rightNodeConstraints.Expression != nil {
-			if terminalCriteriaProjection, err := pgsql.As[pgsql.SelectItem](rightNodeConstraints.Expression); err != nil {
+		if terminalNodeConstraints.Expression != nil {
+			if terminalCriteriaProjection, err := pgsql.As[pgsql.SelectItem](terminalNodeConstraints.Expression); err != nil {
 				return pgsql.Query{}, err
 			} else {
 				expansion.RecursiveStatement.Projection = []pgsql.SelectItem{
