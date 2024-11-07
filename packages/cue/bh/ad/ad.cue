@@ -810,6 +810,13 @@ ADCSWebEnrollmentHTTPSEPA: types.#StringEnum & {
 	representation: "adcswebenrollmenthttpsepa"
 }
 
+DoesAnyAceGrantOwnerRights: types.#StringEnum & {
+ 	symbol: "DoesAnyAceGrantOwnerRights"
+ 	schema: "ad"
+ 	name: "Does Any ACE Grant Owner Rights"
+ 	representation: "doesanyacegrantownerrights"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -920,6 +927,7 @@ Properties: [
 	RestrictOutboundNTLM,
 	GMSA,
 	MSA,
+	DoesAnyAceGrantOwnerRights,
 	ADCSWebEnrollmentHTTP,
 	ADCSWebEnrollmentHTTPS,
 	ADCSWebEnrollmentHTTPSEPA,
