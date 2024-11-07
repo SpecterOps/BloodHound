@@ -356,8 +356,8 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 			auditLogFields["oidc_provider_id"] = ssoProvider.OIDCProvider.ID
 			authProvider = *ssoProvider.OIDCProvider
 		}
-    DeleteBrowserCookie(request, response, AuthPKCECookieName)
-    DeleteBrowserCookie(request, response, AuthPKCECookieName)
+		DeleteBrowserCookie(request, response, AuthStateCookieName)
+		DeleteBrowserCookie(request, response, AuthPKCECookieName)
 	}
 
 	// Generate commit ID for audit logging
