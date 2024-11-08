@@ -285,7 +285,7 @@ func NegotiateValue(value any) (any, error) {
 func ValueToDataType(value any) (DataType, error) {
 	switch typedValue := value.(type) {
 	case time.Time:
-		if typedValue.Location() != nil {
+		if typedValue.Location() != nil && typedValue.Location().String() != time.Local.String() {
 			return TimestampWithTimeZone, nil
 		}
 
@@ -294,29 +294,23 @@ func ValueToDataType(value any) (DataType, error) {
 	case time.Duration:
 		return Interval, nil
 
-	case int8, int16:
+	case uint8, int8, int16:
 		return Int2, nil
 
-	case []int8, []int16:
+	case []uint8, []int8, []int16:
 		return Int2Array, nil
 
-	case int32, graph.ID:
+	case uint16, int32, graph.ID:
 		return Int4, nil
 
-	case []int32, []graph.ID:
+	case []uint16, []int32, []graph.ID:
 		return Int4Array, nil
 
-	case int, int64:
+	case uint32, uint, uint64, int, int64:
 		return Int8, nil
 
-	case []int, []int64:
+	case []uint32, []uint, []uint64, []int, []int64:
 		return Int8Array, nil
-
-	case uint, uint8, uint16, uint32:
-		return Int8, nil
-
-	case uint64:
-		return UnknownDataType, fmt.Errorf("unsigned 64 bit integer values are not supported as pgsql data types")
 
 	case float32:
 		return Float4, nil

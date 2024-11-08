@@ -34,6 +34,17 @@ func mustAsLiteral(value any) pgsql.Literal {
 	}
 }
 
+func TestFormat_TypeCastedParenthetical(t *testing.T) {
+	typeCastedParenthetical := pgsql.NewTypeCast(pgsql.Parenthetical{
+		Expression: pgsql.NewLiteral("str", pgsql.Text),
+	}, pgsql.Text)
+
+	formattedQuery, err := format.Expression(typeCastedParenthetical, format.NewOutputBuilder())
+
+	require.Nil(t, err)
+	require.Equal(t, "('str')::text", formattedQuery)
+}
+
 func TestFormat_Delete(t *testing.T) {
 	formattedQuery, err := format.Statement(pgsql.Delete{
 		From: []pgsql.TableReference{{

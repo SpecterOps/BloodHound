@@ -610,6 +610,24 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 				})
 			}
 
+		case cypher.ToUpperFunction:
+			if typedExpression.NumArguments() > 1 {
+				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
+			} else if argument, err := s.treeTranslator.Pop(); err != nil {
+				s.SetError(err)
+			} else {
+				if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+					// Rewrite the property lookup operator with a JSON text field lookup
+					propertyLookup.Operator = pgsql.OperatorJSONTextField
+				}
+
+				s.treeTranslator.Push(pgsql.FunctionCall{
+					Function:   pgsql.FunctionToUpper,
+					Parameters: []pgsql.Expression{argument},
+					CastType:   pgsql.Text,
+				})
+			}
+
 		default:
 			s.SetErrorf("unknown cypher function: %s", typedExpression.Name)
 		}
@@ -699,7 +717,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 	case *cypher.PropertyLookup:
 		switch currentState := s.currentState(); currentState {
 		case StateTranslatingNestedExpression:
-			if err := s.treeTranslator.PopPushOperator(pgsql.OperatorPropertyLookup); err != nil {
+			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorPropertyLookup); err != nil {
 				s.SetError(err)
 			}
 
@@ -719,7 +737,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 	case *cypher.PartialComparison:
 		switch currentState := s.currentState(); currentState {
 		case StateTranslatingNestedExpression:
-			if err := s.treeTranslator.PopPushOperator(pgsql.Operator(typedExpression.Operator)); err != nil {
+			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.Operator(typedExpression.Operator)); err != nil {
 				s.SetError(err)
 			}
 
@@ -730,7 +748,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 	case *cypher.PartialArithmeticExpression:
 		switch currentState := s.currentState(); currentState {
 		case StateTranslatingNestedExpression:
-			if err := s.treeTranslator.PopPushOperator(pgsql.Operator(typedExpression.Operator)); err != nil {
+			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.Operator(typedExpression.Operator)); err != nil {
 				s.SetError(err)
 			}
 
@@ -742,7 +760,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		switch currentState := s.currentState(); currentState {
 		case StateTranslatingNestedExpression:
 			for idx := 0; idx < typedExpression.Len()-1; idx++ {
-				if err := s.treeTranslator.PopPushOperator(pgsql.OperatorOr); err != nil {
+				if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorOr); err != nil {
 					s.SetError(err)
 				}
 			}
@@ -755,7 +773,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		switch currentState := s.currentState(); currentState {
 		case StateTranslatingNestedExpression:
 			for idx := 0; idx < typedExpression.Len()-1; idx++ {
-				if err := s.treeTranslator.PopPushOperator(pgsql.OperatorAnd); err != nil {
+				if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorAnd); err != nil {
 					s.SetError(err)
 				}
 			}

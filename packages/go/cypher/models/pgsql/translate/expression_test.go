@@ -162,7 +162,10 @@ func TestInferExpressionType(t *testing.T) {
 
 func TestExpressionTreeTranslator(t *testing.T) {
 	// Tree translator is a stack oriented expression tree builder
-	treeTranslator := translate.NewExpressionTreeTranslator()
+	var (
+		treeTranslator = translate.NewExpressionTreeTranslator()
+		scope          = translate.NewScope()
+	)
 
 	// Case: Translating the constraint: a.name = 'a' and a.num_a > 1 and b.name = 'b' and a.other = b.other
 
@@ -177,7 +180,7 @@ func TestExpressionTreeTranslator(t *testing.T) {
 	treeTranslator.Push(mustAsLiteral("a"))
 
 	// Perform a postfix visit of the parent expression and its operator.
-	require.Nil(t, treeTranslator.PopPushOperator(pgsql.OperatorEquals))
+	require.Nil(t, treeTranslator.PopPushOperator(scope, pgsql.OperatorEquals))
 
 	// Expect one newly created binary expression to be the only thing left on the tree
 	// translator's operand stack
@@ -198,10 +201,10 @@ func TestExpressionTreeTranslator(t *testing.T) {
 	treeTranslator.Push(mustAsLiteral(1))
 
 	// Perform a postfix visit of the parent expression and its operator.
-	require.Nil(t, treeTranslator.PopPushOperator(pgsql.OperatorGreaterThan))
+	require.Nil(t, treeTranslator.PopPushOperator(scope, pgsql.OperatorGreaterThan))
 
 	// Perform a postfix visit of the conjoining parent expression and its operator.
-	require.Nil(t, treeTranslator.PopPushOperator(pgsql.OperatorAnd))
+	require.Nil(t, treeTranslator.PopPushOperator(scope, pgsql.OperatorAnd))
 
 	// Continue with: and b.name = "b"
 	// Preform a prefix visit of the 'and' operator:
@@ -217,10 +220,10 @@ func TestExpressionTreeTranslator(t *testing.T) {
 	treeTranslator.Push(mustAsLiteral("b"))
 
 	// Perform a postfix visit of the parent expression and its operator.
-	require.Nil(t, treeTranslator.PopPushOperator(pgsql.OperatorEquals))
+	require.Nil(t, treeTranslator.PopPushOperator(scope, pgsql.OperatorEquals))
 
 	// Perform a postfix visit of the conjoining parent expression and its operator.
-	require.Nil(t, treeTranslator.PopPushOperator(pgsql.OperatorAnd))
+	require.Nil(t, treeTranslator.PopPushOperator(scope, pgsql.OperatorAnd))
 
 	// Continue with: and a.other = b.other
 	// enter Op(and), enter Op(=)
@@ -232,8 +235,8 @@ func TestExpressionTreeTranslator(t *testing.T) {
 	treeTranslator.Push(pgsql.CompoundIdentifier{"b", "other"})
 
 	// exit  exit Op(=), Op(and)
-	treeTranslator.PopPushOperator(pgsql.OperatorEquals)
-	treeTranslator.PopPushOperator(pgsql.OperatorAnd)
+	treeTranslator.PopPushOperator(scope, pgsql.OperatorEquals)
+	treeTranslator.PopPushOperator(scope, pgsql.OperatorAnd)
 
 	// Assign remaining operands as constraints
 	treeTranslator.ConstrainRemainingOperands()

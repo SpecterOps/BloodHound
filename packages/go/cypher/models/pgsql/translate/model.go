@@ -79,6 +79,30 @@ type PatternSegment struct {
 	Projection  []pgsql.SelectItem
 }
 
+// TerminalNode will find the terminal node of this pattern segment based on the segment's direction
+func (s *PatternSegment) TerminalNode() (*BoundIdentifier, error) {
+	switch s.Direction {
+	case graph.DirectionInbound:
+		return s.LeftNode, nil
+	case graph.DirectionOutbound:
+		return s.RightNode, nil
+	default:
+		return nil, fmt.Errorf("unsupported direction: %v", s.Direction)
+	}
+}
+
+// TerminalNode will find the root node of this pattern segment based on the segment's direction
+func (s *PatternSegment) RootNode() (*BoundIdentifier, error) {
+	switch s.Direction {
+	case graph.DirectionInbound:
+		return s.RightNode, nil
+	case graph.DirectionOutbound:
+		return s.LeftNode, nil
+	default:
+		return nil, fmt.Errorf("unsupported direction: %v", s.Direction)
+	}
+}
+
 type PatternPart struct {
 	IsTraversal      bool
 	ShortestPath     bool
