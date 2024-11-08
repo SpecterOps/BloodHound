@@ -14,22 +14,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-type: object
-properties:
-  id:
-    type: integer
-    format: int32
-    description: Unique identifier for the SSO provider
-  name:
-    type: string
-    description: Name of the SSO provider
-  type:
-    type: string
-    description: Type of SSO provider (SAML or OIDC)
-  slug:
-    type: string
-    description: URL-friendly identifier for the provider
-  details:
-    oneOf:
-      - $ref: './model.oidc-provider.yaml'
-      - $ref: './model.saml-provider.yaml'
+allOf:
+  - $ref: './model.components.int32.id.yaml'
+  - $ref: './model.components.timestamps.yaml'
+  - type: object
+    properties:
+      metadata_xml:
+        type: string
+        readOnly: true
+      issuer_uri:
+        type: string
+        readOnly: true
+      single_sign_on_uri:
+        type: string
+        readOnly: true

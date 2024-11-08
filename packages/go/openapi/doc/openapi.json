@@ -14238,6 +14238,30 @@
           }
         }
       },
+      "model.oidc-provider": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "issuer": {
+                "type": "string",
+                "format": "url",
+                "readOnly": true
+              },
+              "client_id": {
+                "type": "string",
+                "readOnly": true
+              }
+            }
+          }
+        ]
+      },
       "model.auth-provider": {
         "type": "object",
         "properties": {
@@ -14261,32 +14285,10 @@
           "details": {
             "oneOf": [
               {
-                "type": "object",
-                "properties": {
-                  "issuer": {
-                    "type": "string",
-                    "format": "url"
-                  },
-                  "client_id": {
-                    "type": "string"
-                  }
-                },
-                "description": "OIDC provider specific details"
+                "$ref": "#/components/schemas/model.oidc-provider"
               },
               {
-                "type": "object",
-                "properties": {
-                  "metadata_xml": {
-                    "type": "string"
-                  },
-                  "issuer_uri": {
-                    "type": "string"
-                  },
-                  "single_sign_on_uri": {
-                    "type": "string"
-                  }
-                },
-                "description": "SAML provider specific details"
+                "$ref": "#/components/schemas/model.saml-provider"
               }
             ]
           }
