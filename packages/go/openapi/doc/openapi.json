@@ -502,6 +502,211 @@
         }
       }
     },
+    "/api/v2/sso-providers": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListAuthProviders",
+        "summary": "List SSO Providers",
+        "description": "Lists all available SSO providers (SAML and OIDC)",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.auth-provider"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sso-providers/oidc": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "CreateOIDCProvider",
+        "summary": "Create OIDC Provider",
+        "description": "Creates a new OIDC provider for SSO authentication",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "issuer",
+                  "client_id"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the OIDC provider"
+                  },
+                  "issuer": {
+                    "type": "string",
+                    "format": "url",
+                    "description": "URL of the OIDC issuer"
+                  },
+                  "client_id": {
+                    "type": "string",
+                    "description": "Client ID for the OIDC provider"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.auth-provider"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sso-providers/{sso_provider_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "description": "SSO Provider ID",
+          "name": "sso_provider_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "delete": {
+        "operationId": "DeleteSSOProvider",
+        "summary": "Delete SSO Provider",
+        "description": "Deletes an existing SSO provider",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "affected_users": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.user"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. The user is trying to delete their own SSO provider.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/permissions": {
       "parameters": [
         {
@@ -14030,6 +14235,60 @@
           "idp_url": {
             "type": "string",
             "readOnly": true
+          }
+        }
+      },
+      "model.auth-provider": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Unique identifier for the SSO provider"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the SSO provider"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of SSO provider (SAML or OIDC)"
+          },
+          "slug": {
+            "type": "string",
+            "description": "URL-friendly identifier for the provider"
+          },
+          "details": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "issuer": {
+                    "type": "string",
+                    "format": "url"
+                  },
+                  "client_id": {
+                    "type": "string"
+                  }
+                },
+                "description": "OIDC provider specific details"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "metadata_xml": {
+                    "type": "string"
+                  },
+                  "issuer_uri": {
+                    "type": "string"
+                  },
+                  "single_sign_on_uri": {
+                    "type": "string"
+                  }
+                },
+                "description": "SAML provider specific details"
+              }
+            ]
           }
         }
       },

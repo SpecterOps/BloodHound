@@ -30,5 +30,21 @@ properties:
     type: string
     description: URL-friendly identifier for the provider
   details:
-    type: object
-    description: Provider-specific configuration details
+    oneOf:
+      - type: object
+        properties:
+          issuer:
+            type: string
+            format: url
+          client_id:
+            type: string
+        description: OIDC provider specific details
+      - type: object
+        properties:
+          metadata_xml:
+            type: string
+          issuer_uri:
+            type: string
+          single_sign_on_uri:
+            type: string
+        description: SAML provider specific details

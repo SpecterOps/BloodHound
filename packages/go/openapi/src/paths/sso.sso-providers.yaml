@@ -35,19 +35,7 @@ get:
               data:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      format: int32
-                    name:
-                      type: string
-                    type:
-                      type: string
-                    slug:
-                      type: string
-                    details:
-                      type: object
+                  $ref: './../schemas/model.auth-provider.yaml'
     '401':
       $ref: './../responses/unauthorized.yaml'
     '403':
