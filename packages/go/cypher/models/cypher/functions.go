@@ -26,6 +26,7 @@ const (
 	DurationFunction           = "duration"
 	IdentityFunction           = "id"
 	ToLowerFunction            = "tolower"
+	ToUpperFunction            = "toupper"
 	NodeLabelsFunction         = "labels"
 	EdgeTypeFunction           = "type"
 	StringSplitToArrayFunction = "split"
