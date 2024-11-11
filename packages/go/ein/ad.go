@@ -290,14 +290,14 @@ func ParseUserMiscData(user User) []IngestibleRelationship {
 	}
 
 	// CoerceToTGT / unconstrained delegation
-	uncondel := user.UnconstrainedDelegation
-	uncondelProps, _ := user.Properties[strings.ToLower(ad.UnconstrainedDelegation.String())].(bool) // SH v2.5.7 and earlier have unconstraineddelegation under 'Properties' only
-	if uncondel || uncondelProps {
-		domainsid := user.DomainSID
-		if domainsid == "" { // SH v2.5.7 and earlier have domainsid under 'Properties' only
-			domainsid, _ = user.Properties[strings.ToLower(ad.DomainSID.String())].(string)
-		}
+	var (
+		userProps        = graph.AsProperties(user.Properties)
+		uncondel, _      = userProps.GetOrDefault(ad.UnconstrainedDelegation.String(), user.UnconstrainedDelegation).Bool() // SH v2.5.7 and earlier have unconstraineddelegation under 'Properties' only
+		domainsid, _     = userProps.GetOrDefault(ad.DomainSID.String(), user.DomainSID).String()                           // SH v2.5.7 and earlier have domainsid under 'Properties' only
+		validCoerceToTGT = uncondel && domainsid != ""
+	)
 
+	if validCoerceToTGT {
 		data = append(data, NewIngestibleRelationship(
 			IngestibleSource{
 				Source:     user.ObjectIdentifier,
