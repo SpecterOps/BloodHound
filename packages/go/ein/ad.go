@@ -580,9 +580,14 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 			},
 		))
 	} else { // We do not want CoerceToTGT edges from DCs
-		uncondel := computer.UnconstrainedDelegation
-		uncondelProps, _ := computer.Properties[strings.ToLower(ad.UnconstrainedDelegation.String())].(bool) // SH v2.5.7 and earlier have unconstraineddelegation under 'Properties' only
-		if uncondel || uncondelProps {
+		var (
+			computerProps    = graph.AsProperties(computer.Properties)
+			uncondel, _      = computerProps.GetOrDefault(ad.UnconstrainedDelegation.String(), computer.UnconstrainedDelegation).Bool() // SH v2.5.7 and earlier have unconstraineddelegation under 'Properties' only
+			domainsid, _     = computerProps.GetOrDefault(ad.DomainSID.String(), computer.DomainSID).String()                           // SH v2.5.7 and earlier have domainsid under 'Properties' only
+			validCoerceToTGT = uncondel && domainsid != ""
+		)
+
+		if validCoerceToTGT {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleSource{
 					Source:     computer.ObjectIdentifier,
