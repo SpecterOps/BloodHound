@@ -19,10 +19,10 @@ allOf:
   - $ref: './model.components.timestamps.yaml'
   - type: object
     properties:
-      issuer:
-        type: string
-        format: url
-        readOnly: true
       client_id:
         type: string
-        readOnly: true
+      issuer:
+        type: string
+      sso_provider_id:
+        type: integer
+        format: int32

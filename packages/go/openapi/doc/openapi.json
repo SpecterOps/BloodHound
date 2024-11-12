@@ -14260,14 +14260,15 @@
           {
             "type": "object",
             "properties": {
-              "issuer": {
-                "type": "string",
-                "format": "url",
-                "readOnly": true
-              },
               "client_id": {
-                "type": "string",
-                "readOnly": true
+                "type": "string"
+              },
+              "issuer": {
+                "type": "string"
+              },
+              "sso_provider_id": {
+                "type": "integer",
+                "format": "int32"
               }
             }
           }

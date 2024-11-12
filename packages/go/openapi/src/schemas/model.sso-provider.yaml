@@ -19,12 +19,15 @@ allOf:
   - $ref: './model.components.timestamps.yaml'
   - type: object
     properties:
-      metadata_xml:
+      type:
         type: string
-        readOnly: true
-      issuer_uri:
+        enum: ["Secret", "SAML", "OIDC"]
+        description: Type of authentication provider
+      name:
         type: string
-        readOnly: true
-      single_sign_on_uri:
+      slug:
         type: string
-        readOnly: true
+      oidc_provider:
+        $ref: './model.oidc-provider.yaml'
+      saml_provider:
+        $ref: './model.saml-provider.yaml'
