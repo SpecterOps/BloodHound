@@ -13632,6 +13632,17 @@
             "properties": {
               "saml_provider_id": {
                 "readOnly": true,
+                "deprecated": true,
+                "description": "Deprecated. Use sso_provider_id instead.",
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.int32"
+                  }
+                ]
+              },
+              "sso_provider_id": {
+                "readOnly": true,
+                "description": "ID of the SSO provider for this user",
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.int32"
@@ -14340,7 +14351,17 @@
             }
           },
           "saml_provider_id": {
-            "type": "string"
+            "type": "string",
+            "deprecated": true,
+            "description": "Deprecated. Use sso_provider_id instead."
+          },
+          "sso_provider_id": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/null.int32"
+              }
+            ],
+            "description": "ID of the SSO provider for this user"
           },
           "is_disabled": {
             "type": "boolean"
