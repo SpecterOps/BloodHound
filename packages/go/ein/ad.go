@@ -242,11 +242,6 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 			if ace.IsInherited {
 				// If the ACE is inherited, it is abusable by principals with WriteOwner permission
 				writeOwnerLimitedPrivs = append(writeOwnerLimitedPrivs, rightKind.String())
-
-				// if rightKind.Is(ad.WriteOwner) || rightKind.Is(ad.WriteOwnerRaw) {
-				// 	// Cache ACEs where WriteOwner permission is granted
-				// 	potentialWriteOwnerLimitedPrincipals = append(potentialWriteOwnerLimitedPrincipals, ace.GetCachedValue())
-				// }
 			} else {
 				// If the ACE is not inherited, it not abusable after abusing WriteOwner
 				continue
