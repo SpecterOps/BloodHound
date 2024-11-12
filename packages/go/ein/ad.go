@@ -205,7 +205,7 @@ type WriteOwnerLimitedCache struct {
 	IsInherited bool
 }
 
-func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []IngestibleRelationship {
+func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, targetType graph.Kind) []IngestibleRelationship {
 	var (
 		ownerPrincipalInfo                   IngestibleSource
 		ownerLimitedPrivs                    = make([]string, 0)
@@ -230,6 +230,11 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 			// Get Owner SID from ACE granting Owns permission
 			ownerPrincipalInfo = ace.GetCachedValue().SourceData
 
+		} else if rightKind.Is(ad.WriteOwner) || rightKind.Is(ad.WriteOwnerRaw) {
+			// Don't convert every WriteOwner permission to an edge, as they are not always abusable
+			// Cache ACEs where WriteOwner permission is granted
+			potentialWriteOwnerLimitedPrincipals = append(potentialWriteOwnerLimitedPrincipals, ace.GetCachedValue())
+
 		} else if strings.HasSuffix(ace.PrincipalSID, "S-1-3-4") {
 			// Cache ACEs where the OWNER RIGHTS SID is granted explicit abusable permissions
 			ownerLimitedPrivs = append(ownerLimitedPrivs, rightKind.String())
@@ -237,11 +242,15 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 			if ace.IsInherited {
 				// If the ACE is inherited, it is abusable by principals with WriteOwner permission
 				writeOwnerLimitedPrivs = append(writeOwnerLimitedPrivs, rightKind.String())
-			}
 
-		} else if rightKind.Is(ad.WriteOwner) || rightKind.Is(ad.WriteOwnerRaw) {
-			// Cache ACEs where WriteOwner permission is granted
-			potentialWriteOwnerLimitedPrincipals = append(potentialWriteOwnerLimitedPrincipals, ace.GetCachedValue())
+				// if rightKind.Is(ad.WriteOwner) || rightKind.Is(ad.WriteOwnerRaw) {
+				// 	// Cache ACEs where WriteOwner permission is granted
+				// 	potentialWriteOwnerLimitedPrincipals = append(potentialWriteOwnerLimitedPrincipals, ace.GetCachedValue())
+				// }
+			} else {
+				// If the ACE is not inherited, it not abusable after abusing WriteOwner
+				continue
+			}
 
 		} else {
 			// Create edges for all other ACEs
@@ -264,25 +273,8 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 
 	//TODO: When inheritance hashes are added, add them to these aces
 
-	// Process permissions granted to the OWNER RIGHTS SID if any were found
+	// Process abusable permissions granted to the OWNER RIGHTS SID if any were found
 	if len(ownerLimitedPrivs) > 0 {
-
-		// For every principal granted WriteOwner permission, create a WriteOwnerLimitedRights edge
-		for _, limitedPrincipal := range potentialWriteOwnerLimitedPrincipals {
-			converted = append(converted, NewIngestibleRelationship(
-				limitedPrincipal.SourceData,
-				IngestibleTarget{
-					Target:     targetID,
-					TargetType: targetType,
-				},
-
-				// Create an edge property containing an array of all INHERITED abusable permissions granted to the OWNER RIGHTS SID
-				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): limitedPrincipal.IsInherited, "privileges": writeOwnerLimitedPrivs},
-					RelType:  ad.WriteOwnerLimitedRights,
-				},
-			))
-		}
 
 		// Create an OwnsLimitedRights edge containing all abusable permissions granted to the OWNER RIGHTS SID
 		if ownerPrincipalInfo.Source != "" {
@@ -300,8 +292,52 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 				},
 			))
 		}
+
+		if len(writeOwnerLimitedPrivs) > 0 {
+			// For every principal granted WriteOwner permission, create a WriteOwnerLimitedRights edge
+			for _, limitedPrincipal := range potentialWriteOwnerLimitedPrincipals {
+				converted = append(converted, NewIngestibleRelationship(
+					limitedPrincipal.SourceData,
+					IngestibleTarget{
+						Target:     targetID,
+						TargetType: targetType,
+					},
+
+					// Create an edge property containing an array of all INHERITED abusable permissions granted to the OWNER RIGHTS SID
+					IngestibleRel{
+						RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): limitedPrincipal.IsInherited, "privileges": writeOwnerLimitedPrivs},
+						RelType:  ad.WriteOwnerLimitedRights,
+					},
+				))
+			}
+		}
+
 	} else {
-		// If no permissions in the ACL are granted to the OWNER RIGHTS SID
+		// If no abusable permissions in the ACL are granted to the OWNER RIGHTS SID
+
+		// Check whether any permissions were granted to the OWNER RIGHTS SID that are not abusable
+		doesAnyAceGrantOwnerRights, exists := targetNode.PropertyMap[ad.DoesAnyAceGrantOwnerRights.String()]
+		if exists {
+			doesAnyAceGrantOwnerRights, ok := doesAnyAceGrantOwnerRights.(bool)
+			if ok {
+				if doesAnyAceGrantOwnerRights {
+
+					// If the non-abusable rights were inherited, they are not deleted on ownership change and WriteOwner is not abusable
+					// Do NOT create the OwnsRaw or WriteOwnerRaw edges if the OWNER RIGHTS SID has inherited, non-abusable permissions
+					doesAnyInheritedAceGrantOwnerRights, exists := targetNode.PropertyMap[ad.DoesAnyInheritedAceGrantOwnerRights.String()]
+					if exists {
+						doesAnyInheritedAceGrantOwnerRights, ok := doesAnyInheritedAceGrantOwnerRights.(bool)
+						if ok {
+							if doesAnyInheritedAceGrantOwnerRights {
+								return converted
+							}
+							// If the non-abusable rights were NOT inherited, they are deleted on ownership change and WriteOwner may be abusable
+							// Post will determine if WriteOwner is abusable based on dSHeuristics:BlockOwnerImplicitRights enforcement and object type
+						}
+					}
+				}
+			}
+		}
 
 		// Create a non-traversable OwnsRaw edge for post-processing
 		if ownerPrincipalInfo.Source != "" {
@@ -921,6 +957,10 @@ func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, re
 }
 
 func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship) []IngestibleRelationship {
+
+	// Get IngesibleNode for EnterpriceCA
+	baseNodeProp := ConvertObjectToNode(enterpriseCA.IngestBase, ad.EnterpriseCA)
+
 	if enterpriseCA.CARegistryData.CASecurity.Collected {
 		caSecurityData := slicesext.Filter(enterpriseCA.CARegistryData.CASecurity.Data, func(s ACE) bool {
 			if s.PrincipalType == ad.LocalGroup.String() {
@@ -946,10 +986,10 @@ func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []Inges
 		})
 
 		combinedData := append(caSecurityData, filteredACES...)
-		relationships = append(relationships, ParseACEData(combinedData, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
+		relationships = append(relationships, ParseACEData(baseNodeProp, combinedData, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
 
 	} else {
-		relationships = append(relationships, ParseACEData(enterpriseCA.Aces, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
+		relationships = append(relationships, ParseACEData(baseNodeProp, enterpriseCA.Aces, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
 	}
 
 	return relationships

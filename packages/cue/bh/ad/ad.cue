@@ -817,6 +817,13 @@ DoesAnyAceGrantOwnerRights: types.#StringEnum & {
  	representation: "doesanyacegrantownerrights"
 }
 
+DoesAnyInheritedAceGrantOwnerRights: types.#StringEnum & {
+ 	symbol: "DoesAnyInheritedAceGrantOwnerRights"
+ 	schema: "ad"
+ 	name: "Does Any Inherited ACE Grant Owner Rights"
+ 	representation: "doesanyinheritedacegrantownerrights"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -927,6 +934,8 @@ Properties: [
 	RestrictOutboundNTLM,
 	GMSA,
 	MSA,
+	DoesAnyAceGrantOwnerRights,
+	DoesAnyInheritedAceGrantOwnerRights,
 	DoesAnyAceGrantOwnerRights,
 	ADCSWebEnrollmentHTTP,
 	ADCSWebEnrollmentHTTPS,
