@@ -157,10 +157,12 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 			}
 		})
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{
-			SAMLProviderID: null.Int32From(2),
-			SAMLProvider: &model.SAMLProvider{
-				Serial: model.Serial{
-					ID: 2,
+			SSOProviderID: null.Int32From(2),
+			SSOProvider: &model.SSOProvider{
+				SAMLProvider: &model.SAMLProvider{
+					Serial: model.Serial{
+						ID: 2,
+					},
 				},
 			},
 		}, nil)

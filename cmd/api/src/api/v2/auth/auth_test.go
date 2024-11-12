@@ -67,7 +67,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		currentPassword   = "currentPassword"
 		goodUser          = model.User{AuthSecret: defaultDigestAuthSecret(t, currentPassword), Unique: model.Unique{ID: must.NewUUIDv4()}}
 		otherUser         = model.User{Unique: model.Unique{ID: must.NewUUIDv4()}}
-		badUser           = model.User{SAMLProviderID: null.Int32From(1), Unique: model.Unique{ID: must.NewUUIDv4()}}
+		badUser           = model.User{SSOProviderID: null.Int32From(1), Unique: model.Unique{ID: must.NewUUIDv4()}}
 		mockCtrl          = gomock.NewController(t)
 		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
 	)
@@ -2473,7 +2473,7 @@ func TestEnrollMFA(t *testing.T) {
 	mockDB.EXPECT().GetUser(gomock.Any(), missingUserId).Return(model.User{}, database.ErrNotFound)
 	mockDB.EXPECT().GetUser(gomock.Any(), activatedId).Return(model.User{AuthSecret: &model.AuthSecret{TOTPActivated: true}}, nil)
 	mockDB.EXPECT().GetUser(gomock.Any(), badPassId).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
-	mockDB.EXPECT().GetUser(gomock.Any(), ssoId).Return(model.User{SAMLProviderID: null.Int32From(1)}, nil)
+	mockDB.EXPECT().GetUser(gomock.Any(), ssoId).Return(model.User{SSOProviderID: null.Int32From(1)}, nil)
 	mockDB.EXPECT().GetUser(gomock.Any(), genTOTPFailId).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "password")}, nil)
 
 	type Input struct {

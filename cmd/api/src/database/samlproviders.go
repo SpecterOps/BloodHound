@@ -71,7 +71,7 @@ func (s *BloodhoundDB) GetSAMLProvider(ctx context.Context, id int32) (model.SAM
 // SELECT * FROM users WHERE saml_provider_id = ..
 func (s *BloodhoundDB) GetSAMLProviderUsers(ctx context.Context, id int32) (model.Users, error) {
 	var users model.Users
-	return users, CheckError(s.preload(model.UserAssociations()).WithContext(ctx).Where("saml_provider_id = ?", id).Find(&users))
+	return users, CheckError(s.preload(model.UserAssociations()).WithContext(ctx).Where("sso_provider_id = ?", id).Find(&users))
 }
 
 // CreateSAMLProvider updates a saml_providers row using the data in the input struct

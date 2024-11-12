@@ -405,9 +405,12 @@ func (s Roles) FindByPermissions(permissions Permissions) (Role, bool) {
 	return Role{}, false
 }
 
+// Used by gorm to preload / instantiate the user FK'd tables data
 func UserAssociations() []string {
 	return []string{
-		"SAMLProvider",
+		"SSOProvider",
+		"SSOProvider.SAMLProvider", // Needed to populate the child provider
+		"SSOProvider.OIDCProvider", // Needed to populate the child provider
 		"AuthSecret",
 		"AuthTokens",
 		"Roles.Permissions",
@@ -415,40 +418,36 @@ func UserAssociations() []string {
 }
 
 type User struct {
-	// Todo delete all references to this
-	SAMLProviderID null.Int32 `json:"saml_provider_id,omitempty"`
-	// Todo delete all references to this
-	SAMLProvider  *SAMLProvider `json:"-" `
-	AuthSecret    *AuthSecret   `gorm:"constraint:OnDelete:CASCADE;"`
-	AuthTokens    AuthTokens    `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
-	Roles         Roles         `json:"roles" gorm:"many2many:users_roles"`
-	FirstName     null.String   `json:"first_name"`
-	LastName      null.String   `json:"last_name"`
-	EmailAddress  null.String   `json:"email_address"`
-	PrincipalName string        `json:"principal_name" gorm:"unique;index"`
-	LastLogin     time.Time     `json:"last_login"`
-	IsDisabled    bool          `json:"is_disabled"`
-	// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
-	// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.
-	EULAAccepted  bool         `json:"eula_accepted"`
 	SSOProvider   *SSOProvider `json:"-" `
 	SSOProviderID null.Int32   `json:"sso_provider_id,omitempty"`
+	AuthSecret    *AuthSecret  `gorm:"constraint:OnDelete:CASCADE;"`
+	AuthTokens    AuthTokens   `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
+	Roles         Roles        `json:"roles" gorm:"many2many:users_roles"`
+	FirstName     null.String  `json:"first_name"`
+	LastName      null.String  `json:"last_name"`
+	EmailAddress  null.String  `json:"email_address"`
+	PrincipalName string       `json:"principal_name" gorm:"unique;index"`
+	LastLogin     time.Time    `json:"last_login"`
+	IsDisabled    bool         `json:"is_disabled"`
+
+	// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
+	// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.
+	EULAAccepted bool `json:"eula_accepted"`
 
 	Unique
 }
 
 func (s *User) AuditData() AuditData {
 	return AuditData{
-		"id":               s.ID,
-		"principal_name":   s.PrincipalName,
-		"first_name":       s.FirstName.ValueOrZero(),
-		"last_name":        s.LastName.ValueOrZero(),
-		"email_address":    s.EmailAddress.ValueOrZero(),
-		"roles":            s.Roles.IDs(),
-		"saml_provider_id": s.SAMLProviderID.ValueOrZero(),
-		"sso_provider_id":  s.SSOProviderID.ValueOrZero(),
-		"is_disabled":      s.IsDisabled,
-		"eula_accepted":    s.EULAAccepted,
+		"id":              s.ID,
+		"principal_name":  s.PrincipalName,
+		"first_name":      s.FirstName.ValueOrZero(),
+		"last_name":       s.LastName.ValueOrZero(),
+		"email_address":   s.EmailAddress.ValueOrZero(),
+		"roles":           s.Roles.IDs(),
+		"sso_provider_id": s.SSOProviderID.ValueOrZero(),
+		"is_disabled":     s.IsDisabled,
+		"eula_accepted":   s.EULAAccepted,
 	}
 }
 
@@ -520,10 +519,12 @@ func (s Users) GetValidFilterPredicatesAsStrings(column string) ([]string, error
 	}
 }
 
+// Used by gorm to preload / instantiate the user FK'd tables data
 func UserSessionAssociations() []string {
 	return []string{
-		"User.SAMLProvider",
 		"User.SSOProvider",
+		"User.SSOProvider.SAMLProvider", // Needed to populate the child provider
+		"User.SSOProvider.OIDCProvider", // Needed to populate the child provider
 		"User.AuthSecret",
 		"User.AuthTokens",
 		"User.Roles.Permissions",
@@ -561,7 +562,7 @@ type UserSession struct {
 	User             User `gorm:"constraint:OnDelete:CASCADE;"`
 	UserID           uuid.UUID
 	AuthProviderType SessionAuthProvider
-	AuthProviderID   int32
+	AuthProviderID   int32 // This is the SSO Provider ID if SSO session
 	ExpiresAt        time.Time
 	Flags            types.JSONBBoolObject `json:"flags"`
 

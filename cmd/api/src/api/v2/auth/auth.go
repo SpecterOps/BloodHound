@@ -340,27 +340,18 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
 				return
 			} else if samlProvider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
-				log.Errorf("Error while attempting to fetch SAML provider %d: %v", createUserRequest.SAMLProviderID, err)
+				log.Errorf("Error while attempting to fetch SAML provider %s: %v", createUserRequest.SAMLProviderID, err)
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else {
-				userTemplate.SAMLProviderID = null.Int32From(samlProvider.ID)
 				userTemplate.SSOProviderID = samlProvider.SSOProviderID
 			}
 		} else if createUserRequest.SSOProviderID.Valid {
-			if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), createUserRequest.SSOProviderID.Int32); err != nil {
+			if _, err := s.db.GetSSOProviderById(request.Context(), createUserRequest.SSOProviderID.Int32); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else {
 				userTemplate.SSOProviderID = createUserRequest.SSOProviderID
-				if ssoProvider.Type == model.SessionAuthProviderSAML {
-					if ssoProvider.SAMLProvider != nil {
-						userTemplate.SAMLProviderID = null.Int32From(ssoProvider.SAMLProvider.ID)
-					}
-				} else {
-					userTemplate.SAMLProvider = nil
-					userTemplate.SAMLProviderID = null.NewInt32(0, false)
-				}
 			}
 		}
 
@@ -435,35 +426,24 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else {
-				// Ensure that the AuthSecret reference is nil and that the SAML provider is set
+				// Ensure that the AuthSecret reference is nil and the SSO provider is set
 				user.AuthSecret = nil // Required or the below updateUser will re-add the authSecret
-				user.SAMLProviderID = null.Int32From(samlProviderID)
 				user.SSOProviderID = provider.SSOProviderID
 			}
 		} else if updateUserRequest.SSOProviderID.Valid {
 			if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
-			} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), updateUserRequest.SSOProviderID.Int32); err != nil {
+			} else if _, err := s.db.GetSSOProviderById(request.Context(), updateUserRequest.SSOProviderID.Int32); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else {
 				user.AuthSecret = nil // Required or the below updateUser will re-add the authSecret
 				user.SSOProviderID = updateUserRequest.SSOProviderID
-				if ssoProvider.Type == model.SessionAuthProviderSAML {
-					if ssoProvider.SAMLProvider != nil {
-						user.SAMLProviderID = null.Int32From(ssoProvider.SAMLProvider.ID)
-					}
-				} else {
-					user.SAMLProvider = nil
-					user.SAMLProviderID = null.NewInt32(0, false)
-				}
 			}
 		} else {
-			// Default SAMLProviderID and SSOProviderID to null if the update request contains no SAMLProviderID and SSOProviderID
-			user.SAMLProvider = nil
+			// Default SSOProviderID to null if the update request contains no SSOProviderID
 			user.SSOProvider = nil
-			user.SAMLProviderID = null.NewInt32(0, false)
 			user.SSOProviderID = null.NewInt32(0, false)
 		}
 
@@ -552,7 +532,7 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 	} else if targetUser, err := s.db.GetUser(request.Context(), targetUserID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if targetUser.SAMLProviderID.Valid {
+	} else if targetUser.SSOProviderID.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid operation, user is SSO", request), response)
 	} else {
 		if loggedInUser.ID == targetUserID {
@@ -596,7 +576,7 @@ func (s ManagementResource) ExpireUserAuthSecret(response http.ResponseWriter, r
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if targetUser, err := s.db.GetUser(request.Context(), userID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if targetUser.SAMLProviderID.Valid {
+	} else if targetUser.SSOProviderID.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "user has SAML auth enabled", request), response)
 	} else {
 		authSecret := targetUser.AuthSecret
@@ -813,7 +793,7 @@ func (s ManagementResource) EnrollMFA(response http.ResponseWriter, request *htt
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorContentTypeJson.Error(), request), response)
 	} else if user, err := s.db.GetUser(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if user.SAMLProviderID.Valid {
+	} else if user.SSOProviderID.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid operation, user is SSO", request), response)
 	} else if user.AuthSecret.TOTPActivated {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsMFAActivated, request), response)
