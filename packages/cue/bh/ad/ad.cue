@@ -770,6 +770,13 @@ DoesAnyAceGrantOwnerRights: types.#StringEnum & {
  	representation: "doesanyacegrantownerrights"
 }
 
+DoesAnyInheritedAceGrantOwnerRights: types.#StringEnum & {
+ 	symbol: "DoesAnyInheritedAceGrantOwnerRights"
+ 	schema: "ad"
+ 	name: "Does Any Inherited ACE Grant Owner Rights"
+ 	representation: "doesanyinheritedacegrantownerrights"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -876,7 +883,8 @@ Properties: [
 	OwnerSid,
 	GMSA,
 	MSA,
-	DoesAnyAceGrantOwnerRights
+	DoesAnyAceGrantOwnerRights,
+	DoesAnyInheritedAceGrantOwnerRights
 ]
 
 // Kinds
