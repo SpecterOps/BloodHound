@@ -42,12 +42,12 @@ import (
 
 func SSOProviderFromResource(resource ProviderResource) model.SSOProvider {
 	return model.SSOProvider{
-				Type: model.SessionAuthProviderSAML,
-				Name: resource.serviceProvider.Config.Name,
-				Slug: resource.serviceProvider.Config.Name,
-				SAMLProvider: &resource.serviceProvider.Config,
-				Serial: model.Serial{ ID: resource.serviceProvider.Config.SSOProviderID.Int32 },
-			}
+		Type:         model.SessionAuthProviderSAML,
+		Name:         resource.serviceProvider.Config.Name,
+		Slug:         resource.serviceProvider.Config.Name,
+		SAMLProvider: &resource.serviceProvider.Config,
+		Serial:       model.Serial{ID: resource.serviceProvider.Config.SSOProviderID.Int32},
+	}
 }
 
 func TestAuth_CreateSSOSession(t *testing.T) {
@@ -58,7 +58,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 			SAMLProvider: &model.SAMLProvider{
 				Serial: model.Serial{ID: 1},
 			},
-			SSOProviderID: null.Int32From(1),
+			SSOProviderID:  null.Int32From(1),
 			SAMLProviderID: null.Int32From(1),
 		}
 
@@ -71,7 +71,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 			config.Configuration{RootURL: serde.MustParseURL("https://example.com")},
 			bhsaml.ServiceProvider{
 				Config: model.SAMLProvider{
-					Serial: model.Serial{ID: 1},
+					Serial:        model.Serial{ID: 1},
 					SSOProviderID: null.Int32From(1),
 				},
 			},

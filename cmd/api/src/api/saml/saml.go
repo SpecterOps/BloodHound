@@ -350,11 +350,11 @@ func (s ProviderResource) serveAssertionConsumerService(response http.ResponseWr
 			s.writeAPIErrorResponse(request, response, http.StatusBadRequest, "session assertion does not meet the requirements for user lookup")
 		} else {
 			s.authenticator.CreateSSOSession(request, response, principalName, model.SSOProvider{
-				Type: model.SessionAuthProviderSAML,
-				Name: s.serviceProvider.Config.Name,
-				Slug: s.serviceProvider.Config.Name,
+				Type:         model.SessionAuthProviderSAML,
+				Name:         s.serviceProvider.Config.Name,
+				Slug:         s.serviceProvider.Config.Name,
 				SAMLProvider: &s.serviceProvider.Config,
-				Serial: model.Serial{ ID: s.serviceProvider.Config.SSOProviderID.Int32 },
+				Serial:       model.Serial{ID: s.serviceProvider.Config.SSOProviderID.Int32},
 			})
 		}
 	}
