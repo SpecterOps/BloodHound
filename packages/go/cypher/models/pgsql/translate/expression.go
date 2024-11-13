@@ -596,6 +596,8 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 
 		switch operator {
 		case pgsql.OperatorContains:
+			newExpression.Operator = pgsql.OperatorLike
+
 			switch typedLOperand := newExpression.LOperand.(type) {
 			case *pgsql.BinaryExpression:
 				switch typedLOperand.Operator {
@@ -607,7 +609,6 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 
 			switch typedROperand := newExpression.ROperand.(type) {
 			case *pgsql.Parameter:
-				newExpression.Operator = pgsql.OperatorLike
 				newExpression.ROperand = pgsql.NewBinaryExpression(
 					pgsql.NewLiteral("%", pgsql.Text),
 					pgsql.OperatorConcatenate,
@@ -624,7 +625,6 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 				} else if stringValue, isString := typedROperand.Value.(string); !isString {
 					return fmt.Errorf("expected string but found %T as right operand for operator %s", typedROperand.Value, operator)
 				} else {
-					newExpression.Operator = pgsql.OperatorLike
 					newExpression.ROperand = pgsql.NewLiteral("%"+stringValue+"%", rOperandDataType)
 				}
 
@@ -632,7 +632,6 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 				if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
 					return err
 				} else {
-					newExpression.Operator = pgsql.OperatorLike
 					newExpression.ROperand = pgsql.NewBinaryExpression(
 						pgsql.NewLiteral("%", pgsql.Text),
 						pgsql.OperatorConcatenate,
@@ -652,7 +651,6 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 						typedROperand.Operator = pgsql.OperatorJSONTextField
 					}
 
-					newExpression.Operator = pgsql.OperatorLike
 					newExpression.ROperand = pgsql.NewTypeCast(pgsql.NewBinaryExpression(
 						stringLiteral,
 						pgsql.OperatorConcatenate,
@@ -672,7 +670,13 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 
 			s.Push(newExpression)
 
+		case pgsql.OperatorRegexMatch:
+			newExpression.Operator = pgsql.OperatorSimilarTo
+			s.Push(newExpression)
+
 		case pgsql.OperatorStartsWith:
+			newExpression.Operator = pgsql.OperatorLike
+
 			switch typedLOperand := newExpression.LOperand.(type) {
 			case *pgsql.BinaryExpression:
 				switch typedLOperand.Operator {
@@ -683,7 +687,6 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 
 				switch typedROperand := newExpression.ROperand.(type) {
 				case *pgsql.Parameter:
-					newExpression.Operator = pgsql.OperatorLike
 					newExpression.ROperand = pgsql.NewBinaryExpression(
 						typedROperand,
 						pgsql.OperatorConcatenate,
@@ -696,7 +699,6 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 					} else if stringValue, isString := typedROperand.Value.(string); !isString {
 						return fmt.Errorf("expected string but found %T as right operand for operator %s", typedROperand.Value, operator)
 					} else {
-						newExpression.Operator = pgsql.OperatorLike
 						newExpression.ROperand = pgsql.NewLiteral(stringValue+"%", rOperandDataType)
 					}
 
@@ -704,7 +706,6 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 					if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
 						return err
 					} else {
-						newExpression.Operator = pgsql.OperatorLike
 						newExpression.ROperand = pgsql.NewBinaryExpression(
 							typeCastedROperand,
 							pgsql.OperatorConcatenate,
@@ -720,7 +721,6 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 							typedROperand.Operator = pgsql.OperatorJSONTextField
 						}
 
-						newExpression.Operator = pgsql.OperatorLike
 						newExpression.ROperand = pgsql.NewTypeCast(pgsql.NewBinaryExpression(
 							&pgsql.Parenthetical{
 								Expression: typedROperand,
@@ -738,6 +738,8 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 			s.Push(newExpression)
 
 		case pgsql.OperatorEndsWith:
+			newExpression.Operator = pgsql.OperatorLike
+
 			switch typedLOperand := newExpression.LOperand.(type) {
 			case *pgsql.BinaryExpression:
 				switch typedLOperand.Operator {
@@ -748,7 +750,6 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 
 				switch typedROperand := newExpression.ROperand.(type) {
 				case *pgsql.Parameter:
-					newExpression.Operator = pgsql.OperatorLike
 					newExpression.ROperand = pgsql.NewBinaryExpression(
 						pgsql.NewLiteral("%", pgsql.Text),
 						pgsql.OperatorConcatenate,
@@ -761,7 +762,6 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 					} else if stringValue, isString := typedROperand.Value.(string); !isString {
 						return fmt.Errorf("expected string but found %T as right operand for operator %s", typedROperand.Value, operator)
 					} else {
-						newExpression.Operator = pgsql.OperatorLike
 						newExpression.ROperand = pgsql.NewLiteral("%"+stringValue, rOperandDataType)
 					}
 
@@ -769,7 +769,6 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 					if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
 						return err
 					} else {
-						newExpression.Operator = pgsql.OperatorLike
 						newExpression.ROperand = pgsql.NewBinaryExpression(
 							pgsql.NewLiteral("%", pgsql.Text),
 							pgsql.OperatorConcatenate,
@@ -782,7 +781,6 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 						typedROperand.Operator = pgsql.OperatorJSONTextField
 					}
 
-					newExpression.Operator = pgsql.OperatorLike
 					newExpression.ROperand = pgsql.NewTypeCast(pgsql.NewBinaryExpression(
 						pgsql.NewLiteral("%", pgsql.Text),
 						pgsql.OperatorConcatenate,
