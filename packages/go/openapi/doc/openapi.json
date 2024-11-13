@@ -14231,6 +14231,14 @@
               "sp_acs_uri": {
                 "type": "string",
                 "readOnly": true
+              },
+              "sso_provider_id": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.int32"
+                  }
+                ]
               }
             }
           }
