@@ -83,7 +83,7 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 	} else if ssoProvider.SAMLProvider == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if serviceProvider, err := serviceProviderFactory(request.Context(), s.config, *ssoProvider.SAMLProvider); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
 		if content, err := xml.MarshalIndent(serviceProvider.Metadata(), "", "  "); err != nil {
 			log.Errorf("[SAML] XML marshalling failure during service provider encoding for %s: %v", ssoProvider.SAMLProvider.IssuerURI, err)
@@ -102,7 +102,7 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 	if ssoProvider.SAMLProvider == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if serviceProvider, err := serviceProviderFactory(request.Context(), s.config, *ssoProvider.SAMLProvider); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
 		providerResource := saml2.NewProviderResource(s.db, s.config, serviceProvider, samlWriteAPIErrorResponse)
 		binding, bindingLocation := providerResource.BindingTypeAndLocation()
@@ -149,7 +149,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 	if ssoProvider.SAMLProvider == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if serviceProvider, err := serviceProviderFactory(request.Context(), s.config, *ssoProvider.SAMLProvider); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
 		providerResource := saml2.NewProviderResource(s.db, s.config, serviceProvider, samlWriteAPIErrorResponse)
 		if err := request.ParseForm(); err != nil {
