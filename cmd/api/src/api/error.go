@@ -124,7 +124,7 @@ func HandleDatabaseError(request *http.Request, response http.ResponseWriter, er
 	} else if errors.Is(err, context.DeadlineExceeded) {
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseRequestTimeout, request), response)
 	} else {
-		log.Errorf("Unexpected database error: %v", err)
+		log.CtxErrorf(request.Context(), "Unexpected database error: %v", err)
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseDetailsInternalServerError, request), response)
 	}
 }

@@ -19,6 +19,7 @@ package log
 //go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../LICENSE.header -destination=./mocks/event.go -package=mocks . Event
 
 import (
+	"context"
 	"net"
 	"time"
 
@@ -145,6 +146,9 @@ type Event interface {
 
 	// MACAddr adds MAC address to the event.
 	MACAddr(key string, ha net.HardwareAddr) Event
+
+	// Ctx adds a Context to the event.
+	Ctx(ctx context.Context) Event
 }
 
 type event struct {
@@ -389,5 +393,10 @@ func (s *event) IPPrefix(key string, pfx net.IPNet) Event {
 
 func (s *event) MACAddr(key string, ha net.HardwareAddr) Event {
 	s.event = s.event.MACAddr(key, ha)
+	return s
+}
+
+func (s *event) Ctx(ctx context.Context) Event {
+	s.event = s.event.Ctx(ctx)
 	return s
 }

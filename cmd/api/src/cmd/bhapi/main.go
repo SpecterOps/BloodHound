@@ -20,6 +20,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/specterops/bloodhound/log/hooks"
 	"os"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -59,6 +60,7 @@ func main() {
 
 	// Initialize basic logging facilities while we start up
 	log.ConfigureDefaults()
+	log.AddHook(hooks.BhCtx{})
 
 	if cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration); err != nil {
 		log.Fatalf("Unable to read configuration %s: %v", configFilePath, err)

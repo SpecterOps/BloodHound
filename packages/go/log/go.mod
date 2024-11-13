@@ -19,7 +19,7 @@ module github.com/specterops/bloodhound/log
 go 1.23
 
 require (
-	github.com/rs/zerolog v1.29.1
+	github.com/rs/zerolog v1.33.0
 	go.uber.org/mock v0.2.0
 )
 

@@ -17,6 +17,7 @@
 package log
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -134,6 +135,10 @@ func GlobalLevel() Level {
 	return zerolog.GlobalLevel()
 }
 
+func AddHook(hook zerolog.Hook) {
+	log.Logger = log.Logger.Hook(hook)
+}
+
 // WithLevel returns a logging event with the given log verbosity level.
 func WithLevel(level Level) Event {
 	return &event{
@@ -170,6 +175,10 @@ func Errorf(format string, args ...any) {
 	Error().Msgf(format, args...)
 }
 
+func CtxErrorf(ctx context.Context, format string, args ...any) {
+	Error().Ctx(ctx).Msgf(format, args...)
+}
+
 // Warn returns a logging event with the LevelWarn log verbosity level.
 func Warn() Event {
 	return WithLevel(LevelWarn)
@@ -190,6 +199,10 @@ func Info() Event {
 // log verbosity level.
 func Infof(format string, args ...any) {
 	Info().Msgf(format, args...)
+}
+
+func CtxInfof(ctx context.Context, format string, args ...any) {
+	Info().Ctx(ctx).Msgf(format, args...)
 }
 
 // Debug returns a logging event with the LevelDebug log verbosity level.

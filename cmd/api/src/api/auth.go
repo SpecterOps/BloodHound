@@ -425,7 +425,7 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 		return "", ErrUserDisabled
 	}
 
-	log.Infof("Creating session for user: %s(%s)", user.ID, user.PrincipalName)
+	log.CtxInfof(ctx, "Creating session for user: %s(%s)", user.ID, user.PrincipalName)
 
 	userSession := model.UserSession{
 		User:      user,
