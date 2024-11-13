@@ -31,11 +31,11 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 )
 
-func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (analysis.AtomicPostProcessingStats, error) {
+func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
 	if dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db); err != nil {
-		return analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
 	} else if adminGroupIds, err := FetchAdminGroupIds(ctx, db, groupExpansions); err != nil {
-		return analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching admin group ids values for postownsandwriteowner: %w", err)
+		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching admin group ids values for postownsandwriteowner: %w", err)
 	} else {
 		operation := analysis.NewPostRelationshipOperation(ctx, db, "PostOwnsAndWriteOwner")
 
@@ -191,7 +191,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 			})
 		})
 
-		return operation.Stats, operation.Done()
+		return &operation.Stats, operation.Done()
 	}
 }
 

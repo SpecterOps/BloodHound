@@ -41,13 +41,14 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled bool, citrixEnable
 	} else if adcsStats, _, err := adAnalysis.PostADCS(ctx, db, groupExpansions, adcsEnabled); err != nil {
 		return &aggregateStats, err
 	} else if ownsStats, err := adAnalysis.PostOwnsAndWriteOwner(ctx, db, groupExpansions); err != nil {
-		return &ownsStats, err
+		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(stats)
 		aggregateStats.Merge(syncLAPSStats)
 		aggregateStats.Merge(dcSyncStats)
 		aggregateStats.Merge(localGroupStats)
 		aggregateStats.Merge(adcsStats)
+		aggregateStats.Merge(ownsStats)
 		return &aggregateStats, nil
 	}
 }
