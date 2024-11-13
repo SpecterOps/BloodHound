@@ -111,7 +111,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 					}
 				}
 
-				return nil
+				return cursor.Error()
 			})
 		})
 
@@ -187,7 +187,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 					}
 				}
 
-				return nil
+				return cursor.Error()
 			})
 		})
 
@@ -224,7 +224,7 @@ func FetchAdminGroupIds(ctx context.Context, db graph.Database, groupExpansions 
 				adminIds.Or(groupExpansions.Cardinality(id.Uint64()))
 			}
 
-			return nil
+			return cursor.Error()
 		})
 	})
 }
