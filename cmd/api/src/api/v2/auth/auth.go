@@ -139,6 +139,9 @@ func (s ManagementResource) GetSAMLProvider(response http.ResponseWriter, reques
 	} else if provider, err := s.db.GetSAMLProvider(request.Context(), int32(providerID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		// Format the service provider uri's in response
+		provider = bhsaml.FormatSAMLProviderURLs(request.Context(), provider)[0]
+
 		api.WriteBasicResponse(request.Context(), provider, http.StatusOK, response)
 	}
 }
