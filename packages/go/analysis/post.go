@@ -18,9 +18,10 @@ package analysis
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"sort"
 	"sync"
+
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"

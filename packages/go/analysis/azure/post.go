@@ -19,6 +19,8 @@ package azure
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -28,7 +30,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
-	"strings"
 )
 
 func AddMemberAllGroupsTargetRoles() []string {
