@@ -50,7 +50,6 @@ get:
       schema:
         type: string
         format: date-time
-    - $ref: './../parameters/query.partition-by.yaml'
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
   responses:
@@ -60,7 +59,6 @@ get:
         application/json:
           schema:
             allOf:
-              - $ref: './../schemas/api.response.partition.yaml'
               - $ref: './../schemas/api.response.pagination.yaml'
               - $ref: './../schemas/api.response.time-window.yaml'
               - type: object
