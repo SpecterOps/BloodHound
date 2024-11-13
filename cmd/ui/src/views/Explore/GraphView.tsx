@@ -114,6 +114,10 @@ const GraphView: FC = () => {
 
     const [columns, setColumns] = useState(columnsDefault);
 
+    const [showNodeLabels, setShowNodeLabels] = useState(true);
+
+    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+
     useEffect(() => {
         let items: any = graphState.chartProps.items;
         if (!items) return;
@@ -221,6 +225,8 @@ const GraphView: FC = () => {
                 graph={graphologyGraph}
                 onClickNode={handleClickNode}
                 handleContextMenu={handleContextMenu}
+                showNodeLabels={showNodeLabels}
+                showEdgeLabels={showEdgeLabels}
                 ref={sigmaChartRef}
             />
 
@@ -272,26 +278,18 @@ const GraphView: FC = () => {
                                 toggleCurrentSearch();
                             }}
                             onShowAllLabels={() => {
-                                sigmaChartRef.current?.setSetting({
-                                    renderLabels: true,
-                                    renderEdgeLabels: true,
-                                });
+                                setShowNodeLabels(true);
+                                setShowEdgeLabels(true);
                             }}
                             onHideAllLabels={() => {
-                                sigmaChartRef.current?.setSetting({
-                                    renderLabels: false,
-                                    renderEdgeLabels: false,
-                                });
+                                setShowNodeLabels(false);
+                                setShowEdgeLabels(false);
                             }}
                             onHideNodeLabels={() => {
-                                sigmaChartRef.current?.setSetting({
-                                    renderLabels: false,
-                                });
+                                setShowNodeLabels(false);
                             }}
                             onHideEdgeLabels={() => {
-                                sigmaChartRef.current?.setSetting({
-                                    renderEdgeLabels: false,
-                                });
+                                setShowEdgeLabels(false);
                             }}
                             isCurrentSearchOpen={false}
                         />
