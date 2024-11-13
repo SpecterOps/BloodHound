@@ -1,4 +1,5 @@
 type: object
+title: Partitioned data
 properties:
   aggregation_data:
     type: array

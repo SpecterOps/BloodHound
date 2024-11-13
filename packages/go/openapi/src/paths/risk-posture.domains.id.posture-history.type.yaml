@@ -11,11 +11,7 @@ parameters:
     in: path
     required: true
     schema:
-      type: string
-      enum:
-        - findings
-        - exposure
-        - assets
+      $ref: '#/components/schemas/data_type'
 get:
   operationId: PostureHistoryForDomain
   summary: Get Posture History
@@ -50,17 +46,25 @@ get:
               - $ref: './../schemas/api.response.partition.yaml'
               - type: object
                 properties:
-                  data:
-                    allOf:
-                    - type: object
-                      properties:
-                        data_type:
-                          type: string
-                          enum:
-                            - findings
-                            - exposure
-                            - assets
-                    - $ref: './../schemas/model.components.aggregation.yaml'
+                  data_type:
+                    $ref: '#/components/schemas/data_type'
+              - oneOf:
+                  - type: object
+                    title: Unpartitioned data
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                              format: date-time
+                              readOnly: true
+                            value:
+                              type: integer
+                              readOnly: true
+                  - $ref: './../schemas/model.components.aggregation.yaml'
 
     400:
       $ref: './../responses/bad-request.yaml'
@@ -74,3 +78,14 @@ get:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
+components:
+  schemas:
+    data_type:
+      type: string
+      enum:
+        - findings
+        - exposure
+        - assets
+        - session_completeness
+        - group_completeness
