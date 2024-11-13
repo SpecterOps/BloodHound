@@ -1018,6 +1018,11 @@ AllowedToDelegate: types.#Kind & {
 	schema: "active_directory"
 }
 
+CoerceToTGT: types.#Kind & {
+	symbol: "CoerceToTGT"
+	schema: "active_directory"
+}
+
 GetChanges: types.#Kind & {
 	symbol: "GetChanges"
 	schema: "active_directory"
@@ -1308,6 +1313,7 @@ RelationshipKinds: [
 	Contains,
 	GPLink,
 	AllowedToDelegate,
+	CoerceToTGT,
 	GetChanges,
 	GetChangesAll,
 	GetChangesInFilteredSet,
@@ -1411,6 +1417,7 @@ PathfindingRelationships: [
 	Contains,
 	GPLink,
 	AllowedToDelegate,
+	CoerceToTGT,
 	TrustedBy,
 	AllowedToAct,
 	AdminTo,
