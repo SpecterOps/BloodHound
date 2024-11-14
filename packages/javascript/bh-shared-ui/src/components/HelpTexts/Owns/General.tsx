@@ -27,8 +27,46 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, target
             </Typography>
 
             <Typography variant='body2'>
-                Object owners retain the ability to modify object security descriptors, regardless of permissions on the
-                object's DACL
+                The owner of an object is implicitly granted the ability to modify object security descriptors, including the DACL,
+                when the following conditions are met:
+                <br />
+                <ul>
+                    <li>
+                        The OWNER RIGHTS SID (S-1-3-4) is NOT explicitly granted privileges on the object
+                    </li>
+                    <br />
+                    OR
+                    <br />
+                    <br />
+                    <li>
+                        Implicit owner rights are NOT blocked
+                    </li>
+                </ul>
+            </Typography>
+            
+            <Typography variant='body2'>
+                Implicit owner rights are not blocked and are therefore abusable when the following conditions are met:
+
+                <ul>
+                    <li>
+                        The domain's BlockOwnerImplicitRights setting is not in enforcement mode. This setting is defined in  
+                        the 29th character in the domain's dSHeuristics attribute. When set to 0 or 2, implicit owner rights are not blocked.
+                    </li>
+                    <br />
+                    AND EITHER:
+                    <br />
+                    <br />
+                    <li>
+                        The object is NOT a computer or derivative of a computer object (e.g., MSA, GMSA)
+                    </li>
+                    <br />
+                    OR
+                    <br />
+                    <br />
+                    <li>
+                        The object is a computer or derivative of a computer object and the owner is a member of the Domain Admins or Enterprise Admins group (or is the SID of either group)
+                    </li>
+                </ul>
             </Typography>
         </>
     );

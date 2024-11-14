@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Link } from '@mui/material';
 import { FC } from 'react';
+import { Link, Box } from '@mui/material';
 
 const References: FC = () => {
     return (
@@ -147,19 +147,29 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener'
-                href='https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword'>
-                https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword
+                href='https://support.microsoft.com/en-us/topic/kb5008383-active-directory-permissions-updates-cve-2021-42291-536d5555-ffba-4248-a60e-d6cbc849cde1'>
+                https://support.microsoft.com/en-us/topic/kb5008383-active-directory-permissions-updates-cve-2021-42291-536d5555-ffba-4248-a60e-d6cbc849cde1
             </Link>
             <br />
             <Link
                 target='_blank'
                 rel='noopener'
-                href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
-                https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt
+                href='https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/fb7c101d-ec8b-4fbf-bca8-7d7c2d747d0c'>
+                https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/fb7c101d-ec8b-4fbf-bca8-7d7c2d747d0c
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/CravateRouge/bloodyAD'>
-                https://github.com/CravateRouge/bloodyAD
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/e5899be4-862e-496f-9a38-33950617d2c5'>
+                https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/e5899be4-862e-496f-9a38-33950617d2c5
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers'>
+                https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers
             </Link>
         </Box>
     );
