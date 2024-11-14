@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCropAlt, faEye } from '@fortawesome/free-solid-svg-icons';
+import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, MenuItem } from '@mui/material';
 import { GraphMenu, GraphButton } from 'bh-shared-ui';
@@ -28,10 +28,11 @@ interface GraphButtonsProps {
     onRunSequentialLayout: () => void;
     onExportJson: () => void;
     onSearchCurrentResults: () => void;
-    onShowAllLabels: () => void;
-    onHideAllLabels: () => void;
-    onHideNodeLabels: () => void;
-    onHideEdgeLabels: () => void;
+    onToggleAllLabels: () => void;
+    onToggleNodeLabels: () => void;
+    onToggleEdgeLabels: () => void;
+    showNodeLabels: boolean;
+    showEdgeLabels: boolean;
     isCurrentSearchOpen: boolean;
 }
 
@@ -41,10 +42,11 @@ const GraphButtons: FC<GraphButtonsProps> = ({
     onRunSequentialLayout,
     onExportJson,
     onSearchCurrentResults,
-    onShowAllLabels,
-    onHideAllLabels,
-    onHideNodeLabels,
-    onHideEdgeLabels,
+    onToggleAllLabels,
+    onToggleNodeLabels,
+    onToggleEdgeLabels,
+    showNodeLabels,
+    showEdgeLabels,
     isCurrentSearchOpen,
 }) => {
     const exportableGraphState = useAppSelector((state) => state.explore.export);
@@ -53,11 +55,12 @@ const GraphButtons: FC<GraphButtonsProps> = ({
         <Box display={'flex'} gap={1}>
             <GraphButton onClick={onReset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
 
-            <GraphMenu label={<FontAwesomeIcon icon={faEye} />}>
-                <MenuItem onClick={onShowAllLabels}>Show all labels</MenuItem>
-                <MenuItem onClick={onHideAllLabels}>Hide all labels</MenuItem>
-                <MenuItem onClick={onHideNodeLabels}>Hide node labels</MenuItem>
-                <MenuItem onClick={onHideEdgeLabels}>Hide edge labels</MenuItem>
+            <GraphMenu label={'Hide Labels'}>
+                <MenuItem onClick={onToggleAllLabels}>
+                    {!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} All Labels
+                </MenuItem>
+                <MenuItem onClick={onToggleNodeLabels}>{showNodeLabels ? 'Hide' : 'Show'} Node Labels</MenuItem>
+                <MenuItem onClick={onToggleEdgeLabels}>{showEdgeLabels ? 'Hide' : 'Show'} Edge Labels</MenuItem>
             </GraphMenu>
 
             <GraphMenu label='Layout'>

@@ -277,20 +277,23 @@ const GraphView: FC = () => {
                             onSearchCurrentResults={() => {
                                 toggleCurrentSearch();
                             }}
-                            onShowAllLabels={() => {
-                                setShowNodeLabels(true);
-                                setShowEdgeLabels(true);
+                            onToggleAllLabels={() => {
+                                if (!showNodeLabels || !showEdgeLabels) {
+                                    setShowNodeLabels(true);
+                                    setShowEdgeLabels(true);
+                                } else {
+                                    setShowNodeLabels(false);
+                                    setShowEdgeLabels(false);
+                                }
                             }}
-                            onHideAllLabels={() => {
-                                setShowNodeLabels(false);
-                                setShowEdgeLabels(false);
+                            onToggleNodeLabels={() => {
+                                setShowNodeLabels((prev) => !prev);
                             }}
-                            onHideNodeLabels={() => {
-                                setShowNodeLabels(false);
+                            onToggleEdgeLabels={() => {
+                                setShowEdgeLabels((prev) => !prev);
                             }}
-                            onHideEdgeLabels={() => {
-                                setShowEdgeLabels(false);
-                            }}
+                            showNodeLabels={showNodeLabels}
+                            showEdgeLabels={showEdgeLabels}
                             isCurrentSearchOpen={false}
                         />
                         <Popper
