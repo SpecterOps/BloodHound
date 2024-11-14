@@ -14,9 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { faEllipsisVertical, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    Skeleton,
+    IconButton,
+    ListItemIcon,
+    ListItemText,
+    Menu,
+    MenuItem,
+    MenuProps,
     Paper,
+    Skeleton,
     Table,
     TableBody,
     TableCell,
@@ -24,20 +33,12 @@ import {
     TableHead,
     TableRow,
     TableSortLabel,
-    IconButton,
-    ListItemIcon,
-    ListItemText,
-    Menu,
-    MenuItem,
-    MenuProps,
     useTheme,
 } from '@mui/material';
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { faEllipsisVertical, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import withStyles from '@mui/styles/withStyles';
-import { FC, useState, MouseEventHandler } from 'react';
 import { SSOProvider } from 'js-client-library';
+import { FC, MouseEventHandler, useState } from 'react';
+import { SortOrder } from '../../utils';
 
 const StyledMenu = withStyles({
     paper: {
@@ -107,7 +108,7 @@ const SSOProviderTable: FC<{
     onDeleteSSOProvider: (ssoProviderId: SSOProvider['id']) => void;
     onClickSSOProvider: (ssoProviderId: SSOProvider['id']) => void;
     onToggleTypeSortOrder: () => void;
-    typeSortOrder?: 'asc' | 'desc';
+    typeSortOrder?: SortOrder;
 }> = ({ ssoProviders, loading, onDeleteSSOProvider, onClickSSOProvider, typeSortOrder, onToggleTypeSortOrder }) => {
     const theme = useTheme();
     return (

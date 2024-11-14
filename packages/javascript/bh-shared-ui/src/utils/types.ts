@@ -21,4 +21,6 @@ export type DeepPartial<T> = T extends object
       }
     : T;
 
-export type SortByOptions = 'asc' | 'desc';
+export type SortOrder = 'asc' | 'desc' | undefined;
+
+export type ValueOf<T> = T[keyof T];
