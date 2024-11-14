@@ -21,6 +21,7 @@ import (
 	"github.com/specterops/bloodhound/cache"
 	_ "github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
@@ -144,6 +145,7 @@ type Resources struct {
 	Cache                      cache.Cache
 	CollectorManifests         config.CollectorManifests
 	Authorizer                 auth.Authorizer
+	Authenticator              api.Authenticator
 }
 
 func NewResources(
@@ -154,6 +156,7 @@ func NewResources(
 	graphQuery queries.Graph,
 	collectorManifests config.CollectorManifests,
 	authorizer auth.Authorizer,
+	authenticator api.Authenticator,
 ) Resources {
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
@@ -165,5 +168,6 @@ func NewResources(
 		Cache:                      apiCache,
 		CollectorManifests:         collectorManifests,
 		Authorizer:                 authorizer,
+		Authenticator:              authenticator,
 	}
 }
