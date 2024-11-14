@@ -114,6 +114,10 @@ const GraphView: FC = () => {
 
     const [columns, setColumns] = useState(columnsDefault);
 
+    const [showNodeLabels, setShowNodeLabels] = useState(true);
+
+    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+
     useEffect(() => {
         let items: any = graphState.chartProps.items;
         if (!items) return;
@@ -221,6 +225,8 @@ const GraphView: FC = () => {
                 graph={graphologyGraph}
                 onClickNode={handleClickNode}
                 handleContextMenu={handleContextMenu}
+                showNodeLabels={showNodeLabels}
+                showEdgeLabels={showEdgeLabels}
                 ref={sigmaChartRef}
             />
 
@@ -271,6 +277,23 @@ const GraphView: FC = () => {
                             onSearchCurrentResults={() => {
                                 toggleCurrentSearch();
                             }}
+                            onToggleAllLabels={() => {
+                                if (!showNodeLabels || !showEdgeLabels) {
+                                    setShowNodeLabels(true);
+                                    setShowEdgeLabels(true);
+                                } else {
+                                    setShowNodeLabels(false);
+                                    setShowEdgeLabels(false);
+                                }
+                            }}
+                            onToggleNodeLabels={() => {
+                                setShowNodeLabels((prev) => !prev);
+                            }}
+                            onToggleEdgeLabels={() => {
+                                setShowEdgeLabels((prev) => !prev);
+                            }}
+                            showNodeLabels={showNodeLabels}
+                            showEdgeLabels={showEdgeLabels}
                             isCurrentSearchOpen={false}
                         />
                         <Popper
