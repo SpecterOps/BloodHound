@@ -28,10 +28,11 @@ describe('GraphLayoutButtons', () => {
         const testOnRunSequentialLayout = vi.fn();
         const testOnExportJson = vi.fn();
         const testOnSearchCurrentResults = vi.fn();
-        const testOnHideAllLabels = vi.fn();
-        const testOnShowAllLabels = vi.fn();
-        const testOnHideNodeLabels = vi.fn();
-        const testOnHideEdgeLabels = vi.fn();
+        const testOnToggleAllLabels = vi.fn();
+        const testOnToggleNodeLabels = vi.fn();
+        const testOnToggleEdgeLabels = vi.fn();
+        const testShowNodeLabels = true;
+        const testShowEdgeLabels = true;
         const testIsCurrentSearchOpen = false;
         render(
             <SigmaContainer>
@@ -41,10 +42,11 @@ describe('GraphLayoutButtons', () => {
                     onRunSequentialLayout={testOnRunSequentialLayout}
                     onExportJson={testOnExportJson}
                     onSearchCurrentResults={testOnSearchCurrentResults}
-                    onHideAllLabels={testOnHideAllLabels}
-                    onShowAllLabels={testOnShowAllLabels}
-                    onHideNodeLabels={testOnHideNodeLabels}
-                    onHideEdgeLabels={testOnHideEdgeLabels}
+                    onToggleAllLabels={testOnToggleAllLabels}
+                    onToggleNodeLabels={testOnToggleNodeLabels}
+                    onToggleEdgeLabels={testOnToggleEdgeLabels}
+                    showNodeLabels={testShowNodeLabels}
+                    showEdgeLabels={testShowEdgeLabels}
                     isCurrentSearchOpen={testIsCurrentSearchOpen}
                 />
             </SigmaContainer>
@@ -63,10 +65,11 @@ describe('GraphLayoutButtons', () => {
         const testOnRunSequentialLayout = vi.fn();
         const testOnExportJson = vi.fn();
         const testOnSearchCurrentResults = vi.fn();
-        const testOnHideAllLabels = vi.fn();
-        const testOnShowAllLabels = vi.fn();
-        const testOnHideNodeLabels = vi.fn();
-        const testOnHideEdgeLabels = vi.fn();
+        const testOnToggleAllLabels = vi.fn();
+        const testOnToggleNodeLabels = vi.fn();
+        const testOnToggleEdgeLabels = vi.fn();
+        const testShowNodeLabels = true;
+        const testShowEdgeLabels = true;
         const testIsCurrentSearchOpen = false;
         render(
             <SigmaContainer>
@@ -76,10 +79,11 @@ describe('GraphLayoutButtons', () => {
                     onRunSequentialLayout={testOnRunSequentialLayout}
                     onExportJson={testOnExportJson}
                     onSearchCurrentResults={testOnSearchCurrentResults}
-                    onHideAllLabels={testOnHideAllLabels}
-                    onShowAllLabels={testOnShowAllLabels}
-                    onHideNodeLabels={testOnHideNodeLabels}
-                    onHideEdgeLabels={testOnHideEdgeLabels}
+                    onToggleAllLabels={testOnToggleAllLabels}
+                    onToggleNodeLabels={testOnToggleNodeLabels}
+                    onToggleEdgeLabels={testOnToggleEdgeLabels}
+                    showNodeLabels={testShowNodeLabels}
+                    showEdgeLabels={testShowEdgeLabels}
                     isCurrentSearchOpen={testIsCurrentSearchOpen}
                 />
             </SigmaContainer>
@@ -103,10 +107,11 @@ describe('GraphLayoutButtons', () => {
         const testOnRunSequentialLayout = vi.fn();
         const testOnExportJson = vi.fn();
         const testOnSearchCurrentResults = vi.fn();
-        const testOnHideAllLabels = vi.fn();
-        const testOnShowAllLabels = vi.fn();
-        const testOnHideNodeLabels = vi.fn();
-        const testOnHideEdgeLabels = vi.fn();
+        const testOnToggleAllLabels = vi.fn();
+        const testOnToggleNodeLabels = vi.fn();
+        const testOnToggleEdgeLabels = vi.fn();
+        const testShowNodeLabels = true;
+        const testShowEdgeLabels = true;
         const testIsCurrentSearchOpen = false;
         render(
             <SigmaContainer>
@@ -116,10 +121,11 @@ describe('GraphLayoutButtons', () => {
                     onRunSequentialLayout={testOnRunSequentialLayout}
                     onExportJson={testOnExportJson}
                     onSearchCurrentResults={testOnSearchCurrentResults}
-                    onHideAllLabels={testOnHideAllLabels}
-                    onShowAllLabels={testOnShowAllLabels}
-                    onHideNodeLabels={testOnHideNodeLabels}
-                    onHideEdgeLabels={testOnHideEdgeLabels}
+                    onToggleAllLabels={testOnToggleAllLabels}
+                    onToggleNodeLabels={testOnToggleNodeLabels}
+                    onToggleEdgeLabels={testOnToggleEdgeLabels}
+                    showNodeLabels={testShowNodeLabels}
+                    showEdgeLabels={testShowEdgeLabels}
                     isCurrentSearchOpen={testIsCurrentSearchOpen}
                 />
             </SigmaContainer>
@@ -140,10 +146,11 @@ describe('GraphLayoutButtons', () => {
         const testOnRunSequentialLayout = vi.fn();
         const testOnExportJson = vi.fn();
         const testOnSearchCurrentResults = vi.fn();
-        const testOnHideAllLabels = vi.fn();
-        const testOnShowAllLabels = vi.fn();
-        const testOnHideNodeLabels = vi.fn();
-        const testOnHideEdgeLabels = vi.fn();
+        const testOnToggleAllLabels = vi.fn();
+        const testOnToggleNodeLabels = vi.fn();
+        const testOnToggleEdgeLabels = vi.fn();
+        const testShowNodeLabels = true;
+        const testShowEdgeLabels = true;
         const testIsCurrentSearchOpen = false;
         render(
             <SigmaContainer>
@@ -153,10 +160,11 @@ describe('GraphLayoutButtons', () => {
                     onRunSequentialLayout={testOnRunSequentialLayout}
                     onExportJson={testOnExportJson}
                     onSearchCurrentResults={testOnSearchCurrentResults}
-                    onHideAllLabels={testOnHideAllLabels}
-                    onShowAllLabels={testOnShowAllLabels}
-                    onHideNodeLabels={testOnHideNodeLabels}
-                    onHideEdgeLabels={testOnHideEdgeLabels}
+                    onToggleAllLabels={testOnToggleAllLabels}
+                    onToggleNodeLabels={testOnToggleNodeLabels}
+                    onToggleEdgeLabels={testOnToggleEdgeLabels}
+                    showNodeLabels={testShowNodeLabels}
+                    showEdgeLabels={testShowEdgeLabels}
                     isCurrentSearchOpen={testIsCurrentSearchOpen}
                 />
             </SigmaContainer>,
