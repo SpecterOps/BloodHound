@@ -26,7 +26,7 @@ import {
     typography,
     components,
     useFeatureFlags,
-    toggleModeClassOnRoot,
+    setRootClass,
 } from 'bh-shared-ui';
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
@@ -188,7 +188,7 @@ export const Inner: React.FC = () => {
 
 const App: React.FC = () => {
     const darkModeEnabled = useAppSelector((state) => state.global.view.darkMode);
-    const currentMode = toggleModeClassOnRoot(darkModeEnabled);
+    const currentMode = setRootClass(darkModeEnabled ? 'dark' : 'light');
 
     const palette = darkModeEnabled ? darkPalette : lightPalette;
 

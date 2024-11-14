@@ -18,20 +18,17 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 /**
- * This function sets the name of our current theme mode as a class on the html document root. This will ensure the correct styles are applied to components attached elsewhere in the DOM, such as modals and popover menus.
+ * This function sets the name of our current theme as a class on the html document root. This will ensure the correct styles are applied to components attached elsewhere in the DOM, such as modals and popover menus.
  *
- * @param enabled - set to 'true' if dark mode is currently enabled
+ * @param value - can be 'dark' or 'light'
  *
- * @returns the name of the currently set mode as a string
+ * @returns the name of the currently set class as a string
  */
-export const toggleModeClassOnRoot = (enabled: boolean) => {
+export const setRootClass = (value: 'dark' | 'light') => {
     const root = window.document.documentElement;
-    const mode = enabled ? 'dark' : 'light';
-
     root.classList.remove('dark', 'light');
-    root.classList.add(mode);
-
-    return mode;
+    root.classList.add(value);
+    return value;
 };
 
 /**
