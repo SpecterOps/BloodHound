@@ -310,8 +310,17 @@ type Computer struct {
 	NTLMRegistryData        RegistryDataAPIResult
 }
 
+type GPOChanges struct {
+	LocalAdmins        []TypedPrincipal
+	RemoteDesktopUsers []TypedPrincipal
+	DcomUsers          []TypedPrincipal
+	PSRemoteUsers      []TypedPrincipal
+	AffectedComputers  []TypedPrincipal
+}
+
 type OU struct {
 	IngestBase
 	ChildObjects []TypedPrincipal
 	Links        []GPLink
+	GPOChanges   GPOChanges
 }
