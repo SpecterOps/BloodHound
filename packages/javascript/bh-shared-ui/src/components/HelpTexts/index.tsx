@@ -66,7 +66,6 @@ import AllowedToAct from './AllowedToAct/AllowedToAct';
 import AllowedToDelegate from './AllowedToDelegate/AllowedToDelegate';
 import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
-import CoerceToTGT from './CoerceToTGT/CoerceToTGT';
 import Contains from './Contains/Contains';
 import DCSync from './DCSync/DCSync';
 import DCFor from './DCFor/DCFor';
@@ -147,7 +146,6 @@ const EdgeInfoComponents = {
     CanRDP: CanRDP,
     ExecuteDCOM: ExecuteDCOM,
     AllowedToDelegate: AllowedToDelegate,
-    CoerceToTGT: CoerceToTGT,
     GetChanges: GetChanges,
     GetChangesAll: GetChangesAll,
     ReadLAPSPassword: ReadLAPSPassword,

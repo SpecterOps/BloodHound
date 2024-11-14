@@ -62,7 +62,6 @@ export const AllEdgeTypes: Category[] = [
             {
                 name: 'Credential Access',
                 edgeTypes: [
-                    ActiveDirectoryRelationshipKind.CoerceToTGT,
                     ActiveDirectoryRelationshipKind.DCSync,
                     ActiveDirectoryRelationshipKind.DumpSMSAPassword,
                     ActiveDirectoryRelationshipKind.HasSession,
