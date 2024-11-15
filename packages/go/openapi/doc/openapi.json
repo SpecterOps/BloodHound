@@ -3947,7 +3947,7 @@
         ],
         "parameters": [
           {
-            "name": "search_query",
+            "name": "query",
             "description": "Search query",
             "in": "query",
             "required": true,
@@ -4027,8 +4027,7 @@
             "in": "query",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "string"
             }
           },
           {
@@ -4037,8 +4036,7 @@
             "in": "query",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "string"
             }
           },
           {
