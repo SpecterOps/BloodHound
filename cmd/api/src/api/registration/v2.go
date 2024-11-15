@@ -44,9 +44,9 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		routerInst.POST("/api/v2/logout", loginResource.Logout),
 
 		// Login path prefix matcher for SAML providers, order matters here due to PathPrefix
-		routerInst.POST("/api/{version}/login/saml/{saml_provider_name}/acs", managementResource.SAMLCallbackRedirect),
-		routerInst.GET("/api/{version}/login/saml/{saml_provider_name}/metadata", managementResource.ServeMetadata),
-		routerInst.PathPrefix("/api/{version}/login/saml/{saml_provider_name}", http.HandlerFunc(managementResource.SAMLLoginRedirect)),
+		routerInst.POST(fmt.Sprintf("/api/{version}/login/saml/{%s}/acs", api.URIPathVariableSSOProviderSlug), managementResource.SAMLCallbackRedirect),
+		routerInst.GET(fmt.Sprintf("/api/{version}/login/saml/{%s}/metadata", api.URIPathVariableSSOProviderSlug), managementResource.ServeMetadata),
+		routerInst.PathPrefix(fmt.Sprintf("/api/{version}/login/saml/{%s}", api.URIPathVariableSSOProviderSlug), http.HandlerFunc(managementResource.SAMLLoginRedirect)),
 
 		// SAML resources
 		routerInst.GET("/api/v2/saml", managementResource.ListSAMLProviders).RequirePermissions(permissions.AuthManageProviders),
@@ -60,6 +60,7 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		routerInst.POST("/api/v2/sso-providers/oidc", managementResource.CreateOIDCProvider).CheckFeatureFlag(resources.DB, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/sso-providers/{%s}", api.URIPathVariableSSOProviderID), managementResource.DeleteSSOProvider).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.GET(fmt.Sprintf("/api/v2/sso/{%s}/login", api.URIPathVariableSSOProviderSlug), managementResource.SSOLoginHandler),
+		routerInst.GET(fmt.Sprintf("/api/v2/sso/{%s}/metadata", api.URIPathVariableSSOProviderSlug), managementResource.ServeMetadata),
 		routerInst.PathPrefix(fmt.Sprintf("/api/v2/sso/{%s}/callback", api.URIPathVariableSSOProviderSlug), http.HandlerFunc(managementResource.SSOCallbackHandler)),
 
 		// Permissions

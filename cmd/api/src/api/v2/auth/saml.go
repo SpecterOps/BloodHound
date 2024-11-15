@@ -51,7 +51,7 @@ const (
 
 // This retains support for the old saml login urls /api/{version}/login/saml/ that were added to their respective IDPs
 func (s ManagementResource) SAMLLoginRedirect(response http.ResponseWriter, request *http.Request) {
-	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableServiceProviderName]
+	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableSSOProviderSlug]
 
 	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -64,7 +64,7 @@ func (s ManagementResource) SAMLLoginRedirect(response http.ResponseWriter, requ
 
 // This retains support for the old saml acs urls /api/{version}/login/saml/ that were added to their respective IDPs
 func (s ManagementResource) SAMLCallbackRedirect(response http.ResponseWriter, request *http.Request) {
-	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableServiceProviderName]
+	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableSSOProviderSlug]
 
 	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -190,7 +190,7 @@ func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, req
 
 // Preserve old metadata endpoint
 func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request *http.Request) {
-	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableServiceProviderName]
+	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableSSOProviderSlug]
 
 	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
 		api.HandleDatabaseError(request, response, err)
