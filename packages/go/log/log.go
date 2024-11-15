@@ -157,10 +157,23 @@ func Panicf(format string, args ...any) {
 	Panic().Msgf(format, args...)
 }
 
+// CtxPanicf is a convenience function for writing a log event with the given format and arguments with the LevelPanic
+// log verbosity level while attaching a context.
+func CtxPanicf(ctx context.Context, format string, args ...any) {
+	Panic().Ctx(ctx).Msgf(format, args...)
+}
+
 // Fatalf is a convenience function for writing a log event with the given format and arguments with the LevelFatal
 // log verbosity level.
 func Fatalf(format string, args ...any) {
 	WithLevel(LevelFatal).Msgf(format, args...)
+	os.Exit(1)
+}
+
+// CtxFatalf is a convenience function for writing a log event with the given format and arguments with the LevelFatal
+// log verbosity level while attaching a context.
+func CtxFatalf(ctx context.Context, format string, args ...any) {
+	WithLevel(LevelFatal).Ctx(ctx).Msgf(format, args...)
 	os.Exit(1)
 }
 
@@ -175,6 +188,8 @@ func Errorf(format string, args ...any) {
 	Error().Msgf(format, args...)
 }
 
+// CtxErrorf is a convenience function for writing a log event with the given format and arguments with the LevelError
+// log verbosity level while attaching a context.
 func CtxErrorf(ctx context.Context, format string, args ...any) {
 	Error().Ctx(ctx).Msgf(format, args...)
 }
@@ -190,6 +205,12 @@ func Warnf(format string, args ...any) {
 	Warn().Msgf(format, args...)
 }
 
+// CtxWarnf is a convenience function for writing a log event with the given format and arguments with the LevelWarn
+// log verbosity level while attachingg a context.
+func CtxWarnf(ctx context.Context, format string, args ...any) {
+	Warn().Ctx(ctx).Msgf(format, args...)
+}
+
 // Info returns a logging event with the LevelInfo log verbosity level.
 func Info() Event {
 	return WithLevel(LevelInfo)
@@ -201,6 +222,8 @@ func Infof(format string, args ...any) {
 	Info().Msgf(format, args...)
 }
 
+// CtxInfof is a convenience function for writing a log event with the given format and arguments with the LevelInfo
+// log verbosity level while attaching a context.
 func CtxInfof(ctx context.Context, format string, args ...any) {
 	Info().Ctx(ctx).Msgf(format, args...)
 }
@@ -216,6 +239,12 @@ func Debugf(format string, args ...any) {
 	Debug().Msgf(format, args...)
 }
 
+// CtxDebugf is a convenience function for writing a log event with the given format and arguments with the LevelDebug
+// log verbosity level while attaching a context.
+func CtxDebugf(ctx context.Context, format string, args ...any) {
+	Debug().Ctx(ctx).Msgf(format, args...)
+}
+
 // Trace returns a logging event with the LevelTrace log verbosity level.
 func Trace() Event {
 	return WithLevel(LevelTrace)
@@ -227,6 +256,12 @@ func Tracef(format string, args ...any) {
 	Trace().Msgf(format, args...)
 }
 
+// CtxTracef is a convenience function for writing a log event with the given format and arguments with the LevelTrace
+// log verbosity level while attaching a context.
+func CtxTracef(ctx context.Context, format string, args ...any) {
+	Trace().Ctx(ctx).Msgf(format, args...)
+}
+
 // Measure is a convenience function that returns a deferrable function that will add a runtime duration to the log
 // event. The time measurement begins on instantiation of the returned deferrable function and ends upon call of said
 // function.
@@ -236,6 +271,19 @@ func Measure(level Level, format string, args ...any) func() {
 	return func() {
 		if elapsed := time.Since(then); elapsed >= measureThreshold {
 			WithLevel(level).Duration(FieldElapsed, elapsed).Msgf(format, args...)
+		}
+	}
+}
+
+// CtxMeasure is a convenience function that returns a deferrable function that will add a runtime duration to the log
+// event. The time measurement begins on instantiation of the returned deferrable function and ends upon call of said
+// function.
+func CtxMeasure(ctx context.Context, level Level, format string, args ...any) func() {
+	then := time.Now()
+
+	return func() {
+		if elapsed := time.Since(then); elapsed >= measureThreshold {
+			WithLevel(level).Ctx(ctx).Duration(FieldElapsed, elapsed).Msgf(format, args...)
 		}
 	}
 }
@@ -261,6 +309,22 @@ func LogAndMeasure(level Level, format string, args ...any) func() {
 	return func() {
 		if elapsed := time.Since(then); elapsed >= measureThreshold {
 			WithLevel(level).Duration(FieldElapsed, elapsed).Uint64(FieldMeasurementID, pairID).Msg(message)
+		}
+	}
+}
+
+func CtxLogAndMeasure(ctx context.Context, level Level, format string, args ...any) func() {
+	var (
+		pairID  = logMeasurePairCounter.Add(1)
+		message = fmt.Sprintf(format, args...)
+		then    = time.Now()
+	)
+
+	WithLevel(level).Uint64(FieldMeasurementID, pairID).Msg(message)
+
+	return func() {
+		if elapsed := time.Since(then); elapsed >= measureThreshold {
+			WithLevel(level).Ctx(ctx).Duration(FieldElapsed, elapsed).Uint64(FieldMeasurementID, pairID).Msg(message)
 		}
 	}
 }
