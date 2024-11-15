@@ -25,6 +25,9 @@ type SAMLProviderData interface {
 // This also creates the corresponding sso_provider entry
 // INSERT INTO saml_identity_providers (...) VALUES (...)
 func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error) {
+	// Set the current version for root_uri_version
+	samlProvider.RootURIVersion = model.SAMLRootURIVersion2
+
 	auditEntry := model.AuditEntry{
 		Action: model.AuditLogActionCreateSAMLIdentityProvider,
 		Model:  &samlProvider, // Pointer is required to ensure success log contains updated fields after transaction

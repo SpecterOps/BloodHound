@@ -22,12 +22,22 @@ var (
 	ErrSAMLAssertion = errors.New("SAML assertion error")
 )
 
+// SAMLRootURIVersion is required for payloads to match the ACS / Callback url configured on IDPs
+// While the DB column root_uri_version has a default of 2, it is also hardcoded in the db method CreateSAMLIdentityProvider
+type SAMLRootURIVersion int
+
+var (
+	SAMLRootURIVersion1 SAMLRootURIVersion = 1 // "/v2/login/saml/{slug}/"
+	SAMLRootURIVersion2 SAMLRootURIVersion = 2 // "/v2/sso/{slug}/"
+)
+
 type SAMLProvider struct {
-	Name            string `json:"name" gorm:"unique;index"`
-	DisplayName     string `json:"display_name"`
-	IssuerURI       string `json:"idp_issuer_uri"`
-	SingleSignOnURI string `json:"idp_sso_uri"`
-	MetadataXML     []byte `json:"-"`
+	Name            string             `json:"name" gorm:"unique;index"`
+	DisplayName     string             `json:"display_name"`
+	IssuerURI       string             `json:"idp_issuer_uri"`
+	SingleSignOnURI string             `json:"idp_sso_uri"`
+	MetadataXML     []byte             `json:"-"`
+	RootURIVersion  SAMLRootURIVersion `json:"root_uri_version"`
 
 	// PrincipalAttributeMapping is an array of OID or XML Namespace element mapping strings that can be used to map a
 	// SAML assertion to a user in the database.
@@ -60,6 +70,7 @@ func (s SAMLProvider) AuditData() AuditData {
 		"saml_name":                    s.Name,
 		"principal_attribute_mappings": s.PrincipalAttributeMappings,
 		"idp_url":                      s.IssuerURI,
+		"root_uri_version":             s.RootURIVersion,
 		"sso_provider_id":              s.SSOProviderID.Int32,
 	}
 }
@@ -115,10 +126,18 @@ func (s SAMLProvider) GetSAMLUserPrincipalNameFromAssertion(assertion *saml.Asse
 
 func (s *SAMLProvider) FormatSAMLProviderURLs(hostUrl url.URL) {
 	root := hostUrl
-	root.Path = path.Join("/api/v2/sso/", s.Name)
+
+	// To preserve existing IDP configurations, existing saml providers still use the old acs endpoint which redirects to the new callback handler
+	switch s.RootURIVersion {
+	case SAMLRootURIVersion1:
+		root.Path = path.Join("/api/v1/login/saml", s.Name)
+		s.ServiceProviderACSURI = serde.FromURL(*root.JoinPath("acs"))
+	case SAMLRootURIVersion2:
+		root.Path = path.Join("/api/v2/sso", s.Name)
+		s.ServiceProviderACSURI = serde.FromURL(*root.JoinPath("callback"))
+	}
 
 	s.ServiceProviderIssuerURI = serde.FromURL(root)
 	s.ServiceProviderInitiationURI = serde.FromURL(*root.JoinPath("login"))
 	s.ServiceProviderMetadataURI = serde.FromURL(*root.JoinPath("metadata"))
-	s.ServiceProviderACSURI = serde.FromURL(*root.JoinPath("callback"))
 }

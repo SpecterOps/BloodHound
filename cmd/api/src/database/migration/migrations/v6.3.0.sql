@@ -14,8 +14,16 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
--- Drop column saml_provider_id
+-- Drop column saml_provider_id from users table
 ALTER TABLE ONLY users
 DROP CONSTRAINT IF EXISTS fk_users_saml_provider;
 ALTER TABLE ONLY users
 DROP COLUMN IF EXISTS saml_provider_id;
+
+-- Add root_uri_version and backfill existing saml providers to 1 or "/v1/login/saml/"
+ALTER TABLE ONLY saml_providers
+  ADD COLUMN IF NOT EXISTS root_uri_version INTEGER NOT NULL DEFAULT 1;
+
+-- Update root_uri_version to default to 2 or "/v2/sso/" for newly created saml providers
+ALTER TABLE ONLY saml_providers
+  ALTER COLUMN root_uri_version SET DEFAULT 2;
