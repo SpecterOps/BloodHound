@@ -34,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/model"
 )
 
 const (
@@ -348,7 +349,13 @@ func (s ProviderResource) serveAssertionConsumerService(response http.ResponseWr
 			log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", s.serviceProvider.Config.Name, err)
 			s.writeAPIErrorResponse(request, response, http.StatusBadRequest, "session assertion does not meet the requirements for user lookup")
 		} else {
-			s.authenticator.CreateSSOSession(request, response, principalName, s.serviceProvider.Config)
+			s.authenticator.CreateSSOSession(request, response, principalName, model.SSOProvider{
+				Type:         model.SessionAuthProviderSAML,
+				Name:         s.serviceProvider.Config.Name,
+				Slug:         s.serviceProvider.Config.Name,
+				SAMLProvider: &s.serviceProvider.Config,
+				Serial:       model.Serial{ID: s.serviceProvider.Config.SSOProviderID.Int32},
+			})
 		}
 	}
 }

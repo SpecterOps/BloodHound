@@ -745,19 +745,7 @@ class BHEAPIClient {
     getUser = (userId: string, options?: types.RequestOptions) =>
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);
 
-    createUser = (
-        user: {
-            firstName: string;
-            lastName: string;
-            emailAddress: string;
-            principal: string;
-            roles: number[];
-            SAMLProviderId?: string;
-            password?: string;
-            needsPasswordReset?: boolean;
-        },
-        options?: types.RequestOptions
-    ) =>
+    createUser = (user: types.CreateUserRequest, options?: types.RequestOptions) =>
         this.baseClient.post(
             '/api/v2/bloodhound-users',
             {
@@ -766,7 +754,7 @@ class BHEAPIClient {
                 email_address: user.emailAddress,
                 principal: user.principal,
                 roles: user.roles,
-                saml_provider_id: user.SAMLProviderId,
+                sso_provider_id: user.SSOProviderId,
                 secret: user.password,
                 needs_password_reset: user.needsPasswordReset,
             },
@@ -782,7 +770,7 @@ class BHEAPIClient {
                 email_address: user.emailAddress,
                 principal: user.principal,
                 roles: user.roles,
-                saml_provider_id: user.SAMLProviderId,
+                sso_provider_id: user.SSOProviderId,
                 is_disabled: user.is_disabled,
             },
             options

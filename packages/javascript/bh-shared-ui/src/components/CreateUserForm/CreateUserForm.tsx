@@ -32,12 +32,14 @@ import {
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { apiClient } from 'bh-shared-ui';
-import { NewUser } from 'src/ducks/auth/types';
+import { apiClient } from '../../utils';
+import { CreateUserRequest, SSOProvider } from 'js-client-library';
+
+export type CreateUserRequestForm = Omit<CreateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 
 const CreateUserForm: React.FC<{
     onCancel: () => void;
-    onSubmit: (user: NewUser) => void;
+    onSubmit: (user: CreateUserRequestForm) => void;
     isLoading: boolean;
     error: any;
 }> = ({ onCancel, onSubmit, isLoading, error }) => {
@@ -46,7 +48,7 @@ const CreateUserForm: React.FC<{
         handleSubmit,
         setValue,
         formState: { errors },
-    } = useForm({
+    } = useForm<CreateUserRequestForm>({
         defaultValues: {
             emailAddress: '',
             principal: '',
@@ -54,8 +56,8 @@ const CreateUserForm: React.FC<{
             lastName: '',
             password: '',
             needsPasswordReset: false,
-            SAMLProviderId: '',
             roles: [1],
+            SSOProviderId: '',
         },
     });
 
@@ -63,16 +65,16 @@ const CreateUserForm: React.FC<{
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
-            setValue('SAMLProviderId', '');
+            setValue('SSOProviderId', undefined);
         }
     }, [authenticationMethod, setValue]);
 
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
-        apiClient.getRoles({ signal }).then((res) => res.data.data.roles)
+        apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)
     );
 
-    const listSAMLProvidersQuery = useQuery(['listSAMLProviders'], ({ signal }) =>
-        apiClient.listSAMLProviders({ signal }).then((res) => res.data.data.saml_providers)
+    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
+        apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
     );
 
     const handleCancel: React.MouseEventHandler<HTMLButtonElement> = (e) => {
@@ -82,7 +84,7 @@ const CreateUserForm: React.FC<{
 
     return (
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
-            {!(getRolesQuery.isLoading || listSAMLProvidersQuery.isLoading) && (
+            {!(getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) && (
                 <>
                     <DialogContent>
                         <Grid container spacing={2}>
@@ -189,8 +191,8 @@ const CreateUserForm: React.FC<{
                                             fullWidth
                                             data-testid='create-user-dialog_select-authentication-method'>
                                             <MenuItem value='password'>Username / Password</MenuItem>
-                                            {listSAMLProvidersQuery.data.length > 0 && (
-                                                <MenuItem value='saml'>SAML</MenuItem>
+                                            {listSSOProvidersQuery.data && listSSOProvidersQuery.data?.length > 0 && (
+                                                <MenuItem value='sso'>Single Sign-On (SSO)</MenuItem>
                                             )}
                                         </Select>
                                     </FormControl>
@@ -254,41 +256,39 @@ const CreateUserForm: React.FC<{
                                 ) : (
                                     <Grid item xs={12}>
                                         <Controller
-                                            name='SAMLProviderId'
+                                            name='SSOProviderId'
                                             control={control}
-                                            defaultValue=''
                                             rules={{
-                                                required: 'SAML Provider is required',
+                                                required: 'SSO Provider is required',
                                             }}
                                             render={({ field: { onChange, onBlur, value, ref } }) => (
-                                                <FormControl error={!!errors.SAMLProviderId}>
+                                                <FormControl error={!!errors.SSOProviderId}>
                                                     <InputLabel
-                                                        id='SAMLProviderId-label'
+                                                        id='SSOProviderId-label'
                                                         sx={{ ml: '-14px', mt: '8px' }}>
-                                                        SAML Provider
+                                                        SSO Provider
                                                     </InputLabel>
                                                     <Select
                                                         onChange={
                                                             onChange as (event: SelectChangeEvent<string>) => void
                                                         }
+                                                        defaultValue={''}
                                                         onBlur={onBlur}
                                                         value={value}
                                                         ref={ref}
-                                                        labelId='SAMLProviderId-label'
-                                                        id='SAMLProviderId'
-                                                        name='SAMLProviderId'
+                                                        labelId='SSOProviderId-label'
+                                                        id='SSOProviderId'
+                                                        name='SSOProviderId'
                                                         variant='standard'
                                                         fullWidth
-                                                        data-testid='create-user-dialog_select-saml-provider'>
-                                                        {listSAMLProvidersQuery.data.map((SAMLProvider: any) => (
-                                                            <MenuItem
-                                                                value={SAMLProvider.id.toString()}
-                                                                key={SAMLProvider.id}>
-                                                                {SAMLProvider.name}
+                                                        data-testid='create-user-dialog_select-sso-provider'>
+                                                        {listSSOProvidersQuery.data?.map((SSOProvider: SSOProvider) => (
+                                                            <MenuItem value={SSOProvider.id} key={SSOProvider.id}>
+                                                                {SSOProvider.name}
                                                             </MenuItem>
                                                         ))}
                                                     </Select>
-                                                    <FormHelperText>{errors.SAMLProviderId?.message}</FormHelperText>
+                                                    <FormHelperText>{errors.SSOProviderId?.message}</FormHelperText>
                                                 </FormControl>
                                             )}
                                         />
@@ -324,7 +324,7 @@ const CreateUserForm: React.FC<{
                                                 {getRolesQuery.isLoading ? (
                                                     <MenuItem value={1}>Loading...</MenuItem>
                                                 ) : (
-                                                    getRolesQuery.data.map((role: any) => (
+                                                    getRolesQuery.data?.map((role: any) => (
                                                         <MenuItem key={role.id} value={role.id.toString()}>
                                                             {role.name}
                                                         </MenuItem>

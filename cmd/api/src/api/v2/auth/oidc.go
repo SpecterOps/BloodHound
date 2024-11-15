@@ -74,6 +74,7 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 			ClientID:    ssoProvider.OIDCProvider.ClientID,
 			Endpoint:    provider.Endpoint(),
 			RedirectURL: getRedirectURL(request, ssoProvider),
+			Scopes:      []string{"openid", "profile", "email", "email_verified", "name", "given_name", "family_name"},
 		}
 
 		// use PKCE to protect against CSRF attacks
@@ -133,6 +134,7 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 			// Extract custom claims
 			var claims struct {
 				Name        string `json:"name"`
+				FamilyName  string `json:"family_name"`
 				DisplayName string `json:"given_name"`
 				Email       string `json:"email"`
 				Verified    bool   `json:"email_verified"`
@@ -140,7 +142,7 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 			if err := idToken.Claims(&claims); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 			} else {
-				s.authenticator.CreateSSOSession(request, response, claims.Email, *ssoProvider.OIDCProvider)
+				s.authenticator.CreateSSOSession(request, response, claims.Email, ssoProvider)
 			}
 		}
 	}

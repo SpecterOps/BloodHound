@@ -71,7 +71,7 @@ type Authenticator interface {
 	ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error
 	ValidateRequestSignature(tokenID uuid.UUID, request *http.Request, serverTime time.Time) (auth.Context, int, error)
 	CreateSession(ctx context.Context, user model.User, authProvider any) (string, error)
-	CreateSSOSession(request *http.Request, response http.ResponseWriter, principalNameOrEmail string, authProvider any)
+	CreateSSOSession(request *http.Request, response http.ResponseWriter, principalNameOrEmail string, ssoProvider model.SSOProvider)
 	ValidateSession(ctx context.Context, jwtTokenString string) (auth.Context, error)
 }
 
@@ -329,30 +329,35 @@ func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter,
 	})
 }
 
-// authProvider should be either model.SAMLProvider or model.OIDCProvider
-func (s authenticator) CreateSSOSession(request *http.Request, response http.ResponseWriter, principalNameOrEmail string, authProvider any) {
+func (s authenticator) CreateSSOSession(request *http.Request, response http.ResponseWriter, principalNameOrEmail string, ssoProvider model.SSOProvider) {
 	var (
 		hostURL    = *ctx.FromRequest(request).Host
 		requestCtx = request.Context()
 		err        error
 
-		user model.User
+		authProvider any
+		user         model.User
 
 		commitID        uuid.UUID
-		auditLogFields  = types.JSONUntypedObject{"username": principalNameOrEmail}
+		auditLogFields  = types.JSONUntypedObject{"username": principalNameOrEmail, "sso_provider_id": ssoProvider.ID}
 		auditLogOutcome = model.AuditLogStatusFailure
 	)
 
-	// Set LoginAttempt method for audit logs
-	switch typedAuthProvider := authProvider.(type) {
-	case model.SAMLProvider:
+	switch ssoProvider.Type {
+	case model.SessionAuthProviderSAML:
 		auditLogFields["auth_type"] = auth.ProviderTypeSAML
-		auditLogFields["saml_provider_id"] = typedAuthProvider.ID
-		auditLogFields["sso_provider_id"] = typedAuthProvider.SSOProviderID
-	case model.OIDCProvider:
+		if ssoProvider.SAMLProvider != nil {
+			auditLogFields["saml_provider_id"] = ssoProvider.SAMLProvider.ID
+			authProvider = *ssoProvider.SAMLProvider
+		}
+	case model.SessionAuthProviderOIDC:
 		auditLogFields["auth_type"] = auth.ProviderTypeOIDC
-		auditLogFields["oidc_provider_id"] = typedAuthProvider.ID
-		auditLogFields["sso_provider_id"] = typedAuthProvider.SSOProviderID
+		if ssoProvider.OIDCProvider != nil {
+			auditLogFields["oidc_provider_id"] = ssoProvider.OIDCProvider.ID
+			authProvider = *ssoProvider.OIDCProvider
+		}
+		DeleteBrowserCookie(request, response, AuthStateCookieName)
+		DeleteBrowserCookie(request, response, AuthPKCECookieName)
 	}
 
 	// Generate commit ID for audit logging
@@ -378,22 +383,9 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
 		}
 	} else {
-		switch typedAuthProvider := authProvider.(type) {
-		case model.SAMLProvider:
-			if !user.SAMLProviderID.Valid || typedAuthProvider.ID != user.SAMLProvider.ID {
-				auditLogFields["error"] = ErrorUserNotAuthorizedForProvider
-				WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
-				return
-			}
-		case model.OIDCProvider:
-			//todo connect to db provider table
-
-			// Delete pre-auth cookies regardless
-			DeleteBrowserCookie(request, response, AuthPKCECookieName)
-			DeleteBrowserCookie(request, response, AuthStateCookieName)
-		default:
-			auditLogFields["error"] = ErrorInvalidAuthProvider
-			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusBadRequest, ErrorInvalidAuthProvider.Error(), request), response)
+		if !user.SSOProviderID.Valid || ssoProvider.ID != user.SSOProviderID.Int32 {
+			auditLogFields["error"] = ErrorUserNotAuthorizedForProvider
+			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
 			return
 		}
 
