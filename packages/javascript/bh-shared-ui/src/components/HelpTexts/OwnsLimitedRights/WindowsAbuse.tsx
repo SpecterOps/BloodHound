@@ -25,7 +25,7 @@ const WindowsAbuse: FC = () => {
                 you can abuse the specific privileges granted to the OWNER RIGHTS SID.
             <br />
             <br />
-                Please refer to the abuse info for the specific privileges granted to OWNER RIGHTS at https://bloodhound.readthedocs.io/en/latest/data-analysis/edges.html
+                Please refer to the abuse info for the specific privileges granted to OWNER RIGHTS at https://support.bloodhoundenterprise.io/hc/en-us/articles/17224136169371-About-BloodHound-Edges
             </Typography>
         </>
     )
