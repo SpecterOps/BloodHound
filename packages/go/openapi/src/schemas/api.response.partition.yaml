@@ -1,4 +1,0 @@
-type: object
-properties:
-  partition_by:
-    $ref: './api.params.query.partition-by.yaml'
