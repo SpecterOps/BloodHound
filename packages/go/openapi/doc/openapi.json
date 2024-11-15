@@ -12253,14 +12253,6 @@
             }
           },
           {
-            "name": "Finding",
-            "deprecated": true,
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
-            }
-          },
-          {
             "name": "domain_sid",
             "in": "query",
             "schema": {

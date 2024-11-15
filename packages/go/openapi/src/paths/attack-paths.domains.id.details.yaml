@@ -85,11 +85,6 @@ get:
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
-    - name: Finding
-      deprecated: true
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.string.yaml'
     - name: domain_sid
       in: query
       schema:
