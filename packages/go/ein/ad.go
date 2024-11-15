@@ -583,7 +583,7 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 		var (
 			computerProps    = graph.AsProperties(computer.Properties)
 			uncondel, _      = computerProps.GetOrDefault(ad.UnconstrainedDelegation.String(), computer.UnconstrainedDelegation).Bool() // SH v2.5.7 and earlier have unconstraineddelegation under 'Properties' only
-			domainsid, _     = computerProps.GetOrDefault(ad.DomainSID.String(), computer.DomainSID).String()                           // SH v2.5.7 and earlier have domainsid under 'Properties' only
+			domainsid, _     = computerProps.GetOrDefault(ad.DomainSID.String(), computer.DomainSID).String()                           // SH schema version 5 and earlier have domainsid under 'Properties' only
 			validCoerceToTGT = uncondel && domainsid != ""
 		)
 
@@ -594,7 +594,7 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 					SourceType: ad.Computer,
 				},
 				IngestibleTarget{
-					Target:     computer.DomainSID,
+					Target:     domainsid,
 					TargetType: ad.Domain,
 				},
 				IngestibleRel{
