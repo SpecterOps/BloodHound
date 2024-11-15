@@ -32,14 +32,14 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, target
                 <br />
                 <ul>
                     <li>
-                        The OWNER RIGHTS SID (S-1-3-4) is NOT explicitly granted privileges on the object
+                        The OWNER RIGHTS SID (S-1-3-4) is not explicitly granted privileges on the object
                     </li>
                     <br />
                     OR
                     <br />
                     <br />
                     <li>
-                        Implicit owner rights are NOT blocked
+                        Implicit owner rights are not blocked
                     </li>
                 </ul>
             </Typography>
@@ -57,7 +57,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, target
                     <br />
                     <br />
                     <li>
-                        The object is NOT a computer or derivative of a computer object (e.g., MSA, GMSA)
+                        The object is not a computer or derivative of a computer object (e.g., MSA, GMSA)
                     </li>
                     <br />
                     OR
