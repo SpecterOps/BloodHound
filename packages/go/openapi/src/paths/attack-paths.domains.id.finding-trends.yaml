@@ -51,20 +51,20 @@ get:
                         items:
                           type: object
                           properties:
-                            DomainSID:
+                            domain_sid:
                               type: string
-                            Finding:
+                            finding:
                               type: string
-                            CompositeRisk:
+                            composite_risk:
                               type: number
                               format: double
-                            FindingCountStart:
+                            finding_count_start:
                               type: integer
-                            FindingCountEnd:
+                            finding_count_end:
                               type: integer
-                      TotalFindingCountStart:
+                      total_finding_count_start:
                         type: integer
-                      TotalFindingCountEnd:
+                      total_finding_count_end:
                         type: integer
 
     400:
