@@ -9,6 +9,37 @@
         {
             "Properties": {
                 "domain": "TESTLAB.LOCAL",
+                "name": "UNCONDEL@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dUNCONDEL,CN\u003dUSERS,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446",
+                "whencreated": 1617618036,
+                "sensitive": false,
+                "dontreqpreauth": false,
+                "passwordnotreqd": false,
+                "unconstraineddelegation": true,
+                "pwdneverexpires": true,
+                "enabled": true,
+                "trustedtoauth": false,
+                "lastlogon": 0,
+                "lastlogontimestamp": -1,
+                "pwdlastset": 1617643236,
+                "serviceprincipalnames": [],
+                "hasspn": false,
+                "admincount": false,
+                "sidhistory": []
+            },
+            "AllowedToDelegate": [],
+            "PrimaryGroupSID": "S-1-5-21-3130019616-2776909439-2417379446-513",
+            "HasSIDHistory": [],
+            "SpnTargets": [],
+            "Aces": [],
+            "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2125",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
                 "name": "ADMINISTRATOR@TESTLAB.LOCAL",
                 "distinguishedname": "CN\u003dADMINISTRATOR,CN\u003dUSERS,DC\u003dTESTLAB,DC\u003dLOCAL",
                 "domainsid": "S-1-5-21-3130019616-2776909439-2417379446",
