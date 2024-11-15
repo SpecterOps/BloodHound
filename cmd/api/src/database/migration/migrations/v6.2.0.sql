@@ -55,3 +55,12 @@ ALTER TABLE ONLY users
     DROP CONSTRAINT IF EXISTS fk_users_saml_provider;
 ALTER TABLE ONLY users
     ADD CONSTRAINT fk_users_saml_provider FOREIGN KEY (saml_provider_id) REFERENCES saml_providers (id) ON DELETE SET NULL;
+
+-- Backfill users with their proper sso_provider when they have a saml_provider_id
+UPDATE users u
+SET sso_provider_id = (SELECT sso.id
+                       FROM saml_providers saml
+                                JOIN sso_providers sso ON sso.id = saml.sso_provider_id
+                       WHERE u.saml_provider_id = saml.id)
+WHERE sso_provider_id IS NULL
+  AND saml_provider_id IS NOT NULL;

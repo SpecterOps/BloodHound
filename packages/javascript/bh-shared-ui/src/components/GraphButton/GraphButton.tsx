@@ -16,7 +16,7 @@
 
 import { Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -42,7 +42,7 @@ const useStyles = makeStyles((theme) => ({
 
 export interface GraphButtonProps {
     onClick: (e?: any) => void;
-    displayText: string | JSX.Element;
+    displayText: string | ReactNode;
     disabled?: boolean;
 }
 
