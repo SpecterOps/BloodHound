@@ -19,9 +19,6 @@ package analysis
 import (
 	"context"
 	"sort"
-	"sync"
-
-	"github.com/specterops/bloodhound/dawgs/cardinality"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -121,57 +118,6 @@ type CreatePostRelationshipJob struct {
 type DeleteRelationshipJob struct {
 	Kind graph.Kind
 	ID   graph.ID
-}
-
-// EdgeConstraintMap is a thread safe tracker for post-processed edges. It guarantees that only one edge of a given
-// post-processed kind may exist. This is useful either to create a batch of post-processed edges to insert or to
-// guard against double insertion of the same post-processed edge.
-type EdgeConstraintMap struct {
-	lock     *sync.Mutex
-	adjacent map[graph.ID]map[graph.Kind]cardinality.Duplex[uint64]
-}
-
-func NewEdgeConstraintMap() EdgeConstraintMap {
-	return EdgeConstraintMap{
-		lock:     &sync.Mutex{},
-		adjacent: map[graph.ID]map[graph.Kind]cardinality.Duplex[uint64]{},
-	}
-}
-
-// TrackCreatePostRelationshipJob decomposes a CreatePostRelationshipJob type and returns the result of tracking it.
-func (s EdgeConstraintMap) TrackCreatePostRelationshipJob(job CreatePostRelationshipJob) bool {
-	return s.Track(job.FromID, job.ToID, job.Kind)
-}
-
-// Track will attempt to track creation of the given relationship arguments. This function returns false
-// if the given relationship has already been tracked; true otherwise.
-func (s EdgeConstraintMap) Track(start, end graph.ID, edgeKind graph.Kind) bool {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	// Lookup what's adjacent outbound from the start ID
-	if startAdjacent, exists := s.adjacent[start]; !exists {
-		// If there's nothing adjacent for the start ID then this is the first outbound edge being created
-		// for it.
-		s.adjacent[start] = map[graph.Kind]cardinality.Duplex[uint64]{
-			edgeKind: cardinality.NewBitmap64With(end.Uint64()),
-		}
-	} else if kindAdjacent, exists := startAdjacent[edgeKind]; !exists {
-		// If there's no bitmap representing outbound edges over the given edge kind then create a new bitmap
-		// and track it.
-		startAdjacent[edgeKind] = cardinality.NewBitmap64With(end.Uint64())
-	} else if !kindAdjacent.CheckedAdd(end.Uint64()) {
-		// This Debugf statement is here to help engineers figure out where double-inserts are coming from in
-		// the post-processing logic.
-		log.Debugf("Duplicate post-processed edge: (%d)-[:%s]->(%d)", start, edgeKind, end)
-
-		// If the CheckedAdd function returns false, the outbound nodes already contains an entry for this end
-		// ID, meaning that the edge has already been created.
-		return false
-	}
-
-	// Getting here means we have added a new, unique edge.
-	return true
 }
 
 func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships ...graph.Kind) (*AtomicPostProcessingStats, error) {
