@@ -25,7 +25,7 @@ get:
     - Community
     - Enterprise
   parameters:
-    - name: search_query
+    - name: query
       description: Search query
       in: query
       required: true
