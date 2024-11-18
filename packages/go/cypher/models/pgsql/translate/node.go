@@ -164,16 +164,16 @@ func (s *Translator) translateNodePatternToStep(scope *Scope, part *PatternPart,
 	return nil
 }
 
-func consumeConstraintsFrom(visibleIdentifiers *pgsql.IdentifierSet, constraintTrackers ...*ConstraintTracker) (*Constraint, error) {
+func consumeConstraintsFrom(visible *pgsql.IdentifierSet, trackers ...*ConstraintTracker) (*Constraint, error) {
 	constraint := &Constraint{
 		Dependencies: pgsql.NewIdentifierSet(),
 	}
 
-	for _, constraintTracker := range constraintTrackers {
-		if trackedConstraint, err := constraintTracker.ConsumeSet(visibleIdentifiers); err != nil {
+	for _, constraintTracker := range trackers {
+		if trackedConstraint, err := constraintTracker.ConsumeSet(visible); err != nil {
 			return nil, err
-		} else {
-			constraint.Merge(trackedConstraint)
+		} else if err := constraint.Merge(trackedConstraint); err != nil {
+			return nil, err
 		}
 	}
 

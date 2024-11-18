@@ -32,12 +32,14 @@ import {
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { apiClient } from 'bh-shared-ui';
-import { UpdatedUser } from 'src/ducks/auth/types';
+import { apiClient } from '../../utils';
+import { SSOProvider, UpdateUserRequest } from 'js-client-library';
+
+export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 
 const UpdateUserForm: React.FC<{
     onCancel: () => void;
-    onSubmit: (user: UpdatedUser) => void;
+    onSubmit: (user: UpdateUserRequestForm) => void;
     userId: string;
     isLoading: boolean;
     error: any;
@@ -54,11 +56,11 @@ const UpdateUserForm: React.FC<{
         apiClient.getRoles({ signal }).then((res) => res.data.data.roles)
     );
 
-    const listSAMLProvidersQuery = useQuery(['listSAMLProviders'], ({ signal }) =>
-        apiClient.listSAMLProviders({ signal }).then((res) => res.data.data.saml_providers)
+    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
+        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
     );
 
-    if (getUserQuery.isLoading || getRolesQuery.isLoading || listSAMLProvidersQuery.isLoading) {
+    if (getUserQuery.isLoading || getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) {
         return (
             <>
                 <DialogContent>
@@ -81,7 +83,7 @@ const UpdateUserForm: React.FC<{
         );
     }
 
-    if (getUserQuery.isError || getRolesQuery.isError || listSAMLProvidersQuery.isError) {
+    if (getUserQuery.isError || getRolesQuery.isError || listSSOProvidersQuery.isError) {
         return (
             <>
                 <DialogContent>
@@ -111,11 +113,11 @@ const UpdateUserForm: React.FC<{
                 principal: getUserQuery.data.principal_name || '',
                 firstName: getUserQuery.data.first_name || '',
                 lastName: getUserQuery.data.last_name || '',
-                SAMLProviderId: getUserQuery.data.saml_provider_id?.toString() || '',
+                SSOProviderId: getUserQuery.data.sso_provider_id?.toString() || '',
                 roles: getUserQuery.data.roles?.map((role: any) => role.id) || [],
             }}
             roles={getRolesQuery.data}
-            SAMLProviders={listSAMLProvidersQuery.data}
+            SSOProviders={listSSOProvidersQuery.data}
             isLoading={isLoading}
             error={error}
         />
@@ -124,30 +126,23 @@ const UpdateUserForm: React.FC<{
 
 const UpdateUserFormInner: React.FC<{
     onCancel: () => void;
-    onSubmit: (user: UpdatedUser) => void;
-    initialData: {
-        emailAddress: string;
-        principal: string;
-        firstName: string;
-        lastName: string;
-        SAMLProviderId?: string;
-        roles: number[];
-    };
+    onSubmit: (user: UpdateUserRequestForm) => void;
+    initialData: UpdateUserRequestForm;
     roles: any[];
-    SAMLProviders: any[];
+    SSOProviders?: SSOProvider[];
     isLoading: boolean;
     error: any;
-}> = ({ onCancel, onSubmit, initialData, roles, SAMLProviders, isLoading, error }) => {
+}> = ({ onCancel, onSubmit, initialData, roles, SSOProviders, isLoading, error }) => {
     const {
         control,
         handleSubmit,
         setValue,
         formState: { errors },
         watch,
-    } = useForm({
+    } = useForm<UpdateUserRequestForm & { authenticationMethod: 'sso' | 'password' }>({
         defaultValues: {
             ...initialData,
-            authenticationMethod: initialData.SAMLProviderId ? 'saml' : 'password',
+            authenticationMethod: initialData.SSOProviderId ? 'sso' : 'password',
         },
     });
 
@@ -155,7 +150,7 @@ const UpdateUserFormInner: React.FC<{
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
-            setValue('SAMLProviderId', '');
+            setValue('SSOProviderId', undefined);
         }
     }, [authenticationMethod, setValue]);
 
@@ -267,40 +262,43 @@ const UpdateUserFormInner: React.FC<{
                                             fullWidth
                                             data-testid='update-user-dialog_select-authentication-method'>
                                             <MenuItem value='password'>Username / Password</MenuItem>
-                                            {SAMLProviders.length > 0 && <MenuItem value='saml'>SAML</MenuItem>}
+                                            {SSOProviders && SSOProviders.length > 0 && (
+                                                <MenuItem value='sso'>Single Sign-On (SSO)</MenuItem>
+                                            )}
                                         </Select>
                                     </FormControl>
                                 )}
                             />
                         </Grid>
 
-                        {authenticationMethod === 'saml' && (
+                        {authenticationMethod === 'sso' && (
                             <Grid item xs={12}>
                                 <Controller
-                                    name='SAMLProviderId'
+                                    name='SSOProviderId'
                                     control={control}
                                     rules={{
-                                        required: 'SAML Provider is required',
+                                        required: 'SSO Provider is required',
                                     }}
                                     render={({ field: { onChange, onBlur, value, ref } }) => (
                                         <FormControl>
-                                            <InputLabel id='SAMLProviderId-label' sx={{ ml: '-14px', mt: '8px' }}>
-                                                SAML Provider
+                                            <InputLabel id='SSOProviderId-label' sx={{ ml: '-14px', mt: '8px' }}>
+                                                SSO Provider
                                             </InputLabel>
                                             <Select
                                                 onChange={onChange as (event: SelectChangeEvent<string>) => void}
                                                 onBlur={onBlur}
-                                                value={value}
+                                                value={value?.toString()}
                                                 ref={ref}
-                                                labelId='SAMLProviderId-label'
-                                                id='SAMLProviderId'
-                                                name='SAMLProviderId'
+                                                defaultValue={''}
+                                                labelId='SSOProviderId-label'
+                                                id='SSOProviderId'
+                                                name='SSOProviderId'
                                                 variant='standard'
                                                 fullWidth
-                                                data-testid='update-user-dialog_select-saml-provider'>
-                                                {SAMLProviders.map((SAMLProvider: any) => (
-                                                    <MenuItem value={SAMLProvider.id.toString()} key={SAMLProvider.id}>
-                                                        {SAMLProvider.name}
+                                                data-testid='update-user-dialog_select-sso-provider'>
+                                                {SSOProviders?.map((SSOProvider: SSOProvider) => (
+                                                    <MenuItem value={SSOProvider.id.toString()} key={SSOProvider.id}>
+                                                        {SSOProvider.name}
                                                     </MenuItem>
                                                 ))}
                                             </Select>

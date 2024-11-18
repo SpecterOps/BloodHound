@@ -21,23 +21,23 @@ import { SSOProvider } from 'js-client-library';
 
 interface LoginViaSSOFormProps {
     providers: SSOProvider[] | undefined;
-    onSubmit: (redirectURL: string) => void;
+    onSubmit: (providerSlug: string) => void;
     onCancel: () => void;
 }
 
 const LoginViaSSOForm: React.FC<LoginViaSSOFormProps> = ({ providers, onSubmit, onCancel }) => {
     /* Hooks */
-    const [redirectURL, setRedirectURL] = React.useState('');
+    const [selectedProviderSlug, setSelectedProviderSlug] = React.useState('');
 
     /* Event Handlers */
     const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
         e.preventDefault();
 
-        if (redirectURL === null) {
+        if (selectedProviderSlug === null) {
             return;
         }
 
-        onSubmit(redirectURL);
+        onSubmit(selectedProviderSlug);
     };
 
     /* Implementation */
@@ -50,12 +50,12 @@ const LoginViaSSOForm: React.FC<LoginViaSSOFormProps> = ({ providers, onSubmit, 
                         <Select
                             labelId='selected-saml-provider-label'
                             id='selected-saml-provider'
-                            value={redirectURL}
+                            value={selectedProviderSlug}
                             label='Choose your SSO Provider'
-                            onChange={(e) => setRedirectURL(e.target.value as string)}
+                            onChange={(e) => setSelectedProviderSlug(e.target.value as string)}
                             fullWidth>
                             {providers?.map((provider) => (
-                                <MenuItem key={provider.id} value={`/api/v2/sso/${provider.slug}/login`}>
+                                <MenuItem key={provider.id} value={provider.slug}>
                                     {provider.name}
                                 </MenuItem>
                             ))}
@@ -63,7 +63,7 @@ const LoginViaSSOForm: React.FC<LoginViaSSOFormProps> = ({ providers, onSubmit, 
                     </FormControl>
                 </Grid>
                 <Grid item xs={8}>
-                    <Button size='large' type='submit' className='w-full' disabled={redirectURL === ''}>
+                    <Button size='large' type='submit' className='w-full' disabled={selectedProviderSlug === ''}>
                         CONTINUE
                     </Button>
                     <Box mt={2}>

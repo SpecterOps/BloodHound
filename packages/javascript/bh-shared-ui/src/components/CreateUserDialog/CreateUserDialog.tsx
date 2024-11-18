@@ -16,20 +16,27 @@
 
 import { Dialog, DialogTitle } from '@mui/material';
 import React from 'react';
-import { UpdatedUser } from 'src/ducks/auth/types';
-import UpdateUserForm from './UpdateUserForm';
+import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
+import { CreateUserRequest } from 'js-client-library';
 
-const UpdateUserDialog: React.FC<{
+const CreateUserDialog: React.FC<{
     open: boolean;
     onClose: () => void;
     onExited?: () => void;
-    onSave: (user: UpdatedUser) => Promise<any>;
-    userId: string;
+    onSave: (user: CreateUserRequest) => Promise<any>;
     isLoading: boolean;
     error: any;
-}> = ({ open, onClose, onExited, userId, onSave, isLoading, error }) => {
-    const handleOnSave = (user: UpdatedUser) => {
-        onSave(user)
+}> = ({ open, onClose, onExited, onSave, isLoading, error }) => {
+    const handleOnSave = (user: CreateUserRequestForm) => {
+        let parsedSSOProviderId: number | undefined = undefined;
+        if (user.SSOProviderId) {
+            parsedSSOProviderId = parseInt(user.SSOProviderId);
+        }
+
+        onSave({
+            ...user,
+            SSOProviderId: parsedSSOProviderId,
+        })
             .then(() => {
                 onClose();
             })
@@ -43,24 +50,17 @@ const UpdateUserDialog: React.FC<{
             maxWidth={'sm'}
             onClose={onClose}
             disableEscapeKeyDown
-            keepMounted={false}
             PaperProps={{
-                // @ts-ignore
-                'data-testid': 'update-user-dialog',
+                //@ts-ignore
+                'data-testid': 'create-user-dialog',
             }}
             TransitionProps={{
                 onExited,
             }}>
-            <DialogTitle>{'Update User'}</DialogTitle>
-            <UpdateUserForm
-                onCancel={onClose}
-                onSubmit={handleOnSave}
-                userId={userId}
-                isLoading={isLoading}
-                error={error}
-            />
+            <DialogTitle>{'Create User'}</DialogTitle>
+            <CreateUserForm onCancel={onClose} onSubmit={handleOnSave} isLoading={isLoading} error={error} />
         </Dialog>
     );
 };
 
-export default UpdateUserDialog;
+export default CreateUserDialog;

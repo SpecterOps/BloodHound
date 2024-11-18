@@ -2,7 +2,7 @@
 
 ## Test Framework
 
-The translation test cases are loaded from an `embedded.FS` instance in the `translation_test.go` file.
+The translation test cases are loaded from an `embedded.FS` instance in the `translator_test.go` file.
 
 Each `case:` is treated as a subtest via: `t.Run(...)` so that users can run a single query translation case if
 desired.

@@ -134,8 +134,7 @@ func FormatRelationshipPartitionUpsert(graphTarget model.Graph, identityProperti
 		"(graph_id, start_id, end_id, kind_id, properties) ",
 		"select $1::int4, unnest($2::int4[]), unnest($3::int4[]), unnest($4::int2[]), unnest($5::jsonb[]) ",
 		formatConflictMatcher(identityProperties, "graph_id, start_id, end_id, kind_id"),
-		"do update set properties = e.properties || excluded.properties ",
-		"returning id;",
+		"do update set properties = e.properties || excluded.properties;",
 	)
 }
 
