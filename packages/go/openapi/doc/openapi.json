@@ -4152,7 +4152,7 @@
         ],
         "parameters": [
           {
-            "name": "search_query",
+            "name": "query",
             "description": "Search query",
             "in": "query",
             "required": true,
@@ -4232,8 +4232,7 @@
             "in": "query",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "string"
             }
           },
           {
@@ -4242,8 +4241,7 @@
             "in": "query",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "string"
             }
           },
           {
@@ -12454,14 +12452,6 @@
           },
           {
             "name": "Principal",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
-            }
-          },
-          {
-            "name": "Finding",
-            "deprecated": true,
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
