@@ -32,51 +32,52 @@ import (
 )
 
 func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
-		operation := analysis.NewPostRelationshipOperation(ctx, db, "PostOwnsAndWriteOwner")
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "PostOwnsAndWriteOwner")
 
-		// Get all source nodes of Owns ACEs (i.e., owning principals) where the target node has no ACEs granting abusable explicit permissions to OWNER RIGHTS
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			return tx.Relationships().Filter(
-				query.And(
-					query.Kind(query.Relationship(), ad.OwnsRaw),
-					query.Kind(query.Start(), ad.Entity),
-				),
-			).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
-				for rel := range cursor.Chan() {
+	// Get all source nodes of Owns ACEs (i.e., owning principals) where the target node has no ACEs granting abusable explicit permissions to OWNER RIGHTS
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		return tx.Relationships().Filter(
+			query.And(
+				query.Kind(query.Relationship(), ad.OwnsRaw),
+				query.Kind(query.Start(), ad.Entity),
+			),
+		).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
+			for rel := range cursor.Chan() {
 
-					// Get the dSHeuristics values for all domains
-					if dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db); err != nil {
+				// Get the dSHeuristics values for all domains
+				if dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db); err != nil {
 
-						// If we fail to get the dSHeuristics values, add the Owns edge and return an error
-						isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
-						if err != nil {
-							isInherited = false
-						}
-						outC <- analysis.CreatePostRelationshipJob{
-							FromID:        rel.StartID,
-							ToID:          rel.EndID,
-							Kind:          ad.Owns,
-							RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
-						}
-						return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
+					// If we fail to get the dSHeuristics values, add the Owns edge and return an error
+					isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
+					if err != nil {
+						isInherited = false
+					}
+					outC <- analysis.CreatePostRelationshipJob{
+						FromID:        rel.StartID,
+						ToID:          rel.EndID,
+						Kind:          ad.Owns,
+						RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
+					}
+					return fmt.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
 
 					// Get the admin group IDs
-					} else if adminGroupIds, err := FetchAdminGroupIds(ctx, db, groupExpansions); err != nil {
+				} else if adminGroupIds, err := FetchAdminGroupIds(ctx, db, groupExpansions); err != nil {
 
-						// If we fail to get the admin group IDs, add the Owns edge and return an error
-						isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
-						if err != nil {
-							isInherited = false
-						}
-						outC <- analysis.CreatePostRelationshipJob{
-							FromID:        rel.StartID,
-							ToID:          rel.EndID,
-							Kind:          ad.Owns,
-							RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
-						}
-						return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching admin group ids values for postownsandwriteowner: %w", err)
+					// If we fail to get the admin group IDs, add the Owns edge and return an error
+					isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
+					if err != nil {
+						isInherited = false
 					}
-					
+					outC <- analysis.CreatePostRelationshipJob{
+						FromID:        rel.StartID,
+						ToID:          rel.EndID,
+						Kind:          ad.Owns,
+						RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
+					}
+					return fmt.Errorf("failed fetching admin group ids values for postownsandwriteowner: %w", err)
+
+				} else {
+
 					// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
 					if anyEnforced {
 
@@ -138,54 +139,39 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 						}
 					}
 				}
+			}
 
-				return cursor.Error()
-			})
+			return cursor.Error()
 		})
+	})
 
-		// Get all source nodes of WriteOwner ACEs where the target node has no ACEs granting explicit abusable permissions to OWNER RIGHTS
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			return tx.Relationships().Filter(
-				query.And(
-					query.Kind(query.Relationship(), ad.WriteOwnerRaw),
-					query.Kind(query.Start(), ad.Entity),
-				),
-			).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
-				for rel := range cursor.Chan() {
+	// Get all source nodes of WriteOwner ACEs where the target node has no ACEs granting explicit abusable permissions to OWNER RIGHTS
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		return tx.Relationships().Filter(
+			query.And(
+				query.Kind(query.Relationship(), ad.WriteOwnerRaw),
+				query.Kind(query.Start(), ad.Entity),
+			),
+		).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
+			for rel := range cursor.Chan() {
 
-					// Get the dSHeuristics values for all domains
-					if dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db); err != nil {
+				// Get the dSHeuristics values for all domains
+				if dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db); err != nil {
 
-						// If we fail to get the dSHeuristics values, add the WriteOwner edge and return an error
-						isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
-						if err != nil {
-							isInherited = false
-						}
-						outC <- analysis.CreatePostRelationshipJob{
-							FromID:        rel.StartID,
-							ToID:          rel.EndID,
-							Kind:          ad.WriteOwner,
-							RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
-						}
-						return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
-
-					// Get the admin group IDs
-					} else if adminGroupIds, err := FetchAdminGroupIds(ctx, db, groupExpansions); err != nil {
-
-						// If we fail to get the admin group IDs, add the Owns edge and return an error
-						isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
-						if err != nil {
-							isInherited = false
-						}
-						outC <- analysis.CreatePostRelationshipJob{
-							FromID:        rel.StartID,
-							ToID:          rel.EndID,
-							Kind:          ad.WriteOwner,
-							RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
-						}
-						return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed fetching admin group ids values for postownsandwriteowner: %w", err)
+					// If we fail to get the dSHeuristics values, add the WriteOwner edge and return an error
+					isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
+					if err != nil {
+						isInherited = false
 					}
+					outC <- analysis.CreatePostRelationshipJob{
+						FromID:        rel.StartID,
+						ToID:          rel.EndID,
+						Kind:          ad.WriteOwner,
+						RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
+					}
+					return fmt.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
 
+				} else {
 					// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
 					if anyEnforced {
 
@@ -215,7 +201,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 									RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
 								}
 
-							// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
+								// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
 							} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err == nil {
 								if !isComputerDerived {
 									isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
@@ -246,13 +232,13 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 						}
 					}
 				}
+			}
 
-				return cursor.Error()
-			})
+			return cursor.Error()
 		})
+	})
 
-		return &operation.Stats, operation.Done()
-	}
+	return &operation.Stats, operation.Done()
 }
 
 func isTargetNodeComputerDerived(node *graph.Node) (bool, error) {
