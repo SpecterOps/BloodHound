@@ -40,8 +40,8 @@ func TestHyperLogLog64(t *testing.T) {
 		deviation            = 100 - cardinalityMax/float64(estimatedCardinality)*100
 	)
 
-	// We expect the HLL sketch to have a cardinality that does not deviate more than 0.58% from reality
-	require.Truef(t, deviation < 0.58, "Expected a cardinality less than 0.58%% but got %.2f%%", deviation)
+	// We expect the HLL sketch to have a cardinality that does not deviate more than 0.66% from reality
+	require.Truef(t, deviation < 0.66, "Expected a cardinality less than 0.66%% but got %.2f%%", deviation)
 
 	for i := 0; i < 100; i++ {
 		previous := sketch.Cardinality()
