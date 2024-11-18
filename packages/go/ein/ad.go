@@ -305,6 +305,23 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 					},
 				))
 			}
+		} else {
+			// If there are abusable permissions granted to the OWNER RIGHTS SID, but they are not inherited,
+			// they will be deleted on ownership change and WriteOwner may be abusable, so create a WriteOwnerRaw
+			// edge for post-processing so we can check BlockOwnerImplicitRights enforcement and object type
+			for _, limitedPrincipal := range potentialWriteOwnerLimitedPrincipals {
+				converted = append(converted, NewIngestibleRelationship(
+					limitedPrincipal.SourceData,
+					IngestibleTarget{
+						Target:     targetID,
+						TargetType: targetType,
+					},
+					IngestibleRel{
+						RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): limitedPrincipal.IsInherited},
+						RelType:  ad.WriteOwnerRaw,
+					},
+				))
+			}
 		}
 
 	} else {
