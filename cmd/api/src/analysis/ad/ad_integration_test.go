@@ -1177,3 +1177,35 @@ func TestDCSync(t *testing.T) {
 		}
 	})
 }
+
+func TestOwnsWriteOwner(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.OwnsWriteOwner.Setup(testContext)
+		// To verify in Neo4j: MATCH (n:Computer) MATCH (u:User) RETURN n, u
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(testContext.Context(), db); err != nil {
+			t.Fatalf("error expanding groups in integration test; %v", err)
+		} else if _, err := adAnalysis.PostOwnsAndWriteOwner(testContext.Context(), db, groupExpansions); err != nil {
+			t.Fatalf("error creating Owns/WriteOwner edges in integration test; %v", err)
+		} else {
+			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+
+				// Owns
+				if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.Owns),
+						query.Kind(query.Start(), ad.Entity),
+					)
+				})); err != nil {
+					t.Fatalf("error fetching Owns edges in integration test; %v", err)
+				} else {
+					require.Equal(t, 10, len(results))
+				}
+				return nil
+			})
+		}
+	})
+}

@@ -201,8 +201,8 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 									RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
 								}
 
-								// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
 							} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err == nil {
+								// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
 								if !isComputerDerived {
 									isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
 									if err != nil {
