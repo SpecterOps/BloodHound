@@ -1193,7 +1193,7 @@ func TestOwnsWriteOwner(t *testing.T) {
 		} else {
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 
-				// Owns
+				// Owns: MATCH (a)-[r:Owns]->(b) RETURN a, r, b;
 				if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 					return query.And(
 						query.Kind(query.Relationship(), ad.Owns),
@@ -1203,7 +1203,96 @@ func TestOwnsWriteOwner(t *testing.T) {
 					t.Fatalf("error fetching Owns edges in integration test; %v", err)
 				} else {
 					require.Equal(t, 10, len(results))
+
+					for _, rel := range results {
+						if startNode, err := ops.FetchNode(tx, rel.StartID); err != nil {
+							t.Fatalf("error fetching start node in integration test; %v", err)
+						} else if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
+							t.Fatalf("error fetching target node in integration test; %v", err)
+						} else {
+							// Extract 'name' properties from startNode and targetNode
+							startNodeName, okStart := startNode.Properties.Map["name"].(string)
+							if !okStart {
+								startNodeName = "<unknown>"
+							}
+							targetNodeName, okTarget := targetNode.Properties.Map["name"].(string)
+							if !okTarget {
+								targetNodeName = "<unknown>"
+							}
+
+							if targetNode.ID == harness.OwnsWriteOwner.Domain1_User1_NoOwnerRights_OwnerIsLowPriv.ID {
+								// Domain1_User101_Owner -[Owns]-> Domain1_User1_NoOwnerRights_OwnerIsLowPriv
+								require.Equal(t, harness.OwnsWriteOwner.Domain1_User101_Owner.ID, startNode.ID)
+							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_Computer2_NoOwnerRights_OwnerIsDA.ID {
+								// Domain1_User102_DomainAdmin -[Owns]-> Domain1_Computer2_NoOwnerRights_OwnerIsDA
+								require.Equal(t, harness.OwnsWriteOwner.Domain1_User102_DomainAdmin.ID, startNode.ID)
+							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_MSA2_NoOwnerRights_OwnerIsDA.ID {
+								// Domain1_User102_DomainAdmin -[Owns]-> Domain1_MSA2_NoOwnerRights_OwnerIsDA
+								require.Equal(t, harness.OwnsWriteOwner.Domain1_User102_DomainAdmin.ID, startNode.ID)
+							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_GMSA2_NoOwnerRights_OwnerIsDA.ID {
+								// Domain1_User102_DomainAdmin -[Owns]-> Domain1_GMSA2_NoOwnerRights_OwnerIsDA
+								require.Equal(t, harness.OwnsWriteOwner.Domain1_User102_DomainAdmin.ID, startNode.ID)
+							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_User2_NoOwnerRights_OwnerIsDA.ID {
+								// Domain1_User102_DomainAdmin -[Owns]-> Domain1_User2_NoOwnerRights_OwnerIsDA
+								require.Equal(t, harness.OwnsWriteOwner.Domain1_User102_DomainAdmin.ID, startNode.ID)
+							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_Computer3_NoOwnerRights_OwnerIsEA.ID {
+								// Domain1_User103_EnterpriseAdmin -[Owns]-> Domain1_Computer3_NoOwnerRights_OwnerIsEA
+								require.Equal(t, harness.OwnsWriteOwner.Domain1_User103_EnterpriseAdmin.ID, startNode.ID)
+							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_MSA3_NoOwnerRights_OwnerIsEA.ID {
+								// Domain1_User103_EnterpriseAdmin -[Owns]-> Domain1_MSA3_NoOwnerRights_OwnerIsEA
+								require.Equal(t, harness.OwnsWriteOwner.Domain1_User103_EnterpriseAdmin.ID, startNode.ID)
+							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_GMSA3_NoOwnerRights_OwnerIsEA.ID {
+								// Domain1_User103_EnterpriseAdmin -[Owns]-> Domain1_GMSA3_NoOwnerRights_OwnerIsEA
+								require.Equal(t, harness.OwnsWriteOwner.Domain1_User103_EnterpriseAdmin.ID, startNode.ID)
+							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_User3_NoOwnerRights_OwnerIsEA.ID {
+								// Domain1_User103_EnterpriseAdmin -[Owns]-> Domain1_User3_NoOwnerRights_OwnerIsEA
+								require.Equal(t, harness.OwnsWriteOwner.Domain1_User103_EnterpriseAdmin.ID, startNode.ID)
+							} else if targetNode.ID == harness.OwnsWriteOwner.Domain2_Computer1_NoOwnerRights.ID {
+								// Domain2_User1_Owner -[Owns]-> Domain2_Computer1_NoOwnerRights
+								require.Equal(t, harness.OwnsWriteOwner.Domain2_User1_Owner.ID, startNode.ID)
+							} else {
+								t.Fatalf("unexpected edge in integration test: %s -[Owns]-> %s", startNodeName, targetNodeName)
+							}
+						}
+					}
 				}
+
+				// OwnsLimitedRights: MATCH (a)-[r:OwnsLimitedRights]->(b) RETURN a, r, b;
+				if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.OwnsLimitedRights),
+						query.Kind(query.Start(), ad.Entity),
+					)
+				})); err != nil {
+					t.Fatalf("error fetching OwnsLimitedRights edges in integration test; %v", err)
+				} else {
+					require.Equal(t, 15, len(results))
+				}
+
+				// WriteOwner: MATCH (a)-[r:WriteOwner]->(b) RETURN a, r, b;
+				if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.WriteOwner),
+						query.Kind(query.Start(), ad.Entity),
+					)
+				})); err != nil {
+					t.Fatalf("error fetching WriteOwner edges in integration test; %v", err)
+				} else {
+					require.Equal(t, 8, len(results))
+				}
+
+				// WriteOwnerLimitedRights: MATCH (a)-[r:WriteOwnerLimitedRights]->(b) RETURN a, r, b;
+				if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+					return query.And(
+						query.Kind(query.Relationship(), ad.WriteOwnerLimitedRights),
+						query.Kind(query.Start(), ad.Entity),
+					)
+				})); err != nil {
+					t.Fatalf("error fetching WriteOwner edges in integration test; %v", err)
+				} else {
+					require.Equal(t, 5, len(results))
+				}
+
 				return nil
 			})
 		}
