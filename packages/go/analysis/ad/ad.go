@@ -44,6 +44,8 @@ const (
 	EnterpriseDomainControllersGroupSIDSuffix = "1-5-9"
 	AdministratorAccountSIDSuffix             = "-500"
 	DomainAdminsGroupSIDSuffix                = "-512"
+	DomainUsersSuffix                         = "-513"
+	DomainComputersSuffix                     = "-515"
 	DomainControllersGroupSIDSuffix           = "-516"
 	SchemaAdminsGroupSIDSuffix                = "-518"
 	EnterpriseAdminsGroupSIDSuffix            = "-519"
@@ -51,10 +53,12 @@ const (
 	EnterpriseKeyAdminsGroupSIDSuffix         = "-527"
 	AdministratorsGroupSIDSuffix              = "-544"
 	BackupOperatorsGroupSIDSuffix             = "-551"
-	DomainUsersSuffix                         = "-513"
+	PerformanceLogUsersSIDSuffix              = "-559"
+	DCOMUsersSIDSuffix                        = "-562"
 	AuthenticatedUsersSuffix                  = "-S-1-5-11"
 	EveryoneSuffix                            = "-S-1-1-0"
-	DomainComputersSuffix                     = "-515"
+	AdminSDHolderDNPrefix                     = "CN=ADMINSDHOLDER,CN=SYSTEM,"
+	DnsAdminsDNPrefix                         = "CN=DNSADMINS,"
 )
 
 func TierZeroWellKnownSIDSuffixes() []string {
@@ -69,6 +73,8 @@ func TierZeroWellKnownSIDSuffixes() []string {
 		EnterpriseKeyAdminsGroupSIDSuffix,
 		BackupOperatorsGroupSIDSuffix,
 		AdministratorsGroupSIDSuffix,
+		DCOMUsersSIDSuffix,
+		PerformanceLogUsersSIDSuffix,
 	}
 }
 
@@ -95,6 +101,38 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 			}); err != nil {
 				return err
 			}
+		}
+
+		// DnsAdmins
+		if err := tx.Nodes().Filterf(func() graph.Criteria {
+			return query.And(
+				query.KindIn(query.Node(), ad.Group),
+				query.StringStartsWith(query.NodeProperty(ad.DistinguishedName.String()), DnsAdminsDNPrefix),
+				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
+			)
+		}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			for node := range cursor.Chan() {
+				nodes.Add(node)
+			}
+			return cursor.Error()
+		}); err != nil {
+			return err
+		}
+
+		// AdminSDHolder
+		if err := tx.Nodes().Filterf(func() graph.Criteria {
+			return query.And(
+				query.KindIn(query.Node(), ad.Container),
+				query.StringStartsWith(query.NodeProperty(ad.DistinguishedName.String()), AdminSDHolderDNPrefix),
+				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
+			)
+		}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			for node := range cursor.Chan() {
+				nodes.Add(node)
+			}
+			return cursor.Error()
+		}); err != nil {
+			return err
 		}
 
 		return nil
