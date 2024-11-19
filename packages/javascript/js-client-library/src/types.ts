@@ -185,6 +185,36 @@ export interface ListSSOProvidersResponse {
     data: SSOProvider[];
 }
 
+export interface User {
+    id: string;
+    sso_provider_id: number | null;
+    AuthSecret: any;
+    roles: Role[];
+    first_name: string | null;
+    last_name: string | null;
+    email_address: string | null;
+    principal_name: string;
+    last_login: string;
+}
+
+interface Permission {
+    id: number;
+    name: string;
+    authority: string;
+}
+
+interface Role {
+    name: string;
+    description: string;
+    permissions: Permission[];
+}
+
+export interface ListUsersResponse {
+    data: {
+        users: User[];
+    };
+}
+
 export interface LoginRequest {
     login_method: string;
     secret: string;
