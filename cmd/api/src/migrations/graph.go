@@ -23,7 +23,6 @@ import (
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/version"
@@ -164,10 +163,6 @@ func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion v
 }
 
 func (s *GraphMigrator) executeStepwiseMigrations(ctx context.Context) error {
-	if err := s.db.AssertSchema(ctx, graphschema.DefaultGraphSchema()); err != nil {
-		return fmt.Errorf("error asserting current schema: %w", err)
-	}
-
 	if currentMigration, err := GetMigrationData(ctx, s.db); err != nil {
 		if errors.Is(err, ErrNoMigrationData) {
 			currentVersion := version.GetVersion()

@@ -189,10 +189,12 @@ type Group struct {
 
 type User struct {
 	IngestBase
-	AllowedToDelegate []TypedPrincipal
-	SPNTargets        []SPNTarget
-	PrimaryGroupSID   string
-	HasSIDHistory     []TypedPrincipal
+	AllowedToDelegate       []TypedPrincipal
+	SPNTargets              []SPNTarget
+	PrimaryGroupSID         string
+	HasSIDHistory           []TypedPrincipal
+	DomainSID               string
+	UnconstrainedDelegation bool
 }
 
 type Container struct {
@@ -260,20 +262,21 @@ type UserRightsAssignmentAPIResult struct {
 
 type Computer struct {
 	IngestBase
-	PrimaryGroupSID    string
-	AllowedToDelegate  []TypedPrincipal
-	AllowedToAct       []TypedPrincipal
-	DumpSMSAPassword   []TypedPrincipal
-	Sessions           SessionAPIResult
-	PrivilegedSessions SessionAPIResult
-	RegistrySessions   SessionAPIResult
-	LocalGroups        []LocalGroupAPIResult
-	UserRights         []UserRightsAssignmentAPIResult
-	DCRegistryData     DCRegistryData
-	Status             ComputerStatus
-	HasSIDHistory      []TypedPrincipal
-	IsDC               bool
-	DomainSID          string
+	PrimaryGroupSID         string
+	AllowedToDelegate       []TypedPrincipal
+	AllowedToAct            []TypedPrincipal
+	DumpSMSAPassword        []TypedPrincipal
+	Sessions                SessionAPIResult
+	PrivilegedSessions      SessionAPIResult
+	RegistrySessions        SessionAPIResult
+	LocalGroups             []LocalGroupAPIResult
+	UserRights              []UserRightsAssignmentAPIResult
+	DCRegistryData          DCRegistryData
+	Status                  ComputerStatus
+	HasSIDHistory           []TypedPrincipal
+	IsDC                    bool
+	DomainSID               string
+	UnconstrainedDelegation bool
 }
 
 type OU struct {

@@ -139,6 +139,9 @@ func (s ManagementResource) GetSAMLProvider(response http.ResponseWriter, reques
 	} else if provider, err := s.db.GetSAMLProvider(request.Context(), int32(providerID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		// Format the service provider uri's in response
+		provider = bhsaml.FormatSAMLProviderURLs(request.Context(), provider)[0]
+
 		api.WriteBasicResponse(request.Context(), provider, http.StatusOK, response)
 	}
 }
@@ -525,7 +528,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		updateUserRequest v2.UpdateUserRequest
 		pathVars          = mux.Vars(request)
 		rawUserID         = pathVars[api.URIPathVariableUserID]
-		context           = *ctx.FromRequest(request)
+		authCtx           = *ctx.FromRequest(request)
 	)
 
 	if userID, err := uuid.FromString(rawUserID); err != nil {
@@ -547,7 +550,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		user.IsDisabled = updateUserRequest.IsDisabled
 
 		if user.IsDisabled {
-			if loggedInUser, _ := auth.GetUserFromAuthCtx(context.AuthCtx); user.ID == loggedInUser.ID {
+			if loggedInUser, _ := auth.GetUserFromAuthCtx(authCtx.AuthCtx); user.ID == loggedInUser.ID {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSelfDisable, request), response)
 				return
 			} else if userSessions, err := s.db.LookupActiveSessionsByUser(request.Context(), user); err != nil {
@@ -573,6 +576,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 				return
 			} else {
 				// Ensure that the AuthSecret reference is nil and that the SAML provider is set
+				user.AuthSecret = nil // Required or the below updateUser will re-add the authSecret
 				user.SAMLProviderID = null.Int32From(samlProviderID)
 				user.SSOProviderID = provider.SSOProviderID
 			}
@@ -584,6 +588,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else {
+				user.AuthSecret = nil // Required or the below updateUser will re-add the authSecret
 				user.SSOProviderID = updateUserRequest.SSOProviderID
 				if ssoProvider.Type == model.SessionAuthProviderSAML {
 					if ssoProvider.SAMLProvider != nil {
@@ -597,6 +602,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		} else {
 			// Default SAMLProviderID and SSOProviderID to null if the update request contains no SAMLProviderID and SSOProviderID
 			user.SAMLProvider = nil
+			user.SSOProvider = nil
 			user.SAMLProviderID = null.NewInt32(0, false)
 			user.SSOProviderID = null.NewInt32(0, false)
 		}

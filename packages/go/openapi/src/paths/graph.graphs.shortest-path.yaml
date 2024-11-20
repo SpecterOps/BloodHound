@@ -30,15 +30,13 @@ get:
       in: query
       required: true
       schema:
-        type: integer
-        format: int32
+        type: string
     - name: end_node
       description: The end node objectId
       in: query
       required: true
       schema:
-        type: integer
-        format: int32
+        type: string
     - name: relationship_kinds
       in: query
       schema:

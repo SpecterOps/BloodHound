@@ -67,5 +67,6 @@ export default {
         'lodash/cloneDeep',
         'lodash/isEmpty',
         'lodash/startCase',
+        'lodash/find',
     ],
 };
