@@ -32,10 +32,9 @@ import {
     CreateUserDialog,
 } from '../../components';
 import { apiClient, LuxonFormat } from '../../utils';
-import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest } from 'js-client-library';
+import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest, User } from 'js-client-library';
 import find from 'lodash/find';
 import { useToggle } from '../../hooks';
-import { User } from '../../hooks/useUsers';
 import UserActionsMenu from '../../components/UserActionsMenu';
 import { useNotifications } from '../../providers';
 
@@ -93,51 +92,31 @@ const Users = () => {
         }
     );
 
-    const disableUserMutation = useMutation(
-        async (userId: string) => {
-            const user = listUsersQuery.data.find((user: User) => {
+    const disableEnableUserMutation = useMutation(
+        async ({ userId, disable }: { userId: string; disable: boolean }) => {
+            const user = listUsersQuery.data?.find((user: User) => {
                 return user.id === userId;
             });
 
-            const updatedUser = {
+            if (!user) {
+                return;
+            }
+
+            const updatedUser: UpdateUserRequest = {
                 emailAddress: user.email_address || '',
                 principal: user.principal_name || '',
                 firstName: user.first_name || '',
                 lastName: user.last_name || '',
-                SSOProviderId: user.sso_provider_id?.toString() || '',
+                ...(user.sso_provider_id && { SSOProviderId: user.sso_provider_id }),
                 roles: user.roles?.map((role: any) => role.id) || [],
-                is_disabled: true,
+                is_disabled: disable,
             };
+
             return apiClient.updateUser(selectedUserId!, updatedUser);
         },
         {
-            onSuccess: () => {
-                addNotification('User disabled successfully!', 'disableUserSuccess');
-                listUsersQuery.refetch();
-            },
-        }
-    );
-
-    const enableUserMutation = useMutation(
-        async (userId: string) => {
-            const user = listUsersQuery.data.find((user: User) => {
-                return user.id === userId;
-            });
-
-            const updatedUser = {
-                emailAddress: user.email_address || '',
-                principal: user.principal_name || '',
-                firstName: user.first_name || '',
-                lastName: user.last_name || '',
-                SSOProviderId: user.sso_provider_id?.toString() || '',
-                roles: user.roles?.map((role: any) => role.id) || [],
-                is_disabled: false,
-            };
-            return apiClient.updateUser(selectedUserId!, updatedUser);
-        },
-        {
-            onSuccess: () => {
-                addNotification('User enabled successfully!', 'enableUserSuccess');
+            onSuccess: (_, { disable }) => {
+                addNotification(`User ${disable ? 'disabled' : 'enabled'} successfully!`, 'disableEnableUserSuccess');
                 listUsersQuery.refetch();
             },
         }
@@ -301,7 +280,7 @@ const Users = () => {
                 title={'Enable User'}
                 onClose={(response) => {
                     if (response) {
-                        enableUserMutation.mutate(selectedUserId!);
+                        disableEnableUserMutation.mutate({ userId: selectedUserId!, disable: false });
                     }
                     toggleEnableUserDialog();
                 }}
@@ -312,7 +291,7 @@ const Users = () => {
                 title={'Disable User'}
                 onClose={(response) => {
                     if (response) {
-                        disableUserMutation.mutate(selectedUserId!);
+                        disableEnableUserMutation.mutate({ userId: selectedUserId!, disable: true });
                     }
                     toggleDisableUserDialog();
                 }}
