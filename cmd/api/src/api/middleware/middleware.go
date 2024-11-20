@@ -19,9 +19,11 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -143,6 +145,8 @@ func ContextMiddleware(next http.Handler) http.Handler {
 				RequestedURL: model.AuditableURL(request.URL.String()),
 				RequestIP:    parseUserIP(request),
 			})
+
+			requestCtx = context.WithValue(requestCtx, "logger", slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{AddSource: true})).With(slog.String("request_id", requestID), slog.String("request_ip", parseUserIP(request))))
 
 			// Route the request with the embedded context
 			next.ServeHTTP(response, request.WithContext(requestCtx))

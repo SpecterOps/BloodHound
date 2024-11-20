@@ -26,6 +26,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -417,7 +418,9 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 		return "", ErrUserDisabled
 	}
 
-	log.Infof("Creating session for user: %s(%s)", user.ID, user.PrincipalName)
+	logger := ctx.Value("logger").(*slog.Logger)
+
+	logger.Info("Creating session", "user_id", user.ID, "principal_name", user.PrincipalName)
 
 	userSession := model.UserSession{
 		User:      user,

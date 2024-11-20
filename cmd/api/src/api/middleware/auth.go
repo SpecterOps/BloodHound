@@ -17,7 +17,9 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -60,6 +62,10 @@ func parseAuthorizationHeader(request *http.Request) (string, string, *api.Error
 func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			requestCtx := request.Context()
+
+			logger := requestCtx.Value("logger").(*slog.Logger)
+
 			if authScheme, schemeParameter, err := parseAuthorizationHeader(request); err != nil {
 				api.WriteErrorResponse(request.Context(), err, response)
 				return
@@ -72,6 +78,7 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 					} else {
 						bhCtx := ctx.Get(request.Context())
 						bhCtx.AuthCtx = userAuth
+						requestCtx = context.WithValue(requestCtx, "logger", logger.With("user_id", userAuth.Session.UserID))
 					}
 
 				case api.AuthorizationSchemeBHESignature:
@@ -85,6 +92,7 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 					} else {
 						bhCtx := ctx.Get(request.Context())
 						bhCtx.AuthCtx = userAuth
+						requestCtx = context.WithValue(requestCtx, "logger", logger.With("user_id", userAuth.Session.UserID))
 					}
 
 				case "":
@@ -93,7 +101,7 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 				}
 			}
 
-			next.ServeHTTP(response, request)
+			next.ServeHTTP(response, request.WithContext(requestCtx))
 		})
 	}
 }

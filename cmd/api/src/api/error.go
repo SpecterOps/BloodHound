@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -119,12 +120,14 @@ func BuildErrorResponse(httpStatus int, message string, request *http.Request) *
 // HandleDatabaseError writes an error (not found or other) depending on the database error encountered
 // Alternate: FormatDatabaseError()
 func HandleDatabaseError(request *http.Request, response http.ResponseWriter, err error) {
+	logger := request.Context().Value("logger").(*slog.Logger)
+
 	if errors.Is(err, database.ErrNotFound) {
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusNotFound, ErrorResponseDetailsResourceNotFound, request), response)
 	} else if errors.Is(err, context.DeadlineExceeded) {
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseRequestTimeout, request), response)
 	} else {
-		log.Errorf("Unexpected database error: %v", err)
+		logger.Error("Unexpected database error", "err", err)
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseDetailsInternalServerError, request), response)
 	}
 }
