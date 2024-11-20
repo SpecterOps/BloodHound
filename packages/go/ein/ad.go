@@ -306,6 +306,21 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 				))
 			}
 		} else {
+			// We're dealing with a case where the OWNER RIGHTS SID is granted uninherited abusable permissions
+			// We can tell if any non-abusable ACE is present and inherited by checking the DoesAnyInheritedAceGrantOwnerRights property
+			// If there are no inherited abusable permissions but there are inherited  non-abusable permissions,
+			// the non-abusable permissions will NOT be deleted on ownership change, so WriteOwner will NOT be abusable
+			doesAnyInheritedAceGrantOwnerRights, exists := targetNode.PropertyMap[ad.DoesAnyInheritedAceGrantOwnerRights.String()]
+			if exists {
+				doesAnyInheritedAceGrantOwnerRights, ok := doesAnyInheritedAceGrantOwnerRights.(bool)
+				if ok {
+					if doesAnyInheritedAceGrantOwnerRights {
+						return converted
+					}
+					// If the non-abusable rights were NOT inherited, they are deleted on ownership change and WriteOwner may be abusable
+					// Post will determine if WriteOwner is abusable based on dSHeuristics:BlockOwnerImplicitRights enforcement and object type
+				}
+			}
 			// If there are abusable permissions granted to the OWNER RIGHTS SID, but they are not inherited,
 			// they will be deleted on ownership change and WriteOwner may be abusable, so create a WriteOwnerRaw
 			// edge for post-processing so we can check BlockOwnerImplicitRights enforcement and object type
@@ -342,15 +357,33 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 						if ok {
 							if doesAnyInheritedAceGrantOwnerRights {
 								return converted
+							} else {
+								// If the non-abusable rights were NOT inherited, they are deleted on ownership change and WriteOwner may be abusable
+								// Post will determine if WriteOwner is abusable based on dSHeuristics:BlockOwnerImplicitRights enforcement and object type
+								// Create a non-traversable WriteOwnerRaw edge for post-processing
+								for _, limitedPrincipal := range potentialWriteOwnerLimitedPrincipals {
+									converted = append(converted, NewIngestibleRelationship(
+										limitedPrincipal.SourceData,
+										IngestibleTarget{
+											Target:     targetID,
+											TargetType: targetType,
+										},
+										IngestibleRel{
+											RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): limitedPrincipal.IsInherited},
+											RelType:  ad.WriteOwnerRaw,
+										},
+									))
+								}
+								// Don't add the OwnsRaw edge if the OWNER RIGHTS SID has uninherited, non-abusable permissions
+								return converted
 							}
-							// If the non-abusable rights were NOT inherited, they are deleted on ownership change and WriteOwner may be abusable
-							// Post will determine if WriteOwner is abusable based on dSHeuristics:BlockOwnerImplicitRights enforcement and object type
 						}
 					}
 				}
 			}
 		}
 
+		// When the SharpHound collection does not include the doesanyacegrantownerrights property
 		// Create a non-traversable OwnsRaw edge for post-processing
 		if ownerPrincipalInfo.Source != "" {
 			converted = append(converted, NewIngestibleRelationship(

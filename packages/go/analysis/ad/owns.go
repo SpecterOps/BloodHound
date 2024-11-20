@@ -60,9 +60,8 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 					}
 					return fmt.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
 
-					// Get the admin group IDs
 				} else if adminGroupIds, err := FetchAdminGroupIds(ctx, db, groupExpansions); err != nil {
-
+					// Get the admin group IDs
 					// If we fail to get the admin group IDs, add the Owns edge and return an error
 					isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
 					if err != nil {
