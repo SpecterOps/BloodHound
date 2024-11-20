@@ -25,8 +25,11 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
+	"github.com/specterops/bloodhound/log/hooks"
 	"io"
+	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -81,6 +84,7 @@ type authenticator struct {
 	secretDigester  crypto.SecretDigester
 	concurrencyLock chan struct{}
 	ctxInitializer  database.AuthContextInitializer
+	logger          *slog.Logger
 }
 
 func NewAuthenticator(cfg config.Configuration, db database.Database, ctxInitializer database.AuthContextInitializer) Authenticator {
@@ -90,6 +94,7 @@ func NewAuthenticator(cfg config.Configuration, db database.Database, ctxInitial
 		secretDigester:  cfg.Crypto.Argon2.NewDigester(),
 		concurrencyLock: make(chan struct{}, 1),
 		ctxInitializer:  ctxInitializer,
+		logger:          slog.New(&hooks.ContextHandler{Handler: slog.NewJSONHandler(os.Stdout, nil)}),
 	}
 }
 
@@ -417,7 +422,7 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 		return "", ErrUserDisabled
 	}
 
-	log.Infof("Creating session for user: %s(%s)", user.ID, user.PrincipalName)
+	s.logger.InfoContext(ctx, "Creating session", "user_id", user.ID)
 
 	userSession := model.UserSession{
 		User:      user,
