@@ -308,7 +308,7 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 		} else {
 			// We're dealing with a case where the OWNER RIGHTS SID is granted uninherited abusable permissions
 			// We can tell if any non-abusable ACE is present and inherited by checking the DoesAnyInheritedAceGrantOwnerRights property
-			// If there are no inherited abusable permissions but there are inherited  non-abusable permissions,
+			// If there are no inherited abusable permissions but there are inherited non-abusable permissions,
 			// the non-abusable permissions will NOT be deleted on ownership change, so WriteOwner will NOT be abusable
 			doesAnyInheritedAceGrantOwnerRights, exists := targetNode.PropertyMap[ad.DoesAnyInheritedAceGrantOwnerRights.String()]
 			if exists {
@@ -384,6 +384,8 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 		}
 
 		// When the SharpHound collection does not include the doesanyacegrantownerrights property
+		// Or when the doesanyinheritedacegrantownerrights property is false
+
 		// Create a non-traversable OwnsRaw edge for post-processing
 		if ownerPrincipalInfo.Source != "" {
 			converted = append(converted, NewIngestibleRelationship(

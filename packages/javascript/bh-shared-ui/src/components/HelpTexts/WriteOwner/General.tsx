@@ -40,11 +40,15 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, target
                         The domain's BlockOwnerImplicitRights setting is not in enforcement mode. This setting is defined in  
                         the 29th character in the domain's dSHeuristics attribute. When set to 0 or 2, implicit owner rights are not blocked.
                     </li>
+                    <Typography component={'pre'}>
+                    {
+                        "$searcher = [adsisearcher]\"\"\n$searcher.SearchRoot = \"LDAP://CN=Directory Service,CN=Windows NT,CN=Services,CN=Configuration,DC=EXAMPLE,DC=LOCAL\"\n$searcher.SearchScope = [System.DirectoryServices.SearchScope]::Base\n$searcher.Filter = \"(objectClass=*)\"\n$searcher.PropertiesToLoad.Add(\"DSHeuristics\") | Out-Null\n$result = $searcher.FindOne()\nWrite-Output \"DSHeuristics: $($result.Properties['DSHeuristics'])\""
+                    }
+                    </Typography>
                     <li>
                         The object is not a computer or a derivative of a computer object (e.g., MSA, GMSA).
                     </li>
                 </ul>
-
             </Typography>
         </>
     );
