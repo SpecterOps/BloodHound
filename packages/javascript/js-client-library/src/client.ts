@@ -308,7 +308,7 @@ class BHEAPIClient {
         options?: types.RequestOptions
     ) => {
         return this.baseClient.get<PostureHistoryResponse>(
-            `/api/v2/posture-history/${environmentId}/${dataType}`,
+            `/api/v2/${environmentId}/posture-history/${dataType}`,
             Object.assign(
                 {
                     start: start?.toISOString(),
