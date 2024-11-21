@@ -106,7 +106,6 @@ type PostureFindingTrend = {
     finding_count_start: number;
     finding_count_end: number;
     composite_risk: number;
-    severity_label: string;
 };
 
 export type PostureFindingTrendsResponse = TimeWindowedResponse<{
