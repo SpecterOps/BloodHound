@@ -110,15 +110,14 @@ type PostureFindingTrend = {
 
 export type PostureFindingTrendsResponse = { findings: PostureFindingTrend[]; total_start: number; total_end: number };
 
-type PostureHistoryAggregatedData = {
+export type PostureHistoryData = {
     date: string;
-    min: number;
-    max: number;
-    average: number;
-    count: number;
+    value: number;
 };
 
-export type PostureHistoryResponse = { aggregation_data: PostureHistoryAggregatedData[] };
+export type PostureHistoryResponse = TimeWindowedResponse<PostureHistoryData[]> & {
+    data_type: string;
+};
 
 type DatapipeStatus = {
     status: 'idle' | 'ingesting' | 'analyzing' | 'purging';

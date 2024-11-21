@@ -304,7 +304,6 @@ class BHEAPIClient {
         dataType: string,
         start?: Date,
         end?: Date,
-        partition_by?: string,
         options?: types.RequestOptions
     ) => {
         return this.baseClient.get<PostureHistoryResponse>(
@@ -313,7 +312,6 @@ class BHEAPIClient {
                 {
                     start: start?.toISOString(),
                     end: end?.toISOString(),
-                    partition_by,
                 },
                 options
             )
