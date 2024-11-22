@@ -57,7 +57,6 @@ const (
 	URIPathVariablePlatformID                        = "platform_id"
 	URIPathVariableRoleID                            = "role_id"
 	URIPathVariableSAMLProviderID                    = "saml_provider_id"
-	URIPathVariableServiceProviderName               = "saml_provider_name"
 	URIPathVariableTaskID                            = "task_id"
 	URIPathVariableTenantID                          = "tenant_id"
 	URIPathVariableTokenID                           = "token_id"
