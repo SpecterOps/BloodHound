@@ -12172,14 +12172,14 @@
         }
       }
     },
-    "/api/v2/domains/{domain_id}/finding-trends": {
+    "/api/v2/domains/{environment_id}/finding-trends": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
         },
         {
-          "name": "domain_id",
-          "description": "Domain ID",
+          "name": "environment_id",
+          "description": "Environment ID",
           "in": "path",
           "required": true,
           "schema": {
@@ -12188,9 +12188,9 @@
         }
       ],
       "get": {
-        "operationId": "FindingTrendsForDomain",
+        "operationId": "FindingTrendsForEnvironment",
         "summary": "List finding trends",
-        "description": "Lists findings and their changes in between two dates for a domain",
+        "description": "Lists findings and their changes in between two dates for an environment",
         "tags": [
           "Attack Paths",
           "Enterprise"
@@ -12236,7 +12236,7 @@
                               "items": {
                                 "type": "object",
                                 "properties": {
-                                  "domain_sid": {
+                                  "environment_id": {
                                     "type": "string"
                                   },
                                   "finding": {
@@ -13200,14 +13200,14 @@
         }
       }
     },
-    "/api/v2/domains/{domain_id}/posture-history/{data_type}": {
+    "/api/v2/domains/{environment_id}/posture-history/{data_type}": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
         },
         {
-          "name": "domain_id",
-          "description": "Domain ID",
+          "name": "environment_id",
+          "description": "Environment ID",
           "in": "path",
           "required": true,
           "schema": {
@@ -13225,7 +13225,7 @@
         }
       ],
       "get": {
-        "operationId": "PostureHistoryForDomain",
+        "operationId": "PostureHistoryForEnvironment",
         "summary": "Get Posture History",
         "description": "Gets posture data count changes over a time period",
         "tags": [

@@ -16,26 +16,25 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
-  - name: domain_id
-    description: Domain ID
+  - name: environment_id
+    description: Environment ID
     in: path
     required: true
     schema:
       type: string
-  - name: data_type
-    description: The type of posture data to return
-    in: path
-    required: true
-    schema:
-      $ref: '#/components/schemas/data_type'
 get:
-  operationId: PostureHistoryForDomain
-  summary: Get Posture History
-  description: Gets posture data count changes over a time period
+  operationId: FindingTrendsForEnvironment
+  summary: List finding trends
+  description: Lists findings and their changes in between two dates for an environment
   tags:
-    - Risk Posture
+    - Attack Paths
     - Enterprise
   parameters:
+    # - name: sort_by
+    #   description: Sortable columns are composite_risk, start_count, end_count, change.
+    #   in: query
+    #   schema:
+    #     $ref: './../schemas/api.params.query.sort-by.yaml'
     - name: start
       description: Beginning datetime of range (inclusive) in RFC-3339 format; Defaults
         to current datetime minus 30 days
@@ -60,21 +59,29 @@ get:
               - $ref: './../schemas/api.response.time-window.yaml'
               - type: object
                 properties:
-                  data_type:
-                    $ref: '#/components/schemas/data_type'
                   data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        date:
-                          type: string
-                          format: date-time
-                          readOnly: true
-                        value:
-                          type: number
-                          format: double
-                          readOnly: true
+                    type: object
+                    properties:
+                      findings:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            environment_id:
+                              type: string
+                            finding:
+                              type: string
+                            composite_risk:
+                              type: number
+                              format: double
+                            finding_count_start:
+                              type: integer
+                            finding_count_end:
+                              type: integer
+                      total_finding_count_start:
+                        type: integer
+                      total_finding_count_end:
+                        type: integer
 
     400:
       $ref: './../responses/bad-request.yaml'
@@ -88,14 +95,3 @@ get:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
-
-components:
-  schemas:
-    data_type:
-      type: string
-      enum:
-        - findings
-        - exposure
-        - assets
-        - session_completeness
-        - group_completeness
