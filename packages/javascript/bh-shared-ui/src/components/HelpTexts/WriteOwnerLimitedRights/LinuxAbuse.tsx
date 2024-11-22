@@ -21,14 +21,16 @@ const LinuxAbuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                To abuse change in ownership of an object where the OWNER RIGHTS SID is explicitly granted inherited privileges,
-                you can modify the owner, then abuse the specific privileges granted to the OWNER RIGHTS SID in the context of the new owner.
-            <br />
-            <br />
-                Please refer to the abuse info for the specific privileges granted to OWNER RIGHTS at https://support.bloodhoundenterprise.io/hc/en-us/articles/17224136169371-About-BloodHound-Edges
+                To abuse change in ownership of an object where the OWNER RIGHTS SID is explicitly granted inherited
+                privileges, you can modify the owner, then abuse the specific privileges granted to the OWNER RIGHTS SID
+                in the context of the new owner.
+                <br />
+                <br />
+                Please refer to the abuse info for the specific privileges granted to OWNER RIGHTS at
+                https://support.bloodhoundenterprise.io/hc/en-us/articles/17224136169371-About-BloodHound-Edges
             </Typography>
         </>
-    )
+    );
 };
 
 export default LinuxAbuse;

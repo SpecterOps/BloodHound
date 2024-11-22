@@ -24,7 +24,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
             <Typography variant='body2'>
                 When specific privileges on an object's DACL are explicitly granted to the "OWNER RIGHTS" SID (S-1-3-4),
                 and inheritance is configured for those permissions, they are inherited by the new object owner after a
-                change in ownership. In this case, implicit owner rights are blocked, and the new owner is granted only 
+                change in ownership. In this case, implicit owner rights are blocked, and the new owner is granted only
                 the specific inherited privileges granted to OWNER RIGHTS.
             </Typography>
         </>

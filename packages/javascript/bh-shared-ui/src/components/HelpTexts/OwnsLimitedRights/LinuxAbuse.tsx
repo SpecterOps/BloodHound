@@ -21,15 +21,16 @@ const LinuxAbuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                To abuse ownership of an object where the OWNER RIGHTS SID is explicitly granted permissions,
-                you can abuse the specific permissions granted to the OWNER RIGHTS SID.
+                To abuse ownership of an object where the OWNER RIGHTS SID is explicitly granted permissions, you can
+                abuse the specific permissions granted to the OWNER RIGHTS SID.
             </Typography>
 
             <Typography variant='body2'>
-                Please refer to the abuse info for the specific granted permissions at https://support.bloodhoundenterprise.io/hc/en-us/articles/17224136169371-About-BloodHound-Edges
+                Please refer to the abuse info for the specific granted permissions at
+                https://support.bloodhoundenterprise.io/hc/en-us/articles/17224136169371-About-BloodHound-Edges
             </Typography>
         </>
-    )
+    );
 };
 
 export default LinuxAbuse;
