@@ -48,6 +48,7 @@ const (
 	URIPathVariableAssetGroupSelectorID              = "asset_group_selector_id"
 	URIPathVariableAttackPathID                      = "attack_path_id"
 	URIPathVariableClientID                          = "client_id"
+	URIPathVariableDataType                          = "data_type"
 	URIPathVariableDomainID                          = "domain_id"
 	URIPathVariableEventID                           = "event_id"
 	URIPathVariableFeatureID                         = "feature_id"
