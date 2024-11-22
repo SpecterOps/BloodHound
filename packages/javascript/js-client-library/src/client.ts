@@ -31,6 +31,8 @@ import {
     ListFileTypesForIngestResponse,
     PaginatedResponse,
     PostureResponse,
+    PostureFindingTrendsResponse,
+    PostureHistoryResponse,
     SavedQuery,
     StartFileIngestResponse,
     UpdateConfigurationResponse,
@@ -161,6 +163,7 @@ class BHEAPIClient {
         this.baseClient.get<AssetGroupResponse>('/api/v2/asset-groups', options);
 
     /* analysis */
+
     getComboTreeGraph = (domainId: string, nodeId: string | null = null, options?: types.RequestOptions) =>
         this.baseClient.get(
             `/api/v2/meta-trees/${domainId}`,
@@ -270,6 +273,47 @@ class BHEAPIClient {
             Object.assign(
                 {
                     params: params,
+                },
+                options
+            )
+        );
+    };
+
+    getPostureFindingTrends = (
+        environmentId: string,
+        start?: Date,
+        end?: Date,
+        sort_by?: string,
+        options?: types.RequestOptions
+    ) => {
+        return this.baseClient.get<PostureFindingTrendsResponse>(
+            `/api/v2/finding-trends/${environmentId}`,
+            Object.assign(
+                {
+                    start: start?.toISOString(),
+                    end: end?.toISOString(),
+                    sort_by,
+                },
+                options
+            )
+        );
+    };
+
+    getPostureHistory = (
+        environmentId: string,
+        dataType: string,
+        start?: Date,
+        end?: Date,
+        partition_by?: string,
+        options?: types.RequestOptions
+    ) => {
+        return this.baseClient.get<PostureHistoryResponse>(
+            `/api/v2/posture-history/${environmentId}/${dataType}`,
+            Object.assign(
+                {
+                    start: start?.toISOString(),
+                    end: end?.toISOString(),
+                    partition_by,
                 },
                 options
             )
@@ -696,24 +740,13 @@ class BHEAPIClient {
     deleteUserToken = (tokenId: string, options?: types.RequestOptions) =>
         this.baseClient.delete(`/api/v2/tokens/${tokenId}`, options);
 
-    listUsers = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/bloodhound-users', options);
+    listUsers = (options?: types.RequestOptions) =>
+        this.baseClient.get<types.ListUsersResponse>('/api/v2/bloodhound-users', options);
 
     getUser = (userId: string, options?: types.RequestOptions) =>
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);
 
-    createUser = (
-        user: {
-            firstName: string;
-            lastName: string;
-            emailAddress: string;
-            principal: string;
-            roles: number[];
-            SAMLProviderId?: string;
-            password?: string;
-            needsPasswordReset?: boolean;
-        },
-        options?: types.RequestOptions
-    ) =>
+    createUser = (user: types.CreateUserRequest, options?: types.RequestOptions) =>
         this.baseClient.post(
             '/api/v2/bloodhound-users',
             {
@@ -722,7 +755,7 @@ class BHEAPIClient {
                 email_address: user.emailAddress,
                 principal: user.principal,
                 roles: user.roles,
-                saml_provider_id: user.SAMLProviderId,
+                sso_provider_id: user.SSOProviderId,
                 secret: user.password,
                 needs_password_reset: user.needsPasswordReset,
             },
@@ -738,7 +771,7 @@ class BHEAPIClient {
                 email_address: user.emailAddress,
                 principal: user.principal,
                 roles: user.roles,
-                saml_provider_id: user.SAMLProviderId,
+                sso_provider_id: user.SSOProviderId,
                 is_disabled: user.is_disabled,
             },
             options

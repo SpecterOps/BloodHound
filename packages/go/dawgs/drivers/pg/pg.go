@@ -34,7 +34,10 @@ const (
 
 	poolInitConnectionTimeout = time.Second * 10
 	defaultTransactionTimeout = time.Minute * 15
-	defaultBatchWriteSize     = 20_000
+
+	// defaultBatchWriteSize is currently set to 2k. This is meant to strike a balance between the cost of thousands
+	// of round-trips against the cost of locking tables for too long.
+	defaultBatchWriteSize = 2_000
 )
 
 func afterPooledConnectionEstablished(ctx context.Context, conn *pgx.Conn) error {

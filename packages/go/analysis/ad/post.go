@@ -56,11 +56,16 @@ func PostProcessedRelationships() []graph.Kind {
 		ad.ADCSESC10a,
 		ad.ADCSESC10b,
 		ad.ADCSESC9a,
+		ad.ADCSESC9b,
 		ad.ADCSESC13,
 		ad.EnrollOnBehalfOf,
 		ad.SyncedToEntraUser,
+<<<<<<< HEAD
 		ad.Owns,
 		ad.WriteOwner,
+=======
+		ad.ExtendedByPolicy,
+>>>>>>> main
 	}
 }
 

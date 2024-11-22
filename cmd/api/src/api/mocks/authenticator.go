@@ -57,7 +57,7 @@ func (m *MockAuthenticator) EXPECT() *MockAuthenticatorMockRecorder {
 }
 
 // CreateSSOSession mocks base method.
-func (m *MockAuthenticator) CreateSSOSession(arg0 *http.Request, arg1 http.ResponseWriter, arg2 string, arg3 interface{}) {
+func (m *MockAuthenticator) CreateSSOSession(arg0 *http.Request, arg1 http.ResponseWriter, arg2 string, arg3 model.SSOProvider) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "CreateSSOSession", arg0, arg1, arg2, arg3)
 }

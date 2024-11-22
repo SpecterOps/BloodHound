@@ -252,21 +252,19 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 			return
 		}
 
-		job, err := s.db.GetFileUploadJob(ctx, ingestTask.TaskID.ValueOrZero())
-		if err != nil {
-			log.Errorf("Failed to fetch job for ingest task %d: %v", ingestTask.ID, err)
-		}
 		total, failed, err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType)
 		if errors.Is(err, fs.ErrNotExist) {
 			log.Warnf("Did not process ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
 		} else if err != nil {
 			log.Errorf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
-		}
-
-		job.TotalFiles = total
-		job.FailedFiles += failed
-		if err = s.db.UpdateFileUploadJob(ctx, job); err != nil {
-			log.Errorf("Failed to update number of failed files for file upload job ID %s: %v", job.ID, err)
+		} else if job, err := s.db.GetFileUploadJob(ctx, ingestTask.TaskID.ValueOrZero()); err != nil {
+			log.Errorf("Failed to fetch job for ingest task %d: %v", ingestTask.ID, err)
+		} else {
+			job.TotalFiles = total
+			job.FailedFiles += failed
+			if err = s.db.UpdateFileUploadJob(ctx, job); err != nil {
+				log.Errorf("Failed to update number of failed files for file upload job ID %s: %v", job.ID, err)
+			}
 		}
 
 		s.clearFileTask(ingestTask)

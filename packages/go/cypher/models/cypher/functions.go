@@ -17,15 +17,17 @@
 package cypher
 
 const (
-	CountFunction         = "count"
-	DateFunction          = "date"
-	TimeFunction          = "time"
-	LocalTimeFunction     = "localtime"
-	DateTimeFunction      = "datetime"
-	LocalDateTimeFunction = "localdatetime"
-	DurationFunction      = "duration"
-	IdentityFunction      = "id"
-	ToLowerFunction       = "tolower"
-	NodeLabelsFunction    = "labels"
-	EdgeTypeFunction      = "type"
+	CountFunction              = "count"
+	DateFunction               = "date"
+	TimeFunction               = "time"
+	LocalTimeFunction          = "localtime"
+	DateTimeFunction           = "datetime"
+	LocalDateTimeFunction      = "localdatetime"
+	DurationFunction           = "duration"
+	IdentityFunction           = "id"
+	ToLowerFunction            = "tolower"
+	ToUpperFunction            = "toupper"
+	NodeLabelsFunction         = "labels"
+	EdgeTypeFunction           = "type"
+	StringSplitToArrayFunction = "split"
 )

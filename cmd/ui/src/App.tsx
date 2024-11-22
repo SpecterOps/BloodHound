@@ -26,6 +26,7 @@ import {
     typography,
     components,
     useFeatureFlags,
+    setRootClass,
 } from 'bh-shared-ui';
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
@@ -170,7 +171,7 @@ export const Inner: React.FC = () => {
     const showHeader = !['', '/', ROUTE_LOGIN, ROUTE_EXPIRED_PASSWORD, ROUTE_USER_DISABLED].includes(location.pathname);
 
     return (
-        <Box className={`${classes.applicationContainer} ${darkMode ? 'dark' : 'light'}`} id='app-root'>
+        <Box className={`${classes.applicationContainer}`} id='app-root'>
             {showHeader && (
                 <Box className={classes.applicationHeader}>
                     <Header />
@@ -186,16 +187,17 @@ export const Inner: React.FC = () => {
 };
 
 const App: React.FC = () => {
-    const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const mode = darkMode ? 'dark' : 'light';
-    const palette = darkMode ? darkPalette : lightPalette;
+    const darkModeEnabled = useAppSelector((state) => state.global.view.darkMode);
+    const currentMode = setRootClass(darkModeEnabled ? 'dark' : 'light');
+
+    const palette = darkModeEnabled ? darkPalette : lightPalette;
 
     let theme = createTheme({
         palette: {
-            mode,
+            mode: currentMode,
             ...palette,
         },
-        typography: { ...typography },
+        typography,
     });
     // suggested by MUI for defining theme options based on other options. https://mui.com/material-ui/customization/theming/#api
     theme = createTheme(theme, {

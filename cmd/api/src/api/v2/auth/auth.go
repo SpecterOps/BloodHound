@@ -139,6 +139,9 @@ func (s ManagementResource) GetSAMLProvider(response http.ResponseWriter, reques
 	} else if provider, err := s.db.GetSAMLProvider(request.Context(), int32(providerID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		// Format the service provider uri's in response
+		provider = bhsaml.FormatSAMLProviderURLs(request.Context(), provider)[0]
+
 		api.WriteBasicResponse(request.Context(), provider, http.StatusOK, response)
 	}
 }
@@ -475,11 +478,29 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		if createUserRequest.SAMLProviderID != "" {
 			if samlProviderID, err := serde.ParseInt32(createUserRequest.SAMLProviderID); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
+				return
 			} else if samlProvider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
 				log.Errorf("Error while attempting to fetch SAML provider %d: %v", createUserRequest.SAMLProviderID, err)
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else {
 				userTemplate.SAMLProviderID = null.Int32From(samlProvider.ID)
+				userTemplate.SSOProviderID = samlProvider.SSOProviderID
+			}
+		} else if createUserRequest.SSOProviderID.Valid {
+			if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), createUserRequest.SSOProviderID.Int32); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else {
+				userTemplate.SSOProviderID = createUserRequest.SSOProviderID
+				if ssoProvider.Type == model.SessionAuthProviderSAML {
+					if ssoProvider.SAMLProvider != nil {
+						userTemplate.SAMLProviderID = null.Int32From(ssoProvider.SAMLProvider.ID)
+					}
+				} else {
+					userTemplate.SAMLProvider = nil
+					userTemplate.SAMLProviderID = null.NewInt32(0, false)
+				}
 			}
 		}
 
@@ -492,20 +513,10 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 	}
 }
 
-func (s ManagementResource) updateUser(response http.ResponseWriter, request *http.Request, user model.User) {
-	if err := s.db.UpdateUser(request.Context(), user); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		response.WriteHeader(http.StatusOK)
-	}
-}
-
 func (s ManagementResource) ensureUserHasNoAuthSecret(ctx context.Context, user model.User) error {
 	if user.AuthSecret != nil {
 		if err := s.db.DeleteAuthSecret(ctx, *user.AuthSecret); err != nil {
 			return api.FormatDatabaseError(err)
-		} else {
-			return nil
 		}
 	}
 
@@ -517,7 +528,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		updateUserRequest v2.UpdateUserRequest
 		pathVars          = mux.Vars(request)
 		rawUserID         = pathVars[api.URIPathVariableUserID]
-		context           = *ctx.FromRequest(request)
+		authCtx           = *ctx.FromRequest(request)
 	)
 
 	if userID, err := uuid.FromString(rawUserID); err != nil {
@@ -539,7 +550,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		user.IsDisabled = updateUserRequest.IsDisabled
 
 		if user.IsDisabled {
-			if loggedInUser, _ := auth.GetUserFromAuthCtx(context.AuthCtx); user.ID == loggedInUser.ID {
+			if loggedInUser, _ := auth.GetUserFromAuthCtx(authCtx.AuthCtx); user.ID == loggedInUser.ID {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSelfDisable, request), response)
 				return
 			} else if userSessions, err := s.db.LookupActiveSessionsByUser(request.Context(), user); err != nil {
@@ -556,24 +567,50 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			// We're setting a SAML provider. If the user has an associated secret the secret will be removed.
 			if samlProviderID, err := serde.ParseInt32(updateUserRequest.SAMLProviderID); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
+				return
 			} else if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else if provider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else {
 				// Ensure that the AuthSecret reference is nil and that the SAML provider is set
-				user.AuthSecret = nil
-				user.SAMLProvider = &provider
+				user.AuthSecret = nil // Required or the below updateUser will re-add the authSecret
 				user.SAMLProviderID = null.Int32From(samlProviderID)
-
-				s.updateUser(response, request, user)
+				user.SSOProviderID = provider.SSOProviderID
+			}
+		} else if updateUserRequest.SSOProviderID.Valid {
+			if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), updateUserRequest.SSOProviderID.Int32); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else {
+				user.AuthSecret = nil // Required or the below updateUser will re-add the authSecret
+				user.SSOProviderID = updateUserRequest.SSOProviderID
+				if ssoProvider.Type == model.SessionAuthProviderSAML {
+					if ssoProvider.SAMLProvider != nil {
+						user.SAMLProviderID = null.Int32From(ssoProvider.SAMLProvider.ID)
+					}
+				} else {
+					user.SAMLProvider = nil
+					user.SAMLProviderID = null.NewInt32(0, false)
+				}
 			}
 		} else {
-			// Default SAMLProviderID to null if the update request contains no SAMLProviderID
-			user.SAMLProviderID = null.NewInt32(0, false)
+			// Default SAMLProviderID and SSOProviderID to null if the update request contains no SAMLProviderID and SSOProviderID
 			user.SAMLProvider = nil
+			user.SSOProvider = nil
+			user.SAMLProviderID = null.NewInt32(0, false)
+			user.SSOProviderID = null.NewInt32(0, false)
+		}
 
-			s.updateUser(response, request, user)
+		if err := s.db.UpdateUser(request.Context(), user); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			response.WriteHeader(http.StatusOK)
 		}
 	}
 }

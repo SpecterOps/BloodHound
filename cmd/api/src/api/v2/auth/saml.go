@@ -56,6 +56,8 @@ func serviceProviderFactory(ctx context.Context, cfg config.Configuration, samlP
 	} else if idpMetadata, err := samlsp.ParseMetadata(samlProvider.MetadataXML); err != nil {
 		return bhsaml.ServiceProvider{}, fmt.Errorf("failed to parse metadata XML for service provider %s: %w", samlProvider.Name, err)
 	} else {
+		// This is required to populate the samlProvider.ServiceProviderIssuerURI
+		samlProvider = bhsaml.FormatSAMLProviderURLs(ctx, samlProvider)[0]
 		return bhsaml.NewServiceProvider(samlProvider, bhsaml.FormatServiceProviderURLs(*bhCtx.Get(ctx).Host, samlProvider.Name), samlsp.Options{
 			EntityID:          samlProvider.ServiceProviderIssuerURI.String(),
 			URL:               samlProvider.ServiceProviderIssuerURI.AsURL(),
@@ -81,7 +83,7 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 	} else if ssoProvider.SAMLProvider == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if serviceProvider, err := serviceProviderFactory(request.Context(), s.config, *ssoProvider.SAMLProvider); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
 		if content, err := xml.MarshalIndent(serviceProvider.Metadata(), "", "  "); err != nil {
 			log.Errorf("[SAML] XML marshalling failure during service provider encoding for %s: %v", ssoProvider.SAMLProvider.IssuerURI, err)
@@ -100,7 +102,7 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 	if ssoProvider.SAMLProvider == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if serviceProvider, err := serviceProviderFactory(request.Context(), s.config, *ssoProvider.SAMLProvider); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
 		providerResource := saml2.NewProviderResource(s.db, s.config, serviceProvider, samlWriteAPIErrorResponse)
 		binding, bindingLocation := providerResource.BindingTypeAndLocation()
@@ -147,7 +149,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 	if ssoProvider.SAMLProvider == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if serviceProvider, err := serviceProviderFactory(request.Context(), s.config, *ssoProvider.SAMLProvider); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
 		providerResource := saml2.NewProviderResource(s.db, s.config, serviceProvider, samlWriteAPIErrorResponse)
 		if err := request.ParseForm(); err != nil {
@@ -167,7 +169,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 				log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", serviceProvider.Config.Name, err)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "session assertion does not meet the requirements for user lookup", request), response)
 			} else {
-				s.authenticator.CreateSSOSession(request, response, principalName, *ssoProvider.SAMLProvider)
+				s.authenticator.CreateSSOSession(request, response, principalName, ssoProvider)
 			}
 		}
 	}

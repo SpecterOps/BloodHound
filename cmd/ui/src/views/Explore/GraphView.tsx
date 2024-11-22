@@ -42,7 +42,7 @@ import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { ROUTE_ADMINISTRATION_FILE_INGEST } from 'src/ducks/global/routes';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
-import useToggle from 'src/hooks/useToggle';
+import { useToggle } from 'bh-shared-ui';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { transformFlatGraphResponse } from 'src/utils';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
@@ -113,6 +113,10 @@ const GraphView: FC = () => {
     const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
 
     const [columns, setColumns] = useState(columnsDefault);
+
+    const [showNodeLabels, setShowNodeLabels] = useState(true);
+
+    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;
@@ -221,6 +225,8 @@ const GraphView: FC = () => {
                 graph={graphologyGraph}
                 onClickNode={handleClickNode}
                 handleContextMenu={handleContextMenu}
+                showNodeLabels={showNodeLabels}
+                showEdgeLabels={showEdgeLabels}
                 ref={sigmaChartRef}
             />
 
@@ -271,6 +277,23 @@ const GraphView: FC = () => {
                             onSearchCurrentResults={() => {
                                 toggleCurrentSearch();
                             }}
+                            onToggleAllLabels={() => {
+                                if (!showNodeLabels || !showEdgeLabels) {
+                                    setShowNodeLabels(true);
+                                    setShowEdgeLabels(true);
+                                } else {
+                                    setShowNodeLabels(false);
+                                    setShowEdgeLabels(false);
+                                }
+                            }}
+                            onToggleNodeLabels={() => {
+                                setShowNodeLabels((prev) => !prev);
+                            }}
+                            onToggleEdgeLabels={() => {
+                                setShowEdgeLabels((prev) => !prev);
+                            }}
+                            showNodeLabels={showNodeLabels}
+                            showEdgeLabels={showEdgeLabels}
                             isCurrentSearchOpen={false}
                         />
                         <Popper

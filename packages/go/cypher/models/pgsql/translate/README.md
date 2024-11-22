@@ -183,7 +183,7 @@ from s1;
 
 The translator represents pattern expansion as
 a [recursive CTE](https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-RECURSIVE) to offload as much
-of the traversal work to the database.
+of the traversal work to the database. Currently, all expansions are hard limited to an expansion depth of 5 steps.
 
 Consider the following openCypher query: `match (n)-[*..]->(e) return n, e`.
 
@@ -196,12 +196,12 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
 
 | Column      | type    | Usage                                                                                  |
 |-------------|---------|----------------------------------------------------------------------------------------|
-| `root_id`   | Int4    | Node that the path originated from. Simplifies referencing the root node of each path. |
-| `next_id`   | Int4    | Next node to expand to.                                                                |
+| `root_id`   | Int8    | Node that the path originated from. Simplifies referencing the root node of each path. |
+| `next_id`   | Int8    | Next node to expand to.                                                                |
 | `depth`     | Int     | Depth of the current traversal.                                                        |
 | `satisfied` | Boolean | True if the expansion is satisfied.                                                    |
 | `is_cycle`  | Boolean | True if the expansion is a cycle.                                                      |
-| `path`      | Int4[]  | Array of edges in order of traversal.                                                  |
+| `path`      | Int8[]  | Array of edges in order of traversal.                                                  |
 
 The translator then formats two queries. First is the primer query that populates the initial pathspace of the
 expansion:

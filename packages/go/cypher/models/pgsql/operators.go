@@ -98,6 +98,8 @@ const (
 	OperatorIn                   Operator = "in"
 	OperatorIs                   Operator = "is"
 	OperatorIsNot                Operator = "is not"
+	OperatorSimilarTo            Operator = "similar to"
+	OperatorRegexMatch           Operator = "=~"
 	OperatorStartsWith           Operator = "starts with"
 	OperatorContains             Operator = "contains"
 	OperatorEndsWith             Operator = "ends with"

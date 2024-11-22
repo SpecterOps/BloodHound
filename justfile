@@ -29,6 +29,11 @@ generate *FLAGS:
   @just stbernard generate {{FLAGS}}
   @just check-license
 
+# run the code generation from the cue schema
+schemagen: yarn-local && check-license (yarn "format") goimports
+  go run github.com/specterops/bloodhound/schemagen
+
+
 # Show repository status
 show *FLAGS:
   @just stbernard show {{FLAGS}}

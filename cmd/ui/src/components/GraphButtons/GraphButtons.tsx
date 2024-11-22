@@ -28,6 +28,11 @@ interface GraphButtonsProps {
     onRunSequentialLayout: () => void;
     onExportJson: () => void;
     onSearchCurrentResults: () => void;
+    onToggleAllLabels: () => void;
+    onToggleNodeLabels: () => void;
+    onToggleEdgeLabels: () => void;
+    showNodeLabels: boolean;
+    showEdgeLabels: boolean;
     isCurrentSearchOpen: boolean;
 }
 
@@ -37,6 +42,11 @@ const GraphButtons: FC<GraphButtonsProps> = ({
     onRunSequentialLayout,
     onExportJson,
     onSearchCurrentResults,
+    onToggleAllLabels,
+    onToggleNodeLabels,
+    onToggleEdgeLabels,
+    showNodeLabels,
+    showEdgeLabels,
     isCurrentSearchOpen,
 }) => {
     const exportableGraphState = useAppSelector((state) => state.explore.export);
@@ -44,6 +54,14 @@ const GraphButtons: FC<GraphButtonsProps> = ({
     return (
         <Box display={'flex'} gap={1}>
             <GraphButton onClick={onReset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
+
+            <GraphMenu label={'Hide Labels'}>
+                <MenuItem onClick={onToggleAllLabels}>
+                    {!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} All Labels
+                </MenuItem>
+                <MenuItem onClick={onToggleNodeLabels}>{showNodeLabels ? 'Hide' : 'Show'} Node Labels</MenuItem>
+                <MenuItem onClick={onToggleEdgeLabels}>{showEdgeLabels ? 'Hide' : 'Show'} Edge Labels</MenuItem>
+            </GraphMenu>
 
             <GraphMenu label='Layout'>
                 <MenuItem onClick={onRunSequentialLayout}>Sequential</MenuItem>

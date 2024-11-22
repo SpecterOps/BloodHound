@@ -16,11 +16,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import LoginForm from 'src/components/LoginForm';
 import LoginPage from 'src/components/LoginPage';
 import { useQuery, useQueryClient } from 'react-query';
 import { Box, CircularProgress } from '@mui/material';
-import { OneTimePasscodeForm, LoginViaSSOForm, apiClient } from 'bh-shared-ui';
+import { OneTimePasscodeForm, LoginViaSSOForm, LoginForm, apiClient } from 'bh-shared-ui';
 
 import { login as loginAction, logout } from 'src/ducks/auth/authSlice';
 import { ROUTE_HOME, ROUTE_USER_DISABLED } from 'src/ducks/global/routes';
@@ -67,8 +66,8 @@ const Login: React.FC = () => {
         dispatch(loginAction({ username: lastUsername, password: lastPassword, otp }));
     };
 
-    const handleSubmitLoginViaSSOForm = (redirectURL: string) => {
-        window.location.assign(redirectURL);
+    const handleSubmitLoginViaSSOForm = (providerSlug: string) => {
+        window.location.assign(`/api/v2/sso/${providerSlug}/login`);
     };
 
     /* Implementation */
@@ -104,7 +103,7 @@ const Login: React.FC = () => {
         );
     }
 
-    if (listSSOProvidersQuery.isError || listSSOProvidersQuery?.data?.length === 0) {
+    if (listSSOProvidersQuery.isError || !listSSOProvidersQuery.data) {
         return (
             <LoginPage>
                 <LoginForm onSubmit={handleSubmitLoginForm} loading={authState.loginLoading} />
@@ -113,6 +112,10 @@ const Login: React.FC = () => {
     }
 
     if (useSSO) {
+        if (listSSOProvidersQuery.data?.length === 1) {
+            handleSubmitLoginViaSSOForm(listSSOProvidersQuery.data[0].slug);
+            return;
+        }
         return (
             <LoginPage>
                 <LoginViaSSOForm

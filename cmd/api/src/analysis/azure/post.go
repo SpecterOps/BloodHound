@@ -29,7 +29,7 @@ import (
 
 func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
-	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, azureAnalysis.AzurePostProcessedRelationships()...); err != nil {
+	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, azureAnalysis.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
 	} else if userRoleStats, err := azureAnalysis.UserRoleAssignments(ctx, db); err != nil {
 		return &aggregateStats, err

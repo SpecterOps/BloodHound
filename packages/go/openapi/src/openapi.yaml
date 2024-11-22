@@ -217,6 +217,14 @@ paths:
   # Undocumented, not sure how this endpoint actually works.
   #/api/v2/login/saml/{saml_provider_name}:
 
+  # sso
+  /api/v2/sso-providers:
+    $ref: './paths/sso.sso-providers.yaml'
+  /api/v2/sso-providers/oidc:
+    $ref: './paths/sso.sso-providers.oidc.yaml'
+  /api/v2/sso-providers/{sso_provider_id}:
+    $ref: './paths/sso.sso-providers.id.yaml'
+
   # permissions
   /api/v2/permissions:
     $ref: './paths/permissions.permissions.yaml'

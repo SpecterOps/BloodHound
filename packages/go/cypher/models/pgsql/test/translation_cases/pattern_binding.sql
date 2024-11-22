@@ -223,3 +223,18 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                    join node n2 on e1.id = ex0.path[array_length(ex0.path, 1)::int4] and n2.id = e1.end_id)
 select s1.e0 as e, edges_to_path(variadic array [(s1.e0).id]::int4[] || s1.ep0)::pathcomposite as p
 from s1;
+
+-- case: match p = (m:NodeKind1)-[:EdgeKind1]->(c:NodeKind2) where m.objectid ends with "-513" and not toUpper(c.operatingsystem) contains "SERVER" return p limit 1000
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite                        as n0,
+                   (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0,
+                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite                        as n1
+            from edge e0
+                   join node n0 on n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and
+                                   n0.properties ->> 'objectid' like '%-513' and n0.id = e0.start_id
+                   join node n1 on n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and
+                                   not upper(n1.properties ->> 'operatingsystem')::text like '%SERVER%' and
+                                   n1.id = e0.end_id
+            where e0.kind_id = any (array [11]::int2[]))
+select edges_to_path(variadic array [(s0.e0).id]::int4[])::pathcomposite as p
+from s0
+limit 1000;

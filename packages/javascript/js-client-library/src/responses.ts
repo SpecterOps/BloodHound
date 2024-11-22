@@ -100,6 +100,26 @@ type PostureStat = TimestampFields & {
 
 export type PostureResponse = PaginatedResponse<PostureStat[]>;
 
+type PostureFindingTrend = {
+    finding: string;
+    start_count: number;
+    end_count: number;
+    severity: number;
+    severity_label: string;
+};
+
+export type PostureFindingTrendsResponse = { findings: PostureFindingTrend[]; total_start: number; total_end: number };
+
+type PostureHistoryAggregatedData = {
+    date: string;
+    min: number;
+    max: number;
+    average: number;
+    count: number;
+};
+
+export type PostureHistoryResponse = { aggregation_data: PostureHistoryAggregatedData[] };
+
 type DatapipeStatus = {
     status: 'idle' | 'ingesting' | 'analyzing' | 'purging';
     last_complete_analysis_at: string;

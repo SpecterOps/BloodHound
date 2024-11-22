@@ -38,7 +38,7 @@ type hyperLogLog64 struct {
 
 func NewHyperLogLog64() Simplex[uint64] {
 	return &hyperLogLog64{
-		sketch: hyperloglog.New16(),
+		sketch: hyperloglog.NewNoSparse(),
 	}
 }
 
@@ -49,7 +49,7 @@ func (s *hyperLogLog64) Clone() Simplex[uint64] {
 }
 
 func (s *hyperLogLog64) Clear() {
-	s.sketch = hyperloglog.New16()
+	s.sketch = hyperloglog.NewNoSparse()
 }
 
 func (s *hyperLogLog64) Add(values ...uint64) {
