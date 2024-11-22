@@ -23,6 +23,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
@@ -144,9 +145,7 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		} else if metadata, err := samlsp.ParseMetadata(metadataXML); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if ssoDescriptor, err := auth.GetIDPSingleSignOnDescriptor(metadata, saml.HTTPPostBinding); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(ssoDescriptor, saml.HTTPPostBinding); err != nil {
+		} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(metadata, saml.HTTPPostBinding); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
 		} else {
 			samlIdentityProvider.Name = providerNames[0]
@@ -211,9 +210,7 @@ func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWrit
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		} else if metadata, err := samlsp.ParseMetadata(metadataXML); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if ssoDescriptor, err := auth.GetIDPSingleSignOnDescriptor(metadata, saml.HTTPPostBinding); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(ssoDescriptor, saml.HTTPPostBinding); err != nil {
+		} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(metadata, saml.HTTPPostBinding); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
 		} else {
 			ssoProvider.Name = providerNames[0]
@@ -223,6 +220,24 @@ func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWrit
 			ssoProvider.SAMLProvider.MetadataXML = metadataXML
 			ssoProvider.SAMLProvider.IssuerURI = metadata.EntityID
 			ssoProvider.SAMLProvider.SingleSignOnURI = ssoURL
+
+			// It's possible to update the ACS url which will be reflected in the metadataXML, we need to guarantee it is set to only what we expect if it is present
+			if acsUrl, err := auth.GetAssertionConsumerServiceURL(metadata, saml.HTTPPostBinding); err == nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have an ACS location that supports HTTP POST binding", request), response)
+				if !strings.Contains(acsUrl, model.SAMLRootURIVersionMap[ssoProvider.SAMLProvider.RootURIVersion]) {
+					var validUri bool
+					for rootUriVersion, path := range model.SAMLRootURIVersionMap {
+						if strings.Contains(acsUrl, path) {
+							ssoProvider.SAMLProvider.RootURIVersion = rootUriVersion
+							validUri = true
+							break
+						}
+					}
+					if !validUri {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a valid ACS location", request), response)
+					}
+				}
+			}
 
 			if newSAMLProvider, err := s.db.UpdateSAMLIdentityProvider(request.Context(), ssoProvider); err != nil {
 				api.HandleDatabaseError(request, response, err)
