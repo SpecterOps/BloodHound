@@ -46,19 +46,26 @@ const SAMLProviderInfoPanel: FC<{
 );
 
 const OIDCProviderInfoPanel: FC<{
-    oidcProviderDetails: OIDCProviderInfo;
-}> = ({ oidcProviderDetails }) => (
-    <FieldsContainer>
-        <Field
-            label={<LabelWithCopy label='Client ID' valueToCopy={oidcProviderDetails.client_id} hoverOnly />}
-            value={oidcProviderDetails.client_id}
-        />
-        <Field
-            label={<LabelWithCopy label='Issuer' valueToCopy={oidcProviderDetails.issuer} hoverOnly />}
-            value={oidcProviderDetails.issuer}
-        />
-    </FieldsContainer>
-);
+    ssoProvider: SSOProvider;
+}> = ({ ssoProvider }) => {
+    const oidcProviderDetails = ssoProvider.details as OIDCProviderInfo;
+    return (
+        <FieldsContainer>
+            <Field
+                label={<LabelWithCopy label='Client ID' valueToCopy={oidcProviderDetails.client_id} hoverOnly />}
+                value={oidcProviderDetails.client_id}
+            />
+            <Field
+                label={<LabelWithCopy label='Issuer' valueToCopy={oidcProviderDetails.issuer} hoverOnly />}
+                value={oidcProviderDetails.issuer}
+            />
+            <Field
+                label={<LabelWithCopy label='Callback URL' valueToCopy={ssoProvider.callback_uri} hoverOnly />}
+                value={ssoProvider.callback_uri}
+            />
+        </FieldsContainer>
+    );
+};
 
 const SSOProviderInfoPanel: FC<{
     ssoProvider: SSOProvider;
@@ -77,7 +84,7 @@ const SSOProviderInfoPanel: FC<{
             infoPanel = <SAMLProviderInfoPanel samlProviderDetails={ssoProvider.details as SAMLProviderInfo} />;
             break;
         case 'oidc':
-            infoPanel = <OIDCProviderInfoPanel oidcProviderDetails={ssoProvider.details as OIDCProviderInfo} />;
+            infoPanel = <OIDCProviderInfoPanel ssoProvider={ssoProvider} />;
             break;
         default:
             infoPanel = null;
