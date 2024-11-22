@@ -108,10 +108,14 @@ func (s *BloodhoundDB) UpdateSAMLIdentityProvider(ctx context.Context, ssoProvid
 
 		if _, err := bhdb.UpdateSSOProvider(ctx, ssoProvider); err != nil {
 			return err
+		} else if err := CheckError(tx.WithContext(ctx).Exec(
+			fmt.Sprintf("UPDATE %s SET name = ?, display_name = ?, issuer_uri = ?, single_sign_on_uri = ?, metadata_xml = ?, updated_at = ? WHERE id = ?;", samlProvidersTableName),
+			ssoProvider.SAMLProvider.Name, ssoProvider.SAMLProvider.DisplayName, ssoProvider.SAMLProvider.IssuerURI, ssoProvider.SAMLProvider.SingleSignOnURI, ssoProvider.SAMLProvider.MetadataXML, time.Now().UTC(), ssoProvider.SAMLProvider.ID),
+		); err != nil {
+			return err
 		} else {
-			return CheckError(tx.WithContext(ctx).Exec(
-				fmt.Sprintf("UPDATE %s SET name = ?, display_name = ?, issuer_uri = ?, single_sign_on_uri = ?, metadata_xml = ?, updated_at = ? WHERE id = ?;", samlProvidersTableName),
-				ssoProvider.SAMLProvider.Name, ssoProvider.SAMLProvider.DisplayName, ssoProvider.SAMLProvider.IssuerURI, ssoProvider.SAMLProvider.SingleSignOnURI, ssoProvider.SAMLProvider.MetadataXML, time.Now().UTC(), ssoProvider.SAMLProvider.ID))
+			// Ensure all existing sessions are invalidated within the tx
+			return bhdb.TerminateUserSessionsBySSOProvider(ctx, ssoProvider)
 		}
 	})
 

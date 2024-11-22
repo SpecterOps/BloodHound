@@ -39,6 +39,7 @@ type SSOProviderData interface {
 	GetSSOProviderById(ctx context.Context, id int32) (model.SSOProvider, error)
 	GetSSOProviderBySlug(ctx context.Context, slug string) (model.SSOProvider, error)
 	GetSSOProviderUsers(ctx context.Context, id int) (model.Users, error)
+	TerminateUserSessionsBySSOProvider(ctx context.Context, ssoProvider model.SSOProvider) error
 	UpdateSSOProvider(ctx context.Context, ssoProvider model.SSOProvider) (model.SSOProvider, error)
 }
 
@@ -147,6 +148,28 @@ func (s *BloodhoundDB) GetSSOProviderById(ctx context.Context, id int32) (model.
 	result := s.db.WithContext(ctx).Preload("OIDCProvider").Preload("SAMLProvider").Table(ssoProviderTableName).Where("id = ?", id).First(&provider)
 
 	return provider, CheckError(result)
+}
+
+// TerminateUserSessionsBySSOProvider terminates all sessions associated with a specific sso provider
+func (s *BloodhoundDB) TerminateUserSessionsBySSOProvider(ctx context.Context, ssoProvider model.SSOProvider) error {
+	// TODO should be migrated to the SSO provider id instead of the child
+	var childId int32
+	switch ssoProvider.Type {
+	case model.SessionAuthProviderSAML:
+		if ssoProvider.SAMLProvider != nil {
+			childId = ssoProvider.SAMLProvider.ID
+		}
+	case model.SessionAuthProviderOIDC:
+		if ssoProvider.OIDCProvider != nil {
+			childId = ssoProvider.OIDCProvider.ID
+		}
+	}
+
+	if childId == 0 {
+		return ErrNotFound
+	}
+
+	return CheckError(s.db.WithContext(ctx).Table("user_sessions").Where("auth_provider_type = ? AND auth_provider_id = ?", ssoProvider.Type, childId).Update("expires_at", gorm.Expr("NOW()")))
 }
 
 // UpdateSSOProvider updates an entry in the sso_providers table

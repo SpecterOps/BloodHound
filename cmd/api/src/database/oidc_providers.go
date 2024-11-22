@@ -79,8 +79,12 @@ func (s *BloodhoundDB) UpdateOIDCProvider(ctx context.Context, ssoProvider model
 
 		if _, err := bhdb.UpdateSSOProvider(ctx, ssoProvider); err != nil {
 			return err
+		} else if err := CheckError(tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET client_id = ?, issuer = ?, updated_at = ? WHERE id = ?;", oidcProvidersTableName),
+			ssoProvider.OIDCProvider.ClientID, ssoProvider.OIDCProvider.Issuer, time.Now().UTC(), ssoProvider.OIDCProvider.ID)); err != nil {
+			return err
 		} else {
-			return CheckError(tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET client_id = ?, issuer = ?, updated_at = ? WHERE id = ?;", oidcProvidersTableName), ssoProvider.OIDCProvider.ClientID, ssoProvider.OIDCProvider.Issuer, time.Now().UTC(), ssoProvider.OIDCProvider.ID))
+			// Ensure all existing sessions are invalidated within the tx
+			return bhdb.TerminateUserSessionsBySSOProvider(ctx, ssoProvider)
 		}
 	})
 
