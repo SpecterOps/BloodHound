@@ -31,7 +31,7 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
+	"github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
@@ -227,7 +227,7 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 			bindingLocation = serviceProvider.GetSSOBindingLocation(binding)
 		}
 
-		// TODO: add actual relay state support
+		// TODO: add actual relay state support - BED-5071
 		if authReq, err := serviceProvider.MakeAuthenticationRequest(bindingLocation, binding, saml.HTTPPostBinding); err != nil {
 			log.Errorf("[SAML] Failed creating SAML authentication request: %v", err)
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)

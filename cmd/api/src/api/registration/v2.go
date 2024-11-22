@@ -97,6 +97,9 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	var permissions = auth.Permissions()
 
+	// Register the auth API endpoints
+	registerV2Auth(resources, routerInst, permissions)
+
 	// Collector APIs
 	routerInst.GET(fmt.Sprintf("/api/v2/collectors/{%s}", v2.CollectorTypePathParameterName), resources.GetCollectorManifest).RequireAuth()
 	routerInst.GET(fmt.Sprintf("/api/v2/collectors/{%s}/{%s:v[0-9]+.[0-9]+.[0-9]+|latest}", v2.CollectorTypePathParameterName, v2.CollectorReleaseTagPathParameterName), resources.DownloadCollectorByVersion).RequireAuth()
@@ -108,9 +111,6 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.POST("/api/v2/file-upload/start", resources.StartFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessFileUpload).RequirePermissions(permissions.GraphDBIngest)
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
-
-	// Register the auth API endpoints
-	registerV2Auth(resources, routerInst, permissions)
 
 	router.With(middleware.DefaultRateLimitMiddleware,
 		// Version API

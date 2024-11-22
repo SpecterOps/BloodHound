@@ -308,7 +308,6 @@ func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
 		updatedSAMLProvider model.SAMLProvider
 		err                 error
 	)
-
 	// Initialize the SAMLProvider without setting SSOProviderID
 	samlProvider = model.SAMLProvider{
 		Name:            "provider",
@@ -323,7 +322,6 @@ func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
 		t.Fatalf("Failed to validate CreateSAMLIdentityProvider audit logs:\n%v", err)
 	} else {
 		user.SSOProviderID = newSAMLProvider.SSOProviderID
-
 		if err = dbInst.UpdateUser(ctx, user); err != nil {
 			t.Fatalf("Failed to update user: %v", err)
 		} else if updatedUser, err = dbInst.GetUser(ctx, user.ID); err != nil {

@@ -28,7 +28,6 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-// Todo Verify this is the optimal place for these
 func GetIDPSingleSignOnServiceURL(idp saml.IDPSSODescriptor, bindingType string) (string, error) {
 	for _, singleSignOnService := range idp.SingleSignOnServices {
 		if singleSignOnService.Binding == bindingType {
@@ -39,7 +38,6 @@ func GetIDPSingleSignOnServiceURL(idp saml.IDPSSODescriptor, bindingType string)
 	return "", fmt.Errorf("no SSO service defined that supports the %s binding type", bindingType)
 }
 
-// Todo Verify this is the optimal place for these
 func GetIDPSingleSignOnDescriptor(metadata *saml.EntityDescriptor, bindingType string) (saml.IDPSSODescriptor, error) {
 	for _, idpSSODescriptor := range metadata.IDPSSODescriptors {
 		for _, singleSignOnService := range idpSSODescriptor.SingleSignOnServices {

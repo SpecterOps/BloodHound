@@ -329,7 +329,6 @@ func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter,
 	})
 }
 
-// authProvider should be either model.SAMLProvider or model.OIDCProvider
 func (s authenticator) CreateSSOSession(request *http.Request, response http.ResponseWriter, principalNameOrEmail string, ssoProvider model.SSOProvider) {
 	var (
 		hostURL    = *ctx.FromRequest(request).Host

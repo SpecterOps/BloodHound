@@ -562,7 +562,7 @@ type UserSession struct {
 	User             User `gorm:"constraint:OnDelete:CASCADE;"`
 	UserID           uuid.UUID
 	AuthProviderType SessionAuthProvider
-	AuthProviderID   int32 // This is the SSO Provider ID if SSO session
+	AuthProviderID   int32 // If SSO Session, this will be the child saml or oidc provider id
 	ExpiresAt        time.Time
 	Flags            types.JSONBBoolObject `json:"flags"`
 
