@@ -189,13 +189,6 @@ IsACL: types.#StringEnum & {
 	representation: "isacl"
 }
 
-IsInherited: types.#StringEnum & {
-	symbol:         "IsInherited"
-	schema:         "ad"
-	name:           "Is Inherited"
-	representation: "isinherited"
-}
-
 IsACLProtected: types.#StringEnum & {
 	symbol:         "IsACLProtected"
 	schema:         "ad"
@@ -742,13 +735,6 @@ MinPwdLength: types.#StringEnum & {
 	representation: "minpwdlength"
 }
 
-OwnerSid: types.#StringEnum & {
- 	symbol: "OwnerSid"
- 	schema: "ad"
- 	name: "Owner SID"
- 	representation: "ownersid"
-}
-
 GMSA: types.#StringEnum & {
  	symbol: "GMSA"
  	schema: "ad"
@@ -803,7 +789,6 @@ Properties: [
 	HighValue,
 	BlocksInheritance,
 	IsACL,
-	IsInherited,
 	IsACLProtected,
 	IsDeleted,
 	Enforced,
@@ -880,7 +865,6 @@ Properties: [
 	MaxPwdAge,
 	LockoutDuration,
 	LockoutObservationWindow,
-	OwnerSid,
 	GMSA,
 	MSA,
 	DoesAnyAceGrantOwnerRights,

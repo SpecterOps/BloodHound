@@ -340,7 +340,6 @@ export enum ActiveDirectoryKindProperties {
     HighValue = 'highvalue',
     BlocksInheritance = 'blocksinheritance',
     IsACL = 'isacl',
-    IsInherited = 'isinherited',
     IsACLProtected = 'isaclprotected',
     IsDeleted = 'isdeleted',
     Enforced = 'enforced',
@@ -417,7 +416,6 @@ export enum ActiveDirectoryKindProperties {
     MaxPwdAge = 'maxpwdage',
     LockoutDuration = 'lockoutduration',
     LockoutObservationWindow = 'lockoutobservationwindow',
-    OwnerSid = 'ownersid',
     GMSA = 'gmsa',
     MSA = 'msa',
     DoesAnyAceGrantOwnerRights = 'doesanyacegrantownerrights',
@@ -475,8 +473,6 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Blocks GPO Inheritance';
         case ActiveDirectoryKindProperties.IsACL:
             return 'Is ACL';
-        case ActiveDirectoryKindProperties.IsInherited:
-            return 'Is Inherited';
         case ActiveDirectoryKindProperties.IsACLProtected:
             return 'ACL Inheritance Denied';
         case ActiveDirectoryKindProperties.IsDeleted:
@@ -629,8 +625,6 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Lockout Duration';
         case ActiveDirectoryKindProperties.LockoutObservationWindow:
             return 'Lockout Observation Window';
-        case ActiveDirectoryKindProperties.OwnerSid:
-            return 'Owner SID';
         case ActiveDirectoryKindProperties.GMSA:
             return 'GMSA';
         case ActiveDirectoryKindProperties.MSA:

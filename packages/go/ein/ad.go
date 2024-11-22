@@ -23,6 +23,7 @@ import (
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/slicesext"
 )
@@ -60,7 +61,7 @@ func convertOwnsEdgeToProperty(item IngestBase, itemProps map[string]any) {
 		if rightName, err := analysis.ParseKind(ace.RightName); err != nil {
 			continue
 		} else if rightName.Is(ad.Owns) || rightName.Is(ad.OwnsRaw) {
-			itemProps[ad.OwnerSid.String()] = ace.PrincipalSID
+			itemProps[common.OwnerObjectID.String()] = ace.PrincipalSID
 			return
 		}
 	}
@@ -258,7 +259,7 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 					TargetType: targetType,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): ace.IsInherited},
+					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): ace.IsInherited},
 					RelType:  rightKind,
 				},
 			))
@@ -281,7 +282,7 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 
 				// Owns is never inherited
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): false, "privileges": ownerLimitedPrivs},
+					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): false, "privileges": ownerLimitedPrivs},
 					RelType:  ad.OwnsLimitedRights,
 				},
 			))
@@ -299,7 +300,7 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 
 					// Create an edge property containing an array of all INHERITED abusable permissions granted to the OWNER RIGHTS SID
 					IngestibleRel{
-						RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): limitedPrincipal.IsInherited, "privileges": writeOwnerLimitedPrivs},
+						RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited, "privileges": writeOwnerLimitedPrivs},
 						RelType:  ad.WriteOwnerLimitedRights,
 					},
 				))
@@ -331,7 +332,7 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 						TargetType: targetType,
 					},
 					IngestibleRel{
-						RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): limitedPrincipal.IsInherited},
+						RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
 						RelType:  ad.WriteOwnerRaw,
 					},
 				))
@@ -368,7 +369,7 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 											TargetType: targetType,
 										},
 										IngestibleRel{
-											RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): limitedPrincipal.IsInherited},
+											RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
 											RelType:  ad.WriteOwnerRaw,
 										},
 									))
@@ -396,7 +397,7 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 
 				// Owns is never inherited
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): false},
+					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): false},
 					RelType:  ad.OwnsRaw,
 				},
 			))
@@ -411,7 +412,7 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 					TargetType: targetType,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): limitedPrincipal.IsInherited},
+					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
 					RelType:  ad.WriteOwnerRaw,
 				},
 			))
