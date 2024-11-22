@@ -25,20 +25,16 @@ import makeStyles from '@mui/styles/makeStyles';
 const ITEM_SIZE = 32;
 
 const useStyles = makeStyles((theme) => ({
-    table: {
-        '& ul': {
-            '& > :nth-child(odd)': {
-                backgroundColor: theme.palette.neutral.tertiary,
-                '&:hover': {
-                    backgroundColor: theme.palette.neutral.quaternary,
-                },
-            },
-            '& > :nth-child(even)': {
-                backgroundColor: theme.palette.neutral.secondary,
-                '&:hover': {
-                    backgroundColor: theme.palette.neutral.quaternary,
-                },
-            },
+    evenItem: {
+        backgroundColor: theme.palette.neutral.secondary,
+        '&:hover': {
+            backgroundColor: theme.palette.neutral.quaternary,
+        },
+    },
+    oddItem: {
+        backgroundColor: theme.palette.neutral.tertiary,
+        '&:hover': {
+            backgroundColor: theme.palette.neutral.quaternary,
         },
     },
 }));
@@ -71,9 +67,11 @@ const createItemData = memoize((items, onClick) => ({
 }));
 
 const Row = memo(function Row({ data, index, style }: ListChildComponentProps) {
+    const tableStyle = useStyles();
+
     const { items, onClick } = data;
     const item = items[index];
-    const itemClass = index % 2 ? 'odd-item' : 'even-item';
+    const itemClass = index % 2 ? tableStyle.oddItem : tableStyle.evenItem;
 
     if (item === undefined) {
         return (
@@ -123,7 +121,6 @@ const InfiniteScrollingTable: React.FC<InfiniteScrollingTableProps> = ({
     const [items, setItems] = useState<Record<number, any>>({});
     const itemData = createItemData(items, onClick);
     const isItemLoaded = (index: number) => !!items[index];
-    const style = useStyles();
 
     const loadMoreItems = async (startIndex: number, stopIndex: number) => {
         if (isFetching) return;
@@ -161,7 +158,6 @@ const InfiniteScrollingTable: React.FC<InfiniteScrollingTableProps> = ({
                     ref={ref}
                     width={'100%'}
                     initialScrollOffset={0}
-                    className={style.table}
                     style={{ borderRadius: 4 }}>
                     {Row}
                 </FixedSizeList>
