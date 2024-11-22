@@ -13279,7 +13279,8 @@
                                 "readOnly": true
                               },
                               "value": {
-                                "type": "integer",
+                                "type": "number",
+                                "format": "double",
                                 "readOnly": true
                               }
                             }

@@ -72,7 +72,8 @@ get:
                           format: date-time
                           readOnly: true
                         value:
-                          type: integer
+                          type: number
+                          format: double
                           readOnly: true
 
     400:
