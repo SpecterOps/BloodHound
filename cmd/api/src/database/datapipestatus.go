@@ -18,11 +18,15 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/specterops/bloodhound/src/model"
 )
+
+type DatapipeStatusData interface {
+	SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus, updateAnalysisTime bool) error
+	GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error)
+}
 
 func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus, updateAnalysisTime bool) error {
 	now := time.Now().UTC()
@@ -42,15 +46,12 @@ func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.Datap
 		updateSql += ";"
 		return s.db.WithContext(ctx).Exec(updateSql, status, now).Error
 	}
-
 }
 
 func (s *BloodhoundDB) GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error) {
 	var datapipeStatus model.DatapipeStatusWrapper
 
-	if tx := s.db.WithContext(ctx).Raw("SELECT status, updated_at, last_complete_analysis_at, last_analysis_run_at FROM datapipe_status LIMIT 1;").Scan(&datapipeStatus); tx.RowsAffected == 0 {
-		return datapipeStatus, sql.ErrNoRows
-	}
+	tx := s.db.WithContext(ctx).Raw("SELECT status, updated_at, last_complete_analysis_at, last_analysis_run_at FROM datapipe_status").First(&datapipeStatus)
 
-	return datapipeStatus, nil
+	return datapipeStatus, CheckError(tx)
 }
