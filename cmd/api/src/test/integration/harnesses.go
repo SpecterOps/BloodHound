@@ -8569,6 +8569,7 @@ func (s *OwnsWriteOwnerPriorCollectorVersions) Setup(graphTestContext *GraphTest
 
 	// This is the same as OwnsWriteOwner except that DoesAnyAceGrantOwnerRights and DoesAnyInheritedAceGrantOwnerRights are
 	// not set on any objects because SharpHound didn't collect them prior to moving Owns and WriteOwner to post-processing
+	// This also impacts ingest for Domain1_<Object>7 and 8 and Domain2_Computer5 and 6
 
 	domainSid := RandomDomainSID()
 
@@ -8629,13 +8630,20 @@ func (s *OwnsWriteOwnerPriorCollectorVersions) Setup(graphTestContext *GraphTest
 		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
 	}))
 	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+	// Ingest adds WriteOwnerRaw if no abusable owner rights are present and DoesAnyInheritedAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer6_AbusableOwnerRightsOnlyNonabusableInherited, ad.WriteOwnerRaw)
 
 	s.Domain1_Computer7_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryComputer("Computer7_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
 	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.OwnsRaw)
 	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
 
 	s.Domain1_Computer8_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("Computer8_OnlyNonabusableOwnerRightsInherited", domainSid)
 	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer8_OnlyNonabusableOwnerRightsInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer8_OnlyNonabusableOwnerRightsInherited, ad.WriteOwnerRaw)
 
 	////// MSAs
 	s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("MSA1_NoOwnerRights_OwnerIsLowPriv", domainSid)
@@ -8681,17 +8689,24 @@ func (s *OwnsWriteOwnerPriorCollectorVersions) Setup(graphTestContext *GraphTest
 		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
 	}))
 	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+	// Ingest adds WriteOwnerRaw if no abusable owner rights are present and DoesAnyInheritedAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited, ad.WriteOwnerRaw)
 
 	s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryComputer("MSA7_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
 	s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.MSA.String(), true)
 	graphTestContext.UpdateNode(s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited)
 	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.OwnsRaw)
 	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
 
 	s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("MSA8_OnlyNonabusableOwnerRightsInherited", domainSid)
 	s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.MSA.String(), true)
 	graphTestContext.UpdateNode(s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited)
 	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited, ad.WriteOwnerRaw)
 
 	////// GMSAs
 	s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("GMSA1_NoOwnerRights_OwnerIsLowPriv", domainSid)
@@ -8737,17 +8752,24 @@ func (s *OwnsWriteOwnerPriorCollectorVersions) Setup(graphTestContext *GraphTest
 		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
 	}))
 	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+	// Ingest adds WriteOwnerRaw if no abusable owner rights are present and DoesAnyInheritedAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited, ad.WriteOwnerRaw)
 
 	s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryComputer("GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
 	s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.GMSA.String(), true)
 	graphTestContext.UpdateNode(s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited)
 	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.OwnsRaw)
 	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
 
 	s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("GMSA8_OnlyNonabusableOwnerRightsInherited", domainSid)
 	s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.GMSA.String(), true)
 	graphTestContext.UpdateNode(s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited)
 	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited, ad.WriteOwnerRaw)
 
 	////// Users
 	s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryUser("User1_NoOwnerRights_OwnerIsLowPriv", domainSid)
@@ -8781,13 +8803,20 @@ func (s *OwnsWriteOwnerPriorCollectorVersions) Setup(graphTestContext *GraphTest
 		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
 	}))
 	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+	// Ingest adds WriteOwnerRaw if no abusable owner rights are present and DoesAnyInheritedAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited, ad.WriteOwnerRaw)
 
 	s.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryUser("User7_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
 	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.OwnsRaw)
 	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
 
 	s.Domain1_User8_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryUser("User8_OnlyNonabusableOwnerRightsInherited", domainSid)
 	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_User8_OnlyNonabusableOwnerRightsInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User8_OnlyNonabusableOwnerRightsInherited, ad.WriteOwnerRaw)
 
 	// Domain 2
 	domainSid = RandomDomainSID()
@@ -8825,13 +8854,20 @@ func (s *OwnsWriteOwnerPriorCollectorVersions) Setup(graphTestContext *GraphTest
 		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
 	}))
 	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+	// Ingest adds WriteOwnerRaw if no abusable owner rights are present and DoesAnyInheritedAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited, ad.WriteOwnerRaw)
 
 	s.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryComputer("Computer5_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
 	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain2_User1_Owner, s.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited, ad.OwnsRaw)
 	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
 
 	s.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("Computer6_OnlyNonabusableOwnerRightsInherited", domainSid)
 	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain2_User1_Owner, s.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited, ad.WriteOwnerRaw)
 }
 
 type CoerceAndRelayNTLMtoADCS struct {

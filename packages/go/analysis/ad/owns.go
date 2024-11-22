@@ -48,7 +48,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 				if dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db); err != nil {
 
 					// If we fail to get the dSHeuristics values, add the Owns edge and return an error
-					isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
+					isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
 					if err != nil {
 						isInherited = false
 					}
@@ -56,14 +56,14 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 						FromID:        rel.StartID,
 						ToID:          rel.EndID,
 						Kind:          ad.Owns,
-						RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
+						RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
 					}
 					return fmt.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
 
 				} else if adminGroupIds, err := FetchAdminGroupIds(ctx, db, groupExpansions); err != nil {
 					// Get the admin group IDs
 					// If we fail to get the admin group IDs, add the Owns edge and return an error
-					isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
+					isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
 					if err != nil {
 						isInherited = false
 					}
@@ -71,7 +71,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 						FromID:        rel.StartID,
 						ToID:          rel.EndID,
 						Kind:          ad.Owns,
-						RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
+						RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
 					}
 					return fmt.Errorf("failed fetching admin group ids values for postownsandwriteowner: %w", err)
 
@@ -95,7 +95,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 
 							// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the Owns edge
 							if !enforced {
-								isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
+								isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
 								if err != nil {
 									isInherited = false
 								}
@@ -103,7 +103,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 									FromID:        rel.StartID,
 									ToID:          rel.EndID,
 									Kind:          ad.Owns,
-									RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
+									RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
 								}
 
 							} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
@@ -112,7 +112,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 							} else if (isComputerDerived && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
 								// If the target node is a computer or derived object, add the Owns edge if the owning principal is a member of DA/EA (or is either group's SID)
 								// If the target node is NOT a computer or derived object, add the Owns edge
-								isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
+								isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
 								if err != nil {
 									isInherited = false
 								}
@@ -120,13 +120,13 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 									FromID:        rel.StartID,
 									ToID:          rel.EndID,
 									Kind:          ad.Owns,
-									RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
+									RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
 								}
 							}
 						}
 					} else {
 						// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1), we can skip this analysis and just add the Owns relationship
-						isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
+						isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
 						if err != nil {
 							isInherited = false
 						}
@@ -134,7 +134,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 							FromID:        rel.StartID,
 							ToID:          rel.EndID,
 							Kind:          ad.Owns,
-							RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
+							RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
 						}
 					}
 				}
@@ -158,7 +158,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 				if dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db); err != nil {
 
 					// If we fail to get the dSHeuristics values, add the WriteOwner edge and return an error
-					isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
+					isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
 					if err != nil {
 						isInherited = false
 					}
@@ -166,7 +166,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 						FromID:        rel.StartID,
 						ToID:          rel.EndID,
 						Kind:          ad.WriteOwner,
-						RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
+						RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
 					}
 					return fmt.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
 
@@ -189,7 +189,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 
 							// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the WriteOwner edge
 							if !enforced {
-								isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
+								isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
 								if err != nil {
 									isInherited = false
 								}
@@ -197,13 +197,13 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 									FromID:        rel.StartID,
 									ToID:          rel.EndID,
 									Kind:          ad.WriteOwner,
-									RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
+									RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
 								}
 
 							} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err == nil {
 								// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
 								if !isComputerDerived {
-									isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
+									isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
 									if err != nil {
 										isInherited = false
 									}
@@ -212,14 +212,14 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 										FromID:        rel.StartID,
 										ToID:          rel.EndID,
 										Kind:          ad.WriteOwner,
-										RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
+										RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
 									}
 								}
 							}
 						}
 					} else {
 						// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1), we can skip this analysis and just add the WriteOwner relationship
-						isInherited, err := rel.Properties.GetOrDefault(ad.IsInherited.String(), false).Bool()
+						isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
 						if err != nil {
 							isInherited = false
 						}
@@ -227,7 +227,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 							FromID:        rel.StartID,
 							ToID:          rel.EndID,
 							Kind:          ad.WriteOwner,
-							RelProperties: map[string]any{ad.IsACL.String(): true, ad.IsInherited.String(): isInherited},
+							RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
 						}
 					}
 				}

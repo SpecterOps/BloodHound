@@ -1202,7 +1202,7 @@ func TestOwnsWriteOwnerPriorCollectorVersions(t *testing.T) {
 				})); err != nil {
 					t.Fatalf("error fetching Owns edges in integration test; %v", err)
 				} else {
-					require.Equal(t, 10, len(results))
+					require.Equal(t, 14, len(results))
 
 					for _, rel := range results {
 						if startNode, err := ops.FetchNode(tx, rel.StartID); err != nil {
@@ -1296,7 +1296,7 @@ func TestOwnsWriteOwnerPriorCollectorVersions(t *testing.T) {
 				})); err != nil {
 					t.Fatalf("error fetching WriteOwner edges in integration test; %v", err)
 				} else {
-					require.Equal(t, 8, len(results))
+					require.Equal(t, 12, len(results))
 
 					for _, rel := range results {
 						if startNode, err := ops.FetchNode(tx, rel.StartID); err != nil {
@@ -1352,11 +1352,11 @@ func TestOwnsWriteOwnerPriorCollectorVersions(t *testing.T) {
 
 							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited.ID {
 								// Domain1_User101_Owner -[WriteOwner]-> Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited
-								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User101_Owner.ID, startNode.ID)
+								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User104_WriteOwner.ID, startNode.ID)
 
 							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User8_OnlyNonabusableOwnerRightsInherited.ID {
 								// Domain1_User101_Owner -[WriteOwner]-> Domain1_User8_OnlyNonabusableOwnerRightsInherited
-								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User101_Owner.ID, startNode.ID)
+								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User104_WriteOwner.ID, startNode.ID)
 
 							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited.ID {
 								// Domain2_User2_WriteOwner -[WriteOwner]-> Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited
