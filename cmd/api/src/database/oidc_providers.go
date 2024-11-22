@@ -18,6 +18,8 @@ package database
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
@@ -30,6 +32,7 @@ const (
 // OIDCProviderData defines the interface required to interact with the oidc_providers table
 type OIDCProviderData interface {
 	CreateOIDCProvider(ctx context.Context, name, issuer, clientID string) (model.OIDCProvider, error)
+	UpdateOIDCProvider(ctx context.Context, ssoProvider model.SSOProvider) (model.OIDCProvider, error)
 }
 
 // CreateOIDCProvider creates a new entry for an OIDC provider as well as the associated SSO provider
@@ -60,4 +63,26 @@ func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, issuer, cli
 	})
 
 	return oidcProvider, err
+}
+
+// UpdateOIDCProvider updates an OIDC provider as well as the associated SSO provider
+func (s *BloodhoundDB) UpdateOIDCProvider(ctx context.Context, ssoProvider model.SSOProvider) (model.OIDCProvider, error) {
+	auditEntry := model.AuditEntry{
+		Action: model.AuditLogActionUpdateOIDCIdentityProvider,
+		Model:  ssoProvider.OIDCProvider, // Pointer is required to ensure success log contains updated fields after transaction
+	}
+
+	// update both the sso_providers, oidc_providers, and user_sessions rows in a single transaction
+	// If one of these requests errors, all changes will be rolled back
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+
+		if _, err := bhdb.UpdateSSOProvider(ctx, ssoProvider); err != nil {
+			return err
+		} else {
+			return CheckError(tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET client_id = ?, issuer = ?, updated_at = ? WHERE id = ?;", oidcProvidersTableName), ssoProvider.OIDCProvider.ClientID, ssoProvider.OIDCProvider.Issuer, time.Now().UTC(), ssoProvider.OIDCProvider.ID))
+		}
+	})
+
+	return *ssoProvider.OIDCProvider, err
 }

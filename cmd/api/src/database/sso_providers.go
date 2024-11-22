@@ -18,7 +18,9 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
@@ -37,6 +39,7 @@ type SSOProviderData interface {
 	GetSSOProviderById(ctx context.Context, id int32) (model.SSOProvider, error)
 	GetSSOProviderBySlug(ctx context.Context, slug string) (model.SSOProvider, error)
 	GetSSOProviderUsers(ctx context.Context, id int) (model.Users, error)
+	UpdateSSOProvider(ctx context.Context, ssoProvider model.SSOProvider) (model.SSOProvider, error)
 }
 
 // CreateSSOProvider creates an entry in the sso_providers table
@@ -144,4 +147,21 @@ func (s *BloodhoundDB) GetSSOProviderById(ctx context.Context, id int32) (model.
 	result := s.db.WithContext(ctx).Preload("OIDCProvider").Preload("SAMLProvider").Table(ssoProviderTableName).Where("id = ?", id).First(&provider)
 
 	return provider, CheckError(result)
+}
+
+// UpdateSSOProvider updates an entry in the sso_providers table
+func (s *BloodhoundDB) UpdateSSOProvider(ctx context.Context, ssoProvider model.SSOProvider) (model.SSOProvider, error) {
+	// Update the slug
+	ssoProvider.Slug = strings.ToLower(strings.ReplaceAll(ssoProvider.Name, " ", "-"))
+
+	auditEntry := model.AuditEntry{
+		Action: model.AuditLogActionUpdateSSOIdentityProvider,
+		Model:  &ssoProvider,
+	}
+
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET name = ?, slug = ?, updated_at = ? WHERE id = ?;", ssoProviderTableName), ssoProvider.Name, ssoProvider.Slug, time.Now().UTC(), ssoProvider.ID))
+	})
+
+	return ssoProvider, err
 }

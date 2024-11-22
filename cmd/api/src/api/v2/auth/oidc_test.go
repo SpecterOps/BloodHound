@@ -47,7 +47,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 		test.Request(t).
 			WithMethod(http.MethodPost).
 			WithURL(url).
-			WithBody(auth.CreateOIDCProviderRequest{
+			WithBody(auth.UpsertOIDCProviderRequest{
 				Name:     "Bloodhound gang",
 				Issuer:   "https://localhost/auth",
 				ClientID: "bloodhound",
@@ -71,7 +71,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 		test.Request(t).
 			WithMethod(http.MethodPost).
 			WithURL(url).
-			WithBody(auth.CreateOIDCProviderRequest{
+			WithBody(auth.UpsertOIDCProviderRequest{
 				Name:     "test",
 				Issuer:   "1234:not:a:url",
 				ClientID: "bloodhound",
@@ -82,7 +82,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	})
 
 	t.Run("error invalid Issuer", func(t *testing.T) {
-		request := auth.CreateOIDCProviderRequest{
+		request := auth.UpsertOIDCProviderRequest{
 			Issuer: "12345:bloodhound",
 		}
 		test.Request(t).
@@ -100,7 +100,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 		test.Request(t).
 			WithMethod(http.MethodPost).
 			WithURL(url).
-			WithBody(auth.CreateOIDCProviderRequest{
+			WithBody(auth.UpsertOIDCProviderRequest{
 				Name:     "test",
 				Issuer:   "https://localhost/auth",
 				ClientID: "bloodhound",

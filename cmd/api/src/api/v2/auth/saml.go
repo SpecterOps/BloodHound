@@ -188,6 +188,51 @@ func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, req
 	}
 }
 
+// UpdateSAMLProviderRequest updates an SAML provider entry given a valid request
+func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
+	if ssoProvider.SAMLProvider == nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+	} else if err := request.ParseMultipartForm(api.DefaultAPIPayloadReadLimitBytes); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if providerNames, hasProviderName := request.MultipartForm.Value["name"]; !hasProviderName {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"name\" parameter", request), response)
+	} else if numProviderNames := len(providerNames); numProviderNames == 0 || numProviderNames > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"name\" parameter", request), response)
+	} else if metadataXMLFileHandles, hasMetadataXML := request.MultipartForm.File["metadata"]; !hasMetadataXML {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"metadata\" parameter", request), response)
+	} else if numHeaders := len(metadataXMLFileHandles); numHeaders == 0 || numHeaders > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"metadata\" parameter", request), response)
+	} else if metadataXMLReader, err := metadataXMLFileHandles[0].Open(); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else {
+		defer metadataXMLReader.Close()
+
+		if metadataXML, err := io.ReadAll(metadataXMLReader); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		} else if metadata, err := samlsp.ParseMetadata(metadataXML); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		} else if ssoDescriptor, err := auth.GetIDPSingleSignOnDescriptor(metadata, saml.HTTPPostBinding); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(ssoDescriptor, saml.HTTPPostBinding); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
+		} else {
+			ssoProvider.Name = providerNames[0]
+
+			ssoProvider.SAMLProvider.Name = providerNames[0]
+			ssoProvider.SAMLProvider.DisplayName = providerNames[0]
+			ssoProvider.SAMLProvider.MetadataXML = metadataXML
+			ssoProvider.SAMLProvider.IssuerURI = metadata.EntityID
+			ssoProvider.SAMLProvider.SingleSignOnURI = ssoURL
+
+			if newSAMLProvider, err := s.db.UpdateSAMLIdentityProvider(request.Context(), ssoProvider); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
+			}
+		}
+	}
+}
+
 // Preserve old metadata endpoint
 func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request *http.Request) {
 	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableSSOProviderSlug]
