@@ -21,14 +21,15 @@ const WindowsAbuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                To abuse ownership of an object where the OWNER RIGHTS SID is explicitly granted privileges,
-                you can abuse the specific privileges granted to the OWNER RIGHTS SID.
-            <br />
-            <br />
-                Please refer to the abuse info for the specific privileges granted to OWNER RIGHTS at https://support.bloodhoundenterprise.io/hc/en-us/articles/17224136169371-About-BloodHound-Edges
+                To abuse ownership of an object where the OWNER RIGHTS SID is explicitly granted privileges, you can
+                abuse the specific privileges granted to the OWNER RIGHTS SID.
+                <br />
+                <br />
+                Please refer to the abuse info for the specific privileges granted to OWNER RIGHTS at
+                https://support.bloodhoundenterprise.io/hc/en-us/articles/17224136169371-About-BloodHound-Edges
             </Typography>
         </>
-    )
+    );
 };
 
 export default WindowsAbuse;

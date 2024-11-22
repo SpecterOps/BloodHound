@@ -23,8 +23,8 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
         <>
             <Typography variant='body2'>
                 When specific privileges on an object's DACL are explicitly granted to the "OWNER RIGHTS" SID (S-1-3-4),
-                implicit owner rights (e.g., WriteDacl) are blocked, and the owner is granted only the specific privileges 
-                granted to OWNER RIGHTS. This can be used to limit the rights of the owner of an object.
+                implicit owner rights (e.g., WriteDacl) are blocked, and the owner is granted only the specific
+                privileges granted to OWNER RIGHTS. This can be used to limit the rights of the owner of an object.
             </Typography>
         </>
     );

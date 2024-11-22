@@ -20,7 +20,10 @@ import { Link, Box } from '@mui/material';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://www.hub.trimarcsecurity.com/post/trimarc-whitepaper-owner-or-pwnd'>
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://www.hub.trimarcsecurity.com/post/trimarc-whitepaper-owner-or-pwnd'>
                 https://www.hub.trimarcsecurity.com/post/trimarc-whitepaper-owner-or-pwnd
             </Link>
             <br />
