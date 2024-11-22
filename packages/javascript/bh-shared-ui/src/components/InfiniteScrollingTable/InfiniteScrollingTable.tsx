@@ -67,9 +67,10 @@ const createItemData = memoize((items, onClick) => ({
 }));
 
 const Row = memo(function Row({ data, index, style }: ListChildComponentProps) {
+    const tableStyle = useStyles();
+
     const { items, onClick } = data;
     const item = items[index];
-    const tableStyle = useStyles();
     const itemClass = index % 2 ? tableStyle.oddItem : tableStyle.evenItem;
 
     if (item === undefined) {
