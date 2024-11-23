@@ -28,23 +28,23 @@ import {
 } from '@mui/material';
 import { useState, FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { UpsertSAMLProviderFormInputs } from 'js-client-library';
+import { SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-library';
 
 const UpsertSAMLProviderForm: FC<{
     error?: string;
+    oldSSOProvider?: SSOProvider;
     onClose: () => void;
     onSubmit: (data: UpsertSAMLProviderFormInputs) => void;
-}> = ({ error, onClose, onSubmit }) => {
+}> = ({ error, onClose, oldSSOProvider, onSubmit }) => {
     const theme = useTheme();
     const {
         control,
         handleSubmit,
         reset,
-
         formState: { errors },
     } = useForm<UpsertSAMLProviderFormInputs>({
         defaultValues: {
-            name: '',
+            name: oldSSOProvider?.name ?? '',
             metadata: undefined,
         },
     });
@@ -57,7 +57,7 @@ const UpsertSAMLProviderForm: FC<{
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
             <DialogContent>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
@@ -144,7 +144,7 @@ const UpsertSAMLProviderForm: FC<{
                     Cancel
                 </Button>
                 <Button data-testid='create-saml-provider-dialog_button-save' type='submit'>
-                    Submit
+                    {oldSSOProvider ? 'Confirm Edits' : 'Submit'}
                 </Button>
             </DialogActions>
         </form>

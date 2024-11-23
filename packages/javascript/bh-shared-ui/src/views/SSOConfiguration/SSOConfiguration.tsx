@@ -96,6 +96,10 @@ const SSOConfiguration: FC = () => {
         return listSSOProvidersQuery.data?.find(({ id }) => id === selectedSSOProviderId);
     }, [selectedSSOProviderId, listSSOProvidersQuery.data]);
 
+    const selectedSSOProviderToUpdate = useMemo(() => {
+        return listSSOProvidersQuery.data?.find(({ id }) => id === ssoProviderIdToDeleteOrUpdate);
+    }, [ssoProviderIdToDeleteOrUpdate, listSSOProvidersQuery.data]);
+
     /* Event Handlers */
 
     const openSAMLProviderDialog = () => {
@@ -280,14 +284,14 @@ const SSOConfiguration: FC = () => {
             </PageWithTitle>
             <UpsertSAMLProviderDialog
                 open={dialogOpen === 'SAML'}
-                isUpdate={dialogOpen === 'SAML' && !!ssoProviderIdToDeleteOrUpdate}
+                oldSSOProvider={dialogOpen === 'SAML' ? selectedSSOProviderToUpdate : undefined}
                 error={createProviderError}
                 onClose={closeDialog}
                 onSubmit={upsertSAMLProvider}
             />
             <UpsertOIDCProviderDialog
                 open={dialogOpen === 'OIDC'}
-                isUpdate={dialogOpen === 'OIDC' && !!ssoProviderIdToDeleteOrUpdate}
+                oldSSOProvider={dialogOpen === 'OIDC' ? selectedSSOProviderToUpdate : undefined}
                 error={createProviderError}
                 onClose={closeDialog}
                 onSubmit={upsertOIDCProvider}
