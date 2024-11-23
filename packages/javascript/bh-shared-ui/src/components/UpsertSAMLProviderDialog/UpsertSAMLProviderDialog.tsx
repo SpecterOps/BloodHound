@@ -15,15 +15,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Dialog, DialogTitle } from '@mui/material';
-import CreateSAMLProviderForm from '../CreateSAMLProviderForm';
-import { CreateSAMLProviderFormInputs } from '../CreateSAMLProviderForm/CreateSAMLProviderForm';
+import { UpsertSAMLProviderFormInputs } from 'js-client-library';
+import UpsertSAMLProviderForm from '../UpsertSAMLProviderForm';
 
-const CreateSAMLProviderDialog: React.FC<{
+const UpsertSAMLProviderDialog: React.FC<{
     open: boolean;
     error?: string;
+    isUpdate: boolean;
     onClose: () => void;
-    onSubmit: (data: CreateSAMLProviderFormInputs) => void;
-}> = ({ open, error, onClose, onSubmit }) => {
+    onSubmit: (data: UpsertSAMLProviderFormInputs) => void;
+}> = ({ open, error, isUpdate, onClose, onSubmit }) => {
     return (
         <Dialog
             open={open}
@@ -34,10 +35,10 @@ const CreateSAMLProviderDialog: React.FC<{
                 // @ts-ignore
                 'data-testid': 'create-saml-provider-dialog',
             }}>
-            <DialogTitle>Create SAML Provider</DialogTitle>
-            <CreateSAMLProviderForm error={error} onClose={onClose} onSubmit={onSubmit} />
+            <DialogTitle>{isUpdate ? 'Edit' : 'Create'} SAML Provider</DialogTitle>
+            <UpsertSAMLProviderForm error={error} onClose={onClose} onSubmit={onSubmit} />
         </Dialog>
     );
 };
 
-export default CreateSAMLProviderDialog;
+export default UpsertSAMLProviderDialog;

@@ -149,7 +149,12 @@ export interface PutUserAuthSecretRequest {
     needsPasswordReset: boolean;
 }
 
-export interface CreateOIDCProviderRequest {
+export interface UpsertSAMLProviderFormInputs {
+    name: string;
+    metadata: FileList;
+}
+
+export interface UpsertOIDCProviderRequest {
     name: string;
     client_id: string;
     issuer: string;

@@ -18,20 +18,21 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, Dialog, DialogTitle, DialogContent, DialogActions, Grid, TextField } from '@mui/material';
 import { FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { CreateOIDCProviderRequest } from 'js-client-library';
+import { UpsertOIDCProviderRequest } from 'js-client-library';
 
-const CreateOIDCProviderDialog: FC<{
+const UpsertOIDCProviderDialog: FC<{
     open: boolean;
     error?: string;
+    isUpdate: boolean;
     onClose: () => void;
-    onSubmit: (data: CreateOIDCProviderRequest) => void;
-}> = ({ open, error, onClose, onSubmit: _onSubmit }) => {
+    onSubmit: (data: UpsertOIDCProviderRequest) => void;
+}> = ({ open, error, isUpdate, onClose, onSubmit: _onSubmit }) => {
     const {
         control,
         handleSubmit,
         reset,
         formState: { errors },
-    } = useForm<CreateOIDCProviderRequest>({
+    } = useForm<UpsertOIDCProviderRequest>({
         defaultValues: {
             name: '',
             client_id: '',
@@ -39,7 +40,7 @@ const CreateOIDCProviderDialog: FC<{
         },
     });
 
-    const onSubmit = (data: CreateOIDCProviderRequest) => {
+    const onSubmit = (data: UpsertOIDCProviderRequest) => {
         _onSubmit(data);
         reset();
     };
@@ -59,7 +60,7 @@ const CreateOIDCProviderDialog: FC<{
                 // @ts-ignore
                 'data-testid': 'create-oidc-provider-dialog',
             }}>
-            <DialogTitle>Create OIDC Provider</DialogTitle>
+            <DialogTitle>{isUpdate ? 'Edit' : 'Create'} OIDC Provider</DialogTitle>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <DialogContent>
                     <Grid container spacing={2}>
@@ -156,4 +157,4 @@ const CreateOIDCProviderDialog: FC<{
     );
 };
 
-export default CreateOIDCProviderDialog;
+export default UpsertOIDCProviderDialog;

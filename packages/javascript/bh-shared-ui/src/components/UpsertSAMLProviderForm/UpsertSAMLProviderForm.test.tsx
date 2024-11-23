@@ -16,13 +16,13 @@
 
 import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor } from '../../test-utils';
-import CreateSAMLProviderForm from './CreateSAMLProviderForm';
+import UpsertSAMLProviderForm from './UpsertSAMLProviderForm';
 
-describe('CreateSAMLProviderForm', () => {
+describe('UpsertSAMLProviderForm', () => {
     it('should render inputs, labels, and action buttons', () => {
         const testOnClose = vi.fn();
         const testOnSubmit = vi.fn();
-        render(<CreateSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
+        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
 
         expect(screen.getByLabelText('SAML Provider Name')).toBeInTheDocument();
 
@@ -37,7 +37,7 @@ describe('CreateSAMLProviderForm', () => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSubmit = vi.fn();
-        render(<CreateSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
+        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
 
         await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
@@ -48,7 +48,7 @@ describe('CreateSAMLProviderForm', () => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSubmit = vi.fn();
-        render(<CreateSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
+        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
 
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 
@@ -65,7 +65,7 @@ describe('CreateSAMLProviderForm', () => {
         const testOnSubmit = vi.fn();
         const validProviderName = 'test-provider-name';
         const validMetadata = new File([], 'test-metadata.xml');
-        render(<CreateSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
+        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
 
         await user.type(screen.getByLabelText('SAML Provider Name'), validProviderName);
 

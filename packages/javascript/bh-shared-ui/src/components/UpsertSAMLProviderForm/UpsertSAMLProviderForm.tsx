@@ -28,16 +28,12 @@ import {
 } from '@mui/material';
 import { useState, FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { UpsertSAMLProviderFormInputs } from 'js-client-library';
 
-export interface CreateSAMLProviderFormInputs {
-    name: string;
-    metadata: FileList;
-}
-
-const CreateSAMLProviderForm: FC<{
+const UpsertSAMLProviderForm: FC<{
     error?: string;
     onClose: () => void;
-    onSubmit: (data: CreateSAMLProviderFormInputs) => void;
+    onSubmit: (data: UpsertSAMLProviderFormInputs) => void;
 }> = ({ error, onClose, onSubmit }) => {
     const theme = useTheme();
     const {
@@ -46,7 +42,7 @@ const CreateSAMLProviderForm: FC<{
         reset,
 
         formState: { errors },
-    } = useForm<CreateSAMLProviderFormInputs>({
+    } = useForm<UpsertSAMLProviderFormInputs>({
         defaultValues: {
             name: '',
             metadata: undefined,
@@ -155,4 +151,4 @@ const CreateSAMLProviderForm: FC<{
     );
 };
 
-export default CreateSAMLProviderForm;
+export default UpsertSAMLProviderForm;

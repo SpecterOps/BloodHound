@@ -642,35 +642,22 @@ class BHEAPIClient {
     getSAMLProvider = (samlProviderId: string, options?: types.RequestOptions) =>
         this.baseClient.get(`/api/v2/saml/providers/${samlProviderId}`, options);
 
-    createSAMLProvider = (
-        data: {
-            name: string;
-            displayName: string;
-            signingCertificate: string;
-            issuerUri: string;
-            singleSignOnUri: string;
-            principalAttributeMappings: string[];
-        },
-        options?: types.RequestOptions
-    ) =>
-        this.baseClient.post(
-            `/api/v2/saml`,
-            {
-                name: data.name,
-                display_name: data.displayName,
-                signing_certificate: data.signingCertificate,
-                issuer_uri: data.issuerUri,
-                single_signon_uri: data.singleSignOnUri,
-                principal_attribute_mappings: data.principalAttributeMappings,
-            },
-            options
-        );
-
     createSAMLProviderFromFile = (data: { name: string; metadata: File }, options?: types.RequestOptions) => {
         const formData = new FormData();
         formData.append('name', data.name);
         formData.append('metadata', data.metadata);
         return this.baseClient.post(`/api/v2/saml/providers`, formData, options);
+    };
+
+    updateSAMLProviderFromFile = (
+        ssoProviderId: types.SSOProvider['id'],
+        data: { name: string; metadata: File },
+        options?: types.RequestOptions
+    ) => {
+        const formData = new FormData();
+        formData.append('name', data.name);
+        formData.append('metadata', data.metadata);
+        return this.baseClient.put(`/api/v2/sso-providers/${ssoProviderId}`, formData, options);
     };
 
     validateSAMLProvider = (
@@ -700,8 +687,11 @@ class BHEAPIClient {
     deleteSSOProvider = (ssoProviderId: types.SSOProvider['id'], options?: types.RequestOptions) =>
         this.baseClient.delete(`/api/v2/sso-providers/${ssoProviderId}`, options);
 
-    createOIDCProvider = (oidcProvider: types.CreateOIDCProviderRequest) =>
+    createOIDCProvider = (oidcProvider: types.UpsertOIDCProviderRequest) =>
         this.baseClient.post(`/api/v2/sso-providers/oidc`, oidcProvider);
+
+    updateOIDCProvider = (ssoProviderId: types.SSOProvider['id'], oidcProvider: types.UpsertOIDCProviderRequest) =>
+        this.baseClient.put(`/api/v2/sso-providers/${ssoProviderId}`, oidcProvider);
 
     listSSOProviders = (options?: types.RequestOptions) =>
         this.baseClient.get<types.ListSSOProvidersResponse>(`/api/v2/sso-providers`, options);
