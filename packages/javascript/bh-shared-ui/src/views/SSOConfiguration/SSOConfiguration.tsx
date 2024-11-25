@@ -44,7 +44,7 @@ const SSOConfiguration: FC = () => {
     const [ssoProviderIdToDeleteOrUpdate, setSSOProviderIdToDeleteOrUpdate] = useState<SSOProvider['id'] | undefined>();
     const [dialogOpen, setDialogOpen] = useState<'SAML' | 'OIDC' | 'DELETE' | ''>('');
     const [nameFilter, setNameFilter] = useState<string>('');
-    const [createProviderError, setCreateProviderError] = useState<string>('');
+    const [upsertProviderError, setUpsertProviderError] = useState<string>('');
     const [typeSortOrder, setTypeSortOrder] = useState<SortOrder>();
 
     const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
@@ -115,7 +115,7 @@ const SSOConfiguration: FC = () => {
     };
 
     const closeDialog = () => {
-        setCreateProviderError('');
+        setUpsertProviderError('');
         setDialogOpen('');
         setSSOProviderIdToDeleteOrUpdate(undefined);
     };
@@ -171,7 +171,7 @@ const SSOConfiguration: FC = () => {
     };
 
     const upsertSAMLProvider = async (samlProvider: UpsertSAMLProviderFormInputs) => {
-        setCreateProviderError('');
+        setUpsertProviderError('');
         try {
             const payload = { name: samlProvider.name, metadata: samlProvider.metadata && samlProvider.metadata[0] };
             if (ssoProviderIdToDeleteOrUpdate) {
@@ -185,14 +185,14 @@ const SSOConfiguration: FC = () => {
             closeDialog();
         } catch (error) {
             console.error(error);
-            setCreateProviderError(
+            setUpsertProviderError(
                 `Unable to ${ssoProviderIdToDeleteOrUpdate ? 'update' : 'create new'} SAML Provider configuration. Please try again.`
             );
         }
     };
 
     const upsertOIDCProvider = async (oidcProvider: UpsertOIDCProviderRequest) => {
-        setCreateProviderError('');
+        setUpsertProviderError('');
         try {
             if (ssoProviderIdToDeleteOrUpdate) {
                 await apiClient.updateOIDCProvider(ssoProviderIdToDeleteOrUpdate, oidcProvider);
@@ -209,7 +209,7 @@ const SSOConfiguration: FC = () => {
             closeDialog();
         } catch (error) {
             console.error(error);
-            setCreateProviderError(
+            setUpsertProviderError(
                 `Unable to ${ssoProviderIdToDeleteOrUpdate ? 'update' : 'create new'} OIDC Provider configuration. Please try again.`
             );
         }
@@ -291,14 +291,14 @@ const SSOConfiguration: FC = () => {
             <UpsertSAMLProviderDialog
                 open={dialogOpen === 'SAML'}
                 oldSSOProvider={dialogOpen === 'SAML' ? selectedSSOProviderToUpdate : undefined}
-                error={createProviderError}
+                error={upsertProviderError}
                 onClose={closeDialog}
                 onSubmit={upsertSAMLProvider}
             />
             <UpsertOIDCProviderDialog
                 open={dialogOpen === 'OIDC'}
                 oldSSOProvider={dialogOpen === 'OIDC' ? selectedSSOProviderToUpdate : undefined}
-                error={createProviderError}
+                error={upsertProviderError}
                 onClose={closeDialog}
                 onSubmit={upsertOIDCProvider}
             />
