@@ -31,14 +31,14 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// UpsertOIDCProviderRequest represents the body of the CreateOIDCProvider endpoint
+// UpsertOIDCProviderRequest represents the body of create & update provider endpoints
 type UpsertOIDCProviderRequest struct {
 	Name     string `json:"name" validate:"required"`
 	Issuer   string `json:"issuer"  validate:"url"`
 	ClientID string `json:"client_id" validate:"required"`
 }
 
-// UpdateOIDCProviderRequest updates an OIDC provider entry given a valid request
+// UpdateOIDCProviderRequest updates an OIDC provider, support for only partial payloads
 func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	var upsertReq UpsertOIDCProviderRequest
 
@@ -46,13 +46,23 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&upsertReq, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if validated := validation.Validate(upsertReq); validated != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, validated.Error(), request), response)
 	} else {
-		ssoProvider.Name = upsertReq.Name
+		if upsertReq.Name != "" {
+			ssoProvider.Name = upsertReq.Name
+		}
 
-		ssoProvider.OIDCProvider.ClientID = upsertReq.ClientID
-		ssoProvider.OIDCProvider.Issuer = upsertReq.Issuer
+		if upsertReq.ClientID != "" {
+			ssoProvider.OIDCProvider.ClientID = upsertReq.ClientID
+		}
+
+		if upsertReq.Issuer != "" {
+			if err := validation.ValidUrl(upsertReq.Issuer); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "issuer url is invalid", request), response)
+				return
+			}
+
+			ssoProvider.OIDCProvider.Issuer = upsertReq.Issuer
+		}
 
 		if oidcProvider, err := s.db.UpdateOIDCProvider(request.Context(), ssoProvider); err != nil {
 			api.HandleDatabaseError(request, response, err)
@@ -64,7 +74,7 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 
 // CreateOIDCProvider creates an OIDC provider entry given a valid request
 func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, request *http.Request) {
-	var upsertReq  UpsertOIDCProviderRequest
+	var upsertReq UpsertOIDCProviderRequest
 
 	if err := api.ReadJSONRequestPayloadLimited(&upsertReq, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)

@@ -187,63 +187,70 @@ func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, req
 	}
 }
 
-// UpdateSAMLProviderRequest updates an SAML provider entry given a valid request
+// UpdateSAMLProviderRequest updates an SAML provider entry, support for partial payloads
 func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	if ssoProvider.SAMLProvider == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if err := request.ParseMultipartForm(api.DefaultAPIPayloadReadLimitBytes); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if providerNames, hasProviderName := request.MultipartForm.Value["name"]; !hasProviderName {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"name\" parameter", request), response)
-	} else if numProviderNames := len(providerNames); numProviderNames == 0 || numProviderNames > 1 {
+	} else if providerNames, hasProviderName := request.MultipartForm.Value["name"]; len(providerNames) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"name\" parameter", request), response)
-	} else if metadataXMLFileHandles, hasMetadataXML := request.MultipartForm.File["metadata"]; !hasMetadataXML {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"metadata\" parameter", request), response)
-	} else if numHeaders := len(metadataXMLFileHandles); numHeaders == 0 || numHeaders > 1 {
+	} else if metadataXMLFileHandles, hasMetadataXML := request.MultipartForm.File["metadata"]; len(metadataXMLFileHandles) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"metadata\" parameter", request), response)
-	} else if metadataXMLReader, err := metadataXMLFileHandles[0].Open(); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {
-		defer metadataXMLReader.Close()
-
-		if metadataXML, err := io.ReadAll(metadataXMLReader); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if metadata, err := samlsp.ParseMetadata(metadataXML); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(metadata, saml.HTTPPostBinding); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
-		} else {
+		if hasProviderName {
 			ssoProvider.Name = providerNames[0]
 
 			ssoProvider.SAMLProvider.Name = providerNames[0]
 			ssoProvider.SAMLProvider.DisplayName = providerNames[0]
-			ssoProvider.SAMLProvider.MetadataXML = metadataXML
-			ssoProvider.SAMLProvider.IssuerURI = metadata.EntityID
-			ssoProvider.SAMLProvider.SingleSignOnURI = ssoURL
+		}
 
-			// It's possible to update the ACS url which will be reflected in the metadataXML, we need to guarantee it is set to only what we expect if it is present
-			if acsUrl, err := auth.GetAssertionConsumerServiceURL(metadata, saml.HTTPPostBinding); err == nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have an ACS location that supports HTTP POST binding", request), response)
-				if !strings.Contains(acsUrl, model.SAMLRootURIVersionMap[ssoProvider.SAMLProvider.RootURIVersion]) {
-					var validUri bool
-					for rootUriVersion, path := range model.SAMLRootURIVersionMap {
-						if strings.Contains(acsUrl, path) {
-							ssoProvider.SAMLProvider.RootURIVersion = rootUriVersion
-							validUri = true
-							break
+		if hasMetadataXML {
+			if metadataXMLReader, err := metadataXMLFileHandles[0].Open(); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			} else {
+				defer metadataXMLReader.Close()
+
+				if metadataXML, err := io.ReadAll(metadataXMLReader); err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+					return
+				} else if metadata, err := samlsp.ParseMetadata(metadataXML); err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+					return
+				} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(metadata, saml.HTTPPostBinding); err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
+					return
+				} else {
+					ssoProvider.SAMLProvider.MetadataXML = metadataXML
+					ssoProvider.SAMLProvider.IssuerURI = metadata.EntityID
+					ssoProvider.SAMLProvider.SingleSignOnURI = ssoURL
+
+					// It's possible to update the ACS url which will be reflected in the metadataXML, we need to guarantee it is set to only what we expect if it is present
+					if acsUrl, err := auth.GetAssertionConsumerServiceURL(metadata, saml.HTTPPostBinding); err == nil {
+						if !strings.Contains(acsUrl, model.SAMLRootURIVersionMap[ssoProvider.SAMLProvider.RootURIVersion]) {
+							var validUri bool
+							for rootUriVersion, path := range model.SAMLRootURIVersionMap {
+								if strings.Contains(acsUrl, path) {
+									ssoProvider.SAMLProvider.RootURIVersion = rootUriVersion
+									validUri = true
+									break
+								}
+							}
+							if !validUri {
+								api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a valid ACS location", request), response)
+								return
+							}
 						}
-					}
-					if !validUri {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a valid ACS location", request), response)
 					}
 				}
 			}
+		}
 
-			if newSAMLProvider, err := s.db.UpdateSAMLIdentityProvider(request.Context(), ssoProvider); err != nil {
-				api.HandleDatabaseError(request, response, err)
-			} else {
-				api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
-			}
+		if newSAMLProvider, err := s.db.UpdateSAMLIdentityProvider(request.Context(), ssoProvider); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
 		}
 	}
 }
