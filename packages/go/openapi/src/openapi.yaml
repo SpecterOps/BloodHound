@@ -642,6 +642,8 @@ paths:
   # attack paths
   /api/v2/domains/{domain_id}/attack-path-findings:
     $ref: './paths/attack-paths.domains.id.attack-path-findings.yaml'
+  /api/v2/domains/{environment_id}/finding-trends:
+    $ref: './paths/attack-paths.environment.id.finding-trends.yaml'
   /api/v2/attack-path-types:
     $ref: './paths/attack-paths.attack-path-types.yaml'
   /api/v2/attack-paths:
@@ -658,6 +660,8 @@ paths:
   # risk posture
   /api/v2/posture-stats:
     $ref: './paths/risk-posture.posture-stats.yaml'
+  /api/v2/domains/{environment_id}/posture-history/{data_type}:
+    $ref: './paths/risk-posture.environment.id.posture-history.type.yaml'
 
   # meta entity
   /api/v2/meta/{object_id}:
