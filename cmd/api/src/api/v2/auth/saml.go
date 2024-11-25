@@ -255,7 +255,7 @@ func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWrit
 	}
 }
 
-// Preserve old metadata endpoint
+// Preserve old metadata endpoint for saml providers
 func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request *http.Request) {
 	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableSSOProviderSlug]
 
@@ -274,6 +274,22 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 			if _, err := response.Write(content); err != nil {
 				log.Errorf("[SAML] Failed to write response for serving metadata: %v", err)
 			}
+		}
+	}
+}
+
+// Provide the saml provider certifcate
+func (s ManagementResource) ServeSigningCertificate(response http.ResponseWriter, request *http.Request) {
+	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableSSOProviderSlug]
+
+	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if ssoProvider.SAMLProvider == nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+	} else {
+		response.Header().Set(headers.ContentDisposition.String(), fmt.Sprintf("attachment; filename=\"%s-signing-certificate.txt\"", ssoProvider.Slug))
+		if _, err := response.Write([]byte(s.config.SAML.ServiceProviderCertificate)); err != nil {
+			log.Errorf("[SAML] Failed to write response for serving signing certificate: %v", err)
 		}
 	}
 }
