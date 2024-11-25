@@ -101,7 +101,7 @@ type PostureStat = TimestampFields & {
 export type PostureResponse = PaginatedResponse<PostureStat[]>;
 
 type PostureFindingTrend = {
-    domain_sid: string;
+    environment_id: string;
     finding: string;
     finding_count_start: number;
     finding_count_end: number;
