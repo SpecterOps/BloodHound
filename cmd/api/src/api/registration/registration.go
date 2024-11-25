@@ -32,7 +32,7 @@ import (
 	"github.com/specterops/bloodhound/src/queries"
 )
 
-func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, db *database.BloodhoundDB, identityResolver auth.IdentityResolver, authenticator api.Authenticator) {
+func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator) {
 	// Set up the middleware stack
 	routerInst.UsePrerouting(middleware.ContextMiddleware)
 	routerInst.UsePrerouting(middleware.CORSMiddleware())
@@ -75,6 +75,6 @@ func RegisterFossRoutes(
 		routerInst.PathPrefix("/ui", static.AssetHandler),
 	)
 
-	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer)
-	NewV2API(cfg, resources, routerInst, authenticator)
+	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator)
+	NewV2API(resources, routerInst)
 }

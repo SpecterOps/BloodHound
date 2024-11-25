@@ -484,7 +484,7 @@ func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString strin
 		log.Infof("Unable to find session %d", sessionID)
 		return auth.Context{}, ErrInvalidAuth
 	} else if session.Expired() {
-		log.Infof("Session %s is expired", sessionID)
+		log.Infof("Session %d is expired", sessionID)
 		return auth.Context{}, ErrInvalidAuth
 	} else {
 		authContext := auth.Context{

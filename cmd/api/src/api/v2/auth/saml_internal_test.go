@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package saml
+package auth
 
 import (
 	"context"
@@ -28,7 +28,6 @@ import (
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
@@ -40,52 +39,30 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func SSOProviderFromResource(resource ProviderResource) model.SSOProvider {
-	return model.SSOProvider{
-		Type:         model.SessionAuthProviderSAML,
-		Name:         resource.serviceProvider.Config.Name,
-		Slug:         resource.serviceProvider.Config.Name,
-		SAMLProvider: &resource.serviceProvider.Config,
-		Serial:       model.Serial{ID: resource.serviceProvider.Config.SSOProviderID.Int32},
-	}
-}
-
 func TestAuth_CreateSSOSession(t *testing.T) {
 	var (
-		username = "harls"
-		user     = model.User{
+		gothamSAML = model.SAMLProvider{Serial: model.Serial{ID: 1}}
+		gothamSSO  = model.SSOProvider{SAMLProvider: &gothamSAML, Serial: model.Serial{ID: 1}, Type: model.SessionAuthProviderSAML}
+		username   = "harls"
+		user       = model.User{
 			PrincipalName: username,
-			SAMLProvider: &model.SAMLProvider{
-				Serial: model.Serial{ID: 1},
-			},
-			SSOProviderID:  null.Int32From(1),
-			SAMLProviderID: null.Int32From(1),
+			SSOProviderID: null.Int32From(1),
 		}
 
 		mockCtrl          = gomock.NewController(t)
 		mockDB            = dbmocks.NewMockDatabase(mockCtrl)
 		testAuthenticator = api.NewAuthenticator(config.Configuration{}, mockDB, dbmocks.NewMockAuthContextInitializer(mockCtrl))
 
-		resource = NewProviderResource(
-			mockDB,
-			config.Configuration{RootURL: serde.MustParseURL("https://example.com")},
-			bhsaml.ServiceProvider{
-				Config: model.SAMLProvider{
-					Serial:        model.Serial{ID: 1},
-					SSOProviderID: null.Int32From(1),
-				},
-			},
-			func(request *http.Request, response http.ResponseWriter, statusCode int, message string) {},
-		)
+		hostUrl = serde.MustParseURL("https://example.com")
 
 		testAssertion = &saml.Assertion{
 			AttributeStatements: []saml.AttributeStatement{{
 				Attributes: []saml.Attribute{{
 					FriendlyName: "uid",
-					Name:         bhsaml.XMLSOAPClaimsEmailAddress,
-					NameFormat:   bhsaml.ObjectIDAttributeNameFormat,
+					Name:         model.XMLSOAPClaimsEmailAddress,
+					NameFormat:   model.ObjectIDAttributeNameFormat,
 					Values: []saml.AttributeValue{{
-						Type:  bhsaml.XMLTypeString,
+						Type:  model.XMLTypeString,
 						Value: username,
 					}},
 				}},
@@ -95,7 +72,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	httpRequest, _ := http.NewRequestWithContext(
-		context.WithValue(context.TODO(), ctx.ValueKey, &ctx.Context{Host: &resource.cfg.RootURL.URL}),
+		context.WithValue(context.TODO(), ctx.ValueKey, &ctx.Context{Host: &hostUrl.URL}),
 		http.MethodPost,
 		"http://localhost",
 		nil,
@@ -116,10 +93,10 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(user, nil)
 		mockDB.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
 
-		principalName, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
+		principalName, err := gothamSAML.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
-		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, SSOProviderFromResource(resource))
+		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSSO)
 
 		require.Regexp(t, expectedCookieContent, response.Header().Get(headers.SetCookie.String()))
 		require.Equal(t, "https://example.com/ui", response.Header().Get(headers.Location.String()))
@@ -138,10 +115,10 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 				require.Equal(t, database.ErrNotFound, log.Fields["error"])
 			}
 		})
-		principalName, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
+		principalName, err := gothamSAML.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
-		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, SSOProviderFromResource(resource))
+		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSSO)
 
 		require.Equal(t, http.StatusForbidden, response.Code)
 	})
@@ -160,10 +137,10 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{}, nil)
 
-		principalName, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
+		principalName, err := gothamSAML.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
-		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, SSOProviderFromResource(resource))
+		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSSO)
 
 		require.Equal(t, http.StatusForbidden, response.Code)
 	})
@@ -180,18 +157,20 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 			}
 		})
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{
-			SAMLProviderID: null.Int32From(2),
-			SAMLProvider: &model.SAMLProvider{
-				Serial: model.Serial{
-					ID: 2,
+			SSOProviderID: null.Int32From(2),
+			SSOProvider: &model.SSOProvider{
+				SAMLProvider: &model.SAMLProvider{
+					Serial: model.Serial{
+						ID: 2,
+					},
 				},
 			},
 		}, nil)
 
-		principalName, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
+		principalName, err := gothamSAML.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
-		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, SSOProviderFromResource(resource))
+		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSSO)
 
 		require.Equal(t, http.StatusForbidden, response.Code)
 	})
@@ -199,7 +178,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 	t.Run("Correctly fails with SAML assertion error if assertion is invalid", func(t *testing.T) {
 		testAssertion.AttributeStatements[0].Attributes[0].Values = nil
 
-		_, err := resource.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
-		require.ErrorIs(t, err, ErrorSAMLAssertion)
+		_, err := gothamSAML.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
+		require.ErrorIs(t, err, model.ErrSAMLAssertion)
 	})
 }

@@ -61,9 +61,8 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 		require.NoError(t, err)
 
 		user, err := dbInst.CreateUser(testCtx, model.User{
-			SSOProviderID:  samlProvider.SSOProviderID,
-			SAMLProviderID: null.Int32From(samlProvider.ID),
-			PrincipalName:  userPrincipal,
+			SSOProviderID: samlProvider.SSOProviderID,
+			PrincipalName: userPrincipal,
 		})
 		require.NoError(t, err)
 
@@ -73,7 +72,6 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 		user, err = dbInst.GetUser(testCtx, user.ID)
 		require.NoError(t, err)
 		assert.Equal(t, null.NewInt32(0, false), user.SSOProviderID)
-		assert.Equal(t, null.NewInt32(0, false), user.SAMLProviderID)
 	})
 
 	t.Run("successfully delete an SSO provider associated with an OIDC provider", func(t *testing.T) {
