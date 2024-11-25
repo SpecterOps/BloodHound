@@ -12721,7 +12721,7 @@
                           "AcceptedUntil": "2024-08-28T21:21:40.845Z",
                           "ImpactPercentage": 12,
                           "ImpactCount": 2,
-                          "ExposurePercentage": 24,
+                          "ExposurePercentage": 0.24,
                           "ExposureCount": 4,
                           "Severity": "high",
                           "Accepted": true
@@ -12810,8 +12810,6 @@
                           "accepted_until": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 12,
                           "ImpactCount": 2,
-                          "ExposurePercentage": 24,
-                          "ExposureCount": 4,
                           "Severity": "high",
                           "Accepted": true
                         }
@@ -12846,8 +12844,6 @@
                           "accepted_until": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0,
                           "ImpactCount": 0,
-                          "ExposurePercentage": 0,
-                          "ExposureCount": 0,
                           "Severity": "",
                           "Accepted": true
                         }
@@ -16174,14 +16170,6 @@
                 "format": "double"
               },
               "ImpactCount": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "ExposurePercentage": {
-                "type": "number",
-                "format": "double"
-              },
-              "ExposureCount": {
                 "type": "integer",
                 "format": "int64"
               },

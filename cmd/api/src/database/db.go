@@ -124,7 +124,6 @@ type Database interface {
 	DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
 	InitializeSecretAuth(ctx context.Context, adminUser model.User, authSecret model.AuthSecret) (model.Installation, error)
 
-
 	// SSO
 	SSOProviderData
 	OIDCProviderData
