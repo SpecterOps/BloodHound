@@ -400,8 +400,10 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		user.PrincipalName = updateUserRequest.Principal
 		user.IsDisabled = updateUserRequest.IsDisabled
 
+		loggedInUser, _ := auth.GetUserFromAuthCtx(authCtx.AuthCtx)
+
 		if user.IsDisabled {
-			if loggedInUser, _ := auth.GetUserFromAuthCtx(authCtx.AuthCtx); user.ID == loggedInUser.ID {
+			if user.ID == loggedInUser.ID {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSelfDisable, request), response)
 				return
 			} else if userSessions, err := s.db.LookupActiveSessionsByUser(request.Context(), user); err != nil {
@@ -445,6 +447,17 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			// Default SSOProviderID to null if the update request contains no SSOProviderID
 			user.SSOProvider = nil
 			user.SSOProviderID = null.NewInt32(0, false)
+		}
+
+		// Prevent a user from modifying their own roles/permissions
+		if user.ID == loggedInUser.ID {
+			if !slices.Equal(roles.IDs(), loggedInUser.Roles.IDs()) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSelfRoleChange, request), response)
+				return
+			} else if !user.SSOProviderID.Equal(loggedInUser.SSOProviderID) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSelfSSOChange, request), response)
+				return
+			}
 		}
 
 		if err := s.db.UpdateUser(request.Context(), user); err != nil {
