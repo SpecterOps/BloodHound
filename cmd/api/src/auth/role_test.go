@@ -141,6 +141,7 @@ func testRoleAccess(t *testing.T, roleName string) {
 			userClient, ok := lab.Unpack(harness, userClientFixture)
 			assert.True(ok)
 
+			// TODO when formally deprecated update this to another endpoint
 			_, err := userClient.ListSAMLIdentityProviders()
 			if role.Permissions.Has(auth.Permissions().AuthManageProviders) {
 				assert.Nil(err)

@@ -28,15 +28,13 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	authapi "github.com/specterops/bloodhound/src/api/v2/auth"
 	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 )
 
-func registerV2Auth(cfg config.Configuration, db database.Database, permissions auth.PermissionSet, routerInst *router.Router, authenticator api.Authenticator) {
+func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissions auth.PermissionSet) {
 	var (
-		loginResource      = authapi.NewLoginResource(cfg, authenticator, db)
-		managementResource = authapi.NewManagementResource(cfg, db, auth.NewAuthorizer(db), authenticator)
+		loginResource      = authapi.NewLoginResource(resources.Config, resources.Authenticator, resources.DB)
+		managementResource = authapi.NewManagementResource(resources.Config, resources.DB, resources.Authorizer, resources.Authenticator)
 	)
 
 	router.With(middleware.DefaultRateLimitMiddleware,
@@ -46,9 +44,9 @@ func registerV2Auth(cfg config.Configuration, db database.Database, permissions 
 		routerInst.POST("/api/v2/logout", loginResource.Logout),
 
 		// Login path prefix matcher for SAML providers, order matters here due to PathPrefix
-		routerInst.POST("/api/{version}/login/saml/{saml_provider_name}/acs", managementResource.SAMLCallbackRedirect),
-		routerInst.GET("/api/{version}/login/saml/{saml_provider_name}/metadata", managementResource.ServeMetadata),
-		routerInst.PathPrefix("/api/{version}/login/saml/{saml_provider_name}", http.HandlerFunc(managementResource.SAMLLoginRedirect)),
+		routerInst.POST(fmt.Sprintf("/api/{version}/login/saml/{%s}/acs", api.URIPathVariableSSOProviderSlug), managementResource.SAMLCallbackRedirect),
+		routerInst.GET(fmt.Sprintf("/api/{version}/login/saml/{%s}/metadata", api.URIPathVariableSSOProviderSlug), managementResource.ServeMetadata),
+		routerInst.PathPrefix(fmt.Sprintf("/api/{version}/login/saml/{%s}", api.URIPathVariableSSOProviderSlug), http.HandlerFunc(managementResource.SAMLLoginRedirect)),
 
 		// SAML resources
 		routerInst.GET("/api/v2/saml", managementResource.ListSAMLProviders).RequirePermissions(permissions.AuthManageProviders),
@@ -59,9 +57,10 @@ func registerV2Auth(cfg config.Configuration, db database.Database, permissions 
 
 		// SSO
 		routerInst.GET("/api/v2/sso-providers", managementResource.ListAuthProviders),
-		routerInst.POST("/api/v2/sso-providers/oidc", managementResource.CreateOIDCProvider).CheckFeatureFlag(db, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
+		routerInst.POST("/api/v2/sso-providers/oidc", managementResource.CreateOIDCProvider).CheckFeatureFlag(resources.DB, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/sso-providers/{%s}", api.URIPathVariableSSOProviderID), managementResource.DeleteSSOProvider).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.GET(fmt.Sprintf("/api/v2/sso/{%s}/login", api.URIPathVariableSSOProviderSlug), managementResource.SSOLoginHandler),
+		routerInst.GET(fmt.Sprintf("/api/v2/sso/{%s}/metadata", api.URIPathVariableSSOProviderSlug), managementResource.ServeMetadata),
 		routerInst.PathPrefix(fmt.Sprintf("/api/v2/sso/{%s}/callback", api.URIPathVariableSSOProviderSlug), http.HandlerFunc(managementResource.SSOCallbackHandler)),
 
 		// Permissions
@@ -95,11 +94,11 @@ func registerV2Auth(cfg config.Configuration, db database.Database, permissions 
 }
 
 // NewV2API sets up dependencies, authorization and a router, and then defines the BloodHound V2 API endpoints on said router
-func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *router.Router, authenticator api.Authenticator) {
+func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	var permissions = auth.Permissions()
 
 	// Register the auth API endpoints
-	registerV2Auth(cfg, resources.DB, permissions, routerInst, authenticator)
+	registerV2Auth(resources, routerInst, permissions)
 
 	// Collector APIs
 	routerInst.GET(fmt.Sprintf("/api/v2/collectors/{%s}", v2.CollectorTypePathParameterName), resources.GetCollectorManifest).RequireAuth()
