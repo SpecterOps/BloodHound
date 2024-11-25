@@ -53,7 +53,7 @@ const UpsertOIDCProviderDialog: FC<{
                             control={control}
                             name='name'
                             rules={{
-                                required: 'OIDC Provider Name is required',
+                                required: !oldSSOProvider && 'OIDC Provider Name is required',
                                 pattern: {
                                     value: /^[A-z0-9 ]+$/,
                                     message: 'OIDC Provider Name must be alphanumeric.',
@@ -80,7 +80,7 @@ const UpsertOIDCProviderDialog: FC<{
                             control={control}
                             name='client_id'
                             rules={{
-                                required: 'Client ID is required',
+                                required: !oldSSOProvider && 'Client ID is required',
                             }}
                             render={({ field }) => (
                                 <TextField
@@ -101,7 +101,7 @@ const UpsertOIDCProviderDialog: FC<{
                             control={control}
                             name='issuer'
                             rules={{
-                                required: 'Issuer is required',
+                                required: !oldSSOProvider && 'Issuer is required',
                             }}
                             render={({ field }) => (
                                 <TextField

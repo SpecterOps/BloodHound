@@ -651,13 +651,17 @@ class BHEAPIClient {
 
     updateSAMLProviderFromFile = (
         ssoProviderId: types.SSOProvider['id'],
-        data: { name: string; metadata: File },
+        data: { name?: string; metadata?: File },
         options?: types.RequestOptions
     ) => {
         const formData = new FormData();
-        formData.append('name', data.name);
-        formData.append('metadata', data.metadata);
-        return this.baseClient.put(`/api/v2/sso-providers/${ssoProviderId}`, formData, options);
+        if (data.name) {
+            formData.append('name', data.name);
+        }
+        if (data.metadata) {
+            formData.append('metadata', data.metadata);
+        }
+        return this.baseClient.patch(`/api/v2/sso-providers/${ssoProviderId}`, formData, options);
     };
 
     validateSAMLProvider = (
@@ -687,11 +691,11 @@ class BHEAPIClient {
     deleteSSOProvider = (ssoProviderId: types.SSOProvider['id'], options?: types.RequestOptions) =>
         this.baseClient.delete(`/api/v2/sso-providers/${ssoProviderId}`, options);
 
-    createOIDCProvider = (oidcProvider: types.UpsertOIDCProviderRequest) =>
+    createOIDCProvider = (oidcProvider: types.CreateOIDCProviderRequest) =>
         this.baseClient.post(`/api/v2/sso-providers/oidc`, oidcProvider);
 
-    updateOIDCProvider = (ssoProviderId: types.SSOProvider['id'], oidcProvider: types.UpsertOIDCProviderRequest) =>
-        this.baseClient.put(`/api/v2/sso-providers/${ssoProviderId}`, oidcProvider);
+    updateOIDCProvider = (ssoProviderId: types.SSOProvider['id'], oidcProvider: types.UpdateOIDCProviderRequest) =>
+        this.baseClient.patch(`/api/v2/sso-providers/${ssoProviderId}`, oidcProvider);
 
     listSSOProviders = (options?: types.RequestOptions) =>
         this.baseClient.get<types.ListSSOProvidersResponse>(`/api/v2/sso-providers`, options);

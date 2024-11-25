@@ -149,16 +149,20 @@ export interface PutUserAuthSecretRequest {
     needsPasswordReset: boolean;
 }
 
-export interface UpsertSAMLProviderFormInputs {
+export interface CreateSAMLProviderFormInputs {
     name: string;
     metadata: FileList;
 }
+export type UpdateSAMLProviderFormInputs = Partial<CreateSAMLProviderFormInputs>;
+export type UpsertSAMLProviderFormInputs = CreateSAMLProviderFormInputs | UpdateSAMLProviderFormInputs;
 
-export interface UpsertOIDCProviderRequest {
+export interface CreateOIDCProviderRequest {
     name: string;
     client_id: string;
     issuer: string;
 }
+export type UpdateOIDCProviderRequest = Partial<CreateOIDCProviderRequest>;
+export type UpsertOIDCProviderRequest = CreateOIDCProviderRequest | UpdateOIDCProviderRequest;
 
 export interface SAMLProviderInfo extends Serial {
     name: string;

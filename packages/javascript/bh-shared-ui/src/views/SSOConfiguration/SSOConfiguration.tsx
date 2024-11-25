@@ -173,13 +173,13 @@ const SSOConfiguration: FC = () => {
     const upsertSAMLProvider = async (samlProvider: UpsertSAMLProviderFormInputs) => {
         setCreateProviderError('');
         try {
-            const payload = { ...samlProvider, metadata: samlProvider.metadata[0] };
+            const payload = { name: samlProvider.name, metadata: samlProvider.metadata && samlProvider.metadata[0] };
             if (ssoProviderIdToDeleteOrUpdate) {
                 await apiClient.updateSAMLProviderFromFile(ssoProviderIdToDeleteOrUpdate, payload);
             } else {
-                await apiClient.createSAMLProviderFromFile(payload);
-                listSSOProvidersQuery.refetch();
-                closeDialog();
+                if (payload.name && payload.metadata) {
+                    await apiClient.createSAMLProviderFromFile({ name: payload.name, metadata: payload.metadata });
+                }
             }
             listSSOProvidersQuery.refetch();
             closeDialog();
@@ -197,7 +197,13 @@ const SSOConfiguration: FC = () => {
             if (ssoProviderIdToDeleteOrUpdate) {
                 await apiClient.updateOIDCProvider(ssoProviderIdToDeleteOrUpdate, oidcProvider);
             } else {
-                await apiClient.createOIDCProvider(oidcProvider);
+                if (oidcProvider.name && oidcProvider.client_id && oidcProvider.issuer) {
+                    await apiClient.createOIDCProvider({
+                        name: oidcProvider.name,
+                        client_id: oidcProvider.client_id,
+                        issuer: oidcProvider.issuer,
+                    });
+                }
             }
             listSSOProvidersQuery.refetch();
             closeDialog();
