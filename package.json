@@ -4,6 +4,7 @@
   "workspaces": {
     "packages": [
       "cmd/ui",
+      "cmd/e2e",
       "packages/javascript/**"
     ]
   },
@@ -14,6 +15,7 @@
     "preview": "yarn workspace bloodhound-ui preview",
     "build": "yarn workspaces foreach -ptv run build",
     "test": "yarn workspaces foreach -ptv run test run",
+    "test:e2e": "yarn workspace e2e test:e2e",
     "check-types": "yarn workspaces foreach -ptv run check-types",
     "lint": "yarn workspaces foreach -ptv run lint",
     "format": "yarn workspaces foreach -ptv run format",
