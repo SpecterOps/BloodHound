@@ -27,6 +27,7 @@ const (
 	ErrorNoFindingType      = "no finding type specified"
 	ErrorInvalidFindingType = "invalid finding type specified: %v"
 	ErrorInvalidRFC3339     = "invalid RFC-3339 datetime format: %v"
+	ErrorNoDataType         = "no data type specified in url"
 )
 
 type RiskAcceptRequest struct {

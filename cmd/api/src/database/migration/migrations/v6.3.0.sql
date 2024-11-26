@@ -27,3 +27,6 @@ ALTER TABLE ONLY saml_providers
 -- Update root_uri_version to default to 2 or "/v2/sso/" for newly created saml providers
 ALTER TABLE ONLY saml_providers
   ALTER COLUMN root_uri_version SET DEFAULT 2;
+
+-- Set the `updated_posture_page` feature flag to true
+UPDATE feature_flags SET enabled = true WHERE key = 'updated_posture_page';

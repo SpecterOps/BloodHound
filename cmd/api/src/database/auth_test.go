@@ -365,13 +365,12 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 
 func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
 	var (
-		ctx                 = context.Background()
-		dbInst, user        = initAndCreateUser(t)
-		samlProvider        model.SAMLProvider
-		newSAMLProvider     model.SAMLProvider
-		updatedUser         model.User
-		updatedSAMLProvider model.SAMLProvider
-		err                 error
+		ctx             = context.Background()
+		dbInst, user    = initAndCreateUser(t)
+		samlProvider    model.SAMLProvider
+		newSAMLProvider model.SAMLProvider
+		updatedUser     model.User
+		err             error
 	)
 	// Initialize the SAMLProvider without setting SSOProviderID
 	samlProvider = model.SAMLProvider{
@@ -398,18 +397,22 @@ func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
 		} else if updatedUser.SSOProvider.SAMLProvider.IssuerURI != newSAMLProvider.IssuerURI {
 			t.Fatalf("Updated user has SAMLProvider URL %s when %s was expected", updatedUser.SSOProvider.SAMLProvider.IssuerURI, newSAMLProvider.IssuerURI)
 		} else {
-			updatedSAMLProvider = model.SAMLProvider{
-				Serial: model.Serial{
-					ID: newSAMLProvider.ID,
+			updatedSSOProvider := model.SSOProvider{
+				Name: "updated provider",
+				Type: model.SessionAuthProviderSAML,
+				SAMLProvider: &model.SAMLProvider{
+					Serial: model.Serial{
+						ID: newSAMLProvider.ID,
+					},
+					Name:            "updated provider",
+					DisplayName:     newSAMLProvider.DisplayName,
+					IssuerURI:       newSAMLProvider.IssuerURI,
+					SingleSignOnURI: newSAMLProvider.SingleSignOnURI,
+					SSOProviderID:   newSAMLProvider.SSOProviderID,
 				},
-				Name:            "updated provider",
-				DisplayName:     newSAMLProvider.DisplayName,
-				IssuerURI:       newSAMLProvider.IssuerURI,
-				SingleSignOnURI: newSAMLProvider.SingleSignOnURI,
-				SSOProviderID:   newSAMLProvider.SSOProviderID,
 			}
 
-			if err = dbInst.UpdateSAMLIdentityProvider(ctx, updatedSAMLProvider); err != nil {
+			if _, err = dbInst.UpdateSAMLIdentityProvider(ctx, updatedSSOProvider); err != nil {
 				t.Fatalf("Failed to update SAML provider: %v", err)
 			} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateSAMLIdentityProvider, "saml_name", "updated provider"); err != nil {
 				t.Fatalf("Failed to validate UpdateSAMLIdentityProvider audit logs:\n%v", err)

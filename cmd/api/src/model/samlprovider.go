@@ -43,8 +43,13 @@ var (
 type SAMLRootURIVersion int
 
 var (
-	SAMLRootURIVersion1 SAMLRootURIVersion = 1 // "/v2/login/saml/{slug}/"
-	SAMLRootURIVersion2 SAMLRootURIVersion = 2 // "/v2/sso/{slug}/"
+	SAMLRootURIVersion1 SAMLRootURIVersion = 1
+	SAMLRootURIVersion2 SAMLRootURIVersion = 2
+
+	SAMLRootURIVersionMap = map[SAMLRootURIVersion]string {
+		SAMLRootURIVersion1: "/api/v1/login/saml",
+		SAMLRootURIVersion2: "/api/v2/sso",
+	}
 )
 
 type SAMLProvider struct {
@@ -142,14 +147,13 @@ func (s SAMLProvider) GetSAMLUserPrincipalNameFromAssertion(assertion *saml.Asse
 
 func (s *SAMLProvider) FormatSAMLProviderURLs(hostUrl url.URL) {
 	root := hostUrl
+	root.Path =  path.Join(SAMLRootURIVersionMap[s.RootURIVersion], s.Name)
 
 	// To preserve existing IDP configurations, existing saml providers still use the old acs endpoint which redirects to the new callback handler
 	switch s.RootURIVersion {
 	case SAMLRootURIVersion1:
-		root.Path = path.Join("/api/v1/login/saml", s.Name)
 		s.ServiceProviderACSURI = serde.FromURL(*root.JoinPath("acs"))
 	case SAMLRootURIVersion2:
-		root.Path = path.Join("/api/v2/sso", s.Name)
 		s.ServiceProviderACSURI = serde.FromURL(*root.JoinPath("callback"))
 	}
 

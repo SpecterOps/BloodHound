@@ -18,6 +18,8 @@ package database
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
@@ -34,7 +36,7 @@ type SAMLProviderData interface {
 	GetAllSAMLProviders(ctx context.Context) (model.SAMLProviders, error)
 	GetSAMLProvider(ctx context.Context, id int32) (model.SAMLProvider, error)
 	GetSAMLProviderUsers(ctx context.Context, id int32) (model.Users, error)
-	UpdateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) error
+	UpdateSAMLIdentityProvider(ctx context.Context, ssoProvider model.SSOProvider) (model.SAMLProvider, error)
 }
 
 // CreateSAMLIdentityProvider creates a new saml_providers row using the data in the input struct
@@ -95,13 +97,27 @@ func (s *BloodhoundDB) GetSAMLProviderUsers(ctx context.Context, id int32) (mode
 
 // CreateSAMLProvider updates a saml_providers row using the data in the input struct
 // UPDATE saml_identity_providers SET (...) VALUES (...) WHERE id = ...
-func (s *BloodhoundDB) UpdateSAMLIdentityProvider(ctx context.Context, provider model.SAMLProvider) error {
+func (s *BloodhoundDB) UpdateSAMLIdentityProvider(ctx context.Context, ssoProvider model.SSOProvider) (model.SAMLProvider, error) {
 	auditEntry := model.AuditEntry{
 		Action: model.AuditLogActionUpdateSAMLIdentityProvider,
-		Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
+		Model:  ssoProvider.SAMLProvider, // Pointer is required to ensure success log contains updated fields after transaction
 	}
 
-	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Save(&provider))
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+
+		if _, err := bhdb.UpdateSSOProvider(ctx, ssoProvider); err != nil {
+			return err
+		} else if err := CheckError(tx.WithContext(ctx).Exec(
+			fmt.Sprintf("UPDATE %s SET name = ?, display_name = ?, issuer_uri = ?, single_sign_on_uri = ?, metadata_xml = ?, updated_at = ? WHERE id = ?;", samlProvidersTableName),
+			ssoProvider.SAMLProvider.Name, ssoProvider.SAMLProvider.DisplayName, ssoProvider.SAMLProvider.IssuerURI, ssoProvider.SAMLProvider.SingleSignOnURI, ssoProvider.SAMLProvider.MetadataXML, time.Now().UTC(), ssoProvider.SAMLProvider.ID),
+		); err != nil {
+			return err
+		} else {
+			// Ensure all existing sessions are invalidated within the tx
+			return bhdb.TerminateUserSessionsBySSOProvider(ctx, ssoProvider)
+		}
 	})
+
+	return *ssoProvider.SAMLProvider, err
 }

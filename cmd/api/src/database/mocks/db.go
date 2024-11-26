@@ -1593,6 +1593,20 @@ func (mr *MockDatabaseMockRecorder) SweepSessions(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SweepSessions", reflect.TypeOf((*MockDatabase)(nil).SweepSessions), arg0)
 }
 
+// TerminateUserSessionsBySSOProvider mocks base method.
+func (m *MockDatabase) TerminateUserSessionsBySSOProvider(arg0 context.Context, arg1 model.SSOProvider) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TerminateUserSessionsBySSOProvider", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// TerminateUserSessionsBySSOProvider indicates an expected call of TerminateUserSessionsBySSOProvider.
+func (mr *MockDatabaseMockRecorder) TerminateUserSessionsBySSOProvider(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TerminateUserSessionsBySSOProvider", reflect.TypeOf((*MockDatabase)(nil).TerminateUserSessionsBySSOProvider), arg0, arg1)
+}
+
 // UpdateAssetGroup mocks base method.
 func (m *MockDatabase) UpdateAssetGroup(arg0 context.Context, arg1 model.AssetGroup) error {
 	m.ctrl.T.Helper()
@@ -1664,18 +1678,49 @@ func (mr *MockDatabaseMockRecorder) UpdateFileUploadJob(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).UpdateFileUploadJob), arg0, arg1)
 }
 
+// UpdateOIDCProvider mocks base method.
+func (m *MockDatabase) UpdateOIDCProvider(arg0 context.Context, arg1 model.SSOProvider) (model.OIDCProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateOIDCProvider", arg0, arg1)
+	ret0, _ := ret[0].(model.OIDCProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateOIDCProvider indicates an expected call of UpdateOIDCProvider.
+func (mr *MockDatabaseMockRecorder) UpdateOIDCProvider(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).UpdateOIDCProvider), arg0, arg1)
+}
+
 // UpdateSAMLIdentityProvider mocks base method.
-func (m *MockDatabase) UpdateSAMLIdentityProvider(arg0 context.Context, arg1 model.SAMLProvider) error {
+func (m *MockDatabase) UpdateSAMLIdentityProvider(arg0 context.Context, arg1 model.SSOProvider) (model.SAMLProvider, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateSAMLIdentityProvider", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(model.SAMLProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateSAMLIdentityProvider indicates an expected call of UpdateSAMLIdentityProvider.
 func (mr *MockDatabaseMockRecorder) UpdateSAMLIdentityProvider(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSAMLIdentityProvider", reflect.TypeOf((*MockDatabase)(nil).UpdateSAMLIdentityProvider), arg0, arg1)
+}
+
+// UpdateSSOProvider mocks base method.
+func (m *MockDatabase) UpdateSSOProvider(arg0 context.Context, arg1 model.SSOProvider) (model.SSOProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSSOProvider", arg0, arg1)
+	ret0, _ := ret[0].(model.SSOProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateSSOProvider indicates an expected call of UpdateSSOProvider.
+func (mr *MockDatabaseMockRecorder) UpdateSSOProvider(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSSOProvider", reflect.TypeOf((*MockDatabase)(nil).UpdateSSOProvider), arg0, arg1)
 }
 
 // UpdateSavedQuery mocks base method.
