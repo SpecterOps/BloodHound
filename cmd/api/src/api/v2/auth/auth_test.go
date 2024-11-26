@@ -165,12 +165,16 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 
 func TestManagementResource_EnableUserSAML(t *testing.T) {
 	var (
+		adminUser         = model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword"), Unique: model.Unique{ID: must.NewUUIDv4()}}
 		goodRoles         = []int32{0}
 		goodUserID        = must.NewUUIDv4()
 		badUserID         = must.NewUUIDv4()
 		mockCtrl          = gomock.NewController(t)
 		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
 	)
+
+	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx.AuthCtx.Owner = adminUser
 
 	defer mockCtrl.Finish()
 
@@ -181,6 +185,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
 		test.Request(t).
+			WithContext(bhCtx).
 			WithURLPathVars(map[string]string{"user_id": goodUserID.String()}).
 			WithBody(v2.UpdateUserRequest{
 				Principal:      "tester",
@@ -197,9 +202,9 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 		mockDB.EXPECT().GetUser(gomock.Any(), badUserID).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
 		mockDB.EXPECT().GetSAMLProvider(gomock.Any(), samlProviderID).Return(model.SAMLProvider{}, nil)
 		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
-		mockDB.EXPECT().DeleteAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
 		test.Request(t).
+			WithContext(bhCtx).
 			WithURLPathVars(map[string]string{"user_id": badUserID.String()}).
 			WithBody(v2.UpdateUserRequest{
 				Principal:      "tester",
@@ -218,6 +223,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
 		test.Request(t).
+			WithContext(bhCtx).
 			WithURLPathVars(map[string]string{"user_id": goodUserID.String()}).
 			WithBody(v2.UpdateUserRequest{
 				Principal:     "tester",
