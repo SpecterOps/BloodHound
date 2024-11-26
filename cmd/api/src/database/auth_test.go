@@ -213,6 +213,71 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 	}
 }
 
+func TestDatabase_UpdateUserAuth(t *testing.T) {
+	var (
+		ctx          = context.Background()
+		dbInst, user = initAndCreateUser(t)
+		secret       = model.AuthSecret{
+			UserID:       user.ID,
+			Digest:       "digest",
+			DigestMethod: "fake",
+			ExpiresAt:    time.Now().Add(1 * time.Hour),
+		}
+		samlProvider = model.SAMLProvider{
+			Name:            "provider",
+			DisplayName:     "provider name",
+			IssuerURI:       "https://idp.example.com/idp.xml",
+			SingleSignOnURI: "https://idp.example.com/sso",
+		}
+	)
+
+	if newSecret, err := dbInst.CreateAuthSecret(ctx, secret); err != nil {
+		t.Fatalf("Failed to create auth secret: %v", err)
+	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateAuthSecret, "secret_user_id", newSecret.UserID.String()); err != nil {
+		t.Fatalf("Failed to validate CreateAuthSecret audit logs:\n%v", err)
+	} else {
+		if newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(ctx, samlProvider); err != nil {
+			t.Fatalf("Failed to create SAML provider: %v", err)
+		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateSAMLIdentityProvider, "saml_name", newSAMLProvider.Name); err != nil {
+			t.Fatalf("Failed to validate CreateSAMLIdentityProvider audit logs:\n%v", err)
+		} else {
+			user, err = dbInst.GetUser(ctx, user.ID)
+			if err != nil {
+				t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+			}
+
+			user.FirstName = null.StringFrom("friendly man")
+
+			if err := dbInst.UpdateUser(ctx, user); err != nil {
+				t.Fatalf("Failed to update user: %v", err)
+			} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateUser, "principal_name", user.PrincipalName); err != nil {
+				t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
+			} else if updatedUser, err := dbInst.GetUser(ctx, user.ID); err != nil {
+				t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+			} else if updatedUser.AuthSecret == nil {
+				t.Fatalf("Failed to find authsecret for user %s", user.PrincipalName)
+			} else if _, err := dbInst.GetAuthSecret(ctx, updatedUser.AuthSecret.ID); err != nil {
+				t.Fatalf("Failed to get authsecret by id %d", updatedUser.AuthSecret.ID)
+			}
+
+			user.AuthSecret = nil
+			user.SSOProviderID = newSAMLProvider.SSOProviderID
+
+			if err := dbInst.UpdateUser(ctx, user); err != nil {
+				t.Fatalf("Failed to update user: %v", err)
+			} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateUser, "principal_name", user.PrincipalName); err != nil {
+				t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
+			} else if updatedUser, err := dbInst.GetUser(ctx, user.ID); err != nil {
+				t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+			} else if updatedUser.AuthSecret != nil {
+				t.Fatalf("Found authsecret for user %s but expected it to be removed", user.PrincipalName)
+			} else if _, err := dbInst.GetAuthSecret(ctx, newSecret.ID); err == nil {
+				t.Fatalf("Found authsecret for id %d but expected it to be removed", newSecret.ID)
+			}
+		}
+	}
+}
+
 func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 	var (
 		ctx          = context.Background()
