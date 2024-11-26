@@ -688,8 +688,8 @@ class BHEAPIClient {
             options
         );
 
-    getSAMLProviderSigningCertificate = (ssoProviderSlug: types.SSOProvider['slug'], options?: types.RequestOptions) =>
-        this.baseClient.get(`/api/v2/sso/${ssoProviderSlug}/signing-certificate`, options);
+    getSAMLProviderSigningCertificate = (ssoProviderId: types.SSOProvider['id'], options?: types.RequestOptions) =>
+        this.baseClient.get(`/api/v2/sso-providers/${ssoProviderId}/signing-certificate`, options);
 
     deleteSSOProvider = (ssoProviderId: types.SSOProvider['id'], options?: types.RequestOptions) =>
         this.baseClient.delete(`/api/v2/sso-providers/${ssoProviderId}`, options);

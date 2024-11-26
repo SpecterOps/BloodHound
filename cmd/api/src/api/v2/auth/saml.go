@@ -266,6 +266,7 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
+		// Note: This is the samlsp metadata tied to authenticate flow and will not be the same as the XML metadata used to import the SAML provider initially
 		if content, err := xml.MarshalIndent(serviceProvider.Metadata(), "", "  "); err != nil {
 			log.Errorf("[SAML] XML marshalling failure during service provider encoding for %s: %v", ssoProvider.SAMLProvider.IssuerURI, err)
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
@@ -280,14 +281,17 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 
 // Provide the saml provider certifcate
 func (s ManagementResource) ServeSigningCertificate(response http.ResponseWriter, request *http.Request) {
-	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableSSOProviderSlug]
+	rawProviderID := mux.Vars(request)[api.URIPathVariableSSOProviderID]
 
-	if ssoProvider, err := s.db.GetSSOProviderBySlug(request.Context(), ssoProviderSlug); err != nil {
+	if ssoProviderID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+	} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), int32(ssoProviderID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if ssoProvider.SAMLProvider == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else {
-		response.Header().Set(headers.ContentDisposition.String(), fmt.Sprintf("attachment; filename=\"%s-signing-certificate.txt\"", ssoProvider.Slug))
+		// Note this is the public cert not necessarily the IDP cert
+		response.Header().Set(headers.ContentDisposition.String(), fmt.Sprintf("attachment; filename=\"%s-signing-certificate.pem\"", ssoProvider.Slug))
 		if _, err := response.Write([]byte(s.config.SAML.ServiceProviderCertificate)); err != nil {
 			log.Errorf("[SAML] Failed to write response for serving signing certificate: %v", err)
 		}

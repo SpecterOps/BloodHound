@@ -100,7 +100,7 @@ const SSOProviderInfoPanel: FC<{
             addNotification('Only SAML providers support signing certificates.', 'errorDownloadSAMLSigningCertificate');
         } else {
             apiClient
-                .getSAMLProviderSigningCertificate(ssoProvider.slug)
+                .getSAMLProviderSigningCertificate(ssoProvider.id)
                 .then((res) => {
                     const filename =
                         res.headers['content-disposition']?.match(/^.*filename="(.*)"$/)?.[1] ||
