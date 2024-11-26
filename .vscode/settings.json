@@ -13,5 +13,11 @@
     "gopls": {
         "ui.semanticTokens": true
     },
-    "python.analysis.extraPaths": ["./packages/python/beagle"]
+    "python.analysis.extraPaths": ["./packages/python/beagle"],
+    "cucumber.features": [
+        "cmd/e2e/src/tests/features/"
+    ],
+    "cucumber.glue": [
+        "cmd/e2e/src/tests/steps/*.ts"
+    ]
 }
