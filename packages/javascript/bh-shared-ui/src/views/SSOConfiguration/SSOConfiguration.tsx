@@ -14,26 +14,26 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, FC, useMemo, ChangeEvent } from 'react';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Grid, Typography, Paper, TextField, useTheme } from '@mui/material';
-import { useMutation, useQuery } from 'react-query';
+import { Box, Grid, Paper, TextField, Typography, useTheme } from '@mui/material';
 import { CreateOIDCProviderRequest, SSOProvider } from 'js-client-library';
-import { apiClient } from '../../utils';
+import { ChangeEvent, FC, useMemo, useState } from 'react';
+import { useMutation, useQuery } from 'react-query';
 import {
+    ConfirmationDialog,
+    CreateMenu,
     CreateSAMLProviderDialog,
     CreateSAMLProviderFormInputs,
-    CreateMenu,
-    ConfirmationDialog,
     DocumentationLinks,
-    SSOProviderTable,
     PageWithTitle,
     SSOProviderInfoPanel,
+    SSOProviderTable,
 } from '../../components';
 import CreateOIDCProviderDialog from '../../components/CreateOIDCProviderDialog';
 import { useFeatureFlag } from '../../hooks';
 import { useNotifications } from '../../providers';
+import { SortOrder, apiClient } from '../../utils';
 
 const SSOConfiguration: FC = () => {
     /* Hooks */
@@ -46,7 +46,7 @@ const SSOConfiguration: FC = () => {
     const [dialogOpen, setDialogOpen] = useState<'SAML' | 'OIDC' | 'DELETE' | ''>('');
     const [nameFilter, setNameFilter] = useState<string>('');
     const [createProviderError, setCreateProviderError] = useState<string>('');
-    const [typeSortOrder, setTypeSortOrder] = useState<'asc' | 'desc' | undefined>();
+    const [typeSortOrder, setTypeSortOrder] = useState<SortOrder>();
 
     const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
         apiClient.listSSOProviders({ signal }).then((res) => res.data.data)

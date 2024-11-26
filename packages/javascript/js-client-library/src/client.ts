@@ -30,9 +30,9 @@ import {
     ListFileIngestJobsResponse,
     ListFileTypesForIngestResponse,
     PaginatedResponse,
-    PostureResponse,
     PostureFindingTrendsResponse,
     PostureHistoryResponse,
+    PostureResponse,
     SavedQuery,
     StartFileIngestResponse,
     UpdateConfigurationResponse,
@@ -287,7 +287,7 @@ class BHEAPIClient {
         options?: types.RequestOptions
     ) => {
         return this.baseClient.get<PostureFindingTrendsResponse>(
-            `/api/v2/finding-trends/${environmentId}`,
+            `/api/v2/domains/${environmentId}/finding-trends`,
             Object.assign(
                 {
                     start: start?.toISOString(),

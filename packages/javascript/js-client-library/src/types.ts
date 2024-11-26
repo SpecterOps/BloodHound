@@ -179,6 +179,8 @@ export interface SSOProvider extends Serial {
     slug: string;
     type: 'OIDC' | 'SAML';
     details: SAMLProviderInfo | OIDCProviderInfo;
+    login_uri: string;
+    callback_uri: string;
 }
 
 export interface ListSSOProvidersResponse {

@@ -12369,7 +12369,7 @@
       "get": {
         "operationId": "ListDomainAttackPathsDetails",
         "summary": "List domain attack paths details",
-        "description": "Lists detailed data about attack paths for a domain. \n\n__Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.\n",
+        "description": "Lists detailed data about attack paths for a domain.\n\n__Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.\n",
         "tags": [
           "Attack Paths",
           "Enterprise"
@@ -12600,9 +12600,9 @@
                           "DomainSID": "string",
                           "PrincipalHash": "string",
                           "AcceptedUntil": "2024-08-28T21:21:40.845Z",
-                          "ImpactPercentage": 12,
+                          "ImpactPercentage": 0.12,
                           "ImpactCount": 2,
-                          "ExposurePercentage": 24,
+                          "ExposurePercentage": 0.24,
                           "ExposureCount": 4,
                           "Severity": "high",
                           "Accepted": true
@@ -12689,10 +12689,8 @@
                             "additionalProp3": {}
                           },
                           "accepted_until": "2024-08-28T21:42:18.844Z",
-                          "ImpactPercentage": 12,
+                          "ImpactPercentage": 0.12,
                           "ImpactCount": 2,
-                          "ExposurePercentage": 24,
-                          "ExposureCount": 4,
                           "Severity": "high",
                           "Accepted": true
                         }
@@ -12727,8 +12725,6 @@
                           "accepted_until": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0,
                           "ImpactCount": 0,
-                          "ExposurePercentage": 0,
-                          "ExposureCount": 0,
                           "Severity": "",
                           "Accepted": true
                         }
@@ -15927,14 +15923,6 @@
                 "format": "double"
               },
               "ImpactCount": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "ExposurePercentage": {
-                "type": "number",
-                "format": "double"
-              },
-              "ExposureCount": {
                 "type": "integer",
                 "format": "int64"
               },

@@ -101,14 +101,18 @@ type PostureStat = TimestampFields & {
 export type PostureResponse = PaginatedResponse<PostureStat[]>;
 
 type PostureFindingTrend = {
+    environment_id: string;
     finding: string;
-    start_count: number;
-    end_count: number;
-    severity: number;
-    severity_label: string;
+    finding_count_start: number;
+    finding_count_end: number;
+    composite_risk: number;
 };
 
-export type PostureFindingTrendsResponse = { findings: PostureFindingTrend[]; total_start: number; total_end: number };
+export type PostureFindingTrendsResponse = TimeWindowedResponse<{
+    findings: PostureFindingTrend[];
+    total_finding_count_start: number;
+    total_finding_count_end: number;
+}>;
 
 export type PostureHistoryData = {
     date: string;
