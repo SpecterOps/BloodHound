@@ -1,0 +1,38 @@
+{
+  "name": "e2e",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.11.0 <23"
+  },
+  "scripts": {
+    "pretest": "yarn ts-node src/helpers/init.ts",
+    "test:e2e": "env-cmd -e dev cucumber-js --config=src/cucumber.js --tags '@e2e'",
+    "test:failed": "env-cmd -e dev cucumber-js -p rerun --config=src/cucumber.js @rerun.txt"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.0.1",
+    "@faker-js/faker": "^9.0.3",
+    "@playwright/browser-chromium": "1.49.0",
+    "@playwright/browser-firefox": "1.49.0",
+    "@playwright/browser-webkit": "1.49.0",
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.7.4",
+    "@types/uuid": "^10.0.0",
+    "dotenv": "^16.4.5",
+    "env-cmd": "^10.1.0",
+    "playwright": "1.49.0",
+    "prisma": "5.22.0",
+    "ts-node": "^10.9.2",
+    "typescript": "5.6.3"
+  },
+  "dependencies": {
+    "@prisma/client": "5.22.0",
+    "argon2": "^0.41.1",
+    "reflect-metadata": "^0.2.2"
+  },
+  "packageManager": "yarn@3.6.1"
+}
