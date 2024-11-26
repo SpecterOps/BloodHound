@@ -34,11 +34,13 @@ import (
 )
 
 func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	// Fetch all Azure tenants first
 	tenants, err := azure.FetchTenants(ctx, db)
 	if err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("fetching Entra tenants: %w", err)
 	}
 
+	// Spin up a new parallel operation to speed up processing
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "Hybrid Attack Paths Post Processing")
 
 	err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -51,14 +53,18 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 			entraToADMap = make(map[graph.ID]graph.ID, 1024)
 		)
 
-		// Work on Entra users by their tenant association
+		// Work on Entra users by their tenant association. Loop therefore through each Entra tenant
 		for _, tenant := range tenants {
+			// Fetch all users in this Entra tenant
 			if tenantUsers, err := fetchEntraUsers(tx, tenant); err != nil {
 				return err
 			} else if len(tenantUsers) == 0 {
+				// If there are no users present, exit this loop
 				continue
 			} else {
+				// Loop through each Entra user in this tenant
 				for _, tenantUser := range tenantUsers {
+					// Check to see if the Entra user has an on prem sync property set
 					if onPremID, hasOnPrem, err := hasOnPremUser(tenantUser); !hasOnPrem {
 						continue
 					} else if err != nil {
@@ -67,6 +73,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 						// We know this user has an onPrem counterpart, so add the node id and onPremID to our three maps
 						adObjIDMap[onPremID] = append(adObjIDMap[onPremID], tenantUser.ID)
 						entraObjIDMap[tenantUser.ID] = onPremID
+
 						// Initialize the current user id as an index in the entraToADMap, but use 0 as the nodeid for AD since we
 						// currently don't know it and 0 is never going to be a valid user node id
 						entraToADMap[tenantUser.ID] = 0
@@ -80,10 +87,13 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 		if adUsers, err := fetchADUsers(tx); err != nil {
 			return err
 		} else {
+			// Loop through each Active Directory user
 			for _, adUser := range adUsers {
+				// Get the user's Object ID
 				if objectID, err := adUser.Properties.Get(common.ObjectID.String()).String(); err != nil {
 					return err
 				} else if azUsers, ok := adObjIDMap[objectID]; !ok {
+					// Skip adding this relationship if we've already seen it before as that implies it will be created
 					continue
 				} else {
 					// Because there could theoretically be more than one Entra user mapped to this objectid, we want to loop through all when adding our current id to the final map
