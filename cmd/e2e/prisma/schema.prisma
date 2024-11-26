@@ -1,0 +1,475 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ad_data_quality_aggregations {
+  domains                  BigInt?
+  users                    BigInt?
+  groups                   BigInt?
+  computers                BigInt?
+  ous                      BigInt?
+  containers               BigInt?
+  gpos                     BigInt?
+  acls                     BigInt?
+  sessions                 BigInt?
+  relationships            BigInt?
+  session_completeness     Decimal?  @db.Decimal
+  local_group_completeness Decimal?  @db.Decimal
+  run_id                   String?
+  id                       Int       @id @default(autoincrement())
+  created_at               DateTime? @db.Timestamptz(6)
+  updated_at               DateTime? @db.Timestamptz(6)
+  aiacas                   BigInt?   @default(0)
+  rootcas                  BigInt?   @default(0)
+  enterprisecas            BigInt?   @default(0)
+  ntauthstores             BigInt?   @default(0)
+  certtemplates            BigInt?   @default(0)
+  issuancepolicies         BigInt?   @default(0)
+
+  @@index([created_at], map: "idx_ad_data_quality_aggregations_created_at")
+  @@index([run_id], map: "idx_ad_data_quality_aggregations_run_id")
+  @@index([updated_at], map: "idx_ad_data_quality_aggregations_updated_at")
+}
+
+model ad_data_quality_stats {
+  domain_sid               String?
+  users                    BigInt?
+  groups                   BigInt?
+  computers                BigInt?
+  ous                      BigInt?
+  containers               BigInt?
+  gpos                     BigInt?
+  acls                     BigInt?
+  sessions                 BigInt?
+  relationships            BigInt?
+  session_completeness     Decimal?  @db.Decimal
+  local_group_completeness Decimal?  @db.Decimal
+  run_id                   String?
+  id                       Int       @id @default(autoincrement())
+  created_at               DateTime? @db.Timestamptz(6)
+  updated_at               DateTime? @db.Timestamptz(6)
+  aiacas                   BigInt?   @default(0)
+  rootcas                  BigInt?   @default(0)
+  enterprisecas            BigInt?   @default(0)
+  ntauthstores             BigInt?   @default(0)
+  certtemplates            BigInt?   @default(0)
+  issuancepolicies         BigInt?   @default(0)
+
+  @@index([run_id], map: "idx_ad_data_quality_stats_run_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model analysis_request_switch {
+  singleton    Boolean  @id @default(true)
+  request_type String
+  requested_by String
+  requested_at DateTime @db.Timestamptz(6)
+}
+
+model asset_group_collection_entries {
+  asset_group_collection_id BigInt?
+  object_id                 String?
+  node_label                String?
+  properties                Json?
+  id                        BigInt                   @id @default(autoincrement())
+  created_at                DateTime?                @db.Timestamptz(6)
+  updated_at                DateTime?                @db.Timestamptz(6)
+  asset_group_collections   asset_group_collections? @relation(fields: [asset_group_collection_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_asset_group_collections_entries")
+
+  @@index([asset_group_collection_id], map: "idx_asset_group_collection_entries_asset_group_collection_id")
+  @@index([created_at], map: "idx_asset_group_collection_entries_created_at")
+  @@index([updated_at], map: "idx_asset_group_collection_entries_updated_at")
+}
+
+model asset_group_collections {
+  asset_group_id                 Int?
+  id                             BigInt                           @id @default(autoincrement())
+  created_at                     DateTime?                        @db.Timestamptz(6)
+  updated_at                     DateTime?                        @db.Timestamptz(6)
+  asset_group_collection_entries asset_group_collection_entries[]
+  asset_groups                   asset_groups?                    @relation(fields: [asset_group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_asset_groups_collections")
+
+  @@index([asset_group_id], map: "idx_asset_group_collections_asset_group_id")
+  @@index([created_at], map: "idx_asset_group_collections_created_at")
+  @@index([updated_at], map: "idx_asset_group_collections_updated_at")
+}
+
+model asset_group_selectors {
+  asset_group_id  Int?
+  name            String?
+  selector        String?
+  system_selector Boolean?
+  id              Int           @id @default(autoincrement())
+  created_at      DateTime?     @db.Timestamptz(6)
+  updated_at      DateTime?     @db.Timestamptz(6)
+  asset_groups    asset_groups? @relation(fields: [asset_group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_asset_groups_selectors")
+
+  @@unique([name, asset_group_id], map: "asset_group_selectors_name_assetgroupid_key")
+}
+
+model asset_groups {
+  name                    String                    @unique
+  tag                     String                    @unique
+  system_group            Boolean?
+  id                      Int                       @id @default(autoincrement())
+  created_at              DateTime?                 @db.Timestamptz(6)
+  updated_at              DateTime?                 @db.Timestamptz(6)
+  asset_group_collections asset_group_collections[]
+  asset_group_selectors   asset_group_selectors[]
+
+  @@index([created_at], map: "idx_ad_asset_groups_created_at")
+  @@index([updated_at], map: "idx_ad_asset_groups_updated_at")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model audit_logs {
+  id                BigInt    @id @default(autoincrement())
+  created_at        DateTime? @db.Timestamptz(6)
+  actor_id          String?
+  actor_name        String?
+  action            String?
+  fields            Json?
+  request_id        String?
+  actor_email       String?   @db.VarChar(330)
+  source_ip_address String?
+  status            String?   @default("intent") @db.VarChar(15)
+  commit_id         String?
+
+  @@index([action], map: "idx_audit_logs_action")
+  @@index([actor_email], map: "idx_audit_logs_actor_email")
+  @@index([actor_id], map: "idx_audit_logs_actor_id")
+  @@index([created_at], map: "idx_audit_logs_created_at")
+  @@index([source_ip_address], map: "idx_audit_logs_source_ip_address")
+  @@index([status], map: "idx_audit_logs_status")
+}
+
+model auth_secrets {
+  user_id        String?
+  digest         String?
+  digest_method  String?
+  expires_at     DateTime? @db.Timestamptz(6)
+  totp_secret    String?
+  totp_activated Boolean?
+  id             Int       @id @default(autoincrement())
+  created_at     DateTime? @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+  users          users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_auth_secret")
+}
+
+model auth_tokens {
+  user_id     String?
+  client_id   String?
+  name        String?
+  key         String?
+  hmac_method String?
+  last_access DateTime? @db.Timestamptz(6)
+  id          String    @id
+  created_at  DateTime? @db.Timestamptz(6)
+  updated_at  DateTime? @db.Timestamptz(6)
+  users       users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_auth_tokens")
+}
+
+model azure_data_quality_aggregations {
+  tenants              BigInt?
+  users                BigInt?
+  groups               BigInt?
+  apps                 BigInt?
+  service_principals   BigInt?
+  devices              BigInt?
+  management_groups    BigInt?
+  subscriptions        BigInt?
+  resource_groups      BigInt?
+  vms                  BigInt?
+  key_vaults           BigInt?
+  relationships        BigInt?
+  run_id               String?
+  id                   Int       @id @default(autoincrement())
+  created_at           DateTime? @db.Timestamptz(6)
+  updated_at           DateTime? @db.Timestamptz(6)
+  automation_accounts  BigInt?   @default(0)
+  container_registries BigInt?   @default(0)
+  function_apps        BigInt?   @default(0)
+  logic_apps           BigInt?   @default(0)
+  managed_clusters     BigInt?   @default(0)
+  vm_scale_sets        BigInt?   @default(0)
+  web_apps             BigInt?   @default(0)
+
+  @@index([created_at], map: "idx_azure_data_quality_aggregations_created_at")
+  @@index([run_id], map: "idx_azure_data_quality_aggregations_run_id")
+}
+
+model azure_data_quality_stats {
+  tenant_id            String?
+  users                BigInt?
+  groups               BigInt?
+  apps                 BigInt?
+  service_principals   BigInt?
+  devices              BigInt?
+  management_groups    BigInt?
+  subscriptions        BigInt?
+  resource_groups      BigInt?
+  vms                  BigInt?
+  key_vaults           BigInt?
+  relationships        BigInt?
+  run_id               String?
+  id                   Int       @id @default(autoincrement())
+  created_at           DateTime? @db.Timestamptz(6)
+  updated_at           DateTime? @db.Timestamptz(6)
+  automation_accounts  BigInt?   @default(0)
+  container_registries BigInt?   @default(0)
+  function_apps        BigInt?   @default(0)
+  logic_apps           BigInt?   @default(0)
+  managed_clusters     BigInt?   @default(0)
+  vm_scale_sets        BigInt?   @default(0)
+  web_apps             BigInt?   @default(0)
+
+  @@index([created_at], map: "idx_azure_data_quality_stats_created_at")
+  @@index([run_id], map: "idx_azure_data_quality_stats_run_id")
+  @@index([updated_at], map: "idx_azure_data_quality_stats_updated_at")
+}
+
+model database_switch {
+  driver String @id
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model datapipe_status {
+  singleton                 Boolean   @id @default(true)
+  status                    String
+  updated_at                DateTime  @db.Timestamptz(6)
+  last_complete_analysis_at DateTime? @db.Timestamptz(6)
+  last_analysis_run_at      DateTime? @db.Timestamptz(6)
+}
+
+model domain_collection_results {
+  job_id          BigInt?
+  domain_name     String?
+  success         Boolean?
+  message         String?
+  user_count      BigInt?
+  group_count     BigInt?
+  computer_count  BigInt?
+  gpo_count       BigInt?
+  ou_count        BigInt?
+  container_count BigInt?
+  deleted_count   BigInt?
+  id              BigInt    @id @default(autoincrement())
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+}
+
+model feature_flags {
+  id             Int       @id @default(autoincrement())
+  created_at     DateTime? @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+  key            String?   @unique
+  name           String?
+  description    String?
+  enabled        Boolean?
+  user_updatable Boolean?
+}
+
+model file_upload_jobs {
+  user_id            String?
+  user_email_address String?
+  status             BigInt?
+  status_message     String?
+  start_time         DateTime? @db.Timestamptz(6)
+  end_time           DateTime? @db.Timestamptz(6)
+  last_ingest        DateTime? @db.Timestamptz(6)
+  id                 BigInt    @id @default(autoincrement())
+  created_at         DateTime? @db.Timestamptz(6)
+  updated_at         DateTime? @db.Timestamptz(6)
+  total_files        Int?      @default(0)
+  failed_files       Int?      @default(0)
+  users              users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_file_upload_jobs_user")
+
+  @@index([created_at], map: "idx_file_upload_jobs_created_at")
+  @@index([end_time], map: "idx_file_upload_jobs_end_time")
+  @@index([start_time], map: "idx_file_upload_jobs_start_time")
+  @@index([status], map: "idx_file_upload_jobs_status")
+  @@index([updated_at], map: "idx_file_upload_jobs_updated_at")
+}
+
+model ingest_tasks {
+  file_name    String?
+  request_guid String?
+  task_id      BigInt?
+  id           BigInt    @id @default(autoincrement())
+  created_at   DateTime? @db.Timestamptz(6)
+  updated_at   DateTime? @db.Timestamptz(6)
+  file_type    Int?      @default(0)
+
+  @@index([task_id], map: "idx_ingest_tasks_task_id")
+}
+
+model installations {
+  id         String    @id
+  created_at DateTime? @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+}
+
+model migrations {
+  id         Int       @id @default(autoincrement())
+  updated_at DateTime? @db.Timestamptz(6)
+  major      Int?
+  minor      Int?
+  patch      Int?
+}
+
+model oidc_providers {
+  id              Int            @id @default(autoincrement())
+  client_id       String
+  issuer          String
+  sso_provider_id Int?
+  updated_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  created_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  sso_providers   sso_providers? @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model parameters {
+  key         String?   @unique
+  name        String?
+  description String?
+  value       Json?
+  id          Int       @id @default(autoincrement())
+  created_at  DateTime? @db.Timestamptz(6)
+  updated_at  DateTime? @db.Timestamptz(6)
+}
+
+model permissions {
+  authority         String?
+  name              String?
+  id                Int                 @id @default(autoincrement())
+  created_at        DateTime?           @db.Timestamptz(6)
+  updated_at        DateTime?           @db.Timestamptz(6)
+  roles_permissions roles_permissions[]
+
+  @@unique([authority, name])
+}
+
+model roles {
+  name              String?             @unique
+  description       String?
+  id                Int                 @id @default(autoincrement())
+  created_at        DateTime?           @db.Timestamptz(6)
+  updated_at        DateTime?           @db.Timestamptz(6)
+  roles_permissions roles_permissions[]
+  users_roles       users_roles[]
+}
+
+model roles_permissions {
+  role_id       Int
+  permission_id Int
+  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_roles_permissions_permission")
+  roles         roles       @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_roles_permissions_role")
+
+  @@id([role_id, permission_id])
+}
+
+model saml_providers {
+  name               String?        @unique
+  display_name       String?
+  issuer_uri         String?
+  single_sign_on_uri String?
+  metadata_xml       Bytes?
+  ous                String[]
+  id                 Int            @id @default(autoincrement())
+  created_at         DateTime?      @db.Timestamptz(6)
+  updated_at         DateTime?      @db.Timestamptz(6)
+  sso_provider_id    Int?
+  root_uri_version   Int            @default(2)
+  sso_providers      sso_providers? @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_saml_provider_sso_provider")
+
+  @@index([name], map: "idx_saml_providers_name")
+}
+
+model saved_queries {
+  user_id                   String?
+  name                      String?
+  query                     String?
+  id                        BigInt                      @id @default(autoincrement())
+  created_at                DateTime?                   @db.Timestamptz(6)
+  updated_at                DateTime?                   @db.Timestamptz(6)
+  description               String?                     @default("")
+  saved_queries_permissions saved_queries_permissions[]
+
+  @@unique([user_id, name], map: "idx_saved_queries_composite_index")
+  @@index([description(ops: raw("gin_trgm_ops"))], map: "idx_saved_queries_description", type: Gin)
+  @@index([name(ops: raw("gin_trgm_ops"))], map: "idx_saved_queries_name", type: Gin)
+}
+
+model saved_queries_permissions {
+  id                BigInt        @id @default(autoincrement())
+  shared_to_user_id String?
+  query_id          BigInt        @default(autoincrement())
+  public            Boolean       @default(false)
+  created_at        DateTime?     @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?     @default(now()) @db.Timestamptz(6)
+  saved_queries     saved_queries @relation(fields: [query_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users             users?        @relation(fields: [shared_to_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([shared_to_user_id, query_id])
+}
+
+model sso_providers {
+  id             Int              @id @default(autoincrement())
+  name           String           @unique
+  slug           String           @unique
+  type           Int
+  updated_at     DateTime?        @default(now()) @db.Timestamptz(6)
+  created_at     DateTime?        @default(now()) @db.Timestamptz(6)
+  oidc_providers oidc_providers[]
+  saml_providers saml_providers[]
+  users          users[]
+}
+
+model user_sessions {
+  user_id            String?
+  auth_provider_type BigInt?
+  auth_provider_id   Int?
+  expires_at         DateTime? @db.Timestamptz(6)
+  id                 BigInt    @id @default(autoincrement())
+  created_at         DateTime? @db.Timestamptz(6)
+  updated_at         DateTime? @db.Timestamptz(6)
+  flags              Json?
+  users              users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_sessions_user")
+}
+
+model users {
+  first_name                String?
+  last_name                 String?
+  email_address             String?
+  principal_name            String?                     @unique
+  last_login                DateTime?                   @db.Timestamptz(6)
+  is_disabled               Boolean?
+  eula_accepted             Boolean?
+  id                        String                      @id
+  created_at                DateTime?                   @db.Timestamptz(6)
+  updated_at                DateTime?                   @db.Timestamptz(6)
+  sso_provider_id           Int?
+  auth_secrets              auth_secrets[]
+  auth_tokens               auth_tokens[]
+  file_upload_jobs          file_upload_jobs[]
+  saved_queries_permissions saved_queries_permissions[]
+  user_sessions             user_sessions[]
+  sso_providers             sso_providers?              @relation(fields: [sso_provider_id], references: [id], onUpdate: NoAction, map: "fk_users_sso_provider")
+  users_roles               users_roles[]
+
+  @@index([eula_accepted], map: "idx_users_eula_accepted")
+  @@index([principal_name], map: "idx_users_principal_name")
+}
+
+model users_roles {
+  user_id String
+  role_id Int
+  roles   roles  @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_roles_role")
+  users   users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_roles_user")
+
+  @@id([user_id, role_id])
+}
