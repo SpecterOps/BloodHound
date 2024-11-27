@@ -18,9 +18,9 @@ package v2
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
@@ -33,8 +33,6 @@ const ErrAnalysisScheduledMode = "analysis is configured to run on a schedule, u
 func (s Resources) GetAnalysisRequest(response http.ResponseWriter, request *http.Request) {
 	if analRequest, err := s.DB.GetAnalysisRequest(request.Context()); err != nil && !errors.Is(err, sql.ErrNoRows) {
 		api.HandleDatabaseError(request, response, err)
-	} else if errors.Is(err, sql.ErrNoRows) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else {
 		api.WriteBasicResponse(request.Context(), analRequest, http.StatusOK, response)
 	}

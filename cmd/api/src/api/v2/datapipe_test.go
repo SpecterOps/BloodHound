@@ -34,10 +34,11 @@ func TestResources_GetDatapipeStatus(t *testing.T) {
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
 		resources = v2.Resources{DB: mockDB}
+		url       = "api/v2/datapipe/status"
 	)
 	defer mockCtrl.Finish()
 
-	t.Run("success get datapipe status", func(t *testing.T) {
+	t.Run("success getting datapipe status", func(t *testing.T) {
 		lastCompleteAnalysisAt := time.Now()
 		lastAnalysisRunAt := time.Now().Add(-time.Minute)
 
@@ -49,7 +50,7 @@ func TestResources_GetDatapipeStatus(t *testing.T) {
 
 		test.Request(t).
 			WithMethod(http.MethodGet).
-			WithURL("api/v2/datapipe/status").
+			WithURL(url).
 			OnHandlerFunc(resources.GetDatapipeStatus).
 			Require().
 			ResponseJSONBody(model.DatapipeStatusWrapper{
@@ -65,7 +66,7 @@ func TestResources_GetDatapipeStatus(t *testing.T) {
 
 		test.Request(t).
 			WithMethod(http.MethodGet).
-			WithURL("api/v2/datapipe/status").
+			WithURL(url).
 			OnHandlerFunc(resources.GetDatapipeStatus).
 			Require().
 			ResponseStatusCode(http.StatusInternalServerError)
