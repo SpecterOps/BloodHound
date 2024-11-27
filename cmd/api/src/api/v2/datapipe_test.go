@@ -30,11 +30,14 @@ import (
 )
 
 func TestResources_GetDatapipeStatus(t *testing.T) {
+	const (
+		url = "api/v2/datapipe/status"
+	)
+
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
 		resources = v2.Resources{DB: mockDB}
-		url       = "api/v2/datapipe/status"
 	)
 	defer mockCtrl.Finish()
 
