@@ -5,6 +5,8 @@ package analysis_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	azureAnalysis "github.com/specterops/bloodhound/analysis/azure"
@@ -15,7 +17,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 // This is a test to validate when we have a situ such
@@ -32,19 +33,19 @@ func TestDeleteTransitEdges(t *testing.T) {
 	var (
 		// This creates a new live integration test context with the graph database
 		// This call will load whatever BHE configuration the environment variable `INTEGRATION_CONFIG_PATH` points to.
-		textCtx = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		testCtx = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 		// For this test we need to validate BED-4954 - this requires, at minimum, an AD user and an Entra (Azure) user. The lines below
 		// will utilize the test context to put the data directly into the graph.
 
 		// AD user first
-		adUser = textCtx.NewNode(graph.AsProperties(map[string]any{
+		adUser = testCtx.NewNode(graph.AsProperties(map[string]any{
 			"name":     "ad_user",
 			"objectid": "1234",
 		}), ad.Entity, ad.User)
 
 		// Azure user second
-		azureUser = textCtx.NewNode(graph.AsProperties(map[string]any{
+		azureUser = testCtx.NewNode(graph.AsProperties(map[string]any{
 			"name":     "azure_user",
 			"objectid": "4321",
 		}), azure.Entity, azure.User)
@@ -57,19 +58,19 @@ func TestDeleteTransitEdges(t *testing.T) {
 	//
 	// Here, we are choosing to create these edges such that the data describes what we would expect to see after a successful execution of the logic
 	// in lib/go/analysis/azure/post.go.
-	textCtx.NewRelationship(adUser, azureUser, ad.SyncedToEntraUser)
-	textCtx.NewRelationship(azureUser, adUser, azure.SyncedToADUser)
+	testCtx.NewRelationship(adUser, azureUser, ad.SyncedToEntraUser)
+	testCtx.NewRelationship(azureUser, adUser, azure.SyncedToADUser)
 
 	// The way post-processing operates is that all edges created during post-processing are deleted before each analysis run. This helps keep the graph consistent
 	// where certain graph conditions (edges, node properties, etc.) that once existed were removed or modified due to the user's environment changing.
 
 	// This first run removes all Azure post-processed relationships - expected outcome is that SyncedToADUser is removed at this stage
-	_, err := analysis.DeleteTransitEdges(context.Background(), textCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, azureAnalysis.PostProcessedRelationships()...)
+	_, err := analysis.DeleteTransitEdges(context.Background(), testCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, azureAnalysis.PostProcessedRelationships()...)
 
 	// Deleting transit edges must not return an error
 	require.Nil(t, err)
 
-	err = textCtx.Graph.Database.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+	err = testCtx.Graph.Database.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 		numEdges, err := tx.Relationships().Filter(query.Kind(query.Relationship(), azure.SyncedToADUser)).Count()
 
 		// This must be true which would mean that the above created SyncedToADUser was correctly deleted by the DeleteTransitEdges call
@@ -81,11 +82,11 @@ func TestDeleteTransitEdges(t *testing.T) {
 	require.Nil(t, err)
 
 	// This first run removes all AD post-processed relationships - expected outcome is that SyncedToEntraUser is removed at this stage
-	_, err = analysis.DeleteTransitEdges(context.Background(), textCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, adAnalysis.PostProcessedRelationships()...)
+	_, err = analysis.DeleteTransitEdges(context.Background(), testCtx.Graph.Database, graph.Kinds{ad.Entity, azure.Entity}, adAnalysis.PostProcessedRelationships()...)
 	// Deleting transit edges must not return an error
 	require.Nil(t, err)
 
-	err = textCtx.Graph.Database.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+	err = testCtx.Graph.Database.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 		numEdges, err := tx.Relationships().Filter(query.Kind(query.Relationship(), ad.SyncedToEntraUser)).Count()
 
 		// This must be true which would mean that the above created SyncedToADUser was correctly deleted by the DeleteTransitEdges call
