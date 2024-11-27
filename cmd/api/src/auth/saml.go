@@ -28,17 +28,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-func GetIDPSingleSignOnServiceURL(idp saml.IDPSSODescriptor, bindingType string) (string, error) {
-	for _, singleSignOnService := range idp.SingleSignOnServices {
-		if singleSignOnService.Binding == bindingType {
-			return singleSignOnService.Location, nil
-		}
-	}
-
-	return "", fmt.Errorf("no SSO service defined that supports the %s binding type", bindingType)
-}
-
-func GetIDPSingleSignOnDescriptor(metadata *saml.EntityDescriptor, bindingType string) (saml.IDPSSODescriptor, error) {
+func getIDPSingleSignOnDescriptor(metadata *saml.EntityDescriptor, bindingType string) (saml.IDPSSODescriptor, error) {
 	for _, idpSSODescriptor := range metadata.IDPSSODescriptors {
 		for _, singleSignOnService := range idpSSODescriptor.SingleSignOnServices {
 			if singleSignOnService.Binding == bindingType {
@@ -48,6 +38,32 @@ func GetIDPSingleSignOnDescriptor(metadata *saml.EntityDescriptor, bindingType s
 	}
 
 	return saml.IDPSSODescriptor{}, fmt.Errorf("no SSO service defined that supports the %s binding type", bindingType)
+}
+
+func GetIDPSingleSignOnServiceURL(metadata *saml.EntityDescriptor, bindingType string) (string, error) {
+	if ssoDescriptor, err := getIDPSingleSignOnDescriptor(metadata, saml.HTTPPostBinding); err != nil {
+		return "", err
+	} else {
+		for _, singleSignOnService := range ssoDescriptor.SingleSignOnServices {
+			if singleSignOnService.Binding == bindingType {
+				return singleSignOnService.Location, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("no SSO service defined that supports the %s binding type", bindingType)
+}
+
+// GetAssertionConsumerServiceURL This may not be present, we return the first we find
+func GetAssertionConsumerServiceURL(metadata *saml.EntityDescriptor, bindingType string) (string, error) {
+	for _, spSSODescriptor := range metadata.SPSSODescriptors {
+		for _, acs := range spSSODescriptor.AssertionConsumerServices {
+			if acs.Binding == bindingType {
+				return acs.Location, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("no SAML ascertion consumer service url defined in metadata xml")
 }
 
 func NewServiceProvider(hostUrl url.URL, cfg config.Configuration, samlProvider model.SAMLProvider) (saml.ServiceProvider, error) {

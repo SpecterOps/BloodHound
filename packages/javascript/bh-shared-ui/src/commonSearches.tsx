@@ -112,8 +112,8 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT coalesce(u.gmsa, ' ') = true\nAND NOT coalesce(u.msa, ' ') = true\nRETURN u\nLIMIT 100`,
             },
             {
-                description: 'Kerberoastable users with most privileges',
-                cypher: `MATCH (u:User)\nOPTIONAL MATCH (u)-[:AdminTo]->(c1:Computer)\nOPTIONAL MATCH (u)-[:MemberOf*1..]->(:Group)-[:AdminTo]->(c2:Computer)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT coalesce(u.gmsa, ' ') = true\nAND NOT coalesce(u.msa, ' ') = true\nWITH u,COLLECT(c1) + COLLECT(c2) AS tempVar\nUNWIND tempVar AS comps\nRETURN u\nLIMIT 100`,
+                description: 'Kerberoastable users with most admin privileges',
+                cypher: `MATCH (u:User)\nWHERE u.hasspn = true\n  AND u.enabled = true\n  AND NOT u.objectid ENDS WITH '-502'\n  AND NOT coalesce(u.gmsa, ' ') = true\n  AND NOT coalesce(u.msa, ' ') = true\nMATCH (u)-[:MemberOf|AdminTo*1..]->(c:Computer)\nWITH DISTINCT u, COUNT(c) AS adminCount\nRETURN u\nORDER BY adminCount DESC\nLIMIT 100`,
             },
             {
                 description: 'AS-REP Roastable users (DontReqPreAuth)',

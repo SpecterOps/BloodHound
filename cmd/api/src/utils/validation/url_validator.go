@@ -66,7 +66,7 @@ func (s UrlValidator) Validate(value any) utils.Errors {
 		}
 	}
 
-	if err := validUrl(inputUrl); err != nil {
+	if err := ValidUrl(inputUrl); err != nil {
 		errs = append(errs, errors.New(ErrorUrlInvalid))
 	}
 
@@ -77,7 +77,7 @@ func (s UrlValidator) Validate(value any) utils.Errors {
 	return nil
 }
 
-func validUrl(inputUrl string) error {
+func ValidUrl(inputUrl string) error {
 	if _, err := url.ParseRequestURI(inputUrl); err != nil {
 		return err
 	}
