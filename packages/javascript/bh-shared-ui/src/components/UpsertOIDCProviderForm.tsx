@@ -20,7 +20,7 @@ import { FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { OIDCProviderInfo, SSOProvider, UpsertOIDCProviderRequest } from 'js-client-library';
 
-const UpsertOIDCProviderDialog: FC<{
+const UpsertOIDCProviderForm: FC<{
     error?: string;
     oldSSOProvider?: SSOProvider;
     onClose: () => void;
@@ -53,7 +53,7 @@ const UpsertOIDCProviderDialog: FC<{
                             control={control}
                             name='name'
                             rules={{
-                                required: !oldSSOProvider && 'OIDC Provider Name is required',
+                                required: 'OIDC Provider Name is required',
                                 pattern: {
                                     value: /^[A-z0-9 ]+$/,
                                     message: 'OIDC Provider Name must be alphanumeric.',
@@ -79,9 +79,7 @@ const UpsertOIDCProviderDialog: FC<{
                         <Controller
                             control={control}
                             name='client_id'
-                            rules={{
-                                required: !oldSSOProvider && 'Client ID is required',
-                            }}
+                            rules={{ required: 'Client ID is required' }}
                             render={({ field }) => (
                                 <TextField
                                     {...field}
@@ -100,9 +98,7 @@ const UpsertOIDCProviderDialog: FC<{
                         <Controller
                             control={control}
                             name='issuer'
-                            rules={{
-                                required: !oldSSOProvider && 'Issuer is required',
-                            }}
+                            rules={{ required: 'Issuer is required' }}
                             render={({ field }) => (
                                 <TextField
                                     {...field}
@@ -140,4 +136,4 @@ const UpsertOIDCProviderDialog: FC<{
     );
 };
 
-export default UpsertOIDCProviderDialog;
+export default UpsertOIDCProviderForm;

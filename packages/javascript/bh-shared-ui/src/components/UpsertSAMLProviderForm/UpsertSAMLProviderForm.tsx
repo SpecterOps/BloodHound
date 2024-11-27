@@ -65,7 +65,7 @@ const UpsertSAMLProviderForm: FC<{
                             control={control}
                             name='name'
                             rules={{
-                                required: !oldSSOProvider && 'SAML Provider Name is required',
+                                required: 'SAML Provider Name is required',
                                 pattern: {
                                     value: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
                                     message:
@@ -92,9 +92,7 @@ const UpsertSAMLProviderForm: FC<{
                         <Controller
                             control={control}
                             name='metadata'
-                            rules={{
-                                required: !oldSSOProvider && 'Metadata is required',
-                            }}
+                            rules={{ required: !oldSSOProvider && 'Metadata is required' }}
                             render={({ field }) => (
                                 <Box p={1} borderRadius={4} bgcolor={theme.palette.neutral.tertiary}>
                                     <Box display='flex' flexDirection='row' alignItems='center'>
