@@ -282,13 +282,17 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 			return err
 		}
 
-		// AuthSecret must be manually deleted and then set to nil again to prevent recreation
+		// AuthSecret must be manually retrieved and deleted
 		if user.AuthSecret == nil {
-			if err := tx.Unscoped().Model(&user).WithContext(ctx).Association("AuthSecret").Unscoped().Clear(); err != nil {
+			var authSecret model.AuthSecret
+			if err := tx.Raw("SELECT * FROM auth_secrets WHERE user_id = ?", user.ID).First(&authSecret).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 				return err
+			} else if authSecret.ID > 0 {
+				bhdb := NewBloodhoundDB(tx, s.idResolver)
+				if err := bhdb.DeleteAuthSecret(ctx, authSecret); err != nil {
+					return err
+				}
 			}
-
-			user.AuthSecret = nil
 		}
 
 		result := tx.WithContext(ctx).Save(&user)
