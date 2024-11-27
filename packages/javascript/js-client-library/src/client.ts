@@ -290,9 +290,11 @@ class BHEAPIClient {
             `/api/v2/domains/${environmentId}/finding-trends`,
             Object.assign(
                 {
-                    start: start?.toISOString(),
-                    end: end?.toISOString(),
-                    sort_by,
+                    params: {
+                        start: start?.toISOString(),
+                        end: end?.toISOString(),
+                        sort_by,
+                    },
                 },
                 options
             )
@@ -304,16 +306,16 @@ class BHEAPIClient {
         dataType: string,
         start?: Date,
         end?: Date,
-        partition_by?: string,
         options?: types.RequestOptions
     ) => {
         return this.baseClient.get<PostureHistoryResponse>(
-            `/api/v2/posture-history/${environmentId}/${dataType}`,
+            `/api/v2/domains/${environmentId}/posture-history/${dataType}`,
             Object.assign(
                 {
-                    start: start?.toISOString(),
-                    end: end?.toISOString(),
-                    partition_by,
+                    params: {
+                        start: start?.toISOString(),
+                        end: end?.toISOString(),
+                    },
                 },
                 options
             )
