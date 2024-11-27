@@ -801,6 +801,68 @@
         }
       }
     },
+    "/api/v2/sso-providers/{sso_provider_id}/signing-certificate": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "description": "SSO Provider ID for a SAML provider",
+          "name": "sso_provider_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetSSOProviderSAMLSigningCertificate",
+        "summary": "Get SAML Provider Signing Certificate",
+        "description": "Download the SAML Provider Signing Certificate. Only applies to SAML providers.",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "content-disposition": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Suggested filename of structure \"{saml-slug}-signing-certificate.pem\""
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/permissions": {
       "parameters": [
         {
