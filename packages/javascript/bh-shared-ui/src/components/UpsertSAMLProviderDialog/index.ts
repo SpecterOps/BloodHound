@@ -14,5 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './CreateSAMLProviderDialog';
-export { default } from './CreateSAMLProviderDialog';
+export * from './UpsertSAMLProviderDialog';
+export { default } from './UpsertSAMLProviderDialog';

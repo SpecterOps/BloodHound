@@ -605,7 +605,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/model.auth-provider"
+                      "$ref": "#/components/schemas/model.oidc-provider"
                     }
                   }
                 }
@@ -646,6 +646,100 @@
           }
         }
       ],
+      "patch": {
+        "operationId": "PatchSSOProvider",
+        "summary": "Update SSO Provider",
+        "description": "Updates an existing SSO provider. Updating saml provider requires a \"multipart/form-data\" body. Updating oidc provider requires \"application/json\" body. Response is respective provider",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the new SAML provider."
+                  },
+                  "metadata": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Metadata XML file."
+                  }
+                }
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the OIDC provider"
+                  },
+                  "issuer": {
+                    "type": "string",
+                    "format": "url",
+                    "description": "URL of the OIDC issuer"
+                  },
+                  "client_id": {
+                    "type": "string",
+                    "description": "Client ID for the OIDC provider"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/model.saml-provider"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/model.oidc-provider"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
       "delete": {
         "operationId": "DeleteSSOProvider",
         "summary": "Delete SSO Provider",

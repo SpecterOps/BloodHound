@@ -28,27 +28,23 @@ import {
 } from '@mui/material';
 import { useState, FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-library';
 
-export interface CreateSAMLProviderFormInputs {
-    name: string;
-    metadata: FileList;
-}
-
-const CreateSAMLProviderForm: FC<{
+const UpsertSAMLProviderForm: FC<{
     error?: string;
+    oldSSOProvider?: SSOProvider;
     onClose: () => void;
-    onSubmit: (data: CreateSAMLProviderFormInputs) => void;
-}> = ({ error, onClose, onSubmit }) => {
+    onSubmit: (data: UpsertSAMLProviderFormInputs) => void;
+}> = ({ error, onClose, oldSSOProvider, onSubmit }) => {
     const theme = useTheme();
     const {
         control,
         handleSubmit,
         reset,
-
         formState: { errors },
-    } = useForm<CreateSAMLProviderFormInputs>({
+    } = useForm<UpsertSAMLProviderFormInputs>({
         defaultValues: {
-            name: '',
+            name: oldSSOProvider?.name ?? '',
             metadata: undefined,
         },
     });
@@ -61,7 +57,7 @@ const CreateSAMLProviderForm: FC<{
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
             <DialogContent>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
@@ -96,9 +92,7 @@ const CreateSAMLProviderForm: FC<{
                         <Controller
                             control={control}
                             name='metadata'
-                            rules={{
-                                required: 'Metadata is required',
-                            }}
+                            rules={{ required: !oldSSOProvider && 'Metadata is required' }}
                             render={({ field }) => (
                                 <Box p={1} borderRadius={4} bgcolor={theme.palette.neutral.tertiary}>
                                     <Box display='flex' flexDirection='row' alignItems='center'>
@@ -148,11 +142,11 @@ const CreateSAMLProviderForm: FC<{
                     Cancel
                 </Button>
                 <Button data-testid='create-saml-provider-dialog_button-save' type='submit'>
-                    Submit
+                    {oldSSOProvider ? 'Confirm Edits' : 'Submit'}
                 </Button>
             </DialogActions>
         </form>
     );
 };
 
-export default CreateSAMLProviderForm;
+export default UpsertSAMLProviderForm;

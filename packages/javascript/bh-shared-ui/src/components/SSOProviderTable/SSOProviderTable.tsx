@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { faEllipsisVertical, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faEllipsisVertical, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     IconButton,
@@ -61,7 +61,8 @@ const StyledMenu = withStyles({
 
 const SSOProviderTableActionsMenu: FC<{
     onDeleteSSOProvider: () => void;
-}> = ({ onDeleteSSOProvider }) => {
+    onUpdateSSOProvider: () => void;
+}> = ({ onDeleteSSOProvider, onUpdateSSOProvider }) => {
     /* Hooks */
 
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -76,6 +77,11 @@ const SSOProviderTableActionsMenu: FC<{
 
     const onClickDeleteSSOProvider = () => {
         onDeleteSSOProvider();
+        setAnchorEl(null);
+    };
+
+    const onClickUpdateSSOProvider = () => {
+        onUpdateSSOProvider();
         setAnchorEl(null);
     };
 
@@ -97,6 +103,12 @@ const SSOProviderTableActionsMenu: FC<{
                     </ListItemIcon>
                     <ListItemText primary='Delete SSO Provider' />
                 </MenuItem>
+                <MenuItem onClick={onClickUpdateSSOProvider}>
+                    <ListItemIcon>
+                        <FontAwesomeIcon icon={faEdit} />
+                    </ListItemIcon>
+                    <ListItemText primary='Edit SSO Provider' />
+                </MenuItem>
             </StyledMenu>
         </>
     );
@@ -105,11 +117,20 @@ const SSOProviderTableActionsMenu: FC<{
 const SSOProviderTable: FC<{
     ssoProviders: SSOProvider[];
     loading: boolean;
-    onDeleteSSOProvider: (ssoProviderId: SSOProvider['id']) => void;
+    onDeleteSSOProvider: (ssoProvider: SSOProvider) => void;
+    onUpdateSSOProvider: (ssoProvider: SSOProvider) => void;
     onClickSSOProvider: (ssoProviderId: SSOProvider['id']) => void;
     onToggleTypeSortOrder: () => void;
     typeSortOrder?: SortOrder;
-}> = ({ ssoProviders, loading, onDeleteSSOProvider, onClickSSOProvider, typeSortOrder, onToggleTypeSortOrder }) => {
+}> = ({
+    ssoProviders,
+    loading,
+    onDeleteSSOProvider,
+    onUpdateSSOProvider,
+    onClickSSOProvider,
+    onToggleTypeSortOrder,
+    typeSortOrder,
+}) => {
     const theme = useTheme();
     return (
         <Paper>
@@ -178,7 +199,8 @@ const SSOProviderTable: FC<{
                                 <TableRow key={ssoProvider.id}>
                                     <TableCell align='center' padding='checkbox'>
                                         <SSOProviderTableActionsMenu
-                                            onDeleteSSOProvider={() => onDeleteSSOProvider(ssoProvider.id)}
+                                            onDeleteSSOProvider={() => onDeleteSSOProvider(ssoProvider)}
+                                            onUpdateSSOProvider={() => onUpdateSSOProvider(ssoProvider)}
                                         />
                                     </TableCell>
                                     <TableCell onClick={() => onClickSSOProvider(ssoProvider.id)} size='small'>
