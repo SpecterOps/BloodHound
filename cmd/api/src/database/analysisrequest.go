@@ -18,10 +18,9 @@ package database
 
 import (
 	"context"
-	"database/sql"
+	"errors"
 	"time"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/model"
 )
@@ -43,12 +42,9 @@ func (s *BloodhoundDB) DeleteAnalysisRequest(ctx context.Context) error {
 func (s *BloodhoundDB) GetAnalysisRequest(ctx context.Context) (model.AnalysisRequest, error) {
 	var analysisRequest model.AnalysisRequest
 
-	// Note: GORM Raw does not throw any errors if no row is found. We can inspect rows affected as a workaround
-	if tx := s.db.WithContext(ctx).Raw(`select requested_by, request_type, requested_at from analysis_request_switch limit 1;`).Scan(&analysisRequest); tx.RowsAffected == 0 {
-		return analysisRequest, sql.ErrNoRows
-	}
+	tx := s.db.WithContext(ctx).Select("requested_by, request_type, requested_at").Table("analysis_request_switch").First(&analysisRequest)
 
-	return analysisRequest, nil
+	return analysisRequest, CheckError(tx)
 }
 
 func (s *BloodhoundDB) HasAnalysisRequest(ctx context.Context) bool {
@@ -71,14 +67,14 @@ func (s *BloodhoundDB) HasCollectedGraphDataDeletionRequest(ctx context.Context)
 	return exists
 }
 
-// This inserts a row into analysis_request_switch for both a collected graph data deletion request or an analysis request.
+// setAnalysisRequest inserts a row into analysis_request_switch for both a collected graph data deletion request or an analysis request.
 // There should only ever be 1 row, if a request is present, subsequent requests no-op
 // If an analysis request is present when a deletion request comes in, that overwrites the analysis to deletion but not vice-versa
 // To request: Use the helper methods `RequestAnalysis` and `RequestCollectedGraphDataDeletion`
 func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, requestType model.AnalysisRequestType, requestedBy string) error {
-	if analReq, err := s.GetAnalysisRequest(ctx); err != nil && !errors.Is(err, sql.ErrNoRows) {
+	if analReq, err := s.GetAnalysisRequest(ctx); err != nil && !errors.Is(err, ErrNotFound) {
 		return err
-	} else if errors.Is(err, sql.ErrNoRows) {
+	} else if errors.Is(err, ErrNotFound) {
 		// Analysis request doesn't exist so insert one
 		insertSql := `insert into analysis_request_switch (requested_by, request_type, requested_at) values (?, ?, ?);`
 		tx := s.db.WithContext(ctx).Exec(insertSql, requestedBy, requestType, time.Now().UTC())
@@ -94,13 +90,13 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, requestType model
 	}
 }
 
-// This will request an analysis be executed, as long as there isn't an existing analysis request or collected graph data deletion request, then it no-ops
+// RequestAnalysis will request an analysis be executed, as long as there isn't an existing analysis request or collected graph data deletion request, then it no-ops
 func (s *BloodhoundDB) RequestAnalysis(ctx context.Context, requestedBy string) error {
 	log.Infof("Analysis requested by %s", requestedBy)
 	return s.setAnalysisRequest(ctx, model.AnalysisRequestAnalysis, requestedBy)
 }
 
-// This will request collected graph data be deleted, if an analysis request is present, it will overwrite that.
+// RequestCollectedGraphDataDeletion will request collected graph data be deleted, if an analysis request is present, it will overwrite that.
 func (s *BloodhoundDB) RequestCollectedGraphDataDeletion(ctx context.Context, requestedBy string) error {
 	log.Infof("Collected graph data deletion requested by %s", requestedBy)
 	return s.setAnalysisRequest(ctx, model.AnalysisRequestDeletion, requestedBy)

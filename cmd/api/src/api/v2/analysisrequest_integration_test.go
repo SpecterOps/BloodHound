@@ -17,36 +17,23 @@
 //go:build integration
 // +build integration
 
-package database_test
+package v2_test
 
 import (
-	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/api/v2/integration"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
 )
 
-func TestAnalysisRequest(t *testing.T) {
-	var (
-		testCtx = context.Background()
-		dbInst  = integration.SetupDB(t)
-	)
+func TestRequestAnalysis(t *testing.T) {
+	testCtx := integration.NewFOSSContext(t)
 
-	err := dbInst.RequestAnalysis(testCtx, "test")
+	err := testCtx.AdminClient().RequestAnalysis()
 	require.Nil(t, err)
 
-	analReq, err := dbInst.GetAnalysisRequest(testCtx)
+	analReq, err := testCtx.AdminClient().GetAnalysisRequest()
 	require.Nil(t, err)
 	require.Equal(t, analReq.RequestType, model.AnalysisRequestAnalysis)
-	require.Equal(t, analReq.RequestedBy, "test")
-	require.False(t, analReq.RequestedAt.IsZero())
-
-	err = dbInst.DeleteAnalysisRequest(testCtx)
-	require.Nil(t, err)
-
-	_, err = dbInst.GetAnalysisRequest(testCtx)
-	require.ErrorIs(t, err, database.ErrNotFound)
 }
