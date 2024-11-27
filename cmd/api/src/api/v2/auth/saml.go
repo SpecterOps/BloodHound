@@ -28,6 +28,7 @@ import (
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/crypto"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
@@ -255,7 +256,7 @@ func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWrit
 	}
 }
 
-// Preserve old metadata endpoint
+// Preserve old metadata endpoint for saml providers
 func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request *http.Request) {
 	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableSSOProviderSlug]
 
@@ -266,6 +267,7 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
+		// Note: This is the samlsp metadata tied to authenticate flow and will not be the same as the XML metadata used to import the SAML provider initially
 		if content, err := xml.MarshalIndent(serviceProvider.Metadata(), "", "  "); err != nil {
 			log.Errorf("[SAML] XML marshalling failure during service provider encoding for %s: %v", ssoProvider.SAMLProvider.IssuerURI, err)
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
@@ -274,6 +276,25 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 			if _, err := response.Write(content); err != nil {
 				log.Errorf("[SAML] Failed to write response for serving metadata: %v", err)
 			}
+		}
+	}
+}
+
+// Provide the saml provider certifcate
+func (s ManagementResource) ServeSigningCertificate(response http.ResponseWriter, request *http.Request) {
+	rawProviderID := mux.Vars(request)[api.URIPathVariableSSOProviderID]
+
+	if ssoProviderID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+	} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), int32(ssoProviderID)); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if ssoProvider.SAMLProvider == nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+	} else {
+		// Note this is the public cert not necessarily the IDP cert
+		response.Header().Set(headers.ContentDisposition.String(), fmt.Sprintf("attachment; filename=\"%s-signing-certificate.pem\"", ssoProvider.Slug))
+		if _, err := response.Write([]byte(crypto.FormatCert(s.config.SAML.ServiceProviderCertificate))); err != nil {
+			log.Errorf("[SAML] Failed to write response for serving signing certificate: %v", err)
 		}
 	}
 }
