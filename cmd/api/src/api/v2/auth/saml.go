@@ -28,6 +28,7 @@ import (
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/crypto"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
@@ -292,7 +293,7 @@ func (s ManagementResource) ServeSigningCertificate(response http.ResponseWriter
 	} else {
 		// Note this is the public cert not necessarily the IDP cert
 		response.Header().Set(headers.ContentDisposition.String(), fmt.Sprintf("attachment; filename=\"%s-signing-certificate.pem\"", ssoProvider.Slug))
-		if _, err := response.Write([]byte(s.config.SAML.ServiceProviderCertificate)); err != nil {
+		if _, err := response.Write([]byte(crypto.FormatCert(s.config.SAML.ServiceProviderCertificate))); err != nil {
 			log.Errorf("[SAML] Failed to write response for serving signing certificate: %v", err)
 		}
 	}
