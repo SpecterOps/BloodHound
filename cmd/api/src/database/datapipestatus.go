@@ -51,7 +51,7 @@ func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.Datap
 func (s *BloodhoundDB) GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error) {
 	var datapipeStatus model.DatapipeStatusWrapper
 
-	tx := s.db.WithContext(ctx).Raw("SELECT status, updated_at, last_complete_analysis_at, last_analysis_run_at FROM datapipe_status").First(&datapipeStatus)
+	tx := s.db.WithContext(ctx).Select("status, updated_at, last_complete_analysis_at, last_analysis_run_at").Table("datapipe_status").First(&datapipeStatus)
 
 	return datapipeStatus, CheckError(tx)
 }
