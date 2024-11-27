@@ -18,7 +18,7 @@ import { Dialog, DialogTitle } from '@mui/material';
 import { SSOProvider, UpsertOIDCProviderRequest } from 'js-client-library';
 import UpsertOIDCProviderForm from './UpsertOIDCProviderForm';
 
-const UpsertSAMLProviderDialog: React.FC<{
+const UpsertOIDCProviderDialog: React.FC<{
     open: boolean;
     error?: string;
     oldSSOProvider?: SSOProvider;
@@ -46,4 +46,4 @@ const UpsertSAMLProviderDialog: React.FC<{
     );
 };
 
-export default UpsertSAMLProviderDialog;
+export default UpsertOIDCProviderDialog;

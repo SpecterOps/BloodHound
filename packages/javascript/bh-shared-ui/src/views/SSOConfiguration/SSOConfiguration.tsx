@@ -17,7 +17,7 @@
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, Paper, TextField, Typography, useTheme } from '@mui/material';
-import { SSOProvider, UpsertSAMLProviderFormInputs, UpsertOIDCProviderRequest } from 'js-client-library';
+import { SSOProvider, UpsertOIDCProviderRequest, UpsertSAMLProviderFormInputs } from 'js-client-library';
 import { ChangeEvent, FC, useMemo, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import {
@@ -117,7 +117,7 @@ const SSOConfiguration: FC = () => {
     const closeDialog = () => {
         setUpsertProviderError('');
         setDialogOpen('');
-        setSSOProviderIdToDeleteOrUpdate(undefined);
+        setTimeout(() => setSSOProviderIdToDeleteOrUpdate(undefined), 500);
     };
 
     const onClickSSOProvider = (ssoProviderId: SSOProvider['id']) => {
@@ -290,14 +290,14 @@ const SSOConfiguration: FC = () => {
             </PageWithTitle>
             <UpsertSAMLProviderDialog
                 open={dialogOpen === 'SAML'}
-                oldSSOProvider={dialogOpen === 'SAML' ? selectedSSOProviderToUpdate : undefined}
+                oldSSOProvider={selectedSSOProviderToUpdate}
                 error={upsertProviderError}
                 onClose={closeDialog}
                 onSubmit={upsertSAMLProvider}
             />
             <UpsertOIDCProviderDialog
                 open={dialogOpen === 'OIDC'}
-                oldSSOProvider={dialogOpen === 'OIDC' ? selectedSSOProviderToUpdate : undefined}
+                oldSSOProvider={selectedSSOProviderToUpdate}
                 error={upsertProviderError}
                 onClose={closeDialog}
                 onSubmit={upsertOIDCProvider}
