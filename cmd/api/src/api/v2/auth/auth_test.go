@@ -1517,6 +1517,64 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 	require.Contains(t, response.Body.String(), api.ErrorResponseUserSelfDisable)
 }
 
+func TestManagementResource_UpdateUser_UserSelfModify(t *testing.T) {
+	var (
+		adminRole = model.Role{
+			Serial: model.Serial{
+				ID: 1,
+			},
+		}
+		goodRoles = []int32{1}
+		badRole   = model.Role{
+			Serial: model.Serial{
+				ID: 2,
+			},
+		}
+		badRoles          = []int32{2}
+		adminUser         = model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword"), Unique: model.Unique{ID: must.NewUUIDv4()}, Roles: model.Roles{adminRole}}
+		mockCtrl          = gomock.NewController(t)
+		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+	)
+
+	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx.AuthCtx.Owner = adminUser
+
+	defer mockCtrl.Finish()
+
+	t.Run("Prevent users from changing their own SSO provider", func(t *testing.T) {
+		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{adminRole}, nil)
+		mockDB.EXPECT().GetUser(gomock.Any(), adminUser.ID).Return(adminUser, nil)
+		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), ssoProviderID).Return(model.SSOProvider{}, nil)
+		test.Request(t).
+			WithContext(bhCtx).
+			WithURLPathVars(map[string]string{"user_id": adminUser.ID.String()}).
+			WithBody(v2.UpdateUserRequest{
+				Principal:     "tester",
+				Roles:         goodRoles,
+				SSOProviderID: null.Int32From(123),
+			}).
+			OnHandlerFunc(resources.UpdateUser).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest)
+	})
+
+	t.Run("Prevent users from changing their own roles", func(t *testing.T) {
+		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{badRole}, nil)
+		mockDB.EXPECT().GetUser(gomock.Any(), adminUser.ID).Return(adminUser, nil)
+
+		test.Request(t).
+			WithContext(bhCtx).
+			WithURLPathVars(map[string]string{"user_id": adminUser.ID.String()}).
+			WithBody(v2.UpdateUserRequest{
+				Principal: "tester",
+				Roles:     badRoles,
+			}).
+			OnHandlerFunc(resources.UpdateUser).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest)
+	})
+}
+
 func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()

@@ -250,7 +250,7 @@ const UpdateUserFormInner: React.FC<{
                                 }}
                                 render={({ field: { onChange, onBlur, value, ref } }) => (
                                     <FormControl>
-                                        <InputLabel id='authenticationMethod-label' sx={{ ml: '-14px', mt: '8px' }}>
+                                        <InputLabel id='authenticationMethod-label' sx={{ ml: '-14px', mt: '8px' }} hidden={hasSelectedSelf}>
                                             Authentication Method
                                         </InputLabel>
                                         <Select
@@ -264,7 +264,7 @@ const UpdateUserFormInner: React.FC<{
                                             variant='standard'
                                             fullWidth
                                             data-testid='update-user-dialog_select-authentication-method'
-                                            disabled={hasSelectedSelf}>
+                                            hidden={hasSelectedSelf}>
                                             <MenuItem value='password'>Username / Password</MenuItem>
                                             {SSOProviders && SSOProviders.length > 0 && (
                                                 <MenuItem value='sso'>Single Sign-On (SSO)</MenuItem>
@@ -285,7 +285,7 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field: { onChange, onBlur, value, ref } }) => (
                                         <FormControl>
-                                            <InputLabel id='SSOProviderId-label' sx={{ ml: '-14px', mt: '8px' }}>
+                                            <InputLabel id='SSOProviderId-label' sx={{ ml: '-14px', mt: '8px' }} hidden={hasSelectedSelf}>
                                                 SSO Provider
                                             </InputLabel>
                                             <Select
@@ -300,7 +300,7 @@ const UpdateUserFormInner: React.FC<{
                                                 variant='standard'
                                                 fullWidth
                                                 data-testid='update-user-dialog_select-sso-provider'
-                                                disabled={hasSelectedSelf}>
+                                                hidden={hasSelectedSelf}>
                                                 {SSOProviders?.map((SSOProvider: SSOProvider) => (
                                                     <MenuItem value={SSOProvider.id.toString()} key={SSOProvider.id}>
                                                         {SSOProvider.name}
@@ -324,7 +324,7 @@ const UpdateUserFormInner: React.FC<{
                             }}
                             render={({ field }) => (
                                 <FormControl>
-                                    <InputLabel id='role-label' sx={{ ml: '-14px', mt: '8px' }}>
+                                    <InputLabel id='role-label' sx={{ ml: '-14px', mt: '8px' }} hidden={hasSelectedSelf}>
                                         Role
                                     </InputLabel>
                                     <Select
@@ -339,7 +339,7 @@ const UpdateUserFormInner: React.FC<{
                                         variant='standard'
                                         fullWidth
                                         data-testid='update-user-dialog_select-role'
-                                        disabled={hasSelectedSelf}>
+                                        hidden={hasSelectedSelf}>
                                         {roles.map((role: any) => (
                                             <MenuItem key={role.id} value={role.id.toString()}>
                                                 {role.name}
