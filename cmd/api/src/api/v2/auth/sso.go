@@ -17,6 +17,7 @@
 package auth
 
 import (
+	"github.com/specterops/bloodhound/headers"
 	"net/http"
 	"net/url"
 	"path"
@@ -172,6 +173,20 @@ func (s ManagementResource) DeleteSSOProvider(response http.ResponseWriter, requ
 			AffectedUsers: providerUsers,
 		}, http.StatusOK, response)
 	}
+}
+
+func redirectToLoginPage(response http.ResponseWriter, request *http.Request, errorMessage string) {
+	hostURL := *ctx.FromRequest(request).Host
+	redirectURL := api.URLJoinPath(hostURL, "ui/login")
+
+	// Optionally, include the error message as a query parameter or in session storage
+	query := redirectURL.Query()
+	query.Set("error", errorMessage)
+	redirectURL.RawQuery = query.Encode()
+
+	// Redirect to the login page
+	response.Header().Add(headers.Location.String(), redirectURL.String())
+	response.WriteHeader(http.StatusFound)
 }
 
 func (s ManagementResource) SSOLoginHandler(response http.ResponseWriter, request *http.Request) {

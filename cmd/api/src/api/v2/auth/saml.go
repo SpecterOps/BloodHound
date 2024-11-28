@@ -214,7 +214,11 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 // HandleStartAuthFlow is called to start the SAML authentication process.
 func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	if ssoProvider.SAMLProvider == nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+		//api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+		//response.Header().Add(headers.Location.String(), "http://bhe.localhost/ui/login")
+		//response.WriteHeader(http.StatusFound)
+		redirectToLoginPage(response, request, "SSO Provider not found")
+
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
