@@ -33,7 +33,7 @@ import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
-import { SSOProvider, UpdateUserRequest } from 'js-client-library';
+import { SSOProvider, UpdateUserRequest, Role } from 'js-client-library';
 
 export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 
@@ -130,7 +130,7 @@ const UpdateUserFormInner: React.FC<{
     onCancel: () => void;
     onSubmit: (user: UpdateUserRequestForm) => void;
     initialData: UpdateUserRequestForm;
-    roles: any[];
+    roles?: Role[];
     SSOProviders?: SSOProvider[];
     hasSelectedSelf: boolean;
     isLoading: boolean;
@@ -363,9 +363,9 @@ const UpdateUserFormInner: React.FC<{
                                         value={isNaN(field.value) ? '' : field.value.toString()}
                                         variant='standard'
                                         fullWidth
-                                        data-testid='update-user-dialog_select-role'
+                                        data-testid='update-user-dialog_select-role'>
                                         hidden={hasSelectedSelf}>
-                                        {roles.map((role: any) => (
+                                        {roles?.map((role: Role) => (
                                             <MenuItem key={role.id} value={role.id.toString()}>
                                                 {role.name}
                                             </MenuItem>
