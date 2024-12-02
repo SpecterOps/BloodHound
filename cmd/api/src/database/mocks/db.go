@@ -95,6 +95,21 @@ func (mr *MockDatabaseMockRecorder) Close(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close), arg0)
 }
 
+// CountAllIngestTasks mocks base method.
+func (m *MockDatabase) CountAllIngestTasks(arg0 context.Context) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountAllIngestTasks", arg0)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountAllIngestTasks indicates an expected call of CountAllIngestTasks.
+func (mr *MockDatabaseMockRecorder) CountAllIngestTasks(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountAllIngestTasks", reflect.TypeOf((*MockDatabase)(nil).CountAllIngestTasks), arg0)
+}
+
 // CreateADDataQualityAggregation mocks base method.
 func (m *MockDatabase) CreateADDataQualityAggregation(arg0 context.Context, arg1 model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error) {
 	m.ctrl.T.Helper()

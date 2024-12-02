@@ -605,7 +605,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/model.auth-provider"
+                      "$ref": "#/components/schemas/model.oidc-provider"
                     }
                   }
                 }
@@ -646,6 +646,100 @@
           }
         }
       ],
+      "patch": {
+        "operationId": "PatchSSOProvider",
+        "summary": "Update SSO Provider",
+        "description": "Updates an existing SSO provider. Updating saml provider requires a \"multipart/form-data\" body. Updating oidc provider requires \"application/json\" body. Response is respective provider",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the new SAML provider."
+                  },
+                  "metadata": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Metadata XML file."
+                  }
+                }
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the OIDC provider"
+                  },
+                  "issuer": {
+                    "type": "string",
+                    "format": "url",
+                    "description": "URL of the OIDC issuer"
+                  },
+                  "client_id": {
+                    "type": "string",
+                    "description": "Client ID for the OIDC provider"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/model.saml-provider"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/model.oidc-provider"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
       "delete": {
         "operationId": "DeleteSSOProvider",
         "summary": "Delete SSO Provider",
@@ -697,6 +791,68 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sso-providers/{sso_provider_id}/signing-certificate": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "description": "SSO Provider ID for a SAML provider",
+          "name": "sso_provider_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetSSOProviderSAMLSigningCertificate",
+        "summary": "Get SAML Provider Signing Certificate",
+        "description": "Download the SAML Provider Signing Certificate. Only applies to SAML providers.",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "content-disposition": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Suggested filename of structure \"{saml-slug}-signing-certificate.pem\""
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"

@@ -23,6 +23,66 @@ parameters:
     schema:
       type: integer
       format: int32
+patch:
+  operationId: PatchSSOProvider
+  summary: Update SSO Provider
+  description: Updates an existing SSO provider. Updating saml provider requires a "multipart/form-data" body. Updating oidc provider requires "application/json" body. Response is respective provider
+  tags:
+    - Auth
+    - Community
+    - Enterprise
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          properties:
+            name:
+              type: string
+              description: Name of the new SAML provider.
+            metadata:
+              type: string
+              format: binary
+              description: Metadata XML file.
+      application/json:
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              description: Name of the OIDC provider
+            issuer:
+              type: string
+              format: url
+              description: URL of the OIDC issuer
+            client_id:
+              type: string
+              description: Client ID for the OIDC provider
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - type: object
+                properties:
+                  data:
+                    $ref: './../schemas/model.saml-provider.yaml'
+              - type: object
+                properties:
+                  data:
+                    $ref: './../schemas/model.oidc-provider.yaml'
+    '401':
+      $ref: './../responses/unauthorized.yaml'
+    '403':
+      $ref: './../responses/forbidden.yaml'
+    '404':
+      $ref: './../responses/not-found.yaml'
+    '429':
+      $ref: './../responses/too-many-requests.yaml'
+    '500':
+      $ref: './../responses/internal-server-error.yaml'
 delete:
   operationId: DeleteSSOProvider
   summary: Delete SSO Provider

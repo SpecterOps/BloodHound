@@ -31,7 +31,7 @@ const samlProvider: SSOProvider = {
 };
 
 const oidcProvider: SSOProvider = {
-    id: 1,
+    id: 2,
     slug: 'gotham-oidc',
     name: 'Gotham OIDC',
     type: 'OIDC',

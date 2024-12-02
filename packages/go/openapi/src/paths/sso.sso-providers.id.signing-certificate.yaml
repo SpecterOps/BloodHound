@@ -16,51 +16,39 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
-post:
-  operationId: CreateOIDCProvider
-  summary: Create OIDC Provider
-  description: Creates a new OIDC provider for SSO authentication
+  - description: SSO Provider ID for a SAML provider
+    name: sso_provider_id
+    in: path
+    required: true
+    schema:
+      type: integer
+      format: int32
+get:
+  operationId: GetSSOProviderSAMLSigningCertificate
+  summary: Get SAML Provider Signing Certificate
+  description: Download the SAML Provider Signing Certificate. Only applies to SAML providers.
   tags:
     - Auth
     - Community
     - Enterprise
-  requestBody:
-    required: true
-    content:
-      application/json:
-        schema:
-          type: object
-          required:
-            - name
-            - issuer
-            - client_id
-          properties:
-            name:
-              type: string
-              description: Name of the OIDC provider
-            issuer:
-              type: string
-              format: url
-              description: URL of the OIDC issuer
-            client_id:
-              type: string
-              description: Client ID for the OIDC provider
   responses:
-    '201':
+    '200':
       description: OK
-      content:
-        application/json:
+      headers:
+        content-disposition:
           schema:
-            type: object
-            properties:
-              data:
-                $ref: './../schemas/model.oidc-provider.yaml'
-    '400':
-      $ref: './../responses/bad-request.yaml'
+            type: string
+          description: Suggested filename of structure "{saml-slug}-signing-certificate.pem"
+      content:
+        text/plain:
+          schema:
+            type: string
     '401':
       $ref: './../responses/unauthorized.yaml'
     '403':
       $ref: './../responses/forbidden.yaml'
+    '404':
+      $ref: './../responses/not-found.yaml'
     '429':
       $ref: './../responses/too-many-requests.yaml'
     '500':
