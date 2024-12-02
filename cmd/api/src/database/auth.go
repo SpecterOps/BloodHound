@@ -264,7 +264,13 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 		Model:  &updatedUser,
 	}
 	return updatedUser, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Create(&updatedUser))
+		err := tx.WithContext(ctx).Create(&updatedUser)
+		if err != nil {
+			if strings.Contains(err.Error.Error(), "duplicate key value violates unique constraint \"users_principal_name_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateUserPrincipal, err)
+			}
+		}
+		return CheckError(err)
 	})
 }
 

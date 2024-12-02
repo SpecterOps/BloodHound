@@ -356,7 +356,11 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		}
 
 		if newUser, err := s.db.CreateUser(request.Context(), userTemplate); err != nil {
-			api.HandleDatabaseError(request, response, err)
+			if errors.Is(err, database.ErrDuplicateUserPrincipal) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "Principal name already in use", request), response)
+			} else {
+				api.HandleDatabaseError(request, response, err)
+			}
 		} else {
 			api.WriteBasicResponse(request.Context(), newUser, http.StatusOK, response)
 		}
