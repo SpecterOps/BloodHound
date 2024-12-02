@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { render, screen, waitFor } from '../../test-utils';
+import { render, screen, waitFor } from '../../../test-utils';
 import UpsertSAMLProviderForm from './UpsertSAMLProviderForm';
 
 describe('UpsertSAMLProviderForm', () => {
