@@ -174,6 +174,27 @@ func (s ManagementResource) DeleteSSOProvider(response http.ResponseWriter, requ
 	}
 }
 
+// UpdateSSOProvider updates a sso_provider with the matching id
+func (s ManagementResource) UpdateSSOProvider(response http.ResponseWriter, request *http.Request) {
+	rawSSOProviderID := mux.Vars(request)[api.URIPathVariableSSOProviderID]
+
+	// Convert the incoming string url param to an int
+	if ssoProviderID, err := strconv.Atoi(rawSSOProviderID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), int32(ssoProviderID)); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		switch ssoProvider.Type {
+		case model.SessionAuthProviderSAML:
+			s.UpdateSAMLProviderRequest(response, request, ssoProvider)
+		case model.SessionAuthProviderOIDC:
+			s.UpdateOIDCProviderRequest(response, request, ssoProvider)
+		default:
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotImplemented, api.ErrorResponseDetailsNotImplemented, request), response)
+		}
+	}
+}
+
 func (s ManagementResource) SSOLoginHandler(response http.ResponseWriter, request *http.Request) {
 	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableSSOProviderSlug]
 

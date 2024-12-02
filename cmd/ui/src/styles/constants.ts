@@ -26,5 +26,7 @@ export const colors = {
     red: '#e52d2d',
     green: '#03b603',
     softRed: '#FF7E79',
+    softRed2: '#E15851',
     softGreen: '#A8D08D',
+    softGreen2: '#02C577',
 };

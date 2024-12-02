@@ -14,26 +14,25 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, FC, useMemo, ChangeEvent } from 'react';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Grid, Typography, Paper, TextField, useTheme } from '@mui/material';
+import { Box, Grid, Paper, TextField, Typography, useTheme } from '@mui/material';
+import { SSOProvider, UpsertOIDCProviderRequest, UpsertSAMLProviderFormInputs } from 'js-client-library';
+import { ChangeEvent, FC, useMemo, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
-import { CreateOIDCProviderRequest, SSOProvider } from 'js-client-library';
-import { apiClient } from '../../utils';
 import {
-    CreateSAMLProviderDialog,
-    CreateSAMLProviderFormInputs,
-    CreateMenu,
     ConfirmationDialog,
+    CreateMenu,
     DocumentationLinks,
-    SSOProviderTable,
     PageWithTitle,
     SSOProviderInfoPanel,
+    SSOProviderTable,
+    UpsertSAMLProviderDialog,
 } from '../../components';
-import CreateOIDCProviderDialog from '../../components/CreateOIDCProviderDialog';
+import UpsertOIDCProviderDialog from '../../components/UpsertOIDCProviderDialog';
 import { useFeatureFlag } from '../../hooks';
 import { useNotifications } from '../../providers';
+import { SortOrder, apiClient } from '../../utils';
 
 const SSOConfiguration: FC = () => {
     /* Hooks */
@@ -42,11 +41,11 @@ const SSOConfiguration: FC = () => {
     const { data: flag } = useFeatureFlag('oidc_support');
 
     const [selectedSSOProviderId, setSelectedSSOProviderId] = useState<SSOProvider['id'] | undefined>();
-    const [ssoProviderIdToDelete, setSSOProviderIdToDelete] = useState<SSOProvider['id'] | undefined>();
+    const [ssoProviderIdToDeleteOrUpdate, setSSOProviderIdToDeleteOrUpdate] = useState<SSOProvider['id'] | undefined>();
     const [dialogOpen, setDialogOpen] = useState<'SAML' | 'OIDC' | 'DELETE' | ''>('');
     const [nameFilter, setNameFilter] = useState<string>('');
-    const [createProviderError, setCreateProviderError] = useState<string>('');
-    const [typeSortOrder, setTypeSortOrder] = useState<'asc' | 'desc' | undefined>();
+    const [upsertProviderError, setUpsertProviderError] = useState<string>('');
+    const [typeSortOrder, setTypeSortOrder] = useState<SortOrder>();
 
     const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
         apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
@@ -97,6 +96,10 @@ const SSOConfiguration: FC = () => {
         return listSSOProvidersQuery.data?.find(({ id }) => id === selectedSSOProviderId);
     }, [selectedSSOProviderId, listSSOProvidersQuery.data]);
 
+    const selectedSSOProviderToUpdate = useMemo(() => {
+        return listSSOProvidersQuery.data?.find(({ id }) => id === ssoProviderIdToDeleteOrUpdate);
+    }, [ssoProviderIdToDeleteOrUpdate, listSSOProvidersQuery.data]);
+
     /* Event Handlers */
 
     const openSAMLProviderDialog = () => {
@@ -112,24 +115,39 @@ const SSOConfiguration: FC = () => {
     };
 
     const closeDialog = () => {
+        setUpsertProviderError('');
         setDialogOpen('');
-        setCreateProviderError('');
+        setTimeout(() => setSSOProviderIdToDeleteOrUpdate(undefined), 500);
     };
 
     const onClickSSOProvider = (ssoProviderId: SSOProvider['id']) => {
         setSelectedSSOProviderId(ssoProviderId);
     };
 
-    const onSelectDeleteSSOProvider = (ssoProviderId: SSOProvider['id']) => {
-        setSSOProviderIdToDelete(ssoProviderId);
-        openDeleteProviderDialog();
+    const onSelectDeleteOrUpdateSSOProvider = (action: 'DELETE' | 'UPDATE') => (ssoProvider: SSOProvider) => {
+        setSSOProviderIdToDeleteOrUpdate(ssoProvider.id);
+        switch (action) {
+            case 'DELETE':
+                openDeleteProviderDialog();
+                break;
+            case 'UPDATE':
+                switch (ssoProvider.type) {
+                    case 'SAML':
+                        openSAMLProviderDialog();
+                        break;
+                    case 'OIDC':
+                        openOIDCProviderDialog();
+                        break;
+                }
+                break;
+        }
     };
 
     const onDeleteSSOProvider = async (response: boolean) => {
         let errored = false;
-        if (response && ssoProviderIdToDelete) {
+        if (response && ssoProviderIdToDeleteOrUpdate) {
             try {
-                await deleteSSOProviderMutation.mutateAsync(ssoProviderIdToDelete);
+                await deleteSSOProviderMutation.mutateAsync(ssoProviderIdToDeleteOrUpdate);
             } catch (err: any) {
                 if (err?.response?.status !== 404) {
                     errored = true;
@@ -152,27 +170,48 @@ const SSOConfiguration: FC = () => {
         }
     };
 
-    const createSAMLProvider = async (samlProvider: CreateSAMLProviderFormInputs) => {
-        setCreateProviderError('');
+    const upsertSAMLProvider = async (samlProvider: UpsertSAMLProviderFormInputs) => {
+        setUpsertProviderError('');
         try {
-            await apiClient.createSAMLProviderFromFile({ ...samlProvider, metadata: samlProvider.metadata[0] });
+            const payload = { name: samlProvider.name, metadata: samlProvider.metadata && samlProvider.metadata[0] };
+            if (ssoProviderIdToDeleteOrUpdate) {
+                await apiClient.updateSAMLProviderFromFile(ssoProviderIdToDeleteOrUpdate, payload);
+            } else {
+                if (payload.name && payload.metadata) {
+                    await apiClient.createSAMLProviderFromFile({ name: payload.name, metadata: payload.metadata });
+                }
+            }
             listSSOProvidersQuery.refetch();
             closeDialog();
         } catch (error) {
             console.error(error);
-            setCreateProviderError('Unable to create new SAML Provider configuration. Please try again.');
+            setUpsertProviderError(
+                `Unable to ${ssoProviderIdToDeleteOrUpdate ? 'update' : 'create new'} SAML Provider configuration. Please try again.`
+            );
         }
     };
 
-    const createOIDCProvider = async (oidcProvider: CreateOIDCProviderRequest) => {
-        setCreateProviderError('');
+    const upsertOIDCProvider = async (oidcProvider: UpsertOIDCProviderRequest) => {
+        setUpsertProviderError('');
         try {
-            await apiClient.createOIDCProvider(oidcProvider);
+            if (ssoProviderIdToDeleteOrUpdate) {
+                await apiClient.updateOIDCProvider(ssoProviderIdToDeleteOrUpdate, oidcProvider);
+            } else {
+                if (oidcProvider.name && oidcProvider.client_id && oidcProvider.issuer) {
+                    await apiClient.createOIDCProvider({
+                        name: oidcProvider.name,
+                        client_id: oidcProvider.client_id,
+                        issuer: oidcProvider.issuer,
+                    });
+                }
+            }
             listSSOProvidersQuery.refetch();
             closeDialog();
         } catch (error) {
             console.error(error);
-            setCreateProviderError('Unable to create new OIDC Provider configuration. Please try again.');
+            setUpsertProviderError(
+                `Unable to ${ssoProviderIdToDeleteOrUpdate ? 'update' : 'create new'} OIDC Provider configuration. Please try again.`
+            );
         }
     };
 
@@ -235,7 +274,8 @@ const SSOConfiguration: FC = () => {
                                 ssoProviders={ssoProviders}
                                 loading={listSSOProvidersQuery.isLoading}
                                 onClickSSOProvider={onClickSSOProvider}
-                                onDeleteSSOProvider={onSelectDeleteSSOProvider}
+                                onDeleteSSOProvider={onSelectDeleteOrUpdateSSOProvider('DELETE')}
+                                onUpdateSSOProvider={onSelectDeleteOrUpdateSSOProvider('UPDATE')}
                                 typeSortOrder={typeSortOrder}
                                 onToggleTypeSortOrder={toggleTypeSortOrder}
                             />
@@ -248,17 +288,19 @@ const SSOConfiguration: FC = () => {
                     )}
                 </Grid>
             </PageWithTitle>
-            <CreateSAMLProviderDialog
+            <UpsertSAMLProviderDialog
                 open={dialogOpen === 'SAML'}
-                error={createProviderError}
+                oldSSOProvider={selectedSSOProviderToUpdate}
+                error={upsertProviderError}
                 onClose={closeDialog}
-                onSubmit={createSAMLProvider}
+                onSubmit={upsertSAMLProvider}
             />
-            <CreateOIDCProviderDialog
+            <UpsertOIDCProviderDialog
                 open={dialogOpen === 'OIDC'}
-                error={createProviderError}
+                oldSSOProvider={selectedSSOProviderToUpdate}
+                error={upsertProviderError}
                 onClose={closeDialog}
-                onSubmit={createOIDCProvider}
+                onSubmit={upsertOIDCProvider}
             />
             <ConfirmationDialog
                 open={dialogOpen === 'DELETE'}
