@@ -291,7 +291,7 @@ const SSOConfiguration: FC = () => {
                     </Grid>
                     {selectedSSOProvider && (
                         <Grid item xs={6}>
-                            <SSOProviderInfoPanel ssoProvider={selectedSSOProvider} />
+                            <SSOProviderInfoPanel ssoProvider={selectedSSOProvider} roles={getRolesQuery.data} />
                         </Grid>
                     )}
                 </Grid>

@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Paper, Box, Typography, useTheme } from '@mui/material';
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 import fileDownload from 'js-file-download';
-import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider } from 'js-client-library';
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider, Role } from 'js-client-library';
+import { Button, Label } from '@bloodhoundenterprise/doodleui';
 import { Field, FieldsContainer, usePaneStyles, useHeaderStyles } from '../../views/Explore';
 import LabelWithCopy from '../LabelWithCopy';
 import { apiClient } from '../../utils';
@@ -27,7 +27,7 @@ import { useNotifications } from '../../providers';
 const SAMLProviderInfoPanel: FC<{
     samlProviderDetails: SAMLProviderInfo;
 }> = ({ samlProviderDetails }) => (
-    <FieldsContainer>
+    <>
         <Field
             label={<LabelWithCopy label='IdP SSO URL' valueToCopy={samlProviderDetails.idp_sso_uri} hoverOnly />}
             value={samlProviderDetails.idp_sso_uri}
@@ -46,7 +46,7 @@ const SAMLProviderInfoPanel: FC<{
             }
             value={samlProviderDetails.sp_metadata_uri}
         />
-    </FieldsContainer>
+    </>
 );
 
 const OIDCProviderInfoPanel: FC<{
@@ -54,7 +54,7 @@ const OIDCProviderInfoPanel: FC<{
 }> = ({ ssoProvider }) => {
     const oidcProviderDetails = ssoProvider.details as OIDCProviderInfo;
     return (
-        <FieldsContainer>
+        <>
             <Field
                 label={<LabelWithCopy label='Client ID' valueToCopy={oidcProviderDetails.client_id} hoverOnly />}
                 value={oidcProviderDetails.client_id}
@@ -67,32 +67,38 @@ const OIDCProviderInfoPanel: FC<{
                 label={<LabelWithCopy label='Callback URL' valueToCopy={ssoProvider.callback_uri} hoverOnly />}
                 value={ssoProvider.callback_uri}
             />
-        </FieldsContainer>
+        </>
     );
 };
 
 const SSOProviderInfoPanel: FC<{
     ssoProvider: SSOProvider;
-}> = ({ ssoProvider }) => {
+    roles?: Role[];
+}> = ({ ssoProvider, roles }) => {
     const theme = useTheme();
     const paneStyles = usePaneStyles();
     const headerStyles = useHeaderStyles();
     const { addNotification } = useNotifications();
 
+    const defaultRoleName = useMemo(
+        () => roles?.find((role) => role.id === ssoProvider.config?.auto_provision?.default_role)?.name,
+        [roles, ssoProvider.config?.auto_provision?.default_role]
+    );
+
     if (!ssoProvider.type) {
         return null;
     }
 
-    let infoPanel;
+    let innerInfoPanel;
     switch (ssoProvider.type.toLowerCase()) {
         case 'saml':
-            infoPanel = <SAMLProviderInfoPanel samlProviderDetails={ssoProvider.details as SAMLProviderInfo} />;
+            innerInfoPanel = <SAMLProviderInfoPanel samlProviderDetails={ssoProvider.details as SAMLProviderInfo} />;
             break;
         case 'oidc':
-            infoPanel = <OIDCProviderInfoPanel ssoProvider={ssoProvider} />;
+            innerInfoPanel = <OIDCProviderInfoPanel ssoProvider={ssoProvider} />;
             break;
         default:
-            infoPanel = null;
+            innerInfoPanel = null;
     }
 
     const downloadSAMLSigningCertificate = () => {
@@ -157,7 +163,25 @@ const SSOProviderInfoPanel: FC<{
                         <Box flexShrink={0} flexGrow={1} fontWeight='bold' ml={theme.spacing(1)} fontSize={'small'}>
                             Provider Information:
                         </Box>
-                        {infoPanel}
+                        <FieldsContainer>
+                            {innerInfoPanel}
+                            <Field
+                                label={<Label>Automatically create new users on login</Label>}
+                                value={ssoProvider.config?.auto_provision?.enabled ? 'Yes' : 'No'}
+                            />
+                            {ssoProvider.config?.auto_provision?.enabled && (
+                                <>
+                                    <Field
+                                        label={<Label>Allow SSO provider to manage roles for new users</Label>}
+                                        value={ssoProvider.config?.auto_provision?.role_provision ? 'Yes' : 'No'}
+                                    />
+                                    <Field
+                                        label={<Label>Default role when creating new users</Label>}
+                                        value={defaultRoleName ?? 'Read-Only'}
+                                    />
+                                </>
+                            )}
+                        </FieldsContainer>
                     </Paper>
                 </Paper>
             </Box>
