@@ -26,26 +26,38 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { useState, FC } from 'react';
+import { useState, FC, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-library';
+import { Role, SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-library';
+import SSOProviderConfigForm from '../SSOProviderConfigForm';
 
 const UpsertSAMLProviderForm: FC<{
     error?: string;
     oldSSOProvider?: SSOProvider;
     onClose: () => void;
     onSubmit: (data: UpsertSAMLProviderFormInputs) => void;
-}> = ({ error, onClose, oldSSOProvider, onSubmit }) => {
+    roles?: Role[];
+}> = ({ error, onClose, oldSSOProvider, onSubmit, roles }) => {
     const theme = useTheme();
+
+    const readOnlyRoleId = useMemo(() => roles?.find((role) => role.name === 'Read-Only')?.id, [roles]);
+
     const {
         control,
+        formState: { errors },
         handleSubmit,
         reset,
-        formState: { errors },
+        resetField,
+        watch,
     } = useForm<UpsertSAMLProviderFormInputs>({
         defaultValues: {
             name: oldSSOProvider?.name ?? '',
             metadata: undefined,
+            config: oldSSOProvider?.config
+                ? oldSSOProvider.config
+                : {
+                      auto_provision: { enabled: false, default_role: readOnlyRoleId, role_provision: false },
+                  },
         },
     });
     const [fileValue, setFileValue] = useState(''); // small workaround to use the file input
@@ -126,6 +138,13 @@ const UpsertSAMLProviderForm: FC<{
                                 : 'Upload the Metadata file provided by your SAML Provider'}
                         </FormHelperText>
                     </Grid>
+                    <SSOProviderConfigForm
+                        control={control}
+                        readOnlyRoleId={readOnlyRoleId}
+                        roles={roles}
+                        resetField={resetField}
+                        watch={watch}
+                    />
                     {error && (
                         <Grid item xs={12}>
                             <Alert severity='error'>{error}</Alert>
