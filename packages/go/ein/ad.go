@@ -62,7 +62,7 @@ func convertOwnsEdgeToProperty(item IngestBase, itemProps map[string]any) {
 		if rightName, err := analysis.ParseKind(ace.RightName); err != nil {
 			continue
 		} else if rightName.Is(ad.Owns) || rightName.Is(ad.OwnsRaw) {
-			itemProps[common.OwnerObjectID.String()] = ace.PrincipalSID
+			itemProps[ad.OwnerSid.String()] = ace.PrincipalSID
 			return
 		}
 	}

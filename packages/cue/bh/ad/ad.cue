@@ -810,6 +810,13 @@ DoesAnyInheritedAceGrantOwnerRights: types.#StringEnum & {
  	representation: "doesanyinheritedacegrantownerrights"
 }
 
+OwnerSid: types.#StringEnum & {
+	symbol: "OwnerSid"
+ 	schema: "ad"
+ 	name: "Owner SID"
+ 	representation: "ownersid"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -921,7 +928,7 @@ Properties: [
 	MSA,
 	DoesAnyAceGrantOwnerRights,
 	DoesAnyInheritedAceGrantOwnerRights,
-	DoesAnyAceGrantOwnerRights,
+	OwnerSid,
 	ADCSWebEnrollmentHTTP,
 	ADCSWebEnrollmentHTTPS,
 	ADCSWebEnrollmentHTTPSEPA,
@@ -1514,6 +1521,8 @@ ACLRelationships: [
 	WritePKINameFlag,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
+	OwnsRaw,
+	WriteOwnerRaw
 ]
 
 // these edges are common to inbound/outbound/pathfinding
