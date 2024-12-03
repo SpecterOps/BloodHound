@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider } from 'js-client-library';
+import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 import { render, screen } from '../../test-utils';
 import { SortOrder } from '../../utils';
 import SSOProviderTable from './SSOProviderTable';
@@ -30,6 +30,7 @@ const samlProvider: SSOProvider = {
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
     details: {} as SAMLProviderInfo,
+    config: {} as SSOProviderConfiguration['config'],
 };
 
 const oidcProvider: SSOProvider = {
@@ -42,6 +43,7 @@ const oidcProvider: SSOProvider = {
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
     details: {} as OIDCProviderInfo,
+    config: {} as SSOProviderConfiguration['config'],
 };
 
 const ssoProviders = [samlProvider, oidcProvider];

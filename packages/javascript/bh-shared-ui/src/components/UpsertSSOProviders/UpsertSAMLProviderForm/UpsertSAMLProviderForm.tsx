@@ -32,7 +32,7 @@ import { Role, SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-libra
 import SSOProviderConfigForm from '../SSOProviderConfigForm';
 
 const UpsertSAMLProviderForm: FC<{
-    error: any;
+    error?: any;
     oldSSOProvider?: SSOProvider;
     onClose: () => void;
     onSubmit: (data: UpsertSAMLProviderFormInputs) => void;
