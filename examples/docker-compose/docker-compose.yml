@@ -17,6 +17,8 @@
 services:
   app-db:
     image: docker.io/library/postgres:16
+    labels:
+      name: "bhce_postgres"
     environment:
       - PGUSER=${POSTGRES_USER:-bloodhound}
       - POSTGRES_USER=${POSTGRES_USER:-bloodhound}
@@ -40,6 +42,8 @@ services:
 
   graph-db:
     image: docker.io/library/neo4j:4.4
+    labels:
+      name: "bhce_neo4j"
     environment:
       - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_SECRET:-bloodhoundcommunityedition}
       - NEO4J_dbms_allow__upgrade=${NEO4J_ALLOW_UPGRADE:-true}
@@ -62,6 +66,8 @@ services:
 
   bloodhound:
     image: docker.io/specterops/bloodhound:${BLOODHOUND_TAG:-latest}
+    labels:
+      name: bhce_bloodhound
     environment:
       - bhe_disable_cypher_complexity_limit=${bhe_disable_cypher_complexity_limit:-false}
       - bhe_enable_cypher_mutations=${bhe_enable_cypher_mutations:-false}
@@ -77,9 +83,8 @@ services:
       ### Default to localhost to prevent accidental publishing of the service to your outer networks
       ### These can be modified by your .env file or by setting the environment variables in your Docker host OS
       - ${BLOODHOUND_HOST:-127.0.0.1}:${BLOODHOUND_PORT:-8080}:8080
-    ### Uncomment to use your own bloodhound.config.json to configure the application
-    # volumes:
-    #   - ./bloodhound.config.json:/bloodhound.config.json:ro
+    volumes:
+      - ./bloodhound.config.json:/bloodhound.config.json:ro
     depends_on:
       app-db:
         condition: service_healthy
