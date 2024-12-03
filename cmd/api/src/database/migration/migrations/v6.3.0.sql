@@ -32,4 +32,4 @@ ALTER TABLE ONLY saml_providers
 UPDATE feature_flags SET enabled = true WHERE key = 'updated_posture_page';
 
 -- Fix users in bad state due to sso bug
-DELETE FROM auth_secrets WHERE id IN (SELECT auth_secrets.id FROM auth_secrets INNER JOIN users ON users.id = auth_secrets.user_id WHERE users.sso_provider_id IS NOT NULL);
+DELETE FROM auth_secrets WHERE id IN (SELECT auth_secrets.id FROM auth_secrets JOIN users ON users.id = auth_secrets.user_id WHERE users.sso_provider_id IS NOT NULL);
