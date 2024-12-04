@@ -19,7 +19,6 @@ package ad
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -29,10 +28,23 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 )
 
 func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "PostOwnsAndWriteOwner")
+
+	// Get the dSHeuristics values for all domains
+	dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db)
+	if err != nil {
+		log.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
+	}
+
+	adminGroupIds, err := FetchAdminGroupIds(ctx, db, groupExpansions)
+	if err != nil {
+		// Get the admin group IDs
+		log.Errorf("failed fetching admin group ids values for postownsandwriteowner: %w", err)
+	}
 
 	// Get all source nodes of Owns ACEs (i.e., owning principals) where the target node has no ACEs granting abusable explicit permissions to OWNER RIGHTS
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -44,98 +56,64 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 		).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 			for rel := range cursor.Chan() {
 
-				// Get the dSHeuristics values for all domains
-				if dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db); err != nil {
+				// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
+				if anyEnforced {
 
-					// If we fail to get the dSHeuristics values, add the Owns edge and return an error
-					isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-					if err != nil {
-						isInherited = false
-					}
-					outC <- analysis.CreatePostRelationshipJob{
-						FromID:        rel.StartID,
-						ToID:          rel.EndID,
-						Kind:          ad.Owns,
-						RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-					}
-					return fmt.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
+					// Get the target node of the OwnsRaw relationship
+					if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
+						continue
 
-				} else if adminGroupIds, err := FetchAdminGroupIds(ctx, db, groupExpansions); err != nil {
-					// Get the admin group IDs
-					// If we fail to get the admin group IDs, add the Owns edge and return an error
-					isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-					if err != nil {
-						isInherited = false
-					}
-					outC <- analysis.CreatePostRelationshipJob{
-						FromID:        rel.StartID,
-						ToID:          rel.EndID,
-						Kind:          ad.Owns,
-						RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-					}
-					return fmt.Errorf("failed fetching admin group ids values for postownsandwriteowner: %w", err)
-
-				} else {
-
-					// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
-					if anyEnforced {
-
-						// Get the target node of the OwnsRaw relationship
-						if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
-							continue
-
-						} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
-							// Get the dSHeuristics value for the domain of the target node
-							continue
-						} else {
-							enforced, ok := dsHeuristicsCache[domainSid]
-							if !ok {
-								enforced = false
-							}
-
-							// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the Owns edge
-							if !enforced {
-								isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-								if err != nil {
-									isInherited = false
-								}
-								outC <- analysis.CreatePostRelationshipJob{
-									FromID:        rel.StartID,
-									ToID:          rel.EndID,
-									Kind:          ad.Owns,
-									RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-								}
-
-							} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
-								// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
-								continue
-							} else if (isComputerDerived && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
-								// If the target node is a computer or derived object, add the Owns edge if the owning principal is a member of DA/EA (or is either group's SID)
-								// If the target node is NOT a computer or derived object, add the Owns edge
-								isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-								if err != nil {
-									isInherited = false
-								}
-								outC <- analysis.CreatePostRelationshipJob{
-									FromID:        rel.StartID,
-									ToID:          rel.EndID,
-									Kind:          ad.Owns,
-									RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-								}
-							}
-						}
+					} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
+						// Get the dSHeuristics value for the domain of the target node
+						continue
 					} else {
-						// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1), we can skip this analysis and just add the Owns relationship
-						isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-						if err != nil {
-							isInherited = false
+						enforced, ok := dsHeuristicsCache[domainSid]
+						if !ok {
+							enforced = false
 						}
-						outC <- analysis.CreatePostRelationshipJob{
-							FromID:        rel.StartID,
-							ToID:          rel.EndID,
-							Kind:          ad.Owns,
-							RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
+
+						// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the Owns edge
+						if !enforced {
+							isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+							if err != nil {
+								isInherited = false
+							}
+							outC <- analysis.CreatePostRelationshipJob{
+								FromID:        rel.StartID,
+								ToID:          rel.EndID,
+								Kind:          ad.Owns,
+								RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
+							}
+
+						} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
+							// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
+							continue
+						} else if (isComputerDerived && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
+							// If the target node is a computer or derived object, add the Owns edge if the owning principal is a member of DA/EA (or is either group's SID)
+							// If the target node is NOT a computer or derived object, add the Owns edge
+							isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+							if err != nil {
+								isInherited = false
+							}
+							outC <- analysis.CreatePostRelationshipJob{
+								FromID:        rel.StartID,
+								ToID:          rel.EndID,
+								Kind:          ad.Owns,
+								RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
+							}
 						}
+					}
+				} else {
+					// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1) or we can't fetch the attribute, we can skip this analysis and just add the Owns relationship
+					isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+					if err != nil {
+						isInherited = false
+					}
+					outC <- analysis.CreatePostRelationshipJob{
+						FromID:        rel.StartID,
+						ToID:          rel.EndID,
+						Kind:          ad.Owns,
+						RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
 					}
 				}
 			}
@@ -154,10 +132,54 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 		).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 			for rel := range cursor.Chan() {
 
-				// Get the dSHeuristics values for all domains
-				if dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db); err != nil {
+				// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
+				if anyEnforced {
 
-					// If we fail to get the dSHeuristics values, add the WriteOwner edge and return an error
+					// Get the target node of the WriteOwner relationship
+					if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
+						continue
+
+					} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
+						// Get the dSHeuristics value for the domain of the target node
+						continue
+					} else {
+						enforced, ok := dsHeuristicsCache[domainSid]
+						if !ok {
+							enforced = false
+						}
+
+						// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the WriteOwner edge
+						if !enforced {
+							isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+							if err != nil {
+								isInherited = false
+							}
+							outC <- analysis.CreatePostRelationshipJob{
+								FromID:        rel.StartID,
+								ToID:          rel.EndID,
+								Kind:          ad.WriteOwner,
+								RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
+							}
+
+						} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err == nil {
+							// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
+							if !isComputerDerived {
+								isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+								if err != nil {
+									isInherited = false
+								}
+								// If the target node is NOT a computer or derived object, add the WriteOwner edge
+								outC <- analysis.CreatePostRelationshipJob{
+									FromID:        rel.StartID,
+									ToID:          rel.EndID,
+									Kind:          ad.WriteOwner,
+									RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
+								}
+							}
+						}
+					}
+				} else {
+					// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1) or we can't fetch the attribute, we can skip this analysis and just add the WriteOwner relationship
 					isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
 					if err != nil {
 						isInherited = false
@@ -168,69 +190,8 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 						Kind:          ad.WriteOwner,
 						RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
 					}
-					return fmt.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
-
-				} else {
-					// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
-					if anyEnforced {
-
-						// Get the target node of the WriteOwner relationship
-						if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
-							continue
-
-						} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
-							// Get the dSHeuristics value for the domain of the target node
-							continue
-						} else {
-							enforced, ok := dsHeuristicsCache[domainSid]
-							if !ok {
-								enforced = false
-							}
-
-							// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the WriteOwner edge
-							if !enforced {
-								isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-								if err != nil {
-									isInherited = false
-								}
-								outC <- analysis.CreatePostRelationshipJob{
-									FromID:        rel.StartID,
-									ToID:          rel.EndID,
-									Kind:          ad.WriteOwner,
-									RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-								}
-
-							} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err == nil {
-								// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
-								if !isComputerDerived {
-									isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-									if err != nil {
-										isInherited = false
-									}
-									// If the target node is NOT a computer or derived object, add the WriteOwner edge
-									outC <- analysis.CreatePostRelationshipJob{
-										FromID:        rel.StartID,
-										ToID:          rel.EndID,
-										Kind:          ad.WriteOwner,
-										RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-									}
-								}
-							}
-						}
-					} else {
-						// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1), we can skip this analysis and just add the WriteOwner relationship
-						isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-						if err != nil {
-							isInherited = false
-						}
-						outC <- analysis.CreatePostRelationshipJob{
-							FromID:        rel.StartID,
-							ToID:          rel.EndID,
-							Kind:          ad.WriteOwner,
-							RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-						}
-					}
 				}
+
 			}
 
 			return cursor.Error()
