@@ -88,7 +88,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 						} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
 							// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
 							continue
-						} else if (isComputerDerived && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
+						} else if (isComputerDerived && adminGroupIds != nil && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
 							// If the target node is a computer or derived object, add the Owns edge if the owning principal is a member of DA/EA (or is either group's SID)
 							// If the target node is NOT a computer or derived object, add the Owns edge
 							isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
