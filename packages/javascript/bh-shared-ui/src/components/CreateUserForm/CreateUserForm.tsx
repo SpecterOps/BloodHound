@@ -82,6 +82,14 @@ const CreateUserForm: React.FC<{
         onCancel();
     };
 
+    const checkError = (err): React.ReactElement<typeof FormHelperText> => {
+        if (err.response.data.errors[0].message == "Principal name already in use") {
+            return <FormHelperText error style={{ margin: 0 }}>Principal name is already in use.</FormHelperText>;
+        } else {
+            return <FormHelperText error style={{ margin: 0 }}>An unexpected error occurred. Please try again.</FormHelperText>;
+        }
+    }
+
     return (
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
             {!(getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) && (
@@ -338,11 +346,7 @@ const CreateUserForm: React.FC<{
                         </Grid>
                     </DialogContent>
                     <DialogActions>
-                        {error && (
-                            <FormHelperText error style={{ margin: 0 }}>
-                                An unexpected error occurred. Please try again.
-                            </FormHelperText>
-                        )}
+                        {error && (checkError(error))}
                         <Button
                             type='button'
                             variant={'tertiary'}
