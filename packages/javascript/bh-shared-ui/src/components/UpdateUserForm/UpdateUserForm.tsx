@@ -250,7 +250,10 @@ const UpdateUserFormInner: React.FC<{
                                 }}
                                 render={({ field: { onChange, onBlur, value, ref } }) => (
                                     <FormControl>
-                                        <InputLabel id='authenticationMethod-label' sx={{ ml: '-14px', mt: '8px' }} hidden={hasSelectedSelf}>
+                                        <InputLabel
+                                            id='authenticationMethod-label'
+                                            sx={{ ml: '-14px', mt: '8px' }}
+                                            hidden={hasSelectedSelf}>
                                             Authentication Method
                                         </InputLabel>
                                         <Select
@@ -285,7 +288,10 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field: { onChange, onBlur, value, ref } }) => (
                                         <FormControl>
-                                            <InputLabel id='SSOProviderId-label' sx={{ ml: '-14px', mt: '8px' }} hidden={hasSelectedSelf}>
+                                            <InputLabel
+                                                id='SSOProviderId-label'
+                                                sx={{ ml: '-14px', mt: '8px' }}
+                                                hidden={hasSelectedSelf}>
                                                 SSO Provider
                                             </InputLabel>
                                             <Select
@@ -324,7 +330,10 @@ const UpdateUserFormInner: React.FC<{
                             }}
                             render={({ field }) => (
                                 <FormControl>
-                                    <InputLabel id='role-label' sx={{ ml: '-14px', mt: '8px' }} hidden={hasSelectedSelf}>
+                                    <InputLabel
+                                        id='role-label'
+                                        sx={{ ml: '-14px', mt: '8px' }}
+                                        hidden={hasSelectedSelf}>
                                         Role
                                     </InputLabel>
                                     <Select
