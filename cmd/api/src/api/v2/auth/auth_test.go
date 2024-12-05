@@ -165,7 +165,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 
 func TestManagementResource_EnableUserSAML(t *testing.T) {
 	var (
-		adminUser         = model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword"), Unique: model.Unique{ID: must.NewUUIDv4()}}
+		adminUser         = model.User{Unique: model.Unique{ID: must.NewUUIDv4()}}
 		goodRoles         = []int32{0}
 		goodUserID        = must.NewUUIDv4()
 		badUserID         = must.NewUUIDv4()
