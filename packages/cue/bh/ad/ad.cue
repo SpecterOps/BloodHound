@@ -735,6 +735,41 @@ MinPwdLength: types.#StringEnum & {
 	representation: "minpwdlength"
 }
 
+GMSA: types.#StringEnum & {
+ 	symbol: "GMSA"
+ 	schema: "ad"
+ 	name: "GMSA"
+ 	representation: "gmsa"
+}
+
+MSA: types.#StringEnum & {
+ 	symbol: "MSA"
+ 	schema: "ad"
+ 	name: "MSA"
+ 	representation: "msa"
+}
+
+DoesAnyAceGrantOwnerRights: types.#StringEnum & {
+ 	symbol: "DoesAnyAceGrantOwnerRights"
+ 	schema: "ad"
+ 	name: "Does Any ACE Grant Owner Rights"
+ 	representation: "doesanyacegrantownerrights"
+}
+
+DoesAnyInheritedAceGrantOwnerRights: types.#StringEnum & {
+ 	symbol: "DoesAnyInheritedAceGrantOwnerRights"
+ 	schema: "ad"
+ 	name: "Does Any Inherited ACE Grant Owner Rights"
+ 	representation: "doesanyinheritedacegrantownerrights"
+}
+
+OwnerSid: types.#StringEnum & {
+	symbol: "OwnerSid"
+ 	schema: "ad"
+ 	name: "Owner SID"
+ 	representation: "ownersid"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -836,7 +871,12 @@ Properties: [
 	MinPwdAge,
 	MaxPwdAge,
 	LockoutDuration,
-	LockoutObservationWindow
+	LockoutObservationWindow,
+	GMSA,
+	MSA,
+	DoesAnyAceGrantOwnerRights,
+	DoesAnyInheritedAceGrantOwnerRights,
+	OwnerSid
 ]
 
 // Kinds
@@ -1298,6 +1338,26 @@ SyncedToEntraUser: types.#Kind & {
 	schema: "active_directory"
 }
 
+WriteOwnerLimitedRights: types.#Kind & {
+	symbol: "WriteOwnerLimitedRights"
+	schema: "active_directory"
+}
+
+WriteOwnerRaw: types.#Kind & {
+	symbol: "WriteOwnerRaw"
+	schema: "active_directory"
+}
+
+OwnsLimitedRights: types.#Kind & {
+	symbol: "OwnsLimitedRights"
+	schema: "active_directory"
+}
+
+OwnsRaw: types.#Kind & {
+	symbol: "OwnsRaw"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1370,6 +1430,10 @@ RelationshipKinds: [
 	ADCSESC10b,
 	ADCSESC13,
 	SyncedToEntraUser,
+	WriteOwnerLimitedRights,
+	WriteOwnerRaw,
+	OwnsLimitedRights,
+	OwnsRaw
 ]
 
 // ACL Relationships
@@ -1399,7 +1463,11 @@ ACLRelationships: [
 	ManageCA,
 	Enroll,
 	WritePKIEnrollmentFlag,
-	WritePKINameFlag
+	WritePKINameFlag,
+	WriteOwnerLimitedRights,
+	OwnsLimitedRights,
+	OwnsRaw,
+	WriteOwnerRaw
 ]
 
 // Edges that are used in pathfinding
@@ -1452,6 +1520,8 @@ PathfindingRelationships: [
 	ADCSESC13,
 	DCFor,
 	SyncedToEntraUser,
+	WriteOwnerLimitedRights,
+	OwnsLimitedRights
 ]
 
 EdgeCompositionRelationships: [
