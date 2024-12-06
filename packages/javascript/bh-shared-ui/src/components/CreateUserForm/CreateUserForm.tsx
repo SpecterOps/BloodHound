@@ -16,6 +16,7 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import {
+    Alert,
     Checkbox,
     DialogActions,
     DialogContent,
@@ -80,6 +81,14 @@ const CreateUserForm: React.FC<{
     const handleCancel: React.MouseEventHandler<HTMLButtonElement> = (e) => {
         e.preventDefault();
         onCancel();
+    };
+
+    const checkError = (err): string => {
+        if (err.response?.data?.errors[0]?.message == 'principal name must be unique') {
+            return 'Principal name is already in use.';
+        } else {
+            return 'An unexpected error occurred. Please try again.';
+        }
     };
 
     return (
@@ -335,14 +344,14 @@ const CreateUserForm: React.FC<{
                                     )}
                                 />
                             </Grid>
+                            {error && (
+                                <Grid item xs={12}>
+                                    <Alert severity='error'>{checkError(error)}</Alert>
+                                </Grid>
+                            )}
                         </Grid>
                     </DialogContent>
                     <DialogActions>
-                        {error && (
-                            <FormHelperText error style={{ margin: 0 }}>
-                                An unexpected error occurred. Please try again.
-                            </FormHelperText>
-                        )}
                         <Button
                             type='button'
                             variant={'tertiary'}
