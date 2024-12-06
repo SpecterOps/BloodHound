@@ -1,0 +1,170 @@
+---
+name: Build and Publish Container Image
+
+description: |
+  This composite action builds a container image based on the specified Dockerfile and metadata.
+  It can optionally push the built image to a container registry.
+  Ensure you have the necessary Docker and QEMU setup steps in your workflow for cross-platform builds.
+
+inputs:
+  image_labels:
+    required: true
+    default: "false"
+    description: >
+      A JSON object containing image labels and metadata.
+      These labels help describe the image and can include information like version, author, and licenses.
+
+      There are given predefined values that can be overwritten:
+        org.opencontainers.image.authors=https://github.com/orgs/SpecterOps/teams/bloodhound-engineering
+        org.opencontainers.image.licenses=Commercial Standard License
+        org.opencontainers.image.vendor=SpecterOps
+  image_tags:
+    required: true
+    default: "false"
+    description: >
+      A comma-separated list of tags to assign to the built image.
+      These tags help identify different versions or variants of the image.
+  image_metadata_json:
+    required: true
+    default: "false"
+    description: |
+      The metadata required to build the container image.
+      This should be the JSON output from a previous 'generate-metadata' action.
+
+      See: https://github.com/docker/metadata-action#json-output-object
+  image_provenance:
+    required: true
+    default: "false"
+    description: >
+      Whether to include image provenance information in the image metadata.
+      Provenance information provides details about how the image was built and can be useful for auditing.
+  image_sbom:
+    required: true
+    default: "false"
+    description: >
+      Whether to include a Software Bill of Materials (SBOM) in the image metadata.
+      An SBOM lists all the software components used in the image, enhancing transparency and security.
+  dockerfile:
+    default: Dockerfile
+    description: >
+      The name of the Dockerfile used for building the container image.
+      If not specified, it defaults to 'Dockerfile' in the repository root.
+
+      Example: 'Dockerfile.prod' for a production-specific Dockerfile.
+  build_context:
+    default: "{{defaultContext}}"
+    description: |-
+      Build's context is the set of files located in the specified PATH or URL (default Git context)
+  build_target:
+    description: >
+      The build stage target for multi-stage Docker builds, if applicable.
+      Specify this if your Dockerfile has multiple stages, and you want to build a specific one.
+
+      Example: 'production' for a multi-stage Dockerfile with a 'production' stage.
+  build_args:
+    description: >
+      Additional build arguments to pass to the Docker build process.
+      These arguments can be used to customize the build based on your requirements.
+
+      Predefined values may already be present, and any inputs provided here will be appended.
+
+      Example: 'MY_VARIABLE=value' to set an environment variable during the build.
+  build_contexts:
+    description: >
+      Additional build contexts to pass to Docker build process.
+
+      Define additional build context with specified contents. In Dockerfile the
+      context can be accessed when FROM name or --from=name is used. When
+      Dockerfile defines a stage with the same name it is overwritten.
+
+      Example: 'name=path'
+  build_outputs:
+    description: >
+      Set build additional build outputs.
+  cache_from:
+    description: >
+      The source image repository from which to cache layers during the build.
+      This can help improve build speed by reusing layers from a previously built image.
+
+      Example: 'docker.io/my-app:cache' to cache from a specific image.
+  cache_to:
+    description: >
+      The destination image cache settings to optimize the caching strategy during the build.
+      This input specifies where to store cached layers and how they are scoped.
+      Values provided here will be appended to any default cache settings.
+
+      Predefined values may already be present, and any inputs provided here will be appended.
+
+      Example: "type=gha,mode=max,scope=\$\{\{ github.workflow \}\}"
+  push_image:
+    required: true
+    default: "false"
+    description: >
+      Whether to push the built container image to the registry after building.
+      Set this to 'true' if you want to automatically push the image.
+
+      Example: 'true' to push the image to the registry, 'false' to skip pushing.
+
+runs:
+  using: composite
+  steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: linux/amd64,linux/arm64
+
+    - name: Set up buildx
+      id: buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        platforms: linux/amd64,linux/arm64
+
+    - name: Build
+      uses: docker/build-push-action@v6
+      with:
+        context: ${{ inputs.build_context }}
+        file: ${{ inputs.dockerfile }}
+        target: ${{ inputs.build_target }}
+        build-args: |
+          BUILDTIME=${{ fromJSON(inputs.image_metadata_json).labels['org.opencontainers.image.created'] }}
+          VERSION=${{ fromJSON(inputs.image_metadata_json).labels['org.opencontainers.image.version'] }}
+          REVISION=${{ fromJSON(inputs.image_metadata_json).labels['org.opencontainers.image.revision'] }}
+          ${{ inputs.build_args }}
+        labels: |
+          org.opencontainers.image.authors=https://github.com/orgs/SpecterOps/teams/bloodhound-engineering
+          org.opencontainers.image.licenses=Commercial Standard License
+          org.opencontainers.image.vendor=SpecterOps
+          ${{ inputs.image_labels }}
+        build-contexts: |
+          ${{ inputs.build_contexts }}
+        provenance: ${{ inputs.image_provenance }}
+        sbom: ${{ inputs.image_sbom }}
+        cache-from: |
+          type=gha
+          ${{ inputs.cache_from }}
+        cache-to: |
+          type=gha,mode=max
+          ${{ inputs.cache_to }}
+        tags: |
+          ${{ inputs.image_tags }}
+        outputs: |
+          type=docker
+          ${{ inputs.build_outputs }}
+
+    - name: Push Images to Registry
+      if: ${{ contains(inputs.push_image, 'true') }}
+      shell: bash
+      run: |
+        echo "::group::Push Images"
+        # Read each line as an image tag and push it
+        while IFS= read -r tag; do
+          # Remove leading/trailing whitespace if any
+          tag="$(echo -e "${tag}" | tr -d '[:space:]')"
+
+          notice_title="Pushing ${tag}"
+
+          echo "::notice title=$notice_title"
+          docker push "${tag}"
+          echo "::notice Finished pushing image"
+        done <<< "${{ inputs.image_tags }}"
+        echo "::endgroup::"
