@@ -38,7 +38,6 @@ jobs:
     needs: build-container-images
     uses: ./.github/workflows/static-code-analysis.yml
     with:
-      build_automation_ref: main
       bloodhound_image_tar_artifact_name: ${{ needs.build-container-images.outputs.bloodhound_image_tar_artifact_name }}
       bloodhound_image_tar_path: ${{ needs.build-container-images.outputs.bloodhound_image_tar_path }}
     secrets:

@@ -39,7 +39,7 @@ on:
 jobs:
   bloodhound:
     name: Build BloodHound Image
-    uses: SpecterOps/build-automation/.github/workflows/reusable.build-container-image.yml@main
+    uses: ./.github/workflows/reusable.build-container-image.yml
     secrets:
       dockerhub_account: ${{ secrets.dockerhub_account }}
       dockerhub_token: ${{ secrets.dockerhub_token }}
@@ -47,7 +47,6 @@ jobs:
       ghcr_token: ${{ secrets.ghcr_token }}
       gh_access_token: ${{ secrets.gh_access_token }}
     with:
-      build_automation_ref: main
       image_repository: specterops/bloodhound
       build_target: deps
       dockerfile: dockerfiles/bloodhound.Dockerfile
