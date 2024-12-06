@@ -41,9 +41,10 @@ const UpdateUserForm: React.FC<{
     onCancel: () => void;
     onSubmit: (user: UpdateUserRequestForm) => void;
     userId: string;
+    hasSelectedSelf: boolean;
     isLoading: boolean;
     error: any;
-}> = ({ onCancel, onSubmit, userId, isLoading, error }) => {
+}> = ({ onCancel, onSubmit, userId, hasSelectedSelf, isLoading, error }) => {
     const getUserQuery = useQuery(
         ['getUser', userId],
         ({ signal }) => apiClient.getUser(userId, { signal }).then((res) => res.data.data),
@@ -118,6 +119,7 @@ const UpdateUserForm: React.FC<{
             }}
             roles={getRolesQuery.data}
             SSOProviders={listSSOProvidersQuery.data}
+            hasSelectedSelf={hasSelectedSelf}
             isLoading={isLoading}
             error={error}
         />
@@ -130,9 +132,10 @@ const UpdateUserFormInner: React.FC<{
     initialData: UpdateUserRequestForm;
     roles: any[];
     SSOProviders?: SSOProvider[];
+    hasSelectedSelf: boolean;
     isLoading: boolean;
     error: any;
-}> = ({ onCancel, onSubmit, initialData, roles, SSOProviders, isLoading, error }) => {
+}> = ({ onCancel, onSubmit, initialData, roles, SSOProviders, hasSelectedSelf, isLoading, error }) => {
     const {
         control,
         handleSubmit,
@@ -247,7 +250,10 @@ const UpdateUserFormInner: React.FC<{
                                 }}
                                 render={({ field: { onChange, onBlur, value, ref } }) => (
                                     <FormControl>
-                                        <InputLabel id='authenticationMethod-label' sx={{ ml: '-14px', mt: '8px' }}>
+                                        <InputLabel
+                                            id='authenticationMethod-label'
+                                            sx={{ ml: '-14px', mt: '8px' }}
+                                            hidden={hasSelectedSelf}>
                                             Authentication Method
                                         </InputLabel>
                                         <Select
@@ -260,7 +266,8 @@ const UpdateUserFormInner: React.FC<{
                                             name='authenticationMethod'
                                             variant='standard'
                                             fullWidth
-                                            data-testid='update-user-dialog_select-authentication-method'>
+                                            data-testid='update-user-dialog_select-authentication-method'
+                                            hidden={hasSelectedSelf}>
                                             <MenuItem value='password'>Username / Password</MenuItem>
                                             {SSOProviders && SSOProviders.length > 0 && (
                                                 <MenuItem value='sso'>Single Sign-On (SSO)</MenuItem>
@@ -281,7 +288,10 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field: { onChange, onBlur, value, ref } }) => (
                                         <FormControl>
-                                            <InputLabel id='SSOProviderId-label' sx={{ ml: '-14px', mt: '8px' }}>
+                                            <InputLabel
+                                                id='SSOProviderId-label'
+                                                sx={{ ml: '-14px', mt: '8px' }}
+                                                hidden={hasSelectedSelf}>
                                                 SSO Provider
                                             </InputLabel>
                                             <Select
@@ -295,7 +305,8 @@ const UpdateUserFormInner: React.FC<{
                                                 name='SSOProviderId'
                                                 variant='standard'
                                                 fullWidth
-                                                data-testid='update-user-dialog_select-sso-provider'>
+                                                data-testid='update-user-dialog_select-sso-provider'
+                                                hidden={hasSelectedSelf}>
                                                 {SSOProviders?.map((SSOProvider: SSOProvider) => (
                                                     <MenuItem value={SSOProvider.id.toString()} key={SSOProvider.id}>
                                                         {SSOProvider.name}
@@ -319,7 +330,10 @@ const UpdateUserFormInner: React.FC<{
                             }}
                             render={({ field }) => (
                                 <FormControl>
-                                    <InputLabel id='role-label' sx={{ ml: '-14px', mt: '8px' }}>
+                                    <InputLabel
+                                        id='role-label'
+                                        sx={{ ml: '-14px', mt: '8px' }}
+                                        hidden={hasSelectedSelf}>
                                         Role
                                     </InputLabel>
                                     <Select
@@ -333,7 +347,8 @@ const UpdateUserFormInner: React.FC<{
                                         value={isNaN(field.value) ? '' : field.value.toString()}
                                         variant='standard'
                                         fullWidth
-                                        data-testid='update-user-dialog_select-role'>
+                                        data-testid='update-user-dialog_select-role'
+                                        hidden={hasSelectedSelf}>
                                         {roles.map((role: any) => (
                                             <MenuItem key={role.id} value={role.id.toString()}>
                                                 {role.name}
