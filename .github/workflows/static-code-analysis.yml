@@ -26,9 +26,7 @@ on:
 jobs:
   lint-container-images:
     name: Anaylze Dockerfiles
-    uses: SpecterOps/build-automation/.github/workflows/reusable.lint-container-image.yml@main
-    with:
-      build_automation_ref: main
+    uses: ./.github/workflows/reusable.lint-container-image.yml
     secrets:
       dockerhub_account: ${{ secrets.dockerhub_username }}
       dockerhub_token: ${{ secrets.dockerhub_token }}
@@ -52,7 +50,7 @@ jobs:
           docker load --input "/tmp/${{ inputs.bloodhound_image_tar_artifact_name }}.tar"
           docker image ls
 
-      - name: Run Tests
+      - name: Lint Code
         shell: bash
         run: |-
           docker run --rm specterops/bloodhound:${{ inputs.bloodhound_image_tar_artifact_name }} \
@@ -74,7 +72,7 @@ jobs:
           docker load --input "/tmp/${{ inputs.bloodhound_image_tar_artifact_name }}.tar"
           docker image ls
 
-      - name: Run Tests
+      - name: Lint Code
         shell: bash
         run: |-
           docker run --rm specterops/bloodhound:${{ inputs.bloodhound_image_tar_artifact_name }} \
