@@ -1,0 +1,267 @@
+name: Build Container Image
+run-name: Container Image Buld started by @${{ github.actor }} for ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_repository:
+        type: string
+        required: true
+        description: >
+          The name of the repository where the container image will be stored in the container registry.
+          This repository name uniquely identifies the image within the registry.
+          Combine this with the 'container_registry' input to form the full URL for the image.
+
+          Example: 'my-app' for a repository named 'my-app' in the container registry.
+      dockerfile:
+        type: string
+        description: >
+          The name of the Dockerfile used for building the container image.
+          If not specified, it defaults to 'Dockerfile' in the repository root.
+
+          Example: 'Dockerfile.prod' for a production-specific Dockerfile.
+      build_target:
+        type: string
+        description: |-
+          The build stage target for multi-stage Docker builds, if applicable.
+          Specify this if your Dockerfile has multiple stages, and you want to
+          build a specific one.
+
+          Example: 'production' for a multi-stage Dockerfile with a 'production'
+          stage.
+      image_flavors:
+        type: string
+        description: |-
+          Additional image flavor information or tags.
+      image_cache_from:
+        type: string
+        description: >
+          The source image repository from which to cache layers during the build.
+          This can help improve build speed by reusing layers from a previously built image.
+
+          Example: 'docker.io/my-app:cache' to cache from a specific image.
+      image_cache_to:
+        type: string
+        description: >
+          The destination image cache settings to optimize the caching strategy during the build.
+          This input specifies where to store cached layers and how they are scoped.
+          Values provided here will be appended to any default cache settings.
+
+          Predefined values may already be present, and any inputs provided here will be appended.
+
+          Example: "type=gha,mode=max,scope=\$\{\{ github.workflow \}\}"
+      timeout_minutes:
+        description: Job timeout configuration in minutes
+        type: number
+        default: 30
+      push_image:
+        type: boolean
+        default: false
+        description: >
+          Whether to push the built container image to the registry after building.
+          Set this to 'true' if you want to automatically push the image.
+
+          Example: 'true' to push the image to the registry, 'false' to skip pushing.
+  workflow_call:
+    inputs:
+      build_context:
+        type: string
+        description: |
+          TBA ...
+      image_repository:
+        type: string
+        required: true
+        description: >
+          The name of the repository where the container image will be stored in the container registry.
+          This repository name uniquely identifies the image within the registry.
+          Combine this with the 'container_registry' input to form the full URL for the image.
+
+          Example: 'my-app' for a repository named 'my-app' in the container registry.
+      dockerfile:
+        type: string
+        description: >
+          The name of the Dockerfile used for building the container image.
+          If not specified, it defaults to 'Dockerfile' in the repository root.
+
+          Example: 'Dockerfile.prod' for a production-specific Dockerfile.
+      build_target:
+        type: string
+        description: |-
+          The build stage target for multi-stage Docker builds, if applicable.
+          Specify this if your Dockerfile has multiple stages, and you want to
+          build a specific one.
+
+          Example: 'production' for a multi-stage Dockerfile with a 'production'
+          stage.
+      build_args:
+        type: string
+        description: |-
+          Additional build arguments to pass to the Docker build process.
+          These arguments can be used to customize the build based on your requirements.
+
+          Predefined values may already be present, and any inputs provided here will be appended.
+
+          Example: 'MY_VARIABLE=value' to set an environment variable during the build.
+      build_contexts:
+        type: string
+        description: |-
+          Additional build contexts to pass to Docker build process.
+
+          Define additional build context with specified contents. In Dockerfile the
+          context can be accessed when FROM name or --from=name is used. When
+          Dockerfile defines a stage with the same name it is overwritten.
+
+          Example: 'name=path'
+      image_provenance:
+        type: string
+        default: "false"
+        description: |-
+          Whether to include image provenance information in the image metadata.
+          Provenance information provides details about how the image was built and can be useful for auditing.
+      image_sbom:
+          type: string
+          default: "false"
+          description: |-
+            Whether to include a Software Bill of Materials (SBOM) in the image metadata.
+            An SBOM lists all the software components used in the image, enhancing transparency and security.
+      image_flavor:
+        type: string
+        description: |-
+          Additional image flavor information or tags.
+      image_cache_from:
+        type: string
+        description: >
+          The source image repository from which to cache layers during the build.
+          This can help improve build speed by reusing layers from a previously built image.
+
+          Example: 'docker.io/my-app:cache' to cache from a specific image.
+      image_cache_to:
+        type: string
+        description: >
+          The destination image cache settings to optimize the caching strategy during the build.
+          This input specifies where to store cached layers and how they are scoped.
+          Values provided here will be appended to any default cache settings.
+
+          Predefined values may already be present, and any inputs provided here will be appended.
+
+          Example: "type=gha,mode=max,scope=\$\{\{ github.workflow \}\}"
+      build_output_tar_dir:
+        type: string
+        description: >
+          The directory path where the tar file of the built image will be saved,
+          to be used as an artifact upload location with the `actions/upload-artifact@v4` GitHub Action.
+          This tar archive can then be retrieved from the workflow artifacts for further use or distribution.
+        default: "/tmp"
+      timeout_minutes:
+        description: Job timeout configuration in minutes
+        type: number
+        default: 30
+      push_image:
+        type: boolean
+        default: false
+        description: |-
+          Whether to push the built container image to the registry after building.
+          Set this to 'true' if you want to automatically push the image.
+
+          Example: 'true' to push the image to the registry, 'false' to skip pushing.
+      build_automation_ref:
+        type: string
+        description: |-
+          When the workflow is reused in another repo, we have to import the
+          .github/actions directory for repository.
+    secrets:
+      dockerhub_account:
+        required: true
+      dockerhub_token:
+        required: true
+      ghcr_account:
+        required: true
+      ghcr_token:
+        required: true
+      gh_access_token:
+        required: true
+    outputs:
+      image_reference:
+        value: ${{ jobs.build-container-image.outputs.image_reference }}
+      image_name:
+        value: ${{ jobs.build-container-image.outputs.image_name }}
+      image_tar_path:
+        value: ${{ jobs.build-container-image.outputs.image_tar_path }}
+      image_tar_artifact_name:
+        value: ${{ jobs.build-container-image.outputs.image_tar_artifact_name }}
+
+jobs:
+  build-container-image:
+    name: ${{ inputs.image_repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout_minutes }}
+    outputs:
+      image_reference: ${{ steps.container-image-metadata.outputs.image_reference }}
+      image_name: ${{ steps.container-image-metadata.outputs.image_name }}
+      image_tar_path: ${{ inputs.build_output_tar_dir }}/${{ steps.container-image-metadata.outputs.version }}.tar
+      image_tar_artifact_name: ${{ steps.container-image-metadata.outputs.version }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - if: inputs.build_automation_ref != ''
+        name: Checkout Reusable Workflows
+        uses: actions/checkout@v4
+        with:
+          clean: false
+          repository: SpecterOps/BloodHound
+          ref: ${{ inputs.build_automation_ref }}
+          token: ${{ secrets.gh_access_token }}
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |-
+            .github/actions
+
+      - uses: ./.github/actions/container-registry-authentication
+        id: dockerhub-authentication
+        name: Login To DockerHub
+        with:
+          container_registry: docker.io
+          registry_account: ${{ secrets.dockerhub_account }}
+          registry_token: ${{ secrets.dockerhub_token }}
+
+      - uses: ./.github/actions/container-registry-authentication
+        id: ghcr-authentication
+        name: Login To GitHub Container Registry
+        with:
+          container_registry: ghcr.io
+          registry_account: ${{ secrets.ghcr_account }}
+          registry_token: ${{ secrets.ghcr_token }}
+
+      - uses: ./.github/actions/container-image-metadata
+        id: container-image-metadata
+        with:
+          image_repository: ${{ inputs.image_repository }}
+          image_flavor: ${{ inputs.image_flavor }}
+
+      - uses: ./.github/actions/build-container-image
+        id: build-container-image
+        with:
+          build_args: ${{ inputs.build_args }}
+          build_context: ${{ inputs.build_context }}
+          build_contexts: ${{ inputs.build_contexts }}
+          build_target: ${{ inputs.build_target }}
+          build_outputs: |-
+            type=docker,dest=${{ inputs.build_output_tar_dir }}/${{ steps.container-image-metadata.outputs.version }}.tar
+          cache_from: ${{ inputs.image_cache_from }}
+          cache_to: ${{ inputs.image_cache_to }}
+          dockerfile: ${{ inputs.dockerfile }}
+          image_labels: ${{ steps.container-image-metadata.outputs.labels }}
+          image_metadata_json: ${{ steps.container-image-metadata.outputs.json }}
+          image_provenance: ${{ inputs.image_provenance }}
+          image_sbom: ${{ inputs.image_sbom }}
+          image_tags: ${{ steps.container-image-metadata.outputs.tags }}
+          push_image: ${{ inputs.push_image }}
+
+      - if: inputs.build_output_tar_dir != ''
+        name: Upload Build Output
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          retention-days: 1
+          name: ${{ steps.container-image-metadata.outputs.version }}
+          path: ${{ inputs.build_output_tar_dir }}/${{ steps.container-image-metadata.outputs.version }}.tar

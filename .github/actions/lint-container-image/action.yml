@@ -1,0 +1,30 @@
+---
+name: Lint Container Image
+
+description: |
+  This composite action performs linting on a specified Dockerfile. Linting helps to enforce best
+  practices and eliminate potential issues in Dockerfiles. With the flexibility to recursively
+  search for Dockerfiles, this action fosters a more streamlined, error-free build process, thereby
+  enhancing the usability and reliability of container images.
+
+inputs:
+  dockerfile:
+    required: true
+    description: |-
+      Specifies the name of the Dockerfile to be processed. Providing this input is mandatory.
+
+      Example: Dockerfile
+  recursive:
+    default: "false"
+    description: |-
+      Determines whether the search for Dockerfiles should be carried out recursively within
+      subdirectories. Providing this input is optional, with the default setting as false.
+
+runs:
+  using: composite
+  steps:
+    - name: Lint Dockerfile
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+        dockerfile: ${{ inputs.dockerfile }}
+        recursive: ${{ inputs.recursive }}

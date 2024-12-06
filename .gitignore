@@ -450,3 +450,6 @@ local-harnesses/*
 
 # folder used by antlr4 VSCode extension
 .antlr
+
+# Act secrets
+*.secrets

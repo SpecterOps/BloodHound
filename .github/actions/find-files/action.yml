@@ -1,0 +1,33 @@
+---
+name: Find Files
+description: >-
+  This action finds files in a specified directory that match a given pattern.
+  It's useful for scenarios where you need to process or manipulate a set of files in your GitHub Actions workflow.
+
+inputs:
+  directory:
+    required: false
+    default: "./"
+    description: |-
+      The directory path where the action should look for files. If not
+      specified, the action defaults to the current directory (denoted by ".").
+
+      This can be set to any relative or absolute path in the repository.
+  pattern:
+    required: true
+    description: |-
+      The pattern to filter the files in the specified directory. This
+      input determines which file types the action will list.
+
+      For example, specifying '.txt' will make the action list all .txt files.
+
+runs:
+  using: docker
+  image: docker://docker.io/specterops/build-automation:berner-pre0.0
+  args:
+    - berner
+    - find-files
+    - --format=json-array
+    - --output=env://GITHUB_OUTPUT
+    - ${{ inputs.directory }}
+    - ${{ inputs.pattern }}
