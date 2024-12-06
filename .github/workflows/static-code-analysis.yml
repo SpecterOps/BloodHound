@@ -28,7 +28,7 @@ jobs:
     name: Anaylze Dockerfiles
     uses: ./.github/workflows/reusable.lint-container-image.yml
     secrets:
-      dockerhub_account: ${{ secrets.dockerhub_username }}
+      dockerhub_account: ${{ secrets.dockerhub_account }}
       dockerhub_token: ${{ secrets.dockerhub_token }}
       ghcr_account: ${{ github.actor }}
       ghcr_token: ${{ secrets.github_token }}
@@ -58,7 +58,7 @@ jobs:
 
   eslint:
     runs-on: ubuntu-latest
-    name: Anaylze JavaScript/TypeSCript Code
+    name: Anaylze JavaScript/TypeScript Code
     steps:
       - name: Download Image Tar
         uses: actions/download-artifact@v4
