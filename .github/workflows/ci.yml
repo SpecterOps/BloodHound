@@ -54,9 +54,3 @@ jobs:
     with:
       bloodhound_image_tar_artifact_name: ${{ needs.build-container-images.outputs.bloodhound_image_tar_artifact_name }}
       bloodhound_image_tar_path: ${{ needs.build-container-images.outputs.bloodhound_image_tar_path }}
-    secrets:
-      dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
-      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-      ghcr_account: ${{ github.actor }}
-      ghcr_token: ${{ secrets.GITHUB_TOKEN }}
-      gh_access_token: ${{ secrets.GITHUB_TOKEN }}
