@@ -25,7 +25,7 @@ jobs:
           POSTGRES_PASSWORD: bloodhound
           POSTGRES_DB: bloodhound
         options: >-
-          --health-cmd 'psql -h localhost -U bloodhound -c select 1 -d bloodhound'
+          --health-cmd "psql -h localhost -U bloodhound -c select 1 -d bloodhound"
           --health-interval 10s
           --health-timeout 5s
           --health-retries
@@ -36,7 +36,7 @@ jobs:
           NEO4J_dbms_security_auth__enabled: false
           NEO4J_server_logs_debug_enabled: true
         options: >-
-          --health-cmd 'wget -O /dev/null -q http://localhost:7474'
+          --health-cmd "wget -O /dev/null -q http://localhost:7474"
           --health-interval 10s
           --health-timeout 5s
           --health-retries
