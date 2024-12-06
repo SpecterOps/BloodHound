@@ -1,0 +1,62 @@
+---
+name: Testing
+run-name: Testing started by @${{ github.actor }} for ${{ github.ref_name }}
+
+on:
+  workflow_call:
+    inputs:
+      bloodhound_image_tar_artifact_name:
+        type: string
+        required: true
+      bloodhound_image_tar_path:
+        type: string
+        required: true
+
+jobs:
+  test_bloodhound:
+    runs-on: ubuntu-latest
+    name: Test BloodHound
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          PGUSER: bloodhound
+          POSTGRES_USER: bloodhound
+          POSTGRES_PASSWORD: bloodhound
+          POSTGRES_DB: bloodhound
+        options: >-
+          --health-cmd 'psql -h localhost -U bloodhound -c select 1 -d bloodhound'
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries
+      neo4j:
+        image: neo4j:4.4.32
+        env:
+          NEO4J_AUTH: neo4j/bloodhoundcommunityedition
+          NEO4J_dbms_security_auth__enabled: false
+          NEO4J_server_logs_debug_enabled: true
+        options: >-
+          --health-cmd 'wget -O /dev/null -q http://localhost:7474'
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries
+
+    steps:
+    - name: Download Image Tar
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.bloodhound_image_tar_artifact_name }}
+        path: /tmp
+
+    - name: Load Image
+      shell: bash
+      run: |-
+        docker load --input "/tmp/${{ inputs.bloodhound_image_tar_artifact_name }}.tar"
+        docker image ls
+
+    - name: Run Tests
+      shell: bash
+      run: |-
+        docker run --rm specterops/bloodhound:${{ inputs.bloodhound_image_tar_artifact_name }} \
+          go work use \
+          go list -f '{{.Dir}}/...' -m | xargs go test
