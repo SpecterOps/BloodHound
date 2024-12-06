@@ -1,0 +1,98 @@
+---
+name: Lint Container Images
+run-name: Lint Container Images by @${{ github.actor }}
+
+on:
+  workflow_call:
+    inputs:
+      build_automation_ref:
+        type: string
+        description: |-
+          When the workflow is reused in another repo, we have to import the .github/actions directory
+          for the cloudops-tools repository.
+    secrets:
+      dockerhub_account:
+        required: true
+      dockerhub_token:
+        required: true
+      ghcr_account:
+        required: true
+      ghcr_token:
+        required: true
+      gh_access_token:
+        required: true
+
+jobs:
+  find-dockerfiles:
+    name: Find Dockerfiles
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      file_paths: ${{ steps.find-files.outputs.file_paths }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - if: inputs.build_automation_ref != ''
+        name: Checkout Reusable Workflows
+        uses: actions/checkout@v4
+        with:
+          clean: false
+          repository: SpecterOps/build-automation
+          ref: ${{ inputs.build_automation_ref }}
+          token: ${{ secrets.gh_access_token }}
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            .github/workflows
+            .github/actions
+
+      - uses: ./.github/actions/container-registry-authentication
+        name: Login To DockerHub
+        with:
+          container_registry: docker.io
+          registry_account: ${{ secrets.dockerhub_account }}
+          registry_token: ${{ secrets.dockerhub_token }}
+
+      - name: Download Build Automation Tool
+        shell: bash
+        run: |
+          docker pull specterops/build-automation:berner-pre0.0
+
+      - name: Find Files
+        id: find-files
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume $GITHUB_WORKSPACE:/app \
+            specterops/build-automation:berner-pre0.0 \
+            find-files --format=json-array --output=file:///app/file_paths.txt . Dockerfile
+
+          echo "$(cat $GITHUB_WORKSPACE/file_paths.txt)" >> $GITHUB_OUTPUT
+
+  hadolint:
+    needs: find-dockerfiles
+    name: Lint Dockerfile(s)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        paths: ${{ fromJson(needs.find-dockerfiles.outputs.file_paths) }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - if: inputs.build_automation_ref != ''
+        name: Checkout Reusable Workflows
+        uses: actions/checkout@v4
+        with:
+          clean: false
+          repository: SpecterOps/build-automation
+          ref: ${{ inputs.build_automation_ref }}
+          token: ${{ secrets.gh_access_token }}
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |-
+            .github/actions
+
+      - uses: ./.github/actions/lint-container-image
+        with:
+          dockerfile: ${{ matrix.paths }}
