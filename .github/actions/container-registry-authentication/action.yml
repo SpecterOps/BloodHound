@@ -1,0 +1,36 @@
+---
+name: Container Registry Authentication
+
+description: |
+  This composite action authenticates your GitHub Actions workflow with a container registry. It
+  allows your workflow to securely push container images to the registry using the provided registry
+  account and token.
+
+inputs:
+  registry_account:
+    required: true
+    description: |
+      The container registry account or username.
+
+      Example: 'myusername' or 'myorg'.
+  registry_token:
+    required: true
+    description: |
+      The personal access token (PAT) or secret token for
+      authenticating with the GitHub Container Registry.
+      Ensure this token has the necessary permissions
+      to push container images to the specified registry.
+  container_registry:
+    required: false
+    description: |
+      The container registry that will be authenticated against.
+
+runs:
+  using: composite
+  steps:
+    - name: Authenticate To Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ inputs.container_registry }}
+        username: ${{ inputs.registry_account }}
+        password: ${{ inputs.registry_token }}
