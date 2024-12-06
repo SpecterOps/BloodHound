@@ -84,7 +84,7 @@ const CreateUserForm: React.FC<{
     };
 
     const checkError = (err): string => {
-        if (err.response.data.errors[0].message == 'principal name must be unique') {
+        if (err.response?.data?.errors[0]?.message == 'principal name must be unique') {
             return 'Principal name is already in use.';
         } else {
             return 'An unexpected error occurred. Please try again.';
