@@ -1,0 +1,63 @@
+---
+name: Continuous Integration (CI)
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    types:
+      - assigned
+      - opened
+      - synchronize
+      - reopened
+      - closed
+  # https://stephencharlesweiss.com/github-actions-run-on-merge-only
+  push:
+    branches:
+      - main
+      - dev
+
+permissions: write-all
+
+jobs:
+  build-container-images:
+    name: Build Container Images
+    uses: ./.github/workflows/build-container-images.yml
+    with:
+      push_image: false
+    secrets:
+      dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+      ghcr_account: ${{ github.actor }}
+      ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+  static-code-analysis:
+    name: Static Code Anaylsis
+    needs: build-container-images
+    uses: ./.github/workflows/static-code-analysis.yml
+    with:
+      build_automation_ref: main
+      bloodhound_image_tar_artifact_name: ${{ needs.build-container-images.outputs.bloodhound_image_tar_artifact_name }}
+      bloodhound_image_tar_path: ${{ needs.build-container-images.outputs.bloodhound_image_tar_path }}
+    secrets:
+      dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+      ghcr_account: ${{ github.actor }}
+      ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+  testing:
+    name: Code Testing
+    needs: build-container-images
+    uses: ./.github/workflows/testing.yml
+    with:
+      bloodhound_image_tar_artifact_name: ${{ needs.build-container-images.outputs.bloodhound_image_tar_artifact_name }}
+      bloodhound_image_tar_path: ${{ needs.build-container-images.outputs.bloodhound_image_tar_path }}
+    secrets:
+      dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+      ghcr_account: ${{ github.actor }}
+      ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_access_token: ${{ secrets.GITHUB_TOKEN }}
