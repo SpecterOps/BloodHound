@@ -1,0 +1,107 @@
+---
+name: Generate Container Image Metadata
+
+description: |
+  This composite action generates metadata for a container image and extracts useful information,
+  such as JSON data, tags, labels, revision, version, and the container image reference.
+  The metadata is essential for tracking and managing container images effectively.
+
+inputs:
+  container_registry:
+    default: docker.io
+    required: true
+    description: >
+      The name of the container image registry where the image will be hosted.
+
+      Example: 'docker.io' for Docker Hub or a custom registry URL.
+
+  image_repository:
+    required: true
+    description: >
+      The name of the repository where the container image will be stored within the registry.
+
+      Example: 'my-app' or 'username/my-app' if it's a user-specific repository.
+
+  image_flavor:
+    description: >
+      See: https://github.com/docker/metadata-action#flavor-input
+
+  image_tags:
+    description: >
+      See: https://github.com/docker/metadata-action#tags-input
+
+outputs:
+  json:
+    value: ${{ steps.generate-metadata.outputs.json }}
+    description: >
+      The JSON metadata for the container image, including details about the image and its layers.
+
+  tags:
+    value: ${{ steps.generate-metadata.outputs.tags }}
+    description: >
+      A list of tags associated with the container image, which may include version and branch information.
+
+  labels:
+    value: ${{ steps.generate-metadata.outputs.labels }}
+    description: >
+      Custom labels associated with the container image, providing additional information and metadata.
+
+  revision:
+    value: ${{ fromJSON(steps.generate-metadata.outputs.json).labels['org.opencontainers.image.revision'] }}
+    description: >
+      The revision of the container image, if available, typically extracted from metadata labels.
+
+  version:
+    value: ${{ steps.generate-metadata.outputs.version }}
+    description: >
+      The version of the container image, often derived from tags or other versioning patterns.
+
+  image_reference:
+    value: ${{ steps.set-image-reference.outputs.image_reference }}
+    description: >
+      The full image reference, including registry, repository, and tag.
+      This fully qualified name is used to pull or locate a specific image
+      from a particular registry (e.g., docker.io/myrepo/myimage:tag).
+
+  image_name:
+    value: ${{ steps.set-image-reference.outputs.image_name }}
+    description: >
+      The image name with repository and tag, typically used locally or
+      with the default registry. This shorthand version omits the registry
+      and assumes the default registry if unspecified (e.g., myimage:tag).
+
+runs:
+  using: composite
+  steps:
+    - name: Downcase container registry name.
+      id: lower-container-registry
+      uses: ASzc/change-string-case-action@v6
+      with:
+        string: ${{ inputs.container_registry }}
+
+    - name: Downcase repository name
+      id: lower-repo
+      uses: ASzc/change-string-case-action@v6
+      with:
+        string: ${{ inputs.image_repository }}
+
+    - name: Generate metadata
+      id: generate-metadata
+      uses: docker/metadata-action@v5
+      with:
+        images: 
+          ${{ steps.lower-container-registry.outputs.lowercase }}/${{ steps.lower-repo.outputs.lowercase }}
+        flavor: ${{ inputs.image_flavor }}
+        tags: |-
+          type=raw,value=sha-{{sha}}-{{date 'YYYYMMDD-HHmmss'}},priority=1500
+          type=sha,format=long,priority=1450
+          ${{ inputs.image_tags }}
+
+    - name: Set Container Image Reference
+      id: set-image-reference
+      shell: bash
+      run: |-
+        image_reference=${{ fromJSON(steps.generate-metadata.outputs.json).tags[0] }}
+        echo "image_reference=$image_reference" >> $GITHUB_OUTPUT
+        image_name=$(echo "$image_reference" | sed 's/.*\///')
+        echo "image_name=$image_name" >> $GITHUB_OUTPUT
