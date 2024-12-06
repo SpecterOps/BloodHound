@@ -1,0 +1,54 @@
+---
+name: Build Container Images
+run-name: Build Container Images started by @${{ github.actor }} for ${{ github.ref_name }}
+
+on:
+  workflow_call:
+    inputs:
+      push_image:
+        type: boolean
+        required: true
+        description: |-
+          Whether to push the built container image to the registry after
+          building. Set this to 'true' if you want to automatically push the
+          image.
+
+          Example: 'true' to push the image to the registry, 'false' to skip
+          pushing.
+      image_flavors:
+        type: string
+        description: |-
+          Additional image flavor information or tags.
+    secrets:
+      dockerhub_account:
+        required: true
+      dockerhub_token:
+        required: true
+      ghcr_account:
+        required: true
+      ghcr_token:
+        required: true
+      gh_access_token:
+        required: true
+    outputs:
+      bloodhound_image_tar_path:
+        value: ${{ jobs.bloodhound.outputs.image_tar_path }}
+      bloodhound_image_tar_artifact_name:
+        value: ${{ jobs.bloodhound.outputs.image_tar_artifact_name }}
+
+jobs:
+  bloodhound:
+    name: Build BloodHound Image
+    uses: SpecterOps/build-automation/.github/workflows/reusable.build-container-image.yml@main
+    secrets:
+      dockerhub_account: ${{ secrets.dockerhub_account }}
+      dockerhub_token: ${{ secrets.dockerhub_token }}
+      ghcr_account: ${{ secrets.ghcr_account }}
+      ghcr_token: ${{ secrets.ghcr_token }}
+      gh_access_token: ${{ secrets.gh_access_token }}
+    with:
+      build_automation_ref: main
+      image_repository: specterops/bloodhound
+      build_target: deps
+      dockerfile: dockerfiles/bloodhound.Dockerfile
+      push_image: ${{ inputs.push_image }}
