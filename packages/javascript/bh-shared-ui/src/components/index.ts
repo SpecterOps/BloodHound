@@ -49,12 +49,6 @@ export { default as ConfirmationDialog } from './ConfirmationDialog';
 export * from './CreateMenu';
 export { default as CreateMenu } from './CreateMenu';
 
-export * from './CreateSAMLProviderDialog';
-export { default as CreateSAMLProviderDialog } from './CreateSAMLProviderDialog';
-
-export * from './CreateSAMLProviderForm';
-export { default as CreateSAMLProviderForm } from './CreateSAMLProviderForm';
-
 export * from './CreateUserForm';
 export { default as CreateUserForm } from './CreateUserForm';
 
@@ -175,6 +169,12 @@ export { default as UpdateUserDialog } from './UpdateUserDialog';
 
 export * from './UpdateUserForm';
 export { default as UpdateUserForm } from './UpdateUserForm';
+
+export * from './UpsertSAMLProviderDialog';
+export { default as UpsertSAMLProviderDialog } from './UpsertSAMLProviderDialog';
+
+export * from './UpsertSAMLProviderForm';
+export { default as UpsertSAMLProviderForm } from './UpsertSAMLProviderForm';
 
 export * from './UserTokenManagementDialog';
 export { default as UserTokenManagementDialog } from './UserTokenManagementDialog';

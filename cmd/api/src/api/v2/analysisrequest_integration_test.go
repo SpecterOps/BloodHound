@@ -14,13 +14,26 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// recursively applies Partial<T> to nested object types
-export type DeepPartial<T> = T extends object
-    ? {
-          [P in keyof T]?: DeepPartial<T[P]>;
-      }
-    : T;
+//go:build integration
+// +build integration
 
-export type SortOrder = 'asc' | 'desc' | undefined;
+package v2_test
 
-export type ValueOf<T> = T[keyof T];
+import (
+	"testing"
+
+	"github.com/specterops/bloodhound/src/api/v2/integration"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/stretchr/testify/require"
+)
+
+func TestRequestAnalysis(t *testing.T) {
+	testCtx := integration.NewFOSSContext(t)
+
+	err := testCtx.AdminClient().RequestAnalysis()
+	require.Nil(t, err)
+
+	analReq, err := testCtx.AdminClient().GetAnalysisRequest()
+	require.Nil(t, err)
+	require.Equal(t, analReq.RequestType, model.AnalysisRequestAnalysis)
+}

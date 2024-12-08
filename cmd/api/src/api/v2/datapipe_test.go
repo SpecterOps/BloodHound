@@ -14,26 +14,64 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build serial_integration
-// +build serial_integration
-
 package v2_test
 
 import (
+	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/src/api/v2/integration"
+	v2 "github.com/specterops/bloodhound/src/api/v2"
+	dbMocks "github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/stretchr/testify/require"
+	"github.com/specterops/bloodhound/src/utils/test"
+	"go.uber.org/mock/gomock"
 )
 
-func TestGetDatapipeStatus(t *testing.T) {
-	testCtx := integration.NewFOSSContext(t)
+func TestResources_GetDatapipeStatus(t *testing.T) {
+	const (
+		url = "api/v2/datapipe/status"
+	)
 
-	testCtx.WaitForDatapipeIdle(90 * time.Second)
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
 
-	datapipeStatus, err := testCtx.AdminClient().GetDatapipeStatus()
-	require.Nil(t, err)
-	require.Equal(t, datapipeStatus.Status, model.DatapipeStatusIdle)
+	t.Run("success getting datapipe status", func(t *testing.T) {
+		lastCompleteAnalysisAt := time.Now()
+		lastAnalysisRunAt := time.Now().Add(-time.Minute)
+
+		mockDB.EXPECT().GetDatapipeStatus(gomock.Any()).Return(model.DatapipeStatusWrapper{
+			Status:                 "idle",
+			LastCompleteAnalysisAt: lastCompleteAnalysisAt,
+			LastAnalysisRunAt:      lastAnalysisRunAt,
+		}, nil)
+
+		test.Request(t).
+			WithMethod(http.MethodGet).
+			WithURL(url).
+			OnHandlerFunc(resources.GetDatapipeStatus).
+			Require().
+			ResponseJSONBody(model.DatapipeStatusWrapper{
+				Status:                 "idle",
+				LastCompleteAnalysisAt: lastCompleteAnalysisAt,
+				LastAnalysisRunAt:      lastAnalysisRunAt,
+			}).
+			ResponseStatusCode(200)
+	})
+
+	t.Run("error getting datapipe status", func(t *testing.T) {
+		mockDB.EXPECT().GetDatapipeStatus(gomock.Any()).Return(model.DatapipeStatusWrapper{}, fmt.Errorf("an error"))
+
+		test.Request(t).
+			WithMethod(http.MethodGet).
+			WithURL(url).
+			OnHandlerFunc(resources.GetDatapipeStatus).
+			Require().
+			ResponseStatusCode(http.StatusInternalServerError)
+	})
 }

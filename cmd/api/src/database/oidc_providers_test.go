@@ -26,27 +26,50 @@ import (
 
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestBloodhoundDB_CreateOIDCProvider(t *testing.T) {
+func TestBloodhoundDB_CreateUpdateOIDCProvider(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
 	)
 	defer dbInst.Close(testCtx)
 
-	t.Run("successfully create an OIDC provider", func(t *testing.T) {
+	t.Run("successfully create and update an OIDC provider", func(t *testing.T) {
 		provider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com/auth", "bloodhound")
 		require.NoError(t, err)
 
-		assert.Equal(t, "https://test.localhost.com/auth", provider.Issuer)
-		assert.Equal(t, "bloodhound", provider.ClientID)
-		assert.NotEmpty(t, provider.ID)
+		require.Equal(t, "https://test.localhost.com/auth", provider.Issuer)
+		require.Equal(t, "bloodhound", provider.ClientID)
+		require.EqualValues(t, 1, provider.ID)
 
-		_, count, err := dbInst.ListAuditLogs(testCtx, time.Now().Add(-time.Minute), time.Now().Add(time.Minute), 0, 10, "", model.SQLFilter{})
+		_, count, err := dbInst.ListAuditLogs(testCtx, time.Now().Add(time.Minute), time.Now().Add(-time.Minute), 0, 10, "", model.SQLFilter{})
 		require.NoError(t, err)
-		assert.Equal(t, 4, count)
+		require.Equal(t, 4, count)
+
+		updatedSSOProvider := model.SSOProvider{
+			Name: "updated provider",
+			Type: model.SessionAuthProviderOIDC,
+			OIDCProvider: &model.OIDCProvider{
+				Serial: model.Serial{
+					ID: provider.ID,
+				},
+				ClientID:      "gotham-net",
+				Issuer:        "https://gotham.net",
+				SSOProviderID: provider.SSOProviderID,
+			},
+		}
+
+		provider, err = dbInst.UpdateOIDCProvider(testCtx, updatedSSOProvider)
+		require.NoError(t, err)
+
+		require.Equal(t, updatedSSOProvider.OIDCProvider.Issuer, provider.Issuer)
+		require.Equal(t, updatedSSOProvider.OIDCProvider.ClientID, provider.ClientID)
+		require.EqualValues(t, updatedSSOProvider.OIDCProvider.ID, provider.ID)
+
+		_, count, err = dbInst.ListAuditLogs(testCtx, time.Now().Add(time.Minute), time.Now().Add(-time.Minute), 0, 10, "", model.SQLFilter{})
+		require.NoError(t, err)
+		require.Equal(t, 8, count)
 	})
 }

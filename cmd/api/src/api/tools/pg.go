@@ -236,6 +236,8 @@ func (s *PGMigrator) SwitchPostgreSQL(response http.ResponseWriter, request *htt
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed connecting to PostgreSQL: %w", err),
 		}, http.StatusInternalServerError, response)
+	} else if err := pgDB.AssertSchema(request.Context(), s.graphSchema); err != nil {
+		log.Errorf("Unable to assert graph schema in PostgreSQL: %v", err)
 	} else if err := SetGraphDriver(request.Context(), s.cfg, pg.DriverName); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed updating graph database driver preferences: %w", err),

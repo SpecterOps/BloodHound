@@ -93,7 +93,7 @@ $$
   begin
     create type nodeComposite as
     (
-      id         integer,
+      id         bigint,
       kind_ids   smallint[8],
       properties jsonb
     );
@@ -133,9 +133,9 @@ $$
   begin
     create type edgeComposite as
     (
-      id         integer,
-      start_id   integer,
-      end_id     integer,
+      id         bigint,
+      start_id   bigint,
+      end_id     bigint,
       kind_id    smallint,
       properties jsonb
     );

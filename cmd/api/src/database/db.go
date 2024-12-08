@@ -66,6 +66,7 @@ type Database interface {
 	// Ingest
 	ingest.IngestData
 	GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error)
+	CountAllIngestTasks(ctx context.Context) (int64, error)
 	DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error
 	GetIngestTasksForJob(ctx context.Context, jobID int64) (model.IngestTasks, error)
 
@@ -124,7 +125,6 @@ type Database interface {
 	DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error
 	InitializeSecretAuth(ctx context.Context, adminUser model.User, authSecret model.AuthSecret) (model.Installation, error)
 
-
 	// SSO
 	SSOProviderData
 	OIDCProviderData
@@ -159,8 +159,7 @@ type Database interface {
 	AnalysisRequestData
 
 	// Datapipe Status
-	SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus, updateAnalysisTime bool) error
-	GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error)
+	DatapipeStatusData
 }
 
 type BloodhoundDB struct {
