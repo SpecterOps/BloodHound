@@ -17,17 +17,21 @@
 FROM docker.io/library/node:22-alpine AS base
 
 # Setup
-RUN mkdir /.yarn && chmod -R go+w /.yarn
-RUN mkdir /.cache && chmod -R go+w /.cache
-RUN corepack enable
-RUN corepack prepare yarn@stable --activate
+RUN mkdir /.yarn && \
+  chmod -R go+w /.yarn \
+  mkdir /.cache && \
+  chmod -R go+w /.cache && \
+  correpack enable && \
+  corepack prepare yarn@stable --activate
 
 # BloodHound Workspace files
 WORKDIR /bloodhound
-COPY package.json ./
-COPY yarn.lock ./
-COPY .yarnrc.yml ./
-COPY .yarn ./.yarn
+
+COPY package.json \
+  yarn.lock \
+  .yarnrc.yml \
+  .yarn \
+  ./
 
 # Shared Project Files
 WORKDIR /bloodhound/packages/javascript
@@ -36,13 +40,12 @@ COPY packages/javascript/js-client-library/package.json ./js-client-library/
 
 # BloodHound Project Files
 WORKDIR /bloodhound/cmd/ui
-COPY cmd/ui/package.json ./
-COPY cmd/ui/vite.config.ts ./
-COPY cmd/ui/tsconfig.node.json ./
-COPY cmd/ui/tsconfig.json ./
+COPY cmd/ui/package.json \
+  cmd/ui/vite.config.ts \
+  cmd/ui/tsconfig.node.json \
+  cmd/ui/tsconfig.json \
+  cmd/ui/index.html \
+  ./
 COPY cmd/ui/public ./public
-COPY cmd/ui/index.html ./
-
-WORKDIR /bloodhound/cmd/ui
 
 RUN yarn

@@ -82,5 +82,3 @@ jobs:
         type=registry,ref=specterops/bloodhound:buildcache
       image_cache_to: |-
         type=registry,ref=specterops/bloodhound:buildcache,mode=max
-
-
