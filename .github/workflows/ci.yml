@@ -21,7 +21,15 @@ on:
 permissions: write-all
 
 jobs:
+  cla-check:
+    name: CLA Check
+    uses: ./.github/workflows/reusable.cla.yml
+    secrets:
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+
   build-container-images:
+    needs: cla-check
     name: Build Container Images
     uses: ./.github/workflows/build-container-images.yml
     with:
@@ -34,8 +42,8 @@ jobs:
       gh_access_token: ${{ secrets.GITHUB_TOKEN }}
 
   static-code-analysis:
-    name: Static Code Anaylsis
-    needs: build-container-images
+    name: Static Code Analysis
+    needs: [cla-check, build-container-images]
     uses: ./.github/workflows/static-code-analysis.yml
     with:
       bloodhound_image_tar_artifact_name: ${{ needs.build-container-images.outputs.bloodhound_image_tar_artifact_name }}
@@ -49,7 +57,7 @@ jobs:
 
   testing:
     name: Code Testing
-    needs: build-container-images
+    needs: [cla-check, build-container-images]
     uses: ./.github/workflows/testing.yml
     with:
       bloodhound_image_tar_artifact_name: ${{ needs.build-container-images.outputs.bloodhound_image_tar_artifact_name }}
