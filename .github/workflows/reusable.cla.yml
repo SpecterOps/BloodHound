@@ -1,0 +1,46 @@
+name: "CLA Assistant Reusable Workflow"
+on:
+  workflow_call:
+    inputs:
+      signatures_path:
+        type: string
+        default: "signatures.json"
+        description: "Path to the signatures JSON file"
+      document_path:
+        type: string
+        default: "https://github.com/BloodHoundAD/CLA/blob/main/ICLA.md"
+        description: "URL to the CLA document"
+      branch:
+        type: string
+        default: "main"
+        description: "Branch name for the CLA repository"
+      remote_organization:
+        type: string
+        default: "BloodHoundAD"
+        description: "Organization name containing the CLA repository"
+      remote_repository:
+        type: string
+        default: "CLA"
+        description: "Name of the CLA repository"
+    secrets:
+      github_token:
+        required: true
+      personal_access_token:
+        required: true
+
+jobs:
+  process-cla:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "CLA Assistant"
+        if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
+        uses: contributor-assistant/github-action@v2.2.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.personal_access_token }}
+        with:
+          path-to-signatures: ${{ inputs.signatures_path }}
+          path-to-document: ${{ inputs.document_path }}
+          branch: ${{ inputs.branch }}
+          remote-organization-name: ${{ inputs.remote_organization }}
+          remote-repository-name: ${{ inputs.remote_repository }}
