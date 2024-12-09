@@ -30,4 +30,6 @@ const (
 	NodeLabelsFunction         = "labels"
 	EdgeTypeFunction           = "type"
 	StringSplitToArrayFunction = "split"
+	ToStringFunction           = "tostring"
+	ToIntegerFunction          = "toint"
 )

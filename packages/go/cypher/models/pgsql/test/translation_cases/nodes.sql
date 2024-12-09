@@ -498,3 +498,20 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             where n0.properties ->> 'system_tags' like '%' || ('text')::text)
 select s0.n0 as n
 from s0;
+
+-- case: match (n:NodeKind1) where toString(n.functionallevel) in ['2008 R2','2012','2008','2003','2003 Interim','2000 Mixed/Native'] return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and (n0.properties -> 'functionallevel')::text = any
+                  (array ['2008 R2', '2012', '2008', '2003', '2003 Interim', '2000 Mixed/Native']::text[]))
+select s0.n0 as n
+from s0;
+
+-- case: match (n:NodeKind1) where toInt(n.value) in [1, 2, 3, 4] return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and (n0.properties -> 'value')::int8 = any (array [1, 2, 3, 4]::int8[]))
+select s0.n0 as n
+from s0;

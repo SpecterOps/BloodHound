@@ -132,6 +132,12 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 		case Float8:
 			return Float8, true
 
+		case Float4Array:
+			return Float4, true
+
+		case Float8Array:
+			return Float8, true
+
 		case Text:
 			return Text, true
 		}
@@ -139,6 +145,9 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 	case Float8:
 		switch other {
 		case Float4:
+			return Float8, true
+
+		case Float4Array, Float8Array:
 			return Float8, true
 
 		case Text:
@@ -156,6 +165,15 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 		case Int8:
 			return Int8, true
 
+		case Int2Array:
+			return Int2, true
+
+		case Int4Array:
+			return Int4, true
+
+		case Int8Array:
+			return Int8, true
+
 		case Text:
 			return Text, true
 		}
@@ -168,6 +186,12 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 		case Int8:
 			return Int8, true
 
+		case Int2Array, Int4Array:
+			return Int4, true
+
+		case Int8Array:
+			return Int8, true
+
 		case Text:
 			return Text, true
 		}
@@ -175,6 +199,9 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 	case Int8:
 		switch other {
 		case Int2, Int4, Int8:
+			return Int8, true
+
+		case Int2Array, Int4Array, Int8Array:
 			return Int8, true
 
 		case Text:

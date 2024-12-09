@@ -628,6 +628,24 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 				})
 			}
 
+		case cypher.ToStringFunction:
+			if typedExpression.NumArguments() > 1 {
+				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
+			} else if argument, err := s.treeTranslator.Pop(); err != nil {
+				s.SetError(err)
+			} else {
+				s.treeTranslator.Push(pgsql.NewTypeCast(argument, pgsql.Text))
+			}
+
+		case cypher.ToIntegerFunction:
+			if typedExpression.NumArguments() > 1 {
+				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
+			} else if argument, err := s.treeTranslator.Pop(); err != nil {
+				s.SetError(err)
+			} else {
+				s.treeTranslator.Push(pgsql.NewTypeCast(argument, pgsql.Int8))
+			}
+
 		default:
 			s.SetErrorf("unknown cypher function: %s", typedExpression.Name)
 		}
