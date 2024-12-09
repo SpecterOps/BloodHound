@@ -97,18 +97,8 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - if: inputs.build_automation_ref != ''
-        name: Checkout Reusable Workflows
-        uses: actions/checkout@v4
-        with:
-          clean: false
-          repository: SpecterOps/build-automation
-          ref: ${{ inputs.build_automation_ref }}
-          token: ${{ secrets.gh_access_token }}
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |-
-            .github/actions
-
-      - uses: ./.github/actions/lint-container-image
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: ${{ matrix.paths }}
+          recursive: false
