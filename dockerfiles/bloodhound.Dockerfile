@@ -106,8 +106,8 @@ RUN wget --progress=dot:giga \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-arm64.zip \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-arm64.zip.sha256
 
-RUN sha256sum -cw *.sha256 && \
-  7z x '*.zip' -oartifacts/* && \
+RUN sha256sum -cw ./*.sha256 && \
+  7z x './*.zip' -oartifacts/* && \
   ls
 
 WORKDIR /tmp/azurehound/artifacts
