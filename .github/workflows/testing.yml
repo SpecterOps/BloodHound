@@ -74,5 +74,5 @@ jobs:
       shell: bash
       run: |-
         docker run --rm specterops/bloodhound:${{ inputs.bloodhound_image_tar_artifact_name }} \
-          go work use \
+          go work use && \
           go list -f '{{.Dir}}/...' -m | xargs go test
