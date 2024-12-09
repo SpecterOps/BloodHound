@@ -18,6 +18,7 @@ package database
 
 import (
 	"errors"
+
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 )
