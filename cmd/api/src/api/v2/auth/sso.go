@@ -17,6 +17,7 @@
 package auth
 
 import (
+	"github.com/specterops/bloodhound/headers"
 	"net/http"
 	"net/url"
 	"path"
@@ -227,4 +228,18 @@ func (s ManagementResource) SSOCallbackHandler(response http.ResponseWriter, req
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotImplemented, api.ErrorResponseDetailsNotImplemented, request), response)
 		}
 	}
+}
+
+func redirectToLoginPage(response http.ResponseWriter, request *http.Request, errorMessage string) {
+	hostURL := *ctx.FromRequest(request).Host
+	redirectURL := api.URLJoinPath(hostURL, api.UserInterfacePath)
+
+	// Optionally, include the error message as a query parameter or in session storage
+	query := redirectURL.Query()
+	query.Set("error", errorMessage)
+	redirectURL.RawQuery = query.Encode()
+
+	// Redirect to the login page
+	response.Header().Add(headers.Location.String(), redirectURL.String())
+	response.WriteHeader(http.StatusFound)
 }
