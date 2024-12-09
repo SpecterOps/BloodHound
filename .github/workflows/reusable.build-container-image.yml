@@ -107,9 +107,9 @@ on:
           - Configure build-specific settings without modifying Dockerfile
           - Support different configurations for dev/staging/prod
           - Pass secrets safely during build (using --secret)
-          
+
           Predefined values may already be present, and any inputs provided here will be appended.
-          
+
           Example: 'VERSION=${GITHUB_SHA}' to embed git commit information
       build_contexts:
         type: string
@@ -120,7 +120,7 @@ on:
           - Include files from different locations without copying
           - Optimize layer caching for different build stages
           - Support complex multi-stage build patterns
-          
+
           In Dockerfile, access these contexts using FROM name or --from=name.
           Note: These contexts override same-named stages in the Dockerfile.
 
@@ -135,7 +135,7 @@ on:
           - Provide audit trails for compliance
           - Verify image build authenticity
           - Support automated security policy enforcement
-          
+
           Provenance data includes build source, tooling, and environment details.
       image_sbom:
           type: string
