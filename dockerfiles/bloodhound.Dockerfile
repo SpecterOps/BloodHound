@@ -76,18 +76,21 @@ ARG AZUREHOUND_VERSION
 WORKDIR /tmp/sharphound
 
 # Make some additional directories for minimal container to copy
-RUN mkdir -p /opt/bloodhound /etc/bloodhound /var/log
-RUN apk --no-cache add p7zip
+RUN mkdir -p \
+  /opt/bloodhound \
+  /etc/bloodhound \
+  /var/log && \
+  apk add --update --no-cache add p7zip=23.01-r0
 
 # Package Sharphound
-RUN wget https://github.com/BloodHoundAD/SharpHound/releases/download/$SHARPHOUND_VERSION/SharpHound-$SHARPHOUND_VERSION.zip \
-  -O sharphound-$SHARPHOUND_VERSION.zip && \
+RUN wget --progress=dot:giga \
+  https://github.com/BloodHoundAD/SharpHound/releases/download/$SHARPHOUND_VERSION/SharpHound-$SHARPHOUND_VERSION.zip -O sharphound-$SHARPHOUND_VERSION.zip && \
   sha256sum sharphound-$SHARPHOUND_VERSION.zip > sharphound-$SHARPHOUND_VERSION.zip.sha256
 
 WORKDIR /tmp/azurehound
 
 # Package Azurehound
-RUN wget \
+RUN wget --progress=dot:giga \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-darwin-amd64.zip \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-darwin-amd64.zip.sha256 \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-darwin-arm64.zip \
@@ -100,13 +103,15 @@ RUN wget \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-amd64.zip.sha256 \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-arm64.zip \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-arm64.zip.sha256
-RUN sha256sum -cw *.sha256
-RUN 7z x '*.zip' -oartifacts/*
-RUN ls
+
+RUN sha256sum -cw *.sha256 && \
+  7z x '*.zip' -oartifacts/* && \
+  ls
 
 WORKDIR /tmp/azurehound/artifacts
-RUN 7z a -tzip -mx9 azurehound-$AZUREHOUND_VERSION.zip azurehound-*
-RUN sha256sum azurehound-$AZUREHOUND_VERSION.zip > azurehound-$AZUREHOUND_VERSION.zip.sha256
+
+RUN 7z a -tzip -mx9 azurehound-$AZUREHOUND_VERSION.zip azurehound-* && \
+  sha256sum azurehound-$AZUREHOUND_VERSION.zip > azurehound-$AZUREHOUND_VERSION.zip.sha256
 
 ########
 # Package Bloodhound
