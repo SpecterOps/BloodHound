@@ -25,7 +25,7 @@ on:
     secrets:
       github_token:
         required: true
-      personal_access_token:
+      gh_access_token:
         required: true
 
 jobs:
@@ -37,7 +37,7 @@ jobs:
         uses: contributor-assistant/github-action@v2.2.1
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.personal_access_token }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.gh_access_token }}
         with:
           path-to-signatures: ${{ inputs.signatures_path }}
           path-to-document: ${{ inputs.document_path }}

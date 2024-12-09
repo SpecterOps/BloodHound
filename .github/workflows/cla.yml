@@ -26,4 +26,4 @@ jobs:
     uses: ./.github/workflows/reusable.cla.yml
     secrets:
       github_token: ${{ secrets.GITHUB_TOKEN }}
-      personal_access_token: ${{ secrets.REPO_SCOPE }}
+      gh_access_token: ${{ secrets.REPO_SCOPE }}
