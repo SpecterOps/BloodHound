@@ -64,10 +64,17 @@ func ExtractSyntaxNodeReferences(root pgsql.SyntaxNode) (*pgsql.IdentifierSet, e
 		func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
 			switch typedNode := node.(type) {
 			case pgsql.Identifier:
-				dependencies.Add(typedNode)
+				// Filter for reserved identifiers
+				if !pgsql.IsReservedIdentifier(typedNode) {
+					dependencies.Add(typedNode)
+				}
 
 			case pgsql.CompoundIdentifier:
-				dependencies.Add(typedNode.Root())
+				identifier := typedNode.Root()
+
+				if !pgsql.IsReservedIdentifier(identifier) {
+					dependencies.Add(identifier)
+				}
 			}
 		},
 	))
@@ -153,27 +160,35 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 		} else {
 			return upcastHint, nil
 		}
-	} else if inferredLeftHint, err := InferExpressionType(expression.LOperand); err != nil {
-		return pgsql.UnsetDataType, err
-	} else if inferredRightHint, err := InferExpressionType(expression.ROperand); err != nil {
-		return pgsql.UnsetDataType, err
-	} else if inferredLeftHint == pgsql.UnknownDataType && inferredRightHint == pgsql.UnknownDataType {
-		// If neither side has type information then check the operator to see if it implies some type hinting
+	} else {
+		// If neither side has specific type information then check the operator to see if it implies some type
+		// hinting before resorting to inference
 		switch expression.Operator {
 		case pgsql.OperatorStartsWith, pgsql.OperatorContains, pgsql.OperatorEndsWith:
 			// String operations imply the operands must be text
 			return pgsql.Text, nil
 
-		// TODO: Boolean inference for OperatorAnd and OperatorOr may want to be plumbed here
+		case pgsql.OperatorAnd, pgsql.OperatorOr:
+			// Boolean operators that the operands must be boolean
+			return pgsql.Boolean, nil
 
 		default:
-			// Unable to infer any type information
-			return pgsql.UnknownDataType, nil
+			// The operator does not imply specific type information onto the operands. Attempt to infer any
+			// information as a last ditch effort to type the AST nodes
+			if inferredLeftHint, err := InferExpressionType(expression.LOperand); err != nil {
+				return pgsql.UnsetDataType, err
+			} else if inferredRightHint, err := InferExpressionType(expression.ROperand); err != nil {
+				return pgsql.UnsetDataType, err
+			} else if inferredLeftHint == pgsql.UnknownDataType && inferredRightHint == pgsql.UnknownDataType {
+				// Unable to infer any type information, this may be resolved elsewhere so this is not explicitly
+				// an error condition
+				return pgsql.UnknownDataType, nil
+			} else if higherLevelHint, matchesOrConverts := inferredLeftHint.Convert(inferredRightHint); !matchesOrConverts {
+				return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, leftHint, inferredLeftHint)
+			} else {
+				return higherLevelHint, nil
+			}
 		}
-	} else if higherLevelHint, matchesOrConverts := inferredLeftHint.Convert(inferredRightHint); !matchesOrConverts {
-		return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, leftHint, inferredLeftHint)
-	} else {
-		return higherLevelHint, nil
 	}
 }
 
@@ -221,6 +236,9 @@ func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 		default:
 			return inferBinaryExpressionType(typedExpression)
 		}
+
+	case pgsql.Parenthetical:
+		return InferExpressionType(typedExpression.Expression)
 
 	default:
 		log.Infof("unable to infer type hint for expression type: %T", expression)

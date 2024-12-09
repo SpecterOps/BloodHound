@@ -515,3 +515,25 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
               and (n0.properties -> 'value')::int8 = any (array [1, 2, 3, 4]::int8[]))
 select s0.n0 as n
 from s0;
+
+-- case: match (u:NodeKind1) where u.pwdlastset < (datetime().epochseconds - (365 * 86400)) and not u.pwdlastset IN [-1.0, 0.0] return u limit 100
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and (n0.properties -> 'pwdlastset')::int8 <
+                  (extract(epoch from now()::timestamp with time zone)::int8 - (365 * 86400))
+              and not (n0.properties -> 'pwdlastset')::float8 = any (array [- 1, 0]::float8[]))
+select s0.n0 as u
+from s0
+limit 100;
+
+-- case: match (u:NodeKind1) where u.pwdlastset < (datetime().epochmillis - (365 * 86400)) and not u.pwdlastset IN [-1.0, 0.0] return u limit 100
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and (n0.properties -> 'pwdlastset')::int8 <
+                  (extract(epoch from now()::timestamp with time zone)::int8 * 1000 - (365 * 86400))
+              and not (n0.properties -> 'pwdlastset')::float8 = any (array [- 1, 0]::float8[]))
+select s0.n0 as u
+from s0
+limit 100;

@@ -41,4 +41,5 @@ const (
 	FunctionCount                  Identifier = "count"
 	FunctionStringToArray          Identifier = "string_to_array"
 	FunctionEdgesToPath            Identifier = "edges_to_path"
+	FunctionExtract                Identifier = "extract"
 )

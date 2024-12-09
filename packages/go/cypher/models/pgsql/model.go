@@ -972,6 +972,19 @@ func (s Projection) NodeType() string {
 	return "projection"
 }
 
+type ProjectionFrom struct {
+	Projection Projection
+	From       []FromClause
+}
+
+func (s ProjectionFrom) NodeType() string {
+	return "projection from"
+}
+
+func (s ProjectionFrom) AsExpression() Expression {
+	return s
+}
+
 // Select is a SQL expression that is evaluated to fetch data.
 type Select struct {
 	Distinct   bool
