@@ -42,19 +42,19 @@ jobs:
     name: Analyze Golang Code
     runs-on: ubuntu-latest
     steps:
-      - name: Download Image Tar
+      - name: Download BloodHound Docker Image Artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.bloodhound_image_tar_artifact_name }}
           path: /tmp
 
-      - name: Load Image
+      - name: Load BloodHound Docker Image
         shell: bash
         run: |-
           docker load --input "/tmp/${{ inputs.bloodhound_image_tar_artifact_name }}.tar"
           docker image ls
 
-      - name: Lint Code
+      - name: Run golangci-lint Analysis
         shell: bash
         run: |-
           docker run --rm specterops/bloodhound:${{ inputs.bloodhound_image_tar_artifact_name }} \
@@ -64,19 +64,19 @@ jobs:
     runs-on: ubuntu-latest
     name: Analyze JavaScript/TypeScript Code
     steps:
-      - name: Download Image Tar
+      - name: Download BloodHound Docker Image Artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.bloodhound_image_tar_artifact_name }}
           path: /tmp
 
-      - name: Load Image
+      - name: Load BloodHound Docker Image
         shell: bash
         run: |-
           docker load --input "/tmp/${{ inputs.bloodhound_image_tar_artifact_name }}.tar"
           docker image ls
 
-      - name: Lint Code
+      - name: Run ESLint Analysis
         shell: bash
         run: |-
           docker run --rm specterops/bloodhound:${{ inputs.bloodhound_image_tar_artifact_name }} \
