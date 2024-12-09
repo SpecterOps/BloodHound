@@ -9,16 +9,27 @@ on:
         type: boolean
         required: true
         description: |-
-          Whether to push the built container image to the registry after
-          building. Set this to 'true' if you want to automatically push the
-          image.
+          Controls whether to automatically push the built container image to the registry.
+          Enable this when you want to:
+          - Automatically deploy images in CI/CD pipelines
+          - Make images immediately available for testing/staging
+          - Ensure consistent image availability across environments
+          
+          Set to false when:
+          - Running local or development builds
+          - Performing security scans before publishing
+          - Testing build configurations without deployment
 
-          Example: 'true' to push the image to the registry, 'false' to skip
-          pushing.
+          Example: 'true' to push the image to the registry, 'false' to skip pushing.
       image_flavors:
         type: string
         description: |-
-          Additional image flavor information or tags.
+          Defines variations of the same image for different use cases or environments.
+          Use image flavors to:
+          - Create specialized builds (e.g., alpine, slim, full)
+          - Target different architectures or platforms
+          - Support multiple runtime configurations
+          - Maintain backwards compatibility with legacy systems
     secrets:
       dockerhub_account:
         required: true
