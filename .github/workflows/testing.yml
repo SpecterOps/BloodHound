@@ -28,7 +28,7 @@ jobs:
           --health-cmd "psql -h localhost -U bloodhound -c select 1 -d bloodhound"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries
+          --health-retries 5
       neo4j:
         image: neo4j:4.4.32
         env:
@@ -39,7 +39,7 @@ jobs:
           --health-cmd "wget -O /dev/null -q http://localhost:7474"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries
+          --health-retries 5
 
     steps:
     - name: Download Image Tar
