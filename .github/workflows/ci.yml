@@ -25,8 +25,8 @@ jobs:
     name: CLA Check
     uses: ./.github/workflows/reusable.cla.yml
     secrets:
-      github_token: ${{ secrets.GITHUB_TOKEN }}
       gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_repo_scope: ${{ secrets.REPO_SCOPE }}
 
   build-container-images:
     needs: cla-check

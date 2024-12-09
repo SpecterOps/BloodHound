@@ -35,9 +35,9 @@ on:
         default: "CLA"
         description: "Name of the CLA repository"
     secrets:
-      github_token:
-        required: true
       gh_access_token:
+        required: true
+      gh_repo_scope:
         required: true
 
 jobs:
@@ -48,8 +48,8 @@ jobs:
         if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
         uses: contributor-assistant/github-action@v2.2.1
         env:
-          GITHUB_TOKEN: ${{ secrets.github_token }}
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.gh_access_token }}
+          GITHUB_TOKEN: ${{ secrets.gh_access_token }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.gh_repo_scope }}
         with:
           path-to-signatures: ${{ inputs.signatures_path }}
           path-to-document: ${{ inputs.document_path }}
