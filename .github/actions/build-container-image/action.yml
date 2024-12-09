@@ -102,16 +102,21 @@ inputs:
       The source image repository from which to cache layers during the build.
       This can help improve build speed by reusing layers from a previously built image.
 
+      Default: type=gha
+
       Example: 'docker.io/my-app:cache' to cache from a specific image.
+    default: |-
+      type=gha
   cache_to:
     description: >
       The destination image cache settings to optimize the caching strategy during the build.
       This input specifies where to store cached layers and how they are scoped.
-      Values provided here will be appended to any default cache settings.
 
-      Predefined values may already be present, and any inputs provided here will be appended.
+      Default: type=gha,mode=max
 
       Example: "type=gha,mode=max,scope=\$\{\{ github.workflow \}\}"
+    default: |-
+      type=gha,mode=max
   push_image:
     required: true
     default: "false"
@@ -156,10 +161,8 @@ runs:
         provenance: ${{ inputs.image_provenance }}
         sbom: ${{ inputs.image_sbom }}
         cache-from: |
-          type=gha
           ${{ inputs.cache_from }}
         cache-to: |
-          type=gha,mode=max
           ${{ inputs.cache_to }}
         tags: |
           ${{ inputs.image_tags }}
