@@ -1,4 +1,4 @@
-name: "CLA Assistant Reusable Workflow"
+name: CLA Assistant Reusable Workflow
 on:
   workflow_call:
     inputs:
