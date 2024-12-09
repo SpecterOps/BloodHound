@@ -1,5 +1,5 @@
-name: Docker Image Build
-run-name: Docker Image Build started by @${{ github.actor }} for ${{ github.ref_name }}
+name: Container Image Build Pipeline
+run-name: Building Container Image for ${{ inputs.image_repository }} by @${{ github.actor }} on ${{ github.ref_name }}
 
 on:
   workflow_dispatch:
@@ -216,7 +216,7 @@ on:
 
 jobs:
   build-container-image:
-    name: ${{ inputs.image_repository }}
+    name: Build and Package ${{ inputs.image_repository }} Container
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout_minutes }}
     outputs:
@@ -225,7 +225,7 @@ jobs:
       image_tar_path: ${{ inputs.build_output_tar_dir }}/${{ steps.container-image-metadata.outputs.version }}.tar
       image_tar_artifact_name: ${{ steps.container-image-metadata.outputs.version }}
     steps:
-      - name: Checkout Repository
+      - name: Checkout Source Code Repository
         uses: actions/checkout@v4
 
       - if: inputs.build_automation_ref != ''
