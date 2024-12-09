@@ -403,9 +403,16 @@ type AnyExpression struct {
 }
 
 func NewAnyExpression(inner Expression) AnyExpression {
-	return AnyExpression{
+	newAnyExpression := AnyExpression{
 		Expression: inner,
 	}
+
+	switch innerTypeHint := inner.(type) {
+	case TypeHinted:
+		newAnyExpression.CastType = innerTypeHint.TypeHint()
+	}
+
+	return newAnyExpression
 }
 
 func (s AnyExpression) AsExpression() Expression {

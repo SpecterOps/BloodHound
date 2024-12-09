@@ -109,7 +109,7 @@ const (
 	ExpansionTerminalNode DataType = "expansion_terminal_node"
 )
 
-func (s DataType) Convert(other DataType) (DataType, bool) {
+func (s DataType) Convert(other DataType, operator Operator) (DataType, bool) {
 	if s == other {
 		return s, true
 	}
@@ -207,6 +207,36 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 		case Text:
 			return Text, true
 		}
+
+	case Int:
+		switch other {
+		case Int2, Int4, Int:
+			return Int, true
+
+		case Int8:
+			return Int8, true
+
+		case Text:
+			return Text, true
+		}
+
+	case Int2Array:
+		switch other {
+		case Int2Array, Int4Array, Int8Array:
+			return other, true
+		}
+
+	case Int4Array:
+		switch other {
+		case Int4Array, Int8Array:
+			return other, true
+		}
+
+	case Float4Array:
+		switch other {
+		case Float4Array, Float8Array:
+			return other, true
+		}
 	}
 
 	return UnsetDataType, false
@@ -234,7 +264,7 @@ func (s DataType) MatchesOneOf(others ...DataType) bool {
 
 func (s DataType) IsArrayType() bool {
 	switch s {
-	case Int2Array, Int4Array, Int8Array, Float4Array, Float8Array, TextArray:
+	case Int2Array, Int4Array, Int8Array, Float4Array, Float8Array, TextArray, JSONBArray, NodeCompositeArray, EdgeCompositeArray:
 		return true
 	}
 
@@ -286,7 +316,7 @@ func (s DataType) ArrayBaseType() (DataType, error) {
 	case TextArray:
 		return Text, nil
 	default:
-		return UnknownDataType, ErrNonArrayDataType
+		return s, nil
 	}
 }
 

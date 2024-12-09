@@ -82,7 +82,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
      s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s0,
                  node n1
-            where (s0.n0).id = any (jsonb_to_text_array(n1.properties -> 'captured_ids')::int4[]))
+            where (s0.n0).id = any (jsonb_to_text_array(n1.properties -> 'captured_ids')::int8[]))
 select s1.n0 as s, s1.n1 as e
 from s1;
 
@@ -537,3 +537,27 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
 select s0.n0 as u
 from s0
 limit 100;
+
+-- case: match (n:NodeKind1) where size(n.array_value) > 0 return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and jsonb_array_length(n0.properties -> 'array_value')::int > 0)
+select s0.n0 as n
+from s0;
+
+-- case: match (n) where 1 in n.array return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where 1 = any (jsonb_to_text_array(n0.properties -> 'array')::int8[]))
+select s0.n0 as n
+from s0;
+
+-- case: match (n) where $p in n.array or $f in n.array return n
+-- cypher_params: {"p": 1, "f": "text"}
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where @pi0::float8 = any (jsonb_to_text_array(n0.properties -> 'array')::float8[])
+               or @pi1::text = any (jsonb_to_text_array(n0.properties -> 'array')::text[]))
+select s0.n0 as n
+from s0;

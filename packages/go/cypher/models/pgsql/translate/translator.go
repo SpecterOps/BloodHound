@@ -589,6 +589,31 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 				})
 			}
 
+		case cypher.ListSizeFunction:
+			if typedExpression.NumArguments() > 1 {
+				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
+			} else if argument, err := s.treeTranslator.Pop(); err != nil {
+				s.SetError(err)
+			} else {
+				var functionCall pgsql.FunctionCall
+
+				if _, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+					functionCall = pgsql.FunctionCall{
+						Function:   pgsql.FunctionJSONBArrayLength,
+						Parameters: []pgsql.Expression{argument},
+						CastType:   pgsql.Int,
+					}
+				} else {
+					functionCall = pgsql.FunctionCall{
+						Function:   pgsql.FunctionArrayLength,
+						Parameters: []pgsql.Expression{argument, pgsql.NewLiteral(1, pgsql.Int)},
+						CastType:   pgsql.Int,
+					}
+				}
+
+				s.treeTranslator.Push(functionCall)
+			}
+
 		case cypher.ToUpperFunction:
 			if typedExpression.NumArguments() > 1 {
 				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
