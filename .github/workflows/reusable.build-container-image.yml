@@ -1,5 +1,5 @@
-name: Build Container Image
-run-name: Container Image Buld started by @${{ github.actor }} for ${{ github.ref_name }}
+name: Docker Image Build
+run-name: Docker Image Build started by @${{ github.actor }} for ${{ github.ref_name }}
 
 on:
   workflow_dispatch:

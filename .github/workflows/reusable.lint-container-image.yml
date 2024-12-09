@@ -1,6 +1,6 @@
 ---
-name: Lint Container Images
-run-name: Lint Container Images by @${{ github.actor }}
+name: Docker Image Linting
+run-name: Docker Image Linting by @${{ github.actor }}
 
 on:
   workflow_call:
@@ -24,7 +24,7 @@ on:
 
 jobs:
   find-dockerfiles:
-    name: Find Dockerfiles
+    name: Discover Dockerfile Locations
     runs-on: ubuntu-latest
     timeout-minutes: 30
     outputs:
@@ -53,12 +53,12 @@ jobs:
           registry_account: ${{ secrets.dockerhub_account }}
           registry_token: ${{ secrets.dockerhub_token }}
 
-      - name: Download Build Automation Tool
+      - name: Pull Build Automation Image
         shell: bash
         run: |
           docker pull specterops/build-automation:berner-pre0.0
 
-      - name: Find Files
+      - name: Locate Dockerfile Paths
         id: find-files
         shell: bash
         run: |
@@ -71,7 +71,7 @@ jobs:
 
   hadolint:
     needs: find-dockerfiles
-    name: Lint Dockerfile(s)
+    name: Run Hadolint Analysis
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
