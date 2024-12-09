@@ -229,7 +229,7 @@ jobs:
         uses: actions/checkout@v4
 
       - if: inputs.build_automation_ref != ''
-        name: Checkout Reusable Workflows
+        name: Checkout Build Automation Workflows
         uses: actions/checkout@v4
         with:
           clean: false
@@ -282,7 +282,7 @@ jobs:
           push_image: ${{ inputs.push_image }}
 
       - if: inputs.build_output_tar_dir != ''
-        name: Upload Docker Image Artifact
+        name: Archive Container Image for Downstream Jobs
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
