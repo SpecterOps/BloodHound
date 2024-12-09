@@ -67,7 +67,12 @@ on:
       build_context:
         type: string
         description: |
-          TBA ...
+          Specifies the build context directory for Docker.
+          Choose your build context carefully to:
+          - Control which files are available during build
+          - Optimize build performance by limiting included files
+          - Ensure security by excluding sensitive files
+          - Support multi-stage builds with specific contexts
       image_repository:
         type: string
         required: true
@@ -96,34 +101,53 @@ on:
       build_args:
         type: string
         description: |-
-          Additional build arguments to pass to the Docker build process.
-          These arguments can be used to customize the build based on your requirements.
-
+          Build-time variables that customize the container build process.
+          Use build args to:
+          - Inject version information at build time
+          - Configure build-specific settings without modifying Dockerfile
+          - Support different configurations for dev/staging/prod
+          - Pass secrets safely during build (using --secret)
+          
           Predefined values may already be present, and any inputs provided here will be appended.
-
-          Example: 'MY_VARIABLE=value' to set an environment variable during the build.
+          
+          Example: 'VERSION=${GITHUB_SHA}' to embed git commit information
       build_contexts:
         type: string
         description: |-
-          Additional build contexts to pass to Docker build process.
+          Additional named build contexts for multi-stage builds.
+          Use multiple build contexts when you need to:
+          - Separate build dependencies from runtime dependencies
+          - Include files from different locations without copying
+          - Optimize layer caching for different build stages
+          - Support complex multi-stage build patterns
+          
+          In Dockerfile, access these contexts using FROM name or --from=name.
+          Note: These contexts override same-named stages in the Dockerfile.
 
-          Define additional build context with specified contents. In Dockerfile the
-          context can be accessed when FROM name or --from=name is used. When
-          Dockerfile defines a stage with the same name it is overwritten.
-
-          Example: 'name=path'
+          Example: 'deps=/path/to/dependencies,assets=/path/to/static-files'
       image_provenance:
         type: string
         default: "false"
         description: |-
-          Whether to include image provenance information in the image metadata.
-          Provenance information provides details about how the image was built and can be useful for auditing.
+          Controls inclusion of SLSA provenance in image metadata.
+          Enable provenance when you need to:
+          - Meet supply chain security requirements
+          - Provide audit trails for compliance
+          - Verify image build authenticity
+          - Support automated security policy enforcement
+          
+          Provenance data includes build source, tooling, and environment details.
       image_sbom:
           type: string
           default: "false"
           description: |-
-            Whether to include a Software Bill of Materials (SBOM) in the image metadata.
-            An SBOM lists all the software components used in the image, enhancing transparency and security.
+            Controls generation of Software Bill of Materials (SBOM) for the image.
+            Enable SBOM generation to:
+            - Track and audit all software dependencies
+            - Identify and respond to security vulnerabilities
+            - Meet compliance requirements for software transparency
+            - Support automated vulnerability scanning
+            - Enable dependency analysis and lifecycle management
       image_flavor:
         type: string
         description: |-
