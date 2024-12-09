@@ -16,6 +16,7 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import {
+    Alert,
     Checkbox,
     DialogActions,
     DialogContent,
@@ -48,6 +49,7 @@ const CreateUserForm: React.FC<{
         handleSubmit,
         setValue,
         formState: { errors },
+        setError,
     } = useForm<CreateUserRequestForm>({
         defaultValues: {
             emailAddress: '',
@@ -67,7 +69,15 @@ const CreateUserForm: React.FC<{
         if (authenticationMethod === 'password') {
             setValue('SSOProviderId', undefined);
         }
-    }, [authenticationMethod, setValue]);
+
+        if (error) {
+            if (error.response?.data?.errors[0]?.message == 'principal name must be unique') {
+                setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
+            } else {
+                setError('generic', { type: 'custom', message: 'An unexpected error occurred. Please try again.' });
+            }
+        }
+    }, [authenticationMethod, setValue, error, setError]);
 
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
         apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)
@@ -335,14 +345,14 @@ const CreateUserForm: React.FC<{
                                     )}
                                 />
                             </Grid>
+                            {!!errors.generic && (
+                                <Grid item xs={12}>
+                                    <Alert severity='error'>{errors.generic.message}</Alert>
+                                </Grid>
+                            )}
                         </Grid>
                     </DialogContent>
                     <DialogActions>
-                        {error && (
-                            <FormHelperText error style={{ margin: 0 }}>
-                                An unexpected error occurred. Please try again.
-                            </FormHelperText>
-                        )}
                         <Button
                             type='button'
                             variant={'tertiary'}
