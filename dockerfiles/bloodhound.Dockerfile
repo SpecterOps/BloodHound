@@ -36,7 +36,10 @@ ENV SB_VERSION=${version}
 ENV CHECKOUT_HASH=${checkout_hash}
 WORKDIR /bloodhound
 
-RUN apk add --update --no-cache git
+RUN apk add \
+  --update \
+  --no-cache \
+  git=2.45.2-r0
 
 COPY --from=godeps /usr/local/go/ /usr/local/go/
 ENV PATH="/usr/local/go/bin:${PATH}"
@@ -57,6 +60,13 @@ WORKDIR /bloodhound
 RUN go run github.com/specterops/bloodhound/packages/go/stbernard build --os ${TARGETOS} --arch ${TARGETARCH}
 
 ########
+# dev/ci
+################
+FROM builder AS dev
+
+RUN yarn add node-jq@6.0.1
+
+########
 # Package other assets
 ################
 FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.20 as hound-builder
@@ -70,8 +80,9 @@ RUN mkdir -p /opt/bloodhound /etc/bloodhound /var/log
 RUN apk --no-cache add p7zip
 
 # Package Sharphound
-RUN wget https://github.com/BloodHoundAD/SharpHound/releases/download/$SHARPHOUND_VERSION/SharpHound-$SHARPHOUND_VERSION.zip -O sharphound-$SHARPHOUND_VERSION.zip
-RUN sha256sum sharphound-$SHARPHOUND_VERSION.zip > sharphound-$SHARPHOUND_VERSION.zip.sha256
+RUN wget https://github.com/BloodHoundAD/SharpHound/releases/download/$SHARPHOUND_VERSION/SharpHound-$SHARPHOUND_VERSION.zip \
+  -O sharphound-$SHARPHOUND_VERSION.zip && \
+  sha256sum sharphound-$SHARPHOUND_VERSION.zip > sharphound-$SHARPHOUND_VERSION.zip.sha256
 
 WORKDIR /tmp/azurehound
 
