@@ -5,11 +5,23 @@ on:
       signatures_path:
         type: string
         default: "signatures.json"
-        description: "Path to the signatures JSON file"
+        description: |-
+          Location where CLA signatures are stored and tracked.
+          This file maintains the record of all contributors who have signed the agreement.
+          Customize this path when:
+          - Using a different storage location for signatures
+          - Managing multiple CLAs in the same repository
+          - Integrating with existing signature tracking systems
       document_path:
         type: string
         default: "https://github.com/BloodHoundAD/CLA/blob/main/ICLA.md"
-        description: "URL to the CLA document"
+        description: |-
+          URL to the Contributor License Agreement document that contributors must sign.
+          This document defines the terms under which contributions are accepted.
+          Customize this when:
+          - Using a different CLA version
+          - Implementing organization-specific agreements
+          - Supporting multiple languages or jurisdictions
       branch:
         type: string
         default: "main"
