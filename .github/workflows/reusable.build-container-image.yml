@@ -218,7 +218,7 @@ jobs:
 
       - uses: ./.github/actions/container-registry-authentication
         id: dockerhub-authentication
-        name: Login To DockerHub
+        name: Authenticate with DockerHub Registry
         with:
           container_registry: docker.io
           registry_account: ${{ secrets.dockerhub_account }}
@@ -226,7 +226,7 @@ jobs:
 
       - uses: ./.github/actions/container-registry-authentication
         id: ghcr-authentication
-        name: Login To GitHub Container Registry
+        name: Authenticate with GitHub Container Registry
         with:
           container_registry: ghcr.io
           registry_account: ${{ secrets.ghcr_account }}
@@ -258,7 +258,7 @@ jobs:
           push_image: ${{ inputs.push_image }}
 
       - if: inputs.build_output_tar_dir != ''
-        name: Upload Build Output
+        name: Upload Docker Image Artifact
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error

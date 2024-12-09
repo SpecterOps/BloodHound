@@ -47,7 +47,7 @@ jobs:
             .github/actions
 
       - uses: ./.github/actions/container-registry-authentication
-        name: Login To DockerHub
+        name: Authenticate with DockerHub Registry
         with:
           container_registry: docker.io
           registry_account: ${{ secrets.dockerhub_account }}
