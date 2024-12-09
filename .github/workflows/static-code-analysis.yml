@@ -34,6 +34,8 @@ jobs:
       ghcr_token: ${{ secrets.github_token }}
       gh_access_token: ${{ secrets.gh_access_token }}
 
+  scan-
+
   golangci-lint:
     name: Anaylze Golang Code
     runs-on: ubuntu-latest
