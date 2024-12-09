@@ -1,0 +1,80 @@
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+---
+name: Continuous Integration (CI)
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    types:
+      - assigned
+      - opened
+      - synchronize
+      - reopened
+      - closed
+  # https://stephencharlesweiss.com/github-actions-run-on-merge-only
+  push:
+    branches:
+      - main
+      - dev
+
+permissions: write-all
+
+jobs:
+  cla-check:
+    name: CLA Check
+    uses: ./.github/workflows/reusable.cla.yml
+    secrets:
+      gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_repo_scope: ${{ secrets.REPO_SCOPE }}
+
+  build-container-images:
+    needs: cla-check
+    name: Build Container Images
+    uses: ./.github/workflows/build-container-images.yml
+    with:
+      push_image: false
+    secrets:
+      dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+      ghcr_account: ${{ github.actor }}
+      ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+  static-code-analysis:
+    name: Static Code Analysis
+    needs: [cla-check, build-container-images]
+    uses: ./.github/workflows/static-code-analysis.yml
+    with:
+      bloodhound_image_tar_artifact_name: ${{ needs.build-container-images.outputs.bloodhound_image_tar_artifact_name }}
+      bloodhound_image_tar_path: ${{ needs.build-container-images.outputs.bloodhound_image_tar_path }}
+    secrets:
+      dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+      ghcr_account: ${{ github.actor }}
+      ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+  testing:
+    name: Code Testing
+    needs: [cla-check, build-container-images]
+    uses: ./.github/workflows/testing.yml
+    with:
+      bloodhound_image_tar_artifact_name: ${{ needs.build-container-images.outputs.bloodhound_image_tar_artifact_name }}
+      bloodhound_image_tar_path: ${{ needs.build-container-images.outputs.bloodhound_image_tar_path }}

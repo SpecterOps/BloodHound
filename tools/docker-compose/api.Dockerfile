@@ -30,8 +30,8 @@ ARG AZUREHOUND_VERSION
 WORKDIR /tmp/sharphound
 
 # Make some additional directories for minimal container to copy
-RUN mkdir -p /opt/bloodhound /etc/bloodhound /var/log
-RUN apk --no-cache add p7zip
+RUN mkdir -p /opt/bloodhound /etc/bloodhound /var/log && \
+  apk --no-cache add p7zip=17.04-r2
 
 # Package Sharphound
 RUN wget https://github.com/BloodHoundAD/SharpHound/releases/download/$SHARPHOUND_VERSION/SharpHound-$SHARPHOUND_VERSION.zip -O sharphound-$SHARPHOUND_VERSION.zip
@@ -40,7 +40,7 @@ RUN sha256sum sharphound-$SHARPHOUND_VERSION.zip > sharphound-$SHARPHOUND_VERSIO
 WORKDIR /tmp/azurehound
 
 # Package Azurehound
-RUN wget \
+RUN wget --progres=dot:giga \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-darwin-amd64.zip \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-darwin-amd64.zip.sha256 \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-darwin-arm64.zip \
@@ -53,24 +53,27 @@ RUN wget \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-amd64.zip.sha256 \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-arm64.zip \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-arm64.zip.sha256
-RUN sha256sum -cw *.sha256
-RUN 7z x '*.zip' -oartifacts/*
-RUN ls
+
+RUN sha256sum -cw ./*.sha256 && \
+  7z x './*.zip' -oartifacts/* && \
+  ls
 
 WORKDIR /tmp/azurehound/artifacts
-RUN 7z a -tzip -mx9 azurehound-$AZUREHOUND_VERSION.zip azurehound-*
-RUN sha256sum azurehound-$AZUREHOUND_VERSION.zip > azurehound-$AZUREHOUND_VERSION.zip.sha256
+RUN 7z a -tzip -mx9 azurehound-$AZUREHOUND_VERSION.zip azurehound-* && \
+  sha256sum azurehound-$AZUREHOUND_VERSION.zip > azurehound-$AZUREHOUND_VERSION.zip.sha256
 
 FROM docker.io/library/golang:1.23
+
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 ENV GOFLAGS="-buildvcs=false"
-WORKDIR /bloodhound
-VOLUME [ "/go/pkg/mod" ]
 
-RUN mkdir -p /bhapi/collectors/azurehound /bhapi/collectors/sharphound /bhapi/work
-RUN go install github.com/go-delve/delve/cmd/dlv@v1.23.0
-RUN go install github.com/air-verse/air@v1.52.3
+WORKDIR /bloodhound
+VOLUME ["/go/pkg/mod"]
+
+RUN mkdir -p /bhapi/collectors/azurehound /bhapi/collectors/sharphound /bhapi/work && \
+  go install github.com/go-delve/delve/cmd/dlv@v1.23.0 && \
+  go install github.com/air-verse/air@v1.52.3
 
 COPY --from=hound-builder /tmp/sharphound/sharphound-$SHARPHOUND_VERSION.zip /bhapi/collectors/sharphound/
 COPY --from=hound-builder /tmp/sharphound/sharphound-$SHARPHOUND_VERSION.zip.sha256 /bhapi/collectors/sharphound/

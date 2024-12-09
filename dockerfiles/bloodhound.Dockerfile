@@ -25,6 +25,8 @@ ARG AZUREHOUND_VERSION=v2.2.1
 ################
 FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.23-alpine3.20 AS godeps
 
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2
+
 ########
 # Builder init
 ################
@@ -36,7 +38,10 @@ ENV SB_VERSION=${version}
 ENV CHECKOUT_HASH=${checkout_hash}
 WORKDIR /bloodhound
 
-RUN apk add --update --no-cache git
+RUN apk add \
+  --update \
+  --no-cache \
+  git=2.45.2-r0
 
 COPY --from=godeps /usr/local/go/ /usr/local/go/
 ENV PATH="/usr/local/go/bin:${PATH}"
@@ -57,6 +62,13 @@ WORKDIR /bloodhound
 RUN go run github.com/specterops/bloodhound/packages/go/stbernard build --os ${TARGETOS} --arch ${TARGETARCH}
 
 ########
+# dev/ci
+################
+FROM builder AS dev
+
+RUN yarn add node-jq@6.0.1
+
+########
 # Package other assets
 ################
 FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.20 as hound-builder
@@ -66,17 +78,21 @@ ARG AZUREHOUND_VERSION
 WORKDIR /tmp/sharphound
 
 # Make some additional directories for minimal container to copy
-RUN mkdir -p /opt/bloodhound /etc/bloodhound /var/log
-RUN apk --no-cache add p7zip
+RUN mkdir -p \
+  /opt/bloodhound \
+  /etc/bloodhound \
+  /var/log && \
+  apk add --update --no-cache add p7zip=23.01-r0
 
 # Package Sharphound
-RUN wget https://github.com/BloodHoundAD/SharpHound/releases/download/$SHARPHOUND_VERSION/SharpHound-$SHARPHOUND_VERSION.zip -O sharphound-$SHARPHOUND_VERSION.zip
-RUN sha256sum sharphound-$SHARPHOUND_VERSION.zip > sharphound-$SHARPHOUND_VERSION.zip.sha256
+RUN wget --progress=dot:giga \
+  https://github.com/BloodHoundAD/SharpHound/releases/download/$SHARPHOUND_VERSION/SharpHound-$SHARPHOUND_VERSION.zip -O sharphound-$SHARPHOUND_VERSION.zip && \
+  sha256sum sharphound-$SHARPHOUND_VERSION.zip > sharphound-$SHARPHOUND_VERSION.zip.sha256
 
 WORKDIR /tmp/azurehound
 
 # Package Azurehound
-RUN wget \
+RUN wget --progress=dot:giga \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-darwin-amd64.zip \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-darwin-amd64.zip.sha256 \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-darwin-arm64.zip \
@@ -89,13 +105,15 @@ RUN wget \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-amd64.zip.sha256 \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-arm64.zip \
   https://github.com/BloodHoundAD/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-arm64.zip.sha256
-RUN sha256sum -cw *.sha256
-RUN 7z x '*.zip' -oartifacts/*
-RUN ls
+
+RUN sha256sum -cw ./*.sha256 && \
+  7z x './*.zip' -oartifacts/* && \
+  ls
 
 WORKDIR /tmp/azurehound/artifacts
-RUN 7z a -tzip -mx9 azurehound-$AZUREHOUND_VERSION.zip azurehound-*
-RUN sha256sum azurehound-$AZUREHOUND_VERSION.zip > azurehound-$AZUREHOUND_VERSION.zip.sha256
+
+RUN 7z a -tzip -mx9 azurehound-$AZUREHOUND_VERSION.zip azurehound-* && \
+  sha256sum azurehound-$AZUREHOUND_VERSION.zip > azurehound-$AZUREHOUND_VERSION.zip.sha256
 
 ########
 # Package Bloodhound

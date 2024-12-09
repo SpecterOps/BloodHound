@@ -14,40 +14,86 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+---
 name: Static Code Analysis
+run-name: Code Anaylsis started by @${{ github.actor }} for ${{ github.ref_name }}
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    types: [opened, synchronize]
+  workflow_call:
+    inputs:
+      bloodhound_image_tar_artifact_name:
+        type: string
+        required: true
+      bloodhound_image_tar_path:
+        type: string
+        required: true
+    secrets:
+      dockerhub_account:
+        required: true
+      dockerhub_token:
+        required: true
+      ghcr_account:
+        required: true
+      ghcr_token:
+        required: true
+      gh_access_token:
+        required: true
 
 jobs:
-  run-analysis:
+  lint-container-images:
+    name: Analyze Dockerfiles
+    uses: ./.github/workflows/reusable.lint-container-image.yml
+    secrets:
+      dockerhub_account: ${{ secrets.dockerhub_account }}
+      dockerhub_token: ${{ secrets.dockerhub_token }}
+      ghcr_account: ${{ github.actor }}
+      ghcr_token: ${{ secrets.github_token }}
+      gh_access_token: ${{ secrets.gh_access_token }}
+
+  trivy-scan:
+    name: Analyze Security Vulnerabilities
+    uses: ./.github/workflows/reusable.vulnerability-scan.yml
+
+  golangci-lint:
+    name: Analyze Golang Code
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout source code for this repository
-        uses: actions/checkout@v3
-
-      - name: Install Go
-        uses: actions/setup-go@v4
+      - name: Download BloodHound Docker Image Artifact
+        uses: actions/download-artifact@v4
         with:
-          go-version: "^1.23.0"
+          name: ${{ inputs.bloodhound_image_tar_artifact_name }}
+          path: /tmp
 
-      - name: Install Node
-        uses: actions/setup-node@v4
+      - name: Load BloodHound Docker Image
+        shell: bash
+        run: |-
+          docker load --input "/tmp/${{ inputs.bloodhound_image_tar_artifact_name }}.tar"
+          docker image ls
+
+      - name: Run golangci-lint Analysis
+        shell: bash
+        run: |-
+          docker run --rm specterops/bloodhound:${{ inputs.bloodhound_image_tar_artifact_name }} \
+            golangci-lint
+
+  eslint:
+    runs-on: ubuntu-latest
+    name: Analyze JavaScript/TypeScript Code
+    steps:
+      - name: Download BloodHound Docker Image Artifact
+        uses: actions/download-artifact@v4
         with:
-          node-version: 22
+          name: ${{ inputs.bloodhound_image_tar_artifact_name }}
+          path: /tmp
 
-      - name: Install Yarn
-        run: |
-          npm install --global yarn
+      - name: Load BloodHound Docker Image
+        shell: bash
+        run: |-
+          docker load --input "/tmp/${{ inputs.bloodhound_image_tar_artifact_name }}.tar"
+          docker image ls
 
-      - name: Install Deps
-        run: |
-          go run github.com/specterops/bloodhound/packages/go/stbernard deps
-
-      - name: Run Analysis
-        run: |
-          go run github.com/specterops/bloodhound/packages/go/stbernard analysis
+      - name: Run ESLint Analysis
+        shell: bash
+        run: |-
+          docker run --rm specterops/bloodhound:${{ inputs.bloodhound_image_tar_artifact_name }} \
+            yarn run lint
