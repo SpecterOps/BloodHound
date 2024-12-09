@@ -125,8 +125,6 @@ func BuildErrorResponse(httpStatus int, message string, request *http.Request) *
 func HandleDatabaseError(request *http.Request, response http.ResponseWriter, err error) {
 	if errors.Is(err, database.ErrNotFound) {
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusNotFound, ErrorResponseDetailsResourceNotFound, request), response)
-	} else if errors.Is(err, database.ErrDuplicateUserPrincipal) {
-		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusConflict, ErrorResponseUserDuplicatePrincipal, request), response)
 	} else if errors.Is(err, context.DeadlineExceeded) {
 		WriteErrorResponse(request.Context(), BuildErrorResponse(http.StatusInternalServerError, ErrorResponseRequestTimeout, request), response)
 	} else {

@@ -264,7 +264,15 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 		Model:  &updatedUser,
 	}
 	return updatedUser, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Create(&updatedUser))
+		result := tx.WithContext(ctx).Create(&updatedUser)
+
+		if result.Error != nil {
+			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"users_principal_name_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateUserPrincipal, tx.Error)
+			}
+		}
+
+		return CheckError(result)
 	})
 }
 
@@ -296,6 +304,13 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 		}
 
 		result := tx.WithContext(ctx).Save(&user)
+
+		if result.Error != nil {
+			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"users_principal_name_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateUserPrincipal, tx.Error)
+			}
+		}
+
 		return CheckError(result)
 	})
 }

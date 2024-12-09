@@ -18,21 +18,13 @@ package database
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
-	"strings"
 )
 
 func CheckError(tx *gorm.DB) error {
 	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 		return ErrNotFound
-	}
-
-	if tx.Error != nil {
-		if strings.Contains(tx.Error.Error(), "duplicate key value violates unique constraint \"users_principal_name_key\"") {
-			return fmt.Errorf("%w: %v", ErrDuplicateUserPrincipal, tx.Error)
-		}
 	}
 
 	return tx.Error
