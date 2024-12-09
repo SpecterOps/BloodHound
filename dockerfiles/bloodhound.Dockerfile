@@ -25,6 +25,8 @@ ARG AZUREHOUND_VERSION=v2.2.1
 ################
 FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.23-alpine3.20 AS godeps
 
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2
+
 ########
 # Builder init
 ################

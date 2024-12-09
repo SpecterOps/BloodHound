@@ -30,7 +30,7 @@ on:
           - Automatically deploy images in CI/CD pipelines
           - Make images immediately available for testing/staging
           - Ensure consistent image availability across environments
-          
+
           Set to false when:
           - Running local or development builds
           - Performing security scans before publishing
@@ -75,6 +75,6 @@ jobs:
       gh_access_token: ${{ secrets.gh_access_token }}
     with:
       image_repository: specterops/bloodhound
-      build_target: deps
+      build_target: dev
       dockerfile: dockerfiles/bloodhound.Dockerfile
       push_image: ${{ inputs.push_image }}
