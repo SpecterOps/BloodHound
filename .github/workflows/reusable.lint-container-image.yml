@@ -1,6 +1,6 @@
 ---
 name: Docker Image Linting
-run-name: Docker Image Linting by @${{ github.actor }}
+run-name: Docker Image Linting by @${{ github.actor }} for ${{ github.ref_name }}
 
 on:
   workflow_call:

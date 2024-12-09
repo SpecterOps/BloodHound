@@ -1,7 +1,7 @@
 ---
 name: Build and Publish Container Image
 
-description: |
+description: |-
   This composite action builds a container image based on the specified Dockerfile and metadata.
   It can optionally push the built image to a container registry.
   Ensure you have the necessary Docker and QEMU setup steps in your workflow for cross-platform builds.
