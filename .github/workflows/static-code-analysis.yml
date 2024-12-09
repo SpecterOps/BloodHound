@@ -25,7 +25,7 @@ on:
 
 jobs:
   lint-container-images:
-    name: Anaylze Dockerfiles
+    name: Analyze Dockerfiles
     uses: ./.github/workflows/reusable.lint-container-image.yml
     secrets:
       dockerhub_account: ${{ secrets.dockerhub_account }}
@@ -34,10 +34,12 @@ jobs:
       ghcr_token: ${{ secrets.github_token }}
       gh_access_token: ${{ secrets.gh_access_token }}
 
-  scan-
+  trivy-scan:
+    name: Analyze Security Vulnerabilities
+    uses: ./.github/workflows/reusable.vulnerability-scan.yml
 
   golangci-lint:
-    name: Anaylze Golang Code
+    name: Analyze Golang Code
     runs-on: ubuntu-latest
     steps:
       - name: Download Image Tar
@@ -60,7 +62,7 @@ jobs:
 
   eslint:
     runs-on: ubuntu-latest
-    name: Anaylze JavaScript/TypeScript Code
+    name: Analyze JavaScript/TypeScript Code
     steps:
       - name: Download Image Tar
         uses: actions/download-artifact@v4
