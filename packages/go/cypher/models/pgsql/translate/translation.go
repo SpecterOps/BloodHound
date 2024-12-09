@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cypher/models"
-	cypher "github.com/specterops/bloodhound/cypher/models/cypher"
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
 
@@ -177,7 +177,7 @@ func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error
 			s.treeTranslator.Push(pgsql.CompoundIdentifier{binding.Identifier, pgsql.ColumnKindIDs})
 			s.treeTranslator.Push(kindIDsLiteral)
 
-			if err := s.treeTranslator.PopPushOperator(pgsql.OperatorPGArrayOverlap); err != nil {
+			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorPGArrayOverlap); err != nil {
 				s.SetError(err)
 			}
 
@@ -185,7 +185,7 @@ func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error
 			s.treeTranslator.Push(pgsql.CompoundIdentifier{binding.Identifier, pgsql.ColumnKindID})
 			s.treeTranslator.Push(pgsql.NewAnyExpression(kindIDsLiteral))
 
-			if err := s.treeTranslator.PopPushOperator(pgsql.OperatorEquals); err != nil {
+			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorEquals); err != nil {
 				s.SetError(err)
 			}
 

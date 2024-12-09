@@ -177,7 +177,7 @@ const UserProfile = () => {
                                     </Button>
                                 </Grid>
                             </Grid>
-                            {user.saml_provider_id === null && (
+                            {user.sso_provider_id === null && (
                                 <>
                                     <Grid container item>
                                         <Grid item xs={3}>

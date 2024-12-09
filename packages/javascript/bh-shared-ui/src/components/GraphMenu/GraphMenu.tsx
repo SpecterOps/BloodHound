@@ -18,7 +18,7 @@ import { Menu } from '@mui/material';
 import GraphButton from '../GraphButton';
 import { Children, FC, ReactNode, useState } from 'react';
 
-const GraphMenu: FC<{ label: string; children: ReactNode }> = ({ children, label }) => {
+const GraphMenu: FC<{ label: ReactNode; children: ReactNode }> = ({ children, label }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const open = Boolean(anchorEl);

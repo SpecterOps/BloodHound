@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as axios from 'axios';
-import { ConfigurationPayload } from './utils/config';
+import { ConfigurationPayload } from './utils';
 
 export type RequestOptions = axios.AxiosRequestConfig;
 
@@ -149,11 +149,20 @@ export interface PutUserAuthSecretRequest {
     needsPasswordReset: boolean;
 }
 
+export interface CreateSAMLProviderFormInputs {
+    name: string;
+    metadata: FileList;
+}
+export type UpdateSAMLProviderFormInputs = Partial<CreateSAMLProviderFormInputs>;
+export type UpsertSAMLProviderFormInputs = CreateSAMLProviderFormInputs | UpdateSAMLProviderFormInputs;
+
 export interface CreateOIDCProviderRequest {
     name: string;
     client_id: string;
     issuer: string;
 }
+export type UpdateOIDCProviderRequest = Partial<CreateOIDCProviderRequest>;
+export type UpsertOIDCProviderRequest = CreateOIDCProviderRequest | UpdateOIDCProviderRequest;
 
 export interface SAMLProviderInfo extends Serial {
     name: string;
@@ -179,10 +188,42 @@ export interface SSOProvider extends Serial {
     slug: string;
     type: 'OIDC' | 'SAML';
     details: SAMLProviderInfo | OIDCProviderInfo;
+    login_uri: string;
+    callback_uri: string;
 }
 
 export interface ListSSOProvidersResponse {
     data: SSOProvider[];
+}
+
+export interface User {
+    id: string;
+    sso_provider_id: number | null;
+    AuthSecret: any;
+    roles: Role[];
+    first_name: string | null;
+    last_name: string | null;
+    email_address: string | null;
+    principal_name: string;
+    last_login: string;
+}
+
+interface Permission {
+    id: number;
+    name: string;
+    authority: string;
+}
+
+interface Role {
+    name: string;
+    description: string;
+    permissions: Permission[];
+}
+
+export interface ListUsersResponse {
+    data: {
+        users: User[];
+    };
 }
 
 export interface LoginRequest {
@@ -313,8 +354,14 @@ export interface UpdateUserRequest {
     emailAddress: string;
     principal: string;
     roles: number[];
-    SAMLProviderId?: string;
+    SAMLProviderId?: string; // deprecated: this is left to maintain backwards compatability, please use SSOProviderId instead
+    SSOProviderId?: number;
     is_disabled?: boolean;
+}
+
+export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'> {
+    password?: string;
+    needsPasswordReset?: boolean;
 }
 
 export type UpdateConfigurationRequest = ConfigurationPayload;

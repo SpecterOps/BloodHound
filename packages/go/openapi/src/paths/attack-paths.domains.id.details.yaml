@@ -26,8 +26,8 @@ get:
   operationId: ListDomainAttackPathsDetails
   summary: List domain attack paths details
   description: |
-    Lists detailed data about attack paths for a domain. 
-    
+    Lists detailed data about attack paths for a domain.
+
     __Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.
   tags:
     - Attack Paths
@@ -82,11 +82,6 @@ get:
       schema:
         $ref: './../schemas/api.params.predicate.filter.time.yaml'
     - name: Principal
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.string.yaml'
-    - name: Finding
-      deprecated: true
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
@@ -180,14 +175,14 @@ get:
                     DomainSID: string,
                     PrincipalHash: string,
                     AcceptedUntil: "2024-08-28T21:21:40.845Z",
-                    ImpactPercentage: 12,
+                    ImpactPercentage: 0.12,
                     ImpactCount: 2,
-                    ExposurePercentage: 24,
+                    ExposurePercentage: 0.24,
                     ExposureCount: 4,
                     Severity: 'high',
                     Accepted: true,
                   }
-                ] 
+                ]
             Metatree Relationship Finding:
               summary: "Metatree Relationship Finding"
               description: "When the butterfly analysis feature flag is off and metatree is running, impact count/percentage and exposure count/percentage will have a value of zero."
@@ -239,7 +234,7 @@ get:
                     Accepted: true
                   }
                 ]
-            Butterfly List Finding: 
+            Butterfly List Finding:
               summary: "Butterfly List Finding"
               description: "When the butterfly analysis feature flag is on, impact count/percentage and exposure count/percentage will have a value other than zero."
               value:
@@ -265,10 +260,8 @@ get:
                       additionalProp3: {}
                     },
                     accepted_until: "2024-08-28T21:42:18.844Z",
-                    ImpactPercentage: 12,
+                    ImpactPercentage: 0.12,
                     ImpactCount: 2,
-                    ExposurePercentage: 24,
-                    ExposureCount: 4,
                     Severity: 'high',
                     Accepted: true
                   }
@@ -301,8 +294,6 @@ get:
                     accepted_until: "2024-08-28T21:42:18.844Z",
                     ImpactPercentage: 0,
                     ImpactCount: 0,
-                    ExposurePercentage: 0,
-                    ExposureCount: 0,
                     Severity: '',
                     Accepted: true
                   }

@@ -21,6 +21,13 @@ allOf:
     properties:
       saml_provider_id:
         readOnly: true
+        deprecated: true
+        description: Deprecated. Use sso_provider_id instead.
+        allOf:
+          - $ref: './null.int32.yaml'
+      sso_provider_id:
+        readOnly: true
+        description: ID of the SSO provider for this user
         allOf:
           - $ref: './null.int32.yaml'
       AuthSecret:
@@ -37,7 +44,7 @@ allOf:
         allOf:
           - $ref: './null.string.yaml'
       last_name:
-          $ref: './null.string.yaml'
+        $ref: './null.string.yaml'
       email_address:
         readOnly: true
         allOf:

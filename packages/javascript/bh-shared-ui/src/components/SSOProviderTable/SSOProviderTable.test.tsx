@@ -17,6 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 import { render, screen } from '../../test-utils';
+import { SortOrder } from '../../utils';
 import SSOProviderTable from './SSOProviderTable';
 
 const samlProvider: SSOProvider = {
@@ -30,7 +31,7 @@ const samlProvider: SSOProvider = {
 };
 
 const oidcProvider: SSOProvider = {
-    id: 1,
+    id: 2,
     slug: 'gotham-oidc',
     name: 'Gotham OIDC',
     type: 'OIDC',
@@ -66,7 +67,7 @@ describe('SSOProviderTable', () => {
 
     it('should sort by type', async () => {
         const user = userEvent.setup();
-        let typeSortOrder: 'asc' | 'desc' | undefined;
+        let typeSortOrder: SortOrder;
         const onToggleTypeSortOrder = () => {
             if (!typeSortOrder || typeSortOrder === 'desc') {
                 typeSortOrder = 'asc';

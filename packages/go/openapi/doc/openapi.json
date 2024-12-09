@@ -502,6 +502,367 @@
         }
       }
     },
+    "/api/v2/sso-providers": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListAuthProviders",
+        "summary": "List SSO Providers",
+        "description": "Lists all available SSO providers (SAML and OIDC)",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.auth-provider"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sso-providers/oidc": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "CreateOIDCProvider",
+        "summary": "Create OIDC Provider",
+        "description": "Creates a new OIDC provider for SSO authentication",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "issuer",
+                  "client_id"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the OIDC provider"
+                  },
+                  "issuer": {
+                    "type": "string",
+                    "format": "url",
+                    "description": "URL of the OIDC issuer"
+                  },
+                  "client_id": {
+                    "type": "string",
+                    "description": "Client ID for the OIDC provider"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.oidc-provider"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sso-providers/{sso_provider_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "description": "SSO Provider ID",
+          "name": "sso_provider_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "patch": {
+        "operationId": "PatchSSOProvider",
+        "summary": "Update SSO Provider",
+        "description": "Updates an existing SSO provider. Updating saml provider requires a \"multipart/form-data\" body. Updating oidc provider requires \"application/json\" body. Response is respective provider",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the new SAML provider."
+                  },
+                  "metadata": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Metadata XML file."
+                  }
+                }
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the OIDC provider"
+                  },
+                  "issuer": {
+                    "type": "string",
+                    "format": "url",
+                    "description": "URL of the OIDC issuer"
+                  },
+                  "client_id": {
+                    "type": "string",
+                    "description": "Client ID for the OIDC provider"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/model.saml-provider"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/model.oidc-provider"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DeleteSSOProvider",
+        "summary": "Delete SSO Provider",
+        "description": "Deletes an existing SSO provider",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "affected_users": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.user"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. The user is trying to delete their own SSO provider.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sso-providers/{sso_provider_id}/signing-certificate": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "description": "SSO Provider ID for a SAML provider",
+          "name": "sso_provider_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetSSOProviderSAMLSigningCertificate",
+        "summary": "Get SAML Provider Signing Certificate",
+        "description": "Download the SAML Provider Signing Certificate. Only applies to SAML providers.",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "content-disposition": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Suggested filename of structure \"{saml-slug}-signing-certificate.pem\""
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/permissions": {
       "parameters": [
         {
@@ -3947,7 +4308,7 @@
         ],
         "parameters": [
           {
-            "name": "search_query",
+            "name": "query",
             "description": "Search query",
             "in": "query",
             "required": true,
@@ -4027,8 +4388,7 @@
             "in": "query",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "string"
             }
           },
           {
@@ -4037,8 +4397,7 @@
             "in": "query",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "string"
             }
           },
           {
@@ -12166,7 +12525,7 @@
       "get": {
         "operationId": "ListDomainAttackPathsDetails",
         "summary": "List domain attack paths details",
-        "description": "Lists detailed data about attack paths for a domain. \n\n__Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.\n",
+        "description": "Lists detailed data about attack paths for a domain.\n\n__Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.\n",
         "tags": [
           "Attack Paths",
           "Enterprise"
@@ -12249,14 +12608,6 @@
           },
           {
             "name": "Principal",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
-            }
-          },
-          {
-            "name": "Finding",
-            "deprecated": true,
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -12405,9 +12756,9 @@
                           "DomainSID": "string",
                           "PrincipalHash": "string",
                           "AcceptedUntil": "2024-08-28T21:21:40.845Z",
-                          "ImpactPercentage": 12,
+                          "ImpactPercentage": 0.12,
                           "ImpactCount": 2,
-                          "ExposurePercentage": 24,
+                          "ExposurePercentage": 0.24,
                           "ExposureCount": 4,
                           "Severity": "high",
                           "Accepted": true
@@ -12494,10 +12845,8 @@
                             "additionalProp3": {}
                           },
                           "accepted_until": "2024-08-28T21:42:18.844Z",
-                          "ImpactPercentage": 12,
+                          "ImpactPercentage": 0.12,
                           "ImpactCount": 2,
-                          "ExposurePercentage": 24,
-                          "ExposureCount": 4,
                           "Severity": "high",
                           "Accepted": true
                         }
@@ -12532,8 +12881,6 @@
                           "accepted_until": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0,
                           "ImpactCount": 0,
-                          "ExposurePercentage": 0,
-                          "ExposureCount": 0,
                           "Severity": "",
                           "Accepted": true
                         }
@@ -13427,6 +13774,17 @@
             "properties": {
               "saml_provider_id": {
                 "readOnly": true,
+                "deprecated": true,
+                "description": "Deprecated. Use sso_provider_id instead.",
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.int32"
+                  }
+                ]
+              },
+              "sso_provider_id": {
+                "readOnly": true,
+                "description": "ID of the SSO provider for this user",
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/null.int32"
@@ -14015,6 +14373,14 @@
               "sp_acs_uri": {
                 "type": "string",
                 "readOnly": true
+              },
+              "sso_provider_id": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.int32"
+                  }
+                ]
               }
             }
           }
@@ -14030,6 +14396,63 @@
           "idp_url": {
             "type": "string",
             "readOnly": true
+          }
+        }
+      },
+      "model.oidc-provider": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "client_id": {
+                "type": "string"
+              },
+              "issuer": {
+                "type": "string"
+              },
+              "sso_provider_id": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        ]
+      },
+      "model.auth-provider": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Unique identifier for the SSO provider"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the SSO provider"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of SSO provider (SAML or OIDC)"
+          },
+          "slug": {
+            "type": "string",
+            "description": "URL-friendly identifier for the provider"
+          },
+          "details": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/model.oidc-provider"
+              },
+              {
+                "$ref": "#/components/schemas/model.saml-provider"
+              }
+            ]
           }
         }
       },
@@ -14079,7 +14502,17 @@
             }
           },
           "saml_provider_id": {
-            "type": "string"
+            "type": "string",
+            "deprecated": true,
+            "description": "Deprecated. Use sso_provider_id instead."
+          },
+          "sso_provider_id": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/null.int32"
+              }
+            ],
+            "description": "ID of the SSO provider for this user"
           },
           "is_disabled": {
             "type": "boolean"
@@ -15646,14 +16079,6 @@
                 "format": "double"
               },
               "ImpactCount": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "ExposurePercentage": {
-                "type": "number",
-                "format": "double"
-              },
-              "ExposureCount": {
                 "type": "integer",
                 "format": "int64"
               },

@@ -45,8 +45,8 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('UserProfile with SAML User', () => {
-    const testSAMLUser = {
+describe('UserProfile with SSO User', () => {
+    const testSSOUser = {
         id: 100,
         first_name: 'Test',
         last_name: 'User',
@@ -57,13 +57,13 @@ describe('UserProfile with SAML User', () => {
                 name: 'Test Role',
             },
         ],
-        saml_provider_id: 'test-idp-1',
+        sso_provider_id: 'test-idp-1',
     };
 
     beforeEach(async () => {
         server.use(
             rest.get(`/api/v2/self`, (req, res, ctx) => {
-                return res(ctx.json({ data: testSAMLUser }));
+                return res(ctx.json({ data: testSSOUser }));
             })
         );
 
@@ -99,7 +99,7 @@ describe('UserProfile', () => {
                 name: 'Test Role',
             },
         ],
-        saml_provider_id: null,
+        sso_provider_id: null,
     };
 
     beforeEach(async () => {

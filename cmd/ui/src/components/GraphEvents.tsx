@@ -39,10 +39,21 @@ export interface GraphEventProps {
     onClickStage?: () => void;
     edgeReducer?: (edge: string, data: Attributes, graph: AbstractGraph) => Attributes;
     onRightClickNode?: (event: SigmaNodeEventPayload) => void;
+    showNodeLabels?: boolean;
+    showEdgeLabels?: boolean;
 }
 
 export const GraphEvents = forwardRef(function GraphEvents(
-    { onDoubleClickNode, onClickNode, onClickEdge, onClickStage, onRightClickNode, edgeReducer }: GraphEventProps,
+    {
+        onDoubleClickNode,
+        onClickNode,
+        onClickEdge,
+        onClickStage,
+        onRightClickNode,
+        edgeReducer,
+        showNodeLabels = true,
+        showEdgeLabels = true,
+    }: GraphEventProps,
     ref
 ) {
     const dispatch = useAppDispatch();
@@ -302,9 +313,9 @@ export const GraphEvents = forwardRef(function GraphEvents(
         if (draggedNode) {
             setSettings({ renderEdgeLabels: false });
         } else {
-            setSettings({ renderEdgeLabels: true });
+            setSettings({ renderEdgeLabels: showEdgeLabels });
         }
-    }, [draggedNode, setSettings]);
+    }, [draggedNode, setSettings, showEdgeLabels]);
 
     useEffect(() => {
         resetCamera(sigma);
@@ -320,6 +331,13 @@ export const GraphEvents = forwardRef(function GraphEvents(
             setHighlightedNode(selectedNode.graphId);
         }
     }, [selectedNode]);
+
+    useEffect(() => {
+        setSettings({
+            renderLabels: showNodeLabels,
+            renderEdgeLabels: showEdgeLabels,
+        });
+    }, [setSettings, showNodeLabels, showEdgeLabels]);
 
     return null;
 });

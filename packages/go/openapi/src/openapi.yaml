@@ -217,6 +217,16 @@ paths:
   # Undocumented, not sure how this endpoint actually works.
   #/api/v2/login/saml/{saml_provider_name}:
 
+  # sso
+  /api/v2/sso-providers:
+    $ref: './paths/sso.sso-providers.yaml'
+  /api/v2/sso-providers/oidc:
+    $ref: './paths/sso.sso-providers.oidc.yaml'
+  /api/v2/sso-providers/{sso_provider_id}:
+    $ref: './paths/sso.sso-providers.id.yaml'
+  /api/v2/sso-providers/{sso_provider_id}/signing-certificate:
+      $ref: './paths/sso.sso-providers.id.signing-certificate.yaml'
+
   # permissions
   /api/v2/permissions:
     $ref: './paths/permissions.permissions.yaml'
@@ -634,6 +644,8 @@ paths:
   # attack paths
   /api/v2/domains/{domain_id}/attack-path-findings:
     $ref: './paths/attack-paths.domains.id.attack-path-findings.yaml'
+#  /api/v2/domains/{environment_id}/finding-trends:
+#    $ref: './paths/attack-paths.environment.id.finding-trends.yaml'
   /api/v2/attack-path-types:
     $ref: './paths/attack-paths.attack-path-types.yaml'
   /api/v2/attack-paths:
@@ -650,6 +662,8 @@ paths:
   # risk posture
   /api/v2/posture-stats:
     $ref: './paths/risk-posture.posture-stats.yaml'
+#  /api/v2/domains/{environment_id}/posture-history/{data_type}:
+#    $ref: './paths/risk-posture.environment.id.posture-history.type.yaml'
 
   # meta entity
   /api/v2/meta/{object_id}:

@@ -93,7 +93,7 @@ $$
   begin
     create type nodeComposite as
     (
-      id         integer,
+      id         bigint,
       kind_ids   smallint[8],
       properties jsonb
     );
@@ -133,9 +133,9 @@ $$
   begin
     create type edgeComposite as
     (
-      id         integer,
-      start_id   integer,
-      end_id     integer,
+      id         bigint,
+      start_id   bigint,
+      end_id     bigint,
       kind_id    smallint,
       properties jsonb
     );
@@ -337,12 +337,12 @@ $$
 create or replace function public.asp_harness(primer_query text, recursive_query text, max_depth int4)
   -- | Column      | type    | Usage                                                                                  |
   -- |-------------|---------|----------------------------------------------------------------------------------------|
-  -- | `root_id`   | Int4    | Node that the path originated from. Simplifies referencing the root node of each path. |
-  -- | `next_id`   | Int4    | Next node to expand to.                                                                |
-  -- | `depth`     | Int     | Depth of the current traversal.                                                        |
+  -- | `root_id`   | Int8    | Node that the path originated from. Simplifies referencing the root node of each path. |
+  -- | `next_id`   | Int8    | Next node to expand to.                                                                |
+  -- | `depth`     | Int4    | Depth of the current traversal.                                                        |
   -- | `satisfied` | Boolean | True if the expansion is satisfied.                                                    |
   -- | `is_cycle`  | Boolean | True if the expansion is a cycle.                                                      |
-  -- | `path`      | Int4[]  | Array of edges in order of traversal.                                                  |
+  -- | `path`      | Int8[]  | Array of edges in order of traversal.                                                  |
   returns table
           (
             root_id   int8,

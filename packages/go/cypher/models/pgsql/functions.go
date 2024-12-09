@@ -34,9 +34,11 @@ const (
 	FunctionCurrentDate            Identifier = "current_date"
 	FunctionNow                    Identifier = "now"
 	FunctionToLower                Identifier = "lower"
+	FunctionToUpper                Identifier = "upper"
 	FunctionCoalesce               Identifier = "coalesce"
 	FunctionUnnest                 Identifier = "unnest"
 	FunctionJSONBSet               Identifier = "jsonb_set"
 	FunctionCount                  Identifier = "count"
+	FunctionStringToArray          Identifier = "string_to_array"
 	FunctionEdgesToPath            Identifier = "edges_to_path"
 )

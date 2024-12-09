@@ -41,6 +41,8 @@ interface SigmaChartProps {
     onClickStage: () => void;
     edgeReducer: (edge: string, data: Attributes, graph: AbstractGraph) => Attributes;
     handleContextMenu: (event: SigmaNodeEventPayload) => void;
+    showNodeLabels?: boolean;
+    showEdgeLabels?: boolean;
 }
 
 const SigmaChart = forwardRef(function SigmaChart(
@@ -52,6 +54,8 @@ const SigmaChart = forwardRef(function SigmaChart(
         onClickStage,
         edgeReducer,
         handleContextMenu,
+        showNodeLabels = true,
+        showEdgeLabels = true,
     }: Partial<SigmaChartProps>,
     ref
 ) {
@@ -82,7 +86,8 @@ const SigmaChart = forwardRef(function SigmaChart(
                         self: SelfEdgeArrowProgram,
                         arrow: EdgeArrowProgram,
                     },
-                    renderEdgeLabels: true,
+                    renderEdgeLabels: showEdgeLabels,
+                    renderLabels: showNodeLabels,
                     hoverRenderer: drawHover,
                     edgeLabelRenderer: drawEdgeLabel,
                     edgeLabelSize: 12,
@@ -100,6 +105,8 @@ const SigmaChart = forwardRef(function SigmaChart(
                     onClickStage={onClickStage}
                     edgeReducer={edgeReducer}
                     onRightClickNode={handleContextMenu}
+                    showNodeLabels={showNodeLabels}
+                    showEdgeLabels={showEdgeLabels}
                     ref={ref}
                 />
             </SigmaContainer>

@@ -45,6 +45,7 @@ export default {
         '@mui/styles/makeStyles',
         '@mui/styles/withStyles',
         'clsx',
+        'tailwind-merge',
         'memoize-one',
         'react-hook-form',
         'react-window-infinite-loader',
@@ -66,5 +67,6 @@ export default {
         'lodash/cloneDeep',
         'lodash/isEmpty',
         'lodash/startCase',
+        'lodash/find',
     ],
 };

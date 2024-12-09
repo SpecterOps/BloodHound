@@ -35,6 +35,16 @@ func (s *BloodhoundDB) GetAllIngestTasks(ctx context.Context) (model.IngestTasks
 	return ingestTasks, CheckError(result)
 }
 
+func (s *BloodhoundDB) CountAllIngestTasks(ctx context.Context) (int64, error) {
+	var (
+		ingestTaskCount  int64
+		ingestTasksModel model.IngestTasks
+	)
+
+	result := s.db.Model(&ingestTasksModel).WithContext(ctx).Count(&ingestTaskCount)
+	return ingestTaskCount, CheckError(result)
+}
+
 func (s *BloodhoundDB) DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error {
 	result := s.db.WithContext(ctx).Delete(&ingestTask)
 	return CheckError(result)

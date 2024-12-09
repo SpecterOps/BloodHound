@@ -17,7 +17,7 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.5.8
+ARG SHARPHOUND_VERSION=v2.5.9
 ARG AZUREHOUND_VERSION=v2.2.1
 
 ########
@@ -28,7 +28,7 @@ FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.23-alpine3.20 AS godep
 ########
 # Builder init
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/node:20-alpine3.20 AS deps
+FROM --platform=$BUILDPLATFORM docker.io/library/node:22-alpine3.20 AS deps
 ARG version=v999.999.999
 ARG checkout_hash=""
 ENV SB_LOG_LEVEL=debug

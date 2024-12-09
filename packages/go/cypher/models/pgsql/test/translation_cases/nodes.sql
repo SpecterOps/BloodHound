@@ -477,3 +477,24 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 select (s0.n0).id
 from s0
 where not exists (select 1 from edge e0 where e0.start_id = (s0.n0).id or e0.end_id = (s0.n0).id);
+
+-- case: match (n) where n.system_tags contains ($param) return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.properties ->> 'system_tags' like '%' || (@pi0)::text || '%')
+select s0.n0 as n
+from s0;
+
+-- case: match (n) where n.system_tags starts with (1) return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.properties ->> 'system_tags' like (1)::text || '%')
+select s0.n0 as n
+from s0;
+
+-- case: match (n) where n.system_tags ends with ('text') return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.properties ->> 'system_tags' like '%' || ('text')::text)
+select s0.n0 as n
+from s0;

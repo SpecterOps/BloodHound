@@ -32,5 +32,11 @@ properties:
       format: int32
   saml_provider_id:
     type: string
+    deprecated: true
+    description: Deprecated. Use sso_provider_id instead.
+  sso_provider_id:
+    allOf:
+      - $ref: './null.int32.yaml'
+    description: ID of the SSO provider for this user
   is_disabled:
     type: boolean
