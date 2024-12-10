@@ -82,15 +82,15 @@ func (s *GraphTestContext) UpdateNode(node *graph.Node) {
 	})
 }
 
-func (s *GraphTestContext) DatabaseTest(dbDelegate func(harness HarnessDetails, db graph.Database)) {
-	dbDelegate(s.Harness, s.Graph.Database)
-}
-
-func (s *GraphTestContext) InititalizeHarness(harness GraphTestHarness) {
+func (s *GraphTestContext) InitializeHarness(harness GraphTestHarness) {
 	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
 		harness.Setup(s)
 		return nil
 	})
+}
+
+func (s *GraphTestContext) DatabaseTest(dbDelegate func(harness HarnessDetails, db graph.Database)) {
+	dbDelegate(s.Harness, s.Graph.Database)
 }
 
 func (s *GraphTestContext) SetupHarness(setup func(harness *HarnessDetails) error) {
@@ -113,8 +113,7 @@ func (s *GraphTestContext) DatabaseTestWithSetup(setup func(harness *HarnessDeta
 }
 
 func (s *GraphTestContext) BatchTest(batchDelegate func(harness HarnessDetails, batch graph.Batch), assertionDelegate func(details HarnessDetails, tx graph.Transaction)) {
-	s.SetupActiveDirectory()
-	s.SetupAzure()
+	s.SetupAzureAndActiveDirectory()
 
 	s.Graph.BatchOperation(s.testCtx, func(batch graph.Batch) error {
 		batchDelegate(s.Harness, batch)
@@ -128,8 +127,7 @@ func (s *GraphTestContext) BatchTest(batchDelegate func(harness HarnessDetails, 
 }
 
 func (s *GraphTestContext) TransactionalTest(txDelegate func(harness HarnessDetails, tx graph.Transaction)) {
-	s.SetupActiveDirectory()
-	s.SetupAzure()
+	s.SetupAzureAndActiveDirectory()
 
 	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
 		txDelegate(s.Harness, tx)
