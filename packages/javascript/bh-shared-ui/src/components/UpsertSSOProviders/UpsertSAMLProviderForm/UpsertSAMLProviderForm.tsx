@@ -31,6 +31,10 @@ import { Controller, useForm } from 'react-hook-form';
 import { Role, SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-library';
 import SSOProviderConfigForm from '../SSOProviderConfigForm';
 
+export const backfillSSOProviderConfig = (readOnlyRoleId?: number) => ({
+    auto_provision: { enabled: false, default_role: readOnlyRoleId, role_provision: false },
+});
+
 const UpsertSAMLProviderForm: FC<{
     error?: any;
     oldSSOProvider?: SSOProvider;
@@ -54,11 +58,7 @@ const UpsertSAMLProviderForm: FC<{
         defaultValues: {
             name: oldSSOProvider?.name ?? '',
             metadata: undefined,
-            config: oldSSOProvider?.config
-                ? oldSSOProvider.config
-                : {
-                      auto_provision: { enabled: false, default_role: readOnlyRoleId, role_provision: false },
-                  },
+            config: oldSSOProvider?.config ? oldSSOProvider.config : backfillSSOProviderConfig(readOnlyRoleId),
         },
     });
     const [fileValue, setFileValue] = useState(''); // small workaround to use the file input
