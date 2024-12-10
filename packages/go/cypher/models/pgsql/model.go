@@ -407,6 +407,7 @@ func NewAnyExpression(inner Expression) AnyExpression {
 		Expression: inner,
 	}
 
+	// This is a guard to prevent recursive wrapping of an expression in an Any expression
 	switch innerTypeHint := inner.(type) {
 	case TypeHinted:
 		newAnyExpression.CastType = innerTypeHint.TypeHint()

@@ -86,7 +86,7 @@ func (s *Translator) translatePropertyLookup(lookup *cypher.PropertyLookup) {
 				switch typedTranslatedAtom.Function {
 				case pgsql.FunctionCurrentDate, pgsql.FunctionLocalTime, pgsql.FunctionCurrentTime, pgsql.FunctionLocalTimestamp, pgsql.FunctionNow:
 					switch componentName {
-					case cypher.ITTCEpocSeconds:
+					case cypher.ITTCEpochSeconds:
 						s.treeTranslator.Push(pgsql.FunctionCall{
 							Function: pgsql.FunctionExtract,
 							Parameters: []pgsql.Expression{pgsql.ProjectionFrom{
@@ -97,10 +97,10 @@ func (s *Translator) translatePropertyLookup(lookup *cypher.PropertyLookup) {
 									Source: translatedAtom,
 								}},
 							}},
-							CastType: pgsql.Int8,
+							CastType: pgsql.Numeric,
 						})
 
-					case cypher.ITTCEpocMilliseconds:
+					case cypher.ITTCEpochMilliseconds:
 						s.treeTranslator.Push(pgsql.NewBinaryExpression(
 							pgsql.FunctionCall{
 								Function: pgsql.FunctionExtract,
@@ -112,7 +112,7 @@ func (s *Translator) translatePropertyLookup(lookup *cypher.PropertyLookup) {
 										Source: translatedAtom,
 									}},
 								}},
-								CastType: pgsql.Int8,
+								CastType: pgsql.Numeric,
 							},
 							pgsql.OperatorMultiply,
 							pgsql.NewLiteral(1000, pgsql.Int4),

@@ -93,6 +93,8 @@ const (
 	TextArray                DataType = "text[]"
 	JSONB                    DataType = "jsonb"
 	JSONBArray               DataType = "jsonb[]"
+	Numeric                  DataType = "numeric"
+	NumericArray             DataType = "numeric[]"
 	Date                     DataType = "date"
 	TimeWithTimeZone         DataType = "time with time zone"
 	TimeWithoutTimeZone      DataType = "time without time zone"
@@ -109,7 +111,8 @@ const (
 	ExpansionTerminalNode DataType = "expansion_terminal_node"
 )
 
-func (s DataType) Convert(other DataType, operator Operator) (DataType, bool) {
+// TODO: operator, while unused, is part of a refactor for this function to make it operator aware
+func (s DataType) Compatible(other DataType, operator Operator) (DataType, bool) {
 	if s == other {
 		return s, true
 	}
@@ -149,6 +152,18 @@ func (s DataType) Convert(other DataType, operator Operator) (DataType, bool) {
 
 		case Float4Array, Float8Array:
 			return Float8, true
+
+		case Text:
+			return Text, true
+		}
+
+	case Numeric:
+		switch other {
+		case Float4, Float8, Int2, Int4, Int8:
+			return Numeric, true
+
+		case Float4Array, Float8Array, NumericArray:
+			return Numeric, true
 
 		case Text:
 			return Text, true
@@ -264,7 +279,7 @@ func (s DataType) MatchesOneOf(others ...DataType) bool {
 
 func (s DataType) IsArrayType() bool {
 	switch s {
-	case Int2Array, Int4Array, Int8Array, Float4Array, Float8Array, TextArray, JSONBArray, NodeCompositeArray, EdgeCompositeArray:
+	case Int2Array, Int4Array, Int8Array, Float4Array, Float8Array, TextArray, JSONBArray, NodeCompositeArray, EdgeCompositeArray, NumericArray:
 		return true
 	}
 
@@ -296,6 +311,8 @@ func (s DataType) ToArrayType() (DataType, error) {
 		return Float8Array, nil
 	case Text, TextArray:
 		return TextArray, nil
+	case Numeric, NumericArray:
+		return NumericArray, nil
 	default:
 		return UnknownDataType, ErrNoAvailableArrayDataType
 	}
@@ -315,6 +332,8 @@ func (s DataType) ArrayBaseType() (DataType, error) {
 		return Float8, nil
 	case TextArray:
 		return Text, nil
+	case NumericArray:
+		return Numeric, nil
 	default:
 		return s, nil
 	}

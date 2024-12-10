@@ -33,6 +33,9 @@ type PropertyLookup struct {
 func asPropertyLookup(expression pgsql.Expression) (*pgsql.BinaryExpression, bool) {
 	switch typedExpression := expression.(type) {
 	case pgsql.AnyExpression:
+		// This is here to unwrap Any expressions that have been passed in as a property lookup. This is
+		// common when dealing with array operators. In the future this check should be handled by the
+		// caller to simplify the logic here.
 		return asPropertyLookup(typedExpression.Expression)
 
 	case *pgsql.BinaryExpression:
@@ -136,7 +139,7 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 
 	if isLeftHinted {
 		if isRightHinted {
-			if higherLevelHint, matchesOrConverts := leftHint.Convert(rightHint, expression.Operator); !matchesOrConverts {
+			if higherLevelHint, matchesOrConverts := leftHint.Compatible(rightHint, expression.Operator); !matchesOrConverts {
 				return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, leftHint, rightHint)
 			} else {
 				return higherLevelHint, nil
@@ -146,7 +149,7 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 		} else if inferredRightHint == pgsql.UnknownDataType {
 			// Assume the right side is convertable and return the left operand hint
 			return leftHint, nil
-		} else if upcastHint, matchesOrConverts := leftHint.Convert(inferredRightHint, expression.Operator); !matchesOrConverts {
+		} else if upcastHint, matchesOrConverts := leftHint.Compatible(inferredRightHint, expression.Operator); !matchesOrConverts {
 			return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, leftHint, inferredRightHint)
 		} else {
 			return upcastHint, nil
@@ -158,7 +161,7 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 		} else if inferredLeftHint == pgsql.UnknownDataType {
 			// Assume the right side is convertable and return the left operand hint
 			return rightHint, nil
-		} else if upcastHint, matchesOrConverts := rightHint.Convert(inferredLeftHint, expression.Operator); !matchesOrConverts {
+		} else if upcastHint, matchesOrConverts := rightHint.Compatible(inferredLeftHint, expression.Operator); !matchesOrConverts {
 			return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, rightHint, inferredLeftHint)
 		} else {
 			return upcastHint, nil
@@ -186,7 +189,7 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 				// Unable to infer any type information, this may be resolved elsewhere so this is not explicitly
 				// an error condition
 				return pgsql.UnknownDataType, nil
-			} else if higherLevelHint, matchesOrConverts := inferredLeftHint.Convert(inferredRightHint, expression.Operator); !matchesOrConverts {
+			} else if higherLevelHint, matchesOrConverts := inferredLeftHint.Compatible(inferredRightHint, expression.Operator); !matchesOrConverts {
 				return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, inferredLeftHint, inferredRightHint)
 			} else {
 				return higherLevelHint, nil
