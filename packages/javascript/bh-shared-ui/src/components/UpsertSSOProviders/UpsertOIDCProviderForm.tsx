@@ -20,6 +20,7 @@ import { useEffect, FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { OIDCProviderInfo, SSOProvider, UpsertOIDCProviderRequest, Role } from 'js-client-library';
 import SSOProviderConfigForm from './SSOProviderConfigForm';
+import { backfillSSOProviderConfig } from './UpsertSAMLProviderForm';
 
 const UpsertOIDCProviderForm: FC<{
     error: any;
@@ -34,15 +35,7 @@ const UpsertOIDCProviderForm: FC<{
         name: oldSSOProvider?.name ?? '',
         client_id: (oldSSOProvider?.details as OIDCProviderInfo)?.client_id ?? '',
         issuer: (oldSSOProvider?.details as OIDCProviderInfo)?.issuer ?? '',
-        config: oldSSOProvider?.config
-            ? oldSSOProvider.config
-            : {
-                  auto_provision: {
-                      enabled: false,
-                      default_role: readOnlyRoleId,
-                      role_provision: false,
-                  },
-              },
+        config: oldSSOProvider?.config? oldSSOProvider.config : backfillSSOProviderConfig(readOnlyRoleId)
     };
 
     const {
