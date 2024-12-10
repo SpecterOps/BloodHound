@@ -22,10 +22,13 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils/validation"
 	"golang.org/x/oauth2"
@@ -33,9 +36,10 @@ import (
 
 // UpsertOIDCProviderRequest represents the body of create & update provider endpoints
 type UpsertOIDCProviderRequest struct {
-	Name     string `json:"name" validate:"required"`
-	Issuer   string `json:"issuer"  validate:"url"`
-	ClientID string `json:"client_id" validate:"required"`
+	Name     string                  `json:"name" validate:"required"`
+	Issuer   string                  `json:"issuer"  validate:"url"`
+	ClientID string                  `json:"client_id" validate:"required"`
+	Config   model.SSOProviderConfig `json:"config"`
 }
 
 // UpdateOIDCProviderRequest updates an OIDC provider, support for only partial payloads
@@ -64,6 +68,16 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 			ssoProvider.OIDCProvider.Issuer = upsertReq.Issuer
 		}
 
+		if upsertReq.Config.AutoProvision.Enabled {
+			if ssoProvider.Config.AutoProvision.DefaultRole > 5 || ssoProvider.Config.AutoProvision.DefaultRole < 0 {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
+				return
+			}
+			ssoProvider.Config.AutoProvision.Enabled = upsertReq.Config.AutoProvision.Enabled
+			ssoProvider.Config.AutoProvision.DefaultRole = upsertReq.Config.AutoProvision.DefaultRole
+			ssoProvider.Config.AutoProvision.RoleProvision = upsertReq.Config.AutoProvision.RoleProvision
+		}
+
 		if oidcProvider, err := s.db.UpdateOIDCProvider(request.Context(), ssoProvider); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
@@ -81,7 +95,7 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 	} else if validated := validation.Validate(upsertReq); validated != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, validated.Error(), request), response)
 	} else {
-		if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), upsertReq.Name, upsertReq.Issuer, upsertReq.ClientID); err != nil {
+		if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), upsertReq.Name, upsertReq.Issuer, upsertReq.ClientID, upsertReq.Config); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), oidcProvider, http.StatusCreated, response)
@@ -173,6 +187,42 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 			}
 			if err := idToken.Claims(&claims); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+			} else if claims.DisplayName == "" {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Display Name claim is missing", request), response)
+				return
+			} else if user, err := s.db.LookupUser(request.Context(), claims.DisplayName); err != nil {
+				if errors.Is(err, database.ErrNotFound) {
+					user.EmailAddress = null.StringFrom(claims.Email)
+					user.PrincipalName = claims.Email
+					user.Roles = model.Roles{
+						{
+							Name:        "Read-Only",
+							Description: "Used for integrations",
+							Serial: model.Serial{
+								ID: 3,
+							},
+						},
+					}
+					user.SSOProviderID = null.Int32From(ssoProvider.ID)
+
+					// Need to find a work around since BHE cannot auto accept EULA as true
+					user.EULAAccepted = true
+
+					if claims.FamilyName == "" {
+						user.FirstName = null.StringFrom(claims.Name)
+						user.LastName = null.StringFrom("Name Not Found")
+						user.PrincipalName = claims.DisplayName
+					} else {
+						user.FirstName = null.StringFrom(claims.Name)
+						user.LastName = null.StringFrom(claims.FamilyName)
+					}
+
+					if _, err := s.db.CreateUser(request.Context(), user); err != nil {
+						api.HandleDatabaseError(request, response, err)
+					}
+
+					s.authenticator.CreateSSOSession(request, response, claims.Email, ssoProvider)
+				}
 			} else {
 				s.authenticator.CreateSSOSession(request, response, claims.Email, ssoProvider)
 			}

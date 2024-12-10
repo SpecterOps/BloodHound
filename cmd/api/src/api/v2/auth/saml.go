@@ -149,13 +149,15 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 		} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(metadata, saml.HTTPPostBinding); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
 		} else {
+			config := model.SSOProviderConfig{}
+
 			samlIdentityProvider.Name = providerNames[0]
 			samlIdentityProvider.DisplayName = providerNames[0]
 			samlIdentityProvider.MetadataXML = metadataXML
 			samlIdentityProvider.IssuerURI = metadata.EntityID
 			samlIdentityProvider.SingleSignOnURI = ssoURL
 
-			if newSAMLProvider, err := s.db.CreateSAMLIdentityProvider(request.Context(), samlIdentityProvider); err != nil {
+			if newSAMLProvider, err := s.db.CreateSAMLIdentityProvider(request.Context(), samlIdentityProvider, config); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else {
 				api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)

@@ -18,6 +18,16 @@ package model
 
 import "fmt"
 
+type AutoProvision struct {
+	Enabled       bool  `json:"enabled"`
+	DefaultRole   int32 `json:"default_role"`
+	RoleProvision bool  `json:"role_provision"`
+}
+
+type SSOProviderConfig struct {
+	AutoProvision AutoProvision `json:"auto_provision"`
+}
+
 // SSOProvider is the common representation of an SSO provider that can be used to display high level information about that provider
 type SSOProvider struct {
 	Type SessionAuthProvider `json:"type" gorm:"column:type"`
@@ -26,6 +36,8 @@ type SSOProvider struct {
 
 	OIDCProvider *OIDCProvider `json:"oidc_provider,omitempty" gorm:"foreignKey:SSOProviderID"`
 	SAMLProvider *SAMLProvider `json:"saml_provider,omitempty" gorm:"foreignKey:SSOProviderID"`
+
+	Config SSOProviderConfig `json:"config" gorm:"type:jsonb column:config"`
 
 	Serial
 }
