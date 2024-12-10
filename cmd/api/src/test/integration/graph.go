@@ -347,6 +347,14 @@ func (s *GraphTestContext) NewActiveDirectoryComputer(name, domainSID string) *g
 	}), ad.Entity, ad.Computer)
 }
 
+func (s *GraphTestContext) NewActiveDirectoryContainer(name, domainSID string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:     name,
+		common.ObjectID: must.NewUUIDv4().String(),
+		ad.DomainSID:    domainSID,
+	}), ad.Entity, ad.Container)
+}
+
 func (s *GraphTestContext) NewActiveDirectoryUser(name, domainSID string, isTierZero ...bool) *graph.Node {
 	return s.NewNode(graph.AsProperties(graph.PropertyMap{
 		common.Name:     name,
