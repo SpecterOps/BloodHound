@@ -28,7 +28,7 @@ with s0 as (with ex0(root_id, next_id, depth, satisfied, is_cycle, path)
             from ex0
                    join edge e0 on e0.id = any (ex0.path)
                    join node n0 on n0.id = ex0.root_id
-                   join node n1 on e0.id = ex0.path[array_length(ex0.path, 1)::int4] and n1.id = e0.end_id)
+                   join node n1 on e0.id = ex0.path[array_length(ex0.path, 1)::int] and n1.id = e0.end_id)
 select edges_to_path(variadic ep0)::pathcomposite as p
 from s0;
 
@@ -46,7 +46,7 @@ with s0 as (with ex0(root_id, next_id, depth, satisfied, is_cycle, path)
             from ex0
                    join edge e0 on e0.id = any (ex0.path)
                    join node n0 on n0.id = ex0.root_id
-                   join node n1 on e0.id = ex0.path[array_length(ex0.path, 1)::int4] and n1.id = e0.end_id
+                   join node n1 on e0.id = ex0.path[array_length(ex0.path, 1)::int] and n1.id = e0.end_id
             where ex0.satisfied)
 select edges_to_path(variadic ep0)::pathcomposite as p
 from s0;
@@ -65,7 +65,7 @@ with s0 as (with ex0(root_id, next_id, depth, satisfied, is_cycle, path)
             from ex0
                    join edge e0 on e0.id = any (ex0.path)
                    join node n0 on n0.id = ex0.root_id
-                   join node n1 on e0.id = ex0.path[array_length(ex0.path, 1)::int4] and n1.id = e0.end_id
+                   join node n1 on e0.id = ex0.path[array_length(ex0.path, 1)::int] and n1.id = e0.end_id
             where ex0.satisfied
               and n0.id <> n1.id)
 select edges_to_path(variadic ep0)::pathcomposite as p
