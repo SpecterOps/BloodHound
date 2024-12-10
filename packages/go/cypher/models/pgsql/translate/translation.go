@@ -60,6 +60,76 @@ func (s *Translator) translateRemoveItem(removeItem *cypher.RemoveItem) error {
 	return nil
 }
 
+func (s *Translator) translatePropertyLookup(lookup *cypher.PropertyLookup) {
+	if translatedAtom, err := s.treeTranslator.Pop(); err != nil {
+		s.SetError(err)
+	} else {
+		switch typedTranslatedAtom := translatedAtom.(type) {
+		case pgsql.Identifier:
+			if fieldIdentifierLiteral, err := pgsql.AsLiteral(lookup.Symbols[0]); err != nil {
+				s.SetError(err)
+			} else {
+				s.treeTranslator.Push(pgsql.CompoundIdentifier{typedTranslatedAtom, pgsql.ColumnProperties})
+				s.treeTranslator.Push(fieldIdentifierLiteral)
+
+				if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorPropertyLookup); err != nil {
+					s.SetError(err)
+				}
+			}
+
+		case pgsql.FunctionCall:
+			if fieldIdentifierLiteral, err := pgsql.AsLiteral(lookup.Symbols[0]); err != nil {
+				s.SetError(err)
+			} else if componentName, typeOK := fieldIdentifierLiteral.Value.(string); !typeOK {
+				s.SetErrorf("expected a string component name in translated literal but received type: %T", fieldIdentifierLiteral.Value)
+			} else {
+				switch typedTranslatedAtom.Function {
+				case pgsql.FunctionCurrentDate, pgsql.FunctionLocalTime, pgsql.FunctionCurrentTime, pgsql.FunctionLocalTimestamp, pgsql.FunctionNow:
+					switch componentName {
+					case cypher.ITTCEpocSeconds:
+						s.treeTranslator.Push(pgsql.FunctionCall{
+							Function: pgsql.FunctionExtract,
+							Parameters: []pgsql.Expression{pgsql.ProjectionFrom{
+								Projection: []pgsql.SelectItem{
+									pgsql.EpochIdentifier,
+								},
+								From: []pgsql.FromClause{{
+									Source: translatedAtom,
+								}},
+							}},
+							CastType: pgsql.Int8,
+						})
+
+					case cypher.ITTCEpocMilliseconds:
+						s.treeTranslator.Push(pgsql.NewBinaryExpression(
+							pgsql.FunctionCall{
+								Function: pgsql.FunctionExtract,
+								Parameters: []pgsql.Expression{pgsql.ProjectionFrom{
+									Projection: []pgsql.SelectItem{
+										pgsql.EpochIdentifier,
+									},
+									From: []pgsql.FromClause{{
+										Source: translatedAtom,
+									}},
+								}},
+								CastType: pgsql.Int8,
+							},
+							pgsql.OperatorMultiply,
+							pgsql.NewLiteral(1000, pgsql.Int4),
+						))
+
+					default:
+						s.SetErrorf("unsupported date time instant type component %s from function call %s", componentName, typedTranslatedAtom.Function)
+					}
+
+				default:
+					s.SetErrorf("unsupported instant type component %s from function call %s", componentName, typedTranslatedAtom.Function)
+				}
+			}
+		}
+	}
+}
+
 func (s *Translator) translateSetItem(setItem *cypher.SetItem) error {
 	if operator, err := translateCypherAssignmentOperator(setItem.Operator); err != nil {
 		return err

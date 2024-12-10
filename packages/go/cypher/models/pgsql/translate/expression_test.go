@@ -72,7 +72,7 @@ func TestInferExpressionType(t *testing.T) {
 			),
 		),
 	}, {
-		ExpectedType: pgsql.Text,
+		ExpectedType: pgsql.Boolean,
 		Expression: pgsql.NewBinaryExpression(
 			mustAsLiteral("123"),
 			pgsql.OperatorIn,

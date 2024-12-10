@@ -321,6 +321,16 @@ func newSQLWalkCursor(node pgsql.SyntaxNode) (*Cursor[pgsql.SyntaxNode], error) 
 			Branches: []pgsql.SyntaxNode{typedNode.Subquery},
 		}, nil
 
+	case pgsql.ProjectionFrom:
+		if branches, err := pgsqlSyntaxNodeSliceTypeConvert(typedNode.From); err != nil {
+			return nil, err
+		} else {
+			return &Cursor[pgsql.SyntaxNode]{
+				Node:     node,
+				Branches: append([]pgsql.SyntaxNode{typedNode.Projection}, branches...),
+			}, nil
+		}
+
 	default:
 		return nil, fmt.Errorf("unable to negotiate sql type %T into a translation cursor", node)
 	}

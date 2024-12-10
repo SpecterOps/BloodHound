@@ -190,7 +190,6 @@ execute procedure delete_node_edges();
 alter table edge
   alter column properties set storage main;
 
-
 -- Index on the graph ID of each edge.
 create index if not exists edge_graph_id_index on edge using btree (graph_id);
 

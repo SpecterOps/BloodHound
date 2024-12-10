@@ -137,6 +137,12 @@ func formatValue(builder *OutputBuilder, value any) error {
 	case bool:
 		builder.Write(strconv.FormatBool(typedValue))
 
+	case float32:
+		builder.Write(strconv.FormatFloat(float64(typedValue), 'f', -1, 64))
+
+	case float64:
+		builder.Write(strconv.FormatFloat(typedValue, 'f', -1, 64))
+
 	default:
 		return fmt.Errorf("unsupported literal type: %T", value)
 	}
@@ -482,8 +488,27 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 				exprStack = append(exprStack, pgsql.FormattingLiteral("not "))
 			}
 
+		case pgsql.ProjectionFrom:
+			for idx, projection := range typedNextExpr.Projection {
+				if idx > 0 {
+					builder.Write(", ")
+				}
+
+				if err := formatNode(builder, projection); err != nil {
+					return err
+				}
+			}
+
+			if len(typedNextExpr.From) > 0 {
+				builder.Write(" from ")
+
+				if err := formatFromClauses(builder, typedNextExpr.From); err != nil {
+					return err
+				}
+			}
+
 		default:
-			return fmt.Errorf("unsupported node type: %T", nextExpr)
+			return fmt.Errorf("unable to format pgsql node type: %T", nextExpr)
 		}
 	}
 

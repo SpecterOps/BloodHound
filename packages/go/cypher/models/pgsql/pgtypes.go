@@ -109,7 +109,7 @@ const (
 	ExpansionTerminalNode DataType = "expansion_terminal_node"
 )
 
-func (s DataType) Convert(other DataType) (DataType, bool) {
+func (s DataType) Convert(other DataType, operator Operator) (DataType, bool) {
 	if s == other {
 		return s, true
 	}
@@ -132,6 +132,12 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 		case Float8:
 			return Float8, true
 
+		case Float4Array:
+			return Float4, true
+
+		case Float8Array:
+			return Float8, true
+
 		case Text:
 			return Text, true
 		}
@@ -139,6 +145,9 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 	case Float8:
 		switch other {
 		case Float4:
+			return Float8, true
+
+		case Float4Array, Float8Array:
 			return Float8, true
 
 		case Text:
@@ -156,6 +165,15 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 		case Int8:
 			return Int8, true
 
+		case Int2Array:
+			return Int2, true
+
+		case Int4Array:
+			return Int4, true
+
+		case Int8Array:
+			return Int8, true
+
 		case Text:
 			return Text, true
 		}
@@ -168,6 +186,12 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 		case Int8:
 			return Int8, true
 
+		case Int2Array, Int4Array:
+			return Int4, true
+
+		case Int8Array:
+			return Int8, true
+
 		case Text:
 			return Text, true
 		}
@@ -177,8 +201,41 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 		case Int2, Int4, Int8:
 			return Int8, true
 
+		case Int2Array, Int4Array, Int8Array:
+			return Int8, true
+
 		case Text:
 			return Text, true
+		}
+
+	case Int:
+		switch other {
+		case Int2, Int4, Int:
+			return Int, true
+
+		case Int8:
+			return Int8, true
+
+		case Text:
+			return Text, true
+		}
+
+	case Int2Array:
+		switch other {
+		case Int2Array, Int4Array, Int8Array:
+			return other, true
+		}
+
+	case Int4Array:
+		switch other {
+		case Int4Array, Int8Array:
+			return other, true
+		}
+
+	case Float4Array:
+		switch other {
+		case Float4Array, Float8Array:
+			return other, true
 		}
 	}
 
@@ -207,7 +264,7 @@ func (s DataType) MatchesOneOf(others ...DataType) bool {
 
 func (s DataType) IsArrayType() bool {
 	switch s {
-	case Int2Array, Int4Array, Int8Array, Float4Array, Float8Array, TextArray:
+	case Int2Array, Int4Array, Int8Array, Float4Array, Float8Array, TextArray, JSONBArray, NodeCompositeArray, EdgeCompositeArray:
 		return true
 	}
 
@@ -259,7 +316,7 @@ func (s DataType) ArrayBaseType() (DataType, error) {
 	case TextArray:
 		return Text, nil
 	default:
-		return UnknownDataType, ErrNonArrayDataType
+		return s, nil
 	}
 }
 

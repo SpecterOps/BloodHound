@@ -60,11 +60,76 @@ func castMapValueAsSliceOf[T any](compositeMap map[string]any, key string) ([]T,
 func castAndAssignMapValue[T any](compositeMap map[string]any, key string, dst *T) error {
 	if src, hasKey := compositeMap[key]; !hasKey {
 		return fmt.Errorf("composite map does not contain expected key %s", key)
-	} else if typed, typeOK := src.(T); !typeOK {
-		var empty T
-		return fmt.Errorf("expected type %T but received %T", empty, src)
 	} else {
-		*dst = typed
+		switch typedSrc := src.(type) {
+		case int8:
+			switch typedDst := any(dst).(type) {
+			case *int8:
+				*typedDst = typedSrc
+			case *int16:
+				*typedDst = int16(typedSrc)
+			case *int32:
+				*typedDst = int32(typedSrc)
+			case *int64:
+				*typedDst = int64(typedSrc)
+			case *int:
+				*typedDst = int(typedSrc)
+			default:
+				return fmt.Errorf("unable to cast and assign value type: %T", src)
+			}
+
+		case int16:
+			switch typedDst := any(dst).(type) {
+			case *int16:
+				*typedDst = typedSrc
+			case *int32:
+				*typedDst = int32(typedSrc)
+			case *int64:
+				*typedDst = int64(typedSrc)
+			case *int:
+				*typedDst = int(typedSrc)
+			default:
+				return fmt.Errorf("unable to cast and assign value type: %T", src)
+			}
+
+		case int32:
+			switch typedDst := any(dst).(type) {
+			case *int32:
+				*typedDst = typedSrc
+			case *int64:
+				*typedDst = int64(typedSrc)
+			case *int:
+				*typedDst = int(typedSrc)
+			default:
+				return fmt.Errorf("unable to cast and assign value type: %T", src)
+			}
+
+		case int64:
+			switch typedDst := any(dst).(type) {
+			case *int64:
+				*typedDst = typedSrc
+			case *int:
+				*typedDst = int(typedSrc)
+			default:
+				return fmt.Errorf("unable to cast and assign value type: %T", src)
+			}
+
+		case int:
+			switch typedDst := any(dst).(type) {
+			case *int64:
+				*typedDst = int64(typedSrc)
+			case *int:
+				*typedDst = typedSrc
+			default:
+				return fmt.Errorf("unable to cast and assign value type: %T", src)
+			}
+
+		case T:
+			*dst = typedSrc
+
+		default:
+			return fmt.Errorf("unable to cast and assign value type: %T", src)
+		}
 	}
 
 	return nil
