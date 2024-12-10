@@ -53,6 +53,13 @@ type SpecifiedParametersFilter struct {
 }
 
 func (s *SpecifiedParametersFilter) EnterOC_Parameter(ctx *parser.OC_ParameterContext) {
+
+	parameterName := ctx.GetStop().GetText()
+
+	if parameterName == "magic" {
+		return
+	}
+
 	s.ctx.AddErrors(ErrUserSpecifiedParametersNotSupported)
 }
 
