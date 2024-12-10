@@ -60,6 +60,8 @@ const (
 	ErrorResponsePayloadUnmarshalError              = "error unmarshalling JSON payload"
 	ErrorResponseRequestTimeout                     = "request timed out"
 	ErrorResponseUserSelfDisable                    = "user attempted to disable themselves"
+	ErrorResponseUserSelfRoleChange                 = "user attempted to change own role"
+	ErrorResponseUserSelfSSOProviderChange          = "user attempted to change own SSO Provider"
 	ErrorResponseAGTagWhiteSpace                    = "asset group tags must not contain whitespace"
 	ErrorResponseAGNameTagEmpty                     = "asset group name or tag must not be empty"
 	ErrorResponseAGDuplicateName                    = "asset group name must be unique"

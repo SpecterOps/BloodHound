@@ -282,6 +282,19 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 			return err
 		}
 
+		// AuthSecret must be manually retrieved and deleted
+		if user.AuthSecret == nil {
+			var authSecret model.AuthSecret
+			if err := tx.Raw("SELECT * FROM auth_secrets WHERE user_id = ?", user.ID).First(&authSecret).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			} else if authSecret.ID > 0 {
+				bhdb := NewBloodhoundDB(tx, s.idResolver)
+				if err := bhdb.DeleteAuthSecret(ctx, authSecret); err != nil {
+					return err
+				}
+			}
+		}
+
 		result := tx.WithContext(ctx).Save(&user)
 		return CheckError(result)
 	})
@@ -431,7 +444,7 @@ func (s *BloodhoundDB) CreateAuthSecret(ctx context.Context, authSecret model.Au
 func (s *BloodhoundDB) GetAuthSecret(ctx context.Context, id int32) (model.AuthSecret, error) {
 	var (
 		authSecret model.AuthSecret
-		result     = s.db.WithContext(ctx).Find(&authSecret, id)
+		result     = s.db.WithContext(ctx).First(&authSecret, id)
 	)
 
 	return authSecret, CheckError(result)

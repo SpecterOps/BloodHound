@@ -23,6 +23,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/specterops/bloodhound/src/test/integration"
+
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -33,25 +35,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const murderDB = `
-do
-$$
-declare
-	t text;
-begin
-	for t in select relname from pg_class where oid in (select partrelid from pg_partitioned_table)
-		loop
-			execute 'drop table ' || t || ' cascade';
-		end loop;
-
-	for t in select table_name from information_schema.tables where table_schema = current_schema() and not table_name ilike '%pg_stat%'
-		loop
-			execute 'drop table ' || t || ' cascade';
-		end loop;
-end
-$$;`
-
 func Test_ResetDB(t *testing.T) {
+	// We don't need the reference to the DB but this will ensure that the canonical DB wipe method is called
+	integration.SetupDB(t)
+
 	ctx, done := context.WithCancel(context.Background())
 	defer done()
 
@@ -63,7 +50,6 @@ func Test_ResetDB(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	require.Nil(t, graphDB.Run(ctx, murderDB, nil))
 	require.Nil(t, graphDB.AssertSchema(ctx, graphschema.DefaultGraphSchema()))
 
 	require.Nil(t, graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
@@ -107,4 +93,32 @@ func TestPG(t *testing.T) {
 	test.RequireNilErr(t, graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Query("match p = (s:User)-[*..]->(:Computer) return p", nil).Error()
 	}))
+}
+
+// TestInt64SequenceIDs is a test that validates against a regression in any logic that originally used graph IDs.
+// Before this test and its related changes, graph IDs were stored as uint32 values. Scale of graphs necessitated
+// a change to an int64 ID space, however, the nuance of this refactor revealed several bugs and assumptions in
+// query formatting as well as business logic.
+//
+// This test represents validating that an instance can insert a node or an edge that has an ID greater than the maximum
+// value of an int32 graph ID.
+func TestInt64SequenceIDs(t *testing.T) {
+	var (
+		// We don't need the reference to the DB but this will ensure that the canonical DB wipe method is called
+		_                = integration.SetupDB(t)
+		graphTestContext = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	)
+
+	if pg.IsPostgreSQLGraph(graphTestContext.Graph.Database) {
+		// Move the ID space out past an int32's max value
+		require.Nil(t, graphTestContext.Graph.Database.Run(context.Background(), "alter sequence node_id_seq restart with 2147483648;", make(map[string]any)))
+		require.Nil(t, graphTestContext.Graph.Database.Run(context.Background(), "alter sequence edge_id_seq restart with 2147483648;", make(map[string]any)))
+	}
+
+	var (
+		// Create two users, chuck and steve where chuck has GenericAll on steve
+		chuckNode = graphTestContext.NewNode(graph.AsProperties(map[string]any{"name": "chuck"}), ad.User, ad.Entity)
+		steveNode = graphTestContext.NewNode(graph.AsProperties(map[string]any{"name": "steve"}), ad.User, ad.Entity)
+		_         = graphTestContext.NewRelationship(chuckNode, steveNode, ad.GenericAll)
+	)
 }

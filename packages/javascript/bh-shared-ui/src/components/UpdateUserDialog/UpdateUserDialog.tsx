@@ -25,9 +25,10 @@ const UpdateUserDialog: React.FC<{
     onExited?: () => void;
     onSave: (user: UpdateUserRequest) => Promise<any>;
     userId: string;
+    hasSelectedSelf: boolean;
     isLoading: boolean;
     error: any;
-}> = ({ open, onClose, onExited, userId, onSave, isLoading, error }) => {
+}> = ({ open, onClose, onExited, userId, onSave, hasSelectedSelf, isLoading, error }) => {
     const handleOnSave = (user: UpdateUserRequestForm) => {
         let parsedSSOProviderId: number | undefined = undefined;
         if (user.SSOProviderId) {
@@ -64,6 +65,7 @@ const UpdateUserDialog: React.FC<{
                 onCancel={onClose}
                 onSubmit={handleOnSave}
                 userId={userId}
+                hasSelectedSelf={hasSelectedSelf}
                 isLoading={isLoading}
                 error={error}
             />
