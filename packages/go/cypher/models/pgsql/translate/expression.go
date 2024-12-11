@@ -353,6 +353,34 @@ func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 	return nil
 }
 
+func applyTypeFunctionCallTypeHints(expression *pgsql.BinaryExpression) error {
+	switch typedLOperand := expression.LOperand.(type) {
+	case pgsql.FunctionCall:
+		if !typedLOperand.CastType.IsKnown() {
+			if rOperandTypeHint, err := InferExpressionType(expression.ROperand); err != nil {
+				return err
+			} else {
+				typedLOperand.CastType = rOperandTypeHint
+				expression.LOperand = typedLOperand
+			}
+		}
+	}
+
+	switch typedROperand := expression.ROperand.(type) {
+	case pgsql.FunctionCall:
+		if !typedROperand.CastType.IsKnown() {
+			if lOperandTypeHint, err := InferExpressionType(expression.LOperand); err != nil {
+				return err
+			} else {
+				typedROperand.CastType = lOperandTypeHint
+				expression.ROperand = typedROperand
+			}
+		}
+	}
+
+	return nil
+}
+
 func applyBinaryExpressionTypeHints(expression *pgsql.BinaryExpression) error {
 	switch expression.Operator {
 	case pgsql.OperatorPropertyLookup:
@@ -361,7 +389,11 @@ func applyBinaryExpressionTypeHints(expression *pgsql.BinaryExpression) error {
 		return nil
 	}
 
-	return rewritePropertyLookupOperands(expression)
+	if err := rewritePropertyLookupOperands(expression); err != nil {
+		return err
+	}
+
+	return applyTypeFunctionCallTypeHints(expression)
 }
 
 type Builder struct {
