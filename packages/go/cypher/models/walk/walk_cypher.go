@@ -36,10 +36,16 @@ func cypherSyntaxNodeSliceTypeConvert[F any, FS []F](fs FS) ([]cypher.SyntaxNode
 func newCypherWalkCursor(node cypher.SyntaxNode) (*Cursor[cypher.SyntaxNode], error) {
 	switch typedNode := node.(type) {
 	// Types with no AST branches
-	case *cypher.RangeQuantifier, *cypher.PropertyLookup, cypher.Operator, *cypher.KindMatcher,
+	case *cypher.RangeQuantifier, cypher.Operator, *cypher.KindMatcher,
 		*cypher.Limit, *cypher.Skip, graph.Kinds, *cypher.Parameter:
 		return &Cursor[cypher.SyntaxNode]{
 			Node: node,
+		}, nil
+
+	case *cypher.PropertyLookup:
+		return &Cursor[cypher.SyntaxNode]{
+			Node:     node,
+			Branches: []cypher.SyntaxNode{typedNode.Atom},
 		}, nil
 
 	case *cypher.MapItem:

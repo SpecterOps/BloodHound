@@ -21,7 +21,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
             from edge e0
                    join node n0 on n0.id = e0.start_id
                    join node n1 on n1.id = e0.end_id)
-select edges_to_path(variadic array [(s0.e0).id]::int4[])::pathcomposite as p
+select edges_to_path(variadic array [(s0.e0).id]::int8[])::pathcomposite as p
 from s0;
 
 -- case: match p = ()-[r1]->()-[r2]->(e) return e
@@ -92,7 +92,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                  edge e1
                    join node n2 on (n2.properties -> 'is_target')::bool and n2.id = e1.start_id
             where (s0.n1).id = e1.end_id)
-select edges_to_path(variadic array [(s1.e0).id, (s1.e1).id]::int4[])::pathcomposite as p
+select edges_to_path(variadic array [(s1.e0).id, (s1.e1).id]::int8[])::pathcomposite as p
 from s1;
 
 -- case: match p = ()-[*..]->() return p limit 1
@@ -126,7 +126,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
             from ex0
                    join edge e0 on e0.id = any (ex0.path)
                    join node n0 on n0.id = ex0.root_id
-                   join node n1 on e0.id = ex0.path[array_length(ex0.path, 1)::int4] and n1.id = e0.end_id)
+                   join node n1 on e0.id = ex0.path[array_length(ex0.path, 1)::int] and n1.id = e0.end_id)
 select edges_to_path(variadic ep0)::pathcomposite as p
 from s0
 limit 1;
@@ -162,7 +162,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
             from ex0
                    join edge e0 on e0.id = any (ex0.path)
                    join node n0 on n0.id = ex0.root_id
-                   join node n1 on e0.id = ex0.path[array_length(ex0.path, 1)::int4] and n1.id = e0.end_id
+                   join node n1 on e0.id = ex0.path[array_length(ex0.path, 1)::int] and n1.id = e0.end_id
             where ex0.satisfied),
      s1 as (select s0.e0                                                                     as e0,
                    s0.ep0                                                                    as ep0,
@@ -174,7 +174,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                  edge e1
                    join node n2 on n2.id = e1.end_id
             where (s0.n1).id = e1.start_id)
-select edges_to_path(variadic array [(s1.e1).id]::int4[] || s1.ep0)::pathcomposite as p
+select edges_to_path(variadic array [(s1.e1).id]::int8[] || s1.ep0)::pathcomposite as p
 from s1
 limit 1;
 
@@ -220,8 +220,8 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                  ex0
                    join edge e1 on e1.id = any (ex0.path)
                    join node n1 on n1.id = ex0.root_id
-                   join node n2 on e1.id = ex0.path[array_length(ex0.path, 1)::int4] and n2.id = e1.end_id)
-select s1.e0 as e, edges_to_path(variadic array [(s1.e0).id]::int4[] || s1.ep0)::pathcomposite as p
+                   join node n2 on e1.id = ex0.path[array_length(ex0.path, 1)::int] and n2.id = e1.end_id)
+select s1.e0 as e, edges_to_path(variadic array [(s1.e0).id]::int8[] || s1.ep0)::pathcomposite as p
 from s1;
 
 -- case: match p = (m:NodeKind1)-[:EdgeKind1]->(c:NodeKind2) where m.objectid ends with "-513" and not toUpper(c.operatingsystem) contains "SERVER" return p limit 1000
@@ -235,6 +235,6 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                                    not upper(n1.properties ->> 'operatingsystem')::text like '%SERVER%' and
                                    n1.id = e0.end_id
             where e0.kind_id = any (array [11]::int2[]))
-select edges_to_path(variadic array [(s0.e0).id]::int4[])::pathcomposite as p
+select edges_to_path(variadic array [(s0.e0).id]::int8[])::pathcomposite as p
 from s0
 limit 1000;
