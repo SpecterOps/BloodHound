@@ -561,3 +561,27 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
                or @pi1::text = any (jsonb_to_text_array(n0.properties -> 'array')::text[]))
 select s0.n0 as n
 from s0;
+
+-- case: match (n:NodeKind1) where coalesce(n.system_tags, '') contains 'admin_tier_0' return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and coalesce(n0.properties ->> 'system_tags', '')::text like '%admin_tier_0%')
+select s0.n0 as n
+from s0;
+
+-- case: match (n:NodeKind1) where coalesce(n.a, n.b, 1) = 1 return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and coalesce((n0.properties -> 'a')::int8, (n0.properties -> 'b')::int8, 1)::int8 = 1)
+select s0.n0 as n
+from s0;
+
+-- case: match (n:NodeKind1) where coalesce(n.a, n.b) = 1 return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and coalesce(n0.properties -> 'a', n0.properties -> 'b')::int8 = 1)
+select s0.n0 as n
+from s0;

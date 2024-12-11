@@ -232,6 +232,60 @@ func (s *Translator) translateDateTimeFunctionCall(cypherFunc *cypher.FunctionIn
 	return nil
 }
 
+func (s *Translator) translateCoalesceFunction(functionInvocation *cypher.FunctionInvocation) error {
+	if numArgs := functionInvocation.NumArguments(); numArgs == 0 {
+		s.SetError(fmt.Errorf("expected at least one argument for cypher function: %s", functionInvocation.Name))
+	} else {
+		var (
+			arguments    = make([]pgsql.Expression, numArgs)
+			expectedType = pgsql.UnsetDataType
+		)
+
+		// This loop is used to pop off the coalesce function arguments in the intended order (since they're
+		// pushed onto the translator stack).
+		for idx := range functionInvocation.Arguments {
+			if argument, err := s.treeTranslator.Pop(); err != nil {
+				return err
+			} else {
+				arguments[numArgs-idx-1] = argument
+			}
+		}
+
+		// Find and validate types of the arguments
+		for _, argument := range arguments {
+			if argumentType, err := InferExpressionType(argument); err != nil {
+				return err
+			} else if argumentType.IsKnown() {
+				// If the expected type isn't known yet then assign the known inferred type to it
+				if !expectedType.IsKnown() {
+					expectedType = argumentType
+				} else if expectedType != argumentType {
+					// All other inferrable argument types must match the first inferred type encountered
+					return fmt.Errorf("types in coalesce function must match %s but got %s", expectedType, argumentType)
+				}
+			}
+		}
+
+		if expectedType.IsKnown() {
+			// Rewrite any property lookup operators now that we have some type information
+			for idx, argument := range arguments {
+				if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+					arguments[idx] = rewritePropertyLookupOperator(propertyLookup, expectedType)
+				}
+			}
+		}
+
+		// Translate the function call to the expected SQL form
+		s.treeTranslator.Push(pgsql.FunctionCall{
+			Function:   pgsql.FunctionCoalesce,
+			Parameters: arguments,
+			CastType:   expectedType,
+		})
+	}
+
+	return nil
+}
+
 func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error {
 	if variable, isVariable := kindMatcher.Reference.(*cypher.Variable); !isVariable {
 		return fmt.Errorf("expected variable for kind matcher reference but found type: %T", kindMatcher.Reference)
