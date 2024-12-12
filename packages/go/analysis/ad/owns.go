@@ -38,6 +38,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 	dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db)
 	if err != nil {
 		log.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
+		return nil, err
 	}
 
 	adminGroupIds, err := FetchAdminGroupIds(ctx, db, groupExpansions)
@@ -61,10 +62,11 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 
 					// Get the target node of the OwnsRaw relationship
 					if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
+						log.Errorf("failed fetching OwnsRaw target node postownsandwriteowner: %w", err)
 						continue
 
 					} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
-						// Get the dSHeuristics value for the domain of the target node
+						// Get the domain SID of the target node
 						continue
 					} else {
 						enforced, ok := dsHeuristicsCache[domainSid]
@@ -135,12 +137,13 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 				// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
 				if anyEnforced {
 
-					// Get the target node of the WriteOwner relationship
+					// Get the target node of the WriteOwnerRaw relationship
 					if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
+						log.Errorf("failed fetching WriteOwnerRaw target node postownsandwriteowner: %w", err)
 						continue
 
 					} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
-						// Get the dSHeuristics value for the domain of the target node
+						// Get the domain SID of the target node
 						continue
 					} else {
 						enforced, ok := dsHeuristicsCache[domainSid]

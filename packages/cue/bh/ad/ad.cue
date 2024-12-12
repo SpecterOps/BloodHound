@@ -1465,9 +1465,7 @@ ACLRelationships: [
 	WritePKIEnrollmentFlag,
 	WritePKINameFlag,
 	WriteOwnerLimitedRights,
-	OwnsLimitedRights,
-	OwnsRaw,
-	WriteOwnerRaw
+	OwnsLimitedRights
 ]
 
 // Edges that are used in pathfinding
