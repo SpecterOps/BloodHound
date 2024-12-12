@@ -1520,9 +1520,7 @@ ACLRelationships: [
 	WritePKIEnrollmentFlag,
 	WritePKINameFlag,
 	WriteOwnerLimitedRights,
-	OwnsLimitedRights,
-	OwnsRaw,
-	WriteOwnerRaw
+	OwnsLimitedRights
 ]
 
 // these edges are common to inbound/outbound/pathfinding
