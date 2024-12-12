@@ -5,6 +5,7 @@
     "node": ">=22.11.0 <23"
   },
   "scripts": {
+    "generate:prisma": "yarn prisma db pull && yarn prisma generate",
     "pretest": "ts-node src/helpers/init.ts",
     "test:e2e": "env-cmd -e dev cucumber-js --config=src/cucumber.js --tags '@e2e'",
     "test:failed": "env-cmd -e dev cucumber-js -p rerun --config=src/cucumber.js @rerun.txt"
