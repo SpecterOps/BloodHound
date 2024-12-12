@@ -1,6 +1,9 @@
 _default:
 	@just --list --unsorted
 
+# generate prisma db client and update schema
+prisma-generate:
+    @yarn generate:prisma
 # run yarn to initiates e2e tests
 run-e2e-tests:
     @yarn test:e2e

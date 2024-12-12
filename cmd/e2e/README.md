@@ -15,7 +15,7 @@ yarn install
 
 Setup Prisma Schema and Client 
 - `cp .env.example .env` & update DB URL
-- `yarn prisma db pull` and  `yarn prisma generate`
+- `just prisma-generate`
 
 Update Cross-Enviroment variables
 - `cp .env-cmdrc.example .env-cmdrc` 
