@@ -321,6 +321,7 @@ func (s *GraphTestContext) NewAzureTenant(tenantID string) *graph.Node {
 	return s.NewNode(graph.AsProperties(graph.PropertyMap{
 		common.Name:     "New Tenant",
 		common.ObjectID: tenantID,
+		azure.TenantID:  tenantID,
 		azure.License:   "license",
 	}), azure.Entity, azure.Tenant)
 }
