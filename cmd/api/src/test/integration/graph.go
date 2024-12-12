@@ -363,7 +363,7 @@ func (s *GraphTestContext) NewActiveDirectoryUser(name, domainSID string, isTier
 		ad.DomainSID:    domainSID,
 	}
 
-	if isTierZero[0] {
+	if isTierZero != nil && isTierZero[0] {
 		propertyMap[common.SystemTags] = ad.AdminTierZero
 	}
 
