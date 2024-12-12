@@ -356,11 +356,18 @@ func (s *GraphTestContext) NewActiveDirectoryContainer(name, domainSID string) *
 }
 
 func (s *GraphTestContext) NewActiveDirectoryUser(name, domainSID string, isTierZero ...bool) *graph.Node {
-	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+
+	propertyMap := graph.PropertyMap{
 		common.Name:     name,
 		common.ObjectID: strings.ToUpper(must.NewUUIDv4().String()),
 		ad.DomainSID:    domainSID,
-	}), ad.Entity, ad.User)
+	}
+
+	if isTierZero[0] {
+		propertyMap[common.SystemTags] = ad.AdminTierZero
+	}
+
+	return s.NewNode(graph.AsProperties(propertyMap), ad.Entity, ad.User)
 }
 
 func (s *GraphTestContext) NewCustomActiveDirectoryUser(properties *graph.Properties) *graph.Node {
