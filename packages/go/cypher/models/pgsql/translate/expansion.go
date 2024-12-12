@@ -320,7 +320,7 @@ func (s *Translator) buildAllShortestPathsExpansionRoot(part *PatternPart, trave
 									pgsql.CompoundIdentifier{traversalStep.Expansion.Value.Binding.Identifier, expansionPath},
 									pgsql.NewLiteral(1, pgsql.Int8),
 								},
-								CastType: pgsql.Int4,
+								CastType: pgsql.Int,
 							},
 						},
 					},
@@ -417,8 +417,15 @@ func (s *Translator) buildAllShortestPathsExpansionRoot(part *PatternPart, trave
 					),
 				}
 
-				// Make sure to only accept paths that are satisfied
-				expansion.ProjectionStatement.Where = pgsql.CompoundIdentifier{traversalStep.Expansion.Value.Binding.Identifier, expansionSatisfied}
+				// Constraints that target the terminal node may crop up here where it's finally in scope. Additionally,
+				// only accept paths that are marked satisfied from the recursive descent CTE
+				if constraints, err := consumeConstraintsFrom(traversalStep.Expansion.Value.Frame.Visible, s.treeTranslator.IdentifierConstraints); err != nil {
+					return pgsql.Query{}, err
+				} else if projectionConstraints, err := ConjoinExpressions([]pgsql.Expression{pgsql.CompoundIdentifier{traversalStep.Expansion.Value.Binding.Identifier, expansionSatisfied}, constraints.Expression}); err != nil {
+					return pgsql.Query{}, err
+				} else {
+					expansion.ProjectionStatement.Where = projectionConstraints
+				}
 			}
 		} else {
 			expansion.PrimerStatement.Projection = []pgsql.SelectItem{
@@ -653,7 +660,7 @@ func (s *Translator) buildExpansionPatternRoot(part *PatternPart, traversalStep 
 									pgsql.CompoundIdentifier{traversalStep.Expansion.Value.Binding.Identifier, expansionPath},
 									pgsql.NewLiteral(1, pgsql.Int8),
 								},
-								CastType: pgsql.Int4,
+								CastType: pgsql.Int,
 							},
 						},
 					},
@@ -940,7 +947,7 @@ func (s *Translator) buildExpansionPatternStep(part *PatternPart, traversalStep 
 									pgsql.CompoundIdentifier{traversalStep.Expansion.Value.Binding.Identifier, expansionPath},
 									pgsql.NewLiteral(1, pgsql.Int8),
 								},
-								CastType: pgsql.Int4,
+								CastType: pgsql.Int,
 							},
 						},
 					},
