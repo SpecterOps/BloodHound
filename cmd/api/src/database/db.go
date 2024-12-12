@@ -44,8 +44,9 @@ const (
 )
 
 var (
-	ErrDuplicateAGName = errors.New("duplicate asset group name")
-	ErrDuplicateAGTag  = errors.New("duplicate asset group tag")
+	ErrDuplicateAGName          = errors.New("duplicate asset group name")
+	ErrDuplicateAGTag           = errors.New("duplicate asset group tag")
+	ErrDuplicateSSOProviderName = errors.New("duplicate sso provider name")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {

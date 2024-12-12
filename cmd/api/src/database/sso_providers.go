@@ -60,7 +60,15 @@ func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authP
 	)
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Table(ssoProviderTableName).Create(&provider))
+		result := tx.Table(ssoProviderTableName).Create(&provider)
+
+		if result.Error != nil {
+			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"sso_providers_name_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateSSOProviderName, tx.Error)
+			}
+		}
+
+		return CheckError(result)
 	})
 
 	return provider, err

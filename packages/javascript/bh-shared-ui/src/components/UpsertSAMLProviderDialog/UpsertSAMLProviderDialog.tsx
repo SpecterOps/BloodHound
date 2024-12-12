@@ -20,7 +20,7 @@ import UpsertSAMLProviderForm from '../UpsertSAMLProviderForm';
 
 const UpsertSAMLProviderDialog: React.FC<{
     open: boolean;
-    error?: string;
+    error: any;
     oldSSOProvider?: SSOProvider;
     onClose: () => void;
     onSubmit: (data: UpsertSAMLProviderFormInputs) => void;
