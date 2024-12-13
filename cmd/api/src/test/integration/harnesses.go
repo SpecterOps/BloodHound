@@ -8412,11 +8412,25 @@ type NtlmCoerceAndRelayNtlmToSmb struct {
 
 func (s *NtlmCoerceAndRelayNtlmToSmb) Setup(graphTestContext *GraphTestContext) {
 	domainSid := RandomDomainSID()
-	s.AuthenticatedUsers = graphTestContext.NewActiveDirectoryUser("Authenticated Users", domainSid)
+	s.AuthenticatedUsers = graphTestContext.NewActiveDirectoryGroup("Authenticated Users", domainSid)
+	s.AuthenticatedUsers.Properties.Set("objectid", fmt.Sprintf("authenticated-users%s", adAnalysis.AuthenticatedUsersSuffix))
+	s.AuthenticatedUsers.Properties.Set("Domain", domainSid)
+	graphTestContext.UpdateNode(s.AuthenticatedUsers)
+
 	s.DomainAdminsUser = graphTestContext.NewActiveDirectoryUser("Domain Admins User", domainSid)
+
 	s.ServerAdmins = graphTestContext.NewActiveDirectoryDomain("Server Admins", domainSid, false, true)
+	s.ServerAdmins.Properties.Set("objectid", fmt.Sprintf("server-admins%s", adAnalysis.AuthenticatedUsersSuffix))
+	s.ServerAdmins.Properties.Set("Domain", domainSid)
+	graphTestContext.UpdateNode(s.ServerAdmins)
+
+	s.DomainAdminsUser.Properties.Set("objectid", fmt.Sprintf("domainadminuser-users%s", adAnalysis.AuthenticatedUsersSuffix))
 	s.computer3 = graphTestContext.NewActiveDirectoryComputer("computer3", domainSid)
+
 	s.computer8 = graphTestContext.NewActiveDirectoryComputer("computer8", domainSid)
+	s.computer8.Properties.Set("smb_signing", "false")
+	graphTestContext.UpdateNode(s.computer8)
+
 	graphTestContext.NewRelationship(s.computer3, s.ServerAdmins, ad.MemberOf)
 	graphTestContext.NewRelationship(s.ServerAdmins, s.computer8, ad.AdminTo)
 	graphTestContext.NewRelationship(s.AuthenticatedUsers, s.computer8, ad.CoerceAndRelayNTLMToSMB)

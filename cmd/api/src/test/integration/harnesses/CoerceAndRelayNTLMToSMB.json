@@ -97,7 +97,9 @@
       "caption": "Authenticated Users",
       "style": {},
       "labels": [],
-      "properties": {}
+      "properties": {
+        "objectid": "authenticatedusers-S-1-5-11"
+      }
     },
     {
       "id": "n4",

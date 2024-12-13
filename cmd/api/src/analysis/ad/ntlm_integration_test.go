@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -71,9 +72,10 @@ func TestPostNtlm(t *testing.T) {
 			} else {
 				require.Equal(t, 1, len(results))
 
-				require.True(t, results.Contains(harness.NtlmCoerceAndRelayNtlmToSmb.DomainAdminsUser))
-				require.True(t, results.Contains(harness.NtlmCoerceAndRelayNtlmToSmb.AuthenticatedUsers))
-				require.True(t, results.Contains(harness.NtlmCoerceAndRelayNtlmToSmb.ServerAdmins))
+				objectId, err := results[0].Properties.Get("objectid").String()
+				require.NoError(t, err)
+
+				assert.Equal(t, "authenticated-users-S-1-5-11", objectId)
 
 			}
 			return nil
