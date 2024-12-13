@@ -38,25 +38,8 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 	// TODO: after adding all of our new NTLM edges, benchmark performance between submitting multiple readers per computer or single reader per computer
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 
-		authenticatedUsersCache := make(map[string]graph.ID)
-
 		// Fetch all nodes where the node is a Group and is an Authenticated User
-		if err := tx.Nodes().Filter(
-			query.And(
-				query.Kind(query.Node(), ad.Group),
-				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), AuthenticatedUsersSuffix)),
-		).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-			for authenticatedUser := range cursor.Chan() {
-				if domain, err := authenticatedUser.Properties.Get(ad.Domain.String()).String(); err != nil {
-					continue
-				} else {
-					authenticatedUsersCache[domain] = authenticatedUser.ID
-				}
-			}
-
-			return cursor.Error()
-		},
-		); err != nil {
+		if authenticatedUsersCache, err := FetchAuthUsersMappedToDomains(tx); err != nil {
 			return err
 		} else {
 			// Fetch all nodes where the type is Computer
@@ -89,7 +72,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 }
 
 // PostCoerceAndRelayNtlmToSmb creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
-// Comprised solely oof adminTo and memberOf edges
+// Comprised solely of adminTo and memberOf edges
 func PostCoerceAndRelayNtlmToSmb(tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, computer *graph.Node, domain string, authenticaedUserNodes map[string]graph.ID) error {
 	if authenticatedUserID, ok := authenticaedUserNodes[domain]; !ok {
 		return nil
@@ -137,4 +120,28 @@ func PostCoerceAndRelayNtlmToSmb(tx graph.Transaction, outC chan<- analysis.Crea
 	}
 
 	return nil
+}
+
+// FetchAuthUsersMappedToDomains Fetch all nodes where the node is a Group and is an Authenticated User
+func FetchAuthUsersMappedToDomains(tx graph.Transaction) (map[string]graph.ID, error) {
+	authenticatedUsers := make(map[string]graph.ID)
+
+	err := tx.Nodes().Filter(
+		query.And(
+			query.Kind(query.Node(), ad.Group),
+			query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), AuthenticatedUsersSuffix)),
+	).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+		for authenticatedUser := range cursor.Chan() {
+			if domain, err := authenticatedUser.Properties.Get(ad.Domain.String()).String(); err != nil {
+				continue
+			} else {
+				authenticatedUsers[domain] = authenticatedUser.ID
+			}
+		}
+
+		return cursor.Error()
+	},
+	)
+
+	return authenticatedUsers, err
 }

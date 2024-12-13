@@ -8402,6 +8402,27 @@ func (s *ESC10bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.DC1)
 }
 
+type NtlmCoerceAndRelayNtlmToSmb struct {
+	AuthenticatedUsers *graph.Node
+	DomainAdminsUser   *graph.Node
+	ServerAdmins       *graph.Node
+	computer3          *graph.Node
+	computer8          *graph.Node
+}
+
+func (s *NtlmCoerceAndRelayNtlmToSmb) Setup(graphTestContext *GraphTestContext) {
+	domainSid := RandomDomainSID()
+	s.AuthenticatedUsers = graphTestContext.NewActiveDirectoryUser("Authenticated Users", domainSid)
+	s.DomainAdminsUser = graphTestContext.NewActiveDirectoryUser("Domain Admins User", domainSid)
+	s.ServerAdmins = graphTestContext.NewActiveDirectoryDomain("Server Admins", domainSid, false, true)
+	s.computer3 = graphTestContext.NewActiveDirectoryComputer("computer3", domainSid)
+	s.computer8 = graphTestContext.NewActiveDirectoryComputer("computer8", domainSid)
+	graphTestContext.NewRelationship(s.computer3, s.ServerAdmins, ad.MemberOf)
+	graphTestContext.NewRelationship(s.ServerAdmins, s.computer8, ad.AdminTo)
+	graphTestContext.NewRelationship(s.AuthenticatedUsers, s.computer8, ad.CoerceAndRelayNTLMToSMB)
+	graphTestContext.NewRelationship(s.computer8, s.DomainAdminsUser, ad.HasSession)
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -8500,4 +8521,5 @@ type HarnessDetails struct {
 	DCSyncHarness                                   DCSyncHarness
 	SyncLAPSPasswordHarness                         SyncLAPSPasswordHarness
 	HybridAttackPaths                               HybridAttackPaths
+	NtlmCoerceAndRelayNtlmToSmb                     NtlmCoerceAndRelayNtlmToSmb
 }
