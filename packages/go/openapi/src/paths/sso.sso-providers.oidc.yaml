@@ -54,7 +54,7 @@ post:
             type: object
             properties:
               data:
-                $ref: './../schemas/model.auth-provider.yaml'
+                $ref: './../schemas/model.oidc-provider.yaml'
     '400':
       $ref: './../responses/bad-request.yaml'
     '401':

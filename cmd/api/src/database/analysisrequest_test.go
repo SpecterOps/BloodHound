@@ -21,9 +21,9 @@ package database_test
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
@@ -48,5 +48,5 @@ func TestAnalysisRequest(t *testing.T) {
 	require.Nil(t, err)
 
 	_, err = dbInst.GetAnalysisRequest(testCtx)
-	require.ErrorIs(t, err, sql.ErrNoRows)
+	require.ErrorIs(t, err, database.ErrNotFound)
 }

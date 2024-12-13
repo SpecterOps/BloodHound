@@ -93,7 +93,7 @@ $$
   begin
     create type nodeComposite as
     (
-      id         integer,
+      id         bigint,
       kind_ids   smallint[8],
       properties jsonb
     );
@@ -133,9 +133,9 @@ $$
   begin
     create type edgeComposite as
     (
-      id         integer,
-      start_id   integer,
-      end_id     integer,
+      id         bigint,
+      start_id   bigint,
+      end_id     bigint,
       kind_id    smallint,
       properties jsonb
     );
@@ -189,7 +189,6 @@ execute procedure delete_node_edges();
 -- page.
 alter table edge
   alter column properties set storage main;
-
 
 -- Index on the graph ID of each edge.
 create index if not exists edge_graph_id_index on edge using btree (graph_id);

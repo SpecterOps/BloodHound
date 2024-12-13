@@ -17,8 +17,9 @@
 package database
 
 import (
+	"errors"
+
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/errors"
 	"gorm.io/gorm"
 )
 

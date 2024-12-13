@@ -605,7 +605,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/model.auth-provider"
+                      "$ref": "#/components/schemas/model.oidc-provider"
                     }
                   }
                 }
@@ -646,6 +646,100 @@
           }
         }
       ],
+      "patch": {
+        "operationId": "PatchSSOProvider",
+        "summary": "Update SSO Provider",
+        "description": "Updates an existing SSO provider. Updating saml provider requires a \"multipart/form-data\" body. Updating oidc provider requires \"application/json\" body. Response is respective provider",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the new SAML provider."
+                  },
+                  "metadata": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Metadata XML file."
+                  }
+                }
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the OIDC provider"
+                  },
+                  "issuer": {
+                    "type": "string",
+                    "format": "url",
+                    "description": "URL of the OIDC issuer"
+                  },
+                  "client_id": {
+                    "type": "string",
+                    "description": "Client ID for the OIDC provider"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/model.saml-provider"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/model.oidc-provider"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
       "delete": {
         "operationId": "DeleteSSOProvider",
         "summary": "Delete SSO Provider",
@@ -697,6 +791,68 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sso-providers/{sso_provider_id}/signing-certificate": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "description": "SSO Provider ID for a SAML provider",
+          "name": "sso_provider_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetSSOProviderSAMLSigningCertificate",
+        "summary": "Get SAML Provider Signing Certificate",
+        "description": "Download the SAML Provider Signing Certificate. Only applies to SAML providers.",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "content-disposition": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Suggested filename of structure \"{saml-slug}-signing-certificate.pem\""
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -12369,7 +12525,7 @@
       "get": {
         "operationId": "ListDomainAttackPathsDetails",
         "summary": "List domain attack paths details",
-        "description": "Lists detailed data about attack paths for a domain. \n\n__Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.\n",
+        "description": "Lists detailed data about attack paths for a domain.\n\n__Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.\n",
         "tags": [
           "Attack Paths",
           "Enterprise"
@@ -12600,9 +12756,9 @@
                           "DomainSID": "string",
                           "PrincipalHash": "string",
                           "AcceptedUntil": "2024-08-28T21:21:40.845Z",
-                          "ImpactPercentage": 12,
+                          "ImpactPercentage": 0.12,
                           "ImpactCount": 2,
-                          "ExposurePercentage": 24,
+                          "ExposurePercentage": 0.24,
                           "ExposureCount": 4,
                           "Severity": "high",
                           "Accepted": true
@@ -12689,10 +12845,8 @@
                             "additionalProp3": {}
                           },
                           "accepted_until": "2024-08-28T21:42:18.844Z",
-                          "ImpactPercentage": 12,
+                          "ImpactPercentage": 0.12,
                           "ImpactCount": 2,
-                          "ExposurePercentage": 24,
-                          "ExposureCount": 4,
                           "Severity": "high",
                           "Accepted": true
                         }
@@ -12727,8 +12881,6 @@
                           "accepted_until": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0,
                           "ImpactCount": 0,
-                          "ExposurePercentage": 0,
-                          "ExposureCount": 0,
                           "Severity": "",
                           "Accepted": true
                         }
@@ -15927,14 +16079,6 @@
                 "format": "double"
               },
               "ImpactCount": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "ExposurePercentage": {
-                "type": "number",
-                "format": "double"
-              },
-              "ExposureCount": {
                 "type": "integer",
                 "format": "int64"
               },

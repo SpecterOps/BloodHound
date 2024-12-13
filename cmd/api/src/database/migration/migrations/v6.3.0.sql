@@ -27,3 +27,12 @@ ALTER TABLE ONLY saml_providers
 -- Update root_uri_version to default to 2 or "/v2/sso/" for newly created saml providers
 ALTER TABLE ONLY saml_providers
   ALTER COLUMN root_uri_version SET DEFAULT 2;
+
+-- Set the `updated_posture_page` feature flag to true
+UPDATE feature_flags SET enabled = true WHERE key = 'updated_posture_page';
+
+-- Fix users in bad state due to sso bug
+DELETE FROM auth_secrets WHERE id IN (SELECT auth_secrets.id FROM auth_secrets JOIN users ON users.id = auth_secrets.user_id WHERE users.sso_provider_id IS NOT NULL);
+
+-- Set the `oidc_support` feature flag to true
+UPDATE feature_flags SET enabled = true WHERE key = 'oidc_support';

@@ -23,15 +23,17 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/crypto"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/api/v2"
+	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
@@ -144,9 +146,7 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		} else if metadata, err := samlsp.ParseMetadata(metadataXML); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if ssoDescriptor, err := auth.GetIDPSingleSignOnDescriptor(metadata, saml.HTTPPostBinding); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(ssoDescriptor, saml.HTTPPostBinding); err != nil {
+		} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(metadata, saml.HTTPPostBinding); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
 		} else {
 			samlIdentityProvider.Name = providerNames[0]
@@ -188,7 +188,75 @@ func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, req
 	}
 }
 
-// Preserve old metadata endpoint
+// UpdateSAMLProviderRequest updates an SAML provider entry, support for partial payloads
+func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
+	if ssoProvider.SAMLProvider == nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+	} else if err := request.ParseMultipartForm(api.DefaultAPIPayloadReadLimitBytes); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if providerNames, hasProviderName := request.MultipartForm.Value["name"]; len(providerNames) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"name\" parameter", request), response)
+	} else if metadataXMLFileHandles, hasMetadataXML := request.MultipartForm.File["metadata"]; len(metadataXMLFileHandles) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"metadata\" parameter", request), response)
+	} else {
+		if hasProviderName {
+			ssoProvider.Name = providerNames[0]
+
+			ssoProvider.SAMLProvider.Name = providerNames[0]
+			ssoProvider.SAMLProvider.DisplayName = providerNames[0]
+		}
+
+		if hasMetadataXML {
+			if metadataXMLReader, err := metadataXMLFileHandles[0].Open(); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			} else {
+				defer metadataXMLReader.Close()
+
+				if metadataXML, err := io.ReadAll(metadataXMLReader); err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+					return
+				} else if metadata, err := samlsp.ParseMetadata(metadataXML); err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+					return
+				} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(metadata, saml.HTTPPostBinding); err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
+					return
+				} else {
+					ssoProvider.SAMLProvider.MetadataXML = metadataXML
+					ssoProvider.SAMLProvider.IssuerURI = metadata.EntityID
+					ssoProvider.SAMLProvider.SingleSignOnURI = ssoURL
+
+					// It's possible to update the ACS url which will be reflected in the metadataXML, we need to guarantee it is set to only what we expect if it is present
+					if acsUrl, err := auth.GetAssertionConsumerServiceURL(metadata, saml.HTTPPostBinding); err == nil {
+						if !strings.Contains(acsUrl, model.SAMLRootURIVersionMap[ssoProvider.SAMLProvider.RootURIVersion]) {
+							var validUri bool
+							for rootUriVersion, path := range model.SAMLRootURIVersionMap {
+								if strings.Contains(acsUrl, path) {
+									ssoProvider.SAMLProvider.RootURIVersion = rootUriVersion
+									validUri = true
+									break
+								}
+							}
+							if !validUri {
+								api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a valid ACS location", request), response)
+								return
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if newSAMLProvider, err := s.db.UpdateSAMLIdentityProvider(request.Context(), ssoProvider); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
+		}
+	}
+}
+
+// Preserve old metadata endpoint for saml providers
 func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request *http.Request) {
 	ssoProviderSlug := mux.Vars(request)[api.URIPathVariableSSOProviderSlug]
 
@@ -199,6 +267,7 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
+		// Note: This is the samlsp metadata tied to authenticate flow and will not be the same as the XML metadata used to import the SAML provider initially
 		if content, err := xml.MarshalIndent(serviceProvider.Metadata(), "", "  "); err != nil {
 			log.Errorf("[SAML] XML marshalling failure during service provider encoding for %s: %v", ssoProvider.SAMLProvider.IssuerURI, err)
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
@@ -211,12 +280,35 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 	}
 }
 
+// Provide the saml provider certifcate
+func (s ManagementResource) ServeSigningCertificate(response http.ResponseWriter, request *http.Request) {
+	rawProviderID := mux.Vars(request)[api.URIPathVariableSSOProviderID]
+
+	if ssoProviderID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+	} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), int32(ssoProviderID)); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if ssoProvider.SAMLProvider == nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+	} else {
+		// Note this is the public cert not necessarily the IDP cert
+		response.Header().Set(headers.ContentDisposition.String(), fmt.Sprintf("attachment; filename=\"%s-signing-certificate.pem\"", ssoProvider.Slug))
+		if _, err := response.Write([]byte(crypto.FormatCert(s.config.SAML.ServiceProviderCertificate))); err != nil {
+			log.Errorf("[SAML] Failed to write response for serving signing certificate: %v", err)
+		}
+	}
+}
+
 // HandleStartAuthFlow is called to start the SAML authentication process.
 func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	if ssoProvider.SAMLProvider == nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+		// SAML misconfiguration scenario
+		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		log.Errorf("[SAML] Service provider creation failed: %v", err)
+		// Technical issues scenario
+		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else {
 		var (
 			binding         = saml.HTTPRedirectBinding
@@ -230,13 +322,16 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 		// TODO: add actual relay state support - BED-5071
 		if authReq, err := serviceProvider.MakeAuthenticationRequest(bindingLocation, binding, saml.HTTPPostBinding); err != nil {
 			log.Errorf("[SAML] Failed creating SAML authentication request: %v", err)
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+			// SAML misconfiguration or technical issue
+			// Since this likely indicates a configuration problem, we treat it as a misconfiguration scenario
+			redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 		} else {
 			switch binding {
 			case saml.HTTPRedirectBinding:
 				if redirectURL, err := authReq.Redirect("", &serviceProvider); err != nil {
 					log.Errorf("[SAML] Failed to format a redirect for SAML provider %s: %v", serviceProvider.EntityID, err)
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+					// Likely a technical or configuration issue
+					redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 				} else {
 					response.Header().Add(headers.Location.String(), redirectURL.String())
 					response.WriteHeader(http.StatusFound)
@@ -249,11 +344,14 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 
 				if _, err := response.Write([]byte(fmt.Sprintf(authInitiationContentBodyFormat, authReq.Post("")))); err != nil {
 					log.Errorf("[SAML] Failed to write response with HTTP POST binding: %v", err)
+					// Technical issues scenario
+					redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 				}
 
 			default:
 				log.Errorf("[SAML] Unhandled binding type %s", binding)
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+				// Treating unknown binding as a misconfiguration
+				redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 			}
 		}
 	}
@@ -262,13 +360,17 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 // HandleStartAuthFlow is called to start the SAML authentication process.
 func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	if ssoProvider.SAMLProvider == nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+		// SAML misconfiguration
+		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		log.Errorf("[SAML] Service provider creation failed: %v", err)
+		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else {
 		if err := request.ParseForm(); err != nil {
 			log.Errorf("[SAML] Failed to parse form POST: %v", err)
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form POST is malformed", request), response)
+			// Technical issues or invalid form data
+			// This is not covered by acceptance criteria directly; treat as technical issue
+			redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 		} else {
 			if assertion, err := serviceProvider.ParseResponse(request, nil); err != nil {
 				var typedErr *saml.InvalidResponseError
@@ -278,10 +380,12 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 				default:
 					log.Errorf("[SAML] Failed to parse ACS response for provider %s: %v", ssoProvider.SAMLProvider.IssuerURI, err)
 				}
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
+				// SAML credentials issue scenario (authentication failed)
+				redirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 			} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
 				log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", ssoProvider.Name, err)
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "session assertion does not meet the requirements for user lookup", request), response)
+				// SAML credentials issue scenario again
+				redirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 			} else {
 				s.authenticator.CreateSSOSession(request, response, principalName, ssoProvider)
 			}
