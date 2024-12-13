@@ -93,6 +93,8 @@ const (
 	TextArray                DataType = "text[]"
 	JSONB                    DataType = "jsonb"
 	JSONBArray               DataType = "jsonb[]"
+	Numeric                  DataType = "numeric"
+	NumericArray             DataType = "numeric[]"
 	Date                     DataType = "date"
 	TimeWithTimeZone         DataType = "time with time zone"
 	TimeWithoutTimeZone      DataType = "time without time zone"
@@ -109,7 +111,8 @@ const (
 	ExpansionTerminalNode DataType = "expansion_terminal_node"
 )
 
-func (s DataType) Convert(other DataType) (DataType, bool) {
+// TODO: operator, while unused, is part of a refactor for this function to make it operator aware
+func (s DataType) Compatible(other DataType, operator Operator) (DataType, bool) {
 	if s == other {
 		return s, true
 	}
@@ -132,6 +135,12 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 		case Float8:
 			return Float8, true
 
+		case Float4Array:
+			return Float4, true
+
+		case Float8Array:
+			return Float8, true
+
 		case Text:
 			return Text, true
 		}
@@ -140,6 +149,21 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 		switch other {
 		case Float4:
 			return Float8, true
+
+		case Float4Array, Float8Array:
+			return Float8, true
+
+		case Text:
+			return Text, true
+		}
+
+	case Numeric:
+		switch other {
+		case Float4, Float8, Int2, Int4, Int8:
+			return Numeric, true
+
+		case Float4Array, Float8Array, NumericArray:
+			return Numeric, true
 
 		case Text:
 			return Text, true
@@ -156,6 +180,15 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 		case Int8:
 			return Int8, true
 
+		case Int2Array:
+			return Int2, true
+
+		case Int4Array:
+			return Int4, true
+
+		case Int8Array:
+			return Int8, true
+
 		case Text:
 			return Text, true
 		}
@@ -168,6 +201,12 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 		case Int8:
 			return Int8, true
 
+		case Int2Array, Int4Array:
+			return Int4, true
+
+		case Int8Array:
+			return Int8, true
+
 		case Text:
 			return Text, true
 		}
@@ -177,8 +216,41 @@ func (s DataType) Convert(other DataType) (DataType, bool) {
 		case Int2, Int4, Int8:
 			return Int8, true
 
+		case Int2Array, Int4Array, Int8Array:
+			return Int8, true
+
 		case Text:
 			return Text, true
+		}
+
+	case Int:
+		switch other {
+		case Int2, Int4, Int:
+			return Int, true
+
+		case Int8:
+			return Int8, true
+
+		case Text:
+			return Text, true
+		}
+
+	case Int2Array:
+		switch other {
+		case Int2Array, Int4Array, Int8Array:
+			return other, true
+		}
+
+	case Int4Array:
+		switch other {
+		case Int4Array, Int8Array:
+			return other, true
+		}
+
+	case Float4Array:
+		switch other {
+		case Float4Array, Float8Array:
+			return other, true
 		}
 	}
 
@@ -207,7 +279,7 @@ func (s DataType) MatchesOneOf(others ...DataType) bool {
 
 func (s DataType) IsArrayType() bool {
 	switch s {
-	case Int2Array, Int4Array, Int8Array, Float4Array, Float8Array, TextArray:
+	case Int2Array, Int4Array, Int8Array, Float4Array, Float8Array, TextArray, JSONBArray, NodeCompositeArray, EdgeCompositeArray, NumericArray:
 		return true
 	}
 
@@ -239,6 +311,8 @@ func (s DataType) ToArrayType() (DataType, error) {
 		return Float8Array, nil
 	case Text, TextArray:
 		return TextArray, nil
+	case Numeric, NumericArray:
+		return NumericArray, nil
 	default:
 		return UnknownDataType, ErrNoAvailableArrayDataType
 	}
@@ -258,8 +332,10 @@ func (s DataType) ArrayBaseType() (DataType, error) {
 		return Float8, nil
 	case TextArray:
 		return Text, nil
+	case NumericArray:
+		return Numeric, nil
 	default:
-		return UnknownDataType, ErrNonArrayDataType
+		return s, nil
 	}
 }
 
