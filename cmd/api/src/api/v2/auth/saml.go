@@ -36,6 +36,8 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -372,6 +374,42 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 			} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
 				log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", ssoProvider.Name, err)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "session assertion does not meet the requirements for user lookup", request), response)
+			} else if user, err := s.db.LookupUser(request.Context(), principalName); err != nil {
+				if errors.Is(err, database.ErrNotFound) {
+					user.EmailAddress = null.StringFrom(principalName)
+					user.PrincipalName = principalName
+					user.Roles = model.Roles{
+						{
+							Name:        "Read-Only",
+							Description: "Used for integrations",
+							Serial: model.Serial{
+								ID: 3,
+							},
+						},
+					}
+					user.SSOProviderID = null.Int32From(ssoProvider.ID)
+
+					// Need to find a work around since BHE cannot auto accept EULA as true
+					user.EULAAccepted = true
+
+					if givenName, err := ssoProvider.SAMLProvider.GetSAMLUserGivenNameFromAssertion(assertion); err != nil {
+						user.FirstName = null.StringFrom(principalName)
+					} else {
+						user.FirstName = null.StringFrom(givenName)
+					}
+
+					if surname, err := ssoProvider.SAMLProvider.GetSAMLUserSurNameFromAssertion(assertion); err != nil {
+						user.LastName = null.StringFrom("Last name Not Found")
+					} else {
+						user.LastName = null.StringFrom(surname)
+					}
+
+					if _, err := s.db.CreateUser(request.Context(), user); err != nil {
+						api.HandleDatabaseError(request, response, err)
+					}
+
+					s.authenticator.CreateSSOSession(request, response, principalName, ssoProvider)
+				}
 			} else {
 				s.authenticator.CreateSSOSession(request, response, principalName, ssoProvider)
 			}

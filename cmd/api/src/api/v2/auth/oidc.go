@@ -69,7 +69,7 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 		}
 
 		if upsertReq.Config.AutoProvision.Enabled {
-			if ssoProvider.Config.AutoProvision.DefaultRole > 5 || ssoProvider.Config.AutoProvision.DefaultRole < 0 {
+			if ssoProvider.Config.AutoProvision.DefaultRole > 5 || ssoProvider.Config.AutoProvision.DefaultRole < 1 {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
 				return
 			}
@@ -208,12 +208,15 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 					// Need to find a work around since BHE cannot auto accept EULA as true
 					user.EULAAccepted = true
 
-					if claims.FamilyName == "" {
+					if claims.DisplayName == "" {
 						user.FirstName = null.StringFrom(claims.Name)
-						user.LastName = null.StringFrom("Name Not Found")
-						user.PrincipalName = claims.DisplayName
 					} else {
-						user.FirstName = null.StringFrom(claims.Name)
+						user.FirstName = null.StringFrom(claims.DisplayName)
+					}
+
+					if claims.FamilyName == "" {
+						user.LastName = null.StringFrom("Last name Not Found")
+					} else {
 						user.LastName = null.StringFrom(claims.FamilyName)
 					}
 

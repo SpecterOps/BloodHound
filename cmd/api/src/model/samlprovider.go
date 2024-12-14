@@ -30,8 +30,15 @@ import (
 const (
 	ObjectIDAttributeNameFormat = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
 	ObjectIDEmail               = "urn:oid:0.9.2342.19200300.100.1.3"
-	XMLTypeString               = "xs:string"
-	XMLSOAPClaimsEmailAddress   = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+	ObjectIDGivenName           = "urn:oid:2.5.4.42"
+	ObjectIDName                = "urn:oid:2.5.4.41"
+	ObjectIDSurname             = "urn:oid:2.5.4.4"
+
+	XMLTypeString             = "xs:string"
+	XMLSOAPClaimsEmailAddress = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+	XMLSOAPClaimsGivenName    = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"
+	XMLSOAPClaimsName         = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+	XMLSOAPClaimsSurname      = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"
 )
 
 var (
@@ -106,6 +113,15 @@ func (s SAMLProvider) emailAttributeNames() []string {
 	return []string{ObjectIDEmail, XMLSOAPClaimsEmailAddress}
 }
 
+func (s SAMLProvider) givenNameAttributeNames() []string {
+	// Added the ObjectIDName and XMLSOAPClaimsName as a fallback
+	return []string{ObjectIDGivenName, XMLSOAPClaimsGivenName, ObjectIDName, XMLSOAPClaimsName}
+}
+
+func (s SAMLProvider) surnameAttributeNames() []string {
+	return []string{ObjectIDSurname, XMLSOAPClaimsSurname}
+}
+
 func assertionFindString(assertion *saml.Assertion, names ...string) (string, error) {
 	for _, attributeStatement := range assertion.AttributeStatements {
 		for _, attribute := range attributeStatement.Attributes {
@@ -142,6 +158,38 @@ func (s SAMLProvider) GetSAMLUserPrincipalNameFromAssertion(assertion *saml.Asse
 		return "", ErrSAMLAssertion
 	} else {
 		return principalName, nil
+	}
+}
+
+func (s SAMLProvider) GetSAMLUserGivenNameFromAssertion(assertion *saml.Assertion) (string, error) {
+	for _, attrStmt := range assertion.AttributeStatements {
+		for _, attr := range attrStmt.Attributes {
+			for _, value := range attr.Values {
+				log.Infof("[SAML] Assertion contains attribute: %s - %s=%v", attr.NameFormat, attr.Name, value)
+			}
+		}
+	}
+
+	if givenName, err := assertionFindString(assertion, s.givenNameAttributeNames()...); err != nil {
+		return "", ErrSAMLAssertion
+	} else {
+		return givenName, nil
+	}
+}
+
+func (s SAMLProvider) GetSAMLUserSurNameFromAssertion(assertion *saml.Assertion) (string, error) {
+	for _, attrStmt := range assertion.AttributeStatements {
+		for _, attr := range attrStmt.Attributes {
+			for _, value := range attr.Values {
+				log.Infof("[SAML] Assertion contains attribute: %s - %s=%v", attr.NameFormat, attr.Name, value)
+			}
+		}
+	}
+
+	if surname, err := assertionFindString(assertion, s.surnameAttributeNames()...); err != nil {
+		return "", ErrSAMLAssertion
+	} else {
+		return surname, nil
 	}
 }
 

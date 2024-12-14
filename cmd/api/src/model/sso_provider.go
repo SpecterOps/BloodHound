@@ -16,7 +16,12 @@
 
 package model
 
-import "fmt"
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"fmt"
+)
 
 type AutoProvision struct {
 	Enabled       bool  `json:"enabled"`
@@ -40,6 +45,28 @@ type SSOProvider struct {
 	Config SSOProviderConfig `json:"config" gorm:"type:jsonb column:config"`
 
 	Serial
+}
+
+// Implement the sql.Scanner interface so that GORM can scan the jsonb column from the database into a golang struct
+func (cfg *SSOProviderConfig) Scan(value interface{}) error {
+	// Handle null values from the database
+	if value == nil {
+		*cfg = SSOProviderConfig{}
+		return nil
+	}
+
+	// Convert the database value to []byte
+	if bytes, ok := value.([]byte); !ok {
+		return errors.New("type assertion to []byte failed for SSOProviderConfig")
+	} else {
+		// Unmarshal JSON into the struct
+		return json.Unmarshal(bytes, cfg)
+	}
+}
+
+// Value returns the json-marshaled value of the receiver
+func (cfg SSOProviderConfig) Value() (driver.Value, error) {
+	return json.Marshal(cfg)
 }
 
 // AuditData returns the fields to log in the audit log
