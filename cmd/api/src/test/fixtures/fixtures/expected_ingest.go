@@ -71,10 +71,10 @@ var (
 			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446")),
 		query.And(
 			query.Kind(query.Start(), ad.Domain),
-			query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-3084884204-958224920-2707782873"),
-			query.Kind(query.Relationship(), ad.SameForestTrusted),
-			query.Kind(query.End(), ad.Domain),
-			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446")),
+			query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446")),
+		query.Kind(query.Relationship(), ad.SameForestTrust),
+		query.Kind(query.End(), ad.Domain),
+		query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3084884204-958224920-2707782873"),
 		query.And(
 			query.Kind(query.Start(), ad.Domain),
 			query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446"),

@@ -88,8 +88,8 @@ export enum ActiveDirectoryRelationshipKind {
     GetChanges = 'GetChanges',
     GetChangesAll = 'GetChangesAll',
     GetChangesInFilteredSet = 'GetChangesInFilteredSet',
-    InterForestTrusted = 'InterForestTrusted',
-    SameForestTrusted = 'SameForestTrusted',
+    CrossForestTrust = 'CrossForestTrust',
+    SameForestTrust = 'SameForestTrust',
     SpoofSIDHistory = 'SpoofSIDHistory',
     AbuseTGTDelegation = 'AbuseTGTDelegation',
     AllowedToAct = 'AllowedToAct',
@@ -181,10 +181,10 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'GetChangesAll';
         case ActiveDirectoryRelationshipKind.GetChangesInFilteredSet:
             return 'GetChangesInFilteredSet';
-        case ActiveDirectoryRelationshipKind.InterForestTrusted:
-            return 'InterForestTrusted';
-        case ActiveDirectoryRelationshipKind.SameForestTrusted:
-            return 'SameForestTrusted';
+        case ActiveDirectoryRelationshipKind.CrossForestTrust:
+            return 'CrossForestTrust';
+        case ActiveDirectoryRelationshipKind.SameForestTrust:
+            return 'SameForestTrust';
         case ActiveDirectoryRelationshipKind.SpoofSIDHistory:
             return 'SpoofSIDHistory';
         case ActiveDirectoryRelationshipKind.AbuseTGTDelegation:
@@ -656,7 +656,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
         ActiveDirectoryRelationshipKind.CoerceToTGT,
-        ActiveDirectoryRelationshipKind.SameForestTrusted,
+        ActiveDirectoryRelationshipKind.SameForestTrust,
         ActiveDirectoryRelationshipKind.SpoofSIDHistory,
         ActiveDirectoryRelationshipKind.AbuseTGTDelegation,
         ActiveDirectoryRelationshipKind.AllowedToAct,

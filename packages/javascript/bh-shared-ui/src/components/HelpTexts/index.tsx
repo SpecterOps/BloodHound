@@ -102,8 +102,8 @@ import SQLAdmin from './SQLAdmin/SQLAdmin';
 import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
 import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
 import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
-import InterForestTrusted from './InterForestTrusted/InterForestTrusted';
-import SameForestTrusted from './SameForestTrusted/SameForestTrusted';
+import CrossForestTrust from './CrossForestTrust/CrossForestTrust';
+import SameForestTrust from './SameForestTrust/SameForestTrust';
 import SpoofSIDHistory from './SpoofSIDHistory/SpoofSIDHistory';
 import AbuseTGTDelegation from './AbuseTGTDelegation/AbuseTGTDelegation';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
@@ -161,8 +161,8 @@ const EdgeInfoComponents = {
     SQLAdmin: SQLAdmin,
     ReadGMSAPassword: ReadGMSAPassword,
     HasSIDHistory: HasSIDHistory,
-    InterForestTrusted: InterForestTrusted,
-    SameForestTrusted: SameForestTrusted,
+    CrossForestTrust: CrossForestTrust,
+    SameForestTrust: SameForestTrust,
     SpoofSIDHistory: SpoofSIDHistory,
     AbuseTGTDelegation: AbuseTGTDelegation,
     CanPSRemote: CanPSRemote,

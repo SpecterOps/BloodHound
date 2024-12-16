@@ -20,7 +20,7 @@ import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
 
-const InterForestTrusted = {
+const CrossForestTrust = {
     general: General,
     windowsAbuse: WindowsAbuse,
     linuxAbuse: LinuxAbuse,
@@ -28,4 +28,4 @@ const InterForestTrusted = {
     references: References,
 };
 
-export default InterForestTrusted;
+export default CrossForestTrust;

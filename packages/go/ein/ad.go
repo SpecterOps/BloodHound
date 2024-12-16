@@ -386,20 +386,20 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		})
 
 		// Determine edge type
-		edgeType := ad.SameForestTrusted
+		edgeType := ad.SameForestTrust
 		if trust.TrustType == "External" || trust.TrustType == "Forest" {
-			edgeType = ad.InterForestTrusted
+			edgeType = ad.CrossForestTrust
 		}
 
 		var dir = trust.TrustDirection
 		if dir == TrustDirectionInbound || dir == TrustDirectionBidirectional {
 			parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
 				IngestibleSource{
-					Source:     domain.ObjectIdentifier,
+					Source:     trust.TargetDomainSid,
 					SourceType: ad.Domain,
 				},
 				IngestibleTarget{
-					Target:     trust.TargetDomainSid,
+					Target:     domain.ObjectIdentifier,
 					TargetType: ad.Domain,
 				},
 				IngestibleRel{
@@ -414,7 +414,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 				},
 			))
 
-			if edgeType == ad.InterForestTrusted && trust.TGTDelegationEnabled {
+			if edgeType == ad.CrossForestTrust && trust.TGTDelegationEnabled {
 				parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
 					IngestibleSource{
 						Source:     trust.TargetDomainSid,
@@ -438,11 +438,11 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		if dir == TrustDirectionOutbound || dir == TrustDirectionBidirectional {
 			parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
 				IngestibleSource{
-					Source:     trust.TargetDomainSid,
+					Source:     domain.ObjectIdentifier,
 					SourceType: ad.Domain,
 				},
 				IngestibleTarget{
-					Target:     domain.ObjectIdentifier,
+					Target:     trust.TargetDomainSid,
 					TargetType: ad.Domain,
 				},
 				IngestibleRel{
@@ -457,7 +457,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 				},
 			))
 
-			if edgeType == ad.InterForestTrusted && !trust.SidFilteringEnabled {
+			if edgeType == ad.CrossForestTrust && !trust.SidFilteringEnabled {
 				parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
 					IngestibleSource{
 						Source:     trust.TargetDomainSid,

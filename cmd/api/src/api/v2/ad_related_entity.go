@@ -174,13 +174,11 @@ func (s *Resources) ListADDomainForeignGPOControllers(response http.ResponseWrit
 }
 
 func (s *Resources) ListADDomainOutboundTrusts(response http.ResponseWriter, request *http.Request) {
-	// The inbound TrustedBy edges represent the outbound trusts for a domain, as the TrustedBy edges goes in the opposite direction of the trust relationship 
-	s.handleAdRelatedEntityQuery(response, request, "ListADDomainOutboundTrusts", adAnalysis.CreateDomainTrustPathDelegate(graph.DirectionInbound), adAnalysis.CreateDomainTrustListDelegate(graph.DirectionInbound))
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainOutboundTrusts", adAnalysis.CreateDomainTrustPathDelegate(graph.DirectionOutbound), adAnalysis.CreateDomainTrustListDelegate(graph.DirectionOutbound))
 }
 
 func (s *Resources) ListADDomainInboundTrusts(response http.ResponseWriter, request *http.Request) {
-	// The outbound TrustedBy edges represent the inbound trusts for a domain, as the TrustedBy edges goes in the opposite direction of the trust relationship 
-	s.handleAdRelatedEntityQuery(response, request, "ListADDomainInboundTrusts", adAnalysis.CreateDomainTrustPathDelegate(graph.DirectionOutbound), adAnalysis.CreateDomainTrustListDelegate(graph.DirectionOutbound))
+	s.handleAdRelatedEntityQuery(response, request, "ListADDomainInboundTrusts", adAnalysis.CreateDomainTrustPathDelegate(graph.DirectionInbound), adAnalysis.CreateDomainTrustListDelegate(graph.DirectionInbound))
 }
 
 func (s *Resources) ListADDomainDCSyncers(response http.ResponseWriter, request *http.Request) {
