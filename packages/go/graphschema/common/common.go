@@ -21,7 +21,6 @@ package common
 
 import (
 	"errors"
-
 	graph "github.com/specterops/bloodhound/dawgs/graph"
 )
 

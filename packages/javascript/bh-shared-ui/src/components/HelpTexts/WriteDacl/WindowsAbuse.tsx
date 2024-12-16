@@ -307,8 +307,9 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             <b>- ms-Mcs-AdmPwdExpirationTime</b>: The LAPS password expiration time
                             <br />
                         </Typography>
-<Typography variant='body2'>
-                            For systems using Windows LAPS (2023 edition), the following AD computer object properties are relevant:
+                        <Typography variant='body2'>
+                            For systems using Windows LAPS (2023 edition), the following AD computer object properties
+                            are relevant:
                             <br />
                             <b>- msLAPS-Password</b>: The plaintext LAPS password
                             <br />
@@ -318,27 +319,33 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             <br />
                             <b>- msLAPS-EncryptedPasswordHistory</b>: The encrypted LAPS password history
                             <br />
-                            <b>- msLAPS-EncryptedDSRMPassword</b>: The encrypted Directory Services Restore Mode (DSRM) password
+                            <b>- msLAPS-EncryptedDSRMPassword</b>: The encrypted Directory Services Restore Mode (DSRM)
+                            password
                             <br />
                             <b>- msLAPS-EncryptedDSRMPasswordHistory</b>: The encrypted DSRM password history
-                            <br /> 
+                            <br />
                         </Typography>
                         <Typography variant='body2'>
                             Plaintext attributes can be read using a simple LDAP client. For example, with PowerView:
                         </Typography>
                         <Typography component={'pre'}>
-                            {'Get-DomainComputer "MachineName" -Properties "cn","ms-mcs-admpwd","ms-mcs-admpwdexpirationtime"'}
+                            {
+                                'Get-DomainComputer "MachineName" -Properties "cn","ms-mcs-admpwd","ms-mcs-admpwdexpirationtime"'
+                            }
                         </Typography>
                         <Typography variant='body2'>
                             Encrypted attributes can be decrypted using Microsoft's LAPS PowerShell module. For example:
                         </Typography>
-                        <Typography component={'pre'}>
-                            {'Get-LapsADPassword "WIN10" -AsPlainText'}
-                        </Typography>
+                        <Typography component={'pre'}>{'Get-LapsADPassword "WIN10" -AsPlainText'}</Typography>
                         <Typography variant='body2'>
-                            The encrypted attributes can also be retrieved and decrypted using <Link target='_blank' rel='noopener' href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
-                            lapsv2decrypt
-                        </Link>{' '} (dotnet or BOF).
+                            The encrypted attributes can also be retrieved and decrypted using{' '}
+                            <Link
+                                target='_blank'
+                                rel='noopener'
+                                href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
+                                lapsv2decrypt
+                            </Link>{' '}
+                            (dotnet or BOF).
                         </Typography>
 
                         <Typography variant='body1'> Shadow Credentials attack </Typography>

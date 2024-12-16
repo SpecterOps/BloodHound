@@ -21,9 +21,7 @@ import { EdgeInfoProps } from '../index';
 const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
-            <Typography variant='body2'>
-                Read the LAPS password attributes listed in the General section.
-            </Typography>
+            <Typography variant='body2'>Read the LAPS password attributes listed in the General section.</Typography>
             <Typography variant='body2'>
                 Plaintext attributes can be read using a simple LDAP client. For example, with PowerView:
             </Typography>
@@ -34,14 +32,17 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
             <Typography variant='body2'>
                 Encrypted attributes can be decrypted using Microsoft's LAPS PowerShell module. For example:
             </Typography>
-            <Typography component={'pre'}>
-                {'Get-LapsADPassword "WIN10" -AsPlainText'}
-            </Typography>
+            <Typography component={'pre'}>{'Get-LapsADPassword "WIN10" -AsPlainText'}</Typography>
 
             <Typography variant='body2'>
-                The encrypted attributes can also be retrieved and decrypted using <Link target='_blank' rel='noopener' href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
-                lapsv2decrypt
-            </Link>{' '} (dotnet or BOF).
+                The encrypted attributes can also be retrieved and decrypted using{' '}
+                <Link
+                    target='_blank'
+                    rel='noopener'
+                    href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
+                    lapsv2decrypt
+                </Link>{' '}
+                (dotnet or BOF).
             </Typography>
         </>
     );
