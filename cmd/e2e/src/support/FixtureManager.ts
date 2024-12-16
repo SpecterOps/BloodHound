@@ -1,6 +1,6 @@
 import { Browser, BrowserContext, Page } from "@playwright/test";
-import PageManager from "./pageManager";
-import { invokeBrowser } from "./browserManager";
+import PageManager from "./pageManager.js";
+import { invokeBrowser } from "./browserManager.js";
 
 export interface IFixture {
     browser: Browser;
