@@ -250,22 +250,42 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
 
                         <Typography variant='body1'> Retrieve LAPS Password </Typography>
                         <Typography variant='body2'>
-                            Full control of a computer object is abusable when the computer's local admin account
-                            credential is controlled with LAPS. The clear-text password for the local administrator
-                            account is stored in an extended attribute on the computer object called ms-Mcs-AdmPwd. With
-                            full control of the computer object, you may have the ability to read this attribute, or
-                            grant yourself the ability to read the attribute by modifying the computer object's security
-                            descriptor.
+                            The GenericAll permission allows {sourceName} to retrieve the LAPS (RID 500 administrator) password for {targetName}.
                         </Typography>
                         <Typography variant='body2'>
-                            <Link target='_blank' rel='noopener' href='https://github.com/p0dalirius/pyLAPS'>
-                                pyLAPS
-                            </Link>{' '}
-                            can be used to retrieve LAPS passwords:
+                            For systems using legacy LAPS, the following AD computer object properties are relevant:
+                            <br />
+                            <b>- ms-Mcs-AdmPwd</b>: The plaintext LAPS password
+                            <br />
+                            <b>- ms-Mcs-AdmPwdExpirationTime</b>: The LAPS password expiration time
+                            <br />
+                        </Typography>
+<Typography variant='body2'>
+                            For systems using Windows LAPS (2023 edition), the following AD computer object properties are relevant:
+                            <br />
+                            <b>- msLAPS-Password</b>: The plaintext LAPS password
+                            <br />
+                            <b>- msLAPS-PasswordExpirationTime</b>: The LAPS password expiration time
+                            <br />
+                            <b>- msLAPS-EncryptedPassword</b>: The encrypted LAPS password
+                            <br />
+                            <b>- msLAPS-EncryptedPasswordHistory</b>: The encrypted LAPS password history
+                            <br />
+                            <b>- msLAPS-EncryptedDSRMPassword</b>: The encrypted Directory Services Restore Mode (DSRM) password
+                            <br />
+                            <b>- msLAPS-EncryptedDSRMPasswordHistory</b>: The encrypted DSRM password history
+                            <br /> 
+                        </Typography>
+                        <Typography variant='body2'>
+                            Plaintext attributes can be read using a simple LDAP client. For example, with bloodyAD:
                         </Typography>
                         <Typography component={'pre'}>
-                            {'pyLAPS.py --action get -d "DOMAIN" -u "ControlledUser" -p "ItsPassword"'}
+                            {"bloodyAD --host $DC_IP -d $DOMAIN -u $USER -p $PASSWORD get search --filter '(ms-mcs-admpwdexpirationtime=*)' --attr ms-mcs-admpwd,ms-mcs-admpwdexpirationtime"}
                         </Typography>
+                        <Typography variant='body2'>
+                            See Windows abuse for retrieving and decrypting the encrypted attributes.
+                        </Typography>
+
                         <Typography variant='body1'> Resource-Based Constrained Delegation </Typography>
                         <Typography variant='body2'>
                             First, if an attacker does not control an account with an SPN set, a new attacker-controlled
@@ -448,25 +468,6 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
 
                     <Typography component={'pre'}>
                         {"secretsdump 'DOMAIN'/'USER':'PASSWORD'@'DOMAINCONTROLLER'"}
-                    </Typography>
-
-                    <Typography variant='body1'> Retrieve LAPS Passwords </Typography>
-
-                    <Typography variant='body2'>
-                        If FullControl (GenericAll) is obtained on the domain, instead of granting DCSync rights, the
-                        AllExtendedRights permission included grants {sourceName} enough permissions to retrieve LAPS
-                        passwords domain-wise.
-                    </Typography>
-
-                    <Typography variant='body2'>
-                        <Link target='_blank' rel='noopener' href='https://github.com/p0dalirius/pyLAPS'>
-                            pyLAPS
-                        </Link>{' '}
-                        can be used for that purpose:
-                    </Typography>
-
-                    <Typography component={'pre'}>
-                        {'pyLAPS.py --action get -d "DOMAIN" -u "ControlledUser" -p "ItsPassword"'}
                     </Typography>
 
                     <Typography variant='body1'>Generic Descendent Object Takeover</Typography>

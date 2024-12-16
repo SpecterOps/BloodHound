@@ -42,12 +42,16 @@ const References: FC = () => {
                 https://www.thehacker.recipes/ad/movement/dacl/forcechangepassword
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://www.thehacker.recipes/ad/movement/dacl/readlapspassword'>
-                https://www.thehacker.recipes/ad/movement/dacl/readlapspassword
+            <Link target='_blank' rel='noopener' href='https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword'>
+            https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://eladshamir.com/2019/01/28/Wagging-the-Dog.html'>
-                https://eladshamir.com/2019/01/28/Wagging-the-Dog.html
+            <Link target='_blank' rel='noopener' href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
+            https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt
+            </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://github.com/CravateRouge/bloodyAD'>
+            https://github.com/CravateRouge/bloodyAD
             </Link>
             <br />
             <Link

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
 
@@ -22,20 +22,17 @@ const LinuxAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
             <Typography variant='body2'>
-                Sufficient control on a computer object is abusable when the computer's local admin account credential
-                is controlled with LAPS. The clear-text password for the local administrator account is stored in an
-                extended attribute on the computer object called ms-Mcs-AdmPwd.
+                Read the LAPS password attributes listed in the General section.
+            </Typography>
+            <Typography variant='body2'>
+                Plaintext attributes can be read using a simple LDAP client. For example, with bloodyAD:
+            </Typography>
+            <Typography component={'pre'}>
+                {"bloodyAD --host $DC_IP -d $DOMAIN -u $USER -p $PASSWORD get search --filter '(ms-mcs-admpwdexpirationtime=*)' --attr ms-mcs-admpwd,ms-mcs-admpwdexpirationtime"}
             </Typography>
 
             <Typography variant='body2'>
-                <Link target='_blank' rel='noopener' href='https://github.com/p0dalirius/pyLAPS'>
-                    pyLAPS
-                </Link>{' '}
-                can be used to retrieve LAPS passwords:
-            </Typography>
-
-            <Typography component={'pre'}>
-                {'pyLAPS.py --action get -d "DOMAIN" -u "ControlledUser" -p "ItsPassword"'}
+                See Windows abuse for retrieving and decrypting the encrypted attributes.
             </Typography>
         </>
     );

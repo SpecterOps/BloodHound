@@ -27,8 +27,19 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
                 Password Solution (LAPS) on the computer {targetName}.
             </Typography>
             <Typography variant='body2'>
-                The local administrator password for a computer managed by LAPS is stored in the confidential LDAP
-                attribute, "ms-mcs-AdmPwd".
+                For systems using legacy LAPS, the following AD computer object properties are relevant:
+                - **ms-Mcs-AdmPwd**: The plaintext LAPS password.
+                - **ms-Mcs-AdmPwdExpirationTime**: The LAPS password expiration time.
+            </Typography>
+
+            <Typography variant='body2'>
+                For systems using Windows LAPS (2023 edition), the following AD computer object properties are relevant:
+                - **msLAPS-Password**: The plaintext LAPS password.
+                - **msLAPS-PasswordExpirationTime**: The LAPS password expiration time.
+                - **msLAPS-EncryptedPassword**: The encrypted LAPS password.
+                - **msLAPS-EncryptedPasswordHistory**: The encrypted LAPS password history.
+                - **msLAPS-EncryptedDSRMPassword**: The encrypted Directory Services Restore Mode (DSRM) password.
+                - **msLAPS-EncryptedDSRMPasswordHistory**: The encrypted DSRM password history.
             </Typography>
         </>
     );
