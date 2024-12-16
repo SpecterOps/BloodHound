@@ -287,7 +287,7 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
         {
             id,
             label: 'Vault Readers',
-            countLabel: 'All Readers', 
+            countLabel: 'All Readers',
             sections: [
                 {
                     id,
@@ -301,7 +301,6 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                                 if (type !== 'graph') res.data.countLabel = 'Key Readers';
                                 return res.data;
                             }),
-
                 },
                 {
                     id,
