@@ -6,10 +6,11 @@
   },
   "scripts": {
     "generate:prisma": "yarn prisma db pull && yarn prisma generate",
-    "pretest": "ts-node src/helpers/init.ts",
-    "test:e2e": "env-cmd -e dev cucumber-js --config=src/cucumber.js --tags '@e2e'",
-    "test:failed": "env-cmd -e dev cucumber-js -p rerun --config=src/cucumber.js @rerun.txt"
+    "pretest": "ts-node/esm src/helpers/init.ts",
+    "test:e2e": "env-cmd -e dev cucumber-js --config=src/cucumber.json --tags '@e2e'",
+    "test:failed": "env-cmd -e dev cucumber-js -p rerun --config=src/cucumber.json @rerun.txt"
   },
+  "type": "module",
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -27,7 +28,6 @@
     "env-cmd": "^10.1.0",
     "playwright": "1.49.0",
     "prisma": "5.22.0",
-    "ts-node": "^10.9.2",
     "typescript": "5.6.3"
   },
   "dependencies": {
