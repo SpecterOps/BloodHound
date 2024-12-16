@@ -21,14 +21,14 @@ import { EdgeInfoProps } from '../index';
 const LinuxAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
-            <Typography variant='body2'>
-                Read the LAPS password attributes listed in the General section.
-            </Typography>
+            <Typography variant='body2'>Read the LAPS password attributes listed in the General section.</Typography>
             <Typography variant='body2'>
                 Plaintext attributes can be read using a simple LDAP client. For example, with bloodyAD:
             </Typography>
             <Typography component={'pre'}>
-                {"bloodyAD --host $DC_IP -d $DOMAIN -u $USER -p $PASSWORD get search --filter '(ms-mcs-admpwdexpirationtime=*)' --attr ms-mcs-admpwd,ms-mcs-admpwdexpirationtime"}
+                {
+                    "bloodyAD --host $DC_IP -d $DOMAIN -u $USER -p $PASSWORD get search --filter '(ms-mcs-admpwdexpirationtime=*)' --attr ms-mcs-admpwd,ms-mcs-admpwdexpirationtime"
+                }
             </Typography>
 
             <Typography variant='body2'>

@@ -250,7 +250,8 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
 
                         <Typography variant='body1'> Retrieve LAPS Password </Typography>
                         <Typography variant='body2'>
-                            The GenericAll permission allows {sourceName} to retrieve the LAPS (RID 500 administrator) password for {targetName}.
+                            The GenericAll permission allows {sourceName} to retrieve the LAPS (RID 500 administrator)
+                            password for {targetName}.
                         </Typography>
                         <Typography variant='body2'>
                             For systems using legacy LAPS, the following AD computer object properties are relevant:
@@ -260,8 +261,9 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                             <b>- ms-Mcs-AdmPwdExpirationTime</b>: The LAPS password expiration time
                             <br />
                         </Typography>
-<Typography variant='body2'>
-                            For systems using Windows LAPS (2023 edition), the following AD computer object properties are relevant:
+                        <Typography variant='body2'>
+                            For systems using Windows LAPS (2023 edition), the following AD computer object properties
+                            are relevant:
                             <br />
                             <b>- msLAPS-Password</b>: The plaintext LAPS password
                             <br />
@@ -271,16 +273,19 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                             <br />
                             <b>- msLAPS-EncryptedPasswordHistory</b>: The encrypted LAPS password history
                             <br />
-                            <b>- msLAPS-EncryptedDSRMPassword</b>: The encrypted Directory Services Restore Mode (DSRM) password
+                            <b>- msLAPS-EncryptedDSRMPassword</b>: The encrypted Directory Services Restore Mode (DSRM)
+                            password
                             <br />
                             <b>- msLAPS-EncryptedDSRMPasswordHistory</b>: The encrypted DSRM password history
-                            <br /> 
+                            <br />
                         </Typography>
                         <Typography variant='body2'>
                             Plaintext attributes can be read using a simple LDAP client. For example, with bloodyAD:
                         </Typography>
                         <Typography component={'pre'}>
-                            {"bloodyAD --host $DC_IP -d $DOMAIN -u $USER -p $PASSWORD get search --filter '(ms-mcs-admpwdexpirationtime=*)' --attr ms-mcs-admpwd,ms-mcs-admpwdexpirationtime"}
+                            {
+                                "bloodyAD --host $DC_IP -d $DOMAIN -u $USER -p $PASSWORD get search --filter '(ms-mcs-admpwdexpirationtime=*)' --attr ms-mcs-admpwd,ms-mcs-admpwdexpirationtime"
+                            }
                         </Typography>
                         <Typography variant='body2'>
                             See Windows abuse for retrieving and decrypting the encrypted attributes.

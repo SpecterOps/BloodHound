@@ -31,16 +31,22 @@ const References: FC = () => {
                 https://adsecurity.org/?p=3164
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword'>
-            https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword'>
+                https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
-            https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
+                https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt
             </Link>
             <br />
             <Link target='_blank' rel='noopener' href='https://github.com/CravateRouge/bloodyAD'>
-            https://github.com/CravateRouge/bloodyAD
+                https://github.com/CravateRouge/bloodyAD
             </Link>
             <br />
         </Box>
