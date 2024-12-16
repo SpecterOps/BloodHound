@@ -1,5 +1,5 @@
 import { Given, When } from "@cucumber/cucumber";
-import { User, IUserResult } from "../../../prisma/seed";
+import { User, IUserResult } from "../../../prisma/seed.js";
 
 let newUser: Promise<IUserResult>
 

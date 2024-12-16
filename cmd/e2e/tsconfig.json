@@ -1,12 +1,11 @@
 {
     "compilerOptions": {
-        "lib": [
-            "ES2021"
-        ],
+        "module": "ESNext",
         "typeRoots": [
             "./node_modules/@types",
             "src/helpers/types"
         ],
+        "moduleResolution": "nodenext",
         "resolveJsonModule": true
     }
 }

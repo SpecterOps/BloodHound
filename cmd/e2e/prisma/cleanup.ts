@@ -1,4 +1,4 @@
-import prisma from "./client"
+import prisma from "./client.js"
 
 export class dbOPS {
     // delete test data in dev environment only
