@@ -7,7 +7,7 @@ import { hash, argon2id } from 'argon2';
  * Returns a string suitable for use as the 'digest' of an auth_secrets record in the postgres db
  * Matches the same algorithm used by the BHE API when creating or updating auth_secrets
  */
-const hashPassword = async (password) => {
+const hashPassword = async (password: string) => {
     const hashedPassword = await hash(password, {
         type: argon2id,
         timeCost: 3,

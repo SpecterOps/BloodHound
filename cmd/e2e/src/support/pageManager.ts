@@ -1,7 +1,7 @@
 import { BrowserContext, Page } from "@playwright/test";
 
 export default class PageManager {
-    currentPage: Page;
+    currentPage!: Page;
 
     get Page(): Page {
         return this.currentPage;
