@@ -10,10 +10,10 @@ export interface IFixture {
 }
 // FixtureManager manages the state of the browser and page for each scenario
 export default class FixtureManager implements IFixture {
-    browser: Browser;
-    context: BrowserContext;
+    browser!: Browser;
+    context!: BrowserContext;
     pageManager: PageManager;
-    page: Page;
+    page!: Page;
 
     constructor() {
         this.pageManager = new PageManager();

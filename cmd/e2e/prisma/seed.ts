@@ -65,7 +65,7 @@ export class User {
         if (this.password == '') {
             uniquePassword = faker.lorem.word({ length: { min: 5, max: 10 }})
         } else {
-            uniquePassword = this.password
+            uniquePassword = this.password as string
         }
 
         const now = new Date();
