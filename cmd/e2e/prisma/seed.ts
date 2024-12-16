@@ -1,6 +1,6 @@
-import prisma from './client';
+import prisma from './client.js';
 import { v4 as uuidv4 } from 'uuid';
-import hashPassword from '../src/helpers/hashpassword';
+import hashPassword from '../src/helpers/hashpassword.js';
 import { faker } from '@faker-js/faker';
 import { exit } from 'process';
 import { users } from '@prisma/client';
