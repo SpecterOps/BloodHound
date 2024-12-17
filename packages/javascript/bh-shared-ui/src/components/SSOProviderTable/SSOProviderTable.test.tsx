@@ -28,6 +28,11 @@ const samlProvider: SSOProvider = {
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
     details: {} as SAMLProviderInfo,
+    login_uri: '',
+    callback_uri: '',
+    config: {
+        auto_provision: { enabled: false, role_provision: false, default_role: 1 },
+    },
 };
 
 const oidcProvider: SSOProvider = {
@@ -38,6 +43,11 @@ const oidcProvider: SSOProvider = {
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
     details: {} as OIDCProviderInfo,
+    login_uri: '',
+    callback_uri: '',
+    config: {
+        auto_provision: { enabled: false, role_provision: false, default_role: 1 },
+    },
 };
 
 const ssoProviders = [samlProvider, oidcProvider];
@@ -45,6 +55,7 @@ const ssoProviders = [samlProvider, oidcProvider];
 describe('SSOProviderTable', () => {
     const onClickSSOProvider = vi.fn();
     const onDeleteSSOProvider = vi.fn();
+    const onUpdateSSOProvider = vi.fn();
 
     it('should render', async () => {
         const onToggleTypeSortOrder = vi.fn();
@@ -56,6 +67,7 @@ describe('SSOProviderTable', () => {
                 onClickSSOProvider={onClickSSOProvider}
                 onDeleteSSOProvider={onDeleteSSOProvider}
                 onToggleTypeSortOrder={onToggleTypeSortOrder}
+                onUpdateSSOProvider={onUpdateSSOProvider}
             />
         );
 
@@ -84,6 +96,7 @@ describe('SSOProviderTable', () => {
                 onDeleteSSOProvider={onDeleteSSOProvider}
                 onToggleTypeSortOrder={onToggleTypeSortOrder}
                 typeSortOrder={typeSortOrder}
+                onUpdateSSOProvider={onUpdateSSOProvider}
             />
         );
 
