@@ -157,7 +157,7 @@ func (s *TrustDCSyncHarness) Setup(testCtx *GraphTestContext) {
 
 	testCtx.NewRelationship(s.DomainA, s.DomainB, ad.SameForestTrust)
 	testCtx.NewRelationship(s.DomainB, s.DomainA, ad.SameForestTrust)
-	testCtx.NewRelationship(s.DomainC, s.DomainA, ad.SameForestTrust)
+	testCtx.NewRelationship(s.DomainA, s.DomainC, ad.SameForestTrust)
 
 	testCtx.NewRelationship(s.DomainB, s.DomainD, ad.SameForestTrust)
 	testCtx.NewRelationship(s.DomainD, s.DomainB, ad.SameForestTrust)
@@ -7347,8 +7347,8 @@ func (s *ESC6bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.SameForestTrust)
 	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.SameForestTrust)
 	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.SameForestTrust)
-	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.SameForestTrust)
-	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.CrossForestTrust)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.CrossForestTrust)
 
 	s.EnterpriseCA0.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
@@ -7638,8 +7638,8 @@ func (s *ESC9aHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.SameForestTrust)
 	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.SameForestTrust)
 	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.SameForestTrust)
-	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.SameForestTrust)
-	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.CrossForestTrust)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.CrossForestTrust)
 
 	s.DC0.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "0")
 	s.DC1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
@@ -7930,8 +7930,8 @@ func (s *ESC9bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.SameForestTrust)
 	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.SameForestTrust)
 	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.SameForestTrust)
-	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.SameForestTrust)
-	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.CrossForestTrust)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.CrossForestTrust)
 
 	s.DC0.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "0")
 	s.DC1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
@@ -8186,8 +8186,8 @@ func (s *ESC10aHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.SameForestTrust)
 	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.SameForestTrust)
 	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.SameForestTrust)
-	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.SameForestTrust)
-	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.CrossForestTrust)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.CrossForestTrust)
 
 	s.DC0.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "4")
 	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
@@ -8447,8 +8447,8 @@ func (s *ESC10bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.SameForestTrust)
 	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.SameForestTrust)
 	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.SameForestTrust)
-	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.SameForestTrust)
-	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.CrossForestTrust)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.CrossForestTrust)
 
 	s.DC0.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "4")
 	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")

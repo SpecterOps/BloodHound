@@ -111,8 +111,8 @@ func TestParseDomainTrusts_TrustAttributesFix(t *testing.T) {
 	assert.Len(t, result.TrustRelationships, 1)
 
 	rel := result.TrustRelationships[0]
-	assert.Contains(t, rel.RelProps, "trustattributes")
-	assert.Equal(t, rel.RelProps["trustattributes"], 12345)
+	assert.Contains(t, rel.RelProps, "trustattributesinbound")
+	assert.Equal(t, rel.RelProps["trustattributesinbound"], 12345)
 
 	domainObject.Trusts = make([]ein.Trust, 0)
 	domainObject.Trusts = append(domainObject.Trusts, ein.Trust{
@@ -130,6 +130,6 @@ func TestParseDomainTrusts_TrustAttributesFix(t *testing.T) {
 	assert.Len(t, result.TrustRelationships, 1)
 
 	rel = result.TrustRelationships[0]
-	assert.Contains(t, rel.RelProps, "trustattributes")
-	assert.Equal(t, rel.RelProps["trustattributes"], 12345)
+	assert.Contains(t, rel.RelProps, "trustattributesinbound")
+	assert.Equal(t, rel.RelProps["trustattributesinbound"], 12345)
 }
