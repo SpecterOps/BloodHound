@@ -50,6 +50,8 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&upsertReq, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if upsertReq.Config.AutoProvision.Enabled && (upsertReq.Config.AutoProvision.DefaultRole > 5 || upsertReq.Config.AutoProvision.DefaultRole < 1) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
 	} else {
 		if upsertReq.Name != "" {
 			ssoProvider.Name = upsertReq.Name
@@ -69,13 +71,18 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 		}
 
 		if upsertReq.Config.AutoProvision.Enabled {
-			if ssoProvider.Config.AutoProvision.DefaultRole > 5 || ssoProvider.Config.AutoProvision.DefaultRole < 1 {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
-				return
+			// Role IDs range from 1 to 5, and so a value of 0 indicates that the int32 DefaultRole value is unset
+			if upsertReq.Config.AutoProvision.DefaultRole == 0 {
+				upsertReq.Config.AutoProvision.DefaultRole = 3
 			}
+
 			ssoProvider.Config.AutoProvision.Enabled = upsertReq.Config.AutoProvision.Enabled
 			ssoProvider.Config.AutoProvision.DefaultRole = upsertReq.Config.AutoProvision.DefaultRole
 			ssoProvider.Config.AutoProvision.RoleProvision = upsertReq.Config.AutoProvision.RoleProvision
+		} else {
+			ssoProvider.Config.AutoProvision.Enabled = upsertReq.Config.AutoProvision.Enabled
+			ssoProvider.Config.AutoProvision.DefaultRole = 0
+			ssoProvider.Config.AutoProvision.RoleProvision = false
 		}
 
 		if oidcProvider, err := s.db.UpdateOIDCProvider(request.Context(), ssoProvider); err != nil {
@@ -94,7 +101,19 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if validated := validation.Validate(upsertReq); validated != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, validated.Error(), request), response)
+	} else if upsertReq.Config.AutoProvision.Enabled && (upsertReq.Config.AutoProvision.DefaultRole > 5 || upsertReq.Config.AutoProvision.DefaultRole < 1) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
 	} else {
+		if !upsertReq.Config.AutoProvision.Enabled {
+			upsertReq.Config.AutoProvision.DefaultRole = 0
+			upsertReq.Config.AutoProvision.RoleProvision = false
+		}
+
+		// Role IDs range from 1 to 5, and so a value of 0 indicates that the int32 DefaultRole value is unset
+		if upsertReq.Config.AutoProvision.DefaultRole == 0 {
+			upsertReq.Config.AutoProvision.DefaultRole = 3
+		}
+
 		if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), upsertReq.Name, upsertReq.Issuer, upsertReq.ClientID, upsertReq.Config); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
@@ -187,11 +206,11 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 			}
 			if err := idToken.Claims(&claims); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
-			} else if claims.DisplayName == "" {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Display Name claim is missing", request), response)
+			} else if claims.Email == "" {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "email claim is missing", request), response)
 				return
 			} else if ssoProvider.Config.AutoProvision.Enabled {
-				if user, err := s.db.LookupUser(request.Context(), claims.DisplayName); err != nil {
+				if user, err := s.db.LookupUser(request.Context(), claims.Email); err != nil {
 					if errors.Is(err, database.ErrNotFound) {
 						user.EmailAddress = null.StringFrom(claims.Email)
 						user.PrincipalName = claims.Email
@@ -204,17 +223,17 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 						}
 						user.SSOProviderID = null.Int32From(ssoProvider.ID)
 
-						// Need to find a work around since BHE cannot auto accept EULA as true
+						// Need to find a work around since BHE cannot auto accept EULA as true *****
 						user.EULAAccepted = true
 
 						if claims.DisplayName == "" {
-							user.FirstName = null.StringFrom(claims.Name)
+							user.FirstName = null.StringFrom(claims.Email)
 						} else {
 							user.FirstName = null.StringFrom(claims.DisplayName)
 						}
 
 						if claims.FamilyName == "" {
-							user.LastName = null.StringFrom("Last name Not Found")
+							user.LastName = null.StringFrom("Last name not found")
 						} else {
 							user.LastName = null.StringFrom(claims.FamilyName)
 						}
