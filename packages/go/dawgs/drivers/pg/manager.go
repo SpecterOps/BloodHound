@@ -23,8 +23,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/specterops/bloodhound/log"
-
 	"github.com/jackc/pgx/v5"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/query"
@@ -61,8 +59,6 @@ func NewSchemaManager(database graph.Database) *SchemaManager {
 }
 
 func (s *SchemaManager) fetch(tx graph.Transaction) error {
-	log.Infof("fetching kinds from database")
-
 	if kinds, err := query.On(tx).SelectKinds(); err != nil {
 		return err
 	} else {

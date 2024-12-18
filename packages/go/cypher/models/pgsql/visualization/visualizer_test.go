@@ -19,8 +19,9 @@ package visualization
 import (
 	"bytes"
 	"context"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg/pgutil"
 	"testing"
+
+	"github.com/specterops/bloodhound/dawgs/drivers/pg/pgutil"
 
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/cypher/models/pgsql/translate"

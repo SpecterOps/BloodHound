@@ -585,3 +585,11 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
               and coalesce(n0.properties -> 'a', n0.properties -> 'b')::int8 = 1)
 select s0.n0 as n
 from s0;
+
+-- case: match (n:NodeKind1) where 1 = coalesce(n.a, n.b) return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and 1 = coalesce(n0.properties -> 'a', n0.properties -> 'b')::int8)
+select s0.n0 as n
+from s0;

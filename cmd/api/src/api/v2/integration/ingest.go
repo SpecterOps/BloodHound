@@ -18,9 +18,10 @@ package integration
 
 import (
 	"encoding/json"
-	"github.com/specterops/bloodhound/graphschema"
 	"strings"
 	"time"
+
+	"github.com/specterops/bloodhound/graphschema"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/model"

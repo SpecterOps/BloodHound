@@ -19,6 +19,7 @@ package pgutil
 import (
 	"context"
 	"fmt"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 

@@ -18,8 +18,9 @@ package translate_test
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg/pgutil"
 	"testing"
+
+	"github.com/specterops/bloodhound/dawgs/drivers/pg/pgutil"
 
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/cypher/models/pgsql/test"

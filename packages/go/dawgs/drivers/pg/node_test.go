@@ -18,8 +18,9 @@ package pg
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg/pgutil"
 	"testing"
+
+	"github.com/specterops/bloodhound/dawgs/drivers/pg/pgutil"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	graph_mocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
