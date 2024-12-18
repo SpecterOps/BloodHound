@@ -619,15 +619,15 @@ SupportedKerberosEncryptionTypes: types.#StringEnum & {
 TGTDelegationInbound: types.#StringEnum & {
 	symbol: "TGTDelegationInbound"
 	schema: "ad"
-	name: "TGT Delegation Enabled (Inbound)"
-	representation: "tgtdelegationenabledinbound"
+	name: "TGT Delegation (Inbound)"
+	representation: "tgtdelegationinbound"
 }
 
 TGTDelegationOutbound: types.#StringEnum & {
 	symbol: "TGTDelegationOutbound"
 	schema: "ad"
-	name: "TGT Delegation Enabled (Outbound)"
-	representation: "tgtdelegationenabledoutbound"
+	name: "TGT Delegation (Outbound)"
+	representation: "tgtdelegationoutbound"
 }
 
 PasswordStoredUsingReversibleEncryption: types.#StringEnum & {

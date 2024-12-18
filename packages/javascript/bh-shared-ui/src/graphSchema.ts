@@ -396,8 +396,8 @@ export enum ActiveDirectoryKindProperties {
     ExpirePasswordsOnSmartCardOnlyAccounts = 'expirepasswordsonsmartcardonlyaccounts',
     MachineAccountQuota = 'machineaccountquota',
     SupportedKerberosEncryptionTypes = 'supportedencryptiontypes',
-    TGTDelegationInbound = 'tgtdelegationenabledinbound',
-    TGTDelegationOutbound = 'tgtdelegationenabledoutbound',
+    TGTDelegationInbound = 'tgtdelegationinbound',
+    TGTDelegationOutbound = 'tgtdelegationoutbound',
     PasswordStoredUsingReversibleEncryption = 'encryptedtextpwdallowed',
     SmartcardRequired = 'smartcardrequired',
     UseDESKeyOnly = 'usedeskeyonly',
@@ -591,9 +591,9 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.SupportedKerberosEncryptionTypes:
             return 'Supported Kerberos Encryption Types';
         case ActiveDirectoryKindProperties.TGTDelegationInbound:
-            return 'TGT Delegation Enabled (Inbound)';
+            return 'TGT Delegation (Inbound)';
         case ActiveDirectoryKindProperties.TGTDelegationOutbound:
-            return 'TGT Delegation Enabled (Outbound)';
+            return 'TGT Delegation (Outbound)';
         case ActiveDirectoryKindProperties.PasswordStoredUsingReversibleEncryption:
             return 'Password Stored Using Reversible Encryption';
         case ActiveDirectoryKindProperties.SmartcardRequired:

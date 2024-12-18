@@ -203,8 +203,8 @@ const (
 	ExpirePasswordsOnSmartCardOnlyAccounts  Property = "expirepasswordsonsmartcardonlyaccounts"
 	MachineAccountQuota                     Property = "machineaccountquota"
 	SupportedKerberosEncryptionTypes        Property = "supportedencryptiontypes"
-	TGTDelegationInbound                    Property = "tgtdelegationenabledinbound"
-	TGTDelegationOutbound                   Property = "tgtdelegationenabledoutbound"
+	TGTDelegationInbound                    Property = "tgtdelegationinbound"
+	TGTDelegationOutbound                   Property = "tgtdelegationoutbound"
 	PasswordStoredUsingReversibleEncryption Property = "encryptedtextpwdallowed"
 	SmartcardRequired                       Property = "smartcardrequired"
 	UseDESKeyOnly                           Property = "usedeskeyonly"
@@ -401,9 +401,9 @@ func ParseProperty(source string) (Property, error) {
 		return MachineAccountQuota, nil
 	case "supportedencryptiontypes":
 		return SupportedKerberosEncryptionTypes, nil
-	case "tgtdelegationenabledinbound":
+	case "tgtdelegationinbound":
 		return TGTDelegationInbound, nil
-	case "tgtdelegationenabledoutbound":
+	case "tgtdelegationoutbound":
 		return TGTDelegationOutbound, nil
 	case "encryptedtextpwdallowed":
 		return PasswordStoredUsingReversibleEncryption, nil
@@ -842,9 +842,9 @@ func (s Property) Name() string {
 	case SupportedKerberosEncryptionTypes:
 		return "Supported Kerberos Encryption Types"
 	case TGTDelegationInbound:
-		return "TGT Delegation Enabled (Inbound)"
+		return "TGT Delegation (Inbound)"
 	case TGTDelegationOutbound:
-		return "TGT Delegation Enabled (Outbound)"
+		return "TGT Delegation (Outbound)"
 	case PasswordStoredUsingReversibleEncryption:
 		return "Password Stored Using Reversible Encryption"
 	case SmartcardRequired:
