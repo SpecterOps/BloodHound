@@ -220,10 +220,10 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
 select s0.n0 as s
 from s0;
 
--- case: match (s) where s.created_at = localtime('12:12:12') return s
+-- case: match (s) where s.created_at = localtime('4:4:4') return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
-            where (n0.properties ->> 'created_at')::time without time zone = ('12:12:12')::time without time zone)
+            where (n0.properties ->> 'created_at')::time without time zone = ('4:4:4')::time without time zone)
 select s0.n0 as s
 from s0;
 
@@ -234,10 +234,10 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
 select s0.n0 as s
 from s0;
 
--- case: match (s) where s.created_at = date('2023-12-12') return s
+-- case: match (s) where s.created_at = date('2023-4-4') return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
-            where (n0.properties ->> 'created_at')::date = ('2023-12-12')::date)
+            where (n0.properties ->> 'created_at')::date = ('2023-4-4')::date)
 select s0.n0 as s
 from s0;
 

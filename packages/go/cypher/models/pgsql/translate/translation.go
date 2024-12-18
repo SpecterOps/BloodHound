@@ -18,7 +18,6 @@ package translate
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/cypher"
@@ -291,8 +290,8 @@ func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error
 		return fmt.Errorf("expected variable for kind matcher reference but found type: %T", kindMatcher.Reference)
 	} else if binding, resolved := s.query.Scope.LookupString(variable.Symbol); !resolved {
 		return fmt.Errorf("unable to find identifier %s", variable.Symbol)
-	} else if kindIDs, missingKinds := s.kindMapper.MapKinds(kindMatcher.Kinds); len(missingKinds) > 0 {
-		return fmt.Errorf("unable to map kinds: %s", strings.Join(missingKinds.Strings(), ", "))
+	} else if kindIDs, err := s.kindMapper.MapKinds(s.ctx, kindMatcher.Kinds); err != nil {
+		s.SetError(fmt.Errorf("failed to translate kinds: %w", err))
 	} else if kindIDsLiteral, err := pgsql.AsLiteral(kindIDs); err != nil {
 		return err
 	} else {

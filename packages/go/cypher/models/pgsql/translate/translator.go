@@ -17,6 +17,7 @@
 package translate
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -68,6 +69,7 @@ func (s State) String() string {
 type Translator struct {
 	walk.HierarchicalVisitor[cypher.SyntaxNode]
 
+	ctx            context.Context
 	kindMapper     pgsql.KindMapper
 	translation    Result
 	state          []State
@@ -80,12 +82,17 @@ type Translator struct {
 	query          *Query
 }
 
-func NewTranslator(kindMapper pgsql.KindMapper) *Translator {
+func NewTranslator(ctx context.Context, kindMapper pgsql.KindMapper, parameters map[string]any) *Translator {
+	if parameters == nil {
+		parameters = map[string]any{}
+	}
+
 	return &Translator{
 		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[cypher.SyntaxNode](),
 		translation: Result{
-			Parameters: map[string]any{},
+			Parameters: parameters,
 		},
+		ctx:            ctx,
 		kindMapper:     kindMapper,
 		treeTranslator: NewExpressionTreeTranslator(),
 		properties:     map[string]pgsql.Expression{},
@@ -855,8 +862,8 @@ type Result struct {
 	Parameters map[string]any
 }
 
-func Translate(cypherQuery *cypher.RegularQuery, kindMapper pgsql.KindMapper) (Result, error) {
-	translator := NewTranslator(kindMapper)
+func Translate(ctx context.Context, cypherQuery *cypher.RegularQuery, kindMapper pgsql.KindMapper, parameters map[string]any) (Result, error) {
+	translator := NewTranslator(ctx, kindMapper, parameters)
 
 	if err := walk.WalkCypher(cypherQuery, translator); err != nil {
 		return Result{}, err

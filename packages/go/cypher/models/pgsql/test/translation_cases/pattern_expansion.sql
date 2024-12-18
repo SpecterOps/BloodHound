@@ -248,7 +248,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
             from s0,
                  edge e1
                    join node n2 on n2.id = e1.end_id
-            where e1.kind_id = any (array [11, 12]::int2[])
+            where e1.kind_id = any (array [3, 4]::int2[])
               and (s0.n1).id = e1.start_id),
      s2 as (with recursive ex1(root_id, next_id, depth, satisfied, is_cycle, path) as (select e2.start_id,
                                                                                               e2.end_id,
@@ -306,7 +306,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                          array [1]::int2[] and
                                                                                          n0.id = e0.start_id
                                                                                               join node n1 on n1.id = e0.end_id
-                                                                                       where e0.kind_id = any (array [11]::int2[])
+                                                                                       where e0.kind_id = any (array [3]::int2[])
                                                                                        union
                                                                                        select ex0.root_id,
                                                                                               e0.end_id,
@@ -322,7 +322,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                               join node n1 on n1.id = e0.end_id
                                                                                        where ex0.depth < 5
                                                                                          and not ex0.is_cycle
-                                                                                         and e0.kind_id = any (array [11]::int2[]))
+                                                                                         and e0.kind_id = any (array [3]::int2[]))
             select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
                     from edge e0
@@ -396,7 +396,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                          'objectid' like '%1234' and
                                                                                          n0.id = e0.start_id
                                                                                               join node n1 on n1.id = e0.end_id
-                                                                                       where e0.kind_id = any (array [11, 12]::int2[])
+                                                                                       where e0.kind_id = any (array [3, 4]::int2[])
                                                                                        union
                                                                                        select ex0.root_id,
                                                                                               e0.end_id,
@@ -412,7 +412,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                               join node n1 on n1.id = e0.end_id
                                                                                        where ex0.depth < 5
                                                                                          and not ex0.is_cycle
-                                                                                         and e0.kind_id = any (array [11, 12]::int2[]))
+                                                                                         and e0.kind_id = any (array [3, 4]::int2[]))
             select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
                     from edge e0
@@ -440,7 +440,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                          array [1]::int2[] and
                                                                                          n0.id = e0.end_id
                                                                                               join node n1 on n1.id = e0.start_id
-                                                                                       where e0.kind_id = any (array [11, 12]::int2[])
+                                                                                       where e0.kind_id = any (array [3, 4]::int2[])
                                                                                        union
                                                                                        select ex0.root_id,
                                                                                               e0.end_id,
@@ -453,7 +453,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                               join node n1 on n1.id = e0.start_id
                                                                                        where ex0.depth < 5
                                                                                          and not ex0.is_cycle
-                                                                                         and e0.kind_id = any (array [11, 12]::int2[]))
+                                                                                         and e0.kind_id = any (array [3, 4]::int2[]))
             select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
                     from edge e0
@@ -482,7 +482,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                          array [1]::int2[] and
                                                                                          n0.id = e0.end_id
                                                                                               join node n1 on n1.id = e0.start_id
-                                                                                       where e0.kind_id = any (array [11, 12]::int2[])
+                                                                                       where e0.kind_id = any (array [3, 4]::int2[])
                                                                                        union
                                                                                        select ex0.root_id,
                                                                                               e0.end_id,
@@ -495,7 +495,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                               join node n1 on n1.id = e0.start_id
                                                                                        where ex0.depth < 5
                                                                                          and not ex0.is_cycle
-                                                                                         and e0.kind_id = any (array [11, 12]::int2[]))
+                                                                                         and e0.kind_id = any (array [3, 4]::int2[]))
             select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
                     from edge e0
@@ -516,7 +516,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                        from s0
                                                                                               join edge e1 on
                                                                                          e1.kind_id = any
-                                                                                         (array [11, 12]::int2[]) and
+                                                                                         (array [3, 4]::int2[]) and
                                                                                          (s0.n1).id = e1.end_id
                                                                                               join node n2 on n2.id = e1.start_id
                                                                                        union
@@ -565,7 +565,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                          array [1]::int2[] and
                                                                                          n0.id = e0.start_id
                                                                                               join node n1 on n1.id = e0.end_id
-                                                                                       where e0.kind_id = any (array [11, 12]::int2[])
+                                                                                       where e0.kind_id = any (array [3, 4]::int2[])
                                                                                        union
                                                                                        select ex0.root_id,
                                                                                               e0.end_id,
@@ -581,7 +581,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                               join node n1 on n1.id = e0.end_id
                                                                                        where ex0.depth < 5
                                                                                          and not ex0.is_cycle
-                                                                                         and e0.kind_id = any (array [11, 12]::int2[]))
+                                                                                         and e0.kind_id = any (array [3, 4]::int2[]))
             select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
                     from edge e0

@@ -17,6 +17,7 @@
 package pg
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -163,9 +164,9 @@ func (s *edgeComposite) FromMap(compositeMap map[string]any) error {
 	return nil
 }
 
-func (s *edgeComposite) ToRelationship(kindMapper KindMapper, relationship *graph.Relationship) error {
-	if kinds, missingIDs := kindMapper.MapKindIDs(s.KindID); len(missingIDs) > 0 {
-		return fmt.Errorf("edge references the following unknown kind IDs: %v", missingIDs)
+func (s *edgeComposite) ToRelationship(ctx context.Context, kindMapper KindMapper, relationship *graph.Relationship) error {
+	if kinds, err := kindMapper.MapKindIDs(ctx, s.KindID); err != nil {
+		return err
 	} else {
 		relationship.Kind = kinds[0]
 	}
@@ -206,9 +207,9 @@ func (s *nodeComposite) FromMap(compositeMap map[string]any) error {
 	return nil
 }
 
-func (s *nodeComposite) ToNode(kindMapper KindMapper, node *graph.Node) error {
-	if kinds, missingIDs := kindMapper.MapKindIDs(s.KindIDs...); len(missingIDs) > 0 {
-		return fmt.Errorf("node references the following unknown kind IDs: %v", missingIDs)
+func (s *nodeComposite) ToNode(ctx context.Context, kindMapper KindMapper, node *graph.Node) error {
+	if kinds, err := kindMapper.MapKindIDs(ctx, s.KindIDs...); err != nil {
+		return err
 	} else {
 		node.Kinds = kinds
 	}
@@ -276,13 +277,13 @@ func (s *pathComposite) FromMap(compositeMap map[string]any) error {
 	return nil
 }
 
-func (s *pathComposite) ToPath(kindMapper KindMapper, path *graph.Path) error {
+func (s *pathComposite) ToPath(ctx context.Context, kindMapper KindMapper, path *graph.Path) error {
 	path.Nodes = make([]*graph.Node, len(s.Nodes))
 
 	for idx, pgNode := range s.Nodes {
 		dawgsNode := &graph.Node{}
 
-		if err := pgNode.ToNode(kindMapper, dawgsNode); err != nil {
+		if err := pgNode.ToNode(ctx, kindMapper, dawgsNode); err != nil {
 			return err
 		}
 
@@ -294,7 +295,7 @@ func (s *pathComposite) ToPath(kindMapper KindMapper, path *graph.Path) error {
 	for idx, pgEdge := range s.Edges {
 		dawgsRelationship := &graph.Relationship{}
 
-		if err := pgEdge.ToRelationship(kindMapper, dawgsRelationship); err != nil {
+		if err := pgEdge.ToRelationship(ctx, kindMapper, dawgsRelationship); err != nil {
 			return err
 		}
 

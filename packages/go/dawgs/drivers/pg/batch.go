@@ -175,7 +175,7 @@ func (s *batch) flushNodeCreateBufferWithIDs() error {
 		}
 	}
 
-	if graphTarget, err := s.innerTransaction.getTargetGraph(s.ctx); err != nil {
+	if graphTarget, err := s.innerTransaction.getTargetGraph(); err != nil {
 		return err
 	} else if _, err := s.innerTransaction.tx.Exec(s.ctx, createNodeWithIDBatchStatement, graphTarget.ID, nodeIDs, kindIDSlices, properties); err != nil {
 		return err
@@ -209,7 +209,7 @@ func (s *batch) flushNodeCreateBufferWithoutIDs() error {
 		}
 	}
 
-	if graphTarget, err := s.innerTransaction.getTargetGraph(s.ctx); err != nil {
+	if graphTarget, err := s.innerTransaction.getTargetGraph(); err != nil {
 		return err
 	} else if _, err := s.innerTransaction.tx.Exec(s.ctx, createNodeWithoutIDBatchStatement, graphTarget.ID, kindIDSlices, properties); err != nil {
 		return err
@@ -226,7 +226,7 @@ func (s *batch) flushNodeUpsertBatch(updates *sql.NodeUpdateBatch) error {
 		return err
 	}
 
-	if graphTarget, err := s.innerTransaction.getTargetGraph(s.ctx); err != nil {
+	if graphTarget, err := s.innerTransaction.getTargetGraph(); err != nil {
 		return err
 	} else {
 		query := sql.FormatNodeUpsert(graphTarget, updates.IdentityProperties)
@@ -338,12 +338,12 @@ func (s *RelationshipUpdateByParameters) Format(graphTarget model.Graph) []any {
 	}
 }
 
-func (s *RelationshipUpdateByParameters) Append(update *sql.RelationshipUpdate, schemaManager *SchemaManager) error {
+func (s *RelationshipUpdateByParameters) Append(ctx context.Context, update *sql.RelationshipUpdate, schemaManager *SchemaManager) error {
 	s.StartIDs = append(s.StartIDs, update.StartID.Value)
 	s.EndIDs = append(s.EndIDs, update.EndID.Value)
 
-	if mappedKindID, mapped := schemaManager.MapKind(update.Relationship.Kind); !mapped {
-		return fmt.Errorf("unable to map kind %s", update.Relationship.Kind)
+	if mappedKindID, err := schemaManager.MapKind(ctx, update.Relationship.Kind); err != nil {
+		return err
 	} else {
 		s.KindIDs = append(s.KindIDs, mappedKindID)
 	}
@@ -356,9 +356,9 @@ func (s *RelationshipUpdateByParameters) Append(update *sql.RelationshipUpdate, 
 	return nil
 }
 
-func (s *RelationshipUpdateByParameters) AppendAll(updates *sql.RelationshipUpdateBatch, schemaManager *SchemaManager) error {
+func (s *RelationshipUpdateByParameters) AppendAll(ctx context.Context, updates *sql.RelationshipUpdateBatch, schemaManager *SchemaManager) error {
 	for _, nextUpdate := range updates.Updates {
-		if err := s.Append(nextUpdate, schemaManager); err != nil {
+		if err := s.Append(ctx, nextUpdate, schemaManager); err != nil {
 			return err
 		}
 	}
@@ -373,11 +373,11 @@ func (s *batch) flushRelationshipUpdateByBuffer(updates *sql.RelationshipUpdateB
 
 	parameters := NewRelationshipUpdateByParameters(len(updates.Updates))
 
-	if err := parameters.AppendAll(updates, s.schemaManager); err != nil {
+	if err := parameters.AppendAll(s.ctx, updates, s.schemaManager); err != nil {
 		return err
 	}
 
-	if graphTarget, err := s.innerTransaction.getTargetGraph(s.ctx); err != nil {
+	if graphTarget, err := s.innerTransaction.getTargetGraph(); err != nil {
 		return err
 	} else {
 		query := sql.FormatRelationshipPartitionUpsert(graphTarget, updates.IdentityProperties)
@@ -454,7 +454,7 @@ func (s *relationshipCreateBatchBuilder) Build() (*relationshipCreateBatch, erro
 	return s.relationshipUpdateBatch, s.relationshipUpdateBatch.EncodeProperties(s.edgePropertiesBatch)
 }
 
-func (s *relationshipCreateBatchBuilder) Add(kindMapper KindMapper, edge *graph.Relationship) error {
+func (s *relationshipCreateBatchBuilder) Add(ctx context.Context, kindMapper KindMapper, edge *graph.Relationship) error {
 	keyBuilder := strings.Builder{}
 
 	keyBuilder.WriteString(edge.StartID.String())
@@ -473,8 +473,8 @@ func (s *relationshipCreateBatchBuilder) Add(kindMapper KindMapper, edge *graph.
 			edgeProperties = edge.Properties.Clone()
 		)
 
-		if edgeKindID, hasKind := kindMapper.MapKind(edge.Kind); !hasKind {
-			return fmt.Errorf("unable to map kind %s", edge.Kind)
+		if edgeKindID, err := kindMapper.MapKind(ctx, edge.Kind); err != nil {
+			return err
 		} else {
 			s.relationshipUpdateBatch.Add(startID, endID, edgeKindID)
 		}
@@ -492,14 +492,14 @@ func (s *batch) flushRelationshipCreateBuffer() error {
 	batchBuilder := newRelationshipCreateBatchBuilder(len(s.relationshipCreateBuffer))
 
 	for _, nextRel := range s.relationshipCreateBuffer {
-		if err := batchBuilder.Add(s.schemaManager, nextRel); err != nil {
+		if err := batchBuilder.Add(s.ctx, s.schemaManager, nextRel); err != nil {
 			return err
 		}
 	}
 
 	if createBatch, err := batchBuilder.Build(); err != nil {
 		return err
-	} else if graphTarget, err := s.innerTransaction.getTargetGraph(s.ctx); err != nil {
+	} else if graphTarget, err := s.innerTransaction.getTargetGraph(); err != nil {
 		return err
 	} else if _, err := s.innerTransaction.tx.Exec(s.ctx, createEdgeBatchStatement, graphTarget.ID, createBatch.startIDs, createBatch.endIDs, createBatch.edgeKindIDs, createBatch.edgePropertyBags); err != nil {
 		log.Infof("Num merged property bags: %d - Num edge keys: %d - StartID batch size: %d", len(batchBuilder.edgePropertiesIndex), len(batchBuilder.keyToEdgeID), len(batchBuilder.relationshipUpdateBatch.startIDs))
