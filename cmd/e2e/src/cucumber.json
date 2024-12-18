@@ -1,8 +1,5 @@
 {
     "default": {
-        "formatOptions": {
-            "snippetInterface": "async-await"
-        },
         "paths": [
             "src/tests/features/"
         ],
@@ -22,16 +19,13 @@
         ]
     },
     "rerun": {
-        "formatOptions": {
-            "snippetInterface": "async-await"
-        },
         "dryRun": false,
-        "require": [
+        "import": [
             "src/tests/steps/*.ts",
             "src/support/hooks.ts"
         ],
-        "requireModule": [
-            "ts-node/register"
+        "loader": [
+            "ts-node/esm"
         ],
         "format": [
             "progress-bar",

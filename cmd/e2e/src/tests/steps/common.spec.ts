@@ -3,15 +3,15 @@ import { User, IUserResult } from "../../../prisma/seed.js";
 
 let newUser: Promise<IUserResult>
 
-Given('Create a new user with {string} role', async function (string) {
+Given('Create a new user with {string} role', async function (roleType: string) {
     const user = new User();
-    user.role = string
+    user.role = roleType
     newUser = user.create();
 });
 
-Given('Create a new user with {string} role with disabled status', async function (string) {
+Given('Create a new user with {string} role with disabled status', async function (roleType: string) {
     const user = new User();
-    user.role = string
+    user.role = roleType
     user.isDisabled = true
     newUser = user.create();
 });
