@@ -1,0 +1,100 @@
+---
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+name: Continuous Integration (CI)
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    types:
+      - assigned
+      - opened
+      - synchronize
+      - reopened
+      - closed
+  # https://stephencharlesweiss.com/github-actions-run-on-merge-only
+  push:
+    branches:
+      - main
+      - develop
+
+permissions: write-all
+
+jobs:
+  cla-check:
+    if: ${{ !github.event.act }}
+    name: Process CLA
+    runs-on: ubuntu-latest
+    steps:
+      - name: CLA Assistant
+        if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
+        uses: contributor-assistant/github-action@v2.2.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.REPO_SCOPE }}
+
+  bloodhound-container-image:
+    needs: cla-check
+    name: Build BloodHound Container Image
+    uses: ./.github/workflows/reusable.build-container-image.yml
+    with:
+      container_image_repository_name: docker.io/specterops/bloodhound
+      build_target: bloodhound
+      image_sbom: true
+      image_provenance: mode=max
+      build_outputs: type=image,push=true
+      dockerfile: dockerfiles/bloodhound.Dockerfile
+      image_cache_from: |-
+        type=registry,ref=docker.io/specterops/bloodhound:buildcache
+        type=registry,ref=ghcr.io/specterops/bloodhound:buildcache
+      image_cache_to: |-
+        type=registry,ref=docker.io/specterops/bloodhound:buildcache,mode=max
+        type=registry,ref=ghcr.io/specterops/bloodhound:buildcache,mode=max
+      docker_content_trust_repository_key_id: 0eb658e566aa45e90de85600c9cfb9b9df7049434003d13cb9466a1a5f61b09f
+      docker_content_trust_server: https://notary.docker.io
+    secrets:
+      dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+      ghcr_account: ${{ github.actor }}
+      ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+      docker_content_trust_repository_passphrase: ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE }}
+      docker_content_trust_repository_key: ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_KEY }}
+      docker_content_trust_repository_public_key: ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PUBLIC_KEY }}
+
+  # static-code-analysis:
+  #   name: Static Code Analysis
+  #   needs: cla-check
+  #   uses: ./.github/workflows/static-code-analysis.yml
+  #   with:
+  #     bloodhound_image_tar_artifact_name: ${{ needs.build-container-images.outputs.bloodhound_image_tar_artifact_name }}
+  #     bloodhound_image_tar_path: ${{ needs.build-container-images.outputs.bloodhound_image_tar_path }}
+  #   secrets:
+  #     dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
+  #     dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+  #     ghcr_account: ${{ github.actor }}
+  #     ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+  #     gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+  #
+  # test-suite:
+  #   name: Test Suite
+  #   needs: [cla-check, build-container-images]
+  #   uses: ./.github/workflows/test-suite.yml
+  #   with:
+  #     bloodhound_image_tar_artifact_name: ${{ needs.build-container-images.outputs.bloodhound_image_tar_artifact_name }}
+  #     bloodhound_image_tar_path: ${{ needs.build-container-images.outputs.bloodhound_image_tar_path }}
