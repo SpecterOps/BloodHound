@@ -1,6 +1,5 @@
 import { Given, When, Then, setDefaultTimeout } from "@cucumber/cucumber";
 import { expect } from "@playwright/test";
-import { IUserResult, User } from "../../../prisma/seed";
 
 Given('User visits the login page', async function () {
   await this.fixture.page.goto(`${process.env.BASEURL}/ui/login`);
