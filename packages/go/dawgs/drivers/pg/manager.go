@@ -17,6 +17,7 @@
 package pg
 
 import (
+	"context"
 	"errors"
 	"sync"
 
@@ -31,11 +32,12 @@ type KindMapper interface {
 	MapKindIDs(kindIDs ...int16) (graph.Kinds, []int16)
 	MapKind(kind graph.Kind) (int16, bool)
 	MapKinds(kinds graph.Kinds) ([]int16, graph.Kinds)
-	AssertKinds(tx graph.Transaction, kinds graph.Kinds) ([]int16, error)
+	AssertKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error)
 }
 
 type SchemaManager struct {
 	defaultGraph    model.Graph
+	database        graph.Database
 	hasDefaultGraph bool
 	graphs          map[string]model.Graph
 	kindsByID       map[graph.Kind]int16
@@ -43,8 +45,9 @@ type SchemaManager struct {
 	lock            *sync.RWMutex
 }
 
-func NewSchemaManager() *SchemaManager {
+func NewSchemaManager(database graph.Database) *SchemaManager {
 	return &SchemaManager{
+		database:        database,
 		hasDefaultGraph: false,
 		graphs:          map[string]model.Graph{},
 		kindsByID:       map[graph.Kind]int16{},
@@ -144,7 +147,27 @@ func (s *SchemaManager) MapKindIDs(kindIDs ...int16) (graph.Kinds, []int16) {
 	return s.mapKindIDs(kindIDs)
 }
 
-func (s *SchemaManager) AssertKinds(tx graph.Transaction, kinds graph.Kinds) ([]int16, error) {
+func (s *SchemaManager) assertKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error) {
+	// Acquire a write-lock and release on-exit
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	// We have to re-acquire the missing kinds since there's a potential for another writer to acquire the write-lock
+	// in between release of the read-lock and acquisition of the write-lock for this operation
+	if _, missingKinds := s.mapKinds(kinds); len(missingKinds) > 0 {
+		if err := s.database.WriteTransaction(ctx, func(tx graph.Transaction) error {
+			return s.defineKinds(tx, missingKinds)
+		}, OptionSetQueryExecMode(pgx.QueryExecModeSimpleProtocol)); err != nil {
+			return nil, err
+		}
+	}
+
+	// Lookup the kinds again from memory as they should now be up to date
+	kindIDs, _ := s.mapKinds(kinds)
+	return kindIDs, nil
+}
+
+func (s *SchemaManager) AssertKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error) {
 	// Acquire a read-lock first to fast-pass validate if we're missing any kind definitions
 	s.lock.RLock()
 
@@ -156,49 +179,43 @@ func (s *SchemaManager) AssertKinds(tx graph.Transaction, kinds graph.Kinds) ([]
 
 	// Release the read-lock here so that we can acquire a write-lock
 	s.lock.RUnlock()
+	return s.assertKinds(ctx, kinds)
+}
 
-	// Acquire a write-lock and release on-exit
+func (s *SchemaManager) setDefaultGraph(defaultGraph model.Graph, schema graph.Graph) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	// We have to re-acquire the missing kinds since there's a potential for another writer to acquire the write-lock
-	// in between release of the read-lock and acquisition of the write-lock for this operation
-	_, missingKinds := s.mapKinds(kinds)
-
-	if err := s.defineKinds(tx, missingKinds); err != nil {
-		return nil, err
+	if !s.hasDefaultGraph {
+		// Another actor has already asserted or otherwise set a default graph
+		return
 	}
 
-	kindIDs, _ := s.mapKinds(kinds)
-	return kindIDs, nil
+	s.graphs[schema.Name] = defaultGraph
+
+	s.defaultGraph = defaultGraph
+	s.hasDefaultGraph = true
 }
 
-func (s *SchemaManager) SetDefaultGraph(tx graph.Transaction, schema graph.Graph) error {
-	// Validate the schema if the graph already exists in the database
-	if definition, err := query.On(tx).SelectGraphByName(schema.Name); err != nil {
-		return err
-	} else {
-		s.graphs[schema.Name] = definition
-
-		s.defaultGraph = definition
-		s.hasDefaultGraph = true
-	}
-
-	return nil
+func (s *SchemaManager) SetDefaultGraph(ctx context.Context, schema graph.Graph) error {
+	return s.database.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		// Validate the schema if the graph already exists in the database
+		if graphModel, err := query.On(tx).SelectGraphByName(schema.Name); err != nil {
+			return err
+		} else {
+			s.setDefaultGraph(graphModel, schema)
+			return nil
+		}
+	})
 }
 
-func (s *SchemaManager) AssertDefaultGraph(tx graph.Transaction, schema graph.Graph) error {
-	if graphInstance, err := s.AssertGraph(tx, schema); err != nil {
+func (s *SchemaManager) AssertDefaultGraph(ctx context.Context, schema graph.Graph) error {
+	if graphModel, err := s.AssertGraph(ctx, schema); err != nil {
 		return err
 	} else {
-		s.lock.Lock()
-		defer s.lock.Unlock()
-
-		s.defaultGraph = graphInstance
-		s.hasDefaultGraph = true
+		s.setDefaultGraph(graphModel, schema)
+		return nil
 	}
-
-	return nil
 }
 
 func (s *SchemaManager) DefaultGraph() (model.Graph, bool) {
@@ -208,7 +225,41 @@ func (s *SchemaManager) DefaultGraph() (model.Graph, bool) {
 	return s.defaultGraph, s.hasDefaultGraph
 }
 
-func (s *SchemaManager) AssertGraph(tx graph.Transaction, schema graph.Graph) (model.Graph, error) {
+func (s *SchemaManager) assertGraph(ctx context.Context, schema graph.Graph) (model.Graph, error) {
+	var assertedGraph model.Graph
+
+	if err := s.database.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		// Validate the schema if the graph already exists in the database
+		if definition, err := query.On(tx).SelectGraphByName(schema.Name); err != nil {
+			// ErrNoRows is ignored as it signifies that this graph must be created
+			if !errors.Is(err, pgx.ErrNoRows) {
+				return err
+			}
+		} else if assertedDefinition, err := query.On(tx).AssertGraph(schema, definition); err != nil {
+			return err
+		} else {
+			// Graph existed and may have been updated
+			assertedGraph = assertedDefinition
+			return nil
+		}
+
+		// Create the graph
+		if definition, err := query.On(tx).CreateGraph(schema); err != nil {
+			return err
+		} else {
+			assertedGraph = definition
+			return nil
+		}
+	}, OptionSetQueryExecMode(pgx.QueryExecModeSimpleProtocol)); err != nil {
+		return model.Graph{}, err
+	}
+
+	// Cache the graph definition and return it
+	s.graphs[schema.Name] = assertedGraph
+	return assertedGraph, nil
+}
+
+func (s *SchemaManager) AssertGraph(ctx context.Context, schema graph.Graph) (model.Graph, error) {
 	// Acquire a read-lock first to fast-pass validate if we're missing the graph definitions
 	s.lock.RLock()
 
@@ -218,44 +269,21 @@ func (s *SchemaManager) AssertGraph(tx graph.Transaction, schema graph.Graph) (m
 		return graphInstance, nil
 	}
 
-	// Release the read-lock here so that we can acquire a write-lock
+	// Release the read-lock here so that we can acquire a write-lock next
 	s.lock.RUnlock()
 
-	// Acquire a write-lock and create the graph definition
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	if graphInstance, isDefined := s.graphs[schema.Name]; isDefined {
-		// The graph was defined by a different actor between the read unlock and the write lock.
+		// The graph was defined by a different actor between the read unlock and the write lock, return it
 		return graphInstance, nil
 	}
 
-	// Validate the schema if the graph already exists in the database
-	if definition, err := query.On(tx).SelectGraphByName(schema.Name); err != nil {
-		// ErrNoRows signifies that this graph must be created
-		if !errors.Is(err, pgx.ErrNoRows) {
-			return model.Graph{}, err
-		}
-	} else if assertedDefinition, err := query.On(tx).AssertGraph(schema, definition); err != nil {
-		return model.Graph{}, err
-	} else {
-		s.graphs[schema.Name] = assertedDefinition
-		return assertedDefinition, nil
-	}
-
-	// Create the graph
-	if definition, err := query.On(tx).CreateGraph(schema); err != nil {
-		return model.Graph{}, err
-	} else {
-		s.graphs[schema.Name] = definition
-		return definition, nil
-	}
+	return s.assertGraph(ctx, schema)
 }
 
-func (s *SchemaManager) AssertSchema(tx graph.Transaction, schema graph.Schema) error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
+func (s *SchemaManager) assertSchema(tx graph.Transaction, schema graph.Schema) error {
 	if err := query.On(tx).CreateSchema(); err != nil {
 		return err
 	}
@@ -279,4 +307,13 @@ func (s *SchemaManager) AssertSchema(tx graph.Transaction, schema graph.Schema) 
 	}
 
 	return nil
+}
+
+func (s *SchemaManager) AssertSchema(ctx context.Context, schema graph.Schema) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	return s.database.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		return s.assertSchema(tx, schema)
+	}, OptionSetQueryExecMode(pgx.QueryExecModeSimpleProtocol))
 }

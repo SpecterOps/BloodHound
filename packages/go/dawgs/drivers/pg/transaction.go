@@ -115,7 +115,7 @@ func (s *transaction) Close() {
 	}
 }
 
-func (s *transaction) getTargetGraph() (model.Graph, error) {
+func (s *transaction) getTargetGraph(ctx context.Context) (model.Graph, error) {
 	if !s.targetSchemaSet {
 		// Look for a default graph target
 		if defaultGraph, hasDefaultGraph := s.schemaManager.DefaultGraph(); !hasDefaultGraph {
@@ -125,13 +125,13 @@ func (s *transaction) getTargetGraph() (model.Graph, error) {
 		}
 	}
 
-	return s.schemaManager.AssertGraph(s, s.targetSchema)
+	return s.schemaManager.AssertGraph(ctx, s.targetSchema)
 }
 
 func (s *transaction) CreateNode(properties *graph.Properties, kinds ...graph.Kind) (*graph.Node, error) {
-	if graphTarget, err := s.getTargetGraph(); err != nil {
+	if graphTarget, err := s.getTargetGraph(s.ctx); err != nil {
 		return nil, err
-	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s, kinds); err != nil {
+	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s.ctx, kinds); err != nil {
 		return nil, err
 	} else if propertiesJSONB, err := pgsql.PropertiesToJSONB(properties); err != nil {
 		return nil, err
@@ -190,9 +190,9 @@ func (s *transaction) Nodes() graph.NodeQuery {
 }
 
 func (s *transaction) CreateRelationshipByIDs(startNodeID, endNodeID graph.ID, kind graph.Kind, properties *graph.Properties) (*graph.Relationship, error) {
-	if graphTarget, err := s.getTargetGraph(); err != nil {
+	if graphTarget, err := s.getTargetGraph(s.ctx); err != nil {
 		return nil, err
-	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s, graph.Kinds{kind}); err != nil {
+	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s.ctx, graph.Kinds{kind}); err != nil {
 		return nil, err
 	} else if propertiesJSONB, err := pgsql.PropertiesToJSONB(properties); err != nil {
 		return nil, err
