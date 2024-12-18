@@ -356,7 +356,11 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		}
 
 		if newUser, err := s.db.CreateUser(request.Context(), userTemplate); err != nil {
-			api.HandleDatabaseError(request, response, err)
+			if errors.Is(err, database.ErrDuplicateUserPrincipal) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicatePrincipal, request), response)
+			} else {
+				api.HandleDatabaseError(request, response, err)
+			}
 		} else {
 			api.WriteBasicResponse(request.Context(), newUser, http.StatusOK, response)
 		}
@@ -445,7 +449,11 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		}
 
 		if err := s.db.UpdateUser(request.Context(), user); err != nil {
-			api.HandleDatabaseError(request, response, err)
+			if errors.Is(err, database.ErrDuplicateUserPrincipal) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicatePrincipal, request), response)
+			} else {
+				api.HandleDatabaseError(request, response, err)
+			}
 		} else {
 			response.WriteHeader(http.StatusOK)
 		}

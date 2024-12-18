@@ -307,9 +307,13 @@ func (s ManagementResource) ServeSigningCertificate(response http.ResponseWriter
 // HandleStartAuthFlow is called to start the SAML authentication process.
 func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	if ssoProvider.SAMLProvider == nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+		// SAML misconfiguration scenario
+		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		log.Errorf("[SAML] Service provider creation failed: %v", err)
+		// Technical issues scenario
+		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else {
 		var (
 			binding         = saml.HTTPRedirectBinding
@@ -323,13 +327,16 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 		// TODO: add actual relay state support - BED-5071
 		if authReq, err := serviceProvider.MakeAuthenticationRequest(bindingLocation, binding, saml.HTTPPostBinding); err != nil {
 			log.Errorf("[SAML] Failed creating SAML authentication request: %v", err)
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+			// SAML misconfiguration or technical issue
+			// Since this likely indicates a configuration problem, we treat it as a misconfiguration scenario
+			redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 		} else {
 			switch binding {
 			case saml.HTTPRedirectBinding:
 				if redirectURL, err := authReq.Redirect("", &serviceProvider); err != nil {
 					log.Errorf("[SAML] Failed to format a redirect for SAML provider %s: %v", serviceProvider.EntityID, err)
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+					// Likely a technical or configuration issue
+					redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 				} else {
 					response.Header().Add(headers.Location.String(), redirectURL.String())
 					response.WriteHeader(http.StatusFound)
@@ -342,11 +349,14 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 
 				if _, err := response.Write([]byte(fmt.Sprintf(authInitiationContentBodyFormat, authReq.Post("")))); err != nil {
 					log.Errorf("[SAML] Failed to write response with HTTP POST binding: %v", err)
+					// Technical issues scenario
+					redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 				}
 
 			default:
 				log.Errorf("[SAML] Unhandled binding type %s", binding)
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+				// Treating unknown binding as a misconfiguration
+				redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 			}
 		}
 	}
@@ -355,13 +365,17 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 // HandleStartAuthFlow is called to start the SAML authentication process.
 func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	if ssoProvider.SAMLProvider == nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+		// SAML misconfiguration
+		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		log.Errorf("[SAML] Service provider creation failed: %v", err)
+		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else {
 		if err := request.ParseForm(); err != nil {
 			log.Errorf("[SAML] Failed to parse form POST: %v", err)
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form POST is malformed", request), response)
+			// Technical issues or invalid form data
+			// This is not covered by acceptance criteria directly; treat as technical issue
+			redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 		} else {
 			if assertion, err := serviceProvider.ParseResponse(request, nil); err != nil {
 				var typedErr *saml.InvalidResponseError
@@ -371,10 +385,12 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 				default:
 					log.Errorf("[SAML] Failed to parse ACS response for provider %s: %v", ssoProvider.SAMLProvider.IssuerURI, err)
 				}
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
+				// SAML credentials issue scenario (authentication failed)
+				redirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 			} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
 				log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", ssoProvider.Name, err)
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "session assertion does not meet the requirements for user lookup", request), response)
+				// SAML credentials issue scenario again
+				redirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 			} else {
 				s.authenticator.CreateSSOSession(request, response, principalName, ssoProvider)
 			}
