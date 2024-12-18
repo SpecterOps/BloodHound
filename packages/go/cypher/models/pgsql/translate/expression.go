@@ -170,7 +170,7 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 		// If neither side has specific type information then check the operator to see if it implies some type
 		// hinting before resorting to inference
 		switch expression.Operator {
-		case pgsql.OperatorStartsWith, pgsql.OperatorContains, pgsql.OperatorEndsWith:
+		case pgsql.OperatorCypherStartsWith, pgsql.OperatorCypherContains, pgsql.OperatorCypherEndsWith:
 			// String operations imply the operands must be text
 			return pgsql.Text, nil
 
@@ -320,7 +320,7 @@ func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 					expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, arrayBaseType)
 				}
 
-			case pgsql.OperatorStartsWith, pgsql.OperatorEndsWith, pgsql.OperatorContains, pgsql.OperatorRegexMatch:
+			case pgsql.OperatorCypherStartsWith, pgsql.OperatorCypherEndsWith, pgsql.OperatorCypherContains, pgsql.OperatorRegexMatch:
 				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, pgsql.Text)
 
 			default:
@@ -341,7 +341,7 @@ func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 					expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, arrayType)
 				}
 
-			case pgsql.OperatorStartsWith, pgsql.OperatorEndsWith, pgsql.OperatorContains, pgsql.OperatorRegexMatch:
+			case pgsql.OperatorCypherStartsWith, pgsql.OperatorCypherEndsWith, pgsql.OperatorCypherContains, pgsql.OperatorRegexMatch:
 				expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, pgsql.Text)
 
 			default:
@@ -683,7 +683,7 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 		}
 
 		switch operator {
-		case pgsql.OperatorContains:
+		case pgsql.OperatorCypherContains:
 			newExpression.Operator = pgsql.OperatorLike
 
 			switch typedLOperand := newExpression.LOperand.(type) {
@@ -758,11 +758,11 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 
 			s.Push(newExpression)
 
-		case pgsql.OperatorRegexMatch:
-			newExpression.Operator = pgsql.OperatorSimilarTo
+		case pgsql.OperatorCypherRegexMatch:
+			newExpression.Operator = pgsql.OperatorRegexMatch
 			s.Push(newExpression)
 
-		case pgsql.OperatorStartsWith:
+		case pgsql.OperatorCypherStartsWith:
 			newExpression.Operator = pgsql.OperatorLike
 
 			switch typedLOperand := newExpression.LOperand.(type) {
@@ -825,7 +825,7 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 
 			s.Push(newExpression)
 
-		case pgsql.OperatorEndsWith:
+		case pgsql.OperatorCypherEndsWith:
 			newExpression.Operator = pgsql.OperatorLike
 
 			switch typedLOperand := newExpression.LOperand.(type) {

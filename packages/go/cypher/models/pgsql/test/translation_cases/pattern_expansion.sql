@@ -555,8 +555,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                               1,
                                                                                               n1.kind_ids operator (pg_catalog.&&)
                                                                                               array [2]::int2[] and
-                                                                                              n1.properties ->>
-                                                                                              'name' similar to
+                                                                                              n1.properties ->> 'name' ~
                                                                                               '(?i)Global Administrator.*|User Administrator.*|Cloud Application Administrator.*|Authentication Policy Administrator.*|Exchange Administrator.*|Helpdesk Administrator.*|Privileged Authentication Administrator.*',
                                                                                               e0.start_id = e0.end_id,
                                                                                               array [e0.id]
@@ -573,8 +572,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                               ex0.depth + 1,
                                                                                               n1.kind_ids operator (pg_catalog.&&)
                                                                                               array [2]::int2[] and
-                                                                                              n1.properties ->>
-                                                                                              'name' similar to
+                                                                                              n1.properties ->> 'name' ~
                                                                                               '(?i)Global Administrator.*|User Administrator.*|Cloud Application Administrator.*|Authentication Policy Administrator.*|Exchange Administrator.*|Helpdesk Administrator.*|Privileged Authentication Administrator.*',
                                                                                               e0.id = any (ex0.path),
                                                                                               ex0.path || e0.id

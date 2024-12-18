@@ -30,7 +30,7 @@ func translateCypherAssignmentOperator(operator cypher.AssignmentOperator) (pgsq
 	case cypher.OperatorAssignment:
 		return pgsql.OperatorAssignment, nil
 	case cypher.OperatorLabelAssignment:
-		return pgsql.OperatorLabelAssignment, nil
+		return pgsql.OperatorKindAssignment, nil
 	default:
 		return pgsql.UnsetOperator, fmt.Errorf("unsupported assignment operator %s", operator)
 	}
@@ -146,7 +146,7 @@ func (s *Translator) translateSetItem(setItem *cypher.SetItem) error {
 				return s.mutations.AddPropertyAssignment(s.query.Scope, leftPropertyLookup, operator, rightOperand)
 			}
 
-		case pgsql.OperatorLabelAssignment:
+		case pgsql.OperatorKindAssignment:
 			if rightOperand, err := s.treeTranslator.Pop(); err != nil {
 				return err
 			} else if leftOperand, err := s.treeTranslator.Pop(); err != nil {
