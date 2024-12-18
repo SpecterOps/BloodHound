@@ -66,7 +66,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
             from edge e0
                    join node n0 on n0.id = e0.start_id
                    join node n1 on n1.id = e0.end_id
-            where e0.kind_id = any (array [11]::int2[]))
+            where e0.kind_id = any (array [3]::int2[]))
 select count(s0.e0)::int8 as the_count
 from s0;
 
@@ -81,7 +81,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                    join node n1 on n1.id = @pi0::float8 and n1.id = e0.end_id
             where not (n0.properties ->> 'objectid' like '%' || @pi2::text or
                        n1.properties ->> 'objectid' like '%' || @pi3::text)
-              and (e0.kind_id = any (array [11]::int2[]) or e0.kind_id = any (array [12]::int2[])))
+              and (e0.kind_id = any (array [3]::int2[]) or e0.kind_id = any (array [4]::int2[])))
 select (s0.n0).id, (s0.e0).id, (s0.n1).id
 from s0;
 
@@ -209,7 +209,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
             from edge e0
                    join node n0 on n0.id = e0.end_id
                    join node n1 on n1.id = e0.start_id
-            where e0.kind_id = any (array [11, 12]::int2[]))
+            where e0.kind_id = any (array [3, 4]::int2[]))
 select (s0.n0).properties -> 'name', (s0.n1).properties -> 'name'
 from s0;
 
@@ -220,7 +220,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
             from edge e0
                    join node n0 on n0.id = e0.start_id
                    join node n1 on n1.id = e0.end_id
-            where e0.kind_id = any (array [11, 12]::int2[])),
+            where e0.kind_id = any (array [3, 4]::int2[])),
      s1 as (select s0.e0                                                                     as e0,
                    s0.n0                                                                     as n0,
                    s0.n1                                                                     as n1,
@@ -229,7 +229,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
             from s0,
                  edge e1
                    join node n2 on n2.id = e1.end_id
-            where e1.kind_id = any (array [11]::int2[])
+            where e1.kind_id = any (array [3]::int2[])
               and (s0.n1).id = e1.start_id)
 select (s1.n0).properties -> 'name' as s_name, (s1.n1).properties -> 'name' as e_name
 from s1;
@@ -241,7 +241,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
             from edge e0
                    join node n0 on n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n0.id = e0.start_id
                    join node n1 on n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and n1.id = e0.end_id
-            where e0.kind_id = any (array [11, 12]::int2[]))
+            where e0.kind_id = any (array [3, 4]::int2[]))
 select (s0.n0).properties -> 'name', (s0.n1).properties -> 'name'
 from s0;
 
@@ -252,7 +252,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
             from edge e0
                    join node n0 on n0.id = e0.start_id
                    join node n1 on n1.id = e0.end_id
-            where e0.kind_id = any (array [11]::int2[]))
+            where e0.kind_id = any (array [3]::int2[]))
 select s0.n0 as s
 from s0
 where (with s1 as (select s0.e0                                              as e0,
@@ -275,7 +275,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                    join node n0 on not (coalesce(n0.properties ->> 'system_tags', '')::text like '%admin_tier_0%') and
                                    n0.id = e0.start_id
                    join node n1 on n1.id = 1 and n1.id = e0.end_id
-            where e0.kind_id = any (array [11]::int2[]))
+            where e0.kind_id = any (array [3]::int2[]))
 select (s0.n0).id, (s0.n0).kind_ids, (s0.e0).id, (s0.e0).kind_id
 from s0;
 
@@ -288,7 +288,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                                    lower(n0.properties ->> 'name')::text like 'test' and n0.id = e0.start_id
                    join node n1
                         on n1.id = any (array [1, 2]::int8[]) and n1.id = e0.end_id
-            where e0.kind_id = any (array [11]::int2[]))
+            where e0.kind_id = any (array [3]::int2[]))
 select s0.e0 as r
 from s0
 limit 1;

@@ -111,6 +111,16 @@ const (
 	ExpansionTerminalNode DataType = "expansion_terminal_node"
 )
 
+func (s DataType) IsKnown() bool {
+	switch s {
+	case UnsetDataType, UnknownDataType:
+		return false
+
+	default:
+		return true
+	}
+}
+
 // TODO: operator, while unused, is part of a refactor for this function to make it operator aware
 func (s DataType) Compatible(other DataType, operator Operator) (DataType, bool) {
 	if s == other {
