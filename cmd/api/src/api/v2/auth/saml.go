@@ -149,7 +149,7 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"default_role\" parameter", request), response)
 	} else if defaultRoleValue, err := strconv.Atoi(defaultRole[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id must be a valid number", request), response)
-	} else if defaultRoleValue > 5 || defaultRoleValue < 1 {
+	} else if defaultRoleValue > 5 || defaultRoleValue < 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
 	} else if isRoleProvisioned, err := strconv.ParseBool(request.MultipartForm.Value["config.auto_provision.role_provision"][0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"role_provision\" parameter could not be converted to bool", request), response)
@@ -163,12 +163,29 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 		} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(metadata, saml.HTTPPostBinding); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
 		} else {
-			config := model.SSOProviderConfig{
-				AutoProvision: model.AutoProvision{
-					Enabled:       isAutoProvisionEnabled,
-					DefaultRole:   int32(defaultRoleValue),
-					RoleProvision: isRoleProvisioned,
-				},
+			var config model.SSOProviderConfig
+
+			if isAutoProvisionEnabled {
+				// Role IDs range from 1 to 5, and so a value of 0 indicates that the int32 DefaultRole value is unset
+				if defaultRoleValue == 0 {
+					defaultRoleValue = 3
+				}
+
+				config = model.SSOProviderConfig{
+					AutoProvision: model.AutoProvision{
+						Enabled:       isAutoProvisionEnabled,
+						DefaultRole:   int32(defaultRoleValue),
+						RoleProvision: isRoleProvisioned,
+					},
+				}
+			} else {
+				config = model.SSOProviderConfig{
+					AutoProvision: model.AutoProvision{
+						Enabled:       isAutoProvisionEnabled,
+						DefaultRole:   0,
+						RoleProvision: false,
+					},
+				}
 			}
 
 			samlIdentityProvider.Name = providerNames[0]
@@ -228,14 +245,25 @@ func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWrit
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"default_role\" parameter", request), response)
 	} else if defaultRoleValue, err := strconv.Atoi(defaultRole[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id must be a valid number", request), response)
-	} else if defaultRoleValue > 5 || defaultRoleValue < 1 {
+	} else if defaultRoleValue > 5 || defaultRoleValue < 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
 	} else if isRoleProvisioned, err := strconv.ParseBool(request.MultipartForm.Value["config.auto_provision.role_provision"][0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"role_provision\" parameter could not be converted to bool", request), response)
 	} else {
-		ssoProvider.Config.AutoProvision.Enabled = isAutoProvisionEnabled
-		ssoProvider.Config.AutoProvision.DefaultRole = int32(defaultRoleValue)
-		ssoProvider.Config.AutoProvision.RoleProvision = isRoleProvisioned
+		if isAutoProvisionEnabled {
+			// Role IDs range from 1 to 5, and so a value of 0 indicates that the int32 DefaultRole value is unset
+			if defaultRoleValue == 0 {
+				defaultRoleValue = 3
+			}
+
+			ssoProvider.Config.AutoProvision.Enabled = isAutoProvisionEnabled
+			ssoProvider.Config.AutoProvision.DefaultRole = int32(defaultRoleValue)
+			ssoProvider.Config.AutoProvision.RoleProvision = isRoleProvisioned
+		} else {
+			ssoProvider.Config.AutoProvision.Enabled = isAutoProvisionEnabled
+			ssoProvider.Config.AutoProvision.DefaultRole = 0
+			ssoProvider.Config.AutoProvision.RoleProvision = false
+		}
 
 		if hasProviderName {
 			ssoProvider.Name = providerNames[0]
@@ -432,7 +460,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 						}
 
 						if surname, err := ssoProvider.SAMLProvider.GetSAMLUserSurNameFromAssertion(assertion); err != nil {
-							user.LastName = null.StringFrom("Last name Not Found")
+							user.LastName = null.StringFrom("Last name not found")
 						} else {
 							user.LastName = null.StringFrom(surname)
 						}
