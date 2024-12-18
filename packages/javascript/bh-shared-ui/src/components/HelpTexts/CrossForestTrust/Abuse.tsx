@@ -18,7 +18,17 @@ import { FC } from 'react';
 import { Typography } from '@mui/material';
 
 const Abuse: FC = () => {
-    return <Typography variant='body2'>There is no abuse associated with this edge.</Typography>;
+    return (
+        <>
+            <Typography variant='body2'>
+                The cross-forest trust does not enable a compromise of any of the domains by default.
+            </Typography>
+            <Typography variant='body2'>
+                BloodHound creates separate traversable edges between the domains if the configuration of the trust
+                enables abuse.
+            </Typography>
+        </>
+    );
 };
 
 export default Abuse;

@@ -22,9 +22,9 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The domain {sourceName} is trusted with an inter-forest trust by the domain {targetName}. The domains
-                belong to seperate forest but the trust relationship enable principals of {sourceName} to access
-                resources in {targetName}.
+                The CrossForestTrust edge represents a trust relationship between two domains/forests. In this
+                relationship, the {sourceName} domain has a cross-forest (inter-realm) trust to the {targetName} domain,
+                allowing principals (users and computers) from {targetName} to access resources in {sourceName}.
             </Typography>
         </>
     );

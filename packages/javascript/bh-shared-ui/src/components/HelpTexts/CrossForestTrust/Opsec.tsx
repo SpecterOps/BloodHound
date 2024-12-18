@@ -18,7 +18,7 @@ import { FC } from 'react';
 import { Typography } from '@mui/material';
 
 const Opsec: FC = () => {
-    return <Typography variant='body2'>There is no opsec associated with this edge</Typography>;
+    return <Typography variant='body2'>There is no OPSEC associated with this edge.</Typography>;
 };
 
 export default Opsec;

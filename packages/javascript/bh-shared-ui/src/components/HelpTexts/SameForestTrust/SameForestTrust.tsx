@@ -15,15 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import General from './General';
-import WindowsAbuse from './WindowsAbuse';
-import LinuxAbuse from './LinuxAbuse';
+import Abuse from './Abuse';
 import Opsec from './Opsec';
 import References from './References';
 
 const SameForestTrust = {
     general: General,
-    windowsAbuse: WindowsAbuse,
-    linuxAbuse: LinuxAbuse,
+    abuse: Abuse,
     opsec: Opsec,
     references: References,
 };

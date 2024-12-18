@@ -22,8 +22,13 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The domain {sourceName} is trusted with an intra-forest trust by the domain {targetName}. The domains
-                belong to the same forest.
+                The SameForestTrust edge represents a trust relationship between two domains within the same AD forest.
+                In this relationship, the {sourceName} domain has a same-forest (intra-realm) trust to the {targetName}{' '}
+                domain, allowing principals (users and computers) from {targetName} to access resources in {sourceName}.
+            </Typography>
+            <Typography variant='body2'>
+                Because the domains are part of the same forest, they inherently trust each other, granting implicit
+                control over resources across domains.
             </Typography>
         </>
     );
