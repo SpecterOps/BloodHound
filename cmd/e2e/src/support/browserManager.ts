@@ -5,8 +5,8 @@ const options: LaunchOptions = {
 }
 
 export const invokeBrowser = () => {
-    // Browser configuration supports two inputs from runtime --BROWSER flag and cross-env BROWSER env variable 
-    const browserType = process.env.npm_config_browser || process.env.DEFAULT_BROWSER;
+    // TODO Add option to load browser type configuration at runtime
+    const browserType = process.env.DEFAULT_BROWSER;
     switch (browserType) {
         case "chrome":
             return chromium.launch(options);

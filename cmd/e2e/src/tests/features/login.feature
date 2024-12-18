@@ -1,4 +1,4 @@
-Feature: BHE Login Page Tests
+Feature: BHCE Login Page Tests
 
   Background:
     Given Create a new user with "Administrator" role 
