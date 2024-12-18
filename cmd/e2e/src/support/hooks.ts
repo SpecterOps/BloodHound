@@ -27,8 +27,6 @@ After(async function ({ result, pickle }) {
         const img = await this.fixture.page.screenshot({ path: `./test-results/screenshots/+${pickle.name}`, type: "png" })
         await this.attach(img, "image/png");
     }
-    // close browser conext of each scenario
-    // await fx.closeContext();
     
     // delete test users in dev environment
     const db = new dbOPS();

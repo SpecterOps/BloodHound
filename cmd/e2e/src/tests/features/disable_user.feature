@@ -1,4 +1,4 @@
-Feature: Disable/Enable BHE Users
+Feature: Disable/Enable BHCE Users
 
   Background:
     Given Create a new user with "User" role with disabled status
