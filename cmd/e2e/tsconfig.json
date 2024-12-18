@@ -1,10 +1,10 @@
 {
     "compilerOptions": {
-        "module": "ESNext",
+        "module": "Node16",
         "typeRoots": [
             "src/helpers/types"
         ],
-        "moduleResolution": "nodenext",
+        "moduleResolution": "node16",
         "strict": true,
         "noUncheckedIndexedAccess": true
     }
