@@ -104,14 +104,14 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 	} else if upsertReq.Config.AutoProvision.Enabled && (upsertReq.Config.AutoProvision.DefaultRole > 5 || upsertReq.Config.AutoProvision.DefaultRole < 1) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
 	} else {
-		if !upsertReq.Config.AutoProvision.Enabled {
+		if upsertReq.Config.AutoProvision.Enabled {
+			// Role IDs range from 1 to 5, and so a value of 0 indicates that the int32 DefaultRole value is unset
+			if upsertReq.Config.AutoProvision.DefaultRole == 0 {
+				upsertReq.Config.AutoProvision.DefaultRole = 3
+			}
+		} else {
 			upsertReq.Config.AutoProvision.DefaultRole = 0
 			upsertReq.Config.AutoProvision.RoleProvision = false
-		}
-
-		// Role IDs range from 1 to 5, and so a value of 0 indicates that the int32 DefaultRole value is unset
-		if upsertReq.Config.AutoProvision.DefaultRole == 0 {
-			upsertReq.Config.AutoProvision.DefaultRole = 3
 		}
 
 		if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), upsertReq.Name, upsertReq.Issuer, upsertReq.ClientID, upsertReq.Config); err != nil {

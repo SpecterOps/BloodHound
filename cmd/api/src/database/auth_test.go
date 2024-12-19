@@ -305,7 +305,14 @@ func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
 		samlProvider    model.SAMLProvider
 		newSAMLProvider model.SAMLProvider
 		updatedUser     model.User
-		err             error
+		config          = model.SSOProviderConfig{
+			AutoProvision: model.AutoProvision{
+				Enabled:       false,
+				DefaultRole:   0,
+				RoleProvision: false,
+			},
+		}
+		err error
 	)
 	// Initialize the SAMLProvider without setting SSOProviderID
 	samlProvider = model.SAMLProvider{
@@ -315,7 +322,7 @@ func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
 		SingleSignOnURI: "https://idp.example.com/sso",
 	}
 
-	if newSAMLProvider, err = dbInst.CreateSAMLIdentityProvider(ctx, samlProvider); err != nil {
+	if newSAMLProvider, err = dbInst.CreateSAMLIdentityProvider(ctx, samlProvider, config); err != nil {
 		t.Fatalf("Failed to create SAML provider: %v", err)
 	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateSAMLIdentityProvider, "saml_name", newSAMLProvider.Name); err != nil {
 		t.Fatalf("Failed to validate CreateSAMLIdentityProvider audit logs:\n%v", err)
@@ -428,10 +435,17 @@ func TestDatabase_GetUserSSOSession(t *testing.T) {
 			IssuerURI:       "https://idp.example.com/idp.xml",
 			SingleSignOnURI: "https://idp.example.com/sso",
 		}
+		config = model.SSOProviderConfig{
+			AutoProvision: model.AutoProvision{
+				Enabled:       false,
+				DefaultRole:   0,
+				RoleProvision: false,
+			},
+		}
 	)
 
 	// Initialize the SAMLProvider without setting SSOProviderID
-	newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(testCtx, samlProvider)
+	newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(testCtx, samlProvider, config)
 	require.Nil(t, err)
 
 	user.SSOProviderID = newSAMLProvider.SSOProviderID

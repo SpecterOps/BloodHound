@@ -33,11 +33,18 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	var (
 		mockCtrl          = gomock.NewController(t)
 		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+		config            = model.SSOProviderConfig{
+			AutoProvision: model.AutoProvision{
+				Enabled:       false,
+				DefaultRole:   0,
+				RoleProvision: false,
+			},
+		}
 	)
 	defer mockCtrl.Finish()
 
 	t.Run("successfully create a new OIDCProvider", func(t *testing.T) {
-		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "Bloodhound gang", "https://localhost/auth", "bloodhound").Return(model.OIDCProvider{
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "Bloodhound gang", "https://localhost/auth", "bloodhound", config).Return(model.OIDCProvider{
 			ClientID: "bloodhound",
 			Issuer:   "https://localhost/auth",
 		}, nil)
@@ -47,6 +54,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 				Name:     "Bloodhound gang",
 				Issuer:   "https://localhost/auth",
 				ClientID: "bloodhound",
+				Config:   config,
 			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).
 			Require().
@@ -84,13 +92,14 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	})
 
 	t.Run("error creating oidc provider db entry", func(t *testing.T) {
-		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/auth", "bloodhound").Return(model.OIDCProvider{}, fmt.Errorf("error"))
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/auth", "bloodhound", config).Return(model.OIDCProvider{}, fmt.Errorf("error"))
 
 		test.Request(t).
 			WithBody(auth.UpsertOIDCProviderRequest{
 				Name:     "test",
 				Issuer:   "https://localhost/auth",
 				ClientID: "bloodhound",
+				Config:   config,
 			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).
 			Require().

@@ -34,10 +34,19 @@ func TestBloodhoundDB_CreateUpdateOIDCProvider(t *testing.T) {
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
 	)
+
+	config := model.SSOProviderConfig{
+		AutoProvision: model.AutoProvision{
+			Enabled:       false,
+			DefaultRole:   0,
+			RoleProvision: false,
+		},
+	}
+
 	defer dbInst.Close(testCtx)
 
 	t.Run("successfully create and update an OIDC provider", func(t *testing.T) {
-		provider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com/auth", "bloodhound")
+		provider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com/auth", "bloodhound", config)
 		require.NoError(t, err)
 
 		require.Equal(t, "https://test.localhost.com/auth", provider.Issuer)
