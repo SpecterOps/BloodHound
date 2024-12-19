@@ -642,16 +642,23 @@ class BHEAPIClient {
     getSAMLProvider = (samlProviderId: string, options?: types.RequestOptions) =>
         this.baseClient.get(`/api/v2/saml/providers/${samlProviderId}`, options);
 
-    createSAMLProviderFromFile = (data: { name: string; metadata: File }, options?: types.RequestOptions) => {
+    createSAMLProviderFromFile = (
+        data: { name: string; metadata: File } & types.SSOProviderConfiguration,
+        options?: types.RequestOptions
+    ) => {
+        // form data is limited to strings or blobs so we have to deconstruct the config payload
         const formData = new FormData();
         formData.append('name', data.name);
         formData.append('metadata', data.metadata);
+        formData.append('auto_provision.enabled', data.config.auto_provision.enabled.toString());
+        formData.append('auto_provision.default_role', data.config.auto_provision.default_role.toString());
+        formData.append('auto_provision.role_provision', data.config.auto_provision.role_provision.toString());
         return this.baseClient.post(`/api/v2/saml/providers`, formData, options);
     };
 
     updateSAMLProviderFromFile = (
         ssoProviderId: types.SSOProvider['id'],
-        data: { name?: string; metadata?: File },
+        data: { name?: string; metadata?: File; config?: types.SSOProviderConfiguration['config'] },
         options?: types.RequestOptions
     ) => {
         const formData = new FormData();
@@ -660,6 +667,11 @@ class BHEAPIClient {
         }
         if (data.metadata) {
             formData.append('metadata', data.metadata);
+        }
+        if (data.config) {
+            formData.append('auto_provision.enabled', data.config.auto_provision.enabled.toString());
+            formData.append('auto_provision.default_role', data.config.auto_provision.default_role.toString());
+            formData.append('auto_provision.role_provision', data.config.auto_provision.role_provision.toString());
         }
         return this.baseClient.patch(`/api/v2/sso-providers/${ssoProviderId}`, formData, options);
     };
@@ -708,7 +720,8 @@ class BHEAPIClient {
     permissionGet = (permissionId: string, options?: types.RequestOptions) =>
         this.baseClient.get(`/api/v2/permissions/${permissionId}`, options);
 
-    getRoles = (options?: types.RequestOptions) => this.baseClient.get(`/api/v2/roles`, options);
+    getRoles = (options?: types.RequestOptions) =>
+        this.baseClient.get<types.ListRolesResponse>(`/api/v2/roles`, options);
 
     getRole = (roleId: string, options?: types.RequestOptions) =>
         this.baseClient.get(`/api/v2/roles/${roleId}`, options);

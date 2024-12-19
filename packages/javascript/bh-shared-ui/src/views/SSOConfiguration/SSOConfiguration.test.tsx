@@ -19,7 +19,15 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from '../../test-utils';
 import SSOConfiguration from './SSOConfiguration';
-import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider } from 'js-client-library';
+import { resizeObserver } from '../../mocks';
+import { ListRolesResponse, ListSSOProvidersResponse, Role, SAMLProviderInfo, SSOProvider } from 'js-client-library';
+
+const testRoles = [
+    { id: 1, name: 'Read-Only' },
+    { id: 2, name: 'Power User' },
+    { id: 3, name: 'Administrator' },
+    { id: 4, name: 'Upload Only' },
+] as Role[];
 
 const initialSAMLProvider: SSOProvider = {
     id: 1,
@@ -37,6 +45,11 @@ const initialSAMLProvider: SSOProvider = {
     } as SAMLProviderInfo,
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
+    login_uri: '',
+    callback_uri: '',
+    config: {
+        auto_provision: { enabled: false, role_provision: false, default_role: 1 },
+    },
 };
 
 const ssoProviders = [initialSAMLProvider];
@@ -57,6 +70,11 @@ const newSAMLProvider: SSOProvider = {
     } as SAMLProviderInfo,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    login_uri: '',
+    callback_uri: '',
+    config: {
+        auto_provision: { enabled: false, role_provision: false, default_role: 1 },
+    },
 };
 
 interface CreateSAMLProviderBody {
@@ -80,6 +98,15 @@ interface CreateSAMLProviderResponse {
 }
 
 const server = setupServer(
+    rest.get<any, any, ListRolesResponse>(`/api/v2/roles`, (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    roles: testRoles,
+                },
+            })
+        );
+    }),
     rest.get<any, any, ListSSOProvidersResponse>('/api/v2/sso-providers', (req, res, ctx) => {
         return res(
             ctx.json({
@@ -107,7 +134,10 @@ beforeEach(() => {
         };
     });
 });
-beforeAll(() => server.listen());
+beforeAll(() => {
+    server.listen();
+    resizeObserver();
+});
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
