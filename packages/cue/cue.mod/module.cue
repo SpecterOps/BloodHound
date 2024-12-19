@@ -15,3 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 module: "pkg.specterops.io/schemas"
+
+language: {
+  version: "v0.9.2"
+}
