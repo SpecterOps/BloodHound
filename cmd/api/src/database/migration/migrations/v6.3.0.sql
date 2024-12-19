@@ -34,6 +34,9 @@ UPDATE feature_flags SET enabled = true WHERE key = 'updated_posture_page';
 -- Fix users in bad state due to sso bug
 DELETE FROM auth_secrets WHERE id IN (SELECT auth_secrets.id FROM auth_secrets JOIN users ON users.id = auth_secrets.user_id WHERE users.sso_provider_id IS NOT NULL);
 
+-- Set the `oidc_support` feature flag to true
+UPDATE feature_flags SET enabled = true WHERE key = 'oidc_support';
+
 -- Add new config column in sso_providers table
 ALTER TABLE IF EXISTS sso_providers ADD COLUMN IF NOT EXISTS config jsonb;
 

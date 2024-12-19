@@ -270,6 +270,7 @@ const Users = () => {
                 onClose={toggleUpdateUserDialog}
                 onExited={updateUserMutation.reset}
                 userId={selectedUserId!}
+                hasSelectedSelf={hasSelectedSelf}
                 onSave={updateUserMutation.mutateAsync}
                 isLoading={updateUserMutation.isLoading}
                 error={updateUserMutation.error}

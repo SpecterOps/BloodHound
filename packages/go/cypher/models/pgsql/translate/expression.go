@@ -31,8 +31,15 @@ type PropertyLookup struct {
 }
 
 func asPropertyLookup(expression pgsql.Expression) (*pgsql.BinaryExpression, bool) {
-	if binaryExpression, isBinaryExpression := expression.(*pgsql.BinaryExpression); isBinaryExpression {
-		return binaryExpression, pgsql.OperatorIsPropertyLookup(binaryExpression.Operator)
+	switch typedExpression := expression.(type) {
+	case pgsql.AnyExpression:
+		// This is here to unwrap Any expressions that have been passed in as a property lookup. This is
+		// common when dealing with array operators. In the future this check should be handled by the
+		// caller to simplify the logic here.
+		return asPropertyLookup(typedExpression.Expression)
+
+	case *pgsql.BinaryExpression:
+		return typedExpression, pgsql.OperatorIsPropertyLookup(typedExpression.Operator)
 	}
 
 	return nil, false
@@ -64,10 +71,17 @@ func ExtractSyntaxNodeReferences(root pgsql.SyntaxNode) (*pgsql.IdentifierSet, e
 		func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
 			switch typedNode := node.(type) {
 			case pgsql.Identifier:
-				dependencies.Add(typedNode)
+				// Filter for reserved identifiers
+				if !pgsql.IsReservedIdentifier(typedNode) {
+					dependencies.Add(typedNode)
+				}
 
 			case pgsql.CompoundIdentifier:
-				dependencies.Add(typedNode.Root())
+				identifier := typedNode.Root()
+
+				if !pgsql.IsReservedIdentifier(identifier) {
+					dependencies.Add(identifier)
+				}
 			}
 		},
 	))
@@ -83,7 +97,6 @@ func applyUnaryExpressionTypeHints(expression *pgsql.UnaryExpression) error {
 
 func rewritePropertyLookupOperator(propertyLookup *pgsql.BinaryExpression, dataType pgsql.DataType) pgsql.Expression {
 	if dataType.IsArrayType() {
-		// This property lookup needs to be coerced into an array type using a function
 		return pgsql.FunctionCall{
 			Function:   pgsql.FunctionJSONBToTextArray,
 			Parameters: []pgsql.Expression{propertyLookup},
@@ -126,7 +139,7 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 
 	if isLeftHinted {
 		if isRightHinted {
-			if higherLevelHint, matchesOrConverts := leftHint.Convert(rightHint); !matchesOrConverts {
+			if higherLevelHint, matchesOrConverts := leftHint.Compatible(rightHint, expression.Operator); !matchesOrConverts {
 				return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, leftHint, rightHint)
 			} else {
 				return higherLevelHint, nil
@@ -136,44 +149,52 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 		} else if inferredRightHint == pgsql.UnknownDataType {
 			// Assume the right side is convertable and return the left operand hint
 			return leftHint, nil
-		} else if upcastHint, matchesOrConverts := leftHint.Convert(inferredRightHint); !matchesOrConverts {
+		} else if upcastHint, matchesOrConverts := leftHint.Compatible(inferredRightHint, expression.Operator); !matchesOrConverts {
 			return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, leftHint, inferredRightHint)
 		} else {
 			return upcastHint, nil
 		}
 	} else if isRightHinted {
 		// There's no left type, attempt to infer it
-		if inferredLeftHint, err := InferExpressionType(expression.ROperand); err != nil {
+		if inferredLeftHint, err := InferExpressionType(expression.LOperand); err != nil {
 			return pgsql.UnsetDataType, err
 		} else if inferredLeftHint == pgsql.UnknownDataType {
 			// Assume the right side is convertable and return the left operand hint
 			return rightHint, nil
-		} else if upcastHint, matchesOrConverts := rightHint.Convert(inferredLeftHint); !matchesOrConverts {
-			return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, leftHint, inferredLeftHint)
+		} else if upcastHint, matchesOrConverts := rightHint.Compatible(inferredLeftHint, expression.Operator); !matchesOrConverts {
+			return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, rightHint, inferredLeftHint)
 		} else {
 			return upcastHint, nil
 		}
-	} else if inferredLeftHint, err := InferExpressionType(expression.LOperand); err != nil {
-		return pgsql.UnsetDataType, err
-	} else if inferredRightHint, err := InferExpressionType(expression.ROperand); err != nil {
-		return pgsql.UnsetDataType, err
-	} else if inferredLeftHint == pgsql.UnknownDataType && inferredRightHint == pgsql.UnknownDataType {
-		// If neither side has type information then check the operator to see if it implies some type hinting
+	} else {
+		// If neither side has specific type information then check the operator to see if it implies some type
+		// hinting before resorting to inference
 		switch expression.Operator {
 		case pgsql.OperatorStartsWith, pgsql.OperatorContains, pgsql.OperatorEndsWith:
 			// String operations imply the operands must be text
 			return pgsql.Text, nil
 
-		// TODO: Boolean inference for OperatorAnd and OperatorOr may want to be plumbed here
+		case pgsql.OperatorAnd, pgsql.OperatorOr:
+			// Boolean operators that the operands must be boolean
+			return pgsql.Boolean, nil
 
 		default:
-			// Unable to infer any type information
-			return pgsql.UnknownDataType, nil
+			// The operator does not imply specific type information onto the operands. Attempt to infer any
+			// information as a last ditch effort to type the AST nodes
+			if inferredLeftHint, err := InferExpressionType(expression.LOperand); err != nil {
+				return pgsql.UnsetDataType, err
+			} else if inferredRightHint, err := InferExpressionType(expression.ROperand); err != nil {
+				return pgsql.UnsetDataType, err
+			} else if inferredLeftHint == pgsql.UnknownDataType && inferredRightHint == pgsql.UnknownDataType {
+				// Unable to infer any type information, this may be resolved elsewhere so this is not explicitly
+				// an error condition
+				return pgsql.UnknownDataType, nil
+			} else if higherLevelHint, matchesOrConverts := inferredLeftHint.Compatible(inferredRightHint, expression.Operator); !matchesOrConverts {
+				return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, inferredLeftHint, inferredRightHint)
+			} else {
+				return higherLevelHint, nil
+			}
 		}
-	} else if higherLevelHint, matchesOrConverts := inferredLeftHint.Convert(inferredRightHint); !matchesOrConverts {
-		return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, leftHint, inferredLeftHint)
-	} else {
-		return higherLevelHint, nil
 	}
 }
 
@@ -191,7 +212,7 @@ func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 		// Infer type information for well known column names
 		switch typedExpression[1] {
 		case pgsql.ColumnGraphID, pgsql.ColumnID, pgsql.ColumnStartID, pgsql.ColumnEndID:
-			return pgsql.Int4, nil
+			return pgsql.Int8, nil
 
 		case pgsql.ColumnKindID:
 			return pgsql.Int2, nil
@@ -215,12 +236,17 @@ func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 			// This is unknown, not unset meaning that it can be re-cast by future inference inspections
 			return pgsql.UnknownDataType, nil
 
-		case pgsql.OperatorAnd, pgsql.OperatorOr:
+		case pgsql.OperatorAnd, pgsql.OperatorOr, pgsql.OperatorEquals, pgsql.OperatorGreaterThan, pgsql.OperatorGreaterThanOrEqualTo,
+			pgsql.OperatorLessThan, pgsql.OperatorLessThanOrEqualTo, pgsql.OperatorIn, pgsql.OperatorJSONBFieldExists,
+			pgsql.OperatorLike, pgsql.OperatorILike, pgsql.OperatorPGArrayOverlap:
 			return pgsql.Boolean, nil
 
 		default:
 			return inferBinaryExpressionType(typedExpression)
 		}
+
+	case pgsql.Parenthetical:
+		return InferExpressionType(typedExpression.Expression)
 
 	default:
 		log.Infof("unable to infer type hint for expression type: %T", expression)
@@ -263,31 +289,65 @@ func TypeCastExpression(expression pgsql.Expression, dataType pgsql.DataType) (p
 	return pgsql.NewTypeCast(expression, dataType), nil
 }
 
-func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression, expressionTypeHint pgsql.DataType) error {
-	if leftPropertyLookup, isPropertyLookup := asPropertyLookup(expression.LOperand); isPropertyLookup {
-		if lookupRequiresElementType(expressionTypeHint, expression.Operator, expression.ROperand) {
-			// Take the base type of the array type hint: <unit> in <collection>
-			if arrayBaseType, err := expressionTypeHint.ArrayBaseType(); err != nil {
-				return err
-			} else {
-				expressionTypeHint = arrayBaseType
-			}
-		}
+func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
+	var (
+		leftPropertyLookup, hasLeftPropertyLookup   = asPropertyLookup(expression.LOperand)
+		rightPropertyLookup, hasRightPropertyLookup = asPropertyLookup(expression.ROperand)
+	)
 
-		expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, expressionTypeHint)
+	// Don't rewrite direct property comparisons
+	if hasLeftPropertyLookup && hasRightPropertyLookup {
+		return nil
 	}
 
-	if rightPropertyLookup, isPropertyLookup := asPropertyLookup(expression.ROperand); isPropertyLookup {
-		if lookupRequiresElementType(expressionTypeHint, expression.Operator, expression.LOperand) {
-			// Take the base type of the array type hint: <unit> in <collection>
-			if arrayBaseType, err := expressionTypeHint.ArrayBaseType(); err != nil {
+	if hasLeftPropertyLookup {
+		// This check exists here to prevent from overwriting a property lookup that's part of a <value> in <list>
+		// binary expression. This may want for better ergonomics in the future
+		if anyExpression, isAnyExpression := expression.ROperand.(pgsql.AnyExpression); isAnyExpression {
+			if arrayBaseType, err := anyExpression.CastType.ArrayBaseType(); err != nil {
 				return err
 			} else {
-				expressionTypeHint = arrayBaseType
+				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, arrayBaseType)
+			}
+		} else if rOperandTypeHint, err := InferExpressionType(expression.ROperand); err != nil {
+			return err
+		} else {
+			switch expression.Operator {
+			case pgsql.OperatorIn:
+				if arrayBaseType, err := rOperandTypeHint.ArrayBaseType(); err != nil {
+					return err
+				} else {
+					expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, arrayBaseType)
+				}
+
+			case pgsql.OperatorStartsWith, pgsql.OperatorEndsWith, pgsql.OperatorContains, pgsql.OperatorRegexMatch:
+				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, pgsql.Text)
+
+			default:
+				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, rOperandTypeHint)
 			}
 		}
+	}
 
-		expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, expressionTypeHint)
+	if hasRightPropertyLookup {
+		if lOperandTypeHint, err := InferExpressionType(expression.LOperand); err != nil {
+			return err
+		} else {
+			switch expression.Operator {
+			case pgsql.OperatorIn:
+				if arrayType, err := lOperandTypeHint.ToArrayType(); err != nil {
+					return err
+				} else {
+					expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, arrayType)
+				}
+
+			case pgsql.OperatorStartsWith, pgsql.OperatorEndsWith, pgsql.OperatorContains, pgsql.OperatorRegexMatch:
+				expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, pgsql.Text)
+
+			default:
+				expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, lOperandTypeHint)
+			}
+		}
 	}
 
 	return nil
@@ -301,11 +361,7 @@ func applyBinaryExpressionTypeHints(expression *pgsql.BinaryExpression) error {
 		return nil
 	}
 
-	if expressionTypeHint, err := InferExpressionType(expression); err != nil {
-		return err
-	} else {
-		return rewritePropertyLookupOperands(expression, expressionTypeHint)
-	}
+	return rewritePropertyLookupOperands(expression)
 }
 
 type Builder struct {
