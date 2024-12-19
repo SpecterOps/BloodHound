@@ -141,17 +141,19 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"metadata\" parameter", request), response)
 	} else if metadataXMLReader, err := metadataXMLFileHandles[0].Open(); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if autoProvisionEnabled, hasAutoProvisionEnabled := request.MultipartForm.Value["config.auto_provision.enabled"]; !hasAutoProvisionEnabled || len(autoProvisionEnabled) == 0 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"enabled\" parameter", request), response)
+	} else if autoProvisionEnabled, hasAutoProvisionEnabled := request.MultipartForm.Value["config.auto_provision.enabled"]; !hasAutoProvisionEnabled || len(autoProvisionEnabled) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"enabled\" parameter or \"enabled\" parameter has more than one value", request), response)
 	} else if isAutoProvisionEnabled, err := strconv.ParseBool(autoProvisionEnabled[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"enabled\" parameter could not be converted to bool", request), response)
-	} else if defaultRole, hasDefaultRole := request.MultipartForm.Value["config.auto_provision.default_role"]; !hasDefaultRole {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"default_role\" parameter", request), response)
+	} else if defaultRole, hasDefaultRole := request.MultipartForm.Value["config.auto_provision.default_role"]; !hasDefaultRole || len(defaultRole) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"default_role\" parameter or \"default_role\" has more than one value", request), response)
 	} else if defaultRoleValue, err := strconv.Atoi(defaultRole[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id must be a valid number", request), response)
 	} else if defaultRoleValue > 5 || defaultRoleValue < 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
-	} else if isRoleProvisioned, err := strconv.ParseBool(request.MultipartForm.Value["config.auto_provision.role_provision"][0]); err != nil {
+	} else if roleProvision, hasRoleProvisioned := request.MultipartForm.Value["config.auto_provision.role_provision"]; !hasRoleProvisioned || len(roleProvision) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"role_provision\" parameter or \"role_provision\" has more than one value", request), response)
+	} else if isRoleProvisioned, err := strconv.ParseBool(roleProvision[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"role_provision\" parameter could not be converted to bool", request), response)
 	} else {
 		defer metadataXMLReader.Close()
@@ -237,17 +239,19 @@ func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWrit
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"name\" parameter", request), response)
 	} else if metadataXMLFileHandles, hasMetadataXML := request.MultipartForm.File["metadata"]; len(metadataXMLFileHandles) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"metadata\" parameter", request), response)
-	} else if autoProvisionEnabled, hasAutoProvisionEnabled := request.MultipartForm.Value["config.auto_provision.enabled"]; !hasAutoProvisionEnabled || len(autoProvisionEnabled) == 0 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"enabled\" parameter", request), response)
+	} else if autoProvisionEnabled, hasAutoProvisionEnabled := request.MultipartForm.Value["config.auto_provision.enabled"]; !hasAutoProvisionEnabled || len(autoProvisionEnabled) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"enabled\" parameter or \"enabled\" parameter has more than one value", request), response)
 	} else if isAutoProvisionEnabled, err := strconv.ParseBool(autoProvisionEnabled[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"enabled\" parameter could not be converted to bool", request), response)
-	} else if defaultRole, hasDefaultRole := request.MultipartForm.Value["config.auto_provision.default_role"]; !hasDefaultRole {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"default_role\" parameter", request), response)
+	} else if defaultRole, hasDefaultRole := request.MultipartForm.Value["config.auto_provision.default_role"]; !hasDefaultRole || len(defaultRole) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"default_role\" parameter or \"default_role\" has more than one value", request), response)
 	} else if defaultRoleValue, err := strconv.Atoi(defaultRole[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id must be a valid number", request), response)
 	} else if defaultRoleValue > 5 || defaultRoleValue < 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
-	} else if isRoleProvisioned, err := strconv.ParseBool(request.MultipartForm.Value["config.auto_provision.role_provision"][0]); err != nil {
+	} else if roleProvision, hasRoleProvisioned := request.MultipartForm.Value["config.auto_provision.role_provision"]; !hasRoleProvisioned || len(roleProvision) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"role_provision\" parameter or \"role_provision\" has more than one value", request), response)
+	} else if isRoleProvisioned, err := strconv.ParseBool(roleProvision[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"role_provision\" parameter could not be converted to bool", request), response)
 	} else {
 		if isAutoProvisionEnabled {
