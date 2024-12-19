@@ -356,22 +356,16 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		}
 
 		if newUser, err := s.db.CreateUser(request.Context(), userTemplate); err != nil {
-			api.HandleDatabaseError(request, response, err)
+			if errors.Is(err, database.ErrDuplicateUserPrincipal) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicatePrincipal, request), response)
+			} else {
+				api.HandleDatabaseError(request, response, err)
+			}
 		} else {
 			api.WriteBasicResponse(request.Context(), newUser, http.StatusOK, response)
 		}
 
 	}
-}
-
-func (s ManagementResource) ensureUserHasNoAuthSecret(ctx context.Context, user model.User) error {
-	if user.AuthSecret != nil {
-		if err := s.db.DeleteAuthSecret(ctx, *user.AuthSecret); err != nil {
-			return api.FormatDatabaseError(err)
-		}
-	}
-
-	return nil
 }
 
 func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *http.Request) {
@@ -400,8 +394,10 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		user.PrincipalName = updateUserRequest.Principal
 		user.IsDisabled = updateUserRequest.IsDisabled
 
+		loggedInUser, _ := auth.GetUserFromAuthCtx(authCtx.AuthCtx)
+
 		if user.IsDisabled {
-			if loggedInUser, _ := auth.GetUserFromAuthCtx(authCtx.AuthCtx); user.ID == loggedInUser.ID {
+			if user.ID == loggedInUser.ID {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSelfDisable, request), response)
 				return
 			} else if userSessions, err := s.db.LookupActiveSessionsByUser(request.Context(), user); err != nil {
@@ -419,9 +415,6 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			if samlProviderID, err := serde.ParseInt32(updateUserRequest.SAMLProviderID); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
 				return
-			} else if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
-				api.HandleDatabaseError(request, response, err)
-				return
 			} else if provider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
@@ -431,10 +424,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 				user.SSOProviderID = provider.SSOProviderID
 			}
 		} else if updateUserRequest.SSOProviderID.Valid {
-			if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
-				api.HandleDatabaseError(request, response, err)
-				return
-			} else if _, err := s.db.GetSSOProviderById(request.Context(), updateUserRequest.SSOProviderID.Int32); err != nil {
+			if _, err := s.db.GetSSOProviderById(request.Context(), updateUserRequest.SSOProviderID.Int32); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else {
@@ -447,8 +437,23 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			user.SSOProviderID = null.NewInt32(0, false)
 		}
 
+		// Prevent a user from modifying their own roles/permissions
+		if user.ID == loggedInUser.ID {
+			if !slices.Equal(roles.IDs(), loggedInUser.Roles.IDs()) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSelfRoleChange, request), response)
+				return
+			} else if !user.SSOProviderID.Equal(loggedInUser.SSOProviderID) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSelfSSOProviderChange, request), response)
+				return
+			}
+		}
+
 		if err := s.db.UpdateUser(request.Context(), user); err != nil {
-			api.HandleDatabaseError(request, response, err)
+			if errors.Is(err, database.ErrDuplicateUserPrincipal) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicatePrincipal, request), response)
+			} else {
+				api.HandleDatabaseError(request, response, err)
+			}
 		} else {
 			response.WriteHeader(http.StatusOK)
 		}

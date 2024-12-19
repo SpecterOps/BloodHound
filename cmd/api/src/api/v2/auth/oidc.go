@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/specterops/bloodhound/log"
+
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/src/api"
@@ -96,11 +98,17 @@ func getRedirectURL(request *http.Request, provider model.SSOProvider) string {
 
 func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	if ssoProvider.OIDCProvider == nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+		// SSO misconfiguration scenario
+		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if state, err := config.GenerateRandomBase64String(77); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		log.Errorf("[OIDC] Failed to generate state: %v", err)
+		// Technical issues scenario
+		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		log.Errorf("[OIDC] Failed to create OIDC provider: %v", err)
+		// SSO misconfiguration or technical issue
+		// Treat this as a misconfiguration scenario
+		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else {
 		conf := &oauth2.Config{
 			ClientID:    ssoProvider.OIDCProvider.ClientID,
@@ -135,17 +143,25 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 	)
 
 	if ssoProvider.OIDCProvider == nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+		// SSO misconfiguration scenario
+		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if len(code) == 0 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "missing code", request), response)
+		// Missing authorization code implies a credentials or form issue
+		// Not explicitly covered, treat as technical issue
+		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if pkceVerifier, err := request.Cookie(api.AuthPKCECookieName); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "missing pkce verifier", request), response)
+		// Missing PKCE verifier - likely a technical or config issue
+		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if len(state) == 0 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "missing state", request), response)
+		// Missing state parameter - treat as technical issue
+		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if stateCookie, err := request.Cookie(api.AuthStateCookieName); err != nil || stateCookie.Value != state[0] {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "bad state", request), response)
+		// Invalid state - treat as technical issue or misconfiguration
+		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		log.Errorf("[OIDC] Failed to create OIDC provider: %v", err)
+		// SSO misconfiguration scenario
+		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else {
 		var (
 			oidcVerifier = provider.Verifier(&oidc.Config{ClientID: ssoProvider.OIDCProvider.ClientID})
@@ -157,11 +173,16 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		)
 
 		if token, err := oauth2Conf.Exchange(request.Context(), code[0], oauth2.VerifierOption(pkceVerifier.Value)); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
+			log.Errorf("[OIDC] Token exchange failed: %v", err)
+			// SAML credentials issue equivalent for OIDC authentication
+			redirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 		} else if rawIDToken, ok := token.Extra("id_token").(string); !ok { // Extract the ID Token from OAuth2 token
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "missing id token", request), response)
+			// Missing ID token - credentials issue
+			redirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 		} else if idToken, err := oidcVerifier.Verify(request.Context(), rawIDToken); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid id token", request), response)
+			log.Errorf("[OIDC] ID token verification failed: %v", err)
+			// Credentials issue scenario
+			redirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 		} else {
 			// Extract custom claims
 			var claims struct {
@@ -172,7 +193,10 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 				Verified    bool   `json:"email_verified"`
 			}
 			if err := idToken.Claims(&claims); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+				log.Errorf("[OIDC] Failed to parse claims: %v", err)
+				// Technical or credentials issue
+				// Not explicitly covered; treat as a technical issue
+				redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 			} else {
 				s.authenticator.CreateSSOSession(request, response, claims.Email, ssoProvider)
 			}

@@ -53,8 +53,6 @@ const (
 	EnterpriseKeyAdminsGroupSIDSuffix         = "-527"
 	AdministratorsGroupSIDSuffix              = "-544"
 	BackupOperatorsGroupSIDSuffix             = "-551"
-	PerformanceLogUsersSIDSuffix              = "-559"
-	DCOMUsersSIDSuffix                        = "-562"
 	AuthenticatedUsersSuffix                  = "-S-1-5-11"
 	EveryoneSuffix                            = "-S-1-1-0"
 	AdminSDHolderDNPrefix                     = "CN=ADMINSDHOLDER,CN=SYSTEM,"
@@ -73,8 +71,6 @@ func TierZeroWellKnownSIDSuffixes() []string {
 		EnterpriseKeyAdminsGroupSIDSuffix,
 		BackupOperatorsGroupSIDSuffix,
 		AdministratorsGroupSIDSuffix,
-		DCOMUsersSIDSuffix,
-		PerformanceLogUsersSIDSuffix,
 	}
 }
 
