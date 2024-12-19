@@ -653,7 +653,7 @@ func FetchDCSyncerPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, 
 }
 
 func FetchForeignGPOControllers(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
-	if domainSID, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+	if domainSID, err := getNodeDomainSIDOrObjectID(node); err != nil {
 		return nil, err
 	} else if gpoIDs, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
@@ -707,7 +707,7 @@ func FetchForeignGPOControllers(tx graph.Transaction, node *graph.Node, skip, li
 }
 
 func FetchForeignGPOControllerPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
-	if domainSID, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+	if domainSID, err := getNodeDomainSIDOrObjectID(node); err != nil {
 		return nil, err
 	} else if gpoIDs, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
@@ -760,15 +760,15 @@ func FetchForeignGPOControllerPaths(tx graph.Transaction, node *graph.Node) (gra
 }
 
 func FetchForeignAdmins(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
-	if domainSid, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+	if domainSID, err := getNodeDomainSIDOrObjectID(node); err != nil {
 		return nil, err
 	} else {
 		if directAdmins, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 			return query.And(
 				query.Kind(query.End(), ad.Computer),
 				query.Kind(query.Relationship(), ad.AdminTo),
-				query.Equals(query.EndProperty(ad.DomainSID.String()), domainSid),
-				query.Not(query.Equals(query.StartProperty(ad.DomainSID.String()), domainSid)),
+				query.Equals(query.EndProperty(ad.DomainSID.String()), domainSID),
+				query.Not(query.Equals(query.StartProperty(ad.DomainSID.String()), domainSID)),
 			)
 		})); err != nil {
 			return nil, err
@@ -776,7 +776,7 @@ func FetchForeignAdmins(tx graph.Transaction, node *graph.Node, skip, limit int)
 			return query.And(
 				query.Kind(query.Start(), ad.Group),
 				query.Kind(query.Relationship(), ad.AdminTo),
-				query.Equals(query.EndProperty(ad.DomainSID.String()), domainSid),
+				query.Equals(query.EndProperty(ad.DomainSID.String()), domainSID),
 				query.Kind(query.End(), ad.Computer),
 			)
 		})); err != nil {
@@ -791,7 +791,7 @@ func FetchForeignAdmins(tx graph.Transaction, node *graph.Node, skip, limit int)
 					BranchQuery: func() graph.Criteria {
 						return query.Or(
 							query.Kind(query.Start(), ad.Group),
-							query.Not(query.Equals(query.StartProperty(ad.DomainSID.String()), domainSid)),
+							query.Not(query.Equals(query.StartProperty(ad.DomainSID.String()), domainSID)),
 						)
 					},
 				}); err != nil {
@@ -808,15 +808,15 @@ func FetchForeignAdmins(tx graph.Transaction, node *graph.Node, skip, limit int)
 }
 
 func FetchForeignAdminPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
-	if domainSid, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+	if domainSID, err := getNodeDomainSIDOrObjectID(node); err != nil {
 		return nil, err
 	} else {
 		if directAdmins, err := ops.FetchPathSet(tx.Relationships().Filterf(func() graph.Criteria {
 			return query.And(
 				query.Kind(query.End(), ad.Computer),
 				query.Kind(query.Relationship(), ad.AdminTo),
-				query.Equals(query.EndProperty(ad.DomainSID.String()), domainSid),
-				query.Not(query.Equals(query.StartProperty(ad.DomainSID.String()), domainSid)),
+				query.Equals(query.EndProperty(ad.DomainSID.String()), domainSID),
+				query.Not(query.Equals(query.StartProperty(ad.DomainSID.String()), domainSID)),
 			)
 		})); err != nil {
 			return nil, err
@@ -824,7 +824,7 @@ func FetchForeignAdminPaths(tx graph.Transaction, node *graph.Node) (graph.PathS
 			return query.And(
 				query.Kind(query.Start(), ad.Group),
 				query.Kind(query.Relationship(), ad.AdminTo),
-				query.Equals(query.EndProperty(ad.DomainSID.String()), domainSid),
+				query.Equals(query.EndProperty(ad.DomainSID.String()), domainSID),
 				query.Kind(query.End(), ad.Computer),
 			)
 		})); err != nil {
@@ -839,7 +839,7 @@ func FetchForeignAdminPaths(tx graph.Transaction, node *graph.Node) (graph.PathS
 					BranchQuery: func() graph.Criteria {
 						return query.Or(
 							query.Kind(query.Start(), ad.Group),
-							query.Not(query.Equals(query.StartProperty(ad.DomainSID.String()), domainSid)),
+							query.Not(query.Equals(query.StartProperty(ad.DomainSID.String()), domainSID)),
 						)
 					},
 				}); err != nil {
@@ -859,12 +859,12 @@ func FetchForeignAdminPaths(tx graph.Transaction, node *graph.Node) (graph.PathS
 func CreateForeignEntityMembershipListDelegate(kind graph.Kind) analysis.ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		foreignNodes := graph.NewNodeSet()
-		if domainSid, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		if domainSID, err := getNodeDomainSIDOrObjectID(node); err != nil {
 			return nil, err
 		} else if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 			return query.And(
 				query.Kind(query.Node(), ad.Group),
-				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSid),
+				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
 			)
 		})); err != nil {
 			return nil, err
@@ -881,7 +881,7 @@ func CreateForeignEntityMembershipListDelegate(kind graph.Kind) analysis.ListDel
 						return false
 					} else if s, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 						return false
-					} else if s == domainSid {
+					} else if s == domainSID {
 						return false
 					} else {
 						return true
@@ -902,12 +902,12 @@ func CreateForeignEntityMembershipPathDelegate(kind graph.Kind) analysis.PathDel
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		foreignPaths := graph.NewPathSet()
 
-		if domainSid, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		if domainSID, err := getNodeDomainSIDOrObjectID(node); err != nil {
 			return nil, err
 		} else if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 			return query.And(
 				query.Kind(query.Node(), ad.Group),
-				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSid),
+				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
 			)
 		})); err != nil {
 			return nil, err
@@ -924,7 +924,7 @@ func CreateForeignEntityMembershipPathDelegate(kind graph.Kind) analysis.PathDel
 						return false
 					} else if s, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 						return false
-					} else if s == domainSid {
+					} else if s == domainSID {
 						return false
 					} else {
 						return true
@@ -1734,4 +1734,14 @@ func FetchAuthUsersAndEveryoneGroups(tx graph.Transaction, domainSID string) (gr
 			),
 		)
 	}))
+}
+
+func getNodeDomainSIDOrObjectID(node *graph.Node) (string, error) {
+	if sid, err := node.Properties.Get(ad.DomainSID.String()).String(); err == nil {
+		return sid, nil
+	} else if sid, err := node.Properties.Get(common.ObjectID.String()).String(); err == nil {
+		return sid, nil
+	} else {
+		return "", err
+	}
 }
