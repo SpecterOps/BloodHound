@@ -1,4 +1,3 @@
-// source https://git.bloodhound-ad.net/bhe/bloodhound-enterprise/-/blob/main/cmd/e2e/cypress/plugins/hashPassword.ts?ref_type=heads
 import { hash, argon2id } from 'argon2';
 
 /**
