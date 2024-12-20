@@ -18,11 +18,10 @@ package version
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/specterops/bloodhound/errors"
 )
 
 var (
@@ -108,7 +107,7 @@ func Parse(rawVersion string) (Version, error) {
 	}
 
 	if matches := semverParsingRegex.FindAllStringSubmatch(rawVersion[1:], 1); len(matches) != 1 {
-		return Version{}, errors.Error("expected version to be formatted: <major>.<minor>.<patch>[-<prerelease>]")
+		return Version{}, errors.New("expected version to be formatted: <major>.<minor>.<patch>[-<prerelease>]")
 	} else {
 		// Map to the first set of capture groups
 		versionParts := matches[0]

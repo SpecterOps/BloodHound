@@ -20,27 +20,26 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
-	"github.com/specterops/bloodhound/src/services/agi"
-	"github.com/specterops/bloodhound/src/services/dataquality"
-	"github.com/specterops/bloodhound/src/services/fileupload"
-	"github.com/specterops/bloodhound/src/services/ingest"
-
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/database/migration"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/src/services/agi"
+	"github.com/specterops/bloodhound/src/services/dataquality"
+	"github.com/specterops/bloodhound/src/services/fileupload"
+	"github.com/specterops/bloodhound/src/services/ingest"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-const (
-	ErrNotFound = errors.Error("entity not found")
+var (
+	ErrNotFound = errors.New("entity not found")
 )
 
 var (
