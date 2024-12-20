@@ -17,6 +17,7 @@
 package pgsql
 
 import (
+	"context"
 	"strings"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -27,7 +28,8 @@ import (
 // KindMapper is an interface that represents a service that can map a given slice of graph.Kind to a slice of
 // int16 numeric identifiers.
 type KindMapper interface {
-	MapKinds(kinds graph.Kinds) ([]int16, graph.Kinds)
+	MapKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error)
+	AssertKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error)
 }
 
 // FormattingLiteral is a syntax node that is used as a transparent formatting syntax node. The formatter will

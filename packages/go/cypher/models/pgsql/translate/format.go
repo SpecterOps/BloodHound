@@ -18,6 +18,7 @@ package translate
 
 import (
 	"bytes"
+	"context"
 
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	cypherFormat "github.com/specterops/bloodhound/cypher/models/cypher/format"
@@ -29,7 +30,7 @@ func Translated(translation Result) (string, error) {
 	return format.Statement(translation.Statement, format.NewOutputBuilder())
 }
 
-func FromCypher(regularQuery *cypher.RegularQuery, kindMapper pgsql.KindMapper, stripLiterals bool) (format.Formatted, error) {
+func FromCypher(ctx context.Context, regularQuery *cypher.RegularQuery, kindMapper pgsql.KindMapper, stripLiterals bool) (format.Formatted, error) {
 	var (
 		output  = &bytes.Buffer{}
 		emitter = cypherFormat.NewCypherEmitter(stripLiterals)
@@ -43,7 +44,7 @@ func FromCypher(regularQuery *cypher.RegularQuery, kindMapper pgsql.KindMapper, 
 
 	output.WriteString("\n")
 
-	if translation, err := Translate(regularQuery, kindMapper); err != nil {
+	if translation, err := Translate(ctx, regularQuery, kindMapper, nil); err != nil {
 		return format.Formatted{}, err
 	} else if sqlQuery, err := format.Statement(translation.Statement, format.NewOutputBuilder()); err != nil {
 		return format.Formatted{}, err
