@@ -1,6 +1,7 @@
 {
   "name": "e2e",
   "version": "0.0.1",
+  "license": "MIT",
   "engines": {
     "node": ">=22.11.0 <23"
   },
