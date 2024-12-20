@@ -283,10 +283,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         </Typography>
                         <Typography variant='body2'>
                             The GenericAll permission grants {sourceName} the ability to obtain the LAPS (RID 500
-                            administrator) password of {targetName}. {sourceName} can do so by listing a computer
-                            object's AD properties with PowerView using Get-DomainComputer {targetName}. The value of
-                            the ms-mcs-AdmPwd property will contain password of the administrative local account on{' '}
-                            {targetName}.
+                            administrator) password of {targetName}.
                         </Typography>
 
                         <Typography variant='body2'>
@@ -299,6 +296,56 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         <Typography variant='body2'>
                             Alternatively, GenericAll on a computer object can be used to perform a Resource-Based
                             Constrained Delegation attack.
+                        </Typography>
+
+                        <Typography variant='body1'> Retrieve LAPS Password </Typography>
+                        <Typography variant='body2'>
+                            For systems using legacy LAPS, the following AD computer object properties are relevant:
+                            <br />
+                            <b>- ms-Mcs-AdmPwd</b>: The plaintext LAPS password
+                            <br />
+                            <b>- ms-Mcs-AdmPwdExpirationTime</b>: The LAPS password expiration time
+                            <br />
+                        </Typography>
+                        <Typography variant='body2'>
+                            For systems using Windows LAPS (2023 edition), the following AD computer object properties
+                            are relevant:
+                            <br />
+                            <b>- msLAPS-Password</b>: The plaintext LAPS password
+                            <br />
+                            <b>- msLAPS-PasswordExpirationTime</b>: The LAPS password expiration time
+                            <br />
+                            <b>- msLAPS-EncryptedPassword</b>: The encrypted LAPS password
+                            <br />
+                            <b>- msLAPS-EncryptedPasswordHistory</b>: The encrypted LAPS password history
+                            <br />
+                            <b>- msLAPS-EncryptedDSRMPassword</b>: The encrypted Directory Services Restore Mode (DSRM)
+                            password
+                            <br />
+                            <b>- msLAPS-EncryptedDSRMPasswordHistory</b>: The encrypted DSRM password history
+                            <br />
+                        </Typography>
+                        <Typography variant='body2'>
+                            Plaintext attributes can be read using a simple LDAP client. For example, with PowerView:
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {
+                                'Get-DomainComputer "MachineName" -Properties "cn","ms-mcs-admpwd","ms-mcs-admpwdexpirationtime"'
+                            }
+                        </Typography>
+                        <Typography variant='body2'>
+                            Encrypted attributes can be decrypted using Microsoft's LAPS PowerShell module. For example:
+                        </Typography>
+                        <Typography component={'pre'}>{'Get-LapsADPassword "WIN10" -AsPlainText'}</Typography>
+                        <Typography variant='body2'>
+                            The encrypted attributes can also be retrieved and decrypted using{' '}
+                            <Link
+                                target='_blank'
+                                rel='noopener'
+                                href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
+                                lapsv2decrypt
+                            </Link>{' '}
+                            (dotnet or BOF).
                         </Typography>
 
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
