@@ -43,9 +43,7 @@ func (s *Translator) translateUpdates(scope *Scope) error {
 							if rewrittenProjections, err := buildProjection(identifierMutation.TargetBinding.Identifier, identifierMutation.UpdateBinding, scope); err != nil {
 								return err
 							} else {
-								for _, rewrittenProjection := range rewrittenProjections {
-									identifierMutation.Projection = append(identifierMutation.Projection, rewrittenProjection)
-								}
+								identifierMutation.Projection = append(identifierMutation.Projection, rewrittenProjections...)
 							}
 
 							continue
