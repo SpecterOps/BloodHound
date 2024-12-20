@@ -2,7 +2,6 @@
     "name": "bloodhound-ui",
     "version": "0.0.0",
     "type": "module",
-    "license": "MIT",
     "private": true,
     "scripts": {
         "debug": "vite --debug",
