@@ -165,6 +165,7 @@ func TestGetEntityResults(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
+	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
 		objectID, err := harness.InboundControl.ControlledUser.Properties.Get(common.ObjectID.String()).String()
 		require.Nil(t, err)
@@ -197,6 +198,7 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
+	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
 		objectID, err := harness.InboundControl.ControlledUser.Properties.Get(common.ObjectID.String()).String()
 		require.Nil(t, err)
@@ -230,6 +232,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 2})
 	require.Nil(t, err)
 
+	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
 		objectID, err := harness.InboundControl.ControlledUser.Properties.Get(common.ObjectID.String()).String()
 		require.Nil(t, err)
@@ -270,6 +273,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 
 func TestGetAssetGroupComboNode(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
 		graphQuery := queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
 		comboNode, err := graphQuery.GetAssetGroupComboNode(context.Background(), "", ad.AdminTierZero)

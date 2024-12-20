@@ -131,7 +131,7 @@ func (s *transaction) getTargetGraph() (model.Graph, error) {
 func (s *transaction) CreateNode(properties *graph.Properties, kinds ...graph.Kind) (*graph.Node, error) {
 	if graphTarget, err := s.getTargetGraph(); err != nil {
 		return nil, err
-	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s, kinds); err != nil {
+	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s.ctx, kinds); err != nil {
 		return nil, err
 	} else if propertiesJSONB, err := pgsql.PropertiesToJSONB(properties); err != nil {
 		return nil, err
@@ -192,7 +192,7 @@ func (s *transaction) Nodes() graph.NodeQuery {
 func (s *transaction) CreateRelationshipByIDs(startNodeID, endNodeID graph.ID, kind graph.Kind, properties *graph.Properties) (*graph.Relationship, error) {
 	if graphTarget, err := s.getTargetGraph(); err != nil {
 		return nil, err
-	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s, graph.Kinds{kind}); err != nil {
+	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s.ctx, graph.Kinds{kind}); err != nil {
 		return nil, err
 	} else if propertiesJSONB, err := pgsql.PropertiesToJSONB(properties); err != nil {
 		return nil, err
@@ -280,7 +280,7 @@ func (s *transaction) query(query string, parameters map[string]any) (pgx.Rows, 
 func (s *transaction) Query(query string, parameters map[string]any) graph.Result {
 	if parsedQuery, err := frontend.ParseCypher(frontend.NewContext(), query); err != nil {
 		return graph.NewErrorResult(err)
-	} else if translated, err := translate.Translate(parsedQuery, s.schemaManager); err != nil {
+	} else if translated, err := translate.Translate(s.ctx, parsedQuery, s.schemaManager, parameters); err != nil {
 		return graph.NewErrorResult(err)
 	} else if sqlQuery, err := translate.Translated(translated); err != nil {
 		return graph.NewErrorResult(err)
@@ -294,6 +294,7 @@ func (s *transaction) Raw(query string, parameters map[string]any) graph.Result 
 		return graph.NewErrorResult(err)
 	} else {
 		return &queryResult{
+			ctx:        s.ctx,
 			rows:       rows,
 			kindMapper: s.schemaManager,
 		}

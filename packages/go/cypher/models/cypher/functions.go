@@ -33,6 +33,7 @@ const (
 	ToStringFunction           = "tostring"
 	ToIntegerFunction          = "toint"
 	ListSizeFunction           = "size"
+	CoalesceFunction           = "coalesce"
 
 	// ITTC - Instant Type; Temporal Component (https://neo4j.com/docs/cypher-manual/current/functions/temporal/)
 	ITTCYear              = "year"

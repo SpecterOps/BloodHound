@@ -206,7 +206,7 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 			exprStack = append(exprStack, *typedNextExpr)
 
 		case pgsql.FunctionCall:
-			if typedNextExpr.CastType != pgsql.UnsetDataType {
+			if typedNextExpr.CastType.IsKnown() {
 				exprStack = append(exprStack, typedNextExpr.CastType, pgsql.FormattingLiteral("::"))
 			}
 
