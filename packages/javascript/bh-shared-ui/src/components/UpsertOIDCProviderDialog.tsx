@@ -20,7 +20,7 @@ import UpsertOIDCProviderForm from './UpsertOIDCProviderForm';
 
 const UpsertOIDCProviderDialog: React.FC<{
     open: boolean;
-    error?: string;
+    error: any;
     oldSSOProvider?: SSOProvider;
     onClose: () => void;
     onSubmit: (data: UpsertOIDCProviderRequest) => void;

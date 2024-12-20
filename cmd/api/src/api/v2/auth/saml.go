@@ -36,6 +36,7 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -156,7 +157,11 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 			samlIdentityProvider.SingleSignOnURI = ssoURL
 
 			if newSAMLProvider, err := s.db.CreateSAMLIdentityProvider(request.Context(), samlIdentityProvider); err != nil {
-				api.HandleDatabaseError(request, response, err)
+				if errors.Is(err, database.ErrDuplicateSSOProviderName) {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseSSOProviderDuplicateName, request), response)
+				} else {
+					api.HandleDatabaseError(request, response, err)
+				}
 			} else {
 				api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
 			}
@@ -249,7 +254,11 @@ func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWrit
 		}
 
 		if newSAMLProvider, err := s.db.UpdateSAMLIdentityProvider(request.Context(), ssoProvider); err != nil {
-			api.HandleDatabaseError(request, response, err)
+			if errors.Is(err, database.ErrDuplicateSSOProviderName) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseSSOProviderDuplicateName, request), response)
+			} else {
+				api.HandleDatabaseError(request, response, err)
+			}
 		} else {
 			api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
 		}

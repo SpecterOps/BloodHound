@@ -26,12 +26,12 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { useState, FC } from 'react';
+import { useState, useEffect, FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-library';
 
 const UpsertSAMLProviderForm: FC<{
-    error?: string;
+    error: any;
     oldSSOProvider?: SSOProvider;
     onClose: () => void;
     onSubmit: (data: UpsertSAMLProviderFormInputs) => void;
@@ -42,6 +42,7 @@ const UpsertSAMLProviderForm: FC<{
         handleSubmit,
         reset,
         formState: { errors },
+        setError,
     } = useForm<UpsertSAMLProviderFormInputs>({
         defaultValues: {
             name: oldSSOProvider?.name ?? '',
@@ -49,6 +50,26 @@ const UpsertSAMLProviderForm: FC<{
         },
     });
     const [fileValue, setFileValue] = useState(''); // small workaround to use the file input
+
+    useEffect(() => {
+        if (error) {
+            if (error?.response?.status === 409) {
+                if (error.response?.data?.errors[0]?.message.toLowerCase().includes('sso provider name')) {
+                    setError('name', { type: 'custom', message: 'SSO Provider Name is already in use.' });
+                } else {
+                    setError('root.generic', {
+                        type: 'custom',
+                        message: `A conflict has occured.`,
+                    });
+                }
+            } else {
+                setError('root.generic', {
+                    type: 'custom',
+                    message: `Unable to ${oldSSOProvider ? 'update' : 'create new'} SAML Provider configuration. Please try again.`,
+                });
+            }
+        }
+    }, [error, setError, oldSSOProvider]);
 
     const handleClose = () => {
         onClose();
@@ -126,9 +147,9 @@ const UpsertSAMLProviderForm: FC<{
                                 : 'Upload the Metadata file provided by your SAML Provider'}
                         </FormHelperText>
                     </Grid>
-                    {error && (
+                    {!!errors.root?.generic && (
                         <Grid item xs={12}>
-                            <Alert severity='error'>{error}</Alert>
+                            <Alert severity='error'>{errors.root.generic.message}</Alert>
                         </Grid>
                     )}
                 </Grid>
