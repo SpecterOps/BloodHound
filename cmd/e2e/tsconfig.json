@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "module": "Node16",
+        "typeRoots": [
+            "src/helpers/types"
+        ],
+        "moduleResolution": "node16",
+        "strict": true,
+        "strictPropertyInitialization": false,
+        "noUncheckedIndexedAccess": true
+    }
+}

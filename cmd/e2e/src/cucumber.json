@@ -1,0 +1,37 @@
+{
+    "default": {
+        "paths": [
+            "src/tests/features/"
+        ],
+        "dryRun": false,
+        "import": [
+            "src/tests/steps/*.ts",
+            "src/support/hooks.ts"
+        ],
+        "loader": [
+            "ts-node/esm"
+        ],
+        "format": [
+            "progress-bar",
+            "html:test-results/reports/html/cucumber-report.html",
+            "json:test-results/reports/json/cucumber-report.json",
+            "rerun:@rerun.txt"
+        ]
+    },
+    "rerun": {
+        "dryRun": false,
+        "import": [
+            "src/tests/steps/*.ts",
+            "src/support/hooks.ts"
+        ],
+        "loader": [
+            "ts-node/esm"
+        ],
+        "format": [
+            "progress-bar",
+            "html:test-results/reports/html/cucumber-report.html",
+            "json:test-results/reports/json/cucumber-report.json",
+            "rerun:@rerun.txt"
+        ]
+    }
+}
