@@ -20,10 +20,10 @@
 package v2_test
 
 import (
+	"errors"
 	"net/http"
 	"testing"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/integration"
 	"github.com/specterops/bloodhound/src/auth"

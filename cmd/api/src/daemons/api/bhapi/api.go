@@ -18,9 +18,9 @@ package bhapi
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/config"
 )
