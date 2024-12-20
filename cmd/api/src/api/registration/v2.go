@@ -51,12 +51,14 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		// SAML resources
 		routerInst.GET("/api/v2/saml", managementResource.ListSAMLProviders).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.GET("/api/v2/saml/sso", managementResource.ListSAMLSignOnEndpoints),
+		// DEPRECATED as of v6.3.0: Please use POST /api/v2/sso-providers/saml instead.
 		routerInst.POST("/api/v2/saml/providers", managementResource.CreateSAMLProviderMultipart).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.GET(fmt.Sprintf("/api/v2/saml/providers/{%s}", api.URIPathVariableSAMLProviderID), managementResource.GetSAMLProvider).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saml/providers/{%s}", api.URIPathVariableSAMLProviderID), managementResource.DeleteSAMLProvider).RequirePermissions(permissions.AuthManageProviders),
 
 		// SSO
 		routerInst.GET("/api/v2/sso-providers", managementResource.ListAuthProviders),
+		routerInst.POST("/api/v2/sso-providers/saml", managementResource.CreateSAMLProviderMultipart).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.POST("/api/v2/sso-providers/oidc", managementResource.CreateOIDCProvider).CheckFeatureFlag(resources.DB, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/sso-providers/{%s}", api.URIPathVariableSSOProviderID), managementResource.DeleteSSOProvider).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.PATCH(fmt.Sprintf("/api/v2/sso-providers/{%s}", api.URIPathVariableSSOProviderID), managementResource.UpdateSSOProvider).RequirePermissions(permissions.AuthManageProviders),

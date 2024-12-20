@@ -222,6 +222,8 @@ paths:
     $ref: './paths/sso.sso-providers.yaml'
   /api/v2/sso-providers/oidc:
     $ref: './paths/sso.sso-providers.oidc.yaml'
+  /api/v2/sso-providers/saml:
+    $ref: './paths/auth.sso-providers.saml.yaml'
   /api/v2/sso-providers/{sso_provider_id}:
     $ref: './paths/sso.sso-providers.id.yaml'
   /api/v2/sso-providers/{sso_provider_id}/signing-certificate:
