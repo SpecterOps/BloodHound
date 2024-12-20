@@ -1,8 +1,6 @@
 {
   "linters": {
-    "disable": [
-      "errcheck"
-    ],
+    "disable": [],
     "enable": [
       "gosimple",
       "stylecheck"
