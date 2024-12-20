@@ -19,7 +19,10 @@ parameters:
 get:
   operationId: GetSamlSignSignOnEndpoints
   summary: Get all SAML sign on endpoints
-  description: Get all SAML sign on endpoints
+  description: >
+    **Deprecated**: This endpoint will no longer be supported in a future release.
+    Please use `GET /api/v2/sso-providers` instead to list available SSO endpoints.
+  deprecated: true
   tags:
     - Auth
     - Community

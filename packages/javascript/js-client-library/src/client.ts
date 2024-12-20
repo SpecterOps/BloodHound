@@ -640,18 +640,11 @@ class BHEAPIClient {
 
     logout = (options?: types.RequestOptions) => this.baseClient.post('/api/v2/logout', options);
 
-    listSAMLSignOnEndpoints = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/saml/sso', options);
-
-    listSAMLProviders = (options?: types.RequestOptions) => this.baseClient.get(`/api/v2/saml`, options);
-
-    getSAMLProvider = (samlProviderId: string, options?: types.RequestOptions) =>
-        this.baseClient.get(`/api/v2/saml/providers/${samlProviderId}`, options);
-
     createSAMLProviderFromFile = (data: { name: string; metadata: File }, options?: types.RequestOptions) => {
         const formData = new FormData();
         formData.append('name', data.name);
         formData.append('metadata', data.metadata);
-        return this.baseClient.post(`/api/v2/saml/providers`, formData, options);
+        return this.baseClient.post(`/api/v2/sso-providers/saml`, formData, options);
     };
 
     updateSAMLProviderFromFile = (
@@ -668,30 +661,6 @@ class BHEAPIClient {
         }
         return this.baseClient.patch(`/api/v2/sso-providers/${ssoProviderId}`, formData, options);
     };
-
-    validateSAMLProvider = (
-        data: {
-            name: string;
-            displayName: string;
-            signingCertificate: string;
-            issuerUri: string;
-            singleSignOnUri: string;
-            principalAttributeMappings: string[];
-        },
-        options?: types.RequestOptions
-    ) =>
-        this.baseClient.post(
-            `/api/v2/saml/validate-idp`,
-            {
-                name: data.name,
-                display_name: data.displayName,
-                signing_certificate: data.signingCertificate,
-                issuer_uri: data.issuerUri,
-                single_signon_uri: data.singleSignOnUri,
-                principal_attribute_mappings: data.principalAttributeMappings,
-            },
-            options
-        );
 
     getSAMLProviderSigningCertificate = (ssoProviderId: types.SSOProvider['id'], options?: types.RequestOptions) =>
         this.baseClient.get(`/api/v2/sso-providers/${ssoProviderId}/signing-certificate`, options);
