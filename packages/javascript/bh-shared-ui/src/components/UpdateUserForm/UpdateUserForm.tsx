@@ -16,11 +16,11 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import {
+    Alert,
     DialogActions,
     DialogContent,
     DialogContentText,
     FormControl,
-    FormHelperText,
     Grid,
     InputLabel,
     MenuItem,
@@ -141,6 +141,7 @@ const UpdateUserFormInner: React.FC<{
         handleSubmit,
         setValue,
         formState: { errors },
+        setError,
         watch,
     } = useForm<UpdateUserRequestForm & { authenticationMethod: 'sso' | 'password' }>({
         defaultValues: {
@@ -155,7 +156,19 @@ const UpdateUserFormInner: React.FC<{
         if (authenticationMethod === 'password') {
             setValue('SSOProviderId', undefined);
         }
-    }, [authenticationMethod, setValue]);
+
+        if (error?.response) {
+            if (error?.response?.status === 409) {
+                if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
+                    setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
+                } else {
+                    setError('generic', { type: 'custom', message: `A conflict has occured.` });
+                }
+            } else {
+                setError('generic', { type: 'custom', message: 'An unexpected error occurred. Please try again.' });
+            }
+        }
+    }, [authenticationMethod, setValue, error, setError]);
 
     return (
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
@@ -359,14 +372,14 @@ const UpdateUserFormInner: React.FC<{
                             )}
                         />
                     </Grid>
+                    {!!errors.generic && (
+                        <Grid item xs={12}>
+                            <Alert severity='error'>{errors.generic.message}</Alert>
+                        </Grid>
+                    )}
                 </Grid>
             </DialogContent>
             <DialogActions>
-                {error && (
-                    <FormHelperText error style={{ margin: 0 }}>
-                        An unexpected error occurred. Please try again.
-                    </FormHelperText>
-                )}
                 <Button
                     type='button'
                     variant={'tertiary'}

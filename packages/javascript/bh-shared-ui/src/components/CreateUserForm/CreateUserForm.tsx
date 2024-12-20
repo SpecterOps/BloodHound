@@ -70,9 +70,13 @@ const CreateUserForm: React.FC<{
             setValue('SSOProviderId', undefined);
         }
 
-        if (error) {
-            if (error.response?.data?.errors[0]?.message == 'principal name must be unique') {
-                setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
+        if (error?.response) {
+            if (error?.response?.status === 409) {
+                if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
+                    setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
+                } else {
+                    setError('generic', { type: 'custom', message: `A conflict has occured.` });
+                }
             } else {
                 setError('generic', { type: 'custom', message: 'An unexpected error occurred. Please try again.' });
             }
