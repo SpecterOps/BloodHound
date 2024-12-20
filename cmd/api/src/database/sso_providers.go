@@ -198,6 +198,8 @@ func (s *BloodhoundDB) UpdateSSOProvider(ctx context.Context, ssoProvider model.
 		if result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"sso_providers_name_key\"") {
 				return fmt.Errorf("%w: %v", ErrDuplicateSSOProviderName, tx.Error)
+			} else if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"sso_providers_slug_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateSSOProviderName, tx.Error)
 			}
 		}
 
