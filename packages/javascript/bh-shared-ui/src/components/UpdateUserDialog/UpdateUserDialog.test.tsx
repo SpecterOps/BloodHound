@@ -194,6 +194,7 @@ describe('UpdateUserDialog', () => {
                 onSave={testOnSave}
                 isLoading={options?.renderLoading || false}
                 error={options?.renderErrors}
+                hasSelectedSelf={false}
             />
         );
 

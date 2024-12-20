@@ -70,7 +70,7 @@ const CreateUserForm: React.FC<{
             setValue('SSOProviderId', undefined);
         }
 
-        if (error?.response) {
+        if (error) {
             if (error?.response?.status === 409) {
                 if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
                     setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
