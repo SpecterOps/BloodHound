@@ -15,7 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 post:
-  operationId: CreateSsoSamlProvider
+  operationId: CreateSSOSAMLProvider
   summary: Create a New SAML Provider from Metadata
   description: Creates a new SAML provider with the given name and metadata XML.
   tags:
