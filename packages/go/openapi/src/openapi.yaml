@@ -205,14 +205,6 @@ paths:
     $ref: './paths/auth.logout.yaml'
   /api/v2/self:
     $ref: './paths/auth.self.yaml'
-  /api/v2/saml:
-    $ref: './paths/auth.saml.yaml'
-  /api/v2/saml/sso:
-    $ref: './paths/auth.saml.sso.yaml'
-  /api/v2/saml/providers:
-    $ref: './paths/auth.saml.providers.yaml'
-  /api/v2/saml/providers/{saml_provider_id}:
-    $ref: './paths/auth.saml.providers.id.yaml'
 
   # Undocumented, not sure how this endpoint actually works.
   #/api/v2/login/saml/{saml_provider_name}:

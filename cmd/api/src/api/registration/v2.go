@@ -49,9 +49,9 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		routerInst.PathPrefix(fmt.Sprintf("/api/{version}/login/saml/{%s}", api.URIPathVariableSSOProviderSlug), http.HandlerFunc(managementResource.SAMLLoginRedirect)),
 
 		// SAML resources
+		// DEPRECATED as of v6.4.0: Please use /api/v2/sso-providers/* endpoints instead of /api/v2/saml/*
 		routerInst.GET("/api/v2/saml", managementResource.ListSAMLProviders).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.GET("/api/v2/saml/sso", managementResource.ListSAMLSignOnEndpoints),
-		// DEPRECATED as of v6.4.0: Please use POST /api/v2/sso-providers/saml instead.
 		routerInst.POST("/api/v2/saml/providers", managementResource.CreateSAMLProviderMultipart).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.GET(fmt.Sprintf("/api/v2/saml/providers/{%s}", api.URIPathVariableSAMLProviderID), managementResource.GetSAMLProvider).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saml/providers/{%s}", api.URIPathVariableSAMLProviderID), managementResource.DeleteSAMLProvider).RequirePermissions(permissions.AuthManageProviders),
