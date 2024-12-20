@@ -1,6 +1,7 @@
 {
   "private": true,
   "name": "bloodhound-ce",
+  "license": "MIT",
   "workspaces": {
     "packages": [
       "cmd/ui",
