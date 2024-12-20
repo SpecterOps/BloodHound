@@ -19,11 +19,11 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/types"
@@ -31,8 +31,8 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	ErrAuthContextInvalid = errors.Error("auth context is invalid")
+var (
+	ErrAuthContextInvalid = errors.New("auth context is invalid")
 )
 
 func newAuditLog(context context.Context, entry model.AuditEntry, idResolver auth.IdentityResolver) (model.AuditLog, error) {

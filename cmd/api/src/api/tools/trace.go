@@ -18,18 +18,16 @@ package tools
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"runtime/pprof"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/api"
 )
 
 const (
-	errUnknownProfile = errors.Error("unknown profile")
-
 	pprofEnableDebugSymbols = 1
 
 	profileQueryParameterName = "profile"
@@ -40,6 +38,10 @@ const (
 	pprofLookupAllocations  = "allocs"
 	pprofLookupBlock        = "block"
 	pprofLookupMutex        = "mutex"
+)
+
+var (
+	errUnknownProfile = errors.New("unknown profile")
 )
 
 func getProfileFromValues(values url.Values) (string, error) {

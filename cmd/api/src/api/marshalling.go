@@ -19,12 +19,12 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
@@ -36,9 +36,11 @@ import (
 const (
 	// DefaultAPIPayloadReadLimitBytes sets the maximum API body size to 10MB
 	DefaultAPIPayloadReadLimitBytes = 10 * 1024 * 1024
+)
 
-	ErrorContentTypeJson = errors.Error("content type must be application/json")
-	ErrorNoRequestBody   = errors.Error("request body is empty")
+var (
+	ErrorContentTypeJson = errors.New("content type must be application/json")
+	ErrorNoRequestBody   = errors.New("request body is empty")
 )
 
 // These are the standardized API V2 response structures

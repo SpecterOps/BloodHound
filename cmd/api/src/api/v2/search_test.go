@@ -17,19 +17,16 @@
 package v2_test
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
-
-	"go.uber.org/mock/gomock"
-
-	"github.com/specterops/bloodhound/errors"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
-
 	graphMocks "github.com/specterops/bloodhound/src/queries/mocks"
+	"go.uber.org/mock/gomock"
 )
 
 func TestResources_SearchHandler(t *testing.T) {

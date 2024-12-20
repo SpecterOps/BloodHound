@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -25,7 +26,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
@@ -91,7 +91,7 @@ func ParseTimeQueryParameter(params url.Values, key string, defaultValue time.Ti
 
 func GetEntityObjectIDFromRequestPath(req *http.Request) (string, error) {
 	if id, hasID := mux.Vars(req)["object_id"]; !hasID {
-		return "", errors.Error("no object ID found in request")
+		return "", errors.New("no object ID found in request")
 	} else {
 		return id, nil
 	}

@@ -19,20 +19,19 @@ package v2_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"go.uber.org/mock/gomock"
-
-	"github.com/specterops/bloodhound/errors"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/test/must"
 	"github.com/specterops/bloodhound/src/utils/test"
+	"go.uber.org/mock/gomock"
 )
 
 func Test_GetApplicationConfigurations(t *testing.T) {
@@ -75,7 +74,7 @@ func Test_GetApplicationConfigurations(t *testing.T) {
 	// Second call to GetAll should fail
 	mockDB.EXPECT().
 		GetAllConfigurationParameters(gomock.Any()).
-		Return(nil, errors.Error("db error"))
+		Return(nil, errors.New("db error"))
 
 	test.Request(t).
 		WithMethod(http.MethodGet).
@@ -100,7 +99,7 @@ func Test_GetApplicationConfigurations(t *testing.T) {
 
 	mockDB.EXPECT().
 		GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).
-		Return(appcfg.Parameter{}, errors.Error("db error"))
+		Return(appcfg.Parameter{}, errors.New("db error"))
 
 	test.Request(t).
 		WithMethod(http.MethodGet).
