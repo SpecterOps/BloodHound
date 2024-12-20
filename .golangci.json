@@ -14,7 +14,7 @@
     "exclude-rules": [
       {
         "path": ".go",
-        "text": "((neo4j(.+)(NewDriver|Result))|Id|database.Database|(.+)Deprecated|batch.CreateRelationshipByIDs) is deprecated"
+        "text": "((neo4j(.+)(NewDriver|Result))|Id|database.Database|(.+)Deprecated|batch.CreateRelationshipByIDs|jwt.StandardClaims) is deprecated"
       },
       {
         "path": "hyperloglog_bench_test.go",
@@ -22,13 +22,11 @@
       },
       {
         "path": "cache_test\\.go",
-        "text": "SA1026:",
-        "severity": "warning"
+        "text": "SA1026:"
       },
       {
         "path": "foldr_test\\.go",
-        "text": "SA4000:",
-        "severity": "warning"
+        "text": "SA4000:"
       },
       {
         "path": "dawgs/util/size/(.+)",
@@ -49,21 +47,7 @@
     "default-severity": "error",
     "rules": [
       {
-        "linters": ["stylecheck", "gosimple", "unused", "errcheck", "forcetypeassert"],
-        "severity": "warning"
-      },
-      {
-        "text": "SA1019:",
-        "severity": "warning"
-      },
-      {
-        "path": "hyperloglog_bench_test\\.go",
-        "text": "SA6002:",
-        "severity": "warning"
-      },
-      {
-        "path": "expected_ingest.go",
-        "text": "ST1022:",
+        "linters": ["errcheck"],
         "severity": "warning"
       }
     ]
