@@ -35,13 +35,7 @@ func TestBloodhoundDB_CreateAndGetSSOProvider(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
-		config  = model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
-				Enabled:       false,
-				DefaultRole:   0,
-				RoleProvision: false,
-			},
-		}
+		config  = model.SSOProviderConfig{}
 	)
 	defer dbInst.Close(testCtx)
 
@@ -60,13 +54,7 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
-		config  = model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
-				Enabled:       false,
-				DefaultRole:   0,
-				RoleProvision: false,
-			},
-		}
+		config  = model.SSOProviderConfig{}
 	)
 	defer dbInst.Close(testCtx)
 
@@ -111,13 +99,7 @@ func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
-		config  = model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
-				Enabled:       false,
-				DefaultRole:   0,
-				RoleProvision: false,
-			},
-		}
+		config  = model.SSOProviderConfig{}
 	)
 	defer dbInst.Close(testCtx)
 
@@ -167,13 +149,7 @@ func TestBloodhoundDB_GetSSOProviderBySlug(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
-		config  = model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
-				Enabled:       false,
-				DefaultRole:   0,
-				RoleProvision: false,
-			},
-		}
+		config  = model.SSOProviderConfig{}
 	)
 	defer dbInst.Close(testCtx)
 
@@ -194,13 +170,7 @@ func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
-		config  = model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
-				Enabled:       false,
-				DefaultRole:   0,
-				RoleProvision: false,
-			},
-		}
+		config  = model.SSOProviderConfig{}
 	)
 	defer dbInst.Close(testCtx)
 
@@ -225,13 +195,7 @@ func TestBloodhoundDB_GetSSOProviderById(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
-		config  = model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
-				Enabled:       false,
-				DefaultRole:   0,
-				RoleProvision: false,
-			},
-		}
+		config  = model.SSOProviderConfig{}
 	)
 	defer dbInst.Close(testCtx)
 

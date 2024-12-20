@@ -33,15 +33,8 @@ func TestBloodhoundDB_CreateUpdateOIDCProvider(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
+		config  = model.SSOProviderConfig{}
 	)
-
-	config := model.SSOProviderConfig{
-		AutoProvision: model.AutoProvision{
-			Enabled:       false,
-			DefaultRole:   0,
-			RoleProvision: false,
-		},
-	}
 
 	defer dbInst.Close(testCtx)
 

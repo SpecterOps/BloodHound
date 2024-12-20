@@ -33,13 +33,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	var (
 		mockCtrl          = gomock.NewController(t)
 		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
-		config            = model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
-				Enabled:       false,
-				DefaultRole:   0,
-				RoleProvision: false,
-			},
-		}
+		config            = model.SSOProviderConfig{}
 	)
 	defer mockCtrl.Finish()
 
