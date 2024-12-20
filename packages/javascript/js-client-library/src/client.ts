@@ -651,7 +651,7 @@ class BHEAPIClient {
         const formData = new FormData();
         formData.append('name', data.name);
         formData.append('metadata', data.metadata);
-        return this.baseClient.post(`/api/v2/saml/providers`, formData, options);
+        return this.baseClient.post(`/api/v2/sso-providers/saml`, formData, options);
     };
 
     updateSAMLProviderFromFile = (

@@ -88,7 +88,7 @@ const server = setupServer(
         );
     }),
 
-    rest.post<CreateSAMLProviderBody, any, CreateSAMLProviderResponse>('/api/v2/saml/providers', (req, res, ctx) => {
+    rest.post<CreateSAMLProviderBody, any, CreateSAMLProviderResponse>('/api/v2/sso-providers/saml', (req, res, ctx) => {
         ssoProviders.push(newSAMLProvider);
         return res(ctx.json({ ...newSAMLProvider, ...(newSAMLProvider.details as SAMLProviderInfo) }));
     })
