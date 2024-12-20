@@ -216,6 +216,297 @@
         }
       }
     },
+    "/api/v2/saml": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListSamlProviders",
+        "summary": "List SAML Providers",
+        "description": "**Deprecated**: This endpoint will no longer be supported in a future release. Please use `GET /api/v2/sso-providers` instead.\n",
+        "deprecated": true,
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "saml_providers": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.saml-provider"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/saml/sso": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetSamlSignSignOnEndpoints",
+        "summary": "Get all SAML sign on endpoints",
+        "description": "**Deprecated**: This endpoint will no longer be supported in a future release. Please use `GET /api/v2/sso-providers` instead to list available SSO endpoints.\n",
+        "deprecated": true,
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "endpoints": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.saml-sign-on-endpoint"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/saml/providers": {
+      "post": {
+        "operationId": "CreateSamlProvider",
+        "summary": "Create a New SAML Provider from Metadata",
+        "description": "**Deprecated**: This endpoint will no longer be supported in a future release. Please use `POST /api/v2/sso-providers/saml` instead.\n",
+        "deprecated": true,
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the new SAML provider."
+                  },
+                  "metadata": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Metadata XML file."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.saml-provider"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/saml/providers/{saml_provider_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "description": "SAML Provider ID",
+          "name": "saml_provider_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetSamlProvider",
+        "summary": "Get SAML Provider",
+        "description": "**Deprecated**: This endpoint will no longer be supported in a future release. Please use `GET /api/v2/sso-providers/{sso_provider_id}` instead.\n",
+        "deprecated": true,
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.saml-provider"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DeleteSamlProvider",
+        "summary": "Delete a SAML Provider",
+        "description": "**Deprecated**: This endpoint will no longer be supported in a future release. Please use `DELETE /api/v2/sso-providers/{sso_provider_id}` instead.\n",
+        "deprecated": true,
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "affected_user": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.user"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict. The user is trying to delete their own SAML provider.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/sso-providers": {
       "parameters": [
         {
@@ -14102,31 +14393,6 @@
           }
         }
       },
-      "model.oidc-provider": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.components.int32.id"
-          },
-          {
-            "$ref": "#/components/schemas/model.components.timestamps"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "client_id": {
-                "type": "string"
-              },
-              "issuer": {
-                "type": "string"
-              },
-              "sso_provider_id": {
-                "type": "integer",
-                "format": "int32"
-              }
-            }
-          }
-        ]
-      },
       "model.saml-provider": {
         "allOf": [
           {
@@ -14184,6 +14450,44 @@
                     "$ref": "#/components/schemas/null.int32"
                   }
                 ]
+              }
+            }
+          }
+        ]
+      },
+      "model.saml-sign-on-endpoint": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "idp_url": {
+            "type": "string",
+            "readOnly": true
+          }
+        }
+      },
+      "model.oidc-provider": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "client_id": {
+                "type": "string"
+              },
+              "issuer": {
+                "type": "string"
+              },
+              "sso_provider_id": {
+                "type": "integer",
+                "format": "int32"
               }
             }
           }
