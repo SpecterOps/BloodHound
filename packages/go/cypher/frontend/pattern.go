@@ -91,21 +91,31 @@ func (s *RelationshipPatternVisitor) EnterOC_RelTypeName(ctx *parser.OC_RelTypeN
 }
 
 func (s *RelationshipPatternVisitor) ExitOC_RelTypeName(ctx *parser.OC_RelTypeNameContext) {
-	rel_type := ctx.GetText()
-	if rel_type == "AZ_ATTACK_PATHS" || rel_type == "ALL_ATTACK_PATHS" {
-		for _, kind := range azure.PathfindingRelationships() {
+	relationshipType := ctx.GetText()
+
+	// Helper function to add kinds from relationships
+	addKindsFromRelationships := func(kinds []graph.Kind) {
+		for _, kind := range kinds {
 			s.RelationshipPattern.Kinds = s.RelationshipPattern.Kinds.Add(kind)
 		}
 	}
 
-	if rel_type == "AD_ATTACK_PATHS" || rel_type == "ALL_ATTACK_PATHS" {
-		for _, kind := range ad.PathfindingRelationships() {
-			s.RelationshipPattern.Kinds = s.RelationshipPattern.Kinds.Add(kind)
-		}
-	}
+	// Handle Azure and AD attack paths
+	switch relationshipType {
+	case "ALL_ATTACK_PATHS":
+		addKindsFromRelationships(azure.PathfindingRelationships())
+		addKindsFromRelationships(ad.PathfindingRelationships())
 
-	kind := graph.StringKind(s.ctx.Exit().(*SymbolicNameOrReservedWordVisitor).Name)
-	s.RelationshipPattern.Kinds = append(s.RelationshipPattern.Kinds, kind)
+	case "AZ_ATTACK_PATHS":
+		addKindsFromRelationships(azure.PathfindingRelationships())
+
+	case "AD_ATTACK_PATHS":
+		addKindsFromRelationships(ad.PathfindingRelationships())
+
+	default:
+		kind := graph.StringKind(s.ctx.Exit().(*SymbolicNameOrReservedWordVisitor).Name)
+		addKindsFromRelationships([]graph.Kind{kind})
+	}
 }
 
 func (s *RelationshipPatternVisitor) EnterOC_Variable(ctx *parser.OC_VariableContext) {
