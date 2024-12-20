@@ -28,7 +28,7 @@ get:
   summary: Get SAML Provider
   description: >
     **Deprecated**: This endpoint will no longer be supported in a future release.
-    Please use `GET /api/v2/sso-providers/{sso_provider_id}` instead.
+    Please use `GET /api/v2/sso-providers` to list all SAML providers instead.
   deprecated: true
   tags:
     - Auth
