@@ -143,12 +143,12 @@ func (s *Daemon) clearFileTask(ingestTask model.IngestTask) {
 
 // preProcessIngestFile will take a path and extract zips if necessary, returning the paths for files to process
 // along with any errors and the number of failed files (in the case of a zip archive)
-func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]string, error, int) {
+func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]string, int, error) {
 	if fileType == model.FileTypeJson {
 		//If this isn't a zip file, just return a slice with the path in it and let stuff process as normal
-		return []string{path}, nil, 0
+		return []string{path}, 0, nil
 	} else if archive, err := zip.OpenReader(path); err != nil {
-		return []string{}, err, 0
+		return []string{}, 0, err
 	} else {
 		var (
 			errs      = util.NewErrorCollector()
@@ -164,7 +164,7 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 			// Break out if temp file creation fails
 			// Collect errors for other failures within the archive
 			if tempFile, err := os.CreateTemp(s.cfg.TempDirectory(), "bh"); err != nil {
-				return []string{}, err, 0
+				return []string{}, 0, err
 			} else if srcFile, err := f.Open(); err != nil {
 				errs.Add(fmt.Errorf("error opening file %s in archive %s: %v", f.Name, path, err))
 				failed++
@@ -189,7 +189,7 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 			log.Errorf("Error deleting archive %s: %v", path, err)
 		}
 
-		return filePaths, errs.Combined(), failed
+		return filePaths, failed, errs.Combined()
 	}
 }
 
@@ -202,7 +202,7 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 	} else {
 		adcsEnabled = adcsFlag.Enabled
 	}
-	if paths, err, failed := s.preProcessIngestFile(path, fileType); err != nil {
+	if paths, failed, err := s.preProcessIngestFile(path, fileType); err != nil {
 		return 0, failed, err
 	} else {
 		failed = 0

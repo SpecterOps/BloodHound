@@ -17,11 +17,11 @@
 package v2_test
 
 import (
+	"errors"
 	"net/http"
 	"testing"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"

@@ -19,6 +19,7 @@ package apiclient
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -26,7 +27,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"

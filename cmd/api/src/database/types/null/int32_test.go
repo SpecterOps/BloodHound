@@ -18,11 +18,10 @@ package null
 
 import (
 	"encoding/json"
+	"errors"
 	"math"
 	"strconv"
 	"testing"
-
-	"github.com/specterops/bloodhound/errors"
 )
 
 var (
