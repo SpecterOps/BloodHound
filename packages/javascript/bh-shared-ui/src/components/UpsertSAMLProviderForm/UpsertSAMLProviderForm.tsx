@@ -57,13 +57,13 @@ const UpsertSAMLProviderForm: FC<{
                 if (error.response?.data?.errors[0]?.message.toLowerCase().includes('sso provider name')) {
                     setError('name', { type: 'custom', message: 'SSO Provider Name is already in use.' });
                 } else {
-                    setError('generic', {
+                    setError('root.generic', {
                         type: 'custom',
                         message: `A conflict has occured.`,
                     });
                 }
             } else {
-                setError('generic', {
+                setError('root.generic', {
                     type: 'custom',
                     message: `Unable to ${oldSSOProvider ? 'update' : 'create new'} SAML Provider configuration. Please try again.`,
                 });
@@ -147,9 +147,9 @@ const UpsertSAMLProviderForm: FC<{
                                 : 'Upload the Metadata file provided by your SAML Provider'}
                         </FormHelperText>
                     </Grid>
-                    {!!errors.generic && (
+                    {!!errors.root?.generic && (
                         <Grid item xs={12}>
-                            <Alert severity='error'>{errors.generic.message}</Alert>
+                            <Alert severity='error'>{errors.root.generic.message}</Alert>
                         </Grid>
                     )}
                 </Grid>

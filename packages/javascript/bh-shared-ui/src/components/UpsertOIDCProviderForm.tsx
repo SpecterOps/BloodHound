@@ -46,13 +46,13 @@ const UpsertOIDCProviderForm: FC<{
                 if (error.response?.data?.errors[0]?.message.toLowerCase().includes('sso provider name')) {
                     setError('name', { type: 'custom', message: 'SSO Provider Name is already in use.' });
                 } else {
-                    setError('generic', {
+                    setError('root.generic', {
                         type: 'custom',
                         message: 'A conflict has occured.',
                     });
                 }
             } else {
-                setError('generic', {
+                setError('root.generic', {
                     type: 'custom',
                     message: `Unable to ${oldSSOProvider ? 'update' : 'create new'} OIDC Provider configuration. Please try again.`,
                 });
@@ -134,9 +134,9 @@ const UpsertOIDCProviderForm: FC<{
                             )}
                         />
                     </Grid>
-                    {!!errors.generic && (
+                    {!!errors.root?.generic && (
                         <Grid item xs={12}>
-                            <Alert severity='error'>{errors.generic.message}</Alert>
+                            <Alert severity='error'>{errors.root.generic.message}</Alert>
                         </Grid>
                     )}
                 </Grid>

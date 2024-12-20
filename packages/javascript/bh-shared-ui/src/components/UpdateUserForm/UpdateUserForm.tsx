@@ -162,10 +162,13 @@ const UpdateUserFormInner: React.FC<{
                 if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
                     setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
                 } else {
-                    setError('generic', { type: 'custom', message: `A conflict has occured.` });
+                    setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
                 }
             } else {
-                setError('generic', { type: 'custom', message: 'An unexpected error occurred. Please try again.' });
+                setError('root.generic', {
+                    type: 'custom',
+                    message: 'An unexpected error occurred. Please try again.',
+                });
             }
         }
     }, [authenticationMethod, setValue, error, setError]);
@@ -372,9 +375,9 @@ const UpdateUserFormInner: React.FC<{
                             )}
                         />
                     </Grid>
-                    {!!errors.generic && (
+                    {!!errors.root?.generic && (
                         <Grid item xs={12}>
-                            <Alert severity='error'>{errors.generic.message}</Alert>
+                            <Alert severity='error'>{errors.root.generic.message}</Alert>
                         </Grid>
                     )}
                 </Grid>
