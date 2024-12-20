@@ -116,6 +116,11 @@ const testSSOProviders: SSOProvider[] = [
         id: 1,
         created_at: '2024-01-01T12:00:00Z',
         updated_at: '2024-01-01T12:00:00Z',
+        login_uri: '',
+        callback_uri: '',
+        config: {
+            auto_provision: { enabled: false, role_provision: false, default_role: 1 },
+        },
     },
 ];
 

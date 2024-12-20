@@ -15,10 +15,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { render, screen, waitFor } from '../../test-utils';
-import UpsertSAMLProviderForm from './UpsertSAMLProviderForm';
+import { render, screen, waitFor } from '../../../test-utils';
+import { resizeObserver } from '../../../mocks';
+import UpsertSAMLProviderForm, { backfillSSOProviderConfig } from './UpsertSAMLProviderForm';
+import { Role } from 'js-client-library';
+
+const testRoles = [
+    { id: 1, name: 'Read-Only' },
+    { id: 2, name: 'Power User' },
+    { id: 3, name: 'Administrator' },
+    { id: 4, name: 'Upload Only' },
+] as Role[];
 
 describe('UpsertSAMLProviderForm', () => {
+    beforeAll(() => resizeObserver());
+
     it('should render inputs, labels, and action buttons', () => {
         const testOnClose = vi.fn();
         const testOnSubmit = vi.fn();
@@ -27,6 +38,10 @@ describe('UpsertSAMLProviderForm', () => {
         expect(screen.getByLabelText('SAML Provider Name')).toBeInTheDocument();
 
         expect(screen.getByLabelText('Choose File')).toBeInTheDocument();
+
+        expect(screen.getByTestId('sso-provider-config-form_toggle-auto-provision')).toBeInTheDocument();
+        expect(screen.getByTestId('sso-provider-config-form_toggle-role-provision')).toBeInTheDocument();
+        expect(screen.getByTestId('sso-provider-config-form_select-default-role')).toBeInTheDocument();
 
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
 
@@ -65,7 +80,7 @@ describe('UpsertSAMLProviderForm', () => {
         const testOnSubmit = vi.fn();
         const validProviderName = 'test-provider-name';
         const validMetadata = new File([], 'test-metadata.xml');
-        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
+        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} roles={testRoles} />);
 
         await user.type(screen.getByLabelText('SAML Provider Name'), validProviderName);
 
@@ -74,5 +89,31 @@ describe('UpsertSAMLProviderForm', () => {
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 
         await waitFor(() => expect(testOnSubmit).toHaveBeenCalled());
+    });
+
+    it('should backfill SSOProviderConfiguration that are undefined', async () => {
+        const user = userEvent.setup();
+        const testOnClose = vi.fn();
+        const testOnSubmit = vi.fn();
+        const validProviderName = 'test-provider-name';
+        const validMetadata = new File([], 'test-metadata.xml');
+        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} roles={testRoles} />);
+
+        await user.type(screen.getByLabelText('SAML Provider Name'), validProviderName);
+
+        await user.upload(screen.getByLabelText('Choose File'), validMetadata);
+
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+        await waitFor(() =>
+            expect(testOnSubmit).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    name: validProviderName,
+                    metadata: expect.any(FileList),
+                    config: backfillSSOProviderConfig(1),
+                }),
+                expect.anything() // ignore the react synthetic event that react-hook-form passes this func
+            )
+        );
     });
 });
