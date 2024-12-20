@@ -14,7 +14,11 @@
     "exclude-rules": [
       {
         "path": ".go",
-        "text": "((neo4j(.+)(NewDriver|Result))|Id|database.Database|(.+)Deprecated) is deprecated"
+        "text": "((neo4j(.+)(NewDriver|Result))|Id|database.Database|(.+)Deprecated|batch.CreateRelationshipByIDs) is deprecated"
+      },
+      {
+        "path": "hyperloglog_bench_test.go",
+        "text": "SA6002:"
       },
       {
         "path": "cache_test\\.go",

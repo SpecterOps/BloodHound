@@ -144,6 +144,9 @@ func Copy[T any](value T, extensions ...CopyExtension[T]) T {
 	case *Merge:
 		return any(typedValue.copy()).(T)
 
+	case *MergeAction:
+		return any(typedValue.copy()).(T)
+
 	case *KindMatcher:
 		return any(typedValue.copy()).(T)
 
