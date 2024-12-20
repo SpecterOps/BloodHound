@@ -36,6 +36,8 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -139,6 +141,20 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"metadata\" parameter", request), response)
 	} else if metadataXMLReader, err := metadataXMLFileHandles[0].Open(); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if autoProvisionEnabled, hasAutoProvisionEnabled := request.MultipartForm.Value["config.auto_provision.enabled"]; !hasAutoProvisionEnabled || len(autoProvisionEnabled) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"enabled\" parameter or \"enabled\" parameter has more than one value", request), response)
+	} else if isAutoProvisionEnabled, err := strconv.ParseBool(autoProvisionEnabled[0]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"enabled\" parameter could not be converted to bool", request), response)
+	} else if defaultRole, hasDefaultRole := request.MultipartForm.Value["config.auto_provision.default_role"]; !hasDefaultRole || len(defaultRole) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"default_role\" parameter or \"default_role\" has more than one value", request), response)
+	} else if defaultRoleValue, err := strconv.Atoi(defaultRole[0]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id must be a valid number", request), response)
+	} else if defaultRoleValue > 5 || defaultRoleValue < 0 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
+	} else if roleProvision, hasRoleProvisioned := request.MultipartForm.Value["config.auto_provision.role_provision"]; !hasRoleProvisioned || len(roleProvision) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"role_provision\" parameter or \"role_provision\" has more than one value", request), response)
+	} else if isRoleProvisioned, err := strconv.ParseBool(roleProvision[0]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"role_provision\" parameter could not be converted to bool", request), response)
 	} else {
 		defer metadataXMLReader.Close()
 
@@ -149,13 +165,38 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 		} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(metadata, saml.HTTPPostBinding); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
 		} else {
+			var config model.SSOProviderConfig
+
+			if isAutoProvisionEnabled {
+				// Role IDs range from 1 to 5, and so a value of 0 indicates that the int32 DefaultRole value is unset
+				if defaultRoleValue == 0 {
+					defaultRoleValue = 3
+				}
+
+				config = model.SSOProviderConfig{
+					AutoProvision: model.AutoProvision{
+						Enabled:       isAutoProvisionEnabled,
+						DefaultRole:   int32(defaultRoleValue),
+						RoleProvision: isRoleProvisioned,
+					},
+				}
+			} else {
+				config = model.SSOProviderConfig{
+					AutoProvision: model.AutoProvision{
+						Enabled:       isAutoProvisionEnabled,
+						DefaultRole:   0,
+						RoleProvision: false,
+					},
+				}
+			}
+
 			samlIdentityProvider.Name = providerNames[0]
 			samlIdentityProvider.DisplayName = providerNames[0]
 			samlIdentityProvider.MetadataXML = metadataXML
 			samlIdentityProvider.IssuerURI = metadata.EntityID
 			samlIdentityProvider.SingleSignOnURI = ssoURL
 
-			if newSAMLProvider, err := s.db.CreateSAMLIdentityProvider(request.Context(), samlIdentityProvider); err != nil {
+			if newSAMLProvider, err := s.db.CreateSAMLIdentityProvider(request.Context(), samlIdentityProvider, config); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else {
 				api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
@@ -198,7 +239,36 @@ func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWrit
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"name\" parameter", request), response)
 	} else if metadataXMLFileHandles, hasMetadataXML := request.MultipartForm.File["metadata"]; len(metadataXMLFileHandles) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"metadata\" parameter", request), response)
+	} else if autoProvisionEnabled, hasAutoProvisionEnabled := request.MultipartForm.Value["config.auto_provision.enabled"]; !hasAutoProvisionEnabled || len(autoProvisionEnabled) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"enabled\" parameter or \"enabled\" parameter has more than one value", request), response)
+	} else if isAutoProvisionEnabled, err := strconv.ParseBool(autoProvisionEnabled[0]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"enabled\" parameter could not be converted to bool", request), response)
+	} else if defaultRole, hasDefaultRole := request.MultipartForm.Value["config.auto_provision.default_role"]; !hasDefaultRole || len(defaultRole) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"default_role\" parameter or \"default_role\" has more than one value", request), response)
+	} else if defaultRoleValue, err := strconv.Atoi(defaultRole[0]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id must be a valid number", request), response)
+	} else if defaultRoleValue > 5 || defaultRoleValue < 0 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
+	} else if roleProvision, hasRoleProvisioned := request.MultipartForm.Value["config.auto_provision.role_provision"]; !hasRoleProvisioned || len(roleProvision) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"role_provision\" parameter or \"role_provision\" has more than one value", request), response)
+	} else if isRoleProvisioned, err := strconv.ParseBool(roleProvision[0]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"role_provision\" parameter could not be converted to bool", request), response)
 	} else {
+		if isAutoProvisionEnabled {
+			// Role IDs range from 1 to 5, and so a value of 0 indicates that the int32 DefaultRole value is unset
+			if defaultRoleValue == 0 {
+				defaultRoleValue = 3
+			}
+
+			ssoProvider.Config.AutoProvision.Enabled = isAutoProvisionEnabled
+			ssoProvider.Config.AutoProvision.DefaultRole = int32(defaultRoleValue)
+			ssoProvider.Config.AutoProvision.RoleProvision = isRoleProvisioned
+		} else {
+			ssoProvider.Config.AutoProvision.Enabled = isAutoProvisionEnabled
+			ssoProvider.Config.AutoProvision.DefaultRole = 0
+			ssoProvider.Config.AutoProvision.RoleProvision = false
+		}
+
 		if hasProviderName {
 			ssoProvider.Name = providerNames[0]
 
@@ -386,6 +456,42 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 				log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", ssoProvider.Name, err)
 				// SAML credentials issue scenario again
 				redirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
+			} else if ssoProvider.Config.AutoProvision.Enabled {
+				if user, err := s.db.LookupUser(request.Context(), principalName); err != nil {
+					if errors.Is(err, database.ErrNotFound) {
+						user.EmailAddress = null.StringFrom(principalName)
+						user.PrincipalName = principalName
+						user.Roles = model.Roles{
+							{
+								Serial: model.Serial{
+									ID: ssoProvider.Config.AutoProvision.DefaultRole,
+								},
+							},
+						}
+						user.SSOProviderID = null.Int32From(ssoProvider.ID)
+
+						// Need to find a work around since BHE cannot auto accept EULA as true
+						user.EULAAccepted = true
+
+						if givenName, err := ssoProvider.SAMLProvider.GetSAMLUserGivenNameFromAssertion(assertion); err != nil {
+							user.FirstName = null.StringFrom(principalName)
+						} else {
+							user.FirstName = null.StringFrom(givenName)
+						}
+
+						if surname, err := ssoProvider.SAMLProvider.GetSAMLUserSurNameFromAssertion(assertion); err != nil {
+							user.LastName = null.StringFrom("Last name not found")
+						} else {
+							user.LastName = null.StringFrom(surname)
+						}
+
+						if _, err := s.db.CreateUser(request.Context(), user); err != nil {
+							api.HandleDatabaseError(request, response, err)
+						}
+
+						s.authenticator.CreateSSOSession(request, response, principalName, ssoProvider)
+					}
+				}
 			} else {
 				s.authenticator.CreateSSOSession(request, response, principalName, ssoProvider)
 			}

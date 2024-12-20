@@ -32,7 +32,7 @@ const (
 
 // SAMLProviderData defines the interface required to interact with the oidc_providers table
 type SAMLProviderData interface {
-	CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error)
+	CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider, config model.SSOProviderConfig) (model.SAMLProvider, error)
 	GetAllSAMLProviders(ctx context.Context) (model.SAMLProviders, error)
 	GetSAMLProvider(ctx context.Context, id int32) (model.SAMLProvider, error)
 	GetSAMLProviderUsers(ctx context.Context, id int32) (model.Users, error)
@@ -42,7 +42,7 @@ type SAMLProviderData interface {
 // CreateSAMLIdentityProvider creates a new saml_providers row using the data in the input struct
 // This also creates the corresponding sso_provider entry
 // INSERT INTO saml_identity_providers (...) VALUES (...)
-func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error) {
+func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider, config model.SSOProviderConfig) (model.SAMLProvider, error) {
 	// Set the current version for root_uri_version
 	samlProvider.RootURIVersion = model.SAMLRootURIVersion2
 
@@ -55,7 +55,7 @@ func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvi
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
 
 		// Create the associated SSO provider
-		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, samlProvider.Name, model.SessionAuthProviderSAML); err != nil {
+		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, samlProvider.Name, model.SessionAuthProviderSAML, config); err != nil {
 			return err
 		} else {
 			samlProvider.SSOProviderID = null.Int32From(ssoProvider.ID)
