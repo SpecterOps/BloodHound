@@ -52,9 +52,16 @@ const UpsertSAMLProviderForm: FC<{
     const [fileValue, setFileValue] = useState(''); // small workaround to use the file input
 
     useEffect(() => {
-        if (error) {
-            if (error.response?.data?.errors[0]?.message == 'sso provider name must be unique') {
-                setError('name', { type: 'custom', message: 'SSO Provider Name is already in use.' });
+        if (error?.response) {
+            if (error?.response?.status === 409) {
+                if (error.response?.data?.errors[0]?.message.toLowerCase().includes('sso provider name')) {
+                    setError('name', { type: 'custom', message: 'SSO Provider Name is already in use.' });
+                } else {
+                    setError('generic', {
+                        type: 'custom',
+                        message: `A conflict has occured.`,
+                    });
+                }
             } else {
                 setError('generic', {
                     type: 'custom',

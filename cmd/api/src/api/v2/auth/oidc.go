@@ -69,7 +69,11 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 		}
 
 		if oidcProvider, err := s.db.UpdateOIDCProvider(request.Context(), ssoProvider); err != nil {
-			api.HandleDatabaseError(request, response, err)
+			if errors.Is(err, database.ErrDuplicateSSOProviderName) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseSSOProviderDuplicateName, request), response)
+			} else {
+				api.HandleDatabaseError(request, response, err)
+			}
 		} else {
 			api.WriteBasicResponse(request.Context(), oidcProvider, http.StatusOK, response)
 		}

@@ -41,13 +41,20 @@ const UpsertOIDCProviderForm: FC<{
     } = useForm<UpsertOIDCProviderRequest>({ defaultValues });
 
     useEffect(() => {
-        if (error) {
-            if (error.response?.data?.errors[0]?.message == 'sso provider name must be unique') {
-                setError('name', { type: 'custom', message: 'SSO Provider Name is already in use.' });
+        if (error?.response) {
+            if (error?.response?.status === 409) {
+                if (error.response?.data?.errors[0]?.message.toLowerCase().includes('sso provider name')) {
+                    setError('name', { type: 'custom', message: 'SSO Provider Name is already in use.' });
+                } else {
+                    setError('generic', {
+                        type: 'custom',
+                        message: 'A conflict has occured.',
+                    });
+                }
             } else {
                 setError('generic', {
                     type: 'custom',
-                    message: `Unable to ${oldSSOProvider ? 'update' : 'create new'} SAML Provider configuration. Please try again.`,
+                    message: `Unable to ${oldSSOProvider ? 'update' : 'create new'} OIDC Provider configuration. Please try again.`,
                 });
             }
         }

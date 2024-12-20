@@ -191,7 +191,15 @@ func (s *BloodhoundDB) UpdateSSOProvider(ctx context.Context, ssoProvider model.
 	}
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET name = ?, slug = ?, updated_at = ? WHERE id = ?;", ssoProviderTableName), ssoProvider.Name, ssoProvider.Slug, time.Now().UTC(), ssoProvider.ID))
+		result := tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET name = ?, slug = ?, updated_at = ? WHERE id = ?;", ssoProviderTableName), ssoProvider.Name, ssoProvider.Slug, time.Now().UTC(), ssoProvider.ID)
+
+		if result.Error != nil {
+			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"sso_providers_name_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateSSOProviderName, tx.Error)
+			}
+		}
+
+		return CheckError(result)
 	})
 
 	return ssoProvider, err
