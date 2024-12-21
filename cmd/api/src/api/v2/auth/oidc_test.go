@@ -48,7 +48,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 				Name:     "Bloodhound gang",
 				Issuer:   "https://localhost/auth",
 				ClientID: "bloodhound",
-				Config:   config,
+				Config:   &config,
 			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).
 			Require().
@@ -93,7 +93,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 				Name:     "test",
 				Issuer:   "https://localhost/auth",
 				ClientID: "bloodhound",
-				Config:   config,
+				Config:   &config,
 			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).
 			Require().

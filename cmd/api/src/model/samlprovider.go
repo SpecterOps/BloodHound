@@ -162,35 +162,11 @@ func (s SAMLProvider) GetSAMLUserPrincipalNameFromAssertion(assertion *saml.Asse
 }
 
 func (s SAMLProvider) GetSAMLUserGivenNameFromAssertion(assertion *saml.Assertion) (string, error) {
-	for _, attrStmt := range assertion.AttributeStatements {
-		for _, attr := range attrStmt.Attributes {
-			for _, value := range attr.Values {
-				log.Infof("[SAML] Assertion contains attribute: %s - %s=%v", attr.NameFormat, attr.Name, value)
-			}
-		}
-	}
-
-	if givenName, err := assertionFindString(assertion, s.givenNameAttributeNames()...); err != nil {
-		return "", ErrSAMLAssertion
-	} else {
-		return givenName, nil
-	}
+	return assertionFindString(assertion, s.givenNameAttributeNames()...)
 }
 
 func (s SAMLProvider) GetSAMLUserSurNameFromAssertion(assertion *saml.Assertion) (string, error) {
-	for _, attrStmt := range assertion.AttributeStatements {
-		for _, attr := range attrStmt.Attributes {
-			for _, value := range attr.Values {
-				log.Infof("[SAML] Assertion contains attribute: %s - %s=%v", attr.NameFormat, attr.Name, value)
-			}
-		}
-	}
-
-	if surname, err := assertionFindString(assertion, s.surnameAttributeNames()...); err != nil {
-		return "", ErrSAMLAssertion
-	} else {
-		return surname, nil
-	}
+	return assertionFindString(assertion, s.surnameAttributeNames()...)
 }
 
 func (s *SAMLProvider) FormatSAMLProviderURLs(hostUrl url.URL) {

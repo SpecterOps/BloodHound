@@ -38,10 +38,10 @@ import (
 
 // UpsertOIDCProviderRequest represents the body of create & update provider endpoints
 type UpsertOIDCProviderRequest struct {
-	Name     string                  `json:"name" validate:"required"`
-	Issuer   string                  `json:"issuer"  validate:"url"`
-	ClientID string                  `json:"client_id" validate:"required"`
-	Config   model.SSOProviderConfig `json:"config"`
+	Name     string                   `json:"name" validate:"required"`
+	Issuer   string                   `json:"issuer"  validate:"url"`
+	ClientID string                   `json:"client_id" validate:"required"`
+	Config   *model.SSOProviderConfig `json:"config,omitempty"`
 }
 
 // UpdateOIDCProviderRequest updates an OIDC provider, support for only partial payloads
@@ -52,8 +52,6 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&upsertReq, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if upsertReq.Config.AutoProvision.Enabled && (upsertReq.Config.AutoProvision.DefaultRole > 5 || upsertReq.Config.AutoProvision.DefaultRole < 1) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
 	} else {
 		if upsertReq.Name != "" {
 			ssoProvider.Name = upsertReq.Name
@@ -72,19 +70,17 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 			ssoProvider.OIDCProvider.Issuer = upsertReq.Issuer
 		}
 
-		if upsertReq.Config.AutoProvision.Enabled {
-			// Role IDs range from 1 to 5, and so a value of 0 indicates that the int32 DefaultRole value is unset
-			if upsertReq.Config.AutoProvision.DefaultRole == 0 {
-				upsertReq.Config.AutoProvision.DefaultRole = 3
+		if upsertReq.Config != nil {
+			if _, err := s.db.GetRole(request.Context(), int32(upsertReq.Config.AutoProvision.DefaultRole)); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
+				return
 			}
 
-			ssoProvider.Config.AutoProvision.Enabled = upsertReq.Config.AutoProvision.Enabled
-			ssoProvider.Config.AutoProvision.DefaultRole = upsertReq.Config.AutoProvision.DefaultRole
-			ssoProvider.Config.AutoProvision.RoleProvision = upsertReq.Config.AutoProvision.RoleProvision
-		} else {
-			ssoProvider.Config.AutoProvision.Enabled = upsertReq.Config.AutoProvision.Enabled
-			ssoProvider.Config.AutoProvision.DefaultRole = 0
-			ssoProvider.Config.AutoProvision.RoleProvision = false
+			if !upsertReq.Config.AutoProvision.Enabled {
+				ssoProvider.Config.AutoProvision = model.AutoProvision{}
+			} else {
+				ssoProvider.Config.AutoProvision = upsertReq.Config.AutoProvision
+			}
 		}
 
 		if oidcProvider, err := s.db.UpdateOIDCProvider(request.Context(), ssoProvider); err != nil {
@@ -103,20 +99,16 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if validated := validation.Validate(upsertReq); validated != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, validated.Error(), request), response)
-	} else if upsertReq.Config.AutoProvision.Enabled && (upsertReq.Config.AutoProvision.DefaultRole > 5 || upsertReq.Config.AutoProvision.DefaultRole < 1) {
+	} else if upsertReq.Config == nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "config is required", request), response)
+	} else if _, err := s.db.GetRole(request.Context(), int32(upsertReq.Config.AutoProvision.DefaultRole)); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
 	} else {
-		if upsertReq.Config.AutoProvision.Enabled {
-			// Role IDs range from 1 to 5, and so a value of 0 indicates that the int32 DefaultRole value is unset
-			if upsertReq.Config.AutoProvision.DefaultRole == 0 {
-				upsertReq.Config.AutoProvision.DefaultRole = 3
-			}
-		} else {
-			upsertReq.Config.AutoProvision.DefaultRole = 0
-			upsertReq.Config.AutoProvision.RoleProvision = false
+		if !upsertReq.Config.AutoProvision.Enabled {
+			upsertReq.Config.AutoProvision = model.AutoProvision{}
 		}
 
-		if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), upsertReq.Name, upsertReq.Issuer, upsertReq.ClientID, upsertReq.Config); err != nil {
+		if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), upsertReq.Name, upsertReq.Issuer, upsertReq.ClientID, *upsertReq.Config); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), oidcProvider, http.StatusCreated, response)
@@ -233,43 +225,41 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 			} else if claims.Email == "" {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "email claim is missing", request), response)
 				return
-			} else if ssoProvider.Config.AutoProvision.Enabled {
-				if user, err := s.db.LookupUser(request.Context(), claims.Email); err != nil {
-					if errors.Is(err, database.ErrNotFound) {
-						user.EmailAddress = null.StringFrom(claims.Email)
-						user.PrincipalName = claims.Email
-						user.Roles = model.Roles{
-							{
-								Serial: model.Serial{
-									ID: ssoProvider.Config.AutoProvision.DefaultRole,
-								},
-							},
+			} else {
+				if ssoProvider.Config.AutoProvision.Enabled {
+					if user, err := s.db.LookupUser(request.Context(), claims.Email); err != nil {
+						if errors.Is(err, database.ErrNotFound) {
+							if role, err := s.db.GetRole(request.Context(), ssoProvider.Config.AutoProvision.DefaultRole); err != nil {
+								api.HandleDatabaseError(request, response, err)
+								return
+							} else {
+								user = model.User{
+									EmailAddress:  null.StringFrom(claims.Email),
+									PrincipalName: claims.Email,
+									Roles:         model.Roles{role},
+									SSOProviderID: null.Int32From(ssoProvider.ID),
+									EULAAccepted:  true, // Need to find a work around since BHE cannot auto accept EULA as true
+									FirstName:     null.StringFrom(claims.Email),
+									LastName:      null.StringFrom("Last name not found"),
+								}
+
+								if claims.DisplayName != "" {
+									user.FirstName = null.StringFrom(claims.DisplayName)
+								}
+
+								if claims.FamilyName != "" {
+									user.LastName = null.StringFrom(claims.FamilyName)
+								}
+
+								if _, err := s.db.CreateUser(request.Context(), user); err != nil {
+									log.Errorf("It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging. Error: %v", err)
+								}
+
+							}
 						}
-						user.SSOProviderID = null.Int32From(ssoProvider.ID)
-
-						// Need to find a work around since BHE cannot auto accept EULA as true *****
-						user.EULAAccepted = true
-
-						if claims.DisplayName == "" {
-							user.FirstName = null.StringFrom(claims.Email)
-						} else {
-							user.FirstName = null.StringFrom(claims.DisplayName)
-						}
-
-						if claims.FamilyName == "" {
-							user.LastName = null.StringFrom("Last name not found")
-						} else {
-							user.LastName = null.StringFrom(claims.FamilyName)
-						}
-
-						if _, err := s.db.CreateUser(request.Context(), user); err != nil {
-							api.HandleDatabaseError(request, response, err)
-						}
-
-						s.authenticator.CreateSSOSession(request, response, claims.Email, ssoProvider)
 					}
 				}
-			} else {
+
 				s.authenticator.CreateSSOSession(request, response, claims.Email, ssoProvider)
 			}
 		}

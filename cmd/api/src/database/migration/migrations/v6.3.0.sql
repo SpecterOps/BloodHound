@@ -40,8 +40,5 @@ UPDATE feature_flags SET enabled = true WHERE key = 'oidc_support';
 -- Add new config column in sso_providers table
 ALTER TABLE IF EXISTS sso_providers ADD COLUMN IF NOT EXISTS config jsonb;
 
--- So that you can delete a user without going into the user_roles table *****
-ALTER TABLE IF EXISTS users_roles
-  DROP CONSTRAINT IF EXISTS fk_users_roles_user;
-ALTER TABLE IF EXISTS users_roles
-  ADD CONSTRAINT fk_users_roles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+-- Update sso_providers table by backfilling existing sso providers' new config column with default values
+UPDATE sso_providers set config = '{"auto_provision": {"enabled": false, "default_role": 0, "role_provision": false}}';
