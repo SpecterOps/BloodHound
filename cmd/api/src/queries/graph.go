@@ -367,7 +367,6 @@ type PreparedQuery struct {
 }
 
 func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error) {
-
 	var (
 		cypherFilters = []frontend.Visitor{
 			&frontend.ExplicitProcedureInvocationFilter{},
@@ -381,8 +380,6 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 
 	// If cypher mutations are disabled, we want to add the updating clause filter to properly error as unsupported query
 	if !s.EnableCypherMutations {
-		cypherFilters = append(cypherFilters, &frontend.UpdatingNotAllowedClauseFilter{})
-	} else {
 		cypherFilters = append(cypherFilters, &frontend.UpdatingClauseFilter{})
 	}
 
