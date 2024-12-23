@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Given, When, Then } from "@cucumber/cucumber";
+import { Given, Then } from "@cucumber/cucumber";
 import { expect } from "@playwright/test";
 
 Given('User visits the login page', async function () {
