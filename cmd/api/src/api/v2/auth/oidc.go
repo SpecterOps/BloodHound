@@ -25,7 +25,6 @@ import (
 	"github.com/specterops/bloodhound/log"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/config"
