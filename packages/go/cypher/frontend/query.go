@@ -485,6 +485,9 @@ func (s *DeleteVisitor) EnterOC_Expression(ctx *parser.OC_ExpressionContext) {
 }
 
 func (s *DeleteVisitor) ExitOC_Expression(ctx *parser.OC_ExpressionContext) {
+	if s.ctx.HasMutation {
+		s.ctx.AddErrors(ErrUpdateWithExpansionNotSupported)
+	}
 	s.Delete.Expressions = append(s.Delete.Expressions, s.ctx.Exit().(*ExpressionVisitor).Expression)
 }
 
