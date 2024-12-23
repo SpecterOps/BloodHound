@@ -107,6 +107,17 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
 select s0.e0 as r
 from s0;
 
+-- case: match ()-[r]->() where r.bool_prop return r
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite                        as n0,
+                   (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0,
+                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite                        as n1
+            from edge e0
+                   join node n0 on n0.id = e0.start_id
+                   join node n1 on n1.id = e0.end_id
+            where (e0.properties -> 'bool_prop')::bool)
+select s0.e0 as r
+from s0;
+
 -- todo: with 1 as a match (n) where n.name = a with n match (r) where r.tag_id = n.tag return r
 ;
 
@@ -292,3 +303,34 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
 select s0.e0 as r
 from s0
 limit 1;
+
+-- case: match (n1)-[]->(n2) where n1 <> n2 return n2
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite                        as n0,
+                   (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0,
+                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite                        as n1
+            from edge e0
+                   join node n0 on n0.id = e0.start_id
+                   join node n1 on n1.id = e0.end_id
+            where n0.id <> n1.id)
+select s0.n1 as n2
+from s0;
+
+-- case: match ()-[r]->()-[e]->(n) where r <> e return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite                        as n0,
+                   (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0,
+                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite                        as n1
+            from edge e0
+                   join node n0 on n0.id = e0.start_id
+                   join node n1 on n1.id = e0.end_id),
+     s1 as (select s0.e0                                                                     as e0,
+                   s0.n0                                                                     as n0,
+                   s0.n1                                                                     as n1,
+                   (e1.id, e1.start_id, e1.end_id, e1.kind_id, e1.properties)::edgecomposite as e1,
+                   (n2.id, n2.kind_ids, n2.properties)::nodecomposite                        as n2
+            from s0,
+                 edge e1
+                   join node n2 on n2.id = e1.end_id
+            where (s0.n1).id = e1.start_id
+              and (s0.e0).id <> e1.id)
+select s1.n2 as n
+from s1;

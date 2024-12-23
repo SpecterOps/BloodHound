@@ -216,7 +216,7 @@ func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 			return pgsql.Int2, nil
 
 		case pgsql.ColumnKindIDs:
-			return pgsql.Int4Array, nil
+			return pgsql.Int2Array, nil
 
 		case pgsql.ColumnProperties:
 			return pgsql.JSONB, nil
@@ -602,28 +602,29 @@ func (s *ExpressionTreeTranslator) Peek() pgsql.Expression {
 	return s.treeBuilder.Peek()
 }
 
-func (s *ExpressionTreeTranslator) NumConstraints() int {
-	return len(s.IdentifierConstraints.Constraints)
-}
-
 func (s *ExpressionTreeTranslator) Pop() (pgsql.Expression, error) {
 	return s.treeBuilder.Pop()
 }
 
-func (s *ExpressionTreeTranslator) popOperandAsConstraint() error {
-	if operand, err := s.Pop(); err != nil {
+func (s *ExpressionTreeTranslator) popExpressionAsConstraint() error {
+	if nextExpression, err := s.Pop(); err != nil {
 		return err
-	} else if identifierDeps, err := ExtractSyntaxNodeReferences(operand); err != nil {
+	} else if identifierDeps, err := ExtractSyntaxNodeReferences(nextExpression); err != nil {
 		return err
 	} else {
-		return s.Constrain(identifierDeps, operand)
+		if propertyLookup, isPropertyLookup := asPropertyLookup(nextExpression); isPropertyLookup {
+			// If this is a bare property lookup rewrite it with the intended type of boolean
+			nextExpression = rewritePropertyLookupOperator(propertyLookup, pgsql.Boolean)
+		}
+
+		return s.Constrain(identifierDeps, nextExpression)
 	}
 }
 
-func (s *ExpressionTreeTranslator) ConstrainRemainingOperands() error {
+func (s *ExpressionTreeTranslator) PopRemainingExpressionsAsConstraints() error {
 	// Pull the right operand only if one exists
 	for !s.treeBuilder.IsEmpty() {
-		if err := s.popOperandAsConstraint(); err != nil {
+		if err := s.popExpressionAsConstraint(); err != nil {
 			return err
 		}
 	}
@@ -669,7 +670,7 @@ func (s *ExpressionTreeTranslator) ConstrainConjoinedOperandPair() error {
 		return fmt.Errorf("expected at least one operand for constraint extraction")
 	}
 
-	if err := s.popOperandAsConstraint(); err != nil {
+	if err := s.popExpressionAsConstraint(); err != nil {
 		return err
 	}
 
@@ -729,7 +730,7 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 							newExpression.ROperand = pgsql.CompoundIdentifier{typedROperand, pgsql.ColumnID}
 
 						case pgsql.PathComposite:
-							return fmt.Errorf("invalid comparison for path identifier %s", typedLOperand)
+							return fmt.Errorf("comparison for path identifiers is unsupported")
 						}
 					}
 				}

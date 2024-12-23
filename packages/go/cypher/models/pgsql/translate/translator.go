@@ -746,7 +746,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		s.exitState(StateTranslatingWhere)
 
 		// Assign the last operands as identifier set constraints
-		if err := s.treeTranslator.ConstrainRemainingOperands(); err != nil {
+		if err := s.treeTranslator.PopRemainingExpressionsAsConstraints(); err != nil {
 			s.SetError(err)
 		}
 
