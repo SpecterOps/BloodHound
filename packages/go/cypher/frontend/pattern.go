@@ -103,13 +103,25 @@ func (s *RelationshipPatternVisitor) ExitOC_RelTypeName(ctx *parser.OC_RelTypeNa
 	// Handle Azure and AD attack paths
 	switch relationshipType {
 	case "ALL_ATTACK_PATHS":
+		s.ctx.HasShortcutExpansion = true
+		if s.ctx.HasMutation {
+			s.ctx.AddErrors(ErrUpdateWithExpansionNotSupported)
+		}
 		addKindsFromRelationships(azure.PathfindingRelationships())
 		addKindsFromRelationships(ad.PathfindingRelationships())
 
 	case "AZ_ATTACK_PATHS":
+		s.ctx.HasShortcutExpansion = true
+		if s.ctx.HasMutation {
+			s.ctx.AddErrors(ErrUpdateWithExpansionNotSupported)
+		}
 		addKindsFromRelationships(azure.PathfindingRelationships())
 
 	case "AD_ATTACK_PATHS":
+		s.ctx.HasShortcutExpansion = true
+		if s.ctx.HasMutation {
+			s.ctx.AddErrors(ErrUpdateWithExpansionNotSupported)
+		}
 		addKindsFromRelationships(ad.PathfindingRelationships())
 
 	default:
