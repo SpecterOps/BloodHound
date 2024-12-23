@@ -18,9 +18,10 @@ package visualization
 
 import (
 	"bytes"
+	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/cypher/models/pgsql/test"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg/pgutil"
 
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/cypher/models/pgsql/translate"
@@ -28,12 +29,12 @@ import (
 )
 
 func TestGraphToPUMLDigraph(t *testing.T) {
-	kindMapper := test.NewInMemoryKindMapper()
+	kindMapper := pgutil.NewInMemoryKindMapper()
 
 	regularQuery, err := frontend.ParseCypher(frontend.NewContext(), "match (s), (e) where s.name = s.other + 1 / s.last return s")
 	require.Nil(t, err)
 
-	translation, err := translate.Translate(regularQuery, kindMapper)
+	translation, err := translate.Translate(context.Background(), regularQuery, kindMapper, nil)
 	require.Nil(t, err)
 
 	graph, err := SQLToDigraph(translation.Statement)

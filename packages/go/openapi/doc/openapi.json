@@ -225,7 +225,8 @@
       "get": {
         "operationId": "ListSamlProviders",
         "summary": "List SAML Providers",
-        "description": "List all registered SAML providers.",
+        "description": "**Deprecated**: This endpoint will no longer be supported in a future release. Please use `GET /api/v2/sso-providers` instead.\n",
+        "deprecated": true,
         "tags": [
           "Auth",
           "Community",
@@ -279,7 +280,8 @@
       "get": {
         "operationId": "GetSamlSignSignOnEndpoints",
         "summary": "Get all SAML sign on endpoints",
-        "description": "Get all SAML sign on endpoints",
+        "description": "**Deprecated**: This endpoint will no longer be supported in a future release. Please use `GET /api/v2/sso-providers` instead to list available SSO endpoints.\n",
+        "deprecated": true,
         "tags": [
           "Auth",
           "Community",
@@ -323,7 +325,8 @@
       "post": {
         "operationId": "CreateSamlProvider",
         "summary": "Create a New SAML Provider from Metadata",
-        "description": "Creates a new SAML provider with the given name and metadata XML.",
+        "description": "**Deprecated**: This endpoint will no longer be supported in a future release. Please use `POST /api/v2/sso-providers/saml` instead.\n",
+        "deprecated": true,
         "tags": [
           "Auth",
           "Community",
@@ -402,7 +405,8 @@
       "get": {
         "operationId": "GetSamlProvider",
         "summary": "Get SAML Provider",
-        "description": "Get the service and identity provider configuration details for a SAML authentication provider.",
+        "description": "**Deprecated**: This endpoint will no longer be supported in a future release. Please use `GET /api/v2/sso-providers` to list all SAML providers instead.\n",
+        "deprecated": true,
         "tags": [
           "Auth",
           "Community",
@@ -444,7 +448,8 @@
       "delete": {
         "operationId": "DeleteSamlProvider",
         "summary": "Delete a SAML Provider",
-        "description": "Deletes an existing BloodHound SAML provider.",
+        "description": "**Deprecated**: This endpoint will no longer be supported in a future release. Please use `DELETE /api/v2/sso-providers/{sso_provider_id}` instead.\n",
+        "deprecated": true,
         "tags": [
           "Auth",
           "Community",
@@ -606,6 +611,70 @@
                   "properties": {
                     "data": {
                       "$ref": "#/components/schemas/model.oidc-provider"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sso-providers/saml": {
+      "post": {
+        "operationId": "CreateSSOSAMLProvider",
+        "summary": "Create a New SAML Provider from Metadata",
+        "description": "Creates a new SAML provider with the given name and metadata XML.",
+        "tags": [
+          "Auth",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the new SAML provider."
+                  },
+                  "metadata": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Metadata XML file."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.saml-provider"
                     }
                   }
                 }

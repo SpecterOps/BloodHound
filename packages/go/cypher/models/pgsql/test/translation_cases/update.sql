@@ -146,7 +146,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
             from edge e0
                    join node n0 on n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n0.id = e0.start_id
                    join node n1 on n1.id = e0.end_id
-            where e0.kind_id = any (array [11]::int2[])),
+            where e0.kind_id = any (array [3]::int2[])),
      s1
        as (update edge e1 set properties = e1.properties ||
                                            jsonb_build_object('visited', true)::jsonb from s0 where (s0.e0).id = e1.id returning (e1.id, e1.start_id, e1.end_id, e1.kind_id, e1.properties)::edgecomposite as e0, s0.n0 as n0, s0.n1 as n1)

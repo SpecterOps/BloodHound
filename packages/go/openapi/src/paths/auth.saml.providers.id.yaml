@@ -26,8 +26,10 @@ parameters:
 get:
   operationId: GetSamlProvider
   summary: Get SAML Provider
-  description: Get the service and identity provider configuration details for a
-    SAML authentication provider.
+  description: >
+    **Deprecated**: This endpoint will no longer be supported in a future release.
+    Please use `GET /api/v2/sso-providers` to list all SAML providers instead.
+  deprecated: true
   tags:
     - Auth
     - Community
@@ -55,7 +57,10 @@ get:
 delete:
   operationId: DeleteSamlProvider
   summary: Delete a SAML Provider
-  description: Deletes an existing BloodHound SAML provider.
+  description: >
+    **Deprecated**: This endpoint will no longer be supported in a future release.
+    Please use `DELETE /api/v2/sso-providers/{sso_provider_id}` instead.
+  deprecated: true
   tags:
     - Auth
     - Community

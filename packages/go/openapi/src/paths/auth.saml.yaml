@@ -19,7 +19,10 @@ parameters:
 get:
   operationId: ListSamlProviders
   summary: List SAML Providers
-  description: List all registered SAML providers.
+  description: >
+    **Deprecated**: This endpoint will no longer be supported in a future release.
+    Please use `GET /api/v2/sso-providers` instead.
+  deprecated: true
   tags:
     - Auth
     - Community

@@ -220,10 +220,10 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
 select s0.n0 as s
 from s0;
 
--- case: match (s) where s.created_at = localtime('12:12:12') return s
+-- case: match (s) where s.created_at = localtime('4:4:4') return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
-            where (n0.properties ->> 'created_at')::time without time zone = ('12:12:12')::time without time zone)
+            where (n0.properties ->> 'created_at')::time without time zone = ('4:4:4')::time without time zone)
 select s0.n0 as s
 from s0;
 
@@ -234,10 +234,10 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
 select s0.n0 as s
 from s0;
 
--- case: match (s) where s.created_at = date('2023-12-12') return s
+-- case: match (s) where s.created_at = date('2023-4-4') return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
-            where (n0.properties ->> 'created_at')::date = ('2023-12-12')::date)
+            where (n0.properties ->> 'created_at')::date = ('2023-4-4')::date)
 select s0.n0 as s
 from s0;
 
@@ -559,5 +559,37 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where @pi0::float8 = any (jsonb_to_text_array(n0.properties -> 'array')::float8[])
                or @pi1::text = any (jsonb_to_text_array(n0.properties -> 'array')::text[]))
+select s0.n0 as n
+from s0;
+
+-- case: match (n:NodeKind1) where coalesce(n.system_tags, '') contains 'admin_tier_0' return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and coalesce(n0.properties ->> 'system_tags', '')::text like '%admin_tier_0%')
+select s0.n0 as n
+from s0;
+
+-- case: match (n:NodeKind1) where coalesce(n.a, n.b, 1) = 1 return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and coalesce((n0.properties -> 'a')::int8, (n0.properties -> 'b')::int8, 1)::int8 = 1)
+select s0.n0 as n
+from s0;
+
+-- case: match (n:NodeKind1) where coalesce(n.a, n.b) = 1 return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and coalesce(n0.properties -> 'a', n0.properties -> 'b')::int8 = 1)
+select s0.n0 as n
+from s0;
+
+-- case: match (n:NodeKind1) where 1 = coalesce(n.a, n.b) return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and 1 = coalesce(n0.properties -> 'a', n0.properties -> 'b')::int8)
 select s0.n0 as n
 from s0;

@@ -43,7 +43,7 @@ func newLiveQuery(ctx context.Context, tx graph.Transaction, kindMapper KindMapp
 func (s *liveQuery) runRegularQuery(allShortestPaths bool) graph.Result {
 	if regularQuery, err := s.queryBuilder.Build(allShortestPaths); err != nil {
 		return graph.NewErrorResult(err)
-	} else if translation, err := translate.FromCypher(regularQuery, s.kindMapper, false); err != nil {
+	} else if translation, err := translate.FromCypher(s.ctx, regularQuery, s.kindMapper, false); err != nil {
 		return graph.NewErrorResult(err)
 	} else {
 		return s.tx.Raw(translation.Statement, translation.Parameters)
