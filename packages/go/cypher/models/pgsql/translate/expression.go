@@ -96,6 +96,9 @@ func applyUnaryExpressionTypeHints(expression *pgsql.UnaryExpression) error {
 
 func rewritePropertyLookupOperator(propertyLookup *pgsql.BinaryExpression, dataType pgsql.DataType) pgsql.Expression {
 	if dataType.IsArrayType() {
+		// Ensure that array conversions use JSONB
+		propertyLookup.Operator = pgsql.OperatorJSONField
+
 		return pgsql.FunctionCall{
 			Function:   pgsql.FunctionJSONBToTextArray,
 			Parameters: []pgsql.Expression{propertyLookup},
@@ -113,11 +116,11 @@ func rewritePropertyLookupOperator(propertyLookup *pgsql.BinaryExpression, dataT
 		return pgsql.NewTypeCast(propertyLookup, dataType)
 
 	case pgsql.UnknownDataType:
-		propertyLookup.Operator = pgsql.OperatorJSONField
+		propertyLookup.Operator = pgsql.OperatorJSONTextField
 		return propertyLookup
 
 	default:
-		propertyLookup.Operator = pgsql.OperatorJSONField
+		propertyLookup.Operator = pgsql.OperatorJSONTextField
 		return pgsql.NewTypeCast(propertyLookup, dataType)
 	}
 }
@@ -231,7 +234,8 @@ func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 	case *pgsql.BinaryExpression:
 		switch typedExpression.Operator {
 		case pgsql.OperatorJSONTextField:
-			return pgsql.Text, nil
+			// Text field lookups could be text or an unknown lookup - reduce it to an unknown type
+			return pgsql.UnknownDataType, nil
 
 		case pgsql.OperatorPropertyLookup, pgsql.OperatorJSONField:
 			// This is unknown, not unset meaning that it can be re-cast by future inference inspections
@@ -292,8 +296,11 @@ func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 		rightPropertyLookup, hasRightPropertyLookup = asPropertyLookup(expression.ROperand)
 	)
 
-	// Don't rewrite direct property comparisons
+	// Ensure that direct property comparisons prefer JSONB - JSONB
 	if hasLeftPropertyLookup && hasRightPropertyLookup {
+		leftPropertyLookup.Operator = pgsql.OperatorJSONField
+		rightPropertyLookup.Operator = pgsql.OperatorJSONField
+
 		return nil
 	}
 
@@ -368,13 +375,15 @@ func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
 					typedLOperand.CastType = rOperandArrayTypeHint
 					expression.LOperand = typedLOperand
 				}
-			}
+			} else if !rOperandTypeHint.IsKnown() {
+				expression.ROperand = pgsql.NewTypeCast(expression.ROperand, typedLOperand.CastType.ArrayBaseType())
+			} else {
+				// Validate against the array base type of the any-expression
+				lOperandBaseType := typedLOperand.CastType.ArrayBaseType()
 
-			// Validate against the array base type of the any-expression
-			lOperandBaseType := typedLOperand.CastType.ArrayBaseType()
-
-			if !lOperandBaseType.IsComparable(rOperandTypeHint, expression.Operator) {
-				return fmt.Errorf("function call has return signature of type %s but is being compared using operator %s against type %s", typedLOperand.CastType, expression.Operator, rOperandTypeHint)
+				if !lOperandBaseType.IsComparable(rOperandTypeHint, expression.Operator) {
+					return fmt.Errorf("function call has return signature of type %s but is being compared using operator %s against type %s", typedLOperand.CastType, expression.Operator, rOperandTypeHint)
+				}
 			}
 		}
 
@@ -385,6 +394,8 @@ func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
 			if !typedLOperand.CastType.IsKnown() {
 				typedLOperand.CastType = rOperandTypeHint
 				expression.LOperand = typedLOperand
+			} else if !rOperandTypeHint.IsKnown() {
+				expression.LOperand = pgsql.NewTypeCast(expression.LOperand, typedLOperand.CastType)
 			}
 
 			if pgsql.OperatorIsComparator(expression.Operator) && !typedLOperand.CastType.IsComparable(rOperandTypeHint, expression.Operator) {
@@ -406,13 +417,15 @@ func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
 					typedROperand.CastType = rOperandArrayTypeHint
 					expression.LOperand = typedROperand
 				}
-			}
+			} else if !lOperandTypeHint.IsKnown() {
+				expression.LOperand = pgsql.NewTypeCast(expression.LOperand, typedROperand.CastType.ArrayBaseType())
+			} else {
+				// Validate against the array base type of the any-expression
+				rOperandBaseType := typedROperand.CastType.ArrayBaseType()
 
-			// Validate against the array base type of the any-expression
-			rOperandBaseType := typedROperand.CastType.ArrayBaseType()
-
-			if !rOperandBaseType.IsComparable(lOperandTypeHint, expression.Operator) {
-				return fmt.Errorf("function call has return signature of type %s but is being compared using operator %s against type %s", typedROperand.CastType, expression.Operator, lOperandTypeHint)
+				if !rOperandBaseType.IsComparable(lOperandTypeHint, expression.Operator) {
+					return fmt.Errorf("function call has return signature of type %s but is being compared using operator %s against type %s", typedROperand.CastType, expression.Operator, lOperandTypeHint)
+				}
 			}
 		}
 
@@ -423,6 +436,8 @@ func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
 			if !typedROperand.CastType.IsKnown() {
 				typedROperand.CastType = lOperandTypeHint
 				expression.ROperand = typedROperand
+			} else if !lOperandTypeHint.IsKnown() {
+				expression.LOperand = pgsql.NewTypeCast(expression.LOperand, typedROperand.CastType)
 			}
 
 			if pgsql.OperatorIsComparator(expression.Operator) && !typedROperand.CastType.IsComparable(lOperandTypeHint, expression.Operator) {
@@ -439,7 +454,7 @@ func applyBinaryExpressionTypeHints(expression *pgsql.BinaryExpression) error {
 	switch expression.Operator {
 	case pgsql.OperatorPropertyLookup:
 		// Don't directly hint property lookups but replace the operator with the JSON operator
-		expression.Operator = pgsql.OperatorJSONField
+		expression.Operator = pgsql.OperatorJSONTextField
 		return nil
 	}
 
@@ -1023,6 +1038,9 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 						} else if leftArrayHint, err := leftHint.ToArrayType(); err != nil {
 							return err
 						} else {
+							// Ensure the lookup uses the JSONB type
+							propertyLookup.Operator = pgsql.OperatorJSONField
+
 							newExpression.ROperand = pgsql.NewAnyExpression(
 								pgsql.FunctionCall{
 									Function:   pgsql.FunctionJSONBToTextArray,

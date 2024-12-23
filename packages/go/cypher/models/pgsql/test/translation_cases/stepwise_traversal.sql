@@ -92,7 +92,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
             from edge e0
                    join node n0 on n0.properties ->> 'name' = '123' and n0.id = e0.start_id
                    join node n1 on n1.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n1.id = e0.end_id
-            where not (e0.properties -> 'property')::bool)
+            where not (e0.properties ->> 'property')::bool)
 select s0.n0 as s, s0.e0 as r, s0.n1 as e
 from s0;
 
@@ -103,7 +103,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
             from edge e0
                    join node n0 on n0.id = e0.start_id
                    join node n1 on n1.id = e0.end_id
-            where (e0.properties -> 'value')::int8 = 42)
+            where (e0.properties ->> 'value')::int8 = 42)
 select s0.e0 as r
 from s0;
 
@@ -114,7 +114,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
             from edge e0
                    join node n0 on n0.id = e0.start_id
                    join node n1 on n1.id = e0.end_id
-            where (e0.properties -> 'bool_prop')::bool)
+            where (e0.properties ->> 'bool_prop')::bool)
 select s0.e0 as r
 from s0;
 
@@ -144,7 +144,7 @@ from s0;
 -- case: match (f), (s)-[r]->(e) where not f.bool_field and s.name = '123' and e.name = '321' return f, s, r, e
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
-            where not (n0.properties -> 'bool_field')::bool),
+            where not (n0.properties ->> 'bool_field')::bool),
      s1 as (select s0.n0                                                                     as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite                        as n1,
                    (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0,
@@ -221,7 +221,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                    join node n0 on n0.id = e0.end_id
                    join node n1 on n1.id = e0.start_id
             where e0.kind_id = any (array [3, 4]::int2[]))
-select (s0.n0).properties -> 'name', (s0.n1).properties -> 'name'
+select (s0.n0).properties ->> 'name', (s0.n1).properties ->> 'name'
 from s0;
 
 -- case: match (s)-[:EdgeKind1|EdgeKind2]->(e)-[:EdgeKind1]->() return s.name as s_name, e.name as e_name
@@ -242,7 +242,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                    join node n2 on n2.id = e1.end_id
             where e1.kind_id = any (array [3]::int2[])
               and (s0.n1).id = e1.start_id)
-select (s1.n0).properties -> 'name' as s_name, (s1.n1).properties -> 'name' as e_name
+select (s1.n0).properties ->> 'name' as s_name, (s1.n1).properties ->> 'name' as e_name
 from s1;
 
 -- case: match (s:NodeKind1)-[r:EdgeKind1|EdgeKind2]->(e:NodeKind2) return s.name, e.name
@@ -253,7 +253,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                    join node n0 on n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n0.id = e0.start_id
                    join node n1 on n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and n1.id = e0.end_id
             where e0.kind_id = any (array [3, 4]::int2[]))
-select (s0.n0).properties -> 'name', (s0.n1).properties -> 'name'
+select (s0.n0).properties ->> 'name', (s0.n1).properties ->> 'name'
 from s0;
 
 -- case: match (s)-[r:EdgeKind1]->() where (s)-[r {prop: 'a'}]->() return s
@@ -334,3 +334,13 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
               and (s0.e0).id <> e1.id)
 select s1.n2 as n
 from s1;
+
+-- case: match p = ()-[]->(e) where e.np = 123 return p
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite                        as n0,
+                   (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0,
+                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite                        as n1
+            from edge e0
+                   join node n0 on n0.id = e0.start_id
+                   join node n1 on (n1.properties ->> 'np')::int8 = 123 and n1.id = e0.end_id)
+select edges_to_path(variadic array [(s0.e0).id]::int8[])::pathcomposite as p
+from s0;

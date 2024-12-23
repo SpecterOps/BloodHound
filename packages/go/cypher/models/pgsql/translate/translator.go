@@ -606,7 +606,10 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 			} else {
 				var functionCall pgsql.FunctionCall
 
-				if _, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+				if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+					// Ensure that the JSONB array length function receives the JSONB type
+					propertyLookup.Operator = pgsql.OperatorJSONField
+
 					functionCall = pgsql.FunctionCall{
 						Function:   pgsql.FunctionJSONBArrayLength,
 						Parameters: []pgsql.Expression{argument},

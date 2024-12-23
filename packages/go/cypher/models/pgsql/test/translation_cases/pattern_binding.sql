@@ -90,7 +90,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                    (n2.id, n2.kind_ids, n2.properties)::nodecomposite                        as n2
             from s0,
                  edge e1
-                   join node n2 on (n2.properties -> 'is_target')::bool and n2.id = e1.start_id
+                   join node n2 on (n2.properties ->> 'is_target')::bool and n2.id = e1.start_id
             where (s0.n1).id = e1.end_id)
 select edges_to_path(variadic array [(s1.e0).id, (s1.e1).id]::int8[])::pathcomposite as p
 from s1;

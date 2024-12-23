@@ -252,6 +252,7 @@ func (s *Translator) translateCoalesceFunction(functionInvocation *cypher.Functi
 
 		// Find and validate types of the arguments
 		for _, argument := range arguments {
+			// Properties have no type information and should be skipped
 			if argumentType, err := InferExpressionType(argument); err != nil {
 				return err
 			} else if argumentType.IsKnown() {

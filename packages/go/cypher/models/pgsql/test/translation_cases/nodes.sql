@@ -108,15 +108,15 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
      s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s0,
                  node n1
-            where n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and ((s0.n0).properties -> 'selected')::bool
-               or (s0.n0).properties -> 'tid' = n1.properties -> 'tid' and (n1.properties -> 'enabled')::bool)
+            where n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and ((s0.n0).properties ->> 'selected')::bool
+               or (s0.n0).properties -> 'tid' = n1.properties -> 'tid' and (n1.properties ->> 'enabled')::bool)
 select s1.n0 as s, s1.n1 as e
 from s1;
 
 -- case: match (s) where s.value + 2 / 3 > 10 return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
-            where (n0.properties -> 'value')::int8 + 2 / 3 > 10)
+            where (n0.properties ->> 'value')::int8 + 2 / 3 > 10)
 select s0.n0 as s
 from s0;
 
@@ -127,7 +127,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
      s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s0,
                  node n1)
-select s1.n0 as s, (s1.n1).properties -> 'name' as othername
+select s1.n0 as s, (s1.n1).properties ->> 'name' as othername
 from s1;
 
 -- case: match (s) where s.name in ['option 1', 'option 2'] return s
@@ -172,7 +172,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
      s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s0,
                  node n1
-            where (n1.properties -> 'other')::int8 = 1234)
+            where (n1.properties ->> 'other')::int8 = 1234)
 select s1.n0 as s
 from s1;
 
@@ -182,7 +182,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
             from s0,
                  node n1
             where (s0.n0).properties ->> 'name' = '1234'
-               or (n1.properties -> 'other')::int8 = 1234)
+               or (n1.properties ->> 'other')::int8 = 1234)
 select s1.n0 as s
 from s1;
 
@@ -211,7 +211,7 @@ offset 5 limit 10;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0)
 select s0.n0 as s
 from s0
-order by (s0.n0).properties -> 'name', (s0.n0).properties -> 'other_prop' desc;
+order by (s0.n0).properties ->> 'name', (s0.n0).properties ->> 'other_prop' desc;
 
 -- case: match (s) where s.created_at = localtime() return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
@@ -281,12 +281,12 @@ from s0;
 
 -- case: match (s) return s.value + 1
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0)
-select ((s0.n0).properties -> 'value')::int8 + 1
+select ((s0.n0).properties ->> 'value')::int8 + 1
 from s0;
 
 -- case: match (s) return (s.value + 1) / 3
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0)
-select (((s0.n0).properties -> 'value')::int8 + 1) / 3
+select (((s0.n0).properties ->> 'value')::int8 + 1) / 3
 from s0;
 
 -- case: match (s) where id(s) in [1, 2, 3, 4] return s
@@ -503,7 +503,7 @@ from s0;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and (n0.properties -> 'functionallevel')::text = any
+              and n0.properties ->> 'functionallevel' = any
                   (array ['2008 R2', '2012', '2008', '2003', '2003 Interim', '2000 Mixed/Native']::text[]))
 select s0.n0 as n
 from s0;
@@ -512,7 +512,7 @@ from s0;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and (n0.properties -> 'value')::int8 = any (array [1, 2, 3, 4]::int8[]))
+              and (n0.properties ->> 'value')::int8 = any (array [1, 2, 3, 4]::int8[]))
 select s0.n0 as n
 from s0;
 
@@ -520,9 +520,9 @@ from s0;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and (n0.properties -> 'pwdlastset')::numeric <
+              and (n0.properties ->> 'pwdlastset')::numeric <
                   (extract(epoch from now()::timestamp with time zone)::numeric - (365 * 86400))
-              and not (n0.properties -> 'pwdlastset')::float8 = any (array [- 1, 0]::float8[]))
+              and not (n0.properties ->> 'pwdlastset')::float8 = any (array [- 1, 0]::float8[]))
 select s0.n0 as u
 from s0
 limit 100;
@@ -531,9 +531,9 @@ limit 100;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and (n0.properties -> 'pwdlastset')::numeric <
+              and (n0.properties ->> 'pwdlastset')::numeric <
                   (extract(epoch from now()::timestamp with time zone)::numeric * 1000 - (365 * 86400000))
-              and not (n0.properties -> 'pwdlastset')::float8 = any (array [- 1, 0]::float8[]))
+              and not (n0.properties ->> 'pwdlastset')::float8 = any (array [- 1, 0]::float8[]))
 select s0.n0 as u
 from s0
 limit 100;
@@ -574,7 +574,7 @@ from s0;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and coalesce((n0.properties -> 'a')::int8, (n0.properties -> 'b')::int8, 1)::int8 = 1)
+              and coalesce((n0.properties ->> 'a')::int8, (n0.properties ->> 'b')::int8, 1)::int8 = 1)
 select s0.n0 as n
 from s0;
 
@@ -582,7 +582,7 @@ from s0;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and coalesce(n0.properties -> 'a', n0.properties -> 'b')::int8 = 1)
+              and coalesce(n0.properties ->> 'a', n0.properties ->> 'b')::int8 = 1)
 select s0.n0 as n
 from s0;
 
@@ -590,7 +590,7 @@ from s0;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and 1 = coalesce(n0.properties -> 'a', n0.properties -> 'b')::int8)
+              and 1 = coalesce(n0.properties ->> 'a', n0.properties ->> 'b')::int8)
 select s0.n0 as n
 from s0;
 
@@ -598,11 +598,11 @@ from s0;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and (n0.properties -> 'hasspn')::bool = true
-              and (n0.properties -> 'enabled')::bool = true
+              and (n0.properties ->> 'hasspn')::bool = true
+              and (n0.properties ->> 'enabled')::bool = true
               and not coalesce(n0.properties ->> 'objectid', '')::text like '%-502'
-              and not coalesce((n0.properties -> 'gmsa')::bool, false)::bool = true
-              and not coalesce((n0.properties -> 'msa')::bool, false)::bool = true)
+              and not coalesce((n0.properties ->> 'gmsa')::bool, false)::bool = true
+              and not coalesce((n0.properties ->> 'msa')::bool, false)::bool = true)
 select s0.n0 as u
 from s0
 limit 10;
