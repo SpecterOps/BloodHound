@@ -593,3 +593,32 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
               and 1 = coalesce(n0.properties -> 'a', n0.properties -> 'b')::int8)
 select s0.n0 as n
 from s0;
+
+-- case: match (u:NodeKind1) where u.hasspn = true and u.enabled = true and not u.objectid ends with '-502' and not coalesce(u.gmsa, false) = true and not coalesce(u.msa, false) = true return u limit 10
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and (n0.properties -> 'hasspn')::bool = true
+              and (n0.properties -> 'enabled')::bool = true
+              and not coalesce(n0.properties ->> 'objectid', '')::text like '%-502'
+              and not coalesce((n0.properties -> 'gmsa')::bool, false)::bool = true
+              and not coalesce((n0.properties -> 'msa')::bool, false)::bool = true)
+select s0.n0 as u
+from s0
+limit 10;
+
+-- case: match (n:NodeKind1) where coalesce(n.name, '') = coalesce(n.migrated_name, '') return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and coalesce(n0.properties ->> 'name', '')::text = coalesce(n0.properties ->> 'migrated_name', '')::text)
+select s0.n0 as n
+from s0;
+
+-- case: match (n:NodeKind1) where '1' in n.array_prop + ['1', '2'] return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and '1' = any (jsonb_to_text_array(n0.properties -> 'array_prop')::text[] || array ['1', '2']::text[]))
+select s0.n0 as n
+from s0;

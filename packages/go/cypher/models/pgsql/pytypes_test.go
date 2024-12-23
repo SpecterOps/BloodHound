@@ -24,6 +24,144 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestDataType_Comparable(t *testing.T) {
+	testCases := []struct {
+		LeftTypes  []DataType
+		Operators  []Operator
+		RightTypes []DataType
+		Expected   bool
+	}{
+		// Supported comparisons
+		{
+			LeftTypes:  []DataType{Int, Int8, Int4, Int2},
+			Operators:  []Operator{OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan, OperatorLessThanOrEqualTo},
+			RightTypes: []DataType{Int, Int8, Int4, Int2, Float8, Float4, Numeric},
+			Expected:   true,
+		},
+		{
+			LeftTypes:  []DataType{Float8, Float4, Numeric},
+			Operators:  []Operator{OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan, OperatorLessThanOrEqualTo},
+			RightTypes: []DataType{Int, Int8, Int4, Int2, Float8, Float4, Numeric},
+			Expected:   true,
+		},
+		{
+			LeftTypes:  []DataType{NodeComposite},
+			Operators:  []Operator{OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan, OperatorLessThanOrEqualTo},
+			RightTypes: []DataType{NodeComposite},
+			Expected:   true,
+		},
+		{
+			LeftTypes:  []DataType{EdgeComposite},
+			Operators:  []Operator{OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan, OperatorLessThanOrEqualTo},
+			RightTypes: []DataType{EdgeComposite},
+			Expected:   true,
+		},
+		{
+			LeftTypes:  []DataType{PathComposite},
+			Operators:  []Operator{OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan, OperatorLessThanOrEqualTo},
+			RightTypes: []DataType{PathComposite},
+			Expected:   true,
+		},
+		{
+			LeftTypes:  []DataType{JSONB},
+			Operators:  []Operator{OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan, OperatorLessThanOrEqualTo},
+			RightTypes: []DataType{JSONB},
+			Expected:   true,
+		},
+		{
+			LeftTypes:  []DataType{AnyArray},
+			Operators:  []Operator{OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan, OperatorLessThanOrEqualTo},
+			RightTypes: []DataType{AnyArray},
+			Expected:   true,
+		},
+		{
+			LeftTypes:  []DataType{Text},
+			Operators:  []Operator{OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan, OperatorLessThanOrEqualTo},
+			RightTypes: []DataType{Text},
+			Expected:   true,
+		},
+		{
+			LeftTypes:  []DataType{Boolean},
+			Operators:  []Operator{OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan, OperatorLessThanOrEqualTo},
+			RightTypes: []DataType{Boolean},
+			Expected:   true,
+		},
+
+		// Right hand unknown types should not be comparable against any left hand int type
+		{
+			LeftTypes:  []DataType{Int},
+			Operators:  []Operator{OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan, OperatorLessThanOrEqualTo},
+			RightTypes: []DataType{UnknownDataType},
+			Expected:   false,
+		},
+
+		// Right hand unknown types should not be comparable against any left hand float type
+		{
+			LeftTypes:  []DataType{Float8},
+			Operators:  []Operator{OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan, OperatorLessThanOrEqualTo},
+			RightTypes: []DataType{UnknownDataType},
+			Expected:   false,
+		},
+
+		// Left hand unknown types should not be comparable against any right hand type
+		{
+			LeftTypes:  []DataType{UnknownDataType},
+			Operators:  []Operator{OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan, OperatorLessThanOrEqualTo},
+			RightTypes: []DataType{Int},
+			Expected:   false,
+		},
+
+		// Validate text operations
+		{
+			LeftTypes:  []DataType{Text},
+			Operators:  []Operator{OperatorConcatenate, OperatorLike, OperatorILike, OperatorSimilarTo, OperatorRegexMatch},
+			RightTypes: []DataType{Text},
+			Expected:   true,
+		},
+
+		// Text operations on non-text types should fail
+		{
+			LeftTypes:  []DataType{Int},
+			Operators:  []Operator{OperatorConcatenate, OperatorLike, OperatorILike, OperatorSimilarTo, OperatorRegexMatch},
+			RightTypes: []DataType{Int},
+			Expected:   false,
+		},
+
+		// Array types may use the overlap operator but only if their base types match
+		{
+			LeftTypes:  []DataType{IntArray},
+			Operators:  []Operator{OperatorPGArrayOverlap},
+			RightTypes: []DataType{IntArray},
+			Expected:   true,
+		},
+		{
+			LeftTypes:  []DataType{IntArray},
+			Operators:  []Operator{OperatorPGArrayOverlap},
+			RightTypes: []DataType{Int},
+			Expected:   false,
+		},
+
+		// Catch all for any unsupported operator
+		{
+			LeftTypes:  []DataType{Int},
+			Operators:  []Operator{"Unsupported Operator Class"},
+			RightTypes: []DataType{Int},
+			Expected:   false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		for _, leftType := range testCase.LeftTypes {
+			for _, operator := range testCase.Operators {
+				for _, rightType := range testCase.RightTypes {
+					result := leftType.IsComparable(rightType, operator)
+					require.Equal(t, testCase.Expected, result)
+				}
+			}
+		}
+	}
+}
+
 func TestValueToDataType(t *testing.T) {
 	testCases := []struct {
 		Value        any

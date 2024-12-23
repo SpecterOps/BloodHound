@@ -18,7 +18,6 @@ package translate
 
 import (
 	"fmt"
-
 	"github.com/specterops/bloodhound/log"
 
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
@@ -139,7 +138,7 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 
 	if isLeftHinted {
 		if isRightHinted {
-			if higherLevelHint, matchesOrConverts := leftHint.Compatible(rightHint, expression.Operator); !matchesOrConverts {
+			if higherLevelHint, matchesOrConverts := leftHint.OperatorResultType(rightHint, expression.Operator); !matchesOrConverts {
 				return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, leftHint, rightHint)
 			} else {
 				return higherLevelHint, nil
@@ -149,7 +148,7 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 		} else if inferredRightHint == pgsql.UnknownDataType {
 			// Assume the right side is convertable and return the left operand hint
 			return leftHint, nil
-		} else if upcastHint, matchesOrConverts := leftHint.Compatible(inferredRightHint, expression.Operator); !matchesOrConverts {
+		} else if upcastHint, matchesOrConverts := leftHint.OperatorResultType(inferredRightHint, expression.Operator); !matchesOrConverts {
 			return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, leftHint, inferredRightHint)
 		} else {
 			return upcastHint, nil
@@ -161,7 +160,7 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 		} else if inferredLeftHint == pgsql.UnknownDataType {
 			// Assume the right side is convertable and return the left operand hint
 			return rightHint, nil
-		} else if upcastHint, matchesOrConverts := rightHint.Compatible(inferredLeftHint, expression.Operator); !matchesOrConverts {
+		} else if upcastHint, matchesOrConverts := rightHint.OperatorResultType(inferredLeftHint, expression.Operator); !matchesOrConverts {
 			return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, rightHint, inferredLeftHint)
 		} else {
 			return upcastHint, nil
@@ -189,7 +188,7 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 				// Unable to infer any type information, this may be resolved elsewhere so this is not explicitly
 				// an error condition
 				return pgsql.UnknownDataType, nil
-			} else if higherLevelHint, matchesOrConverts := inferredLeftHint.Compatible(inferredRightHint, expression.Operator); !matchesOrConverts {
+			} else if higherLevelHint, matchesOrConverts := inferredLeftHint.OperatorResultType(inferredRightHint, expression.Operator); !matchesOrConverts {
 				return pgsql.UnsetDataType, fmt.Errorf("left and right operands for binary expression \"%s\" are not compatible: %s != %s", expression.Operator, inferredLeftHint, inferredRightHint)
 			} else {
 				return higherLevelHint, nil
@@ -201,7 +200,6 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 	switch typedExpression := expression.(type) {
 	case pgsql.Identifier, pgsql.CompoundExpression:
-		// TODO: Type inference may be aided by searching the bound scope for a data type
 		return pgsql.UnknownDataType, nil
 
 	case pgsql.CompoundIdentifier:
@@ -232,7 +230,10 @@ func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 
 	case *pgsql.BinaryExpression:
 		switch typedExpression.Operator {
-		case pgsql.OperatorPropertyLookup, pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
+		case pgsql.OperatorJSONTextField:
+			return pgsql.Text, nil
+
+		case pgsql.OperatorPropertyLookup, pgsql.OperatorJSONField:
 			// This is unknown, not unset meaning that it can be re-cast by future inference inspections
 			return pgsql.UnknownDataType, nil
 
@@ -276,11 +277,7 @@ func TypeCastExpression(expression pgsql.Expression, dataType pgsql.DataType) (p
 
 		if lookupRequiresElementType(dataType, propertyLookup.Operator, propertyLookup.ROperand) {
 			// Take the base type of the array type hint: <unit> in <collection>
-			if arrayBaseType, err := dataType.ArrayBaseType(); err != nil {
-				return nil, err
-			} else {
-				lookupTypeHint = arrayBaseType
-			}
+			lookupTypeHint = dataType.ArrayBaseType()
 		}
 
 		return rewritePropertyLookupOperator(propertyLookup, lookupTypeHint), nil
@@ -304,21 +301,13 @@ func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 		// This check exists here to prevent from overwriting a property lookup that's part of a <value> in <list>
 		// binary expression. This may want for better ergonomics in the future
 		if anyExpression, isAnyExpression := expression.ROperand.(pgsql.AnyExpression); isAnyExpression {
-			if arrayBaseType, err := anyExpression.CastType.ArrayBaseType(); err != nil {
-				return err
-			} else {
-				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, arrayBaseType)
-			}
+			expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, anyExpression.CastType.ArrayBaseType())
 		} else if rOperandTypeHint, err := InferExpressionType(expression.ROperand); err != nil {
 			return err
 		} else {
 			switch expression.Operator {
 			case pgsql.OperatorIn:
-				if arrayBaseType, err := rOperandTypeHint.ArrayBaseType(); err != nil {
-					return err
-				} else {
-					expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, arrayBaseType)
-				}
+				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, rOperandTypeHint.ArrayBaseType())
 
 			case pgsql.OperatorCypherStartsWith, pgsql.OperatorCypherEndsWith, pgsql.OperatorCypherContains, pgsql.OperatorRegexMatch:
 				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, pgsql.Text)
@@ -353,29 +342,94 @@ func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 	return nil
 }
 
-func applyTypeFunctionCallTypeHints(expression *pgsql.BinaryExpression) error {
+func newFunctionCallComparatorError(functionCall pgsql.FunctionCall, operator pgsql.Operator, comparisonType pgsql.DataType) error {
+	switch functionCall.Function {
+	case pgsql.FunctionCoalesce:
+		// This is a specific error statement for coalesce statements. These statements have ill-defined
+		// type conversion semantics in Cypher. As such, exposing the type specificity of coalesce to the
+		// user as a distinct error will help reduce the surprise of running on a non-Neo4j substrate.
+		return fmt.Errorf("coalesce has type %s but is being compared against type %s - ensure that all arguments in the coalesce function match the type of the other side of the comparison", functionCall.CastType, comparisonType)
+	default:
+		return fmt.Errorf("function call has return signature of type %s but is being compared using operator %s against type %s", functionCall.CastType, operator, comparisonType)
+	}
+}
+
+func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
 	switch typedLOperand := expression.LOperand.(type) {
+	case pgsql.AnyExpression:
+		if rOperandTypeHint, err := InferExpressionType(expression.ROperand); err != nil {
+			return err
+		} else {
+			// In an any-expression where the type of the any-expression is unknown, attempt to infer it
+			if !typedLOperand.CastType.IsKnown() {
+				if rOperandArrayTypeHint, err := rOperandTypeHint.ToArrayType(); err != nil {
+					return err
+				} else {
+					typedLOperand.CastType = rOperandArrayTypeHint
+					expression.LOperand = typedLOperand
+				}
+			}
+
+			// Validate against the array base type of the any-expression
+			lOperandBaseType := typedLOperand.CastType.ArrayBaseType()
+
+			if !lOperandBaseType.IsComparable(rOperandTypeHint, expression.Operator) {
+				return fmt.Errorf("function call has return signature of type %s but is being compared using operator %s against type %s", typedLOperand.CastType, expression.Operator, rOperandTypeHint)
+			}
+		}
+
 	case pgsql.FunctionCall:
-		if !typedLOperand.CastType.IsKnown() {
-			if rOperandTypeHint, err := InferExpressionType(expression.ROperand); err != nil {
-				return err
-			} else {
+		if rOperandTypeHint, err := InferExpressionType(expression.ROperand); err != nil {
+			return err
+		} else {
+			if !typedLOperand.CastType.IsKnown() {
 				typedLOperand.CastType = rOperandTypeHint
 				expression.LOperand = typedLOperand
+			}
+
+			if pgsql.OperatorIsComparator(expression.Operator) && !typedLOperand.CastType.IsComparable(rOperandTypeHint, expression.Operator) {
+				return newFunctionCallComparatorError(typedLOperand, expression.Operator, rOperandTypeHint)
 			}
 		}
 	}
 
 	switch typedROperand := expression.ROperand.(type) {
+	case pgsql.AnyExpression:
+		if lOperandTypeHint, err := InferExpressionType(expression.LOperand); err != nil {
+			return err
+		} else {
+			// In an any-expression where the type of the any-expression is unknown, attempt to infer it
+			if !typedROperand.CastType.IsKnown() {
+				if rOperandArrayTypeHint, err := lOperandTypeHint.ToArrayType(); err != nil {
+					return err
+				} else {
+					typedROperand.CastType = rOperandArrayTypeHint
+					expression.LOperand = typedROperand
+				}
+			}
+
+			// Validate against the array base type of the any-expression
+			rOperandBaseType := typedROperand.CastType.ArrayBaseType()
+
+			if !rOperandBaseType.IsComparable(lOperandTypeHint, expression.Operator) {
+				return fmt.Errorf("function call has return signature of type %s but is being compared using operator %s against type %s", typedROperand.CastType, expression.Operator, lOperandTypeHint)
+			}
+		}
+
 	case pgsql.FunctionCall:
-		if !typedROperand.CastType.IsKnown() {
-			if lOperandTypeHint, err := InferExpressionType(expression.LOperand); err != nil {
-				return err
-			} else {
+		if lOperandTypeHint, err := InferExpressionType(expression.LOperand); err != nil {
+			return err
+		} else {
+			if !typedROperand.CastType.IsKnown() {
 				typedROperand.CastType = lOperandTypeHint
 				expression.ROperand = typedROperand
 			}
+
+			if pgsql.OperatorIsComparator(expression.Operator) && !typedROperand.CastType.IsComparable(lOperandTypeHint, expression.Operator) {
+				return newFunctionCallComparatorError(typedROperand, expression.Operator, lOperandTypeHint)
+			}
 		}
+
 	}
 
 	return nil
@@ -393,7 +447,7 @@ func applyBinaryExpressionTypeHints(expression *pgsql.BinaryExpression) error {
 		return err
 	}
 
-	return applyTypeFunctionCallTypeHints(expression)
+	return applyTypeFunctionLikeTypeHints(expression)
 }
 
 type Builder struct {
@@ -683,6 +737,36 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 		}
 
 		switch operator {
+		case pgsql.OperatorCypherAdd:
+			isConcatenationOperation := func(lOperandType, rOperandType pgsql.DataType) bool {
+				// Any use of an array type automatically assumes concatenation
+				if lOperandType.IsArrayType() || rOperandType.IsArrayType() {
+					return true
+				}
+
+				switch lOperandType {
+				case pgsql.Text:
+					switch rOperandType {
+					case pgsql.Text:
+						return true
+					}
+				}
+
+				return false
+			}
+
+			// In the case of the use of the cypher `+` operator we must attempt to disambiguate if the intent
+			// is to concatenate or to perform an addition
+			if lOperandType, err := InferExpressionType(newExpression.LOperand); err != nil {
+				return err
+			} else if rOperandType, err := InferExpressionType(newExpression.ROperand); err != nil {
+				return err
+			} else if isConcatenationOperation(lOperandType, rOperandType) {
+				newExpression.Operator = pgsql.OperatorConcatenate
+			}
+
+			s.Push(newExpression)
+
 		case pgsql.OperatorCypherContains:
 			newExpression.Operator = pgsql.OperatorLike
 
