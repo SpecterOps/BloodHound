@@ -657,25 +657,25 @@ func (s *ExpressionTreeTranslator) ConstrainDisjointOperandPair() error {
 		return err
 	} else if rightDependencies, err := ExtractSyntaxNodeReferences(rightOperand); err != nil {
 		return err
+	} else if s.treeBuilder.IsEmpty() {
+		// If the tree builder is empty then this operand is at the top of the disjunction chain
+		return s.Constrain(rightDependencies, rightOperand)
 	} else if leftOperand, err := s.treeBuilder.Pop(); err != nil {
 		return err
-	} else if leftDependencies, err := ExtractSyntaxNodeReferences(leftOperand); err != nil {
-		return err
 	} else {
-		var (
-			combinedDependencies = leftDependencies.Copy().MergeSet(rightDependencies)
-			projectionConstraint = pgsql.NewBinaryExpression(
-				leftOperand,
-				pgsql.OperatorOr,
-				rightOperand,
-			)
+		newOrExpression := pgsql.NewBinaryExpression(
+			leftOperand,
+			pgsql.OperatorOr,
+			rightOperand,
 		)
 
-		if err := applyBinaryExpressionTypeHints(projectionConstraint); err != nil {
+		if err := applyBinaryExpressionTypeHints(newOrExpression); err != nil {
 			return err
 		}
 
-		return s.Constrain(combinedDependencies, projectionConstraint)
+		// This operation may not be complete; push it back on the stack
+		s.Push(newOrExpression)
+		return nil
 	}
 }
 

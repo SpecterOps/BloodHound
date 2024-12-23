@@ -221,7 +221,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                    join node n0 on n0.id = e0.end_id
                    join node n1 on n1.id = e0.start_id
             where e0.kind_id = any (array [3, 4]::int2[]))
-select (s0.n0).properties ->> 'name', (s0.n1).properties ->> 'name'
+select (s0.n0).properties -> 'name', (s0.n1).properties -> 'name'
 from s0;
 
 -- case: match (s)-[:EdgeKind1|EdgeKind2]->(e)-[:EdgeKind1]->() return s.name as s_name, e.name as e_name
@@ -242,7 +242,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                    join node n2 on n2.id = e1.end_id
             where e1.kind_id = any (array [3]::int2[])
               and (s0.n1).id = e1.start_id)
-select (s1.n0).properties ->> 'name' as s_name, (s1.n1).properties ->> 'name' as e_name
+select (s1.n0).properties -> 'name' as s_name, (s1.n1).properties -> 'name' as e_name
 from s1;
 
 -- case: match (s:NodeKind1)-[r:EdgeKind1|EdgeKind2]->(e:NodeKind2) return s.name, e.name
@@ -253,7 +253,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                    join node n0 on n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n0.id = e0.start_id
                    join node n1 on n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and n1.id = e0.end_id
             where e0.kind_id = any (array [3, 4]::int2[]))
-select (s0.n0).properties ->> 'name', (s0.n1).properties ->> 'name'
+select (s0.n0).properties -> 'name', (s0.n1).properties -> 'name'
 from s0;
 
 -- case: match (s)-[r:EdgeKind1]->() where (s)-[r {prop: 'a'}]->() return s

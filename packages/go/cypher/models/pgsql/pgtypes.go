@@ -26,7 +26,6 @@ import (
 
 var (
 	ErrNoAvailableArrayDataType = errors.New("data type has no direct array representation")
-	ErrNonArrayDataType         = errors.New("data type is not an array type")
 )
 
 const (
@@ -141,7 +140,7 @@ func (s DataType) IsComparable(other DataType, operator Operator) bool {
 	case OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan, OperatorLessThanOrEqualTo:
 		switch s {
 		case NodeComposite, EdgeComposite, PathComposite, JSONB, AnyArray, Text, Boolean,
-			IntArray, Int8Array, Int4Array, Int2Array, Float8Array, Float4Array, NumericArray,
+			IntArray, Int8Array, Int4Array, Int2Array, Float8Array, Float4Array, NumericArray, TextArray,
 			Date, TimeWithTimeZone, TimeWithoutTimeZone, Interval, TimestampWithTimeZone, TimestampWithoutTimeZone:
 			return other == s
 
@@ -182,7 +181,17 @@ func (s DataType) IsComparable(other DataType, operator Operator) bool {
 
 // CoerceToSupertype attempts to take the super of the type s and the type other
 func (s DataType) CoerceToSupertype(other DataType) (DataType, bool) {
+	switch other {
+	case UnknownDataType:
+		// If the other data type is unknown then assume this data type as the super type
+		return s, true
+	}
+
 	switch s {
+	case UnknownDataType:
+		// If this data type is unknown then assume the other type presented as the super type
+		return other, true
+
 	case Int2:
 		switch other {
 		case Int, Int8, Int4, Int2:
@@ -238,6 +247,7 @@ func (s DataType) CoerceToSupertype(other DataType) (DataType, bool) {
 		}
 	}
 
+	// Otherwise unable to identify a super type
 	return UnknownDataType, false
 }
 

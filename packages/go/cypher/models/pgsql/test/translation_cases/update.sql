@@ -172,5 +172,5 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
      s2
        as (update edge e2 set properties = e2.properties ||
                                            jsonb_build_object('visited', true)::jsonb from s1 where (s1.e1).id = e2.id returning s1.e0 as e0, (e2.id, e2.start_id, e2.end_id, e2.kind_id, e2.properties)::edgecomposite as e1, s1.n0 as n0, s1.n1 as n1, s1.n2 as n2)
-select (s2.e1).properties ->> 'name'
+select (s2.e1).properties -> 'name'
 from s2;

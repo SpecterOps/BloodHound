@@ -446,6 +446,11 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		} else if err := RewriteExpressionIdentifiers(lookupExpression, s.query.Scope.CurrentFrameBinding().Identifier, s.query.Scope.Visible()); err != nil {
 			s.SetError(err)
 		} else {
+			if propertyLookup, isPropertyLookup := asPropertyLookup(lookupExpression); isPropertyLookup {
+				// If sorting, use the raw type of the JSONB field
+				propertyLookup.Operator = pgsql.OperatorJSONField
+			}
+
 			s.query.CurrentOrderBy().Expression = lookupExpression
 		}
 

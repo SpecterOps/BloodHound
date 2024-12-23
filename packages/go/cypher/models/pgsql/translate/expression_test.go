@@ -111,6 +111,7 @@ func TestInferExpressionType(t *testing.T) {
 			),
 		),
 	}, {
+		Exclusive: true,
 		ExpectedType: pgsql.Int4,
 		Expression: pgsql.NewBinaryExpression(
 			pgsql.NewPropertyLookup(

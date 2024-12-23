@@ -346,9 +346,9 @@ func (s *Translator) translateProjectionItem(scope *Scope, projectionItem *cyphe
 			}
 
 		case *pgsql.BinaryExpression:
-			if typedSelectItem.Operator == pgsql.OperatorPropertyLookup {
-				// TODO: This probably belongs somewhere else
-				typedSelectItem.Operator = pgsql.OperatorJSONField
+			if propertyLookup, isPropertyLookup := asPropertyLookup(typedSelectItem); isPropertyLookup {
+				// Ensure that projections maintain the raw JSONB type of the field
+				propertyLookup.Operator = pgsql.OperatorJSONField
 			}
 		}
 

@@ -127,7 +127,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
      s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s0,
                  node n1)
-select s1.n0 as s, (s1.n1).properties ->> 'name' as othername
+select s1.n0 as s, (s1.n1).properties -> 'name' as othername
 from s1;
 
 -- case: match (s) where s.name in ['option 1', 'option 2'] return s
@@ -211,7 +211,7 @@ offset 5 limit 10;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0)
 select s0.n0 as s
 from s0
-order by (s0.n0).properties ->> 'name', (s0.n0).properties ->> 'other_prop' desc;
+order by (s0.n0).properties -> 'name', (s0.n0).properties -> 'other_prop' desc;
 
 -- case: match (s) where s.created_at = localtime() return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0

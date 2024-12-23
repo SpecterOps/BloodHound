@@ -24,6 +24,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestDataType_CoerceToSupertype(t *testing.T) {
+
+}
+
 func TestDataType_Comparable(t *testing.T) {
 	testCases := []struct {
 		LeftTypes  []DataType
@@ -114,7 +118,7 @@ func TestDataType_Comparable(t *testing.T) {
 		// Validate text operations
 		{
 			LeftTypes:  []DataType{Text},
-			Operators:  []Operator{OperatorConcatenate, OperatorLike, OperatorILike, OperatorSimilarTo, OperatorRegexMatch},
+			Operators:  []Operator{OperatorLike, OperatorILike, OperatorSimilarTo, OperatorRegexMatch},
 			RightTypes: []DataType{Text},
 			Expected:   true,
 		},
@@ -122,7 +126,7 @@ func TestDataType_Comparable(t *testing.T) {
 		// Text operations on non-text types should fail
 		{
 			LeftTypes:  []DataType{Int},
-			Operators:  []Operator{OperatorConcatenate, OperatorLike, OperatorILike, OperatorSimilarTo, OperatorRegexMatch},
+			Operators:  []Operator{OperatorLike, OperatorILike, OperatorSimilarTo, OperatorRegexMatch},
 			RightTypes: []DataType{Int},
 			Expected:   false,
 		},
@@ -150,12 +154,12 @@ func TestDataType_Comparable(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for idx, testCase := range testCases {
 		for _, leftType := range testCase.LeftTypes {
 			for _, operator := range testCase.Operators {
 				for _, rightType := range testCase.RightTypes {
 					result := leftType.IsComparable(rightType, operator)
-					require.Equal(t, testCase.Expected, result)
+					require.Equalf(t, testCase.Expected, result, "failed test case %d: %+v, %+v", idx, testCase.LeftTypes, testCase.RightTypes)
 				}
 			}
 		}

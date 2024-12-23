@@ -238,3 +238,31 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
 select edges_to_path(variadic array [(s0.e0).id]::int8[])::pathcomposite as p
 from s0
 limit 1000;
+
+-- case: match p = (:NodeKind1)-[:EdgeKind1|EdgeKind2]->(e:NodeKind2)-[:EdgeKind2]->(:NodeKind1) where 'a' in e.values or 'b' in e.values or size(e.values) = 0 return p
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite                        as n0,
+                   (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0,
+                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite                        as n1
+            from edge e0
+                   join node n0 on n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n0.id = e0.start_id
+                   join node n1 on n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and
+                                   'a' = any (jsonb_to_text_array(n1.properties -> 'values')::text[]) or
+                                   'b' = any (jsonb_to_text_array(n1.properties -> 'values')::text[]) or
+                                   jsonb_array_length(n1.properties -> 'values')::int = 0 and n1.id = e0.end_id
+            where e0.kind_id = any (array [3, 4]::int2[])),
+     s1 as (select s0.e0                                                                     as e0,
+                   s0.n0                                                                     as n0,
+                   s0.n1                                                                     as n1,
+                   (e1.id, e1.start_id, e1.end_id, e1.kind_id, e1.properties)::edgecomposite as e1,
+                   (n2.id, n2.kind_ids, n2.properties)::nodecomposite                        as n2
+            from s0,
+                 edge e1
+                   join node n2 on n2.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n2.id = e1.end_id
+            where e1.kind_id = any (array [4]::int2[])
+              and (s0.n1).id = e1.start_id)
+select edges_to_path(variadic array [(s1.e0).id, (s1.e1).id]::int8[])::pathcomposite as p
+from s1;
+
+-- todo: the case below covers untyped array literals but has not yet been fixed
+-- case: match p = (:NodeKind1)-[:EdgeKind1|EdgeKind2]->(e:NodeKind2)-[:EdgeKind2]->(:NodeKind1) where (e.a = [] or 'a' in e.a) and (e.b = 0 or e.b = 1) return p
+
