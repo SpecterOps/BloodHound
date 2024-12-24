@@ -21,12 +21,12 @@ import (
 	"strconv"
 
 	"github.com/specterops/bloodhound/cypher/models/cypher"
+	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/azure"
 
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/specterops/bloodhound/cypher/parser"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
 )
 
 type WhereVisitor struct {
@@ -123,11 +123,11 @@ func (s *RelationshipPatternVisitor) ExitOC_RelTypeName(ctx *parser.OC_RelTypeNa
 			s.ctx.AddErrors(ErrUpdateWithExpansionNotSupported)
 		}
 		addKindsFromRelationships(ad.PathfindingRelationships())
-
 	default:
-		kind := graph.StringKind(s.ctx.Exit().(*SymbolicNameOrReservedWordVisitor).Name)
+		kind := graph.StringKind(relationshipType)
 		addKindsFromRelationships([]graph.Kind{kind})
 	}
+	s.ctx.Exit()
 }
 
 func (s *RelationshipPatternVisitor) EnterOC_Variable(ctx *parser.OC_VariableContext) {
