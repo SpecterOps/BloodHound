@@ -17,6 +17,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -26,7 +27,6 @@ import (
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/common"
 )
 
@@ -53,9 +53,9 @@ const (
 	FalseString    = "false"
 	IdString       = "id"
 	ObjectIdString = "objectid"
-
-	ErrNotFiltered = errors.Error("parameter value is not filtered")
 )
+
+var ErrNotFiltered = errors.New("parameter value is not filtered")
 
 type Filtered interface {
 	ValidFilters() map[string][]FilterOperator

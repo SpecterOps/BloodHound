@@ -18,11 +18,10 @@ package database
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
-
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )

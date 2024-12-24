@@ -18,13 +18,13 @@ package ops_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	graph_mocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

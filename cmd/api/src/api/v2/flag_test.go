@@ -17,17 +17,16 @@
 package v2_test
 
 import (
+	"errors"
 	"net/http"
 	"testing"
 
-	"go.uber.org/mock/gomock"
-
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/utils/test"
+	"go.uber.org/mock/gomock"
 )
 
 func TestResources_GetFlags(t *testing.T) {
@@ -51,7 +50,7 @@ func TestResources_GetFlags(t *testing.T) {
 			Data: []appcfg.FeatureFlag{},
 		})
 
-	mockDB.EXPECT().GetAllFlags(gomock.Any()).Return(nil, errors.Error("db error"))
+	mockDB.EXPECT().GetAllFlags(gomock.Any()).Return(nil, errors.New("db error"))
 
 	test.Request(t).
 		WithMethod(http.MethodGet).

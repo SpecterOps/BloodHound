@@ -368,16 +368,3 @@ func extractIdentifierFromCypherExpression(expression cypher.Expression) (pgsql.
 		return "", false, fmt.Errorf("unknown variable expression type: %T", variableExpression)
 	}
 }
-
-func nodeJoinColumnsForPatternDirection(direction graph.Direction) (pgsql.Identifier, pgsql.Identifier, error) {
-	switch direction {
-	case graph.DirectionOutbound:
-		return pgsql.ColumnStartID, pgsql.ColumnEndID, nil
-
-	case graph.DirectionInbound:
-		return pgsql.ColumnEndID, pgsql.ColumnStartID, nil
-
-	default:
-		return "", "", fmt.Errorf("unsupported direction: %d", direction)
-	}
-}

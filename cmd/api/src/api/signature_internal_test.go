@@ -26,7 +26,8 @@ import (
 	"testing/iotest"
 	"time"
 
-	"github.com/specterops/bloodhound/errors"
+	"errors"
+
 	"github.com/stretchr/testify/require"
 )
 

@@ -19,9 +19,9 @@ package types
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
 
-	"github.com/specterops/bloodhound/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
@@ -58,7 +58,7 @@ func (s *JSONBObject) Scan(value any) error {
 func (s *JSONBObject) Map(target any) error {
 	if len(s.scannedBytes) == 0 {
 		if s.Object == nil {
-			return errors.Error("JSONObject is nil")
+			return errors.New("JSONObject is nil")
 		}
 
 		if content, err := json.Marshal(s.Object); err != nil {
