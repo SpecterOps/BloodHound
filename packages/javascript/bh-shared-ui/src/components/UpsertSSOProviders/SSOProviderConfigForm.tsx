@@ -20,6 +20,10 @@ import { FC } from 'react';
 import { Control, Controller, UseFormResetField, UseFormWatch } from 'react-hook-form';
 import { Role, UpsertOIDCProviderRequest, UpsertSAMLProviderFormInputs } from 'js-client-library';
 
+export const backfillSSOProviderConfig = (readOnlyRoleId?: number) => ({
+    auto_provision: { enabled: false, default_role: readOnlyRoleId, role_provision: false },
+});
+
 const SSOProviderConfigForm: FC<{
     control: Control<UpsertSAMLProviderFormInputs | UpsertOIDCProviderRequest, any>;
     watch: UseFormWatch<UpsertOIDCProviderRequest | UpsertOIDCProviderRequest>;

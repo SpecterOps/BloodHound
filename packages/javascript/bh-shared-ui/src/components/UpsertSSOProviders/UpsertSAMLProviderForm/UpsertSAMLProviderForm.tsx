@@ -29,11 +29,7 @@ import {
 import { useState, useEffect, FC, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Role, SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-library';
-import SSOProviderConfigForm from '../SSOProviderConfigForm';
-
-export const backfillSSOProviderConfig = (readOnlyRoleId?: number) => ({
-    auto_provision: { enabled: false, default_role: readOnlyRoleId, role_provision: false },
-});
+import SSOProviderConfigForm, { backfillSSOProviderConfig } from '../SSOProviderConfigForm';
 
 const UpsertSAMLProviderForm: FC<{
     error?: any;

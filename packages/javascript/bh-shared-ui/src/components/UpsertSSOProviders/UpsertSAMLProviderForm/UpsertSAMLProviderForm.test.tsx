@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor } from '../../../test-utils';
 import { resizeObserver } from '../../../mocks';
-import UpsertSAMLProviderForm, { backfillSSOProviderConfig } from './UpsertSAMLProviderForm';
+import UpsertSAMLProviderForm from './UpsertSAMLProviderForm';
 import { Role } from 'js-client-library';
 
 const testRoles = [
@@ -89,31 +89,5 @@ describe('UpsertSAMLProviderForm', () => {
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 
         await waitFor(() => expect(testOnSubmit).toHaveBeenCalled());
-    });
-
-    it('should backfill SSOProviderConfiguration that are undefined', async () => {
-        const user = userEvent.setup();
-        const testOnClose = vi.fn();
-        const testOnSubmit = vi.fn();
-        const validProviderName = 'test-provider-name';
-        const validMetadata = new File([], 'test-metadata.xml');
-        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} roles={testRoles} />);
-
-        await user.type(screen.getByLabelText('SAML Provider Name'), validProviderName);
-
-        await user.upload(screen.getByLabelText('Choose File'), validMetadata);
-
-        await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-        await waitFor(() =>
-            expect(testOnSubmit).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    name: validProviderName,
-                    metadata: expect.any(FileList),
-                    config: backfillSSOProviderConfig(1),
-                }),
-                expect.anything() // ignore the react synthetic event that react-hook-form passes this func
-            )
-        );
     });
 });

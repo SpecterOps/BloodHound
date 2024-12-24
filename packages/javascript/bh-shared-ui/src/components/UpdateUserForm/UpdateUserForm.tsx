@@ -364,7 +364,7 @@ const UpdateUserFormInner: React.FC<{
                                         variant='standard'
                                         fullWidth
                                         data-testid='update-user-dialog_select-role'>
-                                        hidden={hasSelectedSelf}>
+                                        hidden={hasSelectedSelf}
                                         {roles?.map((role: Role) => (
                                             <MenuItem key={role.id} value={role.id.toString()}>
                                                 {role.name}
