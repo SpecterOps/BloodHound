@@ -48,9 +48,14 @@ func TestGraphQuery_PrepareCypherQuery(t *testing.T) {
 		gq           = queries.NewGraphQuery(mockGraphDB, cache.Cache{}, config.Configuration{EnableCypherMutations: true})
 		gqMutDisable = queries.NewGraphQuery(mockGraphDB, cache.Cache{}, config.Configuration{EnableCypherMutations: false})
 
-		rawCypherRead     = "MATCH (n:Label) return n"
-		rawCypherMutation = "DETACH DELETE (n:Label)"
-		rawCypherInvalid  = "derp"
+		rawCypherRead                 = "MATCH (n:Label) return n"
+		rawCypherMutation             = "DETACH DELETE (n:Label)"
+		rawCypherReadExpansion        = "MATCH (n:Label)-[r:ALL_ATTACK_PATHS]->() return r"
+		rawCypherPathfindingExpansion = "MATCH p=shortestPath((n)-[:AZ_ATTACK_PATHS*1..]->()) return p"
+		rawCypherCreationAndExpansion = "CREATE (n1)-[:ALL_ATTACK_PATHS]->(n2)"
+		rawCypherDeleteAndExpansion   = "MATCH (n:Label)-[r:ALL_ATTACK_PATHS]->() DELETE r"
+		rawCypherUpdateAndExpansion   = "MATCH (n:Lable)-[r:ALL_ATTACK_PATHS]->() SET r.is_active = true RETURN r"
+		rawCypherInvalid              = "derp"
 	)
 
 	t.Run("invalid cypher", func(t *testing.T) {
@@ -73,6 +78,32 @@ func TestGraphQuery_PrepareCypherQuery(t *testing.T) {
 		preparedQuery, err := gq.PrepareCypherQuery(rawCypherMutation)
 		require.Nil(t, err)
 		assert.Equal(t, preparedQuery.HasMutation, true)
+	})
+
+	t.Run("valid cypher pathfinding with expansion", func(t *testing.T) {
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherPathfindingExpansion)
+		require.Nil(t, err)
+		assert.Equal(t, preparedQuery.HasMutation, false)
+	})
+
+	t.Run("valid cypher without mutation with expansion", func(t *testing.T) {
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherReadExpansion)
+		require.Nil(t, err)
+		assert.Equal(t, preparedQuery.HasMutation, false)
+	})
+
+	t.Run("valid cypher with creation and expansion", func(t *testing.T) {
+		_, err := gq.PrepareCypherQuery(rawCypherCreationAndExpansion)
+		assert.ErrorContains(t, err, "not supported")
+	})
+
+	t.Run("valid cypher with deletion and expansion", func(t *testing.T) {
+		_, err := gq.PrepareCypherQuery(rawCypherDeleteAndExpansion)
+		assert.ErrorContains(t, err, "not supported")
+	})
+	t.Run("valid cypher with updates and expansion", func(t *testing.T) {
+		_, err := gq.PrepareCypherQuery(rawCypherUpdateAndExpansion)
+		assert.ErrorContains(t, err, "not supported")
 	})
 
 	t.Run("valid cypher without mutation while mutations disabled", func(t *testing.T) {
