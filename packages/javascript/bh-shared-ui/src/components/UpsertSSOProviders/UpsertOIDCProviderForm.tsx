@@ -19,8 +19,7 @@ import { Alert, DialogContent, DialogActions, Grid, TextField } from '@mui/mater
 import { useEffect, FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { OIDCProviderInfo, SSOProvider, UpsertOIDCProviderRequest, Role } from 'js-client-library';
-import SSOProviderConfigForm from './SSOProviderConfigForm';
-import { backfillSSOProviderConfig } from './UpsertSAMLProviderForm';
+import SSOProviderConfigForm, { backfillSSOProviderConfig } from './SSOProviderConfigForm';
 
 const UpsertOIDCProviderForm: FC<{
     error: any;
@@ -35,7 +34,7 @@ const UpsertOIDCProviderForm: FC<{
         name: oldSSOProvider?.name ?? '',
         client_id: (oldSSOProvider?.details as OIDCProviderInfo)?.client_id ?? '',
         issuer: (oldSSOProvider?.details as OIDCProviderInfo)?.issuer ?? '',
-        config: oldSSOProvider?.config? oldSSOProvider.config : backfillSSOProviderConfig(readOnlyRoleId)
+        config: oldSSOProvider?.config ? oldSSOProvider.config : backfillSSOProviderConfig(readOnlyRoleId),
     };
 
     const {
