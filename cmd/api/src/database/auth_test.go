@@ -37,7 +37,10 @@ import (
 const (
 	userPrincipal  = "first.last@example.com"
 	user2Principal = "first2.last2@example.com"
-	roleToDelete   = auth.RoleReadOnly
+	user3Principal = "first3.last3@example.com"
+	user4Principal = "first4.last4@example.com"
+
+	roleToDelete = auth.RoleReadOnly
 )
 
 func initAndGetRoles(t *testing.T) (database.Database, model.Roles) {
@@ -486,39 +489,162 @@ func TestDatabase_SetUserSessionFlag(t *testing.T) {
 }
 
 func TestDatabase_GetUserSSOSession(t *testing.T) {
-	var (
-		testCtx      = context.Background()
-		dbInst, user = initAndCreateUser(t)
-		samlProvider = model.SAMLProvider{
-			Name:            "provider",
-			DisplayName:     "provider name",
-			IssuerURI:       "https://idp.example.com/idp.xml",
-			SingleSignOnURI: "https://idp.example.com/sso",
+	t.Run("Successful GetUserSSOSession (SAML)", func(t *testing.T) {
+		var (
+			testCtx      = context.Background()
+			dbInst, user = initAndCreateUser(t)
+			samlProvider = model.SAMLProvider{
+				Name:            "provider",
+				DisplayName:     "provider name",
+				IssuerURI:       "https://idp.example.com/idp.xml",
+				SingleSignOnURI: "https://idp.example.com/sso",
+			}
+		)
+
+		// Initialize the SAMLProvider without setting SSOProviderID
+		newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(testCtx, samlProvider, model.SSOProviderConfig{})
+		require.Nil(t, err)
+
+		user.SSOProviderID = newSAMLProvider.SSOProviderID
+		err = dbInst.UpdateUser(testCtx, user)
+		require.Nil(t, err)
+
+		userSession := model.UserSession{
+			AuthProviderID:   newSAMLProvider.ID,
+			AuthProviderType: model.SessionAuthProviderSAML,
+			User:             user,
+			UserID:           user.ID,
+			ExpiresAt:        time.Now().UTC().Add(time.Hour),
 		}
-		config = model.SSOProviderConfig{}
-	)
 
-	// Initialize the SAMLProvider without setting SSOProviderID
-	newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(testCtx, samlProvider, config)
-	require.Nil(t, err)
+		newUserSession, err := dbInst.CreateUserSession(testCtx, userSession)
+		require.Nil(t, err)
 
-	user.SSOProviderID = newSAMLProvider.SSOProviderID
-	err = dbInst.UpdateUser(testCtx, user)
-	require.Nil(t, err)
+		dbSess, err := dbInst.GetUserSession(testCtx, newUserSession.ID)
+		require.Nil(t, err)
+		require.NotNil(t, dbSess.User.SSOProvider)
+		require.NotNil(t, dbSess.User.SSOProvider.SAMLProvider)
+	})
 
-	userSession := model.UserSession{
-		AuthProviderID:   newSAMLProvider.ID,
-		AuthProviderType: model.SessionAuthProviderSAML,
-		User:             user,
-		UserID:           user.ID,
-		ExpiresAt:        time.Now().UTC().Add(time.Hour),
-	}
+	t.Run("Successful GetUserSSOSession (SAML) with config values", func(t *testing.T) {
+		var (
+			testCtx      = context.Background()
+			dbInst, user = initAndCreateUser(t)
+			samlProvider = model.SAMLProvider{
+				Name:            "provider",
+				DisplayName:     "provider name",
+				IssuerURI:       "https://idp.example.com/idp.xml",
+				SingleSignOnURI: "https://idp.example.com/sso",
+			}
+			config = model.SSOProviderConfig{
+				AutoProvision: model.AutoProvision{
+					Enabled:       true,
+					DefaultRole:   3,
+					RoleProvision: true,
+				},
+			}
+		)
 
-	newUserSession, err := dbInst.CreateUserSession(testCtx, userSession)
-	require.Nil(t, err)
+		// Initialize the SAMLProvider without setting SSOProviderID
+		newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(testCtx, samlProvider, config)
+		require.Nil(t, err)
 
-	dbSess, err := dbInst.GetUserSession(testCtx, newUserSession.ID)
-	require.Nil(t, err)
-	require.NotNil(t, dbSess.User.SSOProvider)
-	require.NotNil(t, dbSess.User.SSOProvider.SAMLProvider)
+		user.SSOProviderID = newSAMLProvider.SSOProviderID
+		err = dbInst.UpdateUser(testCtx, user)
+		require.Nil(t, err)
+
+		userSession := model.UserSession{
+			AuthProviderID:   newSAMLProvider.ID,
+			AuthProviderType: model.SessionAuthProviderSAML,
+			User:             user,
+			UserID:           user.ID,
+			ExpiresAt:        time.Now().UTC().Add(time.Hour),
+		}
+
+		newUserSession, err := dbInst.CreateUserSession(testCtx, userSession)
+		require.Nil(t, err)
+
+		dbSess, err := dbInst.GetUserSession(testCtx, newUserSession.ID)
+		require.Nil(t, err)
+		require.NotNil(t, dbSess.User.SSOProvider)
+		require.NotNil(t, dbSess.User.SSOProvider.SAMLProvider)
+	})
+
+	t.Run("Successful GetUserSSOSession (OIDC)", func(t *testing.T) {
+		var (
+			testCtx      = context.Background()
+			dbInst, user = initAndCreateUser(t)
+			oidcProvider = model.OIDCProvider{
+				ClientID: "bloodhound",
+				Issuer:   "https://localhost/auth",
+			}
+			config = model.SSOProviderConfig{}
+		)
+
+		// Initialize the OIDCProvider without setting SSOProviderID
+		newOIDCProvider, err := dbInst.CreateOIDCProvider(testCtx, "test", oidcProvider.Issuer, oidcProvider.ClientID, config)
+		require.Nil(t, err)
+
+		user.SSOProviderID = null.Int32From(int32(newOIDCProvider.SSOProviderID))
+		err = dbInst.UpdateUser(testCtx, user)
+		require.Nil(t, err)
+
+		userSession := model.UserSession{
+			AuthProviderID:   newOIDCProvider.ID,
+			AuthProviderType: model.SessionAuthProviderOIDC,
+			User:             user,
+			UserID:           user.ID,
+			ExpiresAt:        time.Now().UTC().Add(time.Hour),
+		}
+
+		newUserSession, err := dbInst.CreateUserSession(testCtx, userSession)
+		require.Nil(t, err)
+
+		dbSess, err := dbInst.GetUserSession(testCtx, newUserSession.ID)
+		require.Nil(t, err)
+		require.NotNil(t, dbSess.User.SSOProvider)
+		require.NotNil(t, dbSess.User.SSOProvider.OIDCProvider)
+	})
+
+	t.Run("Successful GetUserSSOSession (OIDC) with config values", func(t *testing.T) {
+		var (
+			testCtx      = context.Background()
+			dbInst, user = initAndCreateUser(t)
+			oidcProvider = model.OIDCProvider{
+				ClientID: "bloodhound",
+				Issuer:   "https://localhost/auth",
+			}
+			config = model.SSOProviderConfig{
+				AutoProvision: model.AutoProvision{
+					Enabled:       true,
+					DefaultRole:   3,
+					RoleProvision: true,
+				},
+			}
+		)
+
+		// Initialize the OIDCProvider without setting SSOProviderID
+		newOIDCProvider, err := dbInst.CreateOIDCProvider(testCtx, "test", oidcProvider.Issuer, oidcProvider.ClientID, config)
+		require.Nil(t, err)
+
+		user.SSOProviderID = null.Int32From(int32(newOIDCProvider.SSOProviderID))
+		err = dbInst.UpdateUser(testCtx, user)
+		require.Nil(t, err)
+
+		userSession := model.UserSession{
+			AuthProviderID:   newOIDCProvider.ID,
+			AuthProviderType: model.SessionAuthProviderOIDC,
+			User:             user,
+			UserID:           user.ID,
+			ExpiresAt:        time.Now().UTC().Add(time.Hour),
+		}
+
+		newUserSession, err := dbInst.CreateUserSession(testCtx, userSession)
+		require.Nil(t, err)
+
+		dbSess, err := dbInst.GetUserSession(testCtx, newUserSession.ID)
+		require.Nil(t, err)
+		require.NotNil(t, dbSess.User.SSOProvider)
+		require.NotNil(t, dbSess.User.SSOProvider.OIDCProvider)
+	})
 }
