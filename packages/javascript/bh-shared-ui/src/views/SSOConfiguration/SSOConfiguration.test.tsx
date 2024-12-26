@@ -35,6 +35,8 @@ const initialSAMLProvider: SSOProvider = {
         sp_metadata_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-1/metadata',
         sp_acs_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-1/acs',
     } as SAMLProviderInfo,
+    login_uri: '',
+    callback_uri: '',
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
 };
@@ -55,6 +57,8 @@ const newSAMLProvider: SSOProvider = {
         sp_metadata_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-2/metadata',
         sp_acs_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-2/acs',
     } as SAMLProviderInfo,
+    login_uri: '',
+    callback_uri: '',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
 };
