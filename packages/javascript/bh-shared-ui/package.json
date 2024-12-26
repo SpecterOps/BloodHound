@@ -9,7 +9,7 @@
     ],
     "type": "module",
     "scripts": {
-        "build": "rollup -c rollup.config.js",
+        "build": "yarn check-types && rollup -c rollup.config.js",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "test": "TZ=America/Los_Angeles vitest",
         "check-types": "tsc --noEmit --pretty",
