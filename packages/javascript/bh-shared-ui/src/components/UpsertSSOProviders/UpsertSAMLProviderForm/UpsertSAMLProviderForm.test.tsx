@@ -33,7 +33,7 @@ describe('UpsertSAMLProviderForm', () => {
     it('should render inputs, labels, and action buttons', () => {
         const testOnClose = vi.fn();
         const testOnSubmit = vi.fn();
-        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} error={undefined} />);
+        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
 
         expect(screen.getByLabelText('SAML Provider Name')).toBeInTheDocument();
 
@@ -52,7 +52,7 @@ describe('UpsertSAMLProviderForm', () => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSubmit = vi.fn();
-        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} error={undefined} />);
+        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
 
         await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
@@ -63,7 +63,7 @@ describe('UpsertSAMLProviderForm', () => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSubmit = vi.fn();
-        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} error={undefined} />);
+        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
 
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 

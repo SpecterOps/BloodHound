@@ -15,9 +15,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Switch } from '@bloodhoundenterprise/doodleui';
-import { Grid, Typography, FormControl, InputLabel, Select, MenuItem, FormControlLabel, useTheme } from '@mui/material';
+import {
+    Alert,
+    Grid,
+    Typography,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    FormControlLabel,
+    useTheme,
+} from '@mui/material';
 import { FC } from 'react';
-import { Control, Controller, UseFormResetField, UseFormWatch } from 'react-hook-form';
+import { Control, Controller, FieldErrors, UseFormResetField, UseFormWatch } from 'react-hook-form';
 import { Role, UpsertOIDCProviderRequest, UpsertSAMLProviderFormInputs } from 'js-client-library';
 
 export const backfillSSOProviderConfig = (readOnlyRoleId?: number) => ({
@@ -26,11 +36,12 @@ export const backfillSSOProviderConfig = (readOnlyRoleId?: number) => ({
 
 const SSOProviderConfigForm: FC<{
     control: Control<UpsertSAMLProviderFormInputs | UpsertOIDCProviderRequest, any>;
+    errors: FieldErrors<UpsertSAMLProviderFormInputs | UpsertOIDCProviderRequest>;
     watch: UseFormWatch<UpsertOIDCProviderRequest | UpsertOIDCProviderRequest>;
     resetField: UseFormResetField<UpsertSAMLProviderFormInputs | UpsertOIDCProviderRequest>;
     roles?: Role[];
     readOnlyRoleId?: number;
-}> = ({ control, readOnlyRoleId, resetField, roles, watch }) => {
+}> = ({ control, errors, readOnlyRoleId, resetField, roles, watch }) => {
     const theme = useTheme();
 
     return (
@@ -95,7 +106,10 @@ const SSOProviderConfigForm: FC<{
                     name='config.auto_provision.default_role'
                     control={control}
                     defaultValue={readOnlyRoleId}
-                    rules={{ required: 'Default role is required' }}
+                    rules={{
+                        required: 'Default role is required',
+                        validate: (value) => value != 0 || 'Default role is required',
+                    }}
                     render={({ field }) => (
                         <FormControl>
                             <InputLabel
@@ -127,6 +141,11 @@ const SSOProviderConfigForm: FC<{
                     )}
                 />
             </Grid>
+            {!!errors.config?.auto_provision?.default_role && (
+                <Grid item xs={5}>
+                    <Alert severity='error'>{errors.config?.auto_provision?.default_role?.message}</Alert>
+                </Grid>
+            )}
         </>
     );
 };

@@ -157,6 +157,7 @@ const UpsertSAMLProviderForm: FC<{
                     </Grid>
                     <SSOProviderConfigForm
                         control={control}
+                        errors={errors}
                         readOnlyRoleId={readOnlyRoleId}
                         resetField={resetField}
                         roles={roles}
