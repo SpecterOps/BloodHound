@@ -18,12 +18,12 @@ name: Build UI
 
 on:
   push:
-    branches: [main, BED-5219]
+    branches: [main]
   pull_request:
     types: [opened, synchronize]
 
 jobs:
-  run-analysis:
+  build-ui:
     runs-on: ubuntu-latest
 
     steps:
