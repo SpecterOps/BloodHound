@@ -473,15 +473,17 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 }
 
 func jitSAMLUserCreation(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserCreator) error {
-	if role, err := u.GetRole(ctx, ssoProvider.Config.AutoProvision.DefaultRoleId); err != nil {
-		return fmt.Errorf("get role: %v", err)
+	if roles, err := sanitizeAndGetRoles(ctx, ssoProvider.Config.AutoProvision, ssoProvider.SAMLProvider.GetSAMLUserRolesFromAssertion(assertion), u); err != nil {
+		return fmt.Errorf("sanitizeAndGetRoles: %v", err)
+	} else if len(roles) != 1 {
+		return fmt.Errorf("invalid roles %v", roles.Names())
 	} else if _, err := u.LookupUser(ctx, principalName); err != nil && !errors.Is(err, database.ErrNotFound) {
 		return fmt.Errorf("lookup user: %v", err)
 	} else if errors.Is(err, database.ErrNotFound) {
 		user := model.User{
 			EmailAddress:  null.StringFrom(principalName),
 			PrincipalName: principalName,
-			Roles:         model.Roles{role},
+			Roles:         roles,
 			SSOProviderID: null.Int32From(ssoProvider.ID),
 			EULAAccepted:  true, // EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users
 			FirstName:     null.StringFrom(principalName),

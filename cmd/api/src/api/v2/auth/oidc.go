@@ -46,11 +46,12 @@ var (
 )
 
 type oidcClaims struct {
-	Name        string `json:"name"`
-	FamilyName  string `json:"family_name"`
-	DisplayName string `json:"given_name"`
-	Email       string `json:"email"`
-	Verified    bool   `json:"email_verified"`
+	Name        string   `json:"name"`
+	FamilyName  string   `json:"family_name"`
+	DisplayName string   `json:"given_name"`
+	Email       string   `json:"email"`
+	Verified    bool     `json:"email_verified"`
+	Roles       []string `json:"roles"`
 }
 
 // UpsertOIDCProviderRequest represents the body of create & update provider endpoints
@@ -255,15 +256,17 @@ func getOIDCClaims(reqCtx context.Context, provider *oidc.Provider, ssoProvider 
 }
 
 func jitOIDCUserCreation(ctx context.Context, ssoProvider model.SSOProvider, claims oidcClaims, u jitUserCreator) error {
-	if role, err := u.GetRole(ctx, ssoProvider.Config.AutoProvision.DefaultRoleId); err != nil {
-		return fmt.Errorf("get role: %v", err)
+	if roles, err := sanitizeAndGetRoles(ctx, ssoProvider.Config.AutoProvision, claims.Roles, u); err != nil {
+		return fmt.Errorf("sanitizeAndGetRoles: %v", err)
+	} else if len(roles) != 1 {
+		return fmt.Errorf("invalid roles %v", roles.Names())
 	} else if _, err := u.LookupUser(ctx, claims.Email); err != nil && !errors.Is(err, database.ErrNotFound) {
 		return fmt.Errorf("lookup user: %v", err)
 	} else if errors.Is(err, database.ErrNotFound) {
 		var user = model.User{
 			EmailAddress:  null.StringFrom(claims.Email),
 			PrincipalName: claims.Email,
-			Roles:         model.Roles{role},
+			Roles:         roles,
 			SSOProviderID: null.Int32From(ssoProvider.ID),
 			EULAAccepted:  true, // EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users
 			FirstName:     null.StringFrom(claims.Email),
