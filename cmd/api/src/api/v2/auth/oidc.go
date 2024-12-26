@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
@@ -148,16 +149,16 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 
 	if ssoProvider.OIDCProvider == nil {
 		// SSO misconfiguration scenario
-		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if state, err := config.GenerateRandomBase64String(77); err != nil {
 		log.Errorf("[OIDC] Failed to generate state: %v", err)
 		// Technical issues scenario
-		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
 		log.Errorf("[OIDC] Failed to create OIDC provider: %v", err)
 		// SSO misconfiguration or technical issue
 		// Treat this as a misconfiguration scenario
-		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else {
 		conf := &oauth2.Config{
 			ClientID:    ssoProvider.OIDCProvider.ClientID,
@@ -193,27 +194,27 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 
 	if ssoProvider.OIDCProvider == nil {
 		// SSO misconfiguration scenario
-		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if len(code) == 0 {
 		// Missing authorization code implies a credentials or form issue
 		// Not explicitly covered, treat as technical issue
-		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if pkceVerifier, err := request.Cookie(api.AuthPKCECookieName); err != nil {
 		// Missing PKCE verifier - likely a technical or config issue
-		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if len(state) == 0 {
 		// Missing state parameter - treat as technical issue
-		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if stateCookie, err := request.Cookie(api.AuthStateCookieName); err != nil || stateCookie.Value != state[0] {
 		// Invalid state - treat as technical issue or misconfiguration
-		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
 		log.Errorf("[OIDC] Failed to create OIDC provider: %v", err)
 		// SSO misconfiguration scenario
-		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if claims, err := getOIDCClaims(request.Context(), provider, ssoProvider, pkceVerifier, code[0]); err != nil {
 		log.Errorf("[OIDC] %v", err)
-		redirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
+		v2.RedirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
 			if err := jitOIDCUserCreation(request.Context(), ssoProvider, claims, s.db); err != nil {

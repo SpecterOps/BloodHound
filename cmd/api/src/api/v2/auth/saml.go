@@ -35,7 +35,7 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
+	"github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
@@ -379,12 +379,12 @@ func (s ManagementResource) ServeSigningCertificate(response http.ResponseWriter
 func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	if ssoProvider.SAMLProvider == nil {
 		// SAML misconfiguration scenario
-		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		log.Errorf("[SAML] Service provider creation failed: %v", err)
 		// Technical issues scenario
-		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else {
 		var (
 			binding         = saml.HTTPRedirectBinding
@@ -400,14 +400,14 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 			log.Errorf("[SAML] Failed creating SAML authentication request: %v", err)
 			// SAML misconfiguration or technical issue
 			// Since this likely indicates a configuration problem, we treat it as a misconfiguration scenario
-			redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+			v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 		} else {
 			switch binding {
 			case saml.HTTPRedirectBinding:
 				if redirectURL, err := authReq.Redirect("", &serviceProvider); err != nil {
 					log.Errorf("[SAML] Failed to format a redirect for SAML provider %s: %v", serviceProvider.EntityID, err)
 					// Likely a technical or configuration issue
-					redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+					v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 				} else {
 					response.Header().Add(headers.Location.String(), redirectURL.String())
 					response.WriteHeader(http.StatusFound)
@@ -421,13 +421,13 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 				if _, err := response.Write([]byte(fmt.Sprintf(authInitiationContentBodyFormat, authReq.Post("")))); err != nil {
 					log.Errorf("[SAML] Failed to write response with HTTP POST binding: %v", err)
 					// Technical issues scenario
-					redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+					v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 				}
 
 			default:
 				log.Errorf("[SAML] Unhandled binding type %s", binding)
 				// Treating unknown binding as a misconfiguration
-				redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+				v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 			}
 		}
 	}
@@ -437,15 +437,15 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	if ssoProvider.SAMLProvider == nil {
 		// SAML misconfiguration
-		redirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		log.Errorf("[SAML] Service provider creation failed: %v", err)
-		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if err := request.ParseForm(); err != nil {
 		log.Errorf("[SAML] Failed to parse form POST: %v", err)
 		// Technical issues or invalid form data
 		// This is not covered by acceptance criteria directly; treat as technical issue
-		redirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if assertion, err := serviceProvider.ParseResponse(request, nil); err != nil {
 		var typedErr *saml.InvalidResponseError
 		switch {
@@ -455,11 +455,11 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 			log.Errorf("[SAML] Failed to parse ACS response for provider %s: %v", ssoProvider.SAMLProvider.IssuerURI, err)
 		}
 		// SAML credentials issue scenario (authentication failed)
-		redirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
+		v2.RedirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 	} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
 		log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", ssoProvider.Name, err)
 		// SAML credentials issue scenario again
-		redirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
+		v2.RedirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
 			if err := jitSAMLUserCreation(request.Context(), ssoProvider, principalName, assertion, s.db); err != nil {
