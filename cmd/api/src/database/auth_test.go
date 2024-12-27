@@ -300,7 +300,7 @@ func TestDatabase_UpdateUserAuth(t *testing.T) {
 				SingleSignOnURI: "https://idp.example.com/sso",
 			}
 			config = model.SSOProviderConfig{
-				AutoProvision: model.AutoProvision{
+				AutoProvision: model.SSOProviderAutoProvisionConfig{
 					Enabled:       true,
 					DefaultRole:   3,
 					RoleProvision: true,
@@ -434,7 +434,7 @@ func TestDatabase_UpdateUserAuth(t *testing.T) {
 				Issuer:   "https://localhost/auth",
 			}
 			config = model.SSOProviderConfig{
-				AutoProvision: model.AutoProvision{
+				AutoProvision: model.SSOProviderAutoProvisionConfig{
 					Enabled:       true,
 					DefaultRole:   3,
 					RoleProvision: true,
@@ -653,7 +653,7 @@ func TestDatabase_CreateUpdateDeleteSSOProvider(t *testing.T) {
 			newSAMLProvider model.SAMLProvider
 			updatedUser     model.User
 			config          = model.SSOProviderConfig{
-				AutoProvision: model.AutoProvision{
+				AutoProvision: model.SSOProviderAutoProvisionConfig{
 					Enabled:       true,
 					DefaultRole:   3,
 					RoleProvision: true,
@@ -791,7 +791,7 @@ func TestDatabase_CreateUpdateDeleteSSOProvider(t *testing.T) {
 			}
 			updatedUser model.User
 			config      = model.SSOProviderConfig{
-				AutoProvision: model.AutoProvision{
+				AutoProvision: model.SSOProviderAutoProvisionConfig{
 					Enabled:       true,
 					DefaultRole:   3,
 					RoleProvision: true,
@@ -951,7 +951,7 @@ func TestDatabase_GetUserSSOSession(t *testing.T) {
 				SingleSignOnURI: "https://idp.example.com/sso",
 			}
 			config = model.SSOProviderConfig{
-				AutoProvision: model.AutoProvision{
+				AutoProvision: model.SSOProviderAutoProvisionConfig{
 					Enabled:       true,
 					DefaultRole:   3,
 					RoleProvision: true,
@@ -1029,7 +1029,7 @@ func TestDatabase_GetUserSSOSession(t *testing.T) {
 				Issuer:   "https://localhost/auth",
 			}
 			config = model.SSOProviderConfig{
-				AutoProvision: model.AutoProvision{
+				AutoProvision: model.SSOProviderAutoProvisionConfig{
 					Enabled:       true,
 					DefaultRole:   3,
 					RoleProvision: true,

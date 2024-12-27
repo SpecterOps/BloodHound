@@ -23,14 +23,14 @@ import (
 	"fmt"
 )
 
-type AutoProvision struct {
+type SSOProviderAutoProvisionConfig struct {
 	Enabled       bool  `json:"enabled"`
 	DefaultRole   int32 `json:"default_role"`
 	RoleProvision bool  `json:"role_provision"`
 }
 
 type SSOProviderConfig struct {
-	AutoProvision AutoProvision `json:"auto_provision"`
+	AutoProvision SSOProviderAutoProvisionConfig `json:"auto_provision"`
 }
 
 // SSOProvider is the common representation of an SSO provider that can be used to display high level information about that provider

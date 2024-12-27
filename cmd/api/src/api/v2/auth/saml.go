@@ -169,7 +169,7 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 
 			if isAutoProvisionEnabled {
 				config = model.SSOProviderConfig{
-					AutoProvision: model.AutoProvision{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
 						Enabled:       isAutoProvisionEnabled,
 						DefaultRole:   defaultRoleValue.ID,
 						RoleProvision: isRoleProvisioned,
@@ -260,7 +260,7 @@ func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWrit
 						ssoProvider.Config.AutoProvision.RoleProvision = isRoleProvisioned
 					}
 				} else {
-					ssoProvider.Config.AutoProvision = model.AutoProvision{}
+					ssoProvider.Config.AutoProvision = model.SSOProviderAutoProvisionConfig{}
 				}
 			}
 		}
@@ -483,9 +483,9 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 								}
 
 								if _, err := s.db.CreateUser(request.Context(), user); err != nil {
-									log.Errorf("It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging. Error: %v", err)
+									// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
+									log.Errorf("[SAML] JIT User Create Error: %v", err)
 								}
-
 							}
 						}
 					}

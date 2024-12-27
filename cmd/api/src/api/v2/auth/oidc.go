@@ -77,7 +77,7 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 			}
 
 			if !upsertReq.Config.AutoProvision.Enabled {
-				ssoProvider.Config.AutoProvision = model.AutoProvision{}
+				ssoProvider.Config.AutoProvision = model.SSOProviderAutoProvisionConfig{}
 			} else {
 				ssoProvider.Config.AutoProvision = upsertReq.Config.AutoProvision
 			}
@@ -109,7 +109,7 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
 	} else {
 		if !upsertReq.Config.AutoProvision.Enabled {
-			upsertReq.Config.AutoProvision = model.AutoProvision{}
+			upsertReq.Config.AutoProvision = model.SSOProviderAutoProvisionConfig{}
 		}
 
 		if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), upsertReq.Name, upsertReq.Issuer, upsertReq.ClientID, *upsertReq.Config); err != nil {
@@ -260,9 +260,9 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 								}
 
 								if _, err := s.db.CreateUser(request.Context(), user); err != nil {
-									log.Errorf("It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging. Error: %v", err)
+									// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
+									log.Errorf("[OIDC] JIT User Create Error: %v", err)
 								}
-
 							}
 						}
 					}

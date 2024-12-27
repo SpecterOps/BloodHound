@@ -50,7 +50,7 @@ func TestBloodhoundDB_CreateAndGetSSOProvider(t *testing.T) {
 
 	t.Run("successfully created an SSO provider with config values (SAML)", func(t *testing.T) {
 		config := model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
 				DefaultRole:   3,
 				RoleProvision: true,
@@ -81,7 +81,7 @@ func TestBloodhoundDB_CreateAndGetSSOProvider(t *testing.T) {
 
 	t.Run("successfully created an SSO provider with config values (OIDC)", func(t *testing.T) {
 		config := model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
 				DefaultRole:   3,
 				RoleProvision: true,
@@ -128,7 +128,7 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 
 	t.Run("successfully delete an SSO provider associated with a SAML provider with config values", func(t *testing.T) {
 		config := model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
 				DefaultRole:   3,
 				RoleProvision: true,
@@ -172,7 +172,7 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 
 	t.Run("successfully delete an SSO provider associated with an OIDC provider with config values", func(t *testing.T) {
 		config := model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
 				DefaultRole:   3,
 				RoleProvision: true,
@@ -248,7 +248,7 @@ func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 	// This test fails individually, but passes when ran together with the other tests
 	t.Run("successfully list SSO providers with and without sorting (with configs)", func(t *testing.T) {
 		config := model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
 				DefaultRole:   3,
 				RoleProvision: true,
@@ -324,7 +324,7 @@ func TestBloodhoundDB_GetSSOProviderBySlug(t *testing.T) {
 
 	t.Run("successfully get sso provider by slug (OIDC) with configs", func(t *testing.T) {
 		config := model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
 				DefaultRole:   3,
 				RoleProvision: true,
@@ -372,7 +372,7 @@ func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
 
 	t.Run("successfully list SSO provider users (SAML) with configs", func(t *testing.T) {
 		config := model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
 				DefaultRole:   3,
 				RoleProvision: true,
@@ -417,7 +417,7 @@ func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
 
 	t.Run("successfully list SSO provider users (OIDC) with configs", func(t *testing.T) {
 		config := model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
 				DefaultRole:   3,
 				RoleProvision: true,
@@ -467,7 +467,7 @@ func TestBloodhoundDB_GetSSOProviderById(t *testing.T) {
 
 	t.Run("successfully get sso provider by id with config values (SAML)", func(t *testing.T) {
 		config := model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
 				DefaultRole:   3,
 				RoleProvision: true,
@@ -507,7 +507,7 @@ func TestBloodhoundDB_GetSSOProviderById(t *testing.T) {
 
 	t.Run("successfully get sso provider by id with config values (OIDC)", func(t *testing.T) {
 		config := model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
 				DefaultRole:   3,
 				RoleProvision: true,

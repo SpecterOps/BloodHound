@@ -57,7 +57,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 
 	t.Run("successfully create a new OIDCProvider with config values", func(t *testing.T) {
 		config := model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
 				DefaultRole:   3,
 				RoleProvision: true,
@@ -91,7 +91,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 				Issuer:   "https://gotham-2.net",
 				ClientID: "gotham-net-2",
 				Config: &model.SSOProviderConfig{
-					AutoProvision: model.AutoProvision{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
 						Enabled:       true,
 						DefaultRole:   7,
 						RoleProvision: true,
@@ -194,7 +194,7 @@ func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 				Issuer:   "https://gotham-2.net",
 				ClientID: "gotham-net-2",
 				Config: &model.SSOProviderConfig{
-					AutoProvision: model.AutoProvision{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
 						Enabled:       true,
 						DefaultRole:   3,
 						RoleProvision: true,
@@ -217,7 +217,7 @@ func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 				Issuer:   "https://gotham-2.net",
 				ClientID: "gotham-net-2",
 				Config: &model.SSOProviderConfig{
-					AutoProvision: model.AutoProvision{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
 						Enabled:       true,
 						DefaultRole:   7,
 						RoleProvision: true,

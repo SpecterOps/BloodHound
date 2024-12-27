@@ -77,7 +77,7 @@ func TestBloodhoundDB_CreateUpdateOIDCProvider(t *testing.T) {
 
 	t.Run("successfully create and update an OIDC provider with config values", func(t *testing.T) {
 		config := model.SSOProviderConfig{
-			AutoProvision: model.AutoProvision{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
 				DefaultRole:   3,
 				RoleProvision: true,
@@ -107,7 +107,7 @@ func TestBloodhoundDB_CreateUpdateOIDCProvider(t *testing.T) {
 				SSOProviderID: provider.SSOProviderID,
 			},
 			Config: model.SSOProviderConfig{
-				AutoProvision: model.AutoProvision{
+				AutoProvision: model.SSOProviderAutoProvisionConfig{
 					Enabled:       true,
 					DefaultRole:   2,
 					RoleProvision: false,
