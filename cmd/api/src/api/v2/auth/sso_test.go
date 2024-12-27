@@ -17,6 +17,7 @@
 package auth_test
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"testing"
@@ -31,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -245,5 +247,52 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 			OnHandlerFunc(resources.DeleteSSOProvider).
 			Require().
 			ResponseStatusCode(http.StatusNotFound)
+	})
+}
+
+func TestManagementResource_SanitizeAndGetRoles(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		_, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+		testCtx   = context.Background()
+
+		dbRoles = model.Roles{
+			{Name: "God Role", Serial: model.Serial{ID: 1}},
+			{Name: "Default Role", Serial: model.Serial{ID: 2}},
+			{Name: "Valid Role", Serial: model.Serial{ID: 3}},
+		}
+		roleProvisionEnabledConfig  = model.SSOProviderAutoProvisionConfig{RoleProvision: true, DefaultRoleId: 2, Enabled: true}
+		roleProvisionDisabledConfig = model.SSOProviderAutoProvisionConfig{RoleProvision: false, DefaultRoleId: 2, Enabled: true}
+	)
+	t.Run("role provision enabled - return valid role", func(t *testing.T) {
+		mockDB.EXPECT().GetAllRoles(gomock.Any(), "", model.SQLFilter{}).Return(dbRoles, nil)
+		roles, err := auth.SanitizeAndGetRoles(testCtx, roleProvisionEnabledConfig, []string{"ignored", "bh-valid-role"}, mockDB)
+		require.Nil(t, err)
+		require.Len(t, roles, 1)
+		require.Equal(t, roles[0].ID, dbRoles[2].ID)
+	})
+
+	t.Run("role provision enabled - return default role when multiple valid roles", func(t *testing.T) {
+		mockDB.EXPECT().GetAllRoles(gomock.Any(), "", model.SQLFilter{}).Return(dbRoles, nil)
+		roles, err := auth.SanitizeAndGetRoles(testCtx, roleProvisionEnabledConfig, []string{"bh-valid-role", "ignored", "bh-god-role"}, mockDB)
+		require.Nil(t, err)
+		require.Len(t, roles, 1)
+		require.Equal(t, roles[0].ID, roleProvisionEnabledConfig.DefaultRoleId)
+	})
+
+	t.Run("role provision enabled - return default role when no valid roles", func(t *testing.T) {
+		mockDB.EXPECT().GetAllRoles(gomock.Any(), "", model.SQLFilter{}).Return(dbRoles, nil)
+		roles, err := auth.SanitizeAndGetRoles(testCtx, roleProvisionEnabledConfig, []string{"bh-invalid-role", "ignored"}, mockDB)
+		require.Nil(t, err)
+		require.Len(t, roles, 1)
+		require.Equal(t, roles[0].ID, roleProvisionEnabledConfig.DefaultRoleId)
+	})
+
+	t.Run("role provision disabled - return default role", func(t *testing.T) {
+		mockDB.EXPECT().GetAllRoles(gomock.Any(), "", model.SQLFilter{}).Return(dbRoles, nil)
+		roles, err := auth.SanitizeAndGetRoles(testCtx, roleProvisionDisabledConfig, []string{"bh-valid-role", "ignored", "bh-god-role"}, mockDB)
+		require.Nil(t, err)
+		require.Len(t, roles, 1)
+		require.Equal(t, roles[0].ID, roleProvisionEnabledConfig.DefaultRoleId)
 	})
 }

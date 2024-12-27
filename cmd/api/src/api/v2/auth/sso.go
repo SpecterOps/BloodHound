@@ -250,7 +250,7 @@ func (s ManagementResource) SSOCallbackHandler(response http.ResponseWriter, req
 	}
 }
 
-func sanitizeAndGetRoles(ctx context.Context, autoProvisionConfig model.SSOProviderAutoProvisionConfig, maybeBHRoles []string, r getAllRoler) (model.Roles, error) {
+func SanitizeAndGetRoles(ctx context.Context, autoProvisionConfig model.SSOProviderAutoProvisionConfig, maybeBHRoles []string, r getAllRoler) (model.Roles, error) {
 	if dbRoles, err := r.GetAllRoles(ctx, "", model.SQLFilter{}); err != nil {
 		return nil, err
 	} else {

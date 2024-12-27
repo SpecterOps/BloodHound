@@ -473,10 +473,10 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 }
 
 func jitSAMLUserCreation(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserCreator) error {
-	if roles, err := sanitizeAndGetRoles(ctx, ssoProvider.Config.AutoProvision, ssoProvider.SAMLProvider.GetSAMLUserRolesFromAssertion(assertion), u); err != nil {
-		return fmt.Errorf("sanitizeAndGetRoles: %v", err)
+	if roles, err := SanitizeAndGetRoles(ctx, ssoProvider.Config.AutoProvision, ssoProvider.SAMLProvider.GetSAMLUserRolesFromAssertion(assertion), u); err != nil {
+		return fmt.Errorf("sanitize roles: %v", err)
 	} else if len(roles) != 1 {
-		return fmt.Errorf("invalid roles %v", roles.Names())
+		return fmt.Errorf("invalid roles detected")
 	} else if _, err := u.LookupUser(ctx, principalName); err != nil && !errors.Is(err, database.ErrNotFound) {
 		return fmt.Errorf("lookup user: %v", err)
 	} else if errors.Is(err, database.ErrNotFound) {
