@@ -29,17 +29,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// This test fails individually, but passes when ran together with the other tests
 func TestBloodhoundDB_CreateUpdateOIDCProvider(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
-		config  = model.SSOProviderConfig{}
 	)
 
 	defer dbInst.Close(testCtx)
 
 	t.Run("successfully create and update an OIDC provider", func(t *testing.T) {
-		provider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com/auth", "bloodhound", config)
+		provider, err := dbInst.CreateOIDCProvider(testCtx, "test", "https://test.localhost.com/auth", "bloodhound", model.SSOProviderConfig{})
 		require.NoError(t, err)
 
 		require.Equal(t, "https://test.localhost.com/auth", provider.Issuer)
@@ -73,5 +73,57 @@ func TestBloodhoundDB_CreateUpdateOIDCProvider(t *testing.T) {
 		_, count, err = dbInst.ListAuditLogs(testCtx, time.Now().Add(time.Minute), time.Now().Add(-time.Minute), 0, 10, "", model.SQLFilter{})
 		require.NoError(t, err)
 		require.Equal(t, 8, count)
+	})
+
+	t.Run("successfully create and update an OIDC provider with config values", func(t *testing.T) {
+		config := model.SSOProviderConfig{
+			AutoProvision: model.AutoProvision{
+				Enabled:       true,
+				DefaultRole:   3,
+				RoleProvision: true,
+			},
+		}
+
+		provider, err := dbInst.CreateOIDCProvider(testCtx, "test2", "https://test.localhost.com/auth", "bloodhound", config)
+		require.NoError(t, err)
+
+		require.Equal(t, "https://test.localhost.com/auth", provider.Issuer)
+		require.Equal(t, "bloodhound", provider.ClientID)
+		require.EqualValues(t, 2, provider.ID)
+
+		_, count, err := dbInst.ListAuditLogs(testCtx, time.Now().Add(time.Minute), time.Now().Add(-time.Minute), 0, 10, "", model.SQLFilter{})
+		require.NoError(t, err)
+		require.Equal(t, 12, count)
+
+		updatedSSOProvider := model.SSOProvider{
+			Name: "updated provider2",
+			Type: model.SessionAuthProviderOIDC,
+			OIDCProvider: &model.OIDCProvider{
+				Serial: model.Serial{
+					ID: provider.ID,
+				},
+				ClientID:      "gotham-net",
+				Issuer:        "https://gotham.net",
+				SSOProviderID: provider.SSOProviderID,
+			},
+			Config: model.SSOProviderConfig{
+				AutoProvision: model.AutoProvision{
+					Enabled:       true,
+					DefaultRole:   2,
+					RoleProvision: false,
+				},
+			},
+		}
+
+		provider, err = dbInst.UpdateOIDCProvider(testCtx, updatedSSOProvider)
+		require.NoError(t, err)
+
+		require.Equal(t, updatedSSOProvider.OIDCProvider.Issuer, provider.Issuer)
+		require.Equal(t, updatedSSOProvider.OIDCProvider.ClientID, provider.ClientID)
+		require.EqualValues(t, updatedSSOProvider.OIDCProvider.ID, provider.ID)
+
+		_, count, err = dbInst.ListAuditLogs(testCtx, time.Now().Add(time.Minute), time.Now().Add(-time.Minute), 0, 10, "", model.SQLFilter{})
+		require.NoError(t, err)
+		require.Equal(t, 16, count)
 	})
 }

@@ -38,7 +38,7 @@ func TestBloodhoundDB_CreateAndGetSSOProvider(t *testing.T) {
 	)
 	defer dbInst.Close(testCtx)
 
-	t.Run("successfully create an SSO provider", func(t *testing.T) {
+	t.Run("successfully create an SSO provider (SAML)", func(t *testing.T) {
 		result, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang", model.SessionAuthProviderSAML, model.SSOProviderConfig{})
 		require.NoError(t, err)
 
@@ -48,7 +48,7 @@ func TestBloodhoundDB_CreateAndGetSSOProvider(t *testing.T) {
 		assert.NotEmpty(t, result.ID)
 	})
 
-	t.Run("successfully created an SSO provider with config values", func(t *testing.T) {
+	t.Run("successfully created an SSO provider with config values (SAML)", func(t *testing.T) {
 		config := model.SSOProviderConfig{
 			AutoProvision: model.AutoProvision{
 				Enabled:       true,
@@ -63,6 +63,37 @@ func TestBloodhoundDB_CreateAndGetSSOProvider(t *testing.T) {
 		assert.Equal(t, "Bloodhound Gang2", result.Name)
 		assert.Equal(t, "bloodhound-gang2", result.Slug)
 		assert.Equal(t, model.SessionAuthProviderSAML, result.Type)
+		assert.Equal(t, true, result.Config.AutoProvision.Enabled)
+		assert.Equal(t, int32(3), result.Config.AutoProvision.DefaultRole)
+		assert.Equal(t, true, result.Config.AutoProvision.RoleProvision)
+		assert.NotEmpty(t, result.ID)
+	})
+
+	t.Run("successfully create an SSO provider (OIDC)", func(t *testing.T) {
+		result, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang3", model.SessionAuthProviderOIDC, model.SSOProviderConfig{})
+		require.NoError(t, err)
+
+		assert.Equal(t, "Bloodhound Gang3", result.Name)
+		assert.Equal(t, "bloodhound-gang3", result.Slug)
+		assert.Equal(t, model.SessionAuthProviderOIDC, result.Type)
+		assert.NotEmpty(t, result.ID)
+	})
+
+	t.Run("successfully created an SSO provider with config values (OIDC)", func(t *testing.T) {
+		config := model.SSOProviderConfig{
+			AutoProvision: model.AutoProvision{
+				Enabled:       true,
+				DefaultRole:   3,
+				RoleProvision: true,
+			},
+		}
+
+		result, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang4", model.SessionAuthProviderOIDC, config)
+		require.NoError(t, err)
+
+		assert.Equal(t, "Bloodhound Gang4", result.Name)
+		assert.Equal(t, "bloodhound-gang4", result.Slug)
+		assert.Equal(t, model.SessionAuthProviderOIDC, result.Type)
 		assert.Equal(t, true, result.Config.AutoProvision.Enabled)
 		assert.Equal(t, int32(3), result.Config.AutoProvision.DefaultRole)
 		assert.Equal(t, true, result.Config.AutoProvision.RoleProvision)
@@ -170,16 +201,15 @@ func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
-		config  = model.SSOProviderConfig{}
 	)
 	defer dbInst.Close(testCtx)
 
 	t.Run("successfully list SSO providers with and without sorting", func(t *testing.T) {
 		// Create SSO providers
-		provider1, err := dbInst.CreateSSOProvider(testCtx, "First Provider", model.SessionAuthProviderSAML, config)
+		provider1, err := dbInst.CreateSSOProvider(testCtx, "First Provider", model.SessionAuthProviderSAML, model.SSOProviderConfig{})
 		require.NoError(t, err)
 
-		provider2, err := dbInst.CreateSSOProvider(testCtx, "Second Provider", model.SessionAuthProviderOIDC, config)
+		provider2, err := dbInst.CreateSSOProvider(testCtx, "Second Provider", model.SessionAuthProviderOIDC, model.SSOProviderConfig{})
 		require.NoError(t, err)
 
 		// Enable the OIDC feature flag
@@ -213,6 +243,62 @@ func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, providers, 1)
 		assert.Equal(t, provider1.ID, providers[0].ID)
+	})
+
+	// This test fails individually, but passes when ran together with the other tests
+	t.Run("successfully list SSO providers with and without sorting (with configs)", func(t *testing.T) {
+		config := model.SSOProviderConfig{
+			AutoProvision: model.AutoProvision{
+				Enabled:       true,
+				DefaultRole:   3,
+				RoleProvision: true,
+			},
+		}
+
+		// Create SSO providers
+		provider3, err := dbInst.CreateSSOProvider(testCtx, "Third Provider", model.SessionAuthProviderSAML, config)
+		require.NoError(t, err)
+		assert.Equal(t, true, provider3.Config.AutoProvision.Enabled)
+		assert.Equal(t, int32(3), provider3.Config.AutoProvision.DefaultRole)
+		assert.Equal(t, true, provider3.Config.AutoProvision.RoleProvision)
+
+		provider4, err := dbInst.CreateSSOProvider(testCtx, "Fourth Provider", model.SessionAuthProviderOIDC, config)
+		require.NoError(t, err)
+		assert.Equal(t, true, provider4.Config.AutoProvision.Enabled)
+		assert.Equal(t, int32(3), provider4.Config.AutoProvision.DefaultRole)
+		assert.Equal(t, true, provider4.Config.AutoProvision.RoleProvision)
+
+		// Enable the OIDC feature flag
+		oidcFlag, err := dbInst.GetFlagByKey(testCtx, appcfg.FeatureOIDCSupport)
+		require.NoError(t, err)
+		oidcFlag.Enabled = true
+
+		err = dbInst.SetFlag(testCtx, oidcFlag)
+		require.NoError(t, err)
+
+		// Test default ordering (by created_at)
+		providers, err := dbInst.GetAllSSOProviders(testCtx, "", model.SQLFilter{})
+		require.NoError(t, err)
+		require.Len(t, providers, 4)
+		assert.Equal(t, provider3.ID, providers[2].ID)
+		assert.Equal(t, provider4.ID, providers[3].ID)
+
+		// Test ordering by name descending
+		providers, err = dbInst.GetAllSSOProviders(testCtx, "name desc", model.SQLFilter{})
+		require.NoError(t, err)
+		require.Len(t, providers, 4)
+		assert.Equal(t, provider3.ID, providers[0].ID)
+		assert.Equal(t, provider4.ID, providers[2].ID)
+
+		// Test filtering by name
+		sqlFilter := model.SQLFilter{
+			SQLString: "name = ?",
+			Params:    []interface{}{"Third Provider"},
+		}
+		providers, err = dbInst.GetAllSSOProviders(testCtx, "", sqlFilter)
+		require.NoError(t, err)
+		require.Len(t, providers, 1)
+		assert.Equal(t, provider3.ID, providers[0].ID)
 	})
 }
 
@@ -254,6 +340,9 @@ func TestBloodhoundDB_GetSSOProviderBySlug(t *testing.T) {
 		require.NotNil(t, provider.OIDCProvider)
 		require.Equal(t, newProvider.ClientID, provider.OIDCProvider.ClientID)
 		require.Equal(t, newProvider.Issuer, provider.OIDCProvider.Issuer)
+		assert.Equal(t, true, provider.Config.AutoProvision.Enabled)
+		assert.Equal(t, int32(3), provider.Config.AutoProvision.DefaultRole)
+		assert.Equal(t, true, provider.Config.AutoProvision.RoleProvision)
 	})
 }
 
@@ -292,6 +381,9 @@ func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
 
 		provider, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang2", model.SessionAuthProviderSAML, config)
 		require.NoError(t, err)
+		assert.Equal(t, true, provider.Config.AutoProvision.Enabled)
+		assert.Equal(t, int32(3), provider.Config.AutoProvision.DefaultRole)
+		assert.Equal(t, true, provider.Config.AutoProvision.RoleProvision)
 
 		user, err := dbInst.CreateUser(testCtx, model.User{
 			SSOProviderID: null.Int32From(provider.ID),
@@ -334,6 +426,9 @@ func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
 
 		provider, err := dbInst.CreateSSOProvider(testCtx, "Bloodhound Gang4", model.SessionAuthProviderOIDC, config)
 		require.NoError(t, err)
+		assert.Equal(t, true, provider.Config.AutoProvision.Enabled)
+		assert.Equal(t, int32(3), provider.Config.AutoProvision.DefaultRole)
+		assert.Equal(t, true, provider.Config.AutoProvision.RoleProvision)
 
 		user, err := dbInst.CreateUser(testCtx, model.User{
 			SSOProviderID: null.Int32From(provider.ID),
@@ -386,6 +481,9 @@ func TestBloodhoundDB_GetSSOProviderById(t *testing.T) {
 
 		provider, err := dbInst.GetSSOProviderById(testCtx, newSamlProvider.SSOProviderID.Int32)
 		require.NoError(t, err)
+		assert.Equal(t, true, provider.Config.AutoProvision.Enabled)
+		assert.Equal(t, int32(3), provider.Config.AutoProvision.DefaultRole)
+		assert.Equal(t, true, provider.Config.AutoProvision.RoleProvision)
 
 		require.EqualValues(t, newSamlProvider.SSOProviderID.Int32, provider.ID)
 		require.NotNil(t, provider.SAMLProvider)
@@ -425,6 +523,9 @@ func TestBloodhoundDB_GetSSOProviderById(t *testing.T) {
 
 		provider, err := dbInst.GetSSOProviderById(testCtx, int32(newOIDCProvider.SSOProviderID))
 		require.NoError(t, err)
+		assert.Equal(t, true, provider.Config.AutoProvision.Enabled)
+		assert.Equal(t, int32(3), provider.Config.AutoProvision.DefaultRole)
+		assert.Equal(t, true, provider.Config.AutoProvision.RoleProvision)
 
 		require.EqualValues(t, int32(newOIDCProvider.SSOProviderID), provider.ID)
 		require.NotNil(t, provider.OIDCProvider)

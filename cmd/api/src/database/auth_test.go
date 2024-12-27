@@ -217,69 +217,277 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 }
 
 func TestDatabase_UpdateUserAuth(t *testing.T) {
-	var (
-		ctx          = context.Background()
-		dbInst, user = initAndCreateUser(t)
-		secret       = model.AuthSecret{
-			UserID:       user.ID,
-			Digest:       "digest",
-			DigestMethod: "fake",
-			ExpiresAt:    time.Now().Add(1 * time.Hour),
-		}
-		samlProvider = model.SAMLProvider{
-			Name:            "provider",
-			DisplayName:     "provider name",
-			IssuerURI:       "https://idp.example.com/idp.xml",
-			SingleSignOnURI: "https://idp.example.com/sso",
-		}
-		config = model.SSOProviderConfig{}
-	)
+	t.Run("Successful UpdateUserAuth (SAML)", func(t *testing.T) {
+		var (
+			ctx          = context.Background()
+			dbInst, user = initAndCreateUser(t)
+			secret       = model.AuthSecret{
+				UserID:       user.ID,
+				Digest:       "digest",
+				DigestMethod: "fake",
+				ExpiresAt:    time.Now().Add(1 * time.Hour),
+			}
+			samlProvider = model.SAMLProvider{
+				Name:            "provider",
+				DisplayName:     "provider name",
+				IssuerURI:       "https://idp.example.com/idp.xml",
+				SingleSignOnURI: "https://idp.example.com/sso",
+			}
+			config = model.SSOProviderConfig{}
+		)
 
-	if newSecret, err := dbInst.CreateAuthSecret(ctx, secret); err != nil {
-		t.Fatalf("Failed to create auth secret: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateAuthSecret, "secret_user_id", newSecret.UserID.String()); err != nil {
-		t.Fatalf("Failed to validate CreateAuthSecret audit logs:\n%v", err)
-	} else {
-		if newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(ctx, samlProvider, config); err != nil {
-			t.Fatalf("Failed to create SAML provider: %v", err)
-		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateSAMLIdentityProvider, "saml_name", newSAMLProvider.Name); err != nil {
-			t.Fatalf("Failed to validate CreateSAMLIdentityProvider audit logs:\n%v", err)
+		if newSecret, err := dbInst.CreateAuthSecret(ctx, secret); err != nil {
+			t.Fatalf("Failed to create auth secret: %v", err)
+		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateAuthSecret, "secret_user_id", newSecret.UserID.String()); err != nil {
+			t.Fatalf("Failed to validate CreateAuthSecret audit logs:\n%v", err)
 		} else {
-			user, err = dbInst.GetUser(ctx, user.ID)
-			if err != nil {
-				t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
-			}
+			if newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(ctx, samlProvider, config); err != nil {
+				t.Fatalf("Failed to create SAML provider: %v", err)
+			} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateSAMLIdentityProvider, "saml_name", newSAMLProvider.Name); err != nil {
+				t.Fatalf("Failed to validate CreateSAMLIdentityProvider audit logs:\n%v", err)
+			} else {
+				user, err = dbInst.GetUser(ctx, user.ID)
+				if err != nil {
+					t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+				}
 
-			user.FirstName = null.StringFrom("friendly man")
+				user.FirstName = null.StringFrom("friendly man")
 
-			if err := dbInst.UpdateUser(ctx, user); err != nil {
-				t.Fatalf("Failed to update user: %v", err)
-			} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateUser, "principal_name", user.PrincipalName); err != nil {
-				t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
-			} else if updatedUser, err := dbInst.GetUser(ctx, user.ID); err != nil {
-				t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
-			} else if updatedUser.AuthSecret == nil {
-				t.Fatalf("Failed to find authsecret for user %s", user.PrincipalName)
-			} else if _, err := dbInst.GetAuthSecret(ctx, updatedUser.AuthSecret.ID); err != nil {
-				t.Fatalf("Failed to get authsecret by id %d", updatedUser.AuthSecret.ID)
-			}
+				if err := dbInst.UpdateUser(ctx, user); err != nil {
+					t.Fatalf("Failed to update user: %v", err)
+				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateUser, "principal_name", user.PrincipalName); err != nil {
+					t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
+				} else if updatedUser, err := dbInst.GetUser(ctx, user.ID); err != nil {
+					t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+				} else if updatedUser.AuthSecret == nil {
+					t.Fatalf("Failed to find authsecret for user %s", user.PrincipalName)
+				} else if _, err := dbInst.GetAuthSecret(ctx, updatedUser.AuthSecret.ID); err != nil {
+					t.Fatalf("Failed to get authsecret by id %d", updatedUser.AuthSecret.ID)
+				}
 
-			user.AuthSecret = nil
-			user.SSOProviderID = newSAMLProvider.SSOProviderID
+				user.AuthSecret = nil
+				user.SSOProviderID = newSAMLProvider.SSOProviderID
 
-			if err := dbInst.UpdateUser(ctx, user); err != nil {
-				t.Fatalf("Failed to update user: %v", err)
-			} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateUser, "principal_name", user.PrincipalName); err != nil {
-				t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
-			} else if updatedUser, err := dbInst.GetUser(ctx, user.ID); err != nil {
-				t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
-			} else if updatedUser.AuthSecret != nil {
-				t.Fatalf("Found authsecret for user %s but expected it to be removed", user.PrincipalName)
-			} else if _, err := dbInst.GetAuthSecret(ctx, newSecret.ID); err == nil {
-				t.Fatalf("Found authsecret for id %d but expected it to be removed", newSecret.ID)
+				if err := dbInst.UpdateUser(ctx, user); err != nil {
+					t.Fatalf("Failed to update user: %v", err)
+				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateUser, "principal_name", user.PrincipalName); err != nil {
+					t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
+				} else if updatedUser, err := dbInst.GetUser(ctx, user.ID); err != nil {
+					t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+				} else if updatedUser.AuthSecret != nil {
+					t.Fatalf("Found authsecret for user %s but expected it to be removed", user.PrincipalName)
+				} else if _, err := dbInst.GetAuthSecret(ctx, newSecret.ID); err == nil {
+					t.Fatalf("Found authsecret for id %d but expected it to be removed", newSecret.ID)
+				}
 			}
 		}
-	}
+	})
+
+	t.Run("Successful UpdateUserAuth (SAML) with config values", func(t *testing.T) {
+		var (
+			ctx          = context.Background()
+			dbInst, user = initAndCreateUser(t)
+			secret       = model.AuthSecret{
+				UserID:       user.ID,
+				Digest:       "digest",
+				DigestMethod: "fake",
+				ExpiresAt:    time.Now().Add(1 * time.Hour),
+			}
+			samlProvider = model.SAMLProvider{
+				Name:            "provider",
+				DisplayName:     "provider name",
+				IssuerURI:       "https://idp.example.com/idp.xml",
+				SingleSignOnURI: "https://idp.example.com/sso",
+			}
+			config = model.SSOProviderConfig{
+				AutoProvision: model.AutoProvision{
+					Enabled:       true,
+					DefaultRole:   3,
+					RoleProvision: true,
+				},
+			}
+		)
+
+		if newSecret, err := dbInst.CreateAuthSecret(ctx, secret); err != nil {
+			t.Fatalf("Failed to create auth secret: %v", err)
+		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateAuthSecret, "secret_user_id", newSecret.UserID.String()); err != nil {
+			t.Fatalf("Failed to validate CreateAuthSecret audit logs:\n%v", err)
+		} else {
+			if newSAMLProvider, err := dbInst.CreateSAMLIdentityProvider(ctx, samlProvider, config); err != nil {
+				t.Fatalf("Failed to create SAML provider: %v", err)
+			} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateSAMLIdentityProvider, "saml_name", newSAMLProvider.Name); err != nil {
+				t.Fatalf("Failed to validate CreateSAMLIdentityProvider audit logs:\n%v", err)
+			} else {
+				user, err = dbInst.GetUser(ctx, user.ID)
+				if err != nil {
+					t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+				}
+
+				user.FirstName = null.StringFrom("friendly man")
+
+				if err := dbInst.UpdateUser(ctx, user); err != nil {
+					t.Fatalf("Failed to update user: %v", err)
+				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateUser, "principal_name", user.PrincipalName); err != nil {
+					t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
+				} else if updatedUser, err := dbInst.GetUser(ctx, user.ID); err != nil {
+					t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+				} else if updatedUser.AuthSecret == nil {
+					t.Fatalf("Failed to find authsecret for user %s", user.PrincipalName)
+				} else if _, err := dbInst.GetAuthSecret(ctx, updatedUser.AuthSecret.ID); err != nil {
+					t.Fatalf("Failed to get authsecret by id %d", updatedUser.AuthSecret.ID)
+				}
+
+				user.AuthSecret = nil
+				user.SSOProviderID = newSAMLProvider.SSOProviderID
+
+				if err := dbInst.UpdateUser(ctx, user); err != nil {
+					t.Fatalf("Failed to update user: %v", err)
+				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateUser, "principal_name", user.PrincipalName); err != nil {
+					t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
+				} else if updatedUser, err := dbInst.GetUser(ctx, user.ID); err != nil {
+					t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+				} else if updatedUser.AuthSecret != nil {
+					t.Fatalf("Found authsecret for user %s but expected it to be removed", user.PrincipalName)
+				} else if _, err := dbInst.GetAuthSecret(ctx, newSecret.ID); err == nil {
+					t.Fatalf("Found authsecret for id %d but expected it to be removed", newSecret.ID)
+				}
+			}
+		}
+	})
+
+	t.Run("Successful UpdateUserAuth (OIDC)", func(t *testing.T) {
+		var (
+			testCtx      = context.Background()
+			dbInst, user = initAndCreateUser(t)
+			secret       = model.AuthSecret{
+				UserID:       user.ID,
+				Digest:       "digest",
+				DigestMethod: "fake",
+				ExpiresAt:    time.Now().Add(1 * time.Hour),
+			}
+			oidcProvider = model.OIDCProvider{
+				ClientID: "bloodhound",
+				Issuer:   "https://localhost/auth",
+			}
+			config = model.SSOProviderConfig{}
+		)
+
+		if newSecret, err := dbInst.CreateAuthSecret(testCtx, secret); err != nil {
+			t.Fatalf("Failed to create auth secret: %v", err)
+		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateAuthSecret, "secret_user_id", newSecret.UserID.String()); err != nil {
+			t.Fatalf("Failed to validate CreateAuthSecret audit logs:\n%v", err)
+		} else {
+			if newOIDCProvider, err := dbInst.CreateOIDCProvider(testCtx, "test_oidc", oidcProvider.Issuer, oidcProvider.ClientID, config); err != nil {
+				t.Fatalf("Failed to create OIDC provider: %v", err)
+			} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateOIDCIdentityProvider, "client_id", "bloodhound"); err != nil {
+				t.Fatalf("Failed to validate CreateOIDCIdentityProvider audit logs:\n%v", err)
+			} else {
+				user, err = dbInst.GetUser(testCtx, user.ID)
+				if err != nil {
+					t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+				}
+
+				user.FirstName = null.StringFrom("friendly man")
+
+				if err := dbInst.UpdateUser(testCtx, user); err != nil {
+					t.Fatalf("Failed to update user: %v", err)
+				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateUser, "principal_name", user.PrincipalName); err != nil {
+					t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
+				} else if updatedUser, err := dbInst.GetUser(testCtx, user.ID); err != nil {
+					t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+				} else if updatedUser.AuthSecret == nil {
+					t.Fatalf("Failed to find authsecret for user %s", user.PrincipalName)
+				} else if _, err := dbInst.GetAuthSecret(testCtx, updatedUser.AuthSecret.ID); err != nil {
+					t.Fatalf("Failed to get authsecret by id %d", updatedUser.AuthSecret.ID)
+				}
+
+				user.AuthSecret = nil
+				user.SSOProviderID = null.Int32From(int32(newOIDCProvider.SSOProviderID))
+
+				if err := dbInst.UpdateUser(testCtx, user); err != nil {
+					t.Fatalf("Failed to update user: %v", err)
+				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateUser, "principal_name", user.PrincipalName); err != nil {
+					t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
+				} else if updatedUser, err := dbInst.GetUser(testCtx, user.ID); err != nil {
+					t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+				} else if updatedUser.AuthSecret != nil {
+					t.Fatalf("Found authsecret for user %s but expected it to be removed", user.PrincipalName)
+				} else if _, err := dbInst.GetAuthSecret(testCtx, newSecret.ID); err == nil {
+					t.Fatalf("Found authsecret for id %d but expected it to be removed", newSecret.ID)
+				}
+			}
+		}
+	})
+
+	t.Run("Successful UpdateUserAuth (SAML) with config values", func(t *testing.T) {
+		var (
+			testCtx      = context.Background()
+			dbInst, user = initAndCreateUser(t)
+			secret       = model.AuthSecret{
+				UserID:       user.ID,
+				Digest:       "digest",
+				DigestMethod: "fake",
+				ExpiresAt:    time.Now().Add(1 * time.Hour),
+			}
+			oidcProvider = model.OIDCProvider{
+				ClientID: "bloodhound",
+				Issuer:   "https://localhost/auth",
+			}
+			config = model.SSOProviderConfig{
+				AutoProvision: model.AutoProvision{
+					Enabled:       true,
+					DefaultRole:   3,
+					RoleProvision: true,
+				},
+			}
+		)
+
+		if newSecret, err := dbInst.CreateAuthSecret(testCtx, secret); err != nil {
+			t.Fatalf("Failed to create auth secret: %v", err)
+		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateAuthSecret, "secret_user_id", newSecret.UserID.String()); err != nil {
+			t.Fatalf("Failed to validate CreateAuthSecret audit logs:\n%v", err)
+		} else {
+			if newOIDCProvider, err := dbInst.CreateOIDCProvider(testCtx, "test_oidc", oidcProvider.Issuer, oidcProvider.ClientID, config); err != nil {
+				t.Fatalf("Failed to create OIDC provider: %v", err)
+			} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateOIDCIdentityProvider, "client_id", "bloodhound"); err != nil {
+				t.Fatalf("Failed to validate CreateOIDCIdentityProvider audit logs:\n%v", err)
+			} else {
+				user, err = dbInst.GetUser(testCtx, user.ID)
+				if err != nil {
+					t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+				}
+
+				user.FirstName = null.StringFrom("friendly man")
+
+				if err := dbInst.UpdateUser(testCtx, user); err != nil {
+					t.Fatalf("Failed to update user: %v", err)
+				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateUser, "principal_name", user.PrincipalName); err != nil {
+					t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
+				} else if updatedUser, err := dbInst.GetUser(testCtx, user.ID); err != nil {
+					t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+				} else if updatedUser.AuthSecret == nil {
+					t.Fatalf("Failed to find authsecret for user %s", user.PrincipalName)
+				} else if _, err := dbInst.GetAuthSecret(testCtx, updatedUser.AuthSecret.ID); err != nil {
+					t.Fatalf("Failed to get authsecret by id %d", updatedUser.AuthSecret.ID)
+				}
+
+				user.AuthSecret = nil
+				user.SSOProviderID = null.Int32From(int32(newOIDCProvider.SSOProviderID))
+
+				if err := dbInst.UpdateUser(testCtx, user); err != nil {
+					t.Fatalf("Failed to update user: %v", err)
+				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateUser, "principal_name", user.PrincipalName); err != nil {
+					t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
+				} else if updatedUser, err := dbInst.GetUser(testCtx, user.ID); err != nil {
+					t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
+				} else if updatedUser.AuthSecret != nil {
+					t.Fatalf("Found authsecret for user %s but expected it to be removed", user.PrincipalName)
+				} else if _, err := dbInst.GetAuthSecret(testCtx, newSecret.ID); err == nil {
+					t.Fatalf("Found authsecret for id %d but expected it to be removed", newSecret.ID)
+				}
+			}
+		}
+	})
 }
 
 func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
@@ -367,72 +575,278 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 	}
 }
 
-func TestDatabase_CreateUpdateDeleteSAMLProvider(t *testing.T) {
-	var (
-		ctx             = context.Background()
-		dbInst, user    = initAndCreateUser(t)
-		samlProvider    model.SAMLProvider
-		newSAMLProvider model.SAMLProvider
-		updatedUser     model.User
-		config          = model.SSOProviderConfig{}
-		err             error
-	)
-	// Initialize the SAMLProvider without setting SSOProviderID
-	samlProvider = model.SAMLProvider{
-		Name:            "provider",
-		DisplayName:     "provider name",
-		IssuerURI:       "https://idp.example.com/idp.xml",
-		SingleSignOnURI: "https://idp.example.com/sso",
-	}
+func TestDatabase_CreateUpdateDeleteSSOProvider(t *testing.T) {
+	t.Run("successfully CreateUpdateDeleteSAMLProvider", func(t *testing.T) {
+		var (
+			ctx             = context.Background()
+			dbInst, user    = initAndCreateUser(t)
+			samlProvider    model.SAMLProvider
+			newSAMLProvider model.SAMLProvider
+			updatedUser     model.User
+			config          = model.SSOProviderConfig{}
+			err             error
+		)
+		// Initialize the SAMLProvider without setting SSOProviderID
+		samlProvider = model.SAMLProvider{
+			Name:            "provider",
+			DisplayName:     "provider name",
+			IssuerURI:       "https://idp.example.com/idp.xml",
+			SingleSignOnURI: "https://idp.example.com/sso",
+		}
 
-	if newSAMLProvider, err = dbInst.CreateSAMLIdentityProvider(ctx, samlProvider, config); err != nil {
-		t.Fatalf("Failed to create SAML provider: %v", err)
-	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateSAMLIdentityProvider, "saml_name", newSAMLProvider.Name); err != nil {
-		t.Fatalf("Failed to validate CreateSAMLIdentityProvider audit logs:\n%v", err)
-	} else {
-		user.SSOProviderID = newSAMLProvider.SSOProviderID
-		if err = dbInst.UpdateUser(ctx, user); err != nil {
-			t.Fatalf("Failed to update user: %v", err)
-		} else if updatedUser, err = dbInst.GetUser(ctx, user.ID); err != nil {
-			t.Fatalf("Failed to fetch updated user: %v", err)
-		} else if updatedUser.SSOProvider == nil {
-			t.Fatalf("Updated user does not have a SAMLProvider set when it should")
-		} else if updatedUser.SSOProvider.ID != newSAMLProvider.SSOProviderID.Int32 {
-			t.Fatalf("Updated user has SSOProvider ID %d when %v was expected", updatedUser.SSOProvider.ID, newSAMLProvider.SSOProviderID)
-		} else if updatedUser.SSOProvider.SAMLProvider.IssuerURI != newSAMLProvider.IssuerURI {
-			t.Fatalf("Updated user has SAMLProvider URL %s when %s was expected", updatedUser.SSOProvider.SAMLProvider.IssuerURI, newSAMLProvider.IssuerURI)
+		if newSAMLProvider, err = dbInst.CreateSAMLIdentityProvider(ctx, samlProvider, config); err != nil {
+			t.Fatalf("Failed to create SAML provider: %v", err)
+		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateSAMLIdentityProvider, "saml_name", newSAMLProvider.Name); err != nil {
+			t.Fatalf("Failed to validate CreateSAMLIdentityProvider audit logs:\n%v", err)
 		} else {
-			updatedSSOProvider := model.SSOProvider{
-				Name: "updated provider",
-				Type: model.SessionAuthProviderSAML,
-				SAMLProvider: &model.SAMLProvider{
-					Serial: model.Serial{
-						ID: newSAMLProvider.ID,
-					},
-					Name:            "updated provider",
-					DisplayName:     newSAMLProvider.DisplayName,
-					IssuerURI:       newSAMLProvider.IssuerURI,
-					SingleSignOnURI: newSAMLProvider.SingleSignOnURI,
-					SSOProviderID:   newSAMLProvider.SSOProviderID,
-				},
-			}
-
-			if _, err = dbInst.UpdateSAMLIdentityProvider(ctx, updatedSSOProvider); err != nil {
-				t.Fatalf("Failed to update SAML provider: %v", err)
-			} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateSAMLIdentityProvider, "saml_name", "updated provider"); err != nil {
-				t.Fatalf("Failed to validate UpdateSAMLIdentityProvider audit logs:\n%v", err)
+			user.SSOProviderID = newSAMLProvider.SSOProviderID
+			if err = dbInst.UpdateUser(ctx, user); err != nil {
+				t.Fatalf("Failed to update user: %v", err)
+			} else if updatedUser, err = dbInst.GetUser(ctx, user.ID); err != nil {
+				t.Fatalf("Failed to fetch updated user: %v", err)
+			} else if updatedUser.SSOProvider == nil {
+				t.Fatalf("Updated user does not have a SAMLProvider set when it should")
+			} else if updatedUser.SSOProvider.ID != newSAMLProvider.SSOProviderID.Int32 {
+				t.Fatalf("Updated user has SSOProvider ID %d when %v was expected", updatedUser.SSOProvider.ID, newSAMLProvider.SSOProviderID)
+			} else if updatedUser.SSOProvider.SAMLProvider.IssuerURI != newSAMLProvider.IssuerURI {
+				t.Fatalf("Updated user has SAMLProvider URL %s when %s was expected", updatedUser.SSOProvider.SAMLProvider.IssuerURI, newSAMLProvider.IssuerURI)
 			} else {
-				user.SSOProviderID = null.Int32{}
-				if err = dbInst.UpdateUser(ctx, user); err != nil {
-					t.Fatalf("Failed to update user: %v", err)
-				} else if err = dbInst.DeleteSSOProvider(ctx, int(newSAMLProvider.SSOProviderID.Int32)); err != nil {
-					t.Fatalf("Failed to delete SAML provider: %v", err)
-				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteSSOIdentityProvider, "name", "provider"); err != nil {
-					t.Fatalf("Failed to validate DeleteSAMLIdentityProvider audit logs:\n%v", err)
+				updatedSSOProvider := model.SSOProvider{
+					Name: "updated provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Serial: model.Serial{
+							ID: newSAMLProvider.ID,
+						},
+						Name:            "updated provider",
+						DisplayName:     newSAMLProvider.DisplayName,
+						IssuerURI:       newSAMLProvider.IssuerURI,
+						SingleSignOnURI: newSAMLProvider.SingleSignOnURI,
+						SSOProviderID:   newSAMLProvider.SSOProviderID,
+					},
+					Config: config,
+				}
+
+				if _, err = dbInst.UpdateSAMLIdentityProvider(ctx, updatedSSOProvider); err != nil {
+					t.Fatalf("Failed to update SAML provider: %v", err)
+				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateSAMLIdentityProvider, "saml_name", "updated provider"); err != nil {
+					t.Fatalf("Failed to validate UpdateSAMLIdentityProvider audit logs:\n%v", err)
+				} else {
+					user.SSOProviderID = null.Int32{}
+					if err = dbInst.UpdateUser(ctx, user); err != nil {
+						t.Fatalf("Failed to update user: %v", err)
+					} else if err = dbInst.DeleteSSOProvider(ctx, int(newSAMLProvider.SSOProviderID.Int32)); err != nil {
+						t.Fatalf("Failed to delete SAML provider: %v", err)
+					} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteSSOIdentityProvider, "name", "provider"); err != nil {
+						t.Fatalf("Failed to validate DeleteSAMLIdentityProvider audit logs:\n%v", err)
+					}
 				}
 			}
 		}
-	}
+	})
+
+	t.Run("successfully CreateUpdateDeleteSAMLProvider with config values", func(t *testing.T) {
+		var (
+			ctx             = context.Background()
+			dbInst, user    = initAndCreateUser(t)
+			samlProvider    model.SAMLProvider
+			newSAMLProvider model.SAMLProvider
+			updatedUser     model.User
+			config          = model.SSOProviderConfig{
+				AutoProvision: model.AutoProvision{
+					Enabled:       true,
+					DefaultRole:   3,
+					RoleProvision: true,
+				},
+			}
+			err error
+		)
+		// Initialize the SAMLProvider without setting SSOProviderID
+		samlProvider = model.SAMLProvider{
+			Name:            "provider",
+			DisplayName:     "provider name",
+			IssuerURI:       "https://idp.example.com/idp.xml",
+			SingleSignOnURI: "https://idp.example.com/sso",
+		}
+
+		if newSAMLProvider, err = dbInst.CreateSAMLIdentityProvider(ctx, samlProvider, config); err != nil {
+			t.Fatalf("Failed to create SAML provider: %v", err)
+		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateSAMLIdentityProvider, "saml_name", newSAMLProvider.Name); err != nil {
+			t.Fatalf("Failed to validate CreateSAMLIdentityProvider audit logs:\n%v", err)
+		} else {
+			user.SSOProviderID = newSAMLProvider.SSOProviderID
+			if err = dbInst.UpdateUser(ctx, user); err != nil {
+				t.Fatalf("Failed to update user: %v", err)
+			} else if updatedUser, err = dbInst.GetUser(ctx, user.ID); err != nil {
+				t.Fatalf("Failed to fetch updated user: %v", err)
+			} else if updatedUser.SSOProvider == nil {
+				t.Fatalf("Updated user does not have a SAMLProvider set when it should")
+			} else if updatedUser.SSOProvider.ID != newSAMLProvider.SSOProviderID.Int32 {
+				t.Fatalf("Updated user has SSOProvider ID %d when %v was expected", updatedUser.SSOProvider.ID, newSAMLProvider.SSOProviderID)
+			} else if updatedUser.SSOProvider.SAMLProvider.IssuerURI != newSAMLProvider.IssuerURI {
+				t.Fatalf("Updated user has SAMLProvider URL %s when %s was expected", updatedUser.SSOProvider.SAMLProvider.IssuerURI, newSAMLProvider.IssuerURI)
+			} else {
+				updatedSSOProvider := model.SSOProvider{
+					Name: "updated provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Serial: model.Serial{
+							ID: newSAMLProvider.ID,
+						},
+						Name:            "updated provider",
+						DisplayName:     newSAMLProvider.DisplayName,
+						IssuerURI:       newSAMLProvider.IssuerURI,
+						SingleSignOnURI: newSAMLProvider.SingleSignOnURI,
+						SSOProviderID:   newSAMLProvider.SSOProviderID,
+					},
+					Config: config,
+				}
+
+				if _, err = dbInst.UpdateSAMLIdentityProvider(ctx, updatedSSOProvider); err != nil {
+					t.Fatalf("Failed to update SAML provider: %v", err)
+				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateSAMLIdentityProvider, "saml_name", "updated provider"); err != nil {
+					t.Fatalf("Failed to validate UpdateSAMLIdentityProvider audit logs:\n%v", err)
+				} else {
+					user.SSOProviderID = null.Int32{}
+					if err = dbInst.UpdateUser(ctx, user); err != nil {
+						t.Fatalf("Failed to update user: %v", err)
+					} else if err = dbInst.DeleteSSOProvider(ctx, int(newSAMLProvider.SSOProviderID.Int32)); err != nil {
+						t.Fatalf("Failed to delete SAML provider: %v", err)
+					} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteSSOIdentityProvider, "name", "provider"); err != nil {
+						t.Fatalf("Failed to validate DeleteSAMLIdentityProvider audit logs:\n%v", err)
+					}
+				}
+			}
+		}
+	})
+
+	t.Run("successfully CreateUpdateDeleteOIDCProvider", func(t *testing.T) {
+		var (
+			testCtx      = context.Background()
+			dbInst, user = initAndCreateUser(t)
+			oidcProvider = model.OIDCProvider{
+				ClientID: "bloodhound",
+				Issuer:   "https://localhost/auth",
+			}
+			updatedUser model.User
+			config      = model.SSOProviderConfig{}
+		)
+
+		if newOIDCProvider, err := dbInst.CreateOIDCProvider(testCtx, "test_oidc", oidcProvider.Issuer, oidcProvider.ClientID, config); err != nil {
+			t.Fatalf("Failed to create OIDC provider: %v", err)
+		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateOIDCIdentityProvider, "client_id", "bloodhound"); err != nil {
+			t.Fatalf("Failed to validate CreateOIDCIdentityProvider audit logs:\n%v", err)
+		} else {
+			user.SSOProviderID = null.Int32From(int32(newOIDCProvider.SSOProviderID))
+			if err = dbInst.UpdateUser(testCtx, user); err != nil {
+				t.Fatalf("Failed to update user: %v", err)
+			} else if updatedUser, err = dbInst.GetUser(testCtx, user.ID); err != nil {
+				t.Fatalf("Failed to fetch updated user: %v", err)
+			} else if updatedUser.SSOProvider == nil {
+				t.Fatalf("Updated user does not have a OIDCProvider set when it should")
+			} else if updatedUser.SSOProvider.ID != int32(newOIDCProvider.SSOProviderID) {
+				t.Fatalf("Updated user has SSOProvider ID %d when %v was expected", updatedUser.SSOProvider.ID, newOIDCProvider.ID)
+			} else if updatedUser.SSOProvider.OIDCProvider.Issuer != newOIDCProvider.Issuer {
+				t.Fatalf("Updated user has OIDCProvider Issuer %s when %s was expected", updatedUser.SSOProvider.OIDCProvider.Issuer, newOIDCProvider.Issuer)
+			} else {
+				updatedSSOProvider := model.SSOProvider{
+					Name: "updated provider",
+					Type: model.SessionAuthProviderOIDC,
+					OIDCProvider: &model.OIDCProvider{
+						Serial: model.Serial{
+							ID: newOIDCProvider.ID,
+						},
+						Issuer:        newOIDCProvider.Issuer,
+						ClientID:      newOIDCProvider.ClientID,
+						SSOProviderID: newOIDCProvider.SSOProviderID,
+					},
+					Config: config,
+				}
+
+				if _, err = dbInst.UpdateOIDCProvider(testCtx, updatedSSOProvider); err != nil {
+					t.Fatalf("Failed to update OIDC provider: %v", err)
+				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateOIDCIdentityProvider, "client_id", "bloodhound"); err != nil {
+					t.Fatalf("Failed to validate UpdateOIDCIdentityProvider audit logs:\n%v", err)
+				} else {
+					user.SSOProviderID = null.Int32{}
+					if err = dbInst.UpdateUser(testCtx, user); err != nil {
+						t.Fatalf("Failed to update user: %v", err)
+					} else if err = dbInst.DeleteSSOProvider(testCtx, int(newOIDCProvider.SSOProviderID)); err != nil {
+						t.Fatalf("Failed to delete OIDC provider: %v", err)
+					} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteSSOIdentityProvider, "name", "test_oidc"); err != nil {
+						t.Fatalf("Failed to validate DeleteSSOIdentityProvider audit logs:\n%v", err)
+					}
+				}
+			}
+		}
+	})
+
+	t.Run("successfully CreateUpdateDeleteOIDCProvider with config values", func(t *testing.T) {
+		var (
+			testCtx      = context.Background()
+			dbInst, user = initAndCreateUser(t)
+			oidcProvider = model.OIDCProvider{
+				ClientID: "bloodhound",
+				Issuer:   "https://localhost/auth",
+			}
+			updatedUser model.User
+			config      = model.SSOProviderConfig{
+				AutoProvision: model.AutoProvision{
+					Enabled:       true,
+					DefaultRole:   3,
+					RoleProvision: true,
+				},
+			}
+		)
+
+		if newOIDCProvider, err := dbInst.CreateOIDCProvider(testCtx, "test_oidc", oidcProvider.Issuer, oidcProvider.ClientID, config); err != nil {
+			t.Fatalf("Failed to create OIDC provider: %v", err)
+		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateOIDCIdentityProvider, "client_id", "bloodhound"); err != nil {
+			t.Fatalf("Failed to validate CreateOIDCIdentityProvider audit logs:\n%v", err)
+		} else {
+			user.SSOProviderID = null.Int32From(int32(newOIDCProvider.SSOProviderID))
+			if err = dbInst.UpdateUser(testCtx, user); err != nil {
+				t.Fatalf("Failed to update user: %v", err)
+			} else if updatedUser, err = dbInst.GetUser(testCtx, user.ID); err != nil {
+				t.Fatalf("Failed to fetch updated user: %v", err)
+			} else if updatedUser.SSOProvider == nil {
+				t.Fatalf("Updated user does not have a OIDCProvider set when it should")
+			} else if updatedUser.SSOProvider.ID != int32(newOIDCProvider.SSOProviderID) {
+				t.Fatalf("Updated user has SSOProvider ID %d when %v was expected", updatedUser.SSOProvider.ID, newOIDCProvider.ID)
+			} else if updatedUser.SSOProvider.OIDCProvider.Issuer != newOIDCProvider.Issuer {
+				t.Fatalf("Updated user has OIDCProvider Issuer %s when %s was expected", updatedUser.SSOProvider.OIDCProvider.Issuer, newOIDCProvider.Issuer)
+			} else {
+				updatedSSOProvider := model.SSOProvider{
+					Name: "updated provider",
+					Type: model.SessionAuthProviderOIDC,
+					OIDCProvider: &model.OIDCProvider{
+						Serial: model.Serial{
+							ID: newOIDCProvider.ID,
+						},
+						Issuer:        newOIDCProvider.Issuer,
+						ClientID:      newOIDCProvider.ClientID,
+						SSOProviderID: newOIDCProvider.SSOProviderID,
+					},
+					Config: config,
+				}
+
+				if _, err = dbInst.UpdateOIDCProvider(testCtx, updatedSSOProvider); err != nil {
+					t.Fatalf("Failed to update OIDC provider: %v", err)
+				} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionUpdateOIDCIdentityProvider, "client_id", "bloodhound"); err != nil {
+					t.Fatalf("Failed to validate UpdateOIDCIdentityProvider audit logs:\n%v", err)
+				} else {
+					user.SSOProviderID = null.Int32{}
+					if err = dbInst.UpdateUser(testCtx, user); err != nil {
+						t.Fatalf("Failed to update user: %v", err)
+					} else if err = dbInst.DeleteSSOProvider(testCtx, int(newOIDCProvider.SSOProviderID)); err != nil {
+						t.Fatalf("Failed to delete OIDC provider: %v", err)
+					} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteSSOIdentityProvider, "name", "test_oidc"); err != nil {
+						t.Fatalf("Failed to validate DeleteSSOIdentityProvider audit logs:\n%v", err)
+					}
+				}
+			}
+		}
+	})
 }
 
 func TestDatabase_CreateUserSession(t *testing.T) {
