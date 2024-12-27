@@ -246,7 +246,7 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 									PrincipalName: claims.Email,
 									Roles:         model.Roles{role},
 									SSOProviderID: null.Int32From(ssoProvider.ID),
-									EULAAccepted:  true, // Need to find a work around since BHE cannot auto accept EULA as true
+									EULAAccepted:  true, // EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users
 									FirstName:     null.StringFrom(claims.Email),
 									LastName:      null.StringFrom("Last name not found"),
 								}
