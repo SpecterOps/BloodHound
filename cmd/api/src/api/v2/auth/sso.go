@@ -42,6 +42,7 @@ type AuthProvider struct {
 	Type    string      `json:"type"`
 	Slug    string      `json:"slug"`
 	Details interface{} `json:"details"`
+	Config  model.SSOProviderConfig
 
 	LoginUri    serde.URL `json:"login_uri"`
 	CallbackUri serde.URL `json:"callback_uri"`
@@ -119,10 +120,11 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 		} else {
 			for _, ssoProvider := range ssoProviders {
 				provider := AuthProvider{
-					ID:   ssoProvider.ID,
-					Name: ssoProvider.Name,
-					Type: ssoProvider.Type.String(),
-					Slug: ssoProvider.Slug,
+					ID:     ssoProvider.ID,
+					Name:   ssoProvider.Name,
+					Type:   ssoProvider.Type.String(),
+					Slug:   ssoProvider.Slug,
+					Config: ssoProvider.Config,
 				}
 
 				// Format callback url from host
