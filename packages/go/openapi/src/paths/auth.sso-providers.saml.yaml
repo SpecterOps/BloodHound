@@ -27,6 +27,10 @@ post:
     content:
       multipart/form-data:
         schema:
+          required: 
+            - name
+            - metadata
+            - config
           properties:
             name:
               type: string
@@ -35,6 +39,22 @@ post:
               type: string
               format: binary
               description: Metadata XML file.
+            config:
+              type: object
+              properties: 
+                auto_provision: 
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      description: boolean that is enabled or not depending on if the user wants SSO provider auto provision
+                    default_role:
+                      type: integer
+                      format: int32
+                      description: default role for the user created from SSO provider auto provision
+                    role_provision:
+                      type: boolean
+                      description: boolean that is enabled or not depending on if the user wants role provision allocated for the user created from SSO provider auto provision
   responses:
     200:
       description: OK
