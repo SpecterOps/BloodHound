@@ -145,12 +145,12 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"config.auto_provision.enabled\" parameter or \"config.auto_provision.enabled\" parameter has more than one value", request), response)
 	} else if isAutoProvisionEnabled, err := strconv.ParseBool(autoProvisionEnabled[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.enabled\" parameter could not be converted to bool", request), response)
-	} else if defaultRole, hasDefaultRole := request.MultipartForm.Value["config.auto_provision.default_role"]; !hasDefaultRole || len(defaultRole) > 1 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"config.auto_provision.default_role\" parameter or \"config.auto_provision.default_role\" has more than one value", request), response)
+	} else if defaultRole, hasDefaultRole := request.MultipartForm.Value["config.auto_provision.default_role_id"]; !hasDefaultRole || len(defaultRole) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"config.auto_provision.default_role_id\" parameter or \"config.auto_provision.default_role_id\" has more than one value", request), response)
 	} else if defaultRoleInt, err := strconv.Atoi(defaultRole[0]); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.default_role\" parameter could not be converted to int", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.default_role_id\" parameter could not be converted to int", request), response)
 	} else if defaultRoleValue, err := s.db.GetRole(request.Context(), int32(defaultRoleInt)); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.default_role\" parameter is invalid", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.default_role_id\" parameter is invalid", request), response)
 	} else if roleProvision, hasRoleProvisioned := request.MultipartForm.Value["config.auto_provision.role_provision"]; !hasRoleProvisioned || len(roleProvision) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"config.auto_provision.role_provision\" parameter or \"config.auto_provision.role_provision\" has more than one value", request), response)
 	} else if isRoleProvisioned, err := strconv.ParseBool(roleProvision[0]); err != nil {
@@ -171,7 +171,7 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 				config = model.SSOProviderConfig{
 					AutoProvision: model.SSOProviderAutoProvisionConfig{
 						Enabled:       isAutoProvisionEnabled,
-						DefaultRole:   defaultRoleValue.ID,
+						DefaultRoleId: defaultRoleValue.ID,
 						RoleProvision: isRoleProvisioned,
 					},
 				}
@@ -239,14 +239,14 @@ func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWrit
 				return
 			} else {
 				if isAutoProvisionEnabled {
-					if defaultRole, hasDefaultRole := request.MultipartForm.Value["config.auto_provision.default_role"]; !hasDefaultRole || len(defaultRole) > 1 {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"config.auto_provision.default_role\" parameter or \"config.auto_provision.default_role\" has more than one value", request), response)
+					if defaultRole, hasDefaultRole := request.MultipartForm.Value["config.auto_provision.default_role_id"]; !hasDefaultRole || len(defaultRole) > 1 {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"config.auto_provision.default_role_id\" parameter or \"config.auto_provision.default_role_id\" has more than one value", request), response)
 						return
 					} else if defaultRoleInt, err := strconv.Atoi(defaultRole[0]); err != nil {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.default_role\" parameter could not be converted to int", request), response)
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.default_role_id\" parameter could not be converted to int", request), response)
 						return
 					} else if defaultRole, err := s.db.GetRole(request.Context(), int32(defaultRoleInt)); err != nil {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.default_role\" parameter is invalid", request), response)
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.default_role_id\" parameter is invalid", request), response)
 						return
 					} else if roleProvision, hasRoleProvisioned := request.MultipartForm.Value["config.auto_provision.role_provision"]; !hasRoleProvisioned || len(roleProvision) > 1 {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"config.auto_provision.role_provision\" parameter or \"config.auto_provision.role_provision\" has more than one value", request), response)
@@ -256,7 +256,7 @@ func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWrit
 						return
 					} else {
 						ssoProvider.Config.AutoProvision.Enabled = isAutoProvisionEnabled
-						ssoProvider.Config.AutoProvision.DefaultRole = defaultRole.ID
+						ssoProvider.Config.AutoProvision.DefaultRoleId = defaultRole.ID
 						ssoProvider.Config.AutoProvision.RoleProvision = isRoleProvisioned
 					}
 				} else {
@@ -460,7 +460,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 				if ssoProvider.Config.AutoProvision.Enabled {
 					if user, err := s.db.LookupUser(request.Context(), principalName); err != nil {
 						if errors.Is(err, database.ErrNotFound) {
-							if role, err := s.db.GetRole(request.Context(), ssoProvider.Config.AutoProvision.DefaultRole); err != nil {
+							if role, err := s.db.GetRole(request.Context(), ssoProvider.Config.AutoProvision.DefaultRoleId); err != nil {
 								api.HandleDatabaseError(request, response, err)
 								return
 							} else {
@@ -478,7 +478,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 									user.FirstName = null.StringFrom(givenName)
 								}
 
-								if surname, err := ssoProvider.SAMLProvider.GetSAMLUserSurNameFromAssertion(assertion); err == nil {
+								if surname, err := ssoProvider.SAMLProvider.GetSAMLUserSurnameFromAssertion(assertion); err == nil {
 									user.LastName = null.StringFrom(surname)
 								}
 

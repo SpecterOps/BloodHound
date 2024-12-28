@@ -36,9 +36,3 @@ DELETE FROM auth_secrets WHERE id IN (SELECT auth_secrets.id FROM auth_secrets J
 
 -- Set the `oidc_support` feature flag to true
 UPDATE feature_flags SET enabled = true WHERE key = 'oidc_support';
-
--- Add new config column in sso_providers table
-ALTER TABLE IF EXISTS sso_providers ADD COLUMN IF NOT EXISTS config jsonb;
-
--- Update sso_providers table by backfilling existing sso providers' new config column with default values
-UPDATE sso_providers set config = '{"auto_provision": {"enabled": false, "default_role": 0, "role_provision": false}}';

@@ -71,7 +71,7 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 		}
 
 		if upsertReq.Config != nil {
-			if _, err := s.db.GetRole(request.Context(), int32(upsertReq.Config.AutoProvision.DefaultRole)); err != nil {
+			if _, err := s.db.GetRole(request.Context(), int32(upsertReq.Config.AutoProvision.DefaultRoleId)); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
 				return
 			}
@@ -105,9 +105,10 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, validated.Error(), request), response)
 	} else if upsertReq.Config == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "config is required", request), response)
-	} else if _, err := s.db.GetRole(request.Context(), int32(upsertReq.Config.AutoProvision.DefaultRole)); err != nil {
+	} else if _, err := s.db.GetRole(request.Context(), int32(upsertReq.Config.AutoProvision.DefaultRoleId)); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
 	} else {
+		// This ensures that the keys are all set to default values of, false 0 false, when SSO provider auto provision is not enabled
 		if !upsertReq.Config.AutoProvision.Enabled {
 			upsertReq.Config.AutoProvision = model.SSOProviderAutoProvisionConfig{}
 		}
@@ -237,7 +238,7 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 				if ssoProvider.Config.AutoProvision.Enabled {
 					if user, err := s.db.LookupUser(request.Context(), claims.Email); err != nil {
 						if errors.Is(err, database.ErrNotFound) {
-							if role, err := s.db.GetRole(request.Context(), ssoProvider.Config.AutoProvision.DefaultRole); err != nil {
+							if role, err := s.db.GetRole(request.Context(), ssoProvider.Config.AutoProvision.DefaultRoleId); err != nil {
 								api.HandleDatabaseError(request, response, err)
 								return
 							} else {

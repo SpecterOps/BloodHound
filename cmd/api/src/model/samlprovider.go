@@ -165,7 +165,7 @@ func (s SAMLProvider) GetSAMLUserGivenNameFromAssertion(assertion *saml.Assertio
 	return assertionFindString(assertion, s.givenNameAttributeNames()...)
 }
 
-func (s SAMLProvider) GetSAMLUserSurNameFromAssertion(assertion *saml.Assertion) (string, error) {
+func (s SAMLProvider) GetSAMLUserSurnameFromAssertion(assertion *saml.Assertion) (string, error) {
 	return assertionFindString(assertion, s.surnameAttributeNames()...)
 }
 

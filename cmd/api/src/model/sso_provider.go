@@ -25,7 +25,7 @@ import (
 
 type SSOProviderAutoProvisionConfig struct {
 	Enabled       bool  `json:"enabled"`
-	DefaultRole   int32 `json:"default_role"`
+	DefaultRoleId int32 `json:"default_role_id"`
 	RoleProvision bool  `json:"role_provision"`
 }
 

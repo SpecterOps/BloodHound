@@ -59,7 +59,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 		config := model.SSOProviderConfig{
 			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
-				DefaultRole:   3,
+				DefaultRoleId: 3,
 				RoleProvision: true,
 			},
 		}
@@ -93,7 +93,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 				Config: &model.SSOProviderConfig{
 					AutoProvision: model.SSOProviderAutoProvisionConfig{
 						Enabled:       true,
-						DefaultRole:   7,
+						DefaultRoleId: 7,
 						RoleProvision: true,
 					},
 				},
@@ -196,7 +196,7 @@ func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 				Config: &model.SSOProviderConfig{
 					AutoProvision: model.SSOProviderAutoProvisionConfig{
 						Enabled:       true,
-						DefaultRole:   3,
+						DefaultRoleId: 3,
 						RoleProvision: true,
 					},
 				},
@@ -219,7 +219,7 @@ func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 				Config: &model.SSOProviderConfig{
 					AutoProvision: model.SSOProviderAutoProvisionConfig{
 						Enabled:       true,
-						DefaultRole:   7,
+						DefaultRoleId: 7,
 						RoleProvision: true,
 					},
 				},

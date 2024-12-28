@@ -79,7 +79,7 @@ func TestBloodhoundDB_CreateUpdateOIDCProvider(t *testing.T) {
 		config := model.SSOProviderConfig{
 			AutoProvision: model.SSOProviderAutoProvisionConfig{
 				Enabled:       true,
-				DefaultRole:   3,
+				DefaultRoleId: 3,
 				RoleProvision: true,
 			},
 		}
@@ -109,7 +109,7 @@ func TestBloodhoundDB_CreateUpdateOIDCProvider(t *testing.T) {
 			Config: model.SSOProviderConfig{
 				AutoProvision: model.SSOProviderAutoProvisionConfig{
 					Enabled:       true,
-					DefaultRole:   2,
+					DefaultRoleId: 2,
 					RoleProvision: false,
 				},
 			},
