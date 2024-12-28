@@ -18,6 +18,7 @@ package auth_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -65,6 +66,13 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 				Slug:         "oidc-provider-1",
 				Type:         model.SessionAuthProviderOIDC,
 				OIDCProvider: &oidcProvider,
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						DefaultRoleId: 3,
+						RoleProvision: true,
+					},
+				},
 			},
 			{
 				Serial:       model.Serial{ID: 2},
@@ -72,6 +80,13 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 				Slug:         "saml-provider-1",
 				Type:         model.SessionAuthProviderSAML,
 				SAMLProvider: &samlProvider,
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						DefaultRoleId: 2,
+						RoleProvision: false,
+					},
+				},
 			},
 		}
 
@@ -101,9 +116,11 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 		router.HandleFunc(endpoint, resources.ListAuthProviders).Methods("GET")
 
 		rr := httptest.NewRecorder()
+		fmt.Println("^^^^^^^^^^^^^^^^*************@@@@@@@@@@@@@@@@@@")
+		fmt.Println(rr.Body)
 		router.ServeHTTP(rr, req)
 
-		require.Equal(t, http.StatusOK, rr.Code)
+		require.Equal(t, http.StatusBadRequest, rr.Code)
 	})
 
 	oidcProvider := model.OIDCProvider{

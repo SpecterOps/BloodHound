@@ -54,14 +54,14 @@ post:
                   properties:
                     enabled:
                       type: boolean
-                      description: boolean that is enabled or not depending on if the user wants SSO provider auto provision
+                      description: boolean that, if enabled, allows SSO providers to auto provision bloodhound users on initial login
                     default_role_id:
                       type: integer
                       format: int32
                       description: default role id for the user created from SSO provider auto provision
                     role_provision:
                       type: boolean
-                      description: boolean that is enabled or not depending on if the user wants role provision allocated for the user created from SSO provider auto provision
+                      description: boolean that, if enabled, allows sso providers to manage roles for newly created users
 
 
                 

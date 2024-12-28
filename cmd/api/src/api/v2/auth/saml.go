@@ -145,11 +145,11 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"config.auto_provision.enabled\" parameter or \"config.auto_provision.enabled\" parameter has more than one value", request), response)
 	} else if isAutoProvisionEnabled, err := strconv.ParseBool(autoProvisionEnabled[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.enabled\" parameter could not be converted to bool", request), response)
-	} else if defaultRole, hasDefaultRole := request.MultipartForm.Value["config.auto_provision.default_role_id"]; !hasDefaultRole || len(defaultRole) > 1 {
+	} else if defaultRoleId, hasDefaultRoleId := request.MultipartForm.Value["config.auto_provision.default_role_id"]; !hasDefaultRoleId || len(defaultRoleId) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"config.auto_provision.default_role_id\" parameter or \"config.auto_provision.default_role_id\" has more than one value", request), response)
-	} else if defaultRoleInt, err := strconv.Atoi(defaultRole[0]); err != nil {
+	} else if defaultRoleIdInt, err := strconv.Atoi(defaultRoleId[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.default_role_id\" parameter could not be converted to int", request), response)
-	} else if defaultRoleValue, err := s.db.GetRole(request.Context(), int32(defaultRoleInt)); err != nil {
+	} else if defaultRole, err := s.db.GetRole(request.Context(), int32(defaultRoleIdInt)); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.default_role_id\" parameter is invalid", request), response)
 	} else if roleProvision, hasRoleProvisioned := request.MultipartForm.Value["config.auto_provision.role_provision"]; !hasRoleProvisioned || len(roleProvision) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"config.auto_provision.role_provision\" parameter or \"config.auto_provision.role_provision\" has more than one value", request), response)
@@ -171,7 +171,7 @@ func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWr
 				config = model.SSOProviderConfig{
 					AutoProvision: model.SSOProviderAutoProvisionConfig{
 						Enabled:       isAutoProvisionEnabled,
-						DefaultRoleId: defaultRoleValue.ID,
+						DefaultRoleId: defaultRole.ID,
 						RoleProvision: isRoleProvisioned,
 					},
 				}
@@ -239,13 +239,13 @@ func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWrit
 				return
 			} else {
 				if isAutoProvisionEnabled {
-					if defaultRole, hasDefaultRole := request.MultipartForm.Value["config.auto_provision.default_role_id"]; !hasDefaultRole || len(defaultRole) > 1 {
+					if defaultRoleId, hasDefaultRoleId := request.MultipartForm.Value["config.auto_provision.default_role_id"]; !hasDefaultRoleId || len(defaultRoleId) > 1 {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"config.auto_provision.default_role_id\" parameter or \"config.auto_provision.default_role_id\" has more than one value", request), response)
 						return
-					} else if defaultRoleInt, err := strconv.Atoi(defaultRole[0]); err != nil {
+					} else if defaultRoleIdInt, err := strconv.Atoi(defaultRoleId[0]); err != nil {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.default_role_id\" parameter could not be converted to int", request), response)
 						return
-					} else if defaultRole, err := s.db.GetRole(request.Context(), int32(defaultRoleInt)); err != nil {
+					} else if defaultRole, err := s.db.GetRole(request.Context(), int32(defaultRoleIdInt)); err != nil {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "\"config.auto_provision.default_role_id\" parameter is invalid", request), response)
 						return
 					} else if roleProvision, hasRoleProvisioned := request.MultipartForm.Value["config.auto_provision.role_provision"]; !hasRoleProvisioned || len(roleProvision) > 1 {

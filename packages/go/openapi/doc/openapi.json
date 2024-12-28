@@ -605,7 +605,7 @@
                         "properties": {
                           "enabled": {
                             "type": "boolean",
-                            "description": "boolean that is enabled or not depending on if the user wants SSO provider auto provision"
+                            "description": "boolean that, if enabled, allows SSO providers to auto provision bloodhound users on initial login"
                           },
                           "default_role_id": {
                             "type": "integer",
@@ -614,7 +614,7 @@
                           },
                           "role_provision": {
                             "type": "boolean",
-                            "description": "boolean that is enabled or not depending on if the user wants role provision allocated for the user created from SSO provider auto provision"
+                            "description": "boolean that, if enabled, allows sso providers to manage roles for newly created users"
                           }
                         }
                       }
@@ -676,7 +676,10 @@
               "schema": {
                 "required": [
                   "name",
-                  "metadata"
+                  "metadata",
+                  "config.auto_provision.enabled",
+                  "config.auto_provision.default_role_id",
+                  "config.auto_provision.role_provision"
                 ],
                 "properties": {
                   "name": {
@@ -691,7 +694,7 @@
                   "config.auto_provision.enabled": {
                     "type": "string",
                     "example": "true",
-                    "description": "boolean that is enabled or not depending on if the user wants SSO provider auto provision"
+                    "description": "boolean that, if enabled, allows SSO providers to auto provision bloodhound users on initial login"
                   },
                   "config.auto_provision.default_role_id": {
                     "type": "string",
@@ -700,8 +703,8 @@
                   },
                   "config.auto_provision.role_provision": {
                     "type": "string",
-                    "example": "False",
-                    "description": "boolean that is enabled or not depending on if the user wants role provision allocated for the user created from SSO provider auto provision"
+                    "example": "false",
+                    "description": "boolean that, if enabled, allows sso providers to manage roles for newly created users"
                   }
                 }
               }
@@ -785,7 +788,7 @@
                   "config.auto_provision.enabled": {
                     "type": "string",
                     "example": "true",
-                    "description": "boolean that is enabled or not depending on if the user wants SSO provider auto provision"
+                    "description": "boolean that, if enabled, allows SSO providers to auto provision bloodhound users on initial login"
                   },
                   "config.auto_provision.default_role_id": {
                     "type": "string",
@@ -794,8 +797,8 @@
                   },
                   "config.auto_provision.role_provision": {
                     "type": "string",
-                    "example": "False",
-                    "description": "boolean that is enabled or not depending on if the user wants role provision allocated for the user created from SSO provider auto provision"
+                    "example": "false",
+                    "description": "boolean that, if enabled, allows sso providers to manage roles for newly created users"
                   }
                 }
               }
@@ -825,7 +828,7 @@
                         "properties": {
                           "enabled": {
                             "type": "boolean",
-                            "description": "boolean that is enabled or not depending on if the user wants SSO provider auto provision"
+                            "description": "boolean that, if enabled, allows SSO providers to auto provision bloodhound users on initial login"
                           },
                           "default_role_id": {
                             "type": "integer",
@@ -834,7 +837,7 @@
                           },
                           "role_provision": {
                             "type": "boolean",
-                            "description": "boolean that is enabled or not depending on if the user wants role provision allocated for the user created from SSO provider auto provision"
+                            "description": "boolean that, if enabled, allows sso providers to manage roles for newly created users"
                           }
                         }
                       }
