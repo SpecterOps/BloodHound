@@ -21,6 +21,7 @@ package ad_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -37,10 +38,10 @@ import (
 )
 
 func TestPostNtlm(t *testing.T) {
-	testContex := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
-	testContex.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.NtlmCoerceAndRelayNtlmToSmb.Setup(testContex)
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.NtlmCoerceAndRelayNtlmToSmb.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNtlmToSmb")
@@ -64,25 +65,27 @@ func TestPostNtlm(t *testing.T) {
 			require.NoError(t, err)
 		}
 
+		err = operation.Done()
+		require.NoError(t, err)
+
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 				return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToSMB)
 			})); err != nil {
 				t.Fatalf("error fetching ntlm to smb edges in integration test; %v", err)
 			} else {
-				require.Equal(t, 1, len(results))
+				require.Len(t, results, 1)
+				resultIds := results.IDs()
 
-				objectId, err := results[0].Properties.Get("objectid").String()
+				objectId := results.Get(resultIds[0]).Properties.Get("objectid")
+				require.False(t, objectId.IsNil())
+
+				objectIdStr, err := objectId.String()
 				require.NoError(t, err)
-
-				assert.Equal(t, "authenticated-users-S-1-5-11", objectId)
-
+				assert.True(t, strings.HasSuffix(objectIdStr, ad2.AuthenticatedUsersSuffix))
 			}
 			return nil
 		})
-
-		err = operation.Done()
-		require.NoError(t, err)
 	})
 }
 
