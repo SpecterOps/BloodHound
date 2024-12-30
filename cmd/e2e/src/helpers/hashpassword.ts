@@ -28,7 +28,7 @@ const hashPassword = async (password: string) => {
         timeCost: 3,
         memoryCost: 1048576,
         parallelism: 32,
-        hashLength: 16
+        hashLength: 16,
     });
     const hashWithPadding = hashedPassword
         .split('$')

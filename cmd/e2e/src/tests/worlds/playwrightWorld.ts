@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { setWorldConstructor, World } from "@cucumber/cucumber";
-import { IFixture } from "../../support/FixtureManager.js";
+import { setWorldConstructor, World } from '@cucumber/cucumber';
+import { IFixture } from '../../support/FixtureManager.js';
 
 // Extend World base class properties and methods with PlayWrightWorld Class
 export default class PlaywrightWorld extends World {

@@ -1,16 +1,9 @@
 {
     "default": {
-        "paths": [
-            "src/tests/features/"
-        ],
+        "paths": ["src/tests/features/"],
         "dryRun": false,
-        "import": [
-            "src/tests/steps/*.ts",
-            "src/support/hooks.ts"
-        ],
-        "loader": [
-            "ts-node/esm"
-        ],
+        "import": ["src/tests/steps/*.ts", "src/support/hooks.ts"],
+        "loader": ["ts-node/esm"],
         "format": [
             "progress-bar",
             "html:test-results/reports/html/cucumber-report.html",
@@ -20,13 +13,8 @@
     },
     "rerun": {
         "dryRun": false,
-        "import": [
-            "src/tests/steps/*.ts",
-            "src/support/hooks.ts"
-        ],
-        "loader": [
-            "ts-node/esm"
-        ],
+        "import": ["src/tests/steps/*.ts", "src/support/hooks.ts"],
+        "loader": ["ts-node/esm"],
         "format": [
             "progress-bar",
             "html:test-results/reports/html/cucumber-report.html",

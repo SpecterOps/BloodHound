@@ -23,13 +23,13 @@ import { users } from '@prisma/client';
 
 let uniquePassword: string;
 
-export interface IUserResult extends users { 
+export interface IUserResult extends users {
     email_address: string;
     uniquePassword: string;
     principal_name: string;
 }
 
-// create a unique user for each scenario  
+// create a unique user for each scenario
 export class User {
     firstName: string;
     lastName: string;
@@ -42,15 +42,15 @@ export class User {
     isExpired: boolean;
     totpSecret: string;
     totpActivated: boolean;
-    
+
     // initialize user properties as optional parameters
     constructor(
         firstName = faker.person.firstName(),
         lastName = faker.person.lastName(),
         principalName = `${firstName}-${lastName}`,
         email = `${firstName}@test.com`,
-        role = "Administrator",
-        password = "",
+        role = 'Administrator',
+        password = '',
         eulaAccepted = true,
         isDisabled = false,
         isExpired = false,
@@ -59,29 +59,29 @@ export class User {
     ) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.principalName = principalName
+        this.principalName = principalName;
         this.email = email;
         this.password = password;
-        this.role = role,
-        this.eulaAccepted = eulaAccepted,
-        this.isDisabled = isDisabled,
-        this.isExpired = isExpired,
-        this.totpSecret = totpSecret,
-        this.totpActivated = totpActivated
+        (this.role = role),
+            (this.eulaAccepted = eulaAccepted),
+            (this.isDisabled = isDisabled),
+            (this.isExpired = isExpired),
+            (this.totpSecret = totpSecret),
+            (this.totpActivated = totpActivated);
     }
     async create() {
         // sanity check when running against production environment
-        // production tagged tests should not include any seeding data. 
-        if (process.env.ENV === "production") {
-            console.error("exiting tests: no seeding data in production environment")
-            exit(1)
+        // production tagged tests should not include any seeding data.
+        if (process.env.ENV === 'production') {
+            console.error('exiting tests: no seeding data in production environment');
+            exit(1);
         }
 
         // option to set the password in table driven tests
         if (this.password == '') {
-            uniquePassword = faker.lorem.word({ length: { min: 5, max: 10 }})
+            uniquePassword = faker.lorem.word({ length: { min: 5, max: 10 } });
         } else {
-            uniquePassword = this.password as string
+            uniquePassword = this.password as string;
         }
 
         const now = new Date();
@@ -130,7 +130,7 @@ export class User {
 
         return {
             ...newUser,
-            uniquePassword
-        } as IUserResult
+            uniquePassword,
+        } as IUserResult;
     }
 }
