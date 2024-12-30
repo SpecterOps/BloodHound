@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Browser, BrowserContext, Page } from "@playwright/test";
-import PageManager from "./pageManager.js";
-import { invokeBrowser } from "./browserManager.js";
+import { Browser, BrowserContext, Page } from '@playwright/test';
+import PageManager from './pageManager.js';
+import { invokeBrowser } from './browserManager.js';
 
 export interface IFixture {
     browser: Browser;
@@ -41,7 +41,7 @@ export default class FixtureManager implements IFixture {
             context: this.context,
             pageManager: this.pageManager,
             page: this.pageManager.Page,
-        }
+        };
     }
 
     async openBrowser() {

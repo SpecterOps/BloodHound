@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { BrowserContext, Page } from "@playwright/test";
+import { BrowserContext, Page } from '@playwright/test';
 
 export default class PageManager {
     currentPage!: Page;
@@ -26,7 +26,7 @@ export default class PageManager {
     async newPage(context: BrowserContext): Promise<Page> {
         const page = await context.newPage();
         this.currentPage = page;
-        return page
+        return page;
     }
     async closePage(): Promise<void> {
         await this.currentPage.close();
