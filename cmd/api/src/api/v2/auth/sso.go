@@ -37,12 +37,12 @@ import (
 
 // AuthProvider represents a unified SSO provider (either OIDC or SAML)
 type AuthProvider struct {
-	ID      int32       `json:"id"`
-	Name    string      `json:"name"`
-	Type    string      `json:"type"`
-	Slug    string      `json:"slug"`
-	Details interface{} `json:"details"`
-	Config  model.SSOProviderConfig
+	ID      int32                   `json:"id"`
+	Name    string                  `json:"name"`
+	Type    string                  `json:"type"`
+	Slug    string                  `json:"slug"`
+	Details interface{}             `json:"details"`
+	Config  model.SSOProviderConfig `json:"config"`
 
 	LoginUri    serde.URL `json:"login_uri"`
 	CallbackUri serde.URL `json:"callback_uri"`
