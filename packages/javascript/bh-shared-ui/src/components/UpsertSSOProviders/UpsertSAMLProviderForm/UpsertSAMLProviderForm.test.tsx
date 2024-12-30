@@ -16,7 +16,6 @@
 
 import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor } from '../../../test-utils';
-import { resizeObserver } from '../../../mocks';
 import UpsertSAMLProviderForm from './UpsertSAMLProviderForm';
 import { Role } from 'js-client-library';
 
@@ -28,8 +27,6 @@ const testRoles = [
 ] as Role[];
 
 describe('UpsertSAMLProviderForm', () => {
-    beforeAll(() => resizeObserver());
-
     it('should render inputs, labels, and action buttons', () => {
         const testOnClose = vi.fn();
         const testOnSubmit = vi.fn();

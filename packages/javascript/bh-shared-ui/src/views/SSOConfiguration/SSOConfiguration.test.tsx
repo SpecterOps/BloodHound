@@ -19,7 +19,6 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from '../../test-utils';
 import SSOConfiguration from './SSOConfiguration';
-import { resizeObserver } from '../../mocks';
 import { ListRolesResponse, ListSSOProvidersResponse, Role, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 
 const testRoles = [
@@ -139,7 +138,6 @@ beforeEach(() => {
 });
 beforeAll(() => {
     server.listen();
-    resizeObserver();
 });
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());

@@ -16,4 +16,3 @@
 
 export * from './factories';
 export * from './webgl';
-export * from './resizeObserver';
