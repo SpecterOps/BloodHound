@@ -35,6 +35,8 @@ const initialSAMLProvider: SSOProvider = {
         sp_metadata_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-1/metadata',
         sp_acs_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-1/acs',
     } as SAMLProviderInfo,
+    login_uri: '',
+    callback_uri: '',
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
 };
@@ -55,6 +57,8 @@ const newSAMLProvider: SSOProvider = {
         sp_metadata_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-2/metadata',
         sp_acs_uri: 'http://bloodhound.localhost/api/v2/login/saml/test-idp-2/acs',
     } as SAMLProviderInfo,
+    login_uri: '',
+    callback_uri: '',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
 };
@@ -88,10 +92,13 @@ const server = setupServer(
         );
     }),
 
-    rest.post<CreateSAMLProviderBody, any, CreateSAMLProviderResponse>('/api/v2/saml/providers', (req, res, ctx) => {
-        ssoProviders.push(newSAMLProvider);
-        return res(ctx.json({ ...newSAMLProvider, ...(newSAMLProvider.details as SAMLProviderInfo) }));
-    })
+    rest.post<CreateSAMLProviderBody, any, CreateSAMLProviderResponse>(
+        '/api/v2/sso-providers/saml',
+        (req, res, ctx) => {
+            ssoProviders.push(newSAMLProvider);
+            return res(ctx.json({ ...newSAMLProvider, ...(newSAMLProvider.details as SAMLProviderInfo) }));
+        }
+    )
 );
 
 beforeEach(() => {

@@ -82,10 +82,8 @@ func migrateTypes(ctx context.Context, neoDB, pgDB graph.Database) error {
 		return err
 	}
 
-	return pgDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		_, err := pgDB.(*pg.Driver).KindMapper().AssertKinds(tx, append(neoNodeKinds, neoEdgeKinds...))
-		return err
-	})
+	_, err := pgDB.(*pg.Driver).KindMapper().AssertKinds(ctx, append(neoNodeKinds, neoEdgeKinds...))
+	return err
 }
 
 func convertNeo4jProperties(properties *graph.Properties) error {

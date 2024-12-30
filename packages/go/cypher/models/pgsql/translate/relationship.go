@@ -17,7 +17,7 @@
 package translate
 
 import (
-	"strings"
+	"fmt"
 
 	"github.com/specterops/bloodhound/cypher/models"
 	cypher "github.com/specterops/bloodhound/cypher/models/cypher"
@@ -50,8 +50,8 @@ func (s *Translator) translateRelationshipPattern(scope *Scope, relationshipPatt
 
 		// Capture the kind matchers for this relationship pattern
 		if len(relationshipPattern.Kinds) > 0 {
-			if kindIDs, missingKinds := s.kindMapper.MapKinds(relationshipPattern.Kinds); len(missingKinds) > 0 {
-				s.SetErrorf("unable to map kinds: %s", strings.Join(missingKinds.Strings(), ", "))
+			if kindIDs, err := s.kindMapper.MapKinds(s.ctx, relationshipPattern.Kinds); err != nil {
+				s.SetError(fmt.Errorf("failed to translate kinds: %w", err))
 			} else if kindIDsLiteral, err := pgsql.AsLiteral(kindIDs); err != nil {
 				s.SetError(err)
 			} else {

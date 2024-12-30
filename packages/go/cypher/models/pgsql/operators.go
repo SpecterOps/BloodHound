@@ -99,13 +99,15 @@ const (
 	OperatorIs                   Operator = "is"
 	OperatorIsNot                Operator = "is not"
 	OperatorSimilarTo            Operator = "similar to"
-	OperatorRegexMatch           Operator = "=~"
-	OperatorStartsWith           Operator = "starts with"
-	OperatorContains             Operator = "contains"
-	OperatorEndsWith             Operator = "ends with"
-	OperatorPropertyLookup       Operator = "property_lookup"
+	OperatorRegexMatch           Operator = "~"
+	OperatorAssignment           Operator = "="
+	OperatorAdditionAssignment   Operator = "+="
 
-	OperatorAssignment                  = OperatorEquals
-	OperatorLabelAssignment    Operator = "label_assignment"
-	OperatorAdditionAssignment Operator = "+="
+	OperatorCypherRegexMatch Operator = "=~"
+	OperatorCypherStartsWith Operator = "starts with"
+	OperatorCypherContains   Operator = "contains"
+	OperatorCypherEndsWith   Operator = "ends with"
+
+	OperatorPropertyLookup Operator = "property_lookup"
+	OperatorKindAssignment Operator = "kind_assignment"
 )

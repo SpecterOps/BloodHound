@@ -87,12 +87,16 @@ func newDatabase(connectionString string) (*Driver, error) {
 		if pool, err := pgxpool.NewWithConfig(poolCtx, poolCfg); err != nil {
 			return nil, err
 		} else {
-			return &Driver{
+			driverInst := &Driver{
 				pool:                      pool,
-				schemaManager:             NewSchemaManager(),
 				defaultTransactionTimeout: defaultTransactionTimeout,
 				batchWriteSize:            defaultBatchWriteSize,
-			}, nil
+			}
+
+			// Because the schema manager will act on the database on its own it needs a reference to the driver
+			// TODO: This cyclical dependency might want to be unwound
+			driverInst.schemaManager = NewSchemaManager(driverInst)
+			return driverInst, nil
 		}
 	}
 }

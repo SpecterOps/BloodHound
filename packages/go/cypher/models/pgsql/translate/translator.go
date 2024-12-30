@@ -17,6 +17,7 @@
 package translate
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -68,6 +69,7 @@ func (s State) String() string {
 type Translator struct {
 	walk.HierarchicalVisitor[cypher.SyntaxNode]
 
+	ctx            context.Context
 	kindMapper     pgsql.KindMapper
 	translation    Result
 	state          []State
@@ -80,12 +82,17 @@ type Translator struct {
 	query          *Query
 }
 
-func NewTranslator(kindMapper pgsql.KindMapper) *Translator {
+func NewTranslator(ctx context.Context, kindMapper pgsql.KindMapper, parameters map[string]any) *Translator {
+	if parameters == nil {
+		parameters = map[string]any{}
+	}
+
 	return &Translator{
 		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[cypher.SyntaxNode](),
 		translation: Result{
-			Parameters: map[string]any{},
+			Parameters: parameters,
 		},
+		ctx:            ctx,
 		kindMapper:     kindMapper,
 		treeTranslator: NewExpressionTreeTranslator(),
 		properties:     map[string]pgsql.Expression{},
@@ -128,7 +135,7 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 	case *cypher.RegularQuery, *cypher.SingleQuery, *cypher.PatternElement, *cypher.Return,
 		*cypher.Comparison, *cypher.Skip, *cypher.Limit, cypher.Operator, *cypher.ArithmeticExpression,
 		*cypher.NodePattern, *cypher.RelationshipPattern, *cypher.Remove, *cypher.Set,
-		*cypher.ReadingClause, *cypher.UnaryAddOrSubtractExpression:
+		*cypher.ReadingClause, *cypher.UnaryAddOrSubtractExpression, *cypher.PropertyLookup:
 	// No operation for these syntax nodes
 
 	case *cypher.Negation:
@@ -258,27 +265,6 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 
 	case *cypher.FunctionInvocation:
 		s.pushState(StateTranslatingNestedExpression)
-
-	case *cypher.PropertyLookup:
-		if variable, isVariable := typedExpression.Atom.(*cypher.Variable); !isVariable {
-			s.SetErrorf("expected variable for property lookup reference but found type: %T", typedExpression.Atom)
-		} else if resolved, isResolved := s.query.Scope.LookupString(variable.Symbol); !isResolved {
-			s.SetErrorf("unable to resolve identifier: %s", variable.Symbol)
-		} else {
-			switch currentState := s.currentState(); currentState {
-			case StateTranslatingNestedExpression:
-				// TODO: Cypher does not support nested property references so the Symbols slice should be a string
-				if fieldIdentifierLiteral, err := pgsql.AsLiteral(typedExpression.Symbols[0]); err != nil {
-					s.SetError(err)
-				} else {
-					s.treeTranslator.Push(pgsql.CompoundIdentifier{resolved.Identifier, pgsql.ColumnProperties})
-					s.treeTranslator.Push(fieldIdentifierLiteral)
-				}
-
-			default:
-				s.SetErrorf("invalid state \"%s\" for cypher AST node %T", s.currentState(), expression)
-			}
-		}
 
 	case *cypher.Order:
 		s.pushState(StateTranslatingOrderBy)
@@ -503,7 +489,9 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 
 		switch formattedName {
 		case cypher.IdentityFunction:
-			if referenceArgument, err := PopFromBuilderAs[pgsql.Identifier](s.treeTranslator); err != nil {
+			if typedExpression.NumArguments() != 1 {
+				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
+			} else if referenceArgument, err := PopFromBuilderAs[pgsql.Identifier](s.treeTranslator); err != nil {
 				s.SetError(err)
 			} else {
 				s.treeTranslator.Push(pgsql.CompoundIdentifier{referenceArgument, pgsql.ColumnID})
@@ -530,7 +518,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 			}
 
 		case cypher.EdgeTypeFunction:
-			if typedExpression.NumArguments() > 1 {
+			if typedExpression.NumArguments() != 1 {
 				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
 			} else if argument, err := s.treeTranslator.Pop(); err != nil {
 				s.SetError(err)
@@ -541,7 +529,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 			}
 
 		case cypher.NodeLabelsFunction:
-			if typedExpression.NumArguments() > 1 {
+			if typedExpression.NumArguments() != 1 {
 				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
 			} else if argument, err := s.treeTranslator.Pop(); err != nil {
 				s.SetError(err)
@@ -552,7 +540,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 			}
 
 		case cypher.CountFunction:
-			if typedExpression.NumArguments() > 1 {
+			if typedExpression.NumArguments() != 1 {
 				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
 			} else if argument, err := s.treeTranslator.Pop(); err != nil {
 				s.SetError(err)
@@ -593,7 +581,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 			}
 
 		case cypher.ToLowerFunction:
-			if typedExpression.NumArguments() > 1 {
+			if typedExpression.NumArguments() != 1 {
 				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
 			} else if argument, err := s.treeTranslator.Pop(); err != nil {
 				s.SetError(err)
@@ -610,8 +598,33 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 				})
 			}
 
+		case cypher.ListSizeFunction:
+			if typedExpression.NumArguments() != 1 {
+				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
+			} else if argument, err := s.treeTranslator.Pop(); err != nil {
+				s.SetError(err)
+			} else {
+				var functionCall pgsql.FunctionCall
+
+				if _, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+					functionCall = pgsql.FunctionCall{
+						Function:   pgsql.FunctionJSONBArrayLength,
+						Parameters: []pgsql.Expression{argument},
+						CastType:   pgsql.Int,
+					}
+				} else {
+					functionCall = pgsql.FunctionCall{
+						Function:   pgsql.FunctionArrayLength,
+						Parameters: []pgsql.Expression{argument, pgsql.NewLiteral(1, pgsql.Int)},
+						CastType:   pgsql.Int,
+					}
+				}
+
+				s.treeTranslator.Push(functionCall)
+			}
+
 		case cypher.ToUpperFunction:
-			if typedExpression.NumArguments() > 1 {
+			if typedExpression.NumArguments() != 1 {
 				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
 			} else if argument, err := s.treeTranslator.Pop(); err != nil {
 				s.SetError(err)
@@ -626,6 +639,29 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 					Parameters: []pgsql.Expression{argument},
 					CastType:   pgsql.Text,
 				})
+			}
+
+		case cypher.ToStringFunction:
+			if typedExpression.NumArguments() != 1 {
+				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
+			} else if argument, err := s.treeTranslator.Pop(); err != nil {
+				s.SetError(err)
+			} else {
+				s.treeTranslator.Push(pgsql.NewTypeCast(argument, pgsql.Text))
+			}
+
+		case cypher.ToIntegerFunction:
+			if typedExpression.NumArguments() != 1 {
+				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
+			} else if argument, err := s.treeTranslator.Pop(); err != nil {
+				s.SetError(err)
+			} else {
+				s.treeTranslator.Push(pgsql.NewTypeCast(argument, pgsql.Int8))
+			}
+
+		case cypher.CoalesceFunction:
+			if err := s.translateCoalesceFunction(typedExpression); err != nil {
+				s.SetError(err)
 			}
 
 		default:
@@ -715,24 +751,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		}
 
 	case *cypher.PropertyLookup:
-		switch currentState := s.currentState(); currentState {
-		case StateTranslatingNestedExpression:
-			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorPropertyLookup); err != nil {
-				s.SetError(err)
-			}
-
-		case StateTranslatingProjection:
-			if nextExpression, err := s.treeTranslator.Pop(); err != nil {
-				s.SetError(err)
-			} else if selectItem, isProjection := nextExpression.(pgsql.SelectItem); !isProjection {
-				s.SetErrorf("invalid type for select item: %T", nextExpression)
-			} else {
-				s.projections.CurrentProjection().SelectItem = selectItem
-			}
-
-		default:
-			s.SetErrorf("invalid state \"%s\" for cypher AST node %T", s.currentState(), expression)
-		}
+		s.translatePropertyLookup(typedExpression)
 
 	case *cypher.PartialComparison:
 		switch currentState := s.currentState(); currentState {
@@ -843,8 +862,8 @@ type Result struct {
 	Parameters map[string]any
 }
 
-func Translate(cypherQuery *cypher.RegularQuery, kindMapper pgsql.KindMapper) (Result, error) {
-	translator := NewTranslator(kindMapper)
+func Translate(ctx context.Context, cypherQuery *cypher.RegularQuery, kindMapper pgsql.KindMapper, parameters map[string]any) (Result, error) {
+	translator := NewTranslator(ctx, kindMapper, parameters)
 
 	if err := walk.WalkCypher(cypherQuery, translator); err != nil {
 		return Result{}, err

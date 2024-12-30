@@ -1595,7 +1595,7 @@ func (s *ADCSESC1HarnessAuthUsers) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.AuthUsers)
 }
 
-type EnrollOnBehalfOfHarnessTwo struct {
+type EnrollOnBehalfOfHarness2 struct {
 	Domain2        *graph.Node
 	AuthStore2     *graph.Node
 	RootCA2        *graph.Node
@@ -1604,10 +1604,9 @@ type EnrollOnBehalfOfHarnessTwo struct {
 	CertTemplate22 *graph.Node
 	CertTemplate23 *graph.Node
 	CertTemplate24 *graph.Node
-	CertTemplate25 *graph.Node
 }
 
-func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
+func (s *EnrollOnBehalfOfHarness2) Setup(gt *GraphTestContext) {
 	certRequestAgentEKU := make([]string, 0)
 	certRequestAgentEKU = append(certRequestAgentEKU, adAnalysis.EkuCertRequestAgent)
 	emptyAppPolicies := make([]string, 0)
@@ -1623,7 +1622,7 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 		SubjectAltRequireUPN:    false,
 		SubjectAltRequireSPN:    false,
 		NoSecurityExtension:     false,
-		SchemaVersion:           1,
+		SchemaVersion:           2,
 		AuthorizedSignatures:    0,
 		EffectiveEKUs:           certRequestAgentEKU,
 		ApplicationPolicies:     emptyAppPolicies,
@@ -1635,7 +1634,7 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 		SubjectAltRequireUPN:    false,
 		SubjectAltRequireSPN:    false,
 		NoSecurityExtension:     false,
-		SchemaVersion:           1,
+		SchemaVersion:           2,
 		AuthorizedSignatures:    0,
 		EffectiveEKUs:           []string{adAnalysis.EkuCertRequestAgent, adAnalysis.EkuAnyPurpose},
 		ApplicationPolicies:     emptyAppPolicies,
@@ -1664,18 +1663,6 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 		EffectiveEKUs:           emptyAppPolicies,
 		ApplicationPolicies:     emptyAppPolicies,
 	})
-	s.CertTemplate25 = gt.NewActiveDirectoryCertTemplate("certtemplate2-5", sid, CertTemplateData{
-		RequiresManagerApproval: false,
-		AuthenticationEnabled:   false,
-		EnrolleeSuppliesSubject: false,
-		SubjectAltRequireUPN:    false,
-		SubjectAltRequireSPN:    false,
-		NoSecurityExtension:     false,
-		SchemaVersion:           1,
-		AuthorizedSignatures:    1,
-		EffectiveEKUs:           emptyAppPolicies,
-		ApplicationPolicies:     emptyAppPolicies,
-	})
 
 	gt.NewRelationship(s.AuthStore2, s.Domain2, ad.NTAuthStoreFor)
 	gt.NewRelationship(s.RootCA2, s.Domain2, ad.RootCAFor)
@@ -1685,10 +1672,9 @@ func (s *EnrollOnBehalfOfHarnessTwo) Setup(gt *GraphTestContext) {
 	gt.NewRelationship(s.CertTemplate22, s.EnterpriseCA2, ad.PublishedTo)
 	gt.NewRelationship(s.CertTemplate23, s.EnterpriseCA2, ad.PublishedTo)
 	gt.NewRelationship(s.CertTemplate24, s.EnterpriseCA2, ad.PublishedTo)
-	gt.NewRelationship(s.CertTemplate25, s.EnterpriseCA2, ad.PublishedTo)
 }
 
-type EnrollOnBehalfOfHarnessOne struct {
+type EnrollOnBehalfOfHarness1 struct {
 	Domain1        *graph.Node
 	AuthStore1     *graph.Node
 	RootCA1        *graph.Node
@@ -1698,7 +1684,7 @@ type EnrollOnBehalfOfHarnessOne struct {
 	CertTemplate13 *graph.Node
 }
 
-func (s *EnrollOnBehalfOfHarnessOne) Setup(gt *GraphTestContext) {
+func (s *EnrollOnBehalfOfHarness1) Setup(gt *GraphTestContext) {
 	sid := RandomDomainSID()
 	anyPurposeEkus := make([]string, 0)
 	anyPurposeEkus = append(anyPurposeEkus, adAnalysis.EkuAnyPurpose)
@@ -1751,6 +1737,74 @@ func (s *EnrollOnBehalfOfHarnessOne) Setup(gt *GraphTestContext) {
 	gt.NewRelationship(s.CertTemplate11, s.EnterpriseCA1, ad.PublishedTo)
 	gt.NewRelationship(s.CertTemplate12, s.EnterpriseCA1, ad.PublishedTo)
 	gt.NewRelationship(s.CertTemplate13, s.EnterpriseCA1, ad.PublishedTo)
+}
+
+type EnrollOnBehalfOfHarness3 struct {
+	Domain1        *graph.Node
+	AuthStore1     *graph.Node
+	RootCA1        *graph.Node
+	EnterpriseCA1  *graph.Node
+	EnterpriseCA2  *graph.Node
+	CertTemplate11 *graph.Node
+	CertTemplate12 *graph.Node
+	CertTemplate13 *graph.Node
+}
+
+func (s *EnrollOnBehalfOfHarness3) Setup(gt *GraphTestContext) {
+	sid := RandomDomainSID()
+	anyPurposeEkus := make([]string, 0)
+	anyPurposeEkus = append(anyPurposeEkus, adAnalysis.EkuAnyPurpose)
+	emptyAppPolicies := make([]string, 0)
+	s.Domain1 = gt.NewActiveDirectoryDomain("domain1", sid, false, true)
+	s.AuthStore1 = gt.NewActiveDirectoryNTAuthStore("authstore1", sid)
+	s.RootCA1 = gt.NewActiveDirectoryRootCA("rca1", sid)
+	s.EnterpriseCA1 = gt.NewActiveDirectoryEnterpriseCA("eca1", sid)
+	s.EnterpriseCA2 = gt.NewActiveDirectoryEnterpriseCA("eca2", sid)
+	s.CertTemplate11 = gt.NewActiveDirectoryCertTemplate("certtemplate1-1", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           2,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           anyPurposeEkus,
+		ApplicationPolicies:     emptyAppPolicies,
+	})
+	s.CertTemplate12 = gt.NewActiveDirectoryCertTemplate("certtemplate1-2", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           1,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           anyPurposeEkus,
+		ApplicationPolicies:     emptyAppPolicies,
+	})
+	s.CertTemplate13 = gt.NewActiveDirectoryCertTemplate("certtemplate1-3", sid, CertTemplateData{
+		RequiresManagerApproval: false,
+		AuthenticationEnabled:   false,
+		EnrolleeSuppliesSubject: false,
+		SubjectAltRequireUPN:    false,
+		SubjectAltRequireSPN:    false,
+		NoSecurityExtension:     false,
+		SchemaVersion:           2,
+		AuthorizedSignatures:    0,
+		EffectiveEKUs:           anyPurposeEkus,
+		ApplicationPolicies:     emptyAppPolicies,
+	})
+
+	gt.NewRelationship(s.AuthStore1, s.Domain1, ad.NTAuthStoreFor)
+	gt.NewRelationship(s.RootCA1, s.Domain1, ad.RootCAFor)
+	gt.NewRelationship(s.EnterpriseCA1, s.AuthStore1, ad.TrustedForNTAuth)
+	gt.NewRelationship(s.EnterpriseCA1, s.RootCA1, ad.EnterpriseCAFor)
+	gt.NewRelationship(s.EnterpriseCA2, s.RootCA1, ad.EnterpriseCAFor)
+	gt.NewRelationship(s.CertTemplate11, s.EnterpriseCA1, ad.PublishedTo)
+	gt.NewRelationship(s.CertTemplate12, s.EnterpriseCA1, ad.PublishedTo)
+	gt.NewRelationship(s.CertTemplate13, s.EnterpriseCA2, ad.PublishedTo)
 }
 
 type ADCSGoldenCertHarness struct {
@@ -8472,8 +8526,9 @@ type HarnessDetails struct {
 	ShortcutHarnessEveryone2                        ShortcutHarnessEveryone2
 	ADCSESC1Harness                                 ADCSESC1Harness
 	ADCSESC1HarnessAuthUsers                        ADCSESC1HarnessAuthUsers
-	EnrollOnBehalfOfHarnessOne                      EnrollOnBehalfOfHarnessOne
-	EnrollOnBehalfOfHarnessTwo                      EnrollOnBehalfOfHarnessTwo
+	EnrollOnBehalfOfHarness1                        EnrollOnBehalfOfHarness1
+	EnrollOnBehalfOfHarness2                        EnrollOnBehalfOfHarness2
+	EnrollOnBehalfOfHarness3                        EnrollOnBehalfOfHarness3
 	ADCSGoldenCertHarness                           ADCSGoldenCertHarness
 	IssuedSignedByHarness                           IssuedSignedByHarness
 	EnterpriseCAForHarness                          EnterpriseCAForHarness

@@ -162,8 +162,8 @@ func (s *batch) flushNodeCreateBufferWithIDs() error {
 	for idx, nextNode := range s.nodeCreateBuffer {
 		nodeIDs[idx] = nextNode.ID.Uint64()
 
-		if mappedKindIDs, missingKinds := s.schemaManager.MapKinds(nextNode.Kinds); len(missingKinds) > 0 {
-			return fmt.Errorf("unable to map kinds %v", missingKinds)
+		if mappedKindIDs, err := s.schemaManager.AssertKinds(s.ctx, nextNode.Kinds); err != nil {
+			return fmt.Errorf("unable to map kinds %w", err)
 		} else {
 			kindIDSlices[idx] = kindIDEncoder.Encode(mappedKindIDs)
 		}
@@ -196,8 +196,8 @@ func (s *batch) flushNodeCreateBufferWithoutIDs() error {
 	)
 
 	for idx, nextNode := range s.nodeCreateBuffer {
-		if mappedKindIDs, missingKinds := s.schemaManager.MapKinds(nextNode.Kinds); len(missingKinds) > 0 {
-			return fmt.Errorf("unable to map kinds %v", missingKinds)
+		if mappedKindIDs, err := s.schemaManager.AssertKinds(s.ctx, nextNode.Kinds); err != nil {
+			return fmt.Errorf("unable to map kinds %w", err)
 		} else {
 			kindIDSlices[idx] = kindIDEncoder.Encode(mappedKindIDs)
 		}
@@ -222,7 +222,7 @@ func (s *batch) flushNodeCreateBufferWithoutIDs() error {
 func (s *batch) flushNodeUpsertBatch(updates *sql.NodeUpdateBatch) error {
 	parameters := NewNodeUpsertParameters(len(updates.Updates))
 
-	if err := parameters.AppendAll(updates, s.schemaManager, s.kindIDEncoder); err != nil {
+	if err := parameters.AppendAll(s.ctx, updates, s.schemaManager, s.kindIDEncoder); err != nil {
 		return err
 	}
 
@@ -284,11 +284,11 @@ func (s *NodeUpsertParameters) Format(graphTarget model.Graph) []any {
 	}
 }
 
-func (s *NodeUpsertParameters) Append(update *sql.NodeUpdate, schemaManager *SchemaManager, kindIDEncoder Int2ArrayEncoder) error {
+func (s *NodeUpsertParameters) Append(ctx context.Context, update *sql.NodeUpdate, schemaManager *SchemaManager, kindIDEncoder Int2ArrayEncoder) error {
 	s.IDFutures = append(s.IDFutures, update.IDFuture)
 
-	if mappedKindIDs, missingKinds := schemaManager.MapKinds(update.Node.Kinds); len(missingKinds) > 0 {
-		return fmt.Errorf("unable to map kinds %v", missingKinds)
+	if mappedKindIDs, err := schemaManager.AssertKinds(ctx, update.Node.Kinds); err != nil {
+		return fmt.Errorf("unable to map kinds %w", err)
 	} else {
 		s.KindIDSlices = append(s.KindIDSlices, kindIDEncoder.Encode(mappedKindIDs))
 	}
@@ -302,9 +302,9 @@ func (s *NodeUpsertParameters) Append(update *sql.NodeUpdate, schemaManager *Sch
 	return nil
 }
 
-func (s *NodeUpsertParameters) AppendAll(updates *sql.NodeUpdateBatch, schemaManager *SchemaManager, kindIDEncoder Int2ArrayEncoder) error {
+func (s *NodeUpsertParameters) AppendAll(ctx context.Context, updates *sql.NodeUpdateBatch, schemaManager *SchemaManager, kindIDEncoder Int2ArrayEncoder) error {
 	for _, nextUpdate := range updates.Updates {
-		if err := s.Append(nextUpdate, schemaManager, kindIDEncoder); err != nil {
+		if err := s.Append(ctx, nextUpdate, schemaManager, kindIDEncoder); err != nil {
 			return err
 		}
 	}
@@ -338,12 +338,12 @@ func (s *RelationshipUpdateByParameters) Format(graphTarget model.Graph) []any {
 	}
 }
 
-func (s *RelationshipUpdateByParameters) Append(update *sql.RelationshipUpdate, schemaManager *SchemaManager) error {
+func (s *RelationshipUpdateByParameters) Append(ctx context.Context, update *sql.RelationshipUpdate, schemaManager *SchemaManager) error {
 	s.StartIDs = append(s.StartIDs, update.StartID.Value)
 	s.EndIDs = append(s.EndIDs, update.EndID.Value)
 
-	if mappedKindID, mapped := schemaManager.MapKind(update.Relationship.Kind); !mapped {
-		return fmt.Errorf("unable to map kind %s", update.Relationship.Kind)
+	if mappedKindID, err := schemaManager.MapKind(ctx, update.Relationship.Kind); err != nil {
+		return err
 	} else {
 		s.KindIDs = append(s.KindIDs, mappedKindID)
 	}
@@ -356,9 +356,9 @@ func (s *RelationshipUpdateByParameters) Append(update *sql.RelationshipUpdate, 
 	return nil
 }
 
-func (s *RelationshipUpdateByParameters) AppendAll(updates *sql.RelationshipUpdateBatch, schemaManager *SchemaManager) error {
+func (s *RelationshipUpdateByParameters) AppendAll(ctx context.Context, updates *sql.RelationshipUpdateBatch, schemaManager *SchemaManager) error {
 	for _, nextUpdate := range updates.Updates {
-		if err := s.Append(nextUpdate, schemaManager); err != nil {
+		if err := s.Append(ctx, nextUpdate, schemaManager); err != nil {
 			return err
 		}
 	}
@@ -373,7 +373,7 @@ func (s *batch) flushRelationshipUpdateByBuffer(updates *sql.RelationshipUpdateB
 
 	parameters := NewRelationshipUpdateByParameters(len(updates.Updates))
 
-	if err := parameters.AppendAll(updates, s.schemaManager); err != nil {
+	if err := parameters.AppendAll(s.ctx, updates, s.schemaManager); err != nil {
 		return err
 	}
 
@@ -454,7 +454,7 @@ func (s *relationshipCreateBatchBuilder) Build() (*relationshipCreateBatch, erro
 	return s.relationshipUpdateBatch, s.relationshipUpdateBatch.EncodeProperties(s.edgePropertiesBatch)
 }
 
-func (s *relationshipCreateBatchBuilder) Add(kindMapper KindMapper, edge *graph.Relationship) error {
+func (s *relationshipCreateBatchBuilder) Add(ctx context.Context, kindMapper KindMapper, edge *graph.Relationship) error {
 	keyBuilder := strings.Builder{}
 
 	keyBuilder.WriteString(edge.StartID.String())
@@ -473,8 +473,8 @@ func (s *relationshipCreateBatchBuilder) Add(kindMapper KindMapper, edge *graph.
 			edgeProperties = edge.Properties.Clone()
 		)
 
-		if edgeKindID, hasKind := kindMapper.MapKind(edge.Kind); !hasKind {
-			return fmt.Errorf("unable to map kind %s", edge.Kind)
+		if edgeKindID, err := kindMapper.MapKind(ctx, edge.Kind); err != nil {
+			return err
 		} else {
 			s.relationshipUpdateBatch.Add(startID, endID, edgeKindID)
 		}
@@ -492,7 +492,7 @@ func (s *batch) flushRelationshipCreateBuffer() error {
 	batchBuilder := newRelationshipCreateBatchBuilder(len(s.relationshipCreateBuffer))
 
 	for _, nextRel := range s.relationshipCreateBuffer {
-		if err := batchBuilder.Add(s.schemaManager, nextRel); err != nil {
+		if err := batchBuilder.Add(s.ctx, s.schemaManager, nextRel); err != nil {
 			return err
 		}
 	}
