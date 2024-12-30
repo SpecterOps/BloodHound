@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Dialog, DialogContent, DialogDescription, DialogPortal, DialogTitle } from '@bloodhoundenterprise/doodleui';
+import { useAvailableDomains } from '../../hooks';
 
 type NoDataDialogProps = {
     fileIngestLink?: JSX.Element;
@@ -22,9 +23,11 @@ type NoDataDialogProps = {
 };
 
 export const NoDataDialog: React.FC<NoDataDialogProps> = ({ fileIngestLink, gettingStartedLink }) => {
+    const useAvailableDomainsQuery = useAvailableDomains();
+
     return (
         <Dialog
-            open={true}
+            open={useAvailableDomainsQuery.data.length === 0}
             onOpenChange={() => {
                 // unblocks the body from being clickable so the user can go to another tab
                 document.body.style.pointerEvents = '';
