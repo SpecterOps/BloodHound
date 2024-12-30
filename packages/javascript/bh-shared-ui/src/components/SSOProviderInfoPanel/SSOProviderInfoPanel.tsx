@@ -81,8 +81,8 @@ const SSOProviderInfoPanel: FC<{
     const { addNotification } = useNotifications();
 
     const defaultRoleName = useMemo(
-        () => roles?.find((role) => role.id === ssoProvider.config?.auto_provision?.default_role)?.name,
-        [roles, ssoProvider.config?.auto_provision?.default_role]
+        () => roles?.find((role) => role.id === ssoProvider.config?.auto_provision?.default_role_id)?.name,
+        [roles, ssoProvider.config?.auto_provision?.default_role_id]
     );
 
     if (!ssoProvider.type) {

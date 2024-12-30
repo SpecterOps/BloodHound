@@ -38,7 +38,7 @@ const samlProvider: SSOProvider = {
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
     config: {
-        auto_provision: { enabled: false, role_provision: false, default_role: 0 },
+        auto_provision: { enabled: false, role_provision: false, default_role_id: 0 },
     },
 };
 
@@ -56,7 +56,7 @@ const oidcProvider: SSOProvider = {
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
     config: {
-        auto_provision: { enabled: true, role_provision: true, default_role: 1 },
+        auto_provision: { enabled: true, role_provision: true, default_role_id: 1 },
     },
 };
 

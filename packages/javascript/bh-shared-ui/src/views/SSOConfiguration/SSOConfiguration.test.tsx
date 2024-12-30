@@ -47,7 +47,7 @@ const initialSAMLProvider: SSOProvider = {
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
     config: {
-        auto_provision: { enabled: false, role_provision: false, default_role: 1 },
+        auto_provision: { enabled: false, role_provision: false, default_role_id: 1 },
     },
 };
 
@@ -72,7 +72,7 @@ const newSAMLProvider: SSOProvider = {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     config: {
-        auto_provision: { enabled: false, role_provision: false, default_role: 1 },
+        auto_provision: { enabled: false, role_provision: false, default_role_id: 1 },
     },
 };
 

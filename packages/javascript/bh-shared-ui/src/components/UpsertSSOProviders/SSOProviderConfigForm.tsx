@@ -60,7 +60,7 @@ const SSOProviderConfigForm: FC<{
                                         field.onChange(checked);
                                         if (!checked) {
                                             resetField('config.auto_provision.role_provision');
-                                            resetField('config.auto_provision.default_role');
+                                            resetField('config.auto_provision.default_role_id');
                                         }
                                     }}
                                     color='primary'
@@ -103,7 +103,7 @@ const SSOProviderConfigForm: FC<{
             </Grid>
             <Grid item xs={3}>
                 <Controller
-                    name='config.auto_provision.default_role'
+                    name='config.auto_provision.default_role_id'
                     control={control}
                     defaultValue={readOnlyRoleId}
                     rules={{
@@ -141,9 +141,9 @@ const SSOProviderConfigForm: FC<{
                     )}
                 />
             </Grid>
-            {!!errors.config?.auto_provision?.default_role && (
+            {!!errors.config?.auto_provision?.default_role_id && (
                 <Grid item xs={5}>
-                    <Alert severity='error'>{errors.config?.auto_provision?.default_role?.message}</Alert>
+                    <Alert severity='error'>{errors.config?.auto_provision?.default_role_id?.message}</Alert>
                 </Grid>
             )}
         </>

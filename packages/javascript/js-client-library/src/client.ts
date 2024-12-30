@@ -649,7 +649,7 @@ class BHEAPIClient {
         formData.append('name', data.name);
         formData.append('metadata', data.metadata);
         formData.append('config.auto_provision.enabled', data.config.auto_provision.enabled.toString());
-        formData.append('config.auto_provision.default_role', data.config.auto_provision.default_role.toString());
+        formData.append('config.auto_provision.default_role_id', data.config.auto_provision.default_role_id.toString());
         formData.append('config.auto_provision.role_provision', data.config.auto_provision.role_provision.toString());
         return this.baseClient.post(`/api/v2/sso-providers/saml`, formData, options);
     };
@@ -668,7 +668,10 @@ class BHEAPIClient {
         }
         if (data.config) {
             formData.append('config.auto_provision.enabled', data.config.auto_provision.enabled.toString());
-            formData.append('config.auto_provision.default_role', data.config.auto_provision.default_role.toString());
+            formData.append(
+                'config.auto_provision.default_role_id',
+                data.config.auto_provision.default_role_id.toString()
+            );
             formData.append(
                 'config.auto_provision.role_provision',
                 data.config.auto_provision.role_provision.toString()

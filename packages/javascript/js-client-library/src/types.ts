@@ -187,7 +187,7 @@ export interface SSOProviderConfiguration {
     config: {
         auto_provision: {
             enabled: boolean;
-            default_role: number;
+            default_role_id: number;
             role_provision: boolean;
         };
     };
