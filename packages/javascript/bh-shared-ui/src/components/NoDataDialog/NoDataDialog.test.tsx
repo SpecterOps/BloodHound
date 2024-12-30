@@ -31,6 +31,6 @@ describe('NoDataDialog', () => {
 
         expect(screen.getByText('No Data Available')).toBeInTheDocument();
         expect(screen.getByText(/Getting Started guide/)).toBeInTheDocument();
-        expect(screen.queryByText(/start by uploading your data/)).toBeNull();
+        expect(screen.getByText(/start by uploading your data/)).toBeInTheDocument();
     });
 });
