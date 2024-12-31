@@ -65,8 +65,8 @@ const (
 )
 
 var (
-	mcFormatRegex              = regexp.MustCompile(mcFormatRegexPattern)
-	ErrorMalformedArgon2Digest = errors.New("argon2 digest is malformed")
+	mcFormatRegex            = regexp.MustCompile(mcFormatRegexPattern)
+	ErrMalformedArgon2Digest = errors.New("argon2 digest is malformed")
 )
 
 type ComputerSpecs struct {
@@ -109,7 +109,7 @@ func (s Argon2) ParseDigest(mcFormatDigest string) (SecretDigest, error) {
 	var digest Argon2Digest
 
 	if captureGroups := mcFormatRegex.FindStringSubmatch(mcFormatDigest); captureGroups == nil {
-		return digest, ErrorMalformedArgon2Digest
+		return digest, ErrMalformedArgon2Digest
 	} else if version, err := strconv.ParseInt(captureGroups[mcFormatRegexVersionCapture], 10, 32); err != nil {
 		return digest, err
 	} else if memoryCost, err := strconv.ParseUint(captureGroups[mcFormatRegexMemoryCostCapture], 10, 32); err != nil {

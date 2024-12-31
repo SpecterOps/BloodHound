@@ -46,11 +46,11 @@ import (
 )
 
 var (
-	ErrInvalidAuth                    = errors.New("invalid authentication")
-	ErrNoUserSecret                   = errors.New("user does not have a secret auth provider registered")
-	ErrUserDisabled                   = errors.New("user disabled")
-	ErrorUserNotAuthorizedForProvider = errors.New("user not authorized for this provider")
-	ErrorInvalidAuthProvider          = errors.New("invalid auth provider")
+	ErrInvalidAuth                  = errors.New("invalid authentication")
+	ErrNoUserSecret                 = errors.New("user does not have a secret auth provider registered")
+	ErrUserDisabled                 = errors.New("user disabled")
+	ErrUserNotAuthorizedForProvider = errors.New("user not authorized for this provider")
+	ErrInvalidAuthProvider          = errors.New("invalid auth provider")
 )
 
 func parseRequestDate(rawDate string) (time.Time, error) {
@@ -239,7 +239,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 	} else if authContext, err := s.ctxInitializer.InitContextFromToken(request.Context(), authToken); err != nil {
 		return handleAuthDBError(err)
 	} else if user, isUser := auth.GetUserFromAuthCtx(authContext); isUser && user.IsDisabled {
-		return authContext, http.StatusForbidden, errors.New("user disabled")
+		return authContext, http.StatusForbidden, ErrUserDisabled
 	} else if err := validateRequestTime(serverTime, requestDate); err != nil {
 		return auth.Context{}, http.StatusUnauthorized, err
 	} else {
@@ -384,7 +384,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 		}
 	} else {
 		if !user.SSOProviderID.Valid || ssoProvider.ID != user.SSOProviderID.Int32 {
-			auditLogFields["error"] = ErrorUserNotAuthorizedForProvider
+			auditLogFields["error"] = ErrUserNotAuthorizedForProvider
 			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
 			return
 		}
@@ -436,7 +436,7 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 		userSession.AuthProviderType = model.SessionAuthProviderOIDC
 		userSession.AuthProviderID = typedAuthProvider.ID
 	default:
-		return "", ErrorInvalidAuthProvider
+		return "", ErrInvalidAuthProvider
 	}
 
 	if newSession, err := s.db.CreateUserSession(ctx, userSession); err != nil {

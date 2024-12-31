@@ -50,7 +50,7 @@ func (s LoginResource) loginSecret(loginRequest api.LoginRequest, response http.
 	if loginDetails, err := s.authenticator.LoginWithSecret(request.Context(), loginRequest); err != nil {
 		if errors.Is(err, api.ErrInvalidAuth) || errors.Is(err, api.ErrNoUserSecret) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
-		} else if errors.Is(err, auth.ErrorInvalidOTP) {
+		} else if errors.Is(err, auth.ErrInvalidOTP) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsOTPInvalid, request), response)
 		} else if errors.Is(err, api.ErrUserDisabled) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, err.Error(), request), response)

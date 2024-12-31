@@ -20,13 +20,12 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"errors"
 	"io"
 	"strings"
 	"testing"
 	"testing/iotest"
 	"time"
-
-	"errors"
 
 	"github.com/stretchr/testify/require"
 )
