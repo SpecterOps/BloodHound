@@ -17,6 +17,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"path"
@@ -54,6 +55,17 @@ func (s *AuthProvider) FormatProviderURLs(hostUrl url.URL) {
 
 	s.LoginUri = serde.FromURL(*root.JoinPath("login"))
 	s.CallbackUri = serde.FromURL(*root.JoinPath("callback"))
+}
+
+type getRoler interface {
+	GetRole(ctx context.Context, roleID int32) (model.Role, error)
+}
+
+type jitUserCreator interface {
+	getRoler
+
+	LookupUser(ctx context.Context, principalNameOrEmail string) (model.User, error)
+	CreateUser(ctx context.Context, user model.User) (model.User, error)
 }
 
 // ListAuthProviders lists all available SSO providers (SAML and OIDC) with sorting and filtering

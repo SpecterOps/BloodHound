@@ -44,17 +44,6 @@ var (
 	ErrEmailClaimMissing    = errors.New("")
 )
 
-type getRoler interface {
-	GetRole(ctx context.Context, roleID int32) (model.Role, error)
-}
-
-type jitUserCreator interface {
-	getRoler
-
-	LookupUser(ctx context.Context, principalNameOrEmail string) (model.User, error)
-	CreateUser(ctx context.Context, user model.User) (model.User, error)
-}
-
 type oidcClaims struct {
 	Name        string `json:"name"`
 	FamilyName  string `json:"family_name"`
@@ -77,7 +66,7 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 
 	if err := api.ReadJSONRequestPayloadLimited(&upsertReq, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if ssoProvider, err := patchOIDCProvider(request.Context(), ssoProvider, upsertReq, s.db); errors.Is(err, ErrOIDCProviderMissing) {
+	} else if ssoProvider, err := updateOIDCProvider(request.Context(), ssoProvider, upsertReq, s.db); errors.Is(err, ErrOIDCProviderMissing) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if errors.Is(err, ErrOIDCIssuerURLInvalid) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "issuer url is invalid", request), response)
@@ -94,7 +83,7 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 	}
 }
 
-func patchOIDCProvider(ctx context.Context, ssoProvider model.SSOProvider, upsertReq UpsertOIDCProviderRequest, r getRoler) (model.SSOProvider, error) {
+func updateOIDCProvider(ctx context.Context, ssoProvider model.SSOProvider, upsertReq UpsertOIDCProviderRequest, r getRoler) (model.SSOProvider, error) {
 	if ssoProvider.OIDCProvider == nil {
 		return ssoProvider, ErrOIDCProviderMissing
 	}
@@ -115,7 +104,7 @@ func patchOIDCProvider(ctx context.Context, ssoProvider model.SSOProvider, upser
 		ssoProvider.OIDCProvider.Issuer = upsertReq.Issuer
 	}
 
-	// Need to ensure that if no config is specified, we don't accidentally wipe the existing autoprovision
+	// Need to ensure that if no config is specified, we don't accidentally wipe the existing configuration
 	if upsertReq.Config != nil {
 		if !upsertReq.Config.AutoProvision.Enabled {
 			ssoProvider.Config.AutoProvision = model.SSOProviderAutoProvisionConfig{}
@@ -139,7 +128,7 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, validated.Error(), request), response)
 	} else if upsertReq.Config == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "config is required", request), response)
-	} else if _, err := s.db.GetRole(request.Context(), int32(upsertReq.Config.AutoProvision.DefaultRoleId)); err != nil {
+	} else if _, err := s.db.GetRole(request.Context(), upsertReq.Config.AutoProvision.DefaultRoleId); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
 	} else if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), upsertReq.Name, upsertReq.Issuer, upsertReq.ClientID, *upsertReq.Config); errors.Is(err, database.ErrDuplicateSSOProviderName) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseSSOProviderDuplicateName, request), response)

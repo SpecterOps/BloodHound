@@ -49,11 +49,6 @@ func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, issuer, cli
 		}
 	)
 
-	// If we have a disabled autoprovision, wipe the auto provision config
-	if !config.AutoProvision.Enabled {
-		config.AutoProvision = model.SSOProviderAutoProvisionConfig{}
-	}
-
 	// Create both the sso_providers and oidc_providers rows in a single transaction
 	// If one of these requests errors, both changes will be rolled back
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {

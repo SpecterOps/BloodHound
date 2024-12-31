@@ -46,6 +46,11 @@ type SSOProviderData interface {
 // CreateSSOProvider creates an entry in the sso_providers table
 // A slug will be created for the SSO Provider using the name argument as a base. The name will be lower cased and all spaces are replaced with `-`
 func (s *BloodhoundDB) CreateSSOProvider(ctx context.Context, name string, authProvider model.SessionAuthProvider, config model.SSOProviderConfig) (model.SSOProvider, error) {
+	// If we have a disabled autoprovision, wipe the auto provision config
+	if !config.AutoProvision.Enabled {
+		config.AutoProvision = model.SSOProviderAutoProvisionConfig{}
+	}
+
 	var (
 		provider = model.SSOProvider{
 			Name:   name,
@@ -191,6 +196,11 @@ func (s *BloodhoundDB) UpdateSSOProvider(ctx context.Context, ssoProvider model.
 	auditEntry := model.AuditEntry{
 		Action: model.AuditLogActionUpdateSSOIdentityProvider,
 		Model:  &ssoProvider,
+	}
+
+	// If we have a disabled autoprovision, wipe the auto provision config
+	if !ssoProvider.Config.AutoProvision.Enabled {
+		ssoProvider.Config.AutoProvision = model.SSOProviderAutoProvisionConfig{}
 	}
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
