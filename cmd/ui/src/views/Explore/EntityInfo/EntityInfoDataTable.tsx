@@ -28,7 +28,7 @@ import { addSnackbar } from 'src/ducks/global/actions';
 import { transformFlatGraphResponse } from 'src/utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
-const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, endpoint, sections }) => {
+const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, endpoint, countLabel, sections }) => {
     const dispatch = useDispatch();
 
     const countQuery = useQuery(
@@ -83,12 +83,18 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
 
     let count: number | undefined;
     if (Array.isArray(countQuery.data)) {
-        count = countQuery.data.reduce((acc, val) => {
-            const count = val.count ?? 0;
-            return acc + count;
-        }, 0);
+        if (countLabel !== undefined) {
+            countQuery.data.forEach((sectionData: any) => {
+                if (sectionData.countLabel === countLabel) count = sectionData.count;
+            });
+        } else {
+            count = countQuery.data.reduce((acc, val) => {
+                const count = val?.count ?? 0;
+                return acc + count;
+            }, 0);
+        }
     } else if (countQuery.data) {
-        count = countQuery.data.count ?? 0;
+        count = countQuery.data?.count ?? 0;
     }
 
     return (
