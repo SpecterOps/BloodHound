@@ -16,9 +16,34 @@
 
 import { render, screen } from '../../test-utils';
 import NoDataDialog from '.';
+import { UseQueryResult } from 'react-query';
 
 const gettingStartedLinkText = 'Getting Started guide';
 const fileIngestLinkText = 'start by uploading your data';
+const mockUseAvailableDomainsQuery: UseQueryResult<any, Error> = {
+    data: [],
+    isLoading: false,
+    isError: false,
+    isSuccess: true,
+    isIdle: false,
+    isLoadingError: false,
+    isRefetchError: false,
+    status: 'success',
+    failureCount: 0,
+    dataUpdatedAt: 0,
+    errorUpdatedAt: 0,
+    errorUpdateCount: 0,
+    isFetched: true,
+    isFetchedAfterMount: true,
+    isFetching: false,
+    isPlaceholderData: false,
+    isPreviousData: false,
+    isRefetching: false,
+    isStale: false,
+    error: null,
+    remove: vi.fn(),
+    refetch: vi.fn(),
+};
 
 describe('NoDataDialog', () => {
     it('should render', () => {
@@ -26,6 +51,7 @@ describe('NoDataDialog', () => {
             <NoDataDialog
                 gettingStartedLink={<>{gettingStartedLinkText}</>}
                 fileIngestLink={<>{fileIngestLinkText}</>}
+                useAvailableDomainsQuery={mockUseAvailableDomainsQuery}
             />
         );
 
