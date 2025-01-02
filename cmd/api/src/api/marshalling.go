@@ -19,12 +19,12 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
@@ -36,9 +36,11 @@ import (
 const (
 	// DefaultAPIPayloadReadLimitBytes sets the maximum API body size to 10MB
 	DefaultAPIPayloadReadLimitBytes = 10 * 1024 * 1024
+)
 
-	ErrorContentTypeJson = errors.Error("content type must be application/json")
-	ErrorNoRequestBody   = errors.Error("request body is empty")
+var (
+	ErrContentTypeJson = errors.New("content type must be application/json")
+	ErrNoRequestBody   = errors.New("request body is empty")
 )
 
 // These are the standardized API V2 response structures
@@ -190,7 +192,7 @@ func WriteBinaryResponse(_ context.Context, data []byte, filename string, status
 
 func ReadJsonResponsePayload(value any, response *http.Response) error {
 	if !utils.HeaderMatches(response.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
-		return ErrorContentTypeJson
+		return ErrContentTypeJson
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -203,7 +205,7 @@ func ReadJsonResponsePayload(value any, response *http.Response) error {
 
 func ReadAPIV2ResponsePayload(value any, response *http.Response) error {
 	if !utils.HeaderMatches(response.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
-		return ErrorContentTypeJson
+		return ErrContentTypeJson
 	}
 
 	var wrapper BasicResponse
@@ -221,7 +223,7 @@ func ReadAPIV2ResponsePayload(value any, response *http.Response) error {
 
 func ReadAPIV2ResponseWrapperPayload(value any, response *http.Response) error {
 	if !utils.HeaderMatches(response.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
-		return ErrorContentTypeJson
+		return ErrContentTypeJson
 	}
 
 	if content, err := io.ReadAll(response.Body); err != nil {
@@ -235,7 +237,7 @@ func ReadAPIV2ResponseWrapperPayload(value any, response *http.Response) error {
 
 func ReadAPIV2ErrorResponsePayload(value *ErrorWrapper, response *http.Response) error {
 	if !utils.HeaderMatches(response.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
-		return ErrorContentTypeJson
+		return ErrContentTypeJson
 	}
 
 	if content, err := io.ReadAll(response.Body); err != nil {
@@ -249,11 +251,11 @@ func ReadAPIV2ErrorResponsePayload(value *ErrorWrapper, response *http.Response)
 
 func ReadJSONRequestPayloadLimited(value any, request *http.Request) error {
 	if !utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
-		return ErrorContentTypeJson
+		return ErrContentTypeJson
 	}
 
 	if request.Body == nil {
-		return ErrorNoRequestBody
+		return ErrNoRequestBody
 	}
 
 	var (

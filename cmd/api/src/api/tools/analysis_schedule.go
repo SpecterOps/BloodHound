@@ -33,12 +33,12 @@ type ScheduledAnalysisConfiguration struct {
 	RRule   string `json:"rrule"`
 }
 
-const ErrorInvalidRrule = "invalid rrule specified: %v"
-const ErrorFailedRetrievingData = "error retrieving configuration data: %v"
+const ErrInvalidRrule = "invalid rrule specified: %v"
+const ErrFailedRetrievingData = "error retrieving configuration data: %v"
 
 func (s ToolContainer) GetScheduledAnalysisConfiguration(response http.ResponseWriter, request *http.Request) {
 	if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.db); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf(ErrorFailedRetrievingData, err), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf(ErrFailedRetrievingData, err), request), response)
 	} else {
 		api.WriteJSONResponse(request.Context(), config, http.StatusOK, response)
 	}
@@ -70,11 +70,11 @@ func (s ToolContainer) SetScheduledAnalysisConfiguration(response http.ResponseW
 		//Validate that the rrule is a good rule. We're going to require a DTSTART to keep scheduling consistent.
 		//We're also going to reject UNTIL/COUNT because it will most likely break the pipeline once it's hit without being invalid
 		if _, err := rrule.StrToRRule(config.RRule); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrorInvalidRrule, err), request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrInvalidRrule, err), request), response)
 		} else if strings.Contains(strings.ToUpper(config.RRule), "UNTIL") || strings.Contains(strings.ToUpper(config.RRule), "COUNT") {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrorInvalidRrule, "count/until not supported"), request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrInvalidRrule, "count/until not supported"), request), response)
 		} else if !strings.Contains(strings.ToUpper(config.RRule), "DTSTART") {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrorInvalidRrule, "dtstart is required"), request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrInvalidRrule, "dtstart is required"), request), response)
 		} else {
 			nextParameter := appcfg.ScheduledAnalysisParameter{
 				Enabled: true,

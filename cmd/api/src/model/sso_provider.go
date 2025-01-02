@@ -78,10 +78,8 @@ func (s SSOProvider) AuditData() AuditData {
 	switch s.Type {
 	case SessionAuthProviderSAML:
 		details = s.SAMLProvider
-		break
 	case SessionAuthProviderOIDC:
 		details = s.OIDCProvider
-		break
 	}
 
 	return AuditData{

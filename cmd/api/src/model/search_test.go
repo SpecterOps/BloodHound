@@ -44,7 +44,7 @@ func TestDomainSelectors_GetFilterableColumns(t *testing.T) {
 func TestDomainSelectors_GetValidFilterPredicatesAsStrings(t *testing.T) {
 	domains := DomainSelectors{}
 	_, err := domains.GetValidFilterPredicatesAsStrings("foo")
-	require.Equal(t, ErrorResponseDetailsColumnNotFilterable, err.Error())
+	require.Equal(t, ErrResponseDetailsColumnNotFilterable, err.Error())
 
 	columns := []string{"name", "objectid", "collected"}
 
@@ -63,7 +63,7 @@ func TestDomainSelectors_GetOrderCriteria_InvalidSortColumn(t *testing.T) {
 	params.Add("sort_by", "invalidColumn")
 
 	_, err := domains.GetOrderCriteria(params)
-	require.Equal(t, ErrorResponseDetailsColumnNotSortable, err.Error())
+	require.Equal(t, ErrResponseDetailsColumnNotSortable, err.Error())
 }
 
 func TestDomainSelectors_GetOrderCriteria_Success(t *testing.T) {
@@ -92,7 +92,7 @@ func TestDomainSelectors_GetFilterCriteria_InvalidFilterColumn(t *testing.T) {
 	domains := DomainSelectors{}
 
 	_, err = domains.GetFilterCriteria(request)
-	require.Equal(t, ErrorResponseDetailsColumnNotFilterable, err.Error())
+	require.Equal(t, ErrResponseDetailsColumnNotFilterable, err.Error())
 }
 
 func TestDomainSelectors_GetFilterCriteria_InvalidFilterPredicate(t *testing.T) {
@@ -106,7 +106,7 @@ func TestDomainSelectors_GetFilterCriteria_InvalidFilterPredicate(t *testing.T) 
 	domains := DomainSelectors{}
 
 	_, err = domains.GetFilterCriteria(request)
-	require.Equal(t, ErrorResponseDetailsFilterPredicateNotSupported, err.Error())
+	require.Equal(t, ErrResponseDetailsFilterPredicateNotSupported, err.Error())
 }
 
 func TestDomainSelectors_GetFilterCriteria_Success(t *testing.T) {

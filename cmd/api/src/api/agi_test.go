@@ -132,7 +132,7 @@ func TestAssetGroupMembers_Filter_Equals(t *testing.T) {
 		},
 	})
 	require.NotNil(t, err)
-	require.Contains(t, err.Error(), model.ErrorResponseDetailsColumnNotFilterable)
+	require.Contains(t, err.Error(), model.ErrResponseDetailsColumnNotFilterable)
 
 	_, err = input.Filter(model.QueryParameterFilterMap{
 		"object_id": model.QueryParameterFilters{
@@ -144,7 +144,7 @@ func TestAssetGroupMembers_Filter_Equals(t *testing.T) {
 		},
 	})
 	require.NotNil(t, err)
-	require.Contains(t, err.Error(), model.ErrorResponseDetailsFilterPredicateNotSupported)
+	require.Contains(t, err.Error(), model.ErrResponseDetailsFilterPredicateNotSupported)
 
 	// filter on object_id
 	output, err := input.Filter(model.QueryParameterFilterMap{

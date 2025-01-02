@@ -19,6 +19,7 @@ package crypto
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"regexp"
 	"runtime"
@@ -26,16 +27,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/errors"
-
 	"github.com/shirou/gopsutil/v3/mem"
-
 	"golang.org/x/crypto/argon2"
 )
 
 const (
 	SecretDigesterMethodArgon2        = "argon2"
-	ErrorMalformedArgon2Digest        = errors.Error("argon2 digest is malformed")
 	Argon2SaltByteLength              = 16
 	Argon2DigestByteLength     uint32 = 16
 	Argon2idVariant                   = "argon2id"
@@ -68,7 +65,8 @@ const (
 )
 
 var (
-	mcFormatRegex = regexp.MustCompile(mcFormatRegexPattern)
+	mcFormatRegex            = regexp.MustCompile(mcFormatRegexPattern)
+	ErrMalformedArgon2Digest = errors.New("argon2 digest is malformed")
 )
 
 type ComputerSpecs struct {
@@ -111,7 +109,7 @@ func (s Argon2) ParseDigest(mcFormatDigest string) (SecretDigest, error) {
 	var digest Argon2Digest
 
 	if captureGroups := mcFormatRegex.FindStringSubmatch(mcFormatDigest); captureGroups == nil {
-		return digest, ErrorMalformedArgon2Digest
+		return digest, ErrMalformedArgon2Digest
 	} else if version, err := strconv.ParseInt(captureGroups[mcFormatRegexVersionCapture], 10, 32); err != nil {
 		return digest, err
 	} else if memoryCost, err := strconv.ParseUint(captureGroups[mcFormatRegexMemoryCostCapture], 10, 32); err != nil {
