@@ -16,7 +16,10 @@
 
 import { Given, When } from '@cucumber/cucumber';
 import { User, IUserResult } from '../../../prisma/seed.js';
+import LoginPage from '../pageObjects/loginPage.js';
+import PlaywrightWorld from '../worlds/playwrightWorld.js';
 
+let loginPageObject: LoginPage;
 let newUser: Promise<IUserResult>;
 
 Given('Create a new user with {string} role', async function (roleType: string) {
@@ -32,22 +35,27 @@ Given('Create a new user with {string} role with disabled status', async functio
     newUser = user.create();
 });
 
-Given('User navigates to the login page', async function () {
-    await this.fixture.page.goto(`${process.env.BASEURL}/ui/login`);
-});
-
 Given('User enters valid username', async function () {
-    await this.fixture.page.locator('#username').fill((await newUser).principal_name);
+    await loginPageObject.enterUserName((await newUser).principal_name);
 });
 
 Given('User enters valid email', async function () {
-    await this.fixture.page.locator('#username').fill((await newUser).email_address);
+    await loginPageObject.enterEmail((await newUser).email_address);
 });
 
 Given('User enters valid password', async function () {
-    await this.fixture.page.locator('#password').fill((await newUser).uniquePassword);
+    loginPageObject.enterPassword((await newUser).uniquePassword);
+});
+
+When('User navigates to the login page', async function (this: PlaywrightWorld) {
+    loginPageObject = new LoginPage(this.fixture.page);
+    loginPageObject.navigateToLoginPage();
+});
+
+When('User visits {string} page', async function (text: string) {
+    await this.fixture.page.goto(`${process.env.BASEURL}/ui/${text}`, { waitUntil: 'domcontentloaded' });
 });
 
 When('User clicks on the login button', async function () {
-    await this.fixture.page.getByRole('button', { name: 'LOGIN', exact: true }).click();
+    loginPageObject.clickLoginButton();
 });
