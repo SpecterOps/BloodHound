@@ -15,22 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Dialog, DialogContent, DialogDescription, DialogPortal, DialogTitle } from '@bloodhoundenterprise/doodleui';
-import { UseQueryResult } from 'react-query';
 
 type NoDataDialogProps = {
     fileIngestLink: JSX.Element;
     gettingStartedLink: JSX.Element;
-    useAvailableDomainsQuery: UseQueryResult;
+    open: boolean;
 };
 
-export const NoDataDialog: React.FC<NoDataDialogProps> = ({
-    fileIngestLink,
-    gettingStartedLink,
-    useAvailableDomainsQuery,
-}) => {
+export const NoDataDialog: React.FC<NoDataDialogProps> = ({ fileIngestLink, gettingStartedLink, open }) => {
     return (
         <Dialog
-            open={Array.isArray(useAvailableDomainsQuery.data) && useAvailableDomainsQuery.data?.length === 0}
+            open={open}
             onOpenChange={() => {
                 // unblocks the body from being clickable so the user can go to another tab
                 document.body.style.pointerEvents = '';
