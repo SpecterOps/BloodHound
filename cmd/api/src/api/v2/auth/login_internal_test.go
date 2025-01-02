@@ -84,7 +84,7 @@ func TestLoginFailure(t *testing.T) {
 	}
 
 	mockAuthenticator := api_mocks.NewMockAuthenticator(mockCtrl)
-	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req1).Return(api.LoginDetails{User: model.User{EULAAccepted: true}}, auth.ErrorInvalidOTP)
+	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req1).Return(api.LoginDetails{User: model.User{EULAAccepted: true}}, auth.ErrInvalidOTP)
 	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req2).Return(api.LoginDetails{User: model.User{EULAAccepted: true}}, api.ErrInvalidAuth)
 	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req3).Return(api.LoginDetails{User: model.User{EULAAccepted: true}}, fmt.Errorf("db error"))
 	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req4).Return(api.LoginDetails{User: model.User{EULAAccepted: true}}, api.ErrUserDisabled)

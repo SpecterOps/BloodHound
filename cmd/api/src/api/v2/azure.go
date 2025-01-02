@@ -18,6 +18,7 @@ package v2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"sort"
@@ -26,7 +27,6 @@ import (
 	"github.com/specterops/bloodhound/analysis/azure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/errors"
 	azure2 "github.com/specterops/bloodhound/src/analysis/azure"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/bloodhoundgraph"
@@ -41,11 +41,6 @@ const (
 	objectIDQueryParameterName                = "object_id"
 	relatedEntityTypeQueryParameterName       = "related_entity_type"
 	relatedEntityReturnTypeQueryParameterName = "type"
-
-	errBadRelatedEntityReturnType = errors.Error("invalid return type requested for related entities")
-	errParameterRequired          = errors.Error("missing required parameter")
-	errParameterSkip              = errors.Error("invalid skip parameter")
-	errParameterRelatedEntityType = errors.Error("invalid related entity type")
 
 	entityTypeBase                = "az-base"
 	entityTypeUsers               = "users"
@@ -67,6 +62,13 @@ const (
 	entityTypeServicePrincipals   = "service-principals"
 	entityTypeRoles               = "roles"
 	entityTypeFunctionApps        = "function-apps"
+)
+
+var (
+	errBadRelatedEntityReturnType = errors.New("invalid return type requested for related entities")
+	errParameterRequired          = errors.New("missing required parameter")
+	errParameterSkip              = errors.New("invalid skip parameter")
+	errParameterRelatedEntityType = errors.New("invalid related entity type")
 )
 
 func graphRelatedEntityType(ctx context.Context, db graph.Database, entityType, objectID string, request *http.Request) (any, int, *api.ErrorWrapper) {
