@@ -17,13 +17,10 @@
 package auth_test
 
 import (
-	"context"
 	"net/http"
-	"net/http/httptest"
 	"net/url"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
@@ -34,37 +31,43 @@ import (
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils/test"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
 func TestManagementResource_ListAuthProviders(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	defer mockCtrl.Finish()
+	const endpoint = "/api/v2/sso-providers"
 
-	t.Run("successfully list auth providers without query parameters", func(t *testing.T) {
-		oidcProvider := model.OIDCProvider{
+	var (
+		mockCtrl          = gomock.NewController(t)
+		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+		reqCtx            = &ctx.Context{Host: &url.URL{}}
+
+		oidcProvider = model.OIDCProvider{
 			SSOProviderID: 1,
 			ClientID:      "client-id-1",
 			Issuer:        "https://issuer1.com",
 		}
-
-		samlProvider := model.SAMLProvider{
+		samlProvider = model.SAMLProvider{
 			Serial:        model.Serial{ID: 2},
 			Name:          "SAML Provider 1",
 			DisplayName:   "SAML Provider One",
 			IssuerURI:     "https://saml-issuer1.com",
 			SSOProviderID: null.Int32From(2),
 		}
-
-		ssoProviders := []model.SSOProvider{
+		ssoProviders = []model.SSOProvider{
 			{
 				Serial:       model.Serial{ID: 1},
 				Name:         "OIDC Provider 1",
 				Slug:         "oidc-provider-1",
 				Type:         model.SessionAuthProviderOIDC,
 				OIDCProvider: &oidcProvider,
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						DefaultRoleId: 3,
+						RoleProvision: true,
+					},
+				},
 			},
 			{
 				Serial:       model.Serial{ID: 2},
@@ -72,202 +75,84 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 				Slug:         "saml-provider-1",
 				Type:         model.SessionAuthProviderSAML,
 				SAMLProvider: &samlProvider,
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						DefaultRoleId: 2,
+						RoleProvision: false,
+					},
+				},
 			},
 		}
+	)
+	defer mockCtrl.Finish()
 
+	t.Run("successfully list auth providers without query parameters", func(t *testing.T) {
 		// default ordering and no filters
-		mockDB.EXPECT().GetAllSSOProviders(
-			gomock.Any(),
-			"created_at",
-			model.SQLFilter{SQLString: "", Params: nil},
-		).Return(ssoProviders, nil)
+		mockDB.EXPECT().GetAllSSOProviders(gomock.Any(), "created_at", model.SQLFilter{}).Return(ssoProviders, nil)
 
-		endpoint := "/api/v2/sso-providers"
-
-		bhCtx := &ctx.Context{
-			Host: &url.URL{
-				Scheme: "http",
-				Host:   "example.com",
-			},
-		}
-		requestContext := context.WithValue(context.Background(), ctx.ValueKey, bhCtx)
-
-		req, err := http.NewRequestWithContext(requestContext, "GET", endpoint, nil)
-		require.NoError(t, err)
-		req.Header.Set("Content-Type", "application/json")
-		req.Host = "example.com"
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListAuthProviders).Methods("GET")
-
-		rr := httptest.NewRecorder()
-		router.ServeHTTP(rr, req)
-
-		require.Equal(t, http.StatusOK, rr.Code)
+		test.Request(t).
+			WithMethod(http.MethodGet).
+			WithContext(reqCtx).
+			WithURL(endpoint).
+			OnHandlerFunc(resources.ListAuthProviders).
+			Require().
+			ResponseStatusCode(http.StatusOK)
 	})
 
-	oidcProvider := model.OIDCProvider{
-		SSOProviderID: 1,
-		ClientID:      "client-id-1",
-		Issuer:        "https://issuer1.com",
-	}
-
-	samlProvider := model.SAMLProvider{
-		Serial:        model.Serial{ID: 2},
-		Name:          "SAML Provider 1",
-		DisplayName:   "SAML Provider One",
-		IssuerURI:     "https://saml-issuer1.com",
-		SSOProviderID: null.Int32From(2),
-	}
-
-	ssoProviders := []model.SSOProvider{
-		{
-			Serial:       model.Serial{ID: 2},
-			Name:         "SAML Provider 1",
-			Slug:         "saml-provider-1",
-			Type:         model.SessionAuthProviderSAML,
-			SAMLProvider: &samlProvider,
-		},
-		{
-			Serial:       model.Serial{ID: 1},
-			Name:         "OIDC Provider 1",
-			Slug:         "oidc-provider-1",
-			Type:         model.SessionAuthProviderOIDC,
-			OIDCProvider: &oidcProvider,
-		},
-	}
-
 	t.Run("successfully list auth providers with sorting", func(t *testing.T) {
-
 		// sorting by name descending
-		mockDB.EXPECT().GetAllSSOProviders(
-			gomock.Any(),
-			"name desc",
-			model.SQLFilter{SQLString: "", Params: nil},
-		).Return(ssoProviders, nil)
+		mockDB.EXPECT().GetAllSSOProviders(gomock.Any(), "name desc", model.SQLFilter{SQLString: "", Params: nil}).Return(ssoProviders, nil)
+		const reqUrl = endpoint + "?sort_by=-name"
 
-		endpoint := "/api/v2/sso-providers?sort_by=-name"
-
-		bhCtx := &ctx.Context{
-			Host: &url.URL{
-				Scheme: "http",
-				Host:   "example.com",
-			},
-		}
-		requestContext := context.WithValue(context.Background(), ctx.ValueKey, bhCtx)
-
-		req, err := http.NewRequestWithContext(requestContext, "GET", endpoint, nil)
-		require.NoError(t, err)
-		req.Header.Set("Content-Type", "application/json")
-		req.Host = "example.com"
-
-		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/sso-providers", resources.ListAuthProviders).Methods("GET")
-
-		rr := httptest.NewRecorder()
-		router.ServeHTTP(rr, req)
-
-		require.Equal(t, http.StatusOK, rr.Code)
+		test.Request(t).
+			WithMethod(http.MethodGet).
+			WithContext(reqCtx).
+			WithURL(reqUrl).
+			OnHandlerFunc(resources.ListAuthProviders).
+			Require().
+			ResponseStatusCode(http.StatusOK)
 	})
 
 	t.Run("successfully list auth providers with filtering", func(t *testing.T) {
-		oidcProvider := model.OIDCProvider{
-			SSOProviderID: 1,
-			ClientID:      "client-id-1",
-			Issuer:        "https://issuer1.com",
-		}
-		ssoProviders := []model.SSOProvider{
-			{
-				Serial:       model.Serial{ID: 1},
-				Name:         "OIDC Provider 1",
-				Slug:         "oidc-provider-1",
-				Type:         model.SessionAuthProviderOIDC,
-				OIDCProvider: &oidcProvider,
-			},
-		}
-
 		// filtering by name
-		mockDB.EXPECT().GetAllSSOProviders(
-			gomock.Any(),
-			"created_at",
-			model.SQLFilter{
-				SQLString: "name = ?",
-				Params:    []interface{}{"OIDC Provider 1"},
-			},
-		).Return(ssoProviders, nil)
+		mockDB.EXPECT().GetAllSSOProviders(gomock.Any(), "created_at", model.SQLFilter{
+			SQLString: "name = ?",
+			Params:    []interface{}{"OIDC Provider 1"},
+		}).Return([]model.SSOProvider{ssoProviders[0]}, nil)
+		const reqUrl = endpoint + "?name=eq:OIDC Provider 1"
 
-		endpoint := "/api/v2/sso-providers?name=eq:OIDC Provider 1"
-
-		bhCtx := &ctx.Context{
-			Host: &url.URL{
-				Scheme: "http",
-				Host:   "example.com",
-			},
-		}
-		requestContext := context.WithValue(context.Background(), ctx.ValueKey, bhCtx)
-
-		req, err := http.NewRequestWithContext(requestContext, "GET", endpoint, nil)
-		require.NoError(t, err)
-		req.Header.Set("Content-Type", "application/json")
-		req.Host = "example.com"
-
-		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/sso-providers", resources.ListAuthProviders).Methods("GET")
-
-		rr := httptest.NewRecorder()
-		router.ServeHTTP(rr, req)
-
-		require.Equal(t, http.StatusOK, rr.Code)
+		test.Request(t).
+			WithMethod(http.MethodGet).
+			WithContext(reqCtx).
+			WithURL(reqUrl).
+			OnHandlerFunc(resources.ListAuthProviders).
+			Require().
+			ResponseStatusCode(http.StatusOK)
 	})
 
 	t.Run("fail to list auth providers with invalid sort field", func(t *testing.T) {
-		endpoint := "/api/v2/sso-providers?sort_by=invalid_field"
+		const reqUrl = endpoint + "?sort_by=invalid_field"
 
-		bhCtx := &ctx.Context{
-			Host: &url.URL{
-				Scheme: "http",
-				Host:   "example.com",
-			},
-		}
-		requestContext := context.WithValue(context.Background(), ctx.ValueKey, bhCtx)
-
-		req, err := http.NewRequestWithContext(requestContext, "GET", endpoint, nil)
-		require.NoError(t, err)
-		req.Header.Set("Content-Type", "application/json")
-		req.Host = "example.com"
-
-		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/sso-providers", resources.ListAuthProviders).Methods("GET")
-
-		rr := httptest.NewRecorder()
-		router.ServeHTTP(rr, req)
-
-		require.Equal(t, http.StatusBadRequest, rr.Code)
+		test.Request(t).
+			WithMethod(http.MethodGet).
+			WithContext(reqCtx).
+			WithURL(reqUrl).
+			OnHandlerFunc(resources.ListAuthProviders).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest)
 	})
 
 	t.Run("fail to list auth providers with invalid filter predicate", func(t *testing.T) {
-		endpoint := "/api/v2/sso-providers?name=invalid_predicate:Provider"
+		const reqUrl = endpoint + "?name=invalid_predicate:Provider"
 
-		bhCtx := &ctx.Context{
-			Host: &url.URL{
-				Scheme: "http",
-				Host:   "example.com",
-			},
-		}
-		requestContext := context.WithValue(context.Background(), ctx.ValueKey, bhCtx)
-
-		req, err := http.NewRequestWithContext(requestContext, "GET", endpoint, nil)
-		require.NoError(t, err)
-		req.Header.Set("Content-Type", "application/json")
-		req.Host = "example.com"
-
-		router := mux.NewRouter()
-		router.HandleFunc("/api/v2/sso-providers", resources.ListAuthProviders).Methods("GET")
-
-		rr := httptest.NewRecorder()
-		router.ServeHTTP(rr, req)
-
-		require.Equal(t, http.StatusBadRequest, rr.Code)
+		test.Request(t).
+			WithMethod(http.MethodGet).
+			WithContext(reqCtx).
+			WithURL(reqUrl).
+			OnHandlerFunc(resources.ListAuthProviders).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest)
 	})
 }
 

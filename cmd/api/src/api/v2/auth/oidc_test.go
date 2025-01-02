@@ -37,7 +37,8 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("successfully create a new OIDCProvider", func(t *testing.T) {
-		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "Bloodhound gang", "https://localhost/auth", "bloodhound").Return(model.OIDCProvider{
+		mockDB.EXPECT().GetRole(gomock.Any(), int32(0)).Return(model.Role{}, nil)
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "Bloodhound gang", "https://localhost/auth", "bloodhound", model.SSOProviderConfig{}).Return(model.OIDCProvider{
 			ClientID: "bloodhound",
 			Issuer:   "https://localhost/auth",
 		}, nil)
@@ -47,10 +48,59 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 				Name:     "Bloodhound gang",
 				Issuer:   "https://localhost/auth",
 				ClientID: "bloodhound",
+				Config:   &model.SSOProviderConfig{},
 			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).
 			Require().
 			ResponseStatusCode(http.StatusCreated)
+	})
+
+	t.Run("successfully create a new OIDCProvider with config values", func(t *testing.T) {
+		config := model.SSOProviderConfig{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
+				Enabled:       true,
+				DefaultRoleId: 3,
+				RoleProvision: true,
+			},
+		}
+
+		mockDB.EXPECT().GetRole(gomock.Any(), int32(3)).Return(model.Role{Serial: model.Serial{ID: 3}}, nil)
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "Bloodhound gang2", "https://localhost/auth", "bloodhound", config).Return(model.OIDCProvider{
+			ClientID: "bloodhound",
+			Issuer:   "https://localhost/auth",
+		}, nil)
+
+		test.Request(t).
+			WithBody(auth.UpsertOIDCProviderRequest{
+				Name:     "Bloodhound gang2",
+				Issuer:   "https://localhost/auth",
+				ClientID: "bloodhound",
+				Config:   &config,
+			}).
+			OnHandlerFunc(resources.CreateOIDCProvider).
+			Require().
+			ResponseStatusCode(http.StatusCreated)
+	})
+
+	t.Run("error invalid role id", func(t *testing.T) {
+		mockDB.EXPECT().GetRole(gomock.Any(), int32(7)).Return(model.Role{Serial: model.Serial{ID: 7}}, fmt.Errorf("role id is invalid"))
+
+		test.Request(t).
+			WithBody(auth.UpsertOIDCProviderRequest{
+				Name:     "Gotham Net 2",
+				Issuer:   "https://gotham-2.net",
+				ClientID: "gotham-net-2",
+				Config: &model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						DefaultRoleId: 7,
+						RoleProvision: true,
+					},
+				},
+			}).
+			OnHandlerFunc(resources.CreateOIDCProvider).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest)
 	})
 
 	t.Run("error parsing body request", func(t *testing.T) {
@@ -84,13 +134,15 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	})
 
 	t.Run("error creating oidc provider db entry", func(t *testing.T) {
-		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/auth", "bloodhound").Return(model.OIDCProvider{}, fmt.Errorf("error"))
+		mockDB.EXPECT().GetRole(gomock.Any(), int32(0)).Return(model.Role{}, nil)
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/auth", "bloodhound", model.SSOProviderConfig{}).Return(model.OIDCProvider{}, fmt.Errorf("error"))
 
 		test.Request(t).
 			WithBody(auth.UpsertOIDCProviderRequest{
 				Name:     "test",
 				Issuer:   "https://localhost/auth",
 				ClientID: "bloodhound",
+				Config:   &model.SSOProviderConfig{},
 			}).
 			OnHandlerFunc(resources.CreateOIDCProvider).
 			Require().
@@ -128,6 +180,53 @@ func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 			OnHandlerFunc(resources.UpdateSSOProvider).
 			Require().
 			ResponseStatusCode(http.StatusOK)
+	})
+
+	t.Run("successfully update an OIDCProvider with config values", func(t *testing.T) {
+		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(baseProvider, nil)
+		mockDB.EXPECT().GetRole(gomock.Any(), int32(3)).Return(model.Role{Serial: model.Serial{ID: 3}}, nil)
+		mockDB.EXPECT().UpdateOIDCProvider(gomock.Any(), gomock.Any())
+
+		test.Request(t).
+			WithURLPathVars(urlParams).
+			WithBody(auth.UpsertOIDCProviderRequest{
+				Name:     "Gotham Net 2",
+				Issuer:   "https://gotham-2.net",
+				ClientID: "gotham-net-2",
+				Config: &model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						DefaultRoleId: 3,
+						RoleProvision: true,
+					},
+				},
+			}).
+			OnHandlerFunc(resources.UpdateSSOProvider).
+			Require().
+			ResponseStatusCode(http.StatusOK)
+	})
+
+	t.Run("error invalid role id", func(t *testing.T) {
+		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(baseProvider, nil)
+		mockDB.EXPECT().GetRole(gomock.Any(), int32(7)).Return(model.Role{Serial: model.Serial{ID: 7}}, fmt.Errorf("role id is invalid"))
+
+		test.Request(t).
+			WithURLPathVars(urlParams).
+			WithBody(auth.UpsertOIDCProviderRequest{
+				Name:     "Gotham Net 2",
+				Issuer:   "https://gotham-2.net",
+				ClientID: "gotham-net-2",
+				Config: &model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						DefaultRoleId: 7,
+						RoleProvision: true,
+					},
+				},
+			}).
+			OnHandlerFunc(resources.UpdateSSOProvider).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest)
 	})
 
 	t.Run("error not found while updating an unknown OIDCProvider", func(t *testing.T) {

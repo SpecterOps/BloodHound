@@ -17,6 +17,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"path"
@@ -37,11 +38,12 @@ import (
 
 // AuthProvider represents a unified SSO provider (either OIDC or SAML)
 type AuthProvider struct {
-	ID      int32       `json:"id"`
-	Name    string      `json:"name"`
-	Type    string      `json:"type"`
-	Slug    string      `json:"slug"`
-	Details interface{} `json:"details"`
+	ID      int32                   `json:"id"`
+	Name    string                  `json:"name"`
+	Type    string                  `json:"type"`
+	Slug    string                  `json:"slug"`
+	Details interface{}             `json:"details"`
+	Config  model.SSOProviderConfig `json:"config"`
 
 	LoginUri    serde.URL `json:"login_uri"`
 	CallbackUri serde.URL `json:"callback_uri"`
@@ -53,6 +55,17 @@ func (s *AuthProvider) FormatProviderURLs(hostUrl url.URL) {
 
 	s.LoginUri = serde.FromURL(*root.JoinPath("login"))
 	s.CallbackUri = serde.FromURL(*root.JoinPath("callback"))
+}
+
+type getRoler interface {
+	GetRole(ctx context.Context, roleID int32) (model.Role, error)
+}
+
+type jitUserCreator interface {
+	getRoler
+
+	LookupUser(ctx context.Context, principalNameOrEmail string) (model.User, error)
+	CreateUser(ctx context.Context, user model.User) (model.User, error)
 }
 
 // ListAuthProviders lists all available SSO providers (SAML and OIDC) with sorting and filtering
@@ -119,10 +132,11 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 		} else {
 			for _, ssoProvider := range ssoProviders {
 				provider := AuthProvider{
-					ID:   ssoProvider.ID,
-					Name: ssoProvider.Name,
-					Type: ssoProvider.Type.String(),
-					Slug: ssoProvider.Slug,
+					ID:     ssoProvider.ID,
+					Name:   ssoProvider.Name,
+					Type:   ssoProvider.Type.String(),
+					Slug:   ssoProvider.Slug,
+					Config: ssoProvider.Config,
 				}
 
 				// Format callback url from host
