@@ -57,6 +57,7 @@ export default {
         'notistack',
         'react-query',
         'js-client-library',
+        'js-file-download',
         'swagger-ui-react',
         'swagger-ui-react/swagger-ui.css',
         'prop-types',

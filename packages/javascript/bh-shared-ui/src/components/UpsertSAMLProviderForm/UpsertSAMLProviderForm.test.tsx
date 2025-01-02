@@ -22,7 +22,7 @@ describe('UpsertSAMLProviderForm', () => {
     it('should render inputs, labels, and action buttons', () => {
         const testOnClose = vi.fn();
         const testOnSubmit = vi.fn();
-        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
+        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} error={undefined} />);
 
         expect(screen.getByLabelText('SAML Provider Name')).toBeInTheDocument();
 
@@ -37,7 +37,7 @@ describe('UpsertSAMLProviderForm', () => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSubmit = vi.fn();
-        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
+        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} error={undefined} />);
 
         await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
@@ -48,7 +48,7 @@ describe('UpsertSAMLProviderForm', () => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSubmit = vi.fn();
-        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
+        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} error={undefined} />);
 
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 
@@ -65,7 +65,7 @@ describe('UpsertSAMLProviderForm', () => {
         const testOnSubmit = vi.fn();
         const validProviderName = 'test-provider-name';
         const validMetadata = new File([], 'test-metadata.xml');
-        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
+        render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} error={undefined} />);
 
         await user.type(screen.getByLabelText('SAML Provider Name'), validProviderName);
 

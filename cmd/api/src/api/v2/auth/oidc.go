@@ -163,7 +163,7 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 			ClientID:    ssoProvider.OIDCProvider.ClientID,
 			Endpoint:    provider.Endpoint(),
 			RedirectURL: getRedirectURL(hostURL, ssoProvider),
-			Scopes:      []string{"openid", "profile", "email", "email_verified", "name", "given_name", "family_name"},
+			Scopes:      []string{"openid", "profile", "email"},
 		}
 
 		// use PKCE to protect against CSRF attacks
