@@ -14,13 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Given, Then } from '@cucumber/cucumber';
+import { Then } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
+import PlaywrightWorld from '../worlds/playwrightWorld.js';
 
-Given('User visits the login page', async function () {
-    await this.fixture.page.goto(`${process.env.BASEURL}/ui/login`);
-});
-
-Then('login page displays {string}', async function (text: string) {
+Then('login page displays {string}', async function (this: PlaywrightWorld, text: string) {
     await expect(this.fixture.page.getByText(text)).toBeVisible();
 });

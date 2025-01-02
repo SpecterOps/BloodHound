@@ -18,10 +18,10 @@ Feature: Disable/Enable BHCE Users
 
   Background:
     Given Create a new user with "User" role with disabled status
-
+    Given User navigates to the login page
+    
   @e2e
   Scenario: User redirected to the disabled user page when disabled
-    Given User visits the login page
     And User enters valid email
     And User enters valid password
     When User clicks on the login button
