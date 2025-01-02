@@ -19,7 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from '../../test-utils';
 import CreateUserDialog from './CreateUserDialog';
-import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider } from 'js-client-library';
+import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 
 const testRoles = [
     { id: 1, name: 'Role 1' },
@@ -34,76 +34,48 @@ const testSSOProviders: SSOProvider[] = [
         name: 'saml-provider-1',
         slug: 'saml-provider-1',
         type: 'SAML',
-        details: {
-            idp_issuer_uri: '',
-            idp_sso_uri: '',
-            principal_attribute_mappings: null,
-            sp_issuer_uri: '',
-            sp_sso_uri: '',
-            sp_metadata_uri: '',
-            sp_acs_uri: '',
-        } as SAMLProviderInfo,
         login_uri: '',
         callback_uri: '',
         created_at: '',
         updated_at: '',
+        details: {} as SAMLProviderInfo,
+        config: {} as SSOProviderConfiguration['config'],
     },
     {
         id: 2,
         name: 'saml-provider-2',
         slug: 'saml-provider-2',
         type: 'SAML',
-        details: {
-            idp_issuer_uri: '',
-            idp_sso_uri: '',
-            principal_attribute_mappings: null,
-            sp_issuer_uri: '',
-            sp_sso_uri: '',
-            sp_metadata_uri: '',
-            sp_acs_uri: '',
-        } as SAMLProviderInfo,
         login_uri: '',
         callback_uri: '',
         created_at: '',
         updated_at: '',
+        details: {} as SAMLProviderInfo,
+        config: {} as SSOProviderConfiguration['config'],
     },
     {
         id: 3,
         name: 'saml-provider-3',
         slug: 'saml-provider-3',
         type: 'SAML',
-        details: {
-            idp_issuer_uri: '',
-            idp_sso_uri: '',
-            principal_attribute_mappings: null,
-            sp_issuer_uri: '',
-            sp_sso_uri: '',
-            sp_metadata_uri: '',
-            sp_acs_uri: '',
-        } as SAMLProviderInfo,
         login_uri: '',
         callback_uri: '',
         created_at: '',
         updated_at: '',
+        details: {} as SAMLProviderInfo,
+        config: {} as SSOProviderConfiguration['config'],
     },
     {
         id: 4,
         name: 'saml-provider-4',
         slug: 'saml-provider-4',
         type: 'SAML',
-        details: {
-            idp_issuer_uri: '',
-            idp_sso_uri: '',
-            principal_attribute_mappings: null,
-            sp_issuer_uri: '',
-            sp_sso_uri: '',
-            sp_metadata_uri: '',
-            sp_acs_uri: '',
-        } as SAMLProviderInfo,
         login_uri: '',
         callback_uri: '',
         created_at: '',
         updated_at: '',
+        details: {} as SAMLProviderInfo,
+        config: {} as SSOProviderConfiguration['config'],
     },
 ];
 

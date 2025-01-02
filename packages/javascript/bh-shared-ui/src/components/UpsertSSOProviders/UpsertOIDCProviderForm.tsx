@@ -18,26 +18,33 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, DialogContent, DialogActions, Grid, TextField } from '@mui/material';
 import { useEffect, FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { OIDCProviderInfo, SSOProvider, UpsertOIDCProviderRequest } from 'js-client-library';
+import { OIDCProviderInfo, SSOProvider, UpsertOIDCProviderRequest, Role } from 'js-client-library';
+import SSOProviderConfigForm, { backfillSSOProviderConfig } from './SSOProviderConfigForm';
 
 const UpsertOIDCProviderForm: FC<{
-    error?: any;
+    error: any;
     oldSSOProvider?: SSOProvider;
+    roles?: Role[];
     onClose: () => void;
     onSubmit: (data: UpsertOIDCProviderRequest) => void;
-}> = ({ error, oldSSOProvider, onClose, onSubmit }) => {
+}> = ({ error, oldSSOProvider, roles, onClose, onSubmit }) => {
+    const readOnlyRoleId = roles?.find((role) => role.name === 'Read-Only')?.id;
+
     const defaultValues = {
         name: oldSSOProvider?.name ?? '',
         client_id: (oldSSOProvider?.details as OIDCProviderInfo)?.client_id ?? '',
         issuer: (oldSSOProvider?.details as OIDCProviderInfo)?.issuer ?? '',
+        config: oldSSOProvider?.config ? oldSSOProvider.config : backfillSSOProviderConfig(readOnlyRoleId),
     };
 
     const {
         control,
+        formState: { errors },
         handleSubmit,
         reset,
-        formState: { errors },
+        resetField,
         setError,
+        watch,
     } = useForm<UpsertOIDCProviderRequest>({ defaultValues });
 
     useEffect(() => {
@@ -134,6 +141,14 @@ const UpsertOIDCProviderForm: FC<{
                             )}
                         />
                     </Grid>
+                    <SSOProviderConfigForm
+                        control={control}
+                        errors={errors}
+                        readOnlyRoleId={readOnlyRoleId}
+                        resetField={resetField}
+                        roles={roles}
+                        watch={watch}
+                    />
                     {!!errors.root?.generic && (
                         <Grid item xs={12}>
                             <Alert severity='error'>{errors.root.generic.message}</Alert>
