@@ -1,0 +1,76 @@
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: CLA Assistant Reusable Workflow
+on:
+  workflow_call:
+    inputs:
+      signatures_path:
+        type: string
+        default: "signatures.json"
+        description: |-
+          Location where CLA signatures are stored and tracked.
+          This file maintains the record of all contributors who have signed the agreement.
+          Customize this path when:
+          - Using a different storage location for signatures
+          - Managing multiple CLAs in the same repository
+          - Integrating with existing signature tracking systems
+      document_path:
+        type: string
+        default: "https://github.com/BloodHoundAD/CLA/blob/main/ICLA.md"
+        description: |-
+          URL to the Contributor License Agreement document that contributors must sign.
+          This document defines the terms under which contributions are accepted.
+          Customize this when:
+          - Using a different CLA version
+          - Implementing organization-specific agreements
+          - Supporting multiple languages or jurisdictions
+      branch:
+        type: string
+        default: "main"
+        description: "Branch name for the CLA repository"
+      remote_organization:
+        type: string
+        default: "BloodHoundAD"
+        description: "Organization name containing the CLA repository"
+      remote_repository:
+        type: string
+        default: "CLA"
+        description: "Name of the CLA repository"
+    secrets:
+      gh_access_token:
+        required: true
+      gh_repo_scope:
+        required: true
+
+jobs:
+  process-cla:
+    if: ${{ !github.event.act }}
+    name: Process CLA
+    runs-on: ubuntu-latest
+    steps:
+      - name: CLA Assistant
+        if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
+        uses: contributor-assistant/github-action@v2.2.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.gh_access_token }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.gh_repo_scope }}
+        with:
+          path-to-signatures: ${{ inputs.signatures_path }}
+          path-to-document: ${{ inputs.document_path }}
+          branch: ${{ inputs.branch }}
+          remote-organization-name: ${{ inputs.remote_organization }}
+          remote-repository-name: ${{ inputs.remote_repository }}
