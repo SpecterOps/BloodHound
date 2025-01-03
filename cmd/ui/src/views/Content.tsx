@@ -61,7 +61,7 @@ const Content: React.FC = () => {
         }
     }, [authState, isFullyAuthenticated, dispatch]);
 
-    // BED-5133 -- should this be happening in BHCE??
+    // BED-5133 -- should this be happening in BHCE?? if so, update to match bhe
     // set initial domain/tenant once user is authenticated
     useEffect(() => {
         if (isFullyAuthenticated) {
