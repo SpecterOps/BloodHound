@@ -1,4 +1,5 @@
 {
+    "plugins": ["prettier-plugin-organize-imports"],
     "tabWidth": 4,
     "trailingComma": "es5",
     "semi": true,
