@@ -735,6 +735,20 @@ MinPwdLength: types.#StringEnum & {
 	representation: "minpwdlength"
 }
 
+SmbSigning: types.#StringEnum & {
+	symbol: "SmbSigning"
+	schema: "ad"
+	name: "SMB Signing"
+	representation: "smbsigning"
+}
+
+RestrictOutboundNtlm: types.#StringEnum & {
+	symbol: "RestrictOutboundNtlm"
+	schema: "ad"
+	name: "Restrict Outbound NTLM"
+	representation: "restrictoutboundntlm"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -837,6 +851,8 @@ Properties: [
 	MaxPwdAge,
 	LockoutDuration,
 	LockoutObservationWindow,
+	SmbSigning,
+	RestrictOutboundNtlm
 ]
 
 // Kinds
@@ -1288,6 +1304,11 @@ SyncedToEntraUser: types.#Kind & {
 	schema: "active_directory"
 }
 
+CoerceAndRelayNTLMToSMB: types.#Kind & {
+	symbol: "CoerceAndRelayNTLMToSMB"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1358,6 +1379,7 @@ RelationshipKinds: [
 	ADCSESC10b,
 	ADCSESC13,
 	SyncedToEntraUser,
+	CoerceAndRelayNTLMToSMB,
 ]
 
 // ACL Relationships
@@ -1438,6 +1460,7 @@ PathfindingRelationships: [
 	ADCSESC13,
 	DCFor,
 	SyncedToEntraUser,
+	CoerceAndRelayNTLMToSMB,
 ]
 
 EdgeCompositionRelationships: [
@@ -1452,4 +1475,5 @@ EdgeCompositionRelationships: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	CoerceAndRelayNTLMToSMB
 ]
