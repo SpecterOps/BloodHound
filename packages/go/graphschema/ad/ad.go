@@ -22,7 +22,7 @@ package ad
 import (
 	"errors"
 
-	graph "github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 var (
@@ -218,7 +218,7 @@ const (
 	LockoutDuration                         Property = "lockoutduration"
 	LockoutObservationWindow                Property = "lockoutobservationwindow"
 	SmbSigning                              Property = "smbsigning"
-	RestrictOutboundNtlm                    Property = "restrict_outbound_ntlm"
+	RestrictOutboundNtlm                    Property = "restrictoutboundntlm"
 )
 
 func AllProperties() []Property {
@@ -430,7 +430,7 @@ func ParseProperty(source string) (Property, error) {
 		return LockoutObservationWindow, nil
 	case "smbsigning":
 		return SmbSigning, nil
-	case "restrict_outbound_ntlm":
+	case "restrictoutboundntlm":
 		return RestrictOutboundNtlm, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
