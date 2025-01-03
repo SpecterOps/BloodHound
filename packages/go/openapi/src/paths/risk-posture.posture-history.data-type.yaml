@@ -16,26 +16,28 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
-  - name: environment_id
-    description: Environment ID
-    in: path
-    required: true
-    schema:
-      type: string
   - name: data_type
     description: The type of posture data to return
     in: path
     required: true
     schema:
-      $ref: '#/components/schemas/data_type'
+      $ref: './../schemas/enum.posture-history-type.yaml'
 get:
-  operationId: PostureHistoryForEnvironment
+  operationId: PostureHistoryForEnvironments
   summary: Get Posture History
   description: Gets posture data count changes over a time period
   tags:
     - Risk Posture
     - Enterprise
   parameters:
+    - name: environments
+      description: Environment IDs
+      in: query
+      required: true
+      schema:
+        type: array
+        items:
+          type: string
     - name: start
       description: Beginning datetime of range (inclusive) in RFC-3339 format; Defaults
         to current datetime minus 30 days
@@ -60,8 +62,12 @@ get:
               - $ref: './../schemas/api.response.time-window.yaml'
               - type: object
                 properties:
+                  environments:
+                    type: array
+                    items:
+                      type: string
                   data_type:
-                    $ref: '#/components/schemas/data_type'
+                    $ref: './../schemas/enum.posture-history-type.yaml'
                   data:
                     type: array
                     items:
@@ -88,14 +94,3 @@ get:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
-
-components:
-  schemas:
-    data_type:
-      type: string
-      enum:
-        - findings
-        - exposure
-        - assets
-        - session_completeness
-        - group_completeness
