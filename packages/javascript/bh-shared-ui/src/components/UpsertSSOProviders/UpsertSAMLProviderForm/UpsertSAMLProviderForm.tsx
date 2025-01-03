@@ -26,27 +26,35 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { useState, useEffect, FC } from 'react';
+import { useState, useEffect, FC, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-library';
+import { Role, SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-library';
+import SSOProviderConfigForm, { backfillSSOProviderConfig } from '../SSOProviderConfigForm';
 
 const UpsertSAMLProviderForm: FC<{
-    error: any;
+    error?: any;
     oldSSOProvider?: SSOProvider;
     onClose: () => void;
     onSubmit: (data: UpsertSAMLProviderFormInputs) => void;
-}> = ({ error, onClose, oldSSOProvider, onSubmit }) => {
+    roles?: Role[];
+}> = ({ error, onClose, oldSSOProvider, onSubmit, roles }) => {
     const theme = useTheme();
+
+    const readOnlyRoleId = useMemo(() => roles?.find((role) => role.name === 'Read-Only')?.id, [roles]);
+
     const {
         control,
+        formState: { errors },
         handleSubmit,
         reset,
-        formState: { errors },
+        resetField,
         setError,
+        watch,
     } = useForm<UpsertSAMLProviderFormInputs>({
         defaultValues: {
             name: oldSSOProvider?.name ?? '',
             metadata: undefined,
+            config: oldSSOProvider?.config ? oldSSOProvider.config : backfillSSOProviderConfig(readOnlyRoleId),
         },
     });
     const [fileValue, setFileValue] = useState(''); // small workaround to use the file input
@@ -147,6 +155,14 @@ const UpsertSAMLProviderForm: FC<{
                                 : 'Upload the Metadata file provided by your SAML Provider'}
                         </FormHelperText>
                     </Grid>
+                    <SSOProviderConfigForm
+                        control={control}
+                        errors={errors}
+                        readOnlyRoleId={readOnlyRoleId}
+                        resetField={resetField}
+                        roles={roles}
+                        watch={watch}
+                    />
                     {!!errors.root?.generic && (
                         <Grid item xs={12}>
                             <Alert severity='error'>{errors.root.generic.message}</Alert>

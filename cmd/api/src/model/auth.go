@@ -345,6 +345,16 @@ func (s Roles) GetValidFilterPredicatesAsStrings(column string) ([]string, error
 	}
 }
 
+func (s Roles) Names() []string {
+	names := make([]string, len(s))
+
+	for idx, role := range s {
+		names[idx] = role.Name
+	}
+
+	return names
+}
+
 func (s Roles) IDs() []int32 {
 	ids := make([]int32, len(s))
 

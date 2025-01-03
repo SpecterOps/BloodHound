@@ -84,7 +84,7 @@ const main = async () => {
     const rootContainer = document.getElementById('root');
     const root = createRoot(rootContainer!);
 
-    if (import.meta.env.DEV) {
+    if (import.meta.env.DEV && location.pathname.startsWith('/ui/')) {
         const { worker } = await import('./mocks/browser');
         await worker.start({
             serviceWorker: {

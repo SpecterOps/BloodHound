@@ -45,10 +45,10 @@ import (
 )
 
 const (
-	ErrorResponseDetailsNumRoles               = "a user can only have one role"
-	ErrorResponseDetailsInvalidCurrentPassword = "unable to verify current password"
-	ErrorResponseDetailsMFAActivated           = "multi-factor authentication already active"
-	ErrorResponseDetailsMFAEnrollmentRequired  = "multi-factor authentication enrollment is required before activation"
+	ErrResponseDetailsNumRoles               = "a user can only have one role"
+	ErrResponseDetailsInvalidCurrentPassword = "unable to verify current password"
+	ErrResponseDetailsMFAActivated           = "multi-factor authentication already active"
+	ErrResponseDetailsMFAEnrollmentRequired  = "multi-factor authentication enrollment is required before activation"
 )
 
 type ManagementResource struct {
@@ -300,7 +300,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 	if err := api.ReadJSONRequestPayloadLimited(&createUserRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if len(createUserRequest.Roles) > 1 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsNumRoles, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsNumRoles, request), response)
 	} else if roles, err := s.db.GetRoles(request.Context(), createUserRequest.Roles); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
@@ -795,17 +795,17 @@ func (s ManagementResource) EnrollMFA(response http.ResponseWriter, request *htt
 	} else if userId, err := uuid.FromString(rawUserId); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorContentTypeJson.Error(), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrContentTypeJson.Error(), request), response)
 	} else if user, err := s.db.GetUser(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if user.SSOProviderID.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid operation, user is SSO", request), response)
 	} else if user.AuthSecret.TOTPActivated {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsMFAActivated, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsMFAActivated, request), response)
 	} else if err := api.ValidateSecret(s.secretDigester, payload.Secret, *user.AuthSecret); err != nil {
 		// In this context an authenticated user revalidating their password for mfa enrollment should get a 400 bad request
 		// b/c the bearer token is valid despite the secret in the request payload being invalid
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsInvalidCurrentPassword, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsInvalidCurrentPassword, request), response)
 	} else if totpSecret, err := auth.GenerateTOTPSecret(host.String(), user.PrincipalName); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
@@ -835,7 +835,7 @@ func (s ManagementResource) DisenrollMFA(response http.ResponseWriter, request *
 	} else if userId, err := uuid.FromString(rawUserId); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorContentTypeJson.Error(), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrContentTypeJson.Error(), request), response)
 	} else if user, err := s.db.GetUser(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
@@ -859,7 +859,7 @@ func (s ManagementResource) DisenrollMFA(response http.ResponseWriter, request *
 		if err := api.ValidateSecret(s.secretDigester, payload.Secret, secretToValidate); err != nil {
 			// In this context an authenticated user revalidating their password for mfa enrollment should get a 400 bad request
 			// b/c the bearer token is valid despite the secret in the request payload being invalid
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsInvalidCurrentPassword, request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsInvalidCurrentPassword, request), response)
 			return
 		}
 
@@ -907,11 +907,11 @@ func (s ManagementResource) ActivateMFA(response http.ResponseWriter, request *h
 	} else if userId, err := uuid.FromString(rawUserId); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorContentTypeJson.Error(), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrContentTypeJson.Error(), request), response)
 	} else if user, err := s.db.GetUser(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if user.AuthSecret.TOTPSecret == "" {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsMFAEnrollmentRequired, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsMFAEnrollmentRequired, request), response)
 	} else if !totp.Validate(payload.OTP, user.AuthSecret.TOTPSecret) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsOTPInvalid, request), response)
 	} else {
