@@ -403,7 +403,7 @@ export enum ActiveDirectoryKindProperties {
     LockoutDuration = 'lockoutduration',
     LockoutObservationWindow = 'lockoutobservationwindow',
     SmbSigning = 'smbsigning',
-    RestrictOutboundNtlm = 'restrict_outbound_ntlm',
+    RestrictOutboundNtlm = 'restrictoutboundntlm',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {

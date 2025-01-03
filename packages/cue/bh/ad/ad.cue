@@ -746,7 +746,7 @@ RestrictOutboundNtlm: types.#StringEnum & {
 	symbol: "RestrictOutboundNtlm"
 	schema: "ad"
 	name: "Restrict Outbound NTLM"
-	representation: "restrict_outbound_ntlm"
+	representation: "restrictoutboundntlm"
 }
 
 Properties: [
