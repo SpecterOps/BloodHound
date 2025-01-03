@@ -32,7 +32,7 @@ import (
 	"github.com/specterops/bloodhound/headers"
 )
 
-const ErrorTemplateHMACSignature string = "unable to compute hmac signature: %w"
+const ErrTemplateHMACSignature string = "unable to compute hmac signature: %w"
 
 // tee takes a source reader and two writers. The function reads from the source until exhaustion. Each read is written
 // serially to both writers.
@@ -138,7 +138,7 @@ func (s *SelfDestructingTempFile) Name() string {
 // NOTE: The given io.Reader will be read to EOF. Consider using io.TeeReader so that the body may be read again after the signature has been created.
 func NewRequestSignature(ctx context.Context, hasher func() hash.Hash, key string, datetime string, requestMethod string, requestURI string, body io.Reader) ([]byte, error) {
 	if hasher == nil {
-		return nil, fmt.Errorf(ErrorTemplateHMACSignature, fmt.Errorf("hasher must not be nil"))
+		return nil, fmt.Errorf(ErrTemplateHMACSignature, fmt.Errorf("hasher must not be nil"))
 	}
 
 	digester := hmac.New(hasher, []byte(key))
@@ -150,7 +150,7 @@ func NewRequestSignature(ctx context.Context, hasher func() hash.Hash, key strin
 	// Example: GET /api/v2/test/resource HTTP/1.1
 	// Signature Component: GET/api/v2/test/resource
 	if _, err := digester.Write([]byte(requestMethod + requestURI)); err != nil {
-		return nil, fmt.Errorf(ErrorTemplateHMACSignature, err)
+		return nil, fmt.Errorf(ErrTemplateHMACSignature, err)
 	}
 
 	// DateKey is the next HMAC digest link in the signature chain. This encodes the RFC3339 formatted datetime
@@ -163,7 +163,7 @@ func NewRequestSignature(ctx context.Context, hasher func() hash.Hash, key strin
 	digester = hmac.New(hasher, digester.Sum(nil))
 
 	if _, err := digester.Write([]byte(datetime[:13])); err != nil {
-		return nil, fmt.Errorf(ErrorTemplateHMACSignature, err)
+		return nil, fmt.Errorf(ErrTemplateHMACSignature, err)
 	}
 
 	// Body signing is the last HMAC digest link in the signature chain. This encodes the request body as part of
@@ -179,7 +179,7 @@ func NewRequestSignature(ctx context.Context, hasher func() hash.Hash, key strin
 
 	if body != nil {
 		if _, err := io.Copy(digester, body); err != nil {
-			return nil, fmt.Errorf(ErrorTemplateHMACSignature, err)
+			return nil, fmt.Errorf(ErrTemplateHMACSignature, err)
 		}
 	}
 

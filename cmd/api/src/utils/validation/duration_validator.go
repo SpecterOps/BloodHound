@@ -68,10 +68,6 @@ func (s DurationValidator) okMax(d time.Duration) bool {
 	return d <= s.maxD
 }
 
-func (s DurationValidator) ok(lower, upper time.Duration) bool {
-	return s.okMin(lower) && s.okMax(upper)
-}
-
 func (s DurationValidator) Validate(value any) utils.Errors {
 	var (
 		d    time.Duration

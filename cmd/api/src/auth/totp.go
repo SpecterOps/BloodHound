@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	ErrorInvalidOTP = fmt.Errorf("invalid one time password")
+	ErrInvalidOTP = fmt.Errorf("invalid one time password")
 )
 
 func GenerateTOTPSecret(issuer, accountName string) (*otp.Key, error) {
@@ -42,7 +42,7 @@ func ValidateTOTPSecret(otp string, secret model.AuthSecret) error {
 	if !secret.TOTPActivated || totp.Validate(otp, secret.TOTPSecret) {
 		return nil
 	} else {
-		return ErrorInvalidOTP
+		return ErrInvalidOTP
 	}
 }
 

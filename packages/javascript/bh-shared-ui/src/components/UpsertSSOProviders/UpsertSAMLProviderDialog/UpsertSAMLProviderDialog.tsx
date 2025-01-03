@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2023 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -15,16 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Dialog, DialogTitle } from '@mui/material';
-import { SSOProvider, UpsertOIDCProviderRequest } from 'js-client-library';
-import UpsertOIDCProviderForm from './UpsertOIDCProviderForm';
+import { Role, SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-library';
+import UpsertSAMLProviderForm from '../UpsertSAMLProviderForm';
 
-const UpsertOIDCProviderDialog: React.FC<{
+const UpsertSAMLProviderDialog: React.FC<{
     open: boolean;
     error: any;
     oldSSOProvider?: SSOProvider;
     onClose: () => void;
-    onSubmit: (data: UpsertOIDCProviderRequest) => void;
-}> = ({ open, error, oldSSOProvider, onClose, onSubmit }) => {
+    onSubmit: (data: UpsertSAMLProviderFormInputs) => void;
+    roles?: Role[];
+}> = ({ open, error, oldSSOProvider, onClose, onSubmit, roles }) => {
     return (
         <Dialog
             open={open}
@@ -33,17 +34,18 @@ const UpsertOIDCProviderDialog: React.FC<{
             maxWidth='sm'
             PaperProps={{
                 // @ts-ignore
-                'data-testid': 'create-oidc-provider-dialog',
+                'data-testid': 'create-saml-provider-dialog',
             }}>
-            <DialogTitle>{oldSSOProvider ? 'Edit' : 'Create'} OIDC Provider</DialogTitle>
-            <UpsertOIDCProviderForm
+            <DialogTitle>{oldSSOProvider ? 'Edit' : 'Create'} SAML Provider</DialogTitle>
+            <UpsertSAMLProviderForm
                 error={error}
                 onClose={onClose}
                 oldSSOProvider={oldSSOProvider}
                 onSubmit={onSubmit}
+                roles={roles}
             />
         </Dialog>
     );
 };
 
-export default UpsertOIDCProviderDialog;
+export default UpsertSAMLProviderDialog;

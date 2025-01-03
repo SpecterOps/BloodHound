@@ -749,7 +749,7 @@ func (s *GraphQuery) ValidateOUs(ctx context.Context, ous []string) ([]string, e
 			return nil
 		}); err != nil {
 			if graph.IsErrNotFound(err) {
-				return nil, errors.New(fmt.Sprintf("no record found for %s", ou))
+				return nil, fmt.Errorf("no record found for %s", ou)
 			} else {
 				return nil, err
 			}
@@ -869,7 +869,7 @@ func (s *GraphQuery) runListQuery(ctx context.Context, node *graph.Node, params 
 	if result, err := s.runMaybeCachedEntityQuery(ctx, node, params, cacheEnabled); err != nil {
 		return nil, 0, err
 	} else if skip > result.Len() {
-		return nil, 0, errors.New(fmt.Sprintf(utils.ErrorInvalidSkip, skip))
+		return nil, 0, fmt.Errorf(utils.ErrorInvalidSkip, skip)
 	} else {
 		if skip+limit > result.Len() {
 			limit = result.Len() - skip

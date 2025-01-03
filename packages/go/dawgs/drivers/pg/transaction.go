@@ -270,7 +270,7 @@ func (s *transaction) Relationships() graph.RelationshipQuery {
 func (s *transaction) query(query string, parameters map[string]any) (pgx.Rows, error) {
 	queryArgs := []any{s.queryExecMode, s.queryResultsFormat}
 
-	if parameters != nil && len(parameters) > 0 {
+	if len(parameters) > 0 {
 		queryArgs = append(queryArgs, pgx.NamedArgs(parameters))
 	}
 

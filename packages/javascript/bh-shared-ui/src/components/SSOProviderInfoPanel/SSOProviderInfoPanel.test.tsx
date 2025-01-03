@@ -37,6 +37,9 @@ const samlProvider: SSOProvider = {
     callback_uri: '',
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
+    config: {
+        auto_provision: { enabled: false, role_provision: false, default_role_id: 0 },
+    },
 };
 
 const oidcProvider: SSOProvider = {
@@ -49,9 +52,12 @@ const oidcProvider: SSOProvider = {
         client_id: 'gotham-oidc',
     } as OIDCProviderInfo,
     login_uri: '',
-    callback_uri: '',
+    callback_uri: 'http://bloodhound.localhost/api/v2/sso/test-idp-2/callback',
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
+    config: {
+        auto_provision: { enabled: true, role_provision: true, default_role_id: 1 },
+    },
 };
 
 describe('SSOProviderTable', () => {
@@ -64,6 +70,15 @@ describe('SSOProviderTable', () => {
         expect(await screen.findByText(samlInfo.sp_sso_uri)).toBeInTheDocument();
         expect(await screen.findByText(samlInfo.sp_acs_uri)).toBeInTheDocument();
         expect(await screen.findByText(samlInfo.sp_metadata_uri)).toBeInTheDocument();
+
+        expect(await screen.findByText('Automatically create new users on login')).toBeInTheDocument();
+        // This provider has IDP provisioning disabled which should hide these 2 fields
+        expect(screen.queryByText('Allow SSO provider to manage roles for new users')).not.toBeInTheDocument();
+        expect(screen.queryByText('Default role when creating new users')).not.toBeInTheDocument();
+
+        expect(
+            screen.getByRole('button', { name: `Download ${samlProvider.name} SP Certificate` })
+        ).toBeInTheDocument();
     });
 
     it('should render oidc info provider', async () => {
@@ -73,5 +88,10 @@ describe('SSOProviderTable', () => {
 
         expect(await screen.findByText(oidcInfo.issuer)).toBeInTheDocument();
         expect(await screen.findByText(oidcInfo.client_id)).toBeInTheDocument();
+        expect(await screen.findByText(oidcProvider.callback_uri)).toBeInTheDocument();
+
+        expect(await screen.findByText('Automatically create new users on login')).toBeInTheDocument();
+        expect(await screen.findByText('Allow SSO provider to manage roles for new users')).toBeInTheDocument();
+        expect(await screen.findByText('Default role when creating new users')).toBeInTheDocument();
     });
 });
