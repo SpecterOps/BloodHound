@@ -542,7 +542,7 @@ func TestGetPlatformAggregateStats_Failure(t *testing.T) {
 			},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.ErrorInvalidPlatformId, "invalidPlatform")}},
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.ErrInvalidPlatformId, "invalidPlatform")}},
 			},
 		},
 		// AD

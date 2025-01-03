@@ -17,11 +17,11 @@
 package v2_test
 
 import (
+	"errors"
 	"net/http"
 	"testing"
 
 	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/errors"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	dbMocks "github.com/specterops/bloodhound/src/database/mocks"

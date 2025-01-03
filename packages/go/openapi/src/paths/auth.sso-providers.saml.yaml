@@ -27,6 +27,12 @@ post:
     content:
       multipart/form-data:
         schema:
+          required: 
+            - name
+            - metadata
+            - config.auto_provision.enabled
+            - config.auto_provision.default_role_id
+            - config.auto_provision.role_provision
           properties:
             name:
               type: string
@@ -35,6 +41,19 @@ post:
               type: string
               format: binary
               description: Metadata XML file.
+            config.auto_provision.enabled:
+              type: string
+              example: "true"
+              description: boolean that, if enabled, allows SSO providers to auto provision bloodhound users on initial login
+            config.auto_provision.default_role_id:
+              type: string
+              example: "3"
+              description: default role id for the user created from SSO provider auto provision
+            config.auto_provision.role_provision:
+              type: string
+              example: "false"
+              description: boolean that, if enabled, allows sso providers to manage roles for newly created users
+            
   responses:
     200:
       description: OK

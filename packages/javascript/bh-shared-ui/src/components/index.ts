@@ -128,6 +128,8 @@ export { default as MenuItem } from './MenuItem';
 
 export { default as NoDataAlert } from './NoDataAlert';
 
+export { default as NoDataDialog } from './NoDataDialog';
+
 export * from './NodeIcon';
 export { default as NodeIcon } from './NodeIcon';
 
@@ -170,11 +172,11 @@ export { default as UpdateUserDialog } from './UpdateUserDialog';
 export * from './UpdateUserForm';
 export { default as UpdateUserForm } from './UpdateUserForm';
 
-export * from './UpsertSAMLProviderDialog';
-export { default as UpsertSAMLProviderDialog } from './UpsertSAMLProviderDialog';
+export * from './UpsertSSOProviders/UpsertSAMLProviderDialog';
+export { default as UpsertSAMLProviderDialog } from './UpsertSSOProviders/UpsertSAMLProviderDialog';
 
-export * from './UpsertSAMLProviderForm';
-export { default as UpsertSAMLProviderForm } from './UpsertSAMLProviderForm';
+export * from './UpsertSSOProviders/UpsertSAMLProviderForm';
+export { default as UpsertSAMLProviderForm } from './UpsertSSOProviders/UpsertSAMLProviderForm';
 
 export * from './UserTokenManagementDialog';
 export { default as UserTokenManagementDialog } from './UserTokenManagementDialog';

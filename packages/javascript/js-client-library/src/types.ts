@@ -149,14 +149,14 @@ export interface PutUserAuthSecretRequest {
     needsPasswordReset: boolean;
 }
 
-export interface CreateSAMLProviderFormInputs {
+export interface CreateSAMLProviderFormInputs extends SSOProviderConfiguration {
     name: string;
     metadata: FileList;
 }
 export type UpdateSAMLProviderFormInputs = Partial<CreateSAMLProviderFormInputs>;
 export type UpsertSAMLProviderFormInputs = CreateSAMLProviderFormInputs | UpdateSAMLProviderFormInputs;
 
-export interface CreateOIDCProviderRequest {
+export interface CreateOIDCProviderRequest extends SSOProviderConfiguration {
     name: string;
     client_id: string;
     issuer: string;
@@ -183,7 +183,17 @@ export interface OIDCProviderInfo extends Serial {
     sso_provider_id: number;
 }
 
-export interface SSOProvider extends Serial {
+export interface SSOProviderConfiguration {
+    config: {
+        auto_provision: {
+            enabled: boolean;
+            default_role_id: number;
+            role_provision: boolean;
+        };
+    };
+}
+
+export interface SSOProvider extends Serial, SSOProviderConfiguration {
     name: string;
     slug: string;
     type: 'OIDC' | 'SAML';
@@ -214,10 +224,17 @@ interface Permission {
     authority: string;
 }
 
-interface Role {
+export interface Role {
+    id: number;
     name: string;
     description: string;
     permissions: Permission[];
+}
+
+export interface ListRolesResponse {
+    data: {
+        roles: Role[];
+    };
 }
 
 export interface ListUsersResponse {

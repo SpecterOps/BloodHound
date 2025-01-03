@@ -16,7 +16,22 @@
 
 package model
 
-import "fmt"
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"fmt"
+)
+
+type SSOProviderAutoProvisionConfig struct {
+	Enabled       bool  `json:"enabled"`
+	DefaultRoleId int32 `json:"default_role_id"`
+	RoleProvision bool  `json:"role_provision"`
+}
+
+type SSOProviderConfig struct {
+	AutoProvision SSOProviderAutoProvisionConfig `json:"auto_provision"`
+}
 
 // SSOProvider is the common representation of an SSO provider that can be used to display high level information about that provider
 type SSOProvider struct {
@@ -27,7 +42,31 @@ type SSOProvider struct {
 	OIDCProvider *OIDCProvider `json:"oidc_provider,omitempty" gorm:"foreignKey:SSOProviderID"`
 	SAMLProvider *SAMLProvider `json:"saml_provider,omitempty" gorm:"foreignKey:SSOProviderID"`
 
+	Config SSOProviderConfig `json:"config" gorm:"type:jsonb column:config"`
+
 	Serial
+}
+
+// Implement the sql.Scanner interface so that GORM can scan the jsonb column from the database into a golang struct
+func (cfg *SSOProviderConfig) Scan(value interface{}) error {
+	// Handle null values from the database
+	if value == nil {
+		*cfg = SSOProviderConfig{}
+		return nil
+	}
+
+	// Convert the database value to []byte
+	if bytes, ok := value.([]byte); !ok {
+		return errors.New("type assertion to []byte failed for SSOProviderConfig")
+	} else {
+		// Unmarshal JSON into the struct
+		return json.Unmarshal(bytes, cfg)
+	}
+}
+
+// Value returns the json-marshaled value of the receiver
+func (cfg SSOProviderConfig) Value() (driver.Value, error) {
+	return json.Marshal(cfg)
 }
 
 // AuditData returns the fields to log in the audit log
@@ -39,10 +78,8 @@ func (s SSOProvider) AuditData() AuditData {
 	switch s.Type {
 	case SessionAuthProviderSAML:
 		details = s.SAMLProvider
-		break
 	case SessionAuthProviderOIDC:
 		details = s.OIDCProvider
-		break
 	}
 
 	return AuditData{
