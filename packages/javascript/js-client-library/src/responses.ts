@@ -41,6 +41,14 @@ type TimestampFields = {
     };
 };
 
+export type Domain = {
+    type: string;
+    impactValue: number;
+    name: string;
+    id: string;
+    collected: boolean;
+};
+
 export type ActiveDirectoryQualityStat = TimestampFields & {
     users: number;
     computers: number;

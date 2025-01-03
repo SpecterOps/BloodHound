@@ -24,6 +24,7 @@ import {
     BasicResponse,
     CreateAuthTokenResponse,
     DatapipeStatusResponse,
+    Domain,
     EndFileIngestResponse,
     GetConfigurationResponse,
     ListAuthTokensResponse,
@@ -106,7 +107,8 @@ class BHEAPIClient {
         return this.baseClient.post('/api/v2/clear-database', payload, options);
     };
 
-    getAvailableDomains = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/available-domains', options);
+    getAvailableDomains = (options?: types.RequestOptions) =>
+        this.baseClient.get<BasicResponse<Domain[]>>('/api/v2/available-domains', options);
 
     /* audit */
     getAuditLogs = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/audit', options);

@@ -25,6 +25,7 @@ export const TIER_ZERO_TAG = 'admin_tier_0';
 export const TIER_ZERO_LABEL = 'High Value';
 export const OWNED_OBJECT_TAG = 'owned';
 
+// TODO: get the non-palette doodle colors to match this
 export const lightPalette = {
     primary: {
         main: '#33318F',

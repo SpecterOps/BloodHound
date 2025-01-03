@@ -61,7 +61,8 @@ const Content: React.FC = () => {
         }
     }, [authState, isFullyAuthenticated, dispatch]);
 
-    // set inital domain/tenant once user is authenticated
+    // BED-5133 -- should this be happening in BHCE?? if so, update to match bhe
+    // set initial domain/tenant once user is authenticated
     useEffect(() => {
         if (isFullyAuthenticated) {
             const ctrl = new AbortController();
