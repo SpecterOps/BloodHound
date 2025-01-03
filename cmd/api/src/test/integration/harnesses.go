@@ -8482,7 +8482,8 @@ func (s *NtlmCoerceAndRelayNtlmToSmb) Setup(graphTestContext *GraphTestContext) 
 	s.computer3 = graphTestContext.NewActiveDirectoryComputer("computer3", domainSid)
 
 	s.computer8 = graphTestContext.NewActiveDirectoryComputer("computer8", domainSid)
-	s.computer8.Properties.Set("smb_signing", "false")
+	s.computer8.Properties.Set(ad.SmbSigning.String(), false)
+	s.computer8.Properties.Set(ad.RestrictOutboundNtlm.String(), false)
 	graphTestContext.UpdateNode(s.computer8)
 
 	graphTestContext.NewRelationship(s.computer3, s.ServerAdmins, ad.MemberOf)

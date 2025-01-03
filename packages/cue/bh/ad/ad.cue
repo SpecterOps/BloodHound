@@ -742,6 +742,13 @@ SmbSigning: types.#StringEnum & {
 	representation: "smbsigning"
 }
 
+RestrictOutboundNtlm: types.#StringEnum & {
+	symbol: "RestrictOutboundNtlm"
+	schema: "ad"
+	name: "Restrict Outbound NTLM"
+	representation: "restrict_outbound_ntlm"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -844,7 +851,8 @@ Properties: [
 	MaxPwdAge,
 	LockoutDuration,
 	LockoutObservationWindow,
-	SmbSigning
+	SmbSigning,
+	RestrictOutboundNtlm
 ]
 
 // Kinds

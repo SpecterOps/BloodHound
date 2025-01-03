@@ -82,7 +82,13 @@ func PostCoerceAndRelayNtlmToSmb(tx graph.Transaction, outC chan<- analysis.Crea
 		} else {
 			return err
 		}
-	} else if !smbSigningEnabled {
+	} else if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNtlm.String()).Bool(); err != nil {
+		if errors.Is(err, graph.ErrPropertyNotFound) {
+			return nil
+		} else {
+			return err
+		}
+	} else if !smbSigningEnabled && !restrictOutboundNtlm {
 
 		// Fetch the admins with edges to the provided computer
 		if firstDegreeAdmins, err := fetchFirstDegreeNodes(tx, computer, ad.AdminTo); err != nil {

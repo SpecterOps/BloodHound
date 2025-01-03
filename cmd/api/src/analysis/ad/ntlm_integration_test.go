@@ -55,8 +55,9 @@ func TestPostNtlm(t *testing.T) {
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 				for _, computer := range computers {
 					innerComputer := computer
+					domainSid, _ := innerDomain.Properties.Get(ad.Domain.String()).String()
 
-					if err = ad2.PostCoerceAndRelayNtlmToSmb(tx, outC, groupExpansions, innerComputer, innerDomain.ID.String(), authenticatedUsers); err != nil {
+					if err = ad2.PostCoerceAndRelayNtlmToSmb(tx, outC, groupExpansions, innerComputer, domainSid, authenticatedUsers); err != nil {
 						t.Logf("failed post processig for %s: %v", ad.CoerceAndRelayNTLMToSMB.String(), err)
 					}
 				}
@@ -68,6 +69,7 @@ func TestPostNtlm(t *testing.T) {
 		err = operation.Done()
 		require.NoError(t, err)
 
+		// Test start node
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 				return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToSMB)
@@ -83,6 +85,31 @@ func TestPostNtlm(t *testing.T) {
 				objectIdStr, err := objectId.String()
 				require.NoError(t, err)
 				assert.True(t, strings.HasSuffix(objectIdStr, ad2.AuthenticatedUsersSuffix))
+			}
+			return nil
+		})
+
+		// Test end node
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToSMB)
+			})); err != nil {
+				t.Fatalf("error fetching ntlm to smb edges in integration test; %v", err)
+			} else {
+				require.Len(t, results, 1)
+				resultIds := results.IDs()
+
+				objectId := results.Get(resultIds[0]).Properties.Get("objectid")
+				require.False(t, objectId.IsNil())
+
+				smbSigning, err := results.Get(resultIds[0]).Properties.Get(ad.SmbSigning.String()).Bool()
+				require.NoError(t, err)
+
+				restrictOutbountNtlm, err := results.Get(resultIds[0]).Properties.Get(ad.RestrictOutboundNtlm.String()).Bool()
+				require.NoError(t, err)
+
+				assert.False(t, smbSigning)
+				assert.False(t, restrictOutbountNtlm)
 			}
 			return nil
 		})

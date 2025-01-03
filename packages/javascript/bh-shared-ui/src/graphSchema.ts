@@ -403,6 +403,7 @@ export enum ActiveDirectoryKindProperties {
     LockoutDuration = 'lockoutduration',
     LockoutObservationWindow = 'lockoutobservationwindow',
     SmbSigning = 'smbsigning',
+    RestrictOutboundNtlm = 'restrict_outbound_ntlm',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -610,6 +611,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Lockout Observation Window';
         case ActiveDirectoryKindProperties.SmbSigning:
             return 'SMB Signing';
+        case ActiveDirectoryKindProperties.RestrictOutboundNtlm:
+            return 'Restrict Outbound NTLM';
         default:
             return undefined;
     }
