@@ -17,12 +17,12 @@
 package ops
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 )
 
@@ -79,7 +79,7 @@ type TraversalPlan struct {
 	Direction             graph.Direction
 	BranchQuery           graph.CriteriaProvider
 	DepthExceptionHandler DepthExceptionHandler
-	expansionFilter       func(segment *graph.PathSegment) bool
+	ExpansionFilter       func(segment *graph.PathSegment) bool
 	DescentFilter         SegmentFilter
 	PathFilter            PathFilter
 	Skip                  int
@@ -169,7 +169,7 @@ func Traversal(tx graph.Transaction, plan TraversalPlan, pathVisitor PathVisitor
 			}
 		}
 
-		if descendents, err := nextTraversal(tx, next, plan.Direction, plan.BranchQuery, requireTraversalOrder, plan.expansionFilter); err != nil {
+		if descendents, err := nextTraversal(tx, next, plan.Direction, plan.BranchQuery, requireTraversalOrder, plan.ExpansionFilter); err != nil {
 			// If the error value is the halt traversal sentinel then don't relay any error upstream
 			if errors.Is(err, ErrHaltTraversal) {
 				break
@@ -241,7 +241,7 @@ func AcyclicTraverseNodes(tx graph.Transaction, plan TraversalPlan, nodeFilter N
 	)
 
 	// Prevent expansion of already-visited nodes
-	plan.expansionFilter = func(segment *graph.PathSegment) bool {
+	plan.ExpansionFilter = func(segment *graph.PathSegment) bool {
 		return visitedBitmap.CheckedAdd(segment.Node.ID.Uint64())
 	}
 
@@ -273,7 +273,7 @@ func AcyclicTraverseTerminals(tx graph.Transaction, plan TraversalPlan) (graph.N
 	)
 
 	// Prevent expansion of already-visited nodes
-	plan.expansionFilter = func(segment *graph.PathSegment) bool {
+	plan.ExpansionFilter = func(segment *graph.PathSegment) bool {
 		return visitedBitmap.CheckedAdd(segment.Node.ID.Uint64())
 	}
 

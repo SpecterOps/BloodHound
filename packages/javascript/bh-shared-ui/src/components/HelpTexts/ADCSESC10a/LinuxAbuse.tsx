@@ -68,17 +68,13 @@ const LinuxAbuse: FC = () => {
                 If the victim does not has the mail attribute set, set it to a dummy mail using ldapmodify:
             </Typography>
             <Typography component='pre'>
-                {`echo -e "dn: VICTIM-DN\nchangetype: modify\nreplace: mail\nmail: test@mail.com" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
+                {`echo -e "dn: VICTIM-DN\\nchangetype: modify\\nreplace: mail\\nmail: test@mail.com" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
             </Typography>
         </>
     );
 
     const step3 = (
-        <Box
-            sx={{
-                borderRadius: '4px',
-                backgroundColor: '#eee',
-            }}>
+        <Box>
             <Typography variant='body2' sx={{ marginBottom: '-8px' }}>
                 <b>Step 3: </b>Obtain the credentials of victim.
                 <br />

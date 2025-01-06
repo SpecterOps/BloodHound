@@ -17,9 +17,10 @@
 package graph_test
 
 import (
+	"testing"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_NodeSizeOf(t *testing.T) {

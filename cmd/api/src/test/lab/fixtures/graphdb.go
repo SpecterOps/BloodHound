@@ -19,10 +19,10 @@ package fixtures
 import (
 	"context"
 	"fmt"
-	schema "github.com/specterops/bloodhound/graphschema"
 	"log"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
+	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/lab"
 	"github.com/specterops/bloodhound/src/bootstrap"
 )

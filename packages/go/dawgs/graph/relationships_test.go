@@ -17,10 +17,11 @@
 package graph_test
 
 import (
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"unsafe"
+
+	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_RelationshipSizeOf(t *testing.T) {

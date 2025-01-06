@@ -19,11 +19,11 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/types"
@@ -31,8 +31,8 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	ErrAuthContextInvalid = errors.Error("auth context is invalid")
+var (
+	ErrAuthContextInvalid = errors.New("auth context is invalid")
 )
 
 func newAuditLog(context context.Context, entry model.AuditEntry, idResolver auth.IdentityResolver) (model.AuditLog, error) {
@@ -40,11 +40,16 @@ func newAuditLog(context context.Context, entry model.AuditEntry, idResolver aut
 
 	auditLog := model.AuditLog{
 		Action:          entry.Action,
-		Fields:          types.JSONUntypedObject(entry.Model.AuditData()),
 		RequestID:       bheCtx.RequestID,
 		SourceIpAddress: bheCtx.RequestIP,
 		Status:          entry.Status,
 		CommitID:        entry.CommitID,
+	}
+
+	if entry.Model != nil {
+		auditLog.Fields = types.JSONUntypedObject(entry.Model.AuditData())
+	} else {
+		auditLog.Fields = types.JSONUntypedObject{}
 	}
 
 	if entry.ErrorMsg != "" {
@@ -89,7 +94,7 @@ func (s *BloodhoundDB) ListAuditLogs(ctx context.Context, before, after time.Tim
 	// See the comments here for more information: https://github.com/SpecterOps/BloodHound/pull/297#issuecomment-1887640827
 
 	if filter.SQLString != "" {
-		result = s.db.Model(&auditLogs).WithContext(ctx).Where(filter.SQLString, filter.Params).Count(&count)
+		result = s.db.Model(&auditLogs).WithContext(ctx).Where(filter.SQLString, filter.Params...).Count(&count)
 	} else {
 		result = s.db.Model(&auditLogs).WithContext(ctx).Count(&count)
 	}
@@ -103,7 +108,7 @@ func (s *BloodhoundDB) ListAuditLogs(ctx context.Context, before, after time.Tim
 	}
 
 	if filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params).Order(order).Find(&auditLogs)
+		result = cursor.Where(filter.SQLString, filter.Params...).Order(order).Find(&auditLogs)
 	} else {
 		result = cursor.Order(order).Find(&auditLogs)
 	}

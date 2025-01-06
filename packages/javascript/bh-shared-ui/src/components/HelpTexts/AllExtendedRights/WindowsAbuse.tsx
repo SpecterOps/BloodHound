@@ -257,8 +257,36 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                     from the domain {targetName}. This can be abused using the lsadump::dcsync command in mimikatz.
                 </Typography>
             );
+        case 'CertTemplate':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        The AllExtendedRights permission grants {sourceName} enrollment rights on the certificate
+                        template {targetName}.
+                    </Typography>
+                    <Typography variant='body2'>Certify can be used to enroll a certificate:</Typography>
+                    <Typography component={'pre'}>
+                        {'Certify.exe request /ca:SERVER\\CA-NAME /template:TEMPLATE'}
+                    </Typography>
+                    <Typography variant='body2'>
+                        The following additional requirements must be met for a principal to be able to enroll a
+                        certificate:
+                        <br />
+                        1) The certificate template is published on an enterprise CA
+                        <br />
+                        2) The principal has Enroll permission on the enterprise CA
+                        <br />
+                        3) The principal meets the issuance requirements and the requirements for subject name and
+                        subject alternative name defined by the template
+                    </Typography>
+                </>
+            );
         default:
-            return null;
+            return (
+                <>
+                    <Typography variant='body2'>No abuse information available for this node type.</Typography>
+                </>
+            );
     }
 };
 

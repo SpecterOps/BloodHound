@@ -56,6 +56,18 @@ func (m *MockAuthenticator) EXPECT() *MockAuthenticatorMockRecorder {
 	return m.recorder
 }
 
+// CreateSSOSession mocks base method.
+func (m *MockAuthenticator) CreateSSOSession(arg0 *http.Request, arg1 http.ResponseWriter, arg2 string, arg3 model.SSOProvider) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "CreateSSOSession", arg0, arg1, arg2, arg3)
+}
+
+// CreateSSOSession indicates an expected call of CreateSSOSession.
+func (mr *MockAuthenticatorMockRecorder) CreateSSOSession(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSSOSession", reflect.TypeOf((*MockAuthenticator)(nil).CreateSSOSession), arg0, arg1, arg2, arg3)
+}
+
 // CreateSession mocks base method.
 func (m *MockAuthenticator) CreateSession(arg0 context.Context, arg1 model.User, arg2 interface{}) (string, error) {
 	m.ctrl.T.Helper()

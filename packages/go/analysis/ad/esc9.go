@@ -33,18 +33,13 @@ import (
 )
 
 func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	results := cardinality.NewBitmap32()
+	results := cardinality.NewBitmap64()
 
-	if canAbuseWeakCertBindingRels, err := FetchCanAbuseWeakCertBindingRels(tx, eca); err != nil {
-		if graph.IsErrNotFound(err) {
-			return nil
-		}
-		return err
-	} else if len(canAbuseWeakCertBindingRels) == 0 {
+	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint64()); !ok {
 		return nil
-	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaEnrollers) == 0 {
 		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
@@ -53,11 +48,11 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateEnrollers, ok := cache.CertTemplateEnrollers[template.ID]; !ok {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
-				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaControllers)
+				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(eca.ID))
 
 				if filteredVictims, err := filterUserDNSResults(tx, victimBitmap, template); err != nil {
 					log.Warnf("Error filtering users from victims for esc9a: %v", err)
@@ -66,12 +61,12 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 					log.Warnf("Error getting start nodes for esc9a attacker nodes: %v", err)
 					continue
 				} else {
-					results.Or(cardinality.NodeIDsToDuplex(attackers))
+					results.Or(graph.NodeIDsToDuplex(attackers))
 				}
 			}
 		}
 
-		results.Each(func(value uint32) bool {
+		results.Each(func(value uint64) bool {
 			return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
@@ -84,18 +79,13 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 }
 
 func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	results := cardinality.NewBitmap32()
+	results := cardinality.NewBitmap64()
 
-	if canAbuseWeakCertBindingRels, err := FetchCanAbuseWeakCertBindingRels(tx, eca); err != nil {
-		if graph.IsErrNotFound(err) {
-			return nil
-		}
-		return err
-	} else if len(canAbuseWeakCertBindingRels) == 0 {
+	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint64()); !ok {
 		return nil
-	} else if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if ecaControllers, ok := cache.EnterpriseCAEnrollers[eca.ID]; !ok {
+	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaEnrollers) == 0 {
 		return nil
 	} else {
 		for _, template := range publishedCertTemplates {
@@ -104,22 +94,22 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				continue
 			} else if !valid {
 				continue
-			} else if certTemplateEnrollers, ok := cache.CertTemplateEnrollers[template.ID]; !ok {
+			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
 				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
 				continue
 			} else {
-				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaControllers)
+				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(eca.ID))
 
 				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
 					log.Warnf("Error getting start nodes for esc9a attacker nodes: %v", err)
 					continue
 				} else {
-					results.Or(cardinality.NodeIDsToDuplex(attackers))
+					results.Or(graph.NodeIDsToDuplex(attackers))
 				}
 			}
 		}
 
-		results.Each(func(value uint32) bool {
+		results.Each(func(value uint64) bool {
 			return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   domain.ID,
@@ -177,7 +167,7 @@ func isCertTemplateValidForESC9(ct *graph.Node, scenarioB bool) (bool, error) {
 func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
 		MATCH (n {objectid:'S-1-5-21-3933516454-2894985453-2515407000-500'})-[:ADCSESC9a]->(d:Domain {objectid:'S-1-5-21-3933516454-2894985453-2515407000'})
-		OPTIONAL MATCH p1 = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(m)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		MATCH p1 = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(m)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 		WHERE ct.requiresmanagerapproval = false
 		AND ct.authenticationenabled = true
 		AND ct.nosecurityextension = true
@@ -191,8 +181,14 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		m:Computer
 		OR (m:User AND ct.subjectaltrequiredns = false AND ct.subjectaltrequiredomaindns = false)
 		)
-		OPTIONAL MATCH p2 = (m)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
-		OPTIONAL MATCH p3 = (ca)-[:CanAbuseWeakCertBinding|DCFor|TrustedBy*1..]->(d)
+		MATCH p2 = (m)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
+		MATCH p3 = (d)<-[r:TrustedBy*0..]-()<-[:DCFor]-(dc:Computer)
+		WITH *, relationships(p3) AS r
+		WHERE ALL(rel IN r WHERE type(rel) = "DCFor" OR rel.trusttype = "ParentChild")
+		AND (
+			dc.strongcertificatebindingenforcementraw = 0
+			OR dc.strongcertificatebindingenforcementraw = 1
+		)
 		RETURN p1,p2,p3
 	*/
 
@@ -205,7 +201,7 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		path1CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		victimCANodes          = map[graph.ID][]graph.ID{}
 		path2CandidateSegments = map[graph.ID][]*graph.PathSegment{}
-		path3CandidateSegments = map[graph.ID][]*graph.PathSegment{}
+		path3CandidateSegments = []*graph.PathSegment{}
 		p2canodes              = make([]graph.ID, 0)
 		nodeMap                = map[graph.ID]*graph.Node{}
 		lock                   = &sync.Mutex{}
@@ -242,8 +238,14 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 				}
 			}
 
-			caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			// First ECA in the path
+			var caNode *graph.Node
+			terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+				if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+					caNode = end
+					return false
+				}
+				return true
 			})
 
 			lock.Lock()
@@ -281,14 +283,16 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 	if len(p2canodes) > 0 {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: endNode,
-			Driver: adcsESC9APath3Pattern(p2canodes).Do(func(terminal *graph.PathSegment) error {
-				caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-				})
-
-				lock.Lock()
-				path3CandidateSegments[caNode.ID] = append(path3CandidateSegments[caNode.ID], terminal)
-				lock.Unlock()
+			Driver: adcsESC9APath3Pattern().Do(func(terminal *graph.PathSegment) error {
+				terminalNode := terminal.Node
+				if terminalNode.Kinds.ContainsOneOf(ad.Computer) {
+					strongBinding, err := terminalNode.Properties.Get(ad.StrongCertificateBindingEnforcementRaw.String()).Float64()
+					if err == nil && (strongBinding == 1 || strongBinding == 0) {
+						lock.Lock()
+						path3CandidateSegments = append(path3CandidateSegments, terminal)
+						lock.Unlock()
+					}
+				}
 				return nil
 			}),
 		}); err != nil {
@@ -298,24 +302,30 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 
 	for _, p1paths := range path1CandidateSegments {
 		for _, p1path := range p1paths {
-			caNode := p1path.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			// First ECA in the path
+			var caNode *graph.Node
+			p1path.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+				if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+					caNode = end
+					return false
+				}
+				return true
 			})
 
 			if p2segments, ok := path2CandidateSegments[caNode.ID]; !ok {
-				continue
-			} else if p3segments, ok := path3CandidateSegments[caNode.ID]; !ok {
 				continue
 			} else {
 				paths.AddPath(p1path.Path())
 				for _, p2 := range p2segments {
 					paths.AddPath(p2.Path())
 				}
-
-				for _, p3 := range p3segments {
-					paths.AddPath(p3.Path())
-				}
 			}
+		}
+	}
+
+	if len(paths) > 0 {
+		for _, p3 := range path3CandidateSegments {
+			paths.AddPath(p3.Path())
 		}
 	}
 
@@ -360,8 +370,12 @@ func adcsESC9aPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
 			),
 		).
 		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.PublishedTo, ad.IssuedSignedBy),
+			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
+		)).
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
@@ -393,14 +407,17 @@ func adcsESC9APath2Pattern(caNodes []graph.ID, domainId graph.ID) traversal.Patt
 		))
 }
 
-func adcsESC9APath3Pattern(caIDs []graph.ID) traversal.PatternContinuation {
+func adcsESC9APath3Pattern() traversal.PatternContinuation {
 	return traversal.NewPattern().
-		Inbound(
-			query.KindIn(query.Relationship(), ad.DCFor, ad.TrustedBy),
-		).
+		InboundWithDepth(0, 0,
+			query.And(
+				query.Kind(query.Relationship(), ad.TrustedBy),
+				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
+				query.Kind(query.Start(), ad.Domain),
+			)).
 		Inbound(query.And(
-			query.Kind(query.Relationship(), ad.CanAbuseWeakCertBinding),
-			query.InIDs(query.StartID(), caIDs...),
+			query.Kind(query.Relationship(), ad.DCFor),
+			query.Kind(query.Start(), ad.Computer),
 		))
 }
 
@@ -439,8 +456,12 @@ func adcsESC9bPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
 			),
 		).
 		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.PublishedTo, ad.IssuedSignedBy),
+			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
+		)).
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
@@ -472,21 +493,24 @@ func adcsESC9bPath2Pattern(caNodes []graph.ID, domainId graph.ID) traversal.Patt
 		))
 }
 
-func adcsESC9bPath3Pattern(caIDs []graph.ID) traversal.PatternContinuation {
+func adcsESC9bPath3Pattern() traversal.PatternContinuation {
 	return traversal.NewPattern().
-		Inbound(
-			query.KindIn(query.Relationship(), ad.DCFor, ad.TrustedBy),
-		).
+		InboundWithDepth(0, 0,
+			query.And(
+				query.Kind(query.Relationship(), ad.TrustedBy),
+				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
+				query.Kind(query.Start(), ad.Domain),
+			)).
 		Inbound(query.And(
-			query.Kind(query.Relationship(), ad.CanAbuseWeakCertBinding),
-			query.InIDs(query.StartID(), caIDs...),
+			query.Kind(query.Relationship(), ad.DCFor),
+			query.Kind(query.Start(), ad.Computer),
 		))
 }
 
 func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
 		MATCH (n {objectid:'S-1-5-21-3933516454-2894985453-2515407000-500'})-[:ADCSESC9b]->(d:Domain {objectid:'S-1-5-21-3933516454-2894985453-2515407000'})
-		OPTIONAL MATCH p1 = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(m:Computer)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
+		MATCH p1 = (n)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(m:Computer)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 		WHERE ct.requiresmanagerapproval = false
 		AND ct.authenticationenabled = true
 		AND ct.nosecurityextension = true
@@ -496,8 +520,15 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 			(ct.schemaversion > 1 AND ct.authorizedsignatures = 0)
 			OR ct.schemaversion = 1
 		)
-		OPTIONAL MATCH p2 = (m)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
-		OPTIONAL MATCH p3 = (ca)-[:CanAbuseWeakCertBinding|DCFor|TrustedBy*1..]->(d)
+		MATCH p2 = (m)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
+		MATCH p3 = (d)<-[r:TrustedBy*0..]-()<-[:DCFor]-(dc:Computer)
+		WITH *, relationships(p3) AS r
+		WHERE ALL(rel IN r WHERE type(rel) = "DCFor" OR rel.trusttype = "ParentChild")
+		AND (
+			dc.strongcertificatebindingenforcementraw = 0
+			OR dc.strongcertificatebindingenforcementraw = 1
+		)
+
 		RETURN p1,p2,p3
 	*/
 
@@ -510,7 +541,7 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		path1CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		victimCANodes          = map[graph.ID][]graph.ID{}
 		path2CandidateSegments = map[graph.ID][]*graph.PathSegment{}
-		path3CandidateSegments = map[graph.ID][]*graph.PathSegment{}
+		path3CandidateSegments = []*graph.PathSegment{}
 		p2canodes              = make([]graph.ID, 0)
 		nodeMap                = map[graph.ID]*graph.Node{}
 		lock                   = &sync.Mutex{}
@@ -536,8 +567,14 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 				return nextSegment.Depth() == 1
 			})
 
-			caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			// First ECA in the path
+			var caNode *graph.Node
+			terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+				if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+					caNode = end
+					return false
+				}
+				return true
 			})
 
 			lock.Lock()
@@ -575,14 +612,16 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 	if len(p2canodes) > 0 {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: endNode,
-			Driver: adcsESC9bPath3Pattern(p2canodes).Do(func(terminal *graph.PathSegment) error {
-				caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-				})
-
-				lock.Lock()
-				path3CandidateSegments[caNode.ID] = append(path3CandidateSegments[caNode.ID], terminal)
-				lock.Unlock()
+			Driver: adcsESC9bPath3Pattern().Do(func(terminal *graph.PathSegment) error {
+				terminalNode := terminal.Node
+				if terminalNode.Kinds.ContainsOneOf(ad.Computer) {
+					strongBinding, err := terminalNode.Properties.Get(ad.StrongCertificateBindingEnforcementRaw.String()).Float64()
+					if err == nil && (strongBinding == 1 || strongBinding == 0) {
+						lock.Lock()
+						path3CandidateSegments = append(path3CandidateSegments, terminal)
+						lock.Unlock()
+					}
+				}
 				return nil
 			}),
 		}); err != nil {
@@ -592,24 +631,30 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 
 	for _, p1paths := range path1CandidateSegments {
 		for _, p1path := range p1paths {
-			caNode := p1path.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			// First ECA in the path
+			var caNode *graph.Node
+			p1path.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+				if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+					caNode = end
+					return false
+				}
+				return true
 			})
 
 			if p2segments, ok := path2CandidateSegments[caNode.ID]; !ok {
-				continue
-			} else if p3segments, ok := path3CandidateSegments[caNode.ID]; !ok {
 				continue
 			} else {
 				paths.AddPath(p1path.Path())
 				for _, p2 := range p2segments {
 					paths.AddPath(p2.Path())
 				}
-
-				for _, p3 := range p3segments {
-					paths.AddPath(p3.Path())
-				}
 			}
+		}
+	}
+
+	if len(paths) > 0 {
+		for _, p3 := range path3CandidateSegments {
+			paths.AddPath(p3.Path())
 		}
 	}
 

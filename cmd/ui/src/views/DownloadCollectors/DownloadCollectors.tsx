@@ -17,7 +17,7 @@
 import { Alert, Box, Paper, Skeleton, Typography, useTheme } from '@mui/material';
 import fileDownload from 'js-file-download';
 import { useDispatch } from 'react-redux';
-import { apiClient } from 'bh-shared-ui';
+import { apiClient, DocumentationLinks } from 'bh-shared-ui';
 import { CollectorCardList, PageWithTitle } from 'bh-shared-ui';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { CollectorType, useGetCollectorsByType } from 'src/hooks/useCollectors';
@@ -69,7 +69,17 @@ const DownloadCollectors = () => {
 
     /* Implementation */
     return (
-        <PageWithTitle title='Download Collectors' data-testid='download-collectors'>
+        <PageWithTitle
+            title='Download Collectors'
+            data-testid='download-collectors'
+            pageDescription={
+                <Typography variant='body2' paragraph>
+                    To get started, collect data using SharpHound or AzureHound.
+                    <br />
+                    BloodHound CE supports both {DocumentationLinks.sharpHoundCELink} and{' '}
+                    {DocumentationLinks.azureHoundCELink} collectors.
+                </Typography>
+            }>
             <Box display='grid' gap={theme.spacing(4)}>
                 {(sharpHoundCollectorsQuery.isError ||
                     azureHoundCollectorsQuery.isError ||

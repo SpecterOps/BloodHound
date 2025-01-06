@@ -13,17 +13,21 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
+import { OptionsObject, SnackbarKey } from 'notistack';
 import * as types from './types';
 
-export const removeSnackbar = (key: string): types.GlobalViewActionTypes => {
+export const removeSnackbar = (key: SnackbarKey): types.GlobalViewActionTypes => {
     return {
         type: types.GLOBAL_REMOVE_SNACKBAR,
         key: key,
     };
 };
 
-export const addSnackbar = (notification: string, key: string, options: any = {}): types.GlobalViewActionTypes => {
+export const addSnackbar = (
+    notification: string,
+    key: string,
+    options: OptionsObject = {}
+): types.GlobalViewActionTypes => {
     return {
         type: types.GLOBAL_ADD_SNACKBAR,
         notification: {
@@ -42,6 +46,13 @@ export const closeSnackbar = (key: string): types.GlobalViewActionTypes => {
     return {
         type: types.GLOBAL_CLOSE_SNACKBAR,
         key: key,
+    };
+};
+
+export const setDarkMode = (darkMode: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_DARK_MODE,
+        darkMode,
     };
 };
 

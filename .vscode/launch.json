@@ -20,7 +20,7 @@
             "program": "${file}"
         },
         {
-            "name": "Docker Compose Debug",
+            "name": "Debug with Docker",
             "type": "go",
             "host": "localhost",
             "mode": "remote",

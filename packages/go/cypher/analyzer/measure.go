@@ -19,7 +19,8 @@ package analyzer
 import (
 	"fmt"
 
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/models/cypher"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -46,7 +47,7 @@ type ComplexityMeasure struct {
 	nodeLookupKinds map[string]graph.Kinds
 }
 
-func (s *ComplexityMeasure) onCreate(_ *model.WalkStack, _ *model.Create) error {
+func (s *ComplexityMeasure) onCreate(_ *cypher.WalkStack, _ *cypher.Create) error {
 	// Let's add 1 per create
 	s.Weight += weight1
 	s.isCreate = true
@@ -54,7 +55,7 @@ func (s *ComplexityMeasure) onCreate(_ *model.WalkStack, _ *model.Create) error 
 	return nil
 }
 
-func (s *ComplexityMeasure) onDelete(_ *model.WalkStack, node *model.Delete) error {
+func (s *ComplexityMeasure) onDelete(_ *cypher.WalkStack, node *cypher.Delete) error {
 	// Base weight for delete is 3, if detach is specified, we give a heavy weight on top to account
 	// for the extra complexity of deleting relationships
 	s.Weight += weight3
@@ -83,7 +84,7 @@ func (s *ComplexityMeasure) onExit() {
 	}
 }
 
-func (s *ComplexityMeasure) onFunctionInvocation(_ *model.WalkStack, node *model.FunctionInvocation) error {
+func (s *ComplexityMeasure) onFunctionInvocation(_ *cypher.WalkStack, node *cypher.FunctionInvocation) error {
 	switch node.Name {
 	case "collect":
 		// Collect will force an eager aggregation
@@ -97,9 +98,9 @@ func (s *ComplexityMeasure) onFunctionInvocation(_ *model.WalkStack, node *model
 	return nil
 }
 
-func (s *ComplexityMeasure) onKindMatcher(_ *model.WalkStack, node *model.KindMatcher) error {
+func (s *ComplexityMeasure) onKindMatcher(_ *cypher.WalkStack, node *cypher.KindMatcher) error {
 	switch typedReference := node.Reference.(type) {
-	case *model.Variable:
+	case *cypher.Variable:
 		// This kind matcher narrows a node reference's kind and will result in an indexed lookup
 		s.nodeLookupKinds[typedReference.Symbol] = s.nodeLookupKinds[typedReference.Symbol].Add(node.Kinds...)
 	}
@@ -107,20 +108,20 @@ func (s *ComplexityMeasure) onKindMatcher(_ *model.WalkStack, node *model.KindMa
 	return nil
 }
 
-func (s *ComplexityMeasure) onMerge(_ *model.WalkStack, node *model.Merge) error {
+func (s *ComplexityMeasure) onMerge(_ *cypher.WalkStack, node *cypher.Merge) error {
 	// Let's add 1 per merge action
 	s.Weight += weight1 * int64(len(node.MergeActions))
 
 	return nil
 }
 
-func (s *ComplexityMeasure) onNodePattern(_ *model.WalkStack, node *model.NodePattern) error {
+func (s *ComplexityMeasure) onNodePattern(_ *cypher.WalkStack, node *cypher.NodePattern) error {
 	if node.Binding == nil {
 		if len(node.Kinds) == 0 {
 			// Unlabeled, unbound nodes will incur a lookup of all nodes in the graph
 			s.Weight += weight2
 		}
-	} else if nodePatternBinding, typeOK := node.Binding.(*model.Variable); !typeOK {
+	} else if nodePatternBinding, typeOK := node.Binding.(*cypher.Variable); !typeOK {
 		return fmt.Errorf("expected variable for node pattern binding but got: %T", node.Binding)
 	} else {
 		nodeLookupKinds, hasBinding := s.nodeLookupKinds[nodePatternBinding.Symbol]
@@ -142,9 +143,9 @@ func (s *ComplexityMeasure) onNodePattern(_ *model.WalkStack, node *model.NodePa
 	return nil
 }
 
-func (s *ComplexityMeasure) onPartialComparison(_ *model.WalkStack, node *model.PartialComparison) error {
+func (s *ComplexityMeasure) onPartialComparison(_ *cypher.WalkStack, node *cypher.PartialComparison) error {
 	switch node.Operator {
-	case model.OperatorRegexMatch:
+	case cypher.OperatorRegexMatch:
 		// Regular expression matching incurs a weight since it can be far more involved than any of the other
 		// string operators
 		s.Weight += weight1
@@ -153,7 +154,7 @@ func (s *ComplexityMeasure) onPartialComparison(_ *model.WalkStack, node *model.
 	return nil
 }
 
-func (s *ComplexityMeasure) onPatternPart(_ *model.WalkStack, node *model.PatternPart) error {
+func (s *ComplexityMeasure) onPatternPart(_ *cypher.WalkStack, node *cypher.PatternPart) error {
 	// All pattern parts incur a compounding weight
 	s.numPatterns += 1
 	s.Weight += s.numPatterns
@@ -172,7 +173,7 @@ func (s *ComplexityMeasure) onPatternPart(_ *model.WalkStack, node *model.Patter
 	return nil
 }
 
-func (s *ComplexityMeasure) onProjection(_ *model.WalkStack, node *model.Projection) error {
+func (s *ComplexityMeasure) onProjection(_ *cypher.WalkStack, node *cypher.Projection) error {
 	// We want to capture the cost of additional inline projections so ignore the first projection
 	s.Weight += s.numProjections
 	s.numProjections += 1
@@ -189,14 +190,14 @@ func (s *ComplexityMeasure) onProjection(_ *model.WalkStack, node *model.Project
 	return nil
 }
 
-func (s *ComplexityMeasure) onQuantifier(_ *model.WalkStack, _ *model.Quantifier) error {
+func (s *ComplexityMeasure) onQuantifier(_ *cypher.WalkStack, _ *cypher.Quantifier) error {
 	// Quantifier expressions may increase the size of an inline projection to apply its contained filter and should
 	// be weighted
 	s.Weight += weight1
 	return nil
 }
 
-func (s *ComplexityMeasure) onRelationshipPattern(_ *model.WalkStack, node *model.RelationshipPattern) error {
+func (s *ComplexityMeasure) onRelationshipPattern(_ *cypher.WalkStack, node *cypher.RelationshipPattern) error {
 	numKindMatchers := len(node.Kinds)
 
 	// All relationship lookups incur a weight
@@ -243,27 +244,27 @@ func (s *ComplexityMeasure) onRelationshipPattern(_ *model.WalkStack, node *mode
 	return nil
 }
 
-func (s *ComplexityMeasure) onRemove(_ *model.WalkStack, node *model.Remove) error {
+func (s *ComplexityMeasure) onRemove(_ *cypher.WalkStack, node *cypher.Remove) error {
 	// Let's add 1 per remove
 	s.Weight += weight1
 
 	return nil
 }
 
-func (s *ComplexityMeasure) onSet(_ *model.WalkStack, node *model.Set) error {
+func (s *ComplexityMeasure) onSet(_ *cypher.WalkStack, node *cypher.Set) error {
 	// Let's add 1 per set
 	s.Weight += weight1
 
 	return nil
 }
 
-func (s *ComplexityMeasure) onSortItem(_ *model.WalkStack, _ *model.SortItem) error {
+func (s *ComplexityMeasure) onSortItem(_ *cypher.WalkStack, _ *cypher.SortItem) error {
 	// Sorting incurs a weight since it will change how the projection is materialized
 	s.Weight += weight1
 	return nil
 }
 
-func (s *ComplexityMeasure) onWhere(_ *model.WalkStack, _ *model.Where) error {
+func (s *ComplexityMeasure) onWhere(_ *cypher.WalkStack, _ *cypher.Where) error {
 	// Filters in the query plan may or may not take advantage of indexes and should be weighted accordingly
 	s.Weight += weight1
 	s.hasWhere = true

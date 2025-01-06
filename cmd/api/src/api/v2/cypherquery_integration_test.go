@@ -23,7 +23,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/specterops/bloodhound/cypher/backend/cypher"
+	"github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils/test"
@@ -134,7 +134,7 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			&frontend.ImplicitProcedureInvocationFilter{},
 			&frontend.SpecifiedParametersFilter{},
 		)
-		stripper = cypher.NewCypherEmitter(true)
+		stripper = format.NewCypherEmitter(true)
 	)
 
 	lab.NewSpec(t, harness).Run(
@@ -143,7 +143,7 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			assert.True(ok)
 
 			var (
-				query         = "match (w: Wizard) where w.name = 'vldmrt' remove w.name return w"
+				query         = "match (w: User) where w.name = 'vldmrt' remove w.name return w"
 				strippedQuery = &bytes.Buffer{}
 			)
 			parsedQuery, err := frontend.ParseCypher(parseCtx, query)
@@ -168,7 +168,7 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			assert.True(ok)
 
 			var (
-				query         = "match (w: Wizard) where w.name = 'harryp' delete w"
+				query         = "match (w: User) where w.name = 'harryp' delete w"
 				strippedQuery = &bytes.Buffer{}
 			)
 			parsedQuery, err := frontend.ParseCypher(parseCtx, query)
@@ -196,7 +196,7 @@ func Test_CypherSearch_WithCypherMutationsEnabled(t *testing.T) {
 			assert.True(ok)
 
 			var (
-				query         = "match (w: Wizard) set w.wizard = true return w.wizard"
+				query         = "match (w: User) set w.wizard = true return w"
 				strippedQuery = &bytes.Buffer{}
 			)
 

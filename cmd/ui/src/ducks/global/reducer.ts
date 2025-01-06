@@ -14,21 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { produce } from 'immer';
+import { produce, castDraft } from 'immer';
 import { combineReducers } from '@reduxjs/toolkit';
 import * as types from './types';
 import assign from 'lodash/assign';
 
 const initialGlobalState: types.GlobalViewState = {
-    drawerOpen: false,
-    pageTitle: 'Home',
     notifications: [],
+    darkMode: false,
 };
 
 const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewActionTypes) => {
     return produce(state, (draft) => {
         if (action.type === types.GLOBAL_ADD_SNACKBAR) {
-            draft.notifications = [...draft.notifications, action.notification];
+            draft.notifications = [...draft.notifications, castDraft(action.notification)];
         } else if (action.type === types.GLOBAL_CLOSE_SNACKBAR) {
             draft.notifications = draft.notifications.map((notification) => {
                 return action.key === null || action.key === notification.key
@@ -37,6 +36,8 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             });
         } else if (action.type === types.GLOBAL_REMOVE_SNACKBAR) {
             draft.notifications = draft.notifications.filter((notification) => notification.key !== action.key);
+        } else if (action.type === types.GLOBAL_SET_DARK_MODE) {
+            draft.darkMode = action.darkMode;
         }
     });
 };

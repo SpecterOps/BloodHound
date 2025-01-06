@@ -132,3 +132,10 @@ export const toggleTierZeroNode = (nodeId: string): types.GraphActionTypes => {
         nodeId,
     };
 };
+
+export const toggleOwnedObjectNode = (nodeId: string): types.GraphActionTypes => {
+    return {
+        type: types.TOGGLE_OWNED_OBJECT_NODE,
+        nodeId,
+    };
+};

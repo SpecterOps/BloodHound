@@ -20,10 +20,12 @@ package datapipe
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
+
+	"github.com/specterops/bloodhound/log"
 )
 
 // FileOperations is an interface for describing filesystem actions. This implementation exists due to deficiencies in
@@ -60,7 +62,7 @@ func NewOrphanFileSweeper(fileOps FileOperations, tempDirectoryRootPath string) 
 	return &OrphanFileSweeper{
 		lock:                  &sync.Mutex{},
 		fileOps:               fileOps,
-		tempDirectoryRootPath: tempDirectoryRootPath,
+		tempDirectoryRootPath: strings.TrimSuffix(tempDirectoryRootPath, string(filepath.Separator)),
 	}
 }
 
@@ -77,6 +79,9 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 	// Release the lock once finished
 	defer s.lock.Unlock()
 
+	log.Infof("Running OrphanFileSweeper for path %s", s.tempDirectoryRootPath)
+	log.Debugf("OrphanFileSweeper expected names %v", expectedFileNames)
+
 	if dirEntries, err := s.fileOps.ReadDir(s.tempDirectoryRootPath); err != nil {
 		log.Errorf("Failed reading work directory %s: %v", s.tempDirectoryRootPath, err)
 	} else {
@@ -84,8 +89,17 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 
 		// Remove expected files from the deletion list
 		for _, expectedFileName := range expectedFileNames {
+			expectedDir, expectedFN := filepath.Split(expectedFileName)
+			if expectedDir != "" {
+				expectedDir = strings.TrimSuffix(expectedDir, string(filepath.Separator))
+				if expectedDir != s.tempDirectoryRootPath {
+					log.Warnf("directory '%s' for expectedFileName '%s' does not match tempDirectoryRootPath '%s': skipping", expectedDir, expectedFileName, s.tempDirectoryRootPath)
+					continue
+				}
+			}
 			for idx, dirEntry := range dirEntries {
-				if expectedFileName == dirEntry.Name() {
+				if expectedFN == dirEntry.Name() {
+					log.Debugf("skipping expected file %s", expectedFN)
 					dirEntries = append(dirEntries[:idx], dirEntries[idx+1:]...)
 				}
 			}
@@ -97,6 +111,7 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 				break
 			}
 
+			log.Infof("Removing orphaned file %s", orphanedDirEntry.Name())
 			fullPath := filepath.Join(s.tempDirectoryRootPath, orphanedDirEntry.Name())
 
 			if err := s.fileOps.RemoveAll(fullPath); err != nil {

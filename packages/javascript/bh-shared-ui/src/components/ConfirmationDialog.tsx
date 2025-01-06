@@ -14,15 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
-    FormHelperText,
-} from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormHelperText } from '@mui/material';
 import React from 'react';
 
 const ConfirmationDialog: React.FC<{
@@ -54,18 +47,13 @@ const ConfirmationDialog: React.FC<{
                     </FormHelperText>
                 )}
                 <Button
-                    autoFocus
-                    color='inherit'
+                    variant='tertiary'
                     onClick={() => onClose(false)}
                     disabled={isLoading}
                     data-testid='confirmation-dialog_button-no'>
                     {'No'}
                 </Button>
-                <Button
-                    color='primary'
-                    onClick={() => onClose(true)}
-                    disabled={isLoading}
-                    data-testid='confirmation-dialog_button-yes'>
+                <Button onClick={() => onClose(true)} disabled={isLoading} data-testid='confirmation-dialog_button-yes'>
                     {'Yes'}
                 </Button>
             </DialogActions>

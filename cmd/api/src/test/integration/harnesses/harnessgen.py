@@ -81,13 +81,14 @@ class CertTemplateData:
     def __init__(self) -> None:
         self.RequiresManagerApproval = False
         self.AuthenticationEnabled = False
+        self.SchannelAuthenticationEnabled = False
         self.EnrolleeSuppliesSubject = False
         self.SubjectAltRequireUPN = False
         self.SubjectAltRequireSPN = False
         self.NoSecurityExtension = False
         self.SchemaVersion = 1
         self.AuthorizedSignatures = 0
-        self.EKUS = []
+        self.EffectiveEKUs = []
         self.ApplicationPolicies = []
         self.SubjectAltRequireEmail = False
 

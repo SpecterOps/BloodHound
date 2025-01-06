@@ -650,18 +650,10 @@
             }
         },
         {
-            "name": "Users with Foreign Domain Group Membership",
+            "name": "Principals with Foreign Domain Group Membership",
             "type": "string_match",
             "details": {
-                "query": "match p = (n:User)-[:MemberOf]->(m:Group) where n.domain = 'DOMAIN.PAIN' and m.domain <> n.domain return p",
-                "complexity": 3
-            }
-        },
-        {
-            "name": "Groups with Foreign Domain Group Membership",
-            "type": "string_match",
-            "details": {
-                "query": "match p = (n:Group {domain: 'DOMAIN.PAIN'})-[:MemberOf]->(m:Group) where m.domain <> n.domain and n.name <> m.name return p",
+                "query": "match p = (n:Base)-[:MemberOf]->(m:Group) where n.domain = 'DOMAIN.PAIN' and m.domain <> n.domain return p",
                 "complexity": 3
             }
         },
@@ -717,7 +709,7 @@
             "name": "Find Dangerous Privileges for Domain Users Groups",
             "type": "string_match",
             "details": {
-                "query": "match p = (m:Group)-[:Owns|WriteDacl|GenericAll|WriteOwner|ExecuteDCOM|GenericWrite|AllowedToDelegate|ForceChangePassword]->(n:Computer) where m.objectid ends with '-513' return p",
+                "query": "match p = (m:Group)-[:Owns|GenericAll|GenericWrite|WriteOwner|WriteDacl|MemberOf|ForceChangePassword|AllExtendedRights|AddMember|HasSession|Contains|GPLink|AllowedToDelegate|CoerceToTGT|TrustedBy|AllowedToAct|AdminTo|CanPSRemote|CanRDP|ExecuteDCOM|HasSIDHistory|AddSelf|DCSync|ReadLAPSPassword|ReadGMSAPassword|DumpSMSAPassword|SQLAdmin|AddAllowedToAct|WriteSPN|AddKeyCredentialLink|SyncLAPSPassword|WriteAccountRestrictions|GoldenCert|ADCSESC1|ADCSESC3|ADCSESC4|ADCSESC5|ADCSESC6a|ADCSESC6b|ADCSESC7|ADCSESC9a|ADCSESC9b|ADCSESC10a|ADCSESC10b|ADCSESC13|DCFor|SyncedToEntraUser]->(n:Base) where m.objectid ends with '-513' return p",
                 "complexity": 3
             }
         },
@@ -791,6 +783,22 @@
             "details": {
                 "query": "match (n:Product) return 1 + 2 % 3 + n.prop_1 ^ n.prop_2 - 300.124 / 2 * 100 as combined",
                 "complexity": 1
+            }
+        },
+        {
+            "name": "Support unary operators in property match",
+            "type": "string_match",
+            "details": {
+                "query": "match (n:Product) where n.prop_1 = -1 return n",
+                "complexity": 2
+            }
+        },
+        {
+            "name": "Support complex arithmetic expressions with unary operators in property match",
+            "type": "string_match",
+            "details": {
+                "query": "match (n:Product) where n.prop_1 = -(1 + 2) * -3 return n",
+                "complexity": 2
             }
         },
         {

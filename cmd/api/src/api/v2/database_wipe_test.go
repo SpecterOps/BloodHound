@@ -21,12 +21,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	graph_mocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
-	taskerMocks "github.com/specterops/bloodhound/src/daemons/datapipe/mocks"
 	dbMocks "github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"go.uber.org/mock/gomock"
@@ -34,15 +34,19 @@ import (
 
 func TestDatabaseWipe(t *testing.T) {
 	var (
-		mockCtrl   = gomock.NewController(t)
-		mockDB     = dbMocks.NewMockDatabase(mockCtrl)
-		mockTasker = taskerMocks.NewMockTasker(mockCtrl)
-		mockGraph  = graph_mocks.NewMockDatabase(mockCtrl)
-		resources  = v2.Resources{DB: mockDB, TaskNotifier: mockTasker, Graph: mockGraph}
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+		mockGraph = graph_mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB, Graph: mockGraph}
+		user      = setupUser()
+		userCtx   = setupUserCtx(user)
 	)
 	defer mockCtrl.Finish()
 
 	apitest.NewHarness(t, resources.HandleDatabaseWipe).
+		WithCommonRequest(func(input *apitest.Input) {
+			apitest.SetContext(input, userCtx)
+		}).
 		Run([]apitest.Case{
 			{
 				Name: "JSON Malformed",
@@ -81,7 +85,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 			},
 			{
-				Name: "deletion of collected graph data kicks off tasker",
+				Name: "deletion of collected graph data kicks off analysis",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
 					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteCollectedGraphData: true})
@@ -91,11 +95,11 @@ func TestDatabaseWipe(t *testing.T) {
 						Enabled: true,
 					}, nil)
 
-					taskerIntent := mockTasker.EXPECT().RequestDeletion().Times(1)
+					successfulRequestDeletion := mockDB.EXPECT().RequestCollectedGraphDataDeletion(gomock.Any(), uuid.UUID{}.String()).Times(1)
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulAuditLogWipe := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-					gomock.InOrder(successfulAuditLogIntent, taskerIntent, successfulAuditLogWipe)
+					gomock.InOrder(successfulAuditLogIntent, successfulRequestDeletion, successfulAuditLogWipe)
 
 				},
 				Test: func(output apitest.Output) {
@@ -131,7 +135,7 @@ func TestDatabaseWipe(t *testing.T) {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulAssetGroupSelectorsDelete := mockDB.EXPECT().DeleteAssetGroupSelectorsForAssetGroups(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulAuditLogSuccess := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					successfulAnalysisKickoff := mockTasker.EXPECT().RequestAnalysis().Times(1)
+					successfulAnalysisKickoff := mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String()).Times(1)
 
 					gomock.InOrder(successfulAuditLogIntent, successfulAssetGroupSelectorsDelete, successfulAuditLogSuccess, successfulAnalysisKickoff)
 
@@ -197,7 +201,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 			},
 			{
-				Name: "succesful deletion of data quality history",
+				Name: "successful deletion of data quality history",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
 					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteDataQualityHistory: true})
@@ -255,16 +259,16 @@ func TestDatabaseWipe(t *testing.T) {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{
 						Enabled: true,
 					}, nil)
-					taskerIntent := mockTasker.EXPECT().RequestDeletion().Times(1)
+					successfulDeletionRequest := mockDB.EXPECT().RequestCollectedGraphDataDeletion(gomock.Any(), uuid.UUID{}.String()).Times(1)
 					nodesDeletedAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					gomock.InOrder(successfulAuditLogIntent, taskerIntent, nodesDeletedAuditLog)
+					gomock.InOrder(successfulAuditLogIntent, successfulDeletionRequest, nodesDeletedAuditLog)
 
 					// high value selector operations
 					assetGroupSelectorsDelete := mockDB.EXPECT().DeleteAssetGroupSelectorsForAssetGroups(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					assetGroupSelectorsAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 					// analysis kickoff
-					analysisKickoff := mockTasker.EXPECT().RequestAnalysis().Times(1)
+					analysisKickoff := mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String()).Times(1)
 
 					gomock.InOrder(assetGroupSelectorsDelete, assetGroupSelectorsAuditLog, analysisKickoff)
 

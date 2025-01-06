@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Button, Grid, TextField, Typography } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Box, Grid, TextField, Typography } from '@mui/material';
 import React, { useState } from 'react';
 
 interface OneTimePasscodeFormProps {
@@ -60,25 +61,16 @@ const OneTimePasscodeForm: React.FC<OneTimePasscodeFormProps> = ({ onSubmit, onC
                     />
                 </Grid>
                 <Grid item xs={8}>
-                    <Button
-                        variant='contained'
-                        color='primary'
-                        size='large'
-                        type='submit'
-                        fullWidth
-                        disableElevation
-                        disabled={loading}>
+                    <Button size='large' type='submit' style={{ width: '100%' }} disabled={loading}>
                         {loading ? 'Checking Code' : 'Check Code'}
                     </Button>
                     <Box mt={2}>
                         <Button
                             onClick={onCancel}
-                            color='inherit'
-                            variant='contained'
+                            variant='tertiary'
                             size='large'
                             type='button'
-                            fullWidth
-                            disableElevation
+                            style={{ width: '100%' }}
                             disabled={loading}>
                             Return to Login
                         </Button>

@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { OWNED_OBJECT_TAG, TIER_ZERO_TAG } from 'bh-shared-ui';
 import { produce } from 'immer';
 import * as types from 'src/ducks/explore/types';
 
@@ -49,12 +50,38 @@ const graphDataReducer = (state = initialGraphDataState, action: types.GraphActi
         } else if (action.type === types.SAVE_RESPONSE_FOR_EXPORT) {
             draft.export = action.payload;
         } else if (action.type === types.TOGGLE_TIER_ZERO_NODE) {
-            const systemTags = state.chartProps.items[action.nodeId].data.system_tags;
-            // remove the tier zero tag from the node
-            if (systemTags === 'admin_tier_0') {
-                draft.chartProps.items[action.nodeId].data.system_tags = '';
+            let systemTags = [];
+            // Check if system_tags contains tags then split, else leave empty
+            {
+                state.chartProps.items[action.nodeId].data.system_tags
+                    ? (systemTags = state.chartProps.items[action.nodeId].data.system_tags.split(' '))
+                    : null;
+            }
+            if (systemTags.includes(TIER_ZERO_TAG)) {
+                // Remove tag
+                systemTags.splice(systemTags.indexOf(TIER_ZERO_TAG), 1);
+                draft.chartProps.items[action.nodeId].data.system_tags = systemTags.join(' ');
             } else {
-                draft.chartProps.items[action.nodeId].data.system_tags = 'admin_tier_0';
+                // Add tag
+                systemTags.push(TIER_ZERO_TAG);
+                draft.chartProps.items[action.nodeId].data.system_tags = systemTags.join(' ');
+            }
+        } else if (action.type === types.TOGGLE_OWNED_OBJECT_NODE) {
+            let systemTags = [];
+            // Check if system_tags contains tags then split, else leave empty
+            {
+                state.chartProps.items[action.nodeId].data.system_tags
+                    ? (systemTags = state.chartProps.items[action.nodeId].data.system_tags.split(' '))
+                    : null;
+            }
+            if (systemTags.includes(OWNED_OBJECT_TAG)) {
+                // Remove tag
+                systemTags.splice(systemTags.indexOf(OWNED_OBJECT_TAG), 1);
+                draft.chartProps.items[action.nodeId].data.system_tags = systemTags.join(' ');
+            } else {
+                // Add tag
+                systemTags.push(OWNED_OBJECT_TAG);
+                draft.chartProps.items[action.nodeId].data.system_tags = systemTags.join(' ');
             }
         }
         return draft;

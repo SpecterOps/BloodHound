@@ -22,7 +22,9 @@ import (
 	"sync"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util"
+	"github.com/specterops/bloodhound/dawgs/util/channels"
 )
 
 var (
@@ -291,4 +293,173 @@ func (s *Operation[T]) SubmitWriter(writer WriterFunc[T]) error {
 	case s.writerJobC <- job:
 		return nil
 	}
+}
+
+func parallelNodeQuery(ctx context.Context, db graph.Database, numWorkers int, criteria graph.Criteria, largestNodeID graph.ID, queryDelegate func(query graph.NodeQuery) error) error {
+	const stride = 20_000
+
+	var (
+		rangeC   = make(chan graph.ID)
+		errorC   = make(chan error)
+		workerWG = &sync.WaitGroup{}
+		errorWG  = &sync.WaitGroup{}
+		errs     []error
+	)
+
+	// Query workers
+	for workerID := 0; workerID < numWorkers; workerID++ {
+		workerWG.Add(1)
+
+		go func() {
+			defer workerWG.Done()
+
+			if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+				// Create a slice of criteria to join the node ID range constraints to any passed user criteria
+				var criteriaSlice []graph.Criteria
+
+				if criteria != nil {
+					criteriaSlice = append(criteriaSlice, criteria)
+				}
+
+				// Select the next node ID range floor while honoring context cancellation and channel closure
+				nextRangeFloor, channelOpen := channels.Receive(ctx, rangeC)
+
+				for channelOpen {
+					nextQuery := tx.Nodes().Filter(query.And(
+						append(criteriaSlice,
+							query.GreaterThanOrEquals(query.NodeID(), nextRangeFloor),
+							query.LessThan(query.NodeID(), nextRangeFloor+stride),
+						)...,
+					))
+
+					if err := queryDelegate(nextQuery); err != nil {
+						return err
+					}
+
+					nextRangeFloor, channelOpen = channels.Receive(ctx, rangeC)
+				}
+
+				return nil
+			}); err != nil {
+				channels.Submit(ctx, errorC, err)
+			}
+		}()
+	}
+
+	// Merge goroutine for collected errors
+	errorWG.Add(1)
+
+	go func() {
+		defer errorWG.Done()
+
+		for {
+			select {
+			case <-ctx.Done():
+				// Bail if the context is canceled
+				return
+
+			case nextErr, channelOpen := <-errorC:
+				if !channelOpen {
+					// Channel closure indicates completion of work and join of the parallel workers
+					return
+				}
+
+				errs = append(errs, nextErr)
+			}
+		}
+	}()
+
+	// Iterate through node ID ranges up to the maximum ID by the stride constant
+	for nextRangeFloor := graph.ID(0); nextRangeFloor <= largestNodeID; nextRangeFloor += stride {
+		channels.Submit(ctx, rangeC, nextRangeFloor)
+	}
+
+	// Stop the fetch workers
+	close(rangeC)
+	workerWG.Wait()
+
+	// Wait for the merge routine to join to ensure that both the nodes instance and the errs instance contain
+	// everything to be collected from the parallel workers
+	close(errorC)
+	errorWG.Wait()
+
+	// Return the joined errors lastly
+	return errors.Join(errs...)
+}
+
+// ParallelNodeQuery will first look up the largest node database identifier. The function will then spin up to
+// numWorkers parallel read transactions. Each transaction will apply the user passed criteria to this function to a
+// range of node database identifiers to avoid parallel worker collisions.
+func ParallelNodeQuery(ctx context.Context, db graph.Database, criteria graph.Criteria, numWorkers int, queryDelegate func(query graph.NodeQuery) error) error {
+	if largestNodeID, err := FetchLargestNodeID(ctx, db); err != nil {
+		if graph.IsErrNotFound(err) {
+			return nil
+		}
+
+		return err
+	} else {
+		return parallelNodeQuery(ctx, db, numWorkers, criteria, largestNodeID, queryDelegate)
+	}
+}
+
+// ParallelNodeQueryBuilder is a type that can be used to construct a dawgs node query that is run in parallel. The
+// Stream(...) function commits the query to as many workers as specified and then submits all results to a single
+// channel that can be safely ranged over. Context cancellation is taken into consideration and the channel will close
+// upon exit of the parallel query's context.
+type ParallelNodeQueryBuilder[T any] struct {
+	db            graph.Database
+	wg            *sync.WaitGroup
+	err           error
+	criteria      graph.Criteria
+	queryDelegate func(query graph.NodeQuery, outC chan<- T) error
+}
+
+func NewParallelNodeQuery[T any](db graph.Database) *ParallelNodeQueryBuilder[T] {
+	return &ParallelNodeQueryBuilder[T]{
+		db: db,
+		wg: &sync.WaitGroup{},
+	}
+}
+
+// UsingQuery specifies the execution and marshalling of results from the database. All results written to the outC
+// channel parameter will be received by the Stream(...) caller.
+func (s *ParallelNodeQueryBuilder[T]) UsingQuery(queryDelegate func(query graph.NodeQuery, outC chan<- T) error) *ParallelNodeQueryBuilder[T] {
+	s.queryDelegate = queryDelegate
+	return s
+}
+
+// WithCriteria specifies the criteria being used to filter this query.
+func (s *ParallelNodeQueryBuilder[T]) WithCriteria(criteria graph.Criteria) *ParallelNodeQueryBuilder[T] {
+	s.criteria = criteria
+	return s
+}
+
+// Error returns any error that may have occurred during the parallel operation. This error may be a joined error.
+func (s *ParallelNodeQueryBuilder[T]) Error() error {
+	return s.err
+}
+
+// Join blocks the current thread and waits for the parallel node query to complete.
+func (s *ParallelNodeQueryBuilder[T]) Join() {
+	s.wg.Wait()
+}
+
+// Stream commits the query to the database in parallel and writes all results to the returned output channel.
+func (s *ParallelNodeQueryBuilder[T]) Stream(ctx context.Context, numWorkers int) <-chan T {
+	mergeC := make(chan T)
+
+	s.wg.Add(1)
+
+	go func() {
+		defer close(mergeC)
+		defer s.wg.Done()
+
+		if err := ParallelNodeQuery(ctx, s.db, s.criteria, numWorkers, func(query graph.NodeQuery) error {
+			return s.queryDelegate(query, mergeC)
+		}); err != nil {
+			s.err = err
+		}
+	}()
+
+	return mergeC
 }

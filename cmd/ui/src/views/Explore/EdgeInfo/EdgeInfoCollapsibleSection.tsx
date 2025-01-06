@@ -44,6 +44,7 @@ export const EdgeInfoCollapsibleSection: React.FC<
             TransitionProps={{ unmountOnExit: true }}
             className={styles.accordionRoot}>
             <AccordionSummary
+                data-testid={`${section.toLocaleLowerCase()}-accordion`}
                 expandIcon={<FontAwesomeIcon icon={expanded ? faMinus : faPlus} />}
                 className={'accordion-summary'}
                 classes={{

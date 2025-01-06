@@ -20,6 +20,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/bootstrap"
@@ -27,10 +29,6 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/services"
 	"github.com/specterops/bloodhound/src/version"
-	"os"
-
-	// This import is required by swaggo
-	_ "github.com/specterops/bloodhound/src/docs"
 )
 
 func printVersion() {
@@ -66,9 +64,10 @@ func main() {
 		log.Fatalf("Unable to read configuration %s: %v", configFilePath, err)
 	} else {
 		initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
-			Configuration: cfg,
-			DBConnector:   services.ConnectDatabases,
-			Entrypoint:    services.Entrypoint,
+			Configuration:       cfg,
+			DBConnector:         services.ConnectDatabases,
+			PreMigrationDaemons: services.PreMigrationDaemons,
+			Entrypoint:          services.Entrypoint,
 		}
 
 		if err := initializer.Launch(context.Background(), true); err != nil {

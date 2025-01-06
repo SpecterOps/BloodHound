@@ -19,6 +19,7 @@ package apitest
 import (
 	"log"
 
+	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/auth"
 	authPkg "github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
@@ -36,7 +37,7 @@ func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementReso
 	cfg.Crypto.Argon2.NumThreads = 1
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB))
+	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB), api.NewAuthenticator(cfg, mockDB, mocks.NewMockAuthContextInitializer(mockCtrl)))
 
 	return resources, mockDB
 }

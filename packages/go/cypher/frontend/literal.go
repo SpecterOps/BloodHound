@@ -20,7 +20,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/models/cypher"
+
 	"github.com/specterops/bloodhound/cypher/parser"
 )
 
@@ -46,12 +47,12 @@ type MapLiteralVisitor struct {
 	BaseVisitor
 
 	nextPropertyKey string
-	Map             model.MapLiteral
+	Map             cypher.MapLiteral
 }
 
 func NewMapLiteralVisitor() *MapLiteralVisitor {
 	return &MapLiteralVisitor{
-		Map: model.MapLiteral{},
+		Map: cypher.MapLiteral{},
 	}
 }
 
@@ -74,12 +75,12 @@ func (s *MapLiteralVisitor) ExitOC_Expression(ctx *parser.OC_ExpressionContext) 
 type ListLiteralVisitor struct {
 	BaseVisitor
 
-	List *model.ListLiteral
+	List *cypher.ListLiteral
 }
 
 func NewListLiteralVisitor() *ListLiteralVisitor {
 	return &ListLiteralVisitor{
-		List: model.NewListLiteral(),
+		List: cypher.NewListLiteral(),
 	}
 }
 
@@ -94,12 +95,12 @@ func (s *ListLiteralVisitor) ExitOC_Expression(ctx *parser.OC_ExpressionContext)
 type LiteralVisitor struct {
 	BaseVisitor
 
-	Literal *model.Literal
+	Literal *cypher.Literal
 }
 
 func NewLiteralVisitor() *LiteralVisitor {
 	return &LiteralVisitor{
-		Literal: &model.Literal{},
+		Literal: &cypher.Literal{},
 	}
 }
 

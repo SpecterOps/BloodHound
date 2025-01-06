@@ -22,6 +22,7 @@ export type GraphNode = {
     objectId: string;
     lastSeen: string;
     isTierZero: boolean;
+    isOwnedObject: boolean;
     descendent_count?: number | null;
 };
 

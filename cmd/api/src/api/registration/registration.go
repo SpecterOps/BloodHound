@@ -28,19 +28,18 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/queries"
 )
 
-func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, db *database.BloodhoundDB, identityResolver auth.IdentityResolver, authenticator api.Authenticator) {
+func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator) {
 	// Set up the middleware stack
 	routerInst.UsePrerouting(middleware.ContextMiddleware)
 	routerInst.UsePrerouting(middleware.CORSMiddleware())
 
 	// Set up logging. This must be done after ContextMiddleware is initialized so the context can be accessed in the log logic
 	if cfg.EnableAPILogging {
-		routerInst.UsePrerouting(middleware.LoggingMiddleware(cfg, identityResolver, db))
+		routerInst.UsePrerouting(middleware.LoggingMiddleware(identityResolver))
 	}
 
 	routerInst.UsePostrouting(
@@ -53,13 +52,12 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 func RegisterFossRoutes(
 	routerInst *router.Router,
 	cfg config.Configuration,
-	rdms *database.BloodhoundDB,
+	rdms database.Database,
 	graphDB *graph.DatabaseSwitch,
 	graphQuery queries.Graph,
 	apiCache cache.Cache,
 	collectorManifests config.CollectorManifests,
 	authenticator api.Authenticator,
-	taskNotifier datapipe.Tasker,
 	authorizer auth.Authorizer,
 ) {
 	router.With(middleware.DefaultRateLimitMiddleware,
@@ -74,9 +72,9 @@ func RegisterFossRoutes(
 		}),
 
 		// Static asset handling for the UI
-		routerInst.PathPrefix("/ui", static.Handler()),
+		routerInst.PathPrefix("/ui", static.AssetHandler),
 	)
 
-	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, taskNotifier, authorizer)
-	NewV2API(cfg, resources, routerInst, authenticator)
+	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator)
+	NewV2API(resources, routerInst)
 }

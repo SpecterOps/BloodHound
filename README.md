@@ -1,32 +1,61 @@
 <p align="center">
-    <img src="cmd/ui/public/img/logo-white-full.svg" alt="BloodHound Community Edition" style="width: 400px;" />
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="cmd/ui/public/img/logo-secondary-transparent-full.svg">
+        <img src="cmd/ui/public/img/logo-transparent-full.svg" alt="BloodHound Community Edition" width='400' />
+    </picture>
 </p>
 
 <hr />
 
 BloodHound is a monolithic web application composed of an embedded React frontend with [Sigma.js](https://www.sigmajs.org/) and a [Go](https://go.dev/) based REST API backend. It is deployed with a [Postgresql](https://www.postgresql.org/) application database and a [Neo4j](https://neo4j.com/) graph database, and is fed by the [SharpHound](https://github.com/BloodHoundAD/SharpHound) and [AzureHound](https://github.com/BloodHoundAD/AzureHound) data collectors.
 
-BloodHound uses graph theory to reveal the hidden and often unintended relationships within an Active Directory or Azure environment. Attackers can use BloodHound to easily identify highly complex attack paths that would otherwise be impossible to identify quickly. Defenders can use BloodHound to identify and eliminate those same attack paths. Both red and blue teams can use BloodHound to easily gain a deeper understanding of privilege relationships in an Active Directory or Azure environment.
+BloodHound uses graph theory to reveal the hidden and often unintended relationships within an Active Directory or Azure environment. Attackers can use BloodHound to quickly identify highly complex attack paths that would otherwise be impossible to find. Defenders can use BloodHound to identify and eliminate those same attack paths. Both red and blue teams can use BloodHound to better understand privileged relationships in an Active Directory or Azure environment.
 
-BloodHound CE is created and maintained by the [BloodHound Enterprise Team](https://bloodhoundenterprise.io). The original BloodHound was created by [@_wald0](https://www.twitter.com/_wald0), [@CptJesus](https://twitter.com/CptJesus), and [@harmj0y](https://twitter.com/harmj0y).
+BloodHound CE is created and maintained by the [BloodHound Enterprise Team](https://bloodhoundenterprise.io). The original BloodHound was created by [@\_wald0](https://www.twitter.com/_wald0), [@CptJesus](https://twitter.com/CptJesus), and [@harmj0y](https://twitter.com/harmj0y).
 
 ## Running BloodHound Community Edition
+Docker Compose is the easiest way to get up and running with BloodHound CE. Instructions below describe how to install and upgrade your deployment.
 
-The easiest way to get up and running is to use our pre-configured Docker Compose setup. The following steps will get BloodHound CE up and running with the least amount of effort.
-  
-  1. Install Docker Compose and ensure Docker is running. This should be included with the [Docker Desktop](https://www.docker.com/products/docker-desktop/) installation
-  2. Run `curl -L https://ghst.ly/getbhce | docker compose -f - up`
-  3. Locate the randomly generated password in the terminal output of Docker Compose
-  4. In a browser, navigate to `http://localhost:8080/ui/login`. Login with a username of `admin` and the randomly generated password from the logs
+### System Requirements
+BloodHound CE deploys in a traditional multi-tier container architecture consisting of databases, application, and UI layers. 
 
-NOTE: Going forward, the default `docker-compose.yml` example binds only to localhost (127.0.0.1). If you want to access BloodHound outside of localhost, you'll need to follow the instructions in [examples/docker-compose/README.md](examples/docker-compose/README.md) to configure the host binding for the container.
+**Minimum specifications:**
+
+- 4GB of RAM
+- 4 processor cores
+- 10GB hard disk space
+
+**For large environments (>50,000 users):**
+
+- 96GB of RAM
+- 12 processor cores
+- 50GB hard disk space
+
+### Deploy BloodHound CE
+Deploying BloodHound CE quickly with the following steps:
+
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/). Docker Desktop includes Docker Compose as part of the installation.
+2. Download the [Docker Compose YAML file](examples/docker-compose/docker-compose.yml) and save it to a directory where you'd like to run BloodHound. You can do this from a terminal application with `curl -L https://ghst.ly/getbhce`.
+   > On Windows: Execute the command in CMD, or use `curl.exe` instead of `curl` in PowerShell.
+3. Navigate to the folder with the saved `docker-compose.yml` file and run `docker compose pull && docker compose up`.
+4. Locate the randomly generated password in the terminal output of Docker Compose.
+5. In a browser, navigate to `http://localhost:8080/ui/login`. Login with a username of `admin` and the randomly generated password from the logs.
+
+*NOTE: The default `docker-compose.yml` example binds only to localhost (127.0.0.1). If you want to access BloodHound outside of localhost, you'll need to follow the instructions in [examples/docker-compose/README.md](examples/docker-compose/README.md) to configure the host binding for the container.*
+
+### Upgrade BloodHound CE
+Once installed, upgrade BloodHound CE to the latest version with the following steps:
+
+1. Navigate to the folder with the saved `docker-compose.yml` file and run `docker compose pull && docker compose up`.
+2. In a browser, navigate to `http://localhost:8080/ui/login` and log in with your previously configured username and password.
 
 ### Importing sample data
-The BloodHound team has provided some sample data for testing BloodHound without performing a SharpHound or AzureHound collection. That data may be found [here](examples/sample-data/README.md).
+
+The BloodHound team has provided some sample data for testing BloodHound without performing a SharpHound or AzureHound collection. That data may be found [here](https://github.com/SpecterOps/BloodHound/wiki/Example-Data).
 
 ## Installation Error Handling
 
-- If you encounter a "failed to get console mode for stdin: The handle is invalid." ensure Docker Desktop (and associated Engine is running). Docker Desktop does not automatically register as a startup entry. 
+- If you encounter a "failed to get console mode for stdin: The handle is invalid." ensure Docker Desktop (and associated Engine is running). Docker Desktop does not automatically register as a startup entry.
 
 <p align="center">
     <img width="302" alt="Docker Engine Running" src="cmd/ui/public/img/Docker-Engine-Running.png">
@@ -41,6 +70,7 @@ docker info
 # Attempt to stop Neo4j Service if running (on Windows)
 Stop-Service "Neo4j" -ErrorAction SilentlyContinue
 ```
+
 - A successful installation of BloodHound CE would look like the below:
 
 https://github.com/SpecterOps/BloodHound/assets/12970156/ea9dc042-1866-4ccb-9839-933140cc38b9

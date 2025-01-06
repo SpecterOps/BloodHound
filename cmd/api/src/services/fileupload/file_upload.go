@@ -18,30 +18,25 @@
 package fileupload
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/mediatypes"
-	"github.com/specterops/bloodhound/src/model/ingest"
-	"github.com/specterops/bloodhound/src/utils"
 	"io"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/specterops/bloodhound/bomenc"
+	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/src/model/ingest"
+	"github.com/specterops/bloodhound/src/utils"
 
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/model"
 )
 
 const jobActivityTimeout = time.Minute * 20
-
-const (
-	UTF8BOM1 = 0xef
-	UTF8BOM2 = 0xbb
-	UTF8BMO3 = 0xbf
-)
 
 var ErrInvalidJSON = errors.New("file is not valid json")
 
@@ -119,18 +114,12 @@ func WriteAndValidateZip(src io.Reader, dst io.Writer) error {
 }
 
 func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
-	tr := io.TeeReader(src, dst)
-	bufReader := bufio.NewReader(tr)
-	if b, err := bufReader.Peek(3); err != nil {
+	normalizedContent, err := bomenc.NormalizeToUTF8(src)
+	if err != nil {
 		return err
-	} else {
-		if b[0] == UTF8BOM1 && b[1] == UTF8BOM2 && b[2] == UTF8BMO3 {
-			if _, err := bufReader.Discard(3); err != nil {
-				return err
-			}
-		}
 	}
-	_, err := ValidateMetaTag(bufReader, true)
+	tr := io.TeeReader(normalizedContent, dst)
+	_, err = ValidateMetaTag(tr, true)
 	return err
 }
 
@@ -146,7 +135,7 @@ func SaveIngestFile(location string, request *http.Request) (string, model.FileT
 	} else if utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...) {
 		return tempFile.Name(), model.FileTypeZip, WriteAndValidateFile(fileData, tempFile, WriteAndValidateZip)
 	} else {
-		//We should never get here since this is checked a level above
+		// We should never get here since this is checked a level above
 		return "", model.FileTypeJson, fmt.Errorf("invalid content type for ingest file")
 	}
 }

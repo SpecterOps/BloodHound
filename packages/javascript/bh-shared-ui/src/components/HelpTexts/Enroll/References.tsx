@@ -26,6 +26,14 @@ const References: FC = () => {
                 href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
                 https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf
             </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Certify'>
+                https://github.com/GhostPack/Certify
+            </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://github.com/ly4k/Certipy'>
+                https://github.com/ly4k/Certipy
+            </Link>
         </Box>
     );
 };

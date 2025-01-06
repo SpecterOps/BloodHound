@@ -16,9 +16,11 @@
 
 name: type
 description: |
-  The type of return data requested. If no type is provided, query will default to `list`,
-  but invalid types will result in a `count` query. Some entity query endpoints do not
-  support the `graph` type.
+  The type of return data requested. If no type is provided, query will default to `list`.
+  The only supported type is `list`, but the unsupported `graph` type can be used.
+  Some entity query endpoints do not support the `graph` type. For those interested in
+  using the undocumented graph type parameter, the response type is described in the schema
+  `model.bh-graph.graph`.
 in: query
 schema:
   type: string
@@ -26,4 +28,3 @@ schema:
   enum:
     - list
     - graph
-    - count

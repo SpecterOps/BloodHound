@@ -40,11 +40,6 @@ import (
 	"github.com/unrolled/secure"
 )
 
-const (
-	// Default timeout for any request is thirty seconds
-	defaultTimeout = 30 * time.Second
-)
-
 // Wrapper is an iterator for middleware function application that wraps around a http.Handler.
 type Wrapper struct {
 	middleware []mux.MiddlewareFunc
@@ -85,7 +80,7 @@ func getScheme(request *http.Request) string {
 	}
 }
 
-func requestWaitDuration(request *http.Request) (time.Duration, error) {
+func RequestWaitDuration(request *http.Request) (time.Duration, error) {
 	var (
 		requestedWaitDuration time.Duration
 		err                   error
@@ -114,7 +109,7 @@ func ContextMiddleware(next http.Handler) http.Handler {
 			requestID = newUUID.String()
 		}
 
-		if requestedWaitDuration, err := requestWaitDuration(request); err != nil {
+		if requestedWaitDuration, err := RequestWaitDuration(request); err != nil {
 			// If there is a failure or other expectation mismatch with the client, respond right away with the relevant
 			// error information
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Prefer header has an invalid value: %v", err), request), response)

@@ -44,6 +44,8 @@ const (
 	EnterpriseDomainControllersGroupSIDSuffix = "1-5-9"
 	AdministratorAccountSIDSuffix             = "-500"
 	DomainAdminsGroupSIDSuffix                = "-512"
+	DomainUsersSuffix                         = "-513"
+	DomainComputersSuffix                     = "-515"
 	DomainControllersGroupSIDSuffix           = "-516"
 	SchemaAdminsGroupSIDSuffix                = "-518"
 	EnterpriseAdminsGroupSIDSuffix            = "-519"
@@ -51,10 +53,9 @@ const (
 	EnterpriseKeyAdminsGroupSIDSuffix         = "-527"
 	AdministratorsGroupSIDSuffix              = "-544"
 	BackupOperatorsGroupSIDSuffix             = "-551"
-	DomainUsersSuffix                         = "-513"
 	AuthenticatedUsersSuffix                  = "-S-1-5-11"
 	EveryoneSuffix                            = "-S-1-1-0"
-	DomainComputersSuffix                     = "-515"
+	AdminSDHolderDNPrefix                     = "CN=ADMINSDHOLDER,CN=SYSTEM,"
 )
 
 func TierZeroWellKnownSIDSuffixes() []string {
@@ -95,6 +96,22 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 			}); err != nil {
 				return err
 			}
+		}
+
+		// AdminSDHolder
+		if err := tx.Nodes().Filterf(func() graph.Criteria {
+			return query.And(
+				query.KindIn(query.Node(), ad.Container),
+				query.StringStartsWith(query.NodeProperty(ad.DistinguishedName.String()), AdminSDHolderDNPrefix),
+				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
+			)
+		}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			for node := range cursor.Chan() {
+				nodes.Add(node)
+			}
+			return cursor.Error()
+		}); err != nil {
+			return err
 		}
 
 		return nil
@@ -299,173 +316,105 @@ func createOrUpdateWellKnownLink(tx graph.Transaction, startNode *graph.Node, en
 }
 
 // CalculateCrossProductNodeSets finds the intersection of the given sets of nodes.
-func CalculateCrossProductNodeSets(groupExpansions impact.PathAggregator, nodeSets ...[]*graph.Node) cardinality.Duplex[uint32] {
-	if len(nodeSets) < 2 {
+// See CalculateCrossProductNodeSetsDoc.md for explaination of the specialGroups (Authenticated Users and Everyone) and why we treat them the way we do
+func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, groupExpansions impact.PathAggregator, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
+	if len(nodeSlices) < 2 {
 		log.Errorf("Cross products require at least 2 nodesets")
-		return cardinality.NewBitmap32()
+		return cardinality.NewBitmap64()
 	}
 
 	//The intention is that the node sets being passed into this function contain all the first degree principals for control
 	var (
-		resultEntities = cardinality.NewBitmap32()
-		unrollSet      = cardinality.NewBitmap32()
-		checkSet       = cardinality.NewBitmap32()
+		//Temporary storage for first degree and unrolled sets without auth users/everyone
+		firstDegreeSets []cardinality.Duplex[uint64]
+		unrolledSets    []cardinality.Duplex[uint64]
+
+		//This is the set we use as a reference set to check against checkset
+		unrolledRefSet = cardinality.NewBitmap64()
+
+		//This is the set we use to aggregate multiple sets together it should have all the valid principals from all other sets at this point
+		checkSet = cardinality.NewBitmap64()
+
+		//This is our set of entities that have the complete cross product of permissions
+		resultEntities = cardinality.NewBitmap64()
 	)
 
-	//We need to fully unroll node sets 1-X into a single bitmap which we will check against
-	for _, entity := range nodeSets[1] {
-		checkSet.Add(entity.ID.Uint32())
-		if entity.Kinds.ContainsOneOf(ad.Group) {
-			checkSet.Or(groupExpansions.Cardinality(entity.ID.Uint32()).(cardinality.Duplex[uint32]))
-		}
+	//Get the IDs of the Auth. Users and Everyone groups
+	specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid)
+
+	if err != nil {
+		log.Errorf("Could not fetch groups: %s", err.Error())
 	}
 
-	if len(nodeSets) > 2 {
-		for i := 2; i < len(nodeSets); i++ {
-			tempSet := cardinality.NewBitmap32()
-			for _, entity := range nodeSets[i] {
-				tempSet.Add(entity.ID.Uint32())
-				if entity.Kinds.ContainsOneOf(ad.Group) {
-					tempSet.Or(groupExpansions.Cardinality(entity.ID.Uint32()).(cardinality.Duplex[uint32]))
-				}
+	//Unroll all nodesets
+	for _, nodeSlice := range nodeSlices {
+		var (
+			firstDegreeSet = cardinality.NewBitmap64()
+			unrolledSet    = cardinality.NewBitmap64()
+		)
+
+		for _, entity := range nodeSlice {
+			entityID := entity.ID.Uint64()
+
+			firstDegreeSet.Add(entityID)
+			unrolledSet.Add(entityID)
+
+			if entity.Kinds.ContainsOneOf(ad.Group, ad.LocalGroup) {
+				unrolledSet.Or(groupExpansions.Cardinality(entity.ID.Uint64()))
 			}
-			checkSet.And(tempSet)
+		}
+
+		//Skip sets containing Auth. Users or Everyone
+		hasSpecialGroup := false
+
+		for _, specialGroup := range specialGroups {
+			if unrolledSet.Contains(specialGroup.ID.Uint64()) {
+				hasSpecialGroup = true
+				break
+			}
+		}
+
+		if !hasSpecialGroup {
+			unrolledSets = append(unrolledSets, unrolledSet)
+			firstDegreeSets = append(firstDegreeSets, firstDegreeSet)
 		}
 	}
 
-	//checkSet should have all the valid principals from all other sets at this point
-	//Check first degree principals in our reference set first
-	for _, entity := range nodeSets[0] {
-		if checkSet.Contains(entity.ID.Uint32()) {
-			resultEntities.Add(entity.ID.Uint32())
-		} else if entity.Kinds.ContainsOneOf(ad.Group, ad.LocalGroup) {
-			unrollSet.Or(groupExpansions.Cardinality(entity.ID.Uint32()).(cardinality.Duplex[uint32]))
+	//If every nodeset (unrolled) includes Auth. Users/Everyone then return all nodesets (first degree)
+	if len(firstDegreeSets) == 0 {
+		for _, nodeSet := range nodeSlices {
+			for _, entity := range nodeSet {
+				resultEntities.Add(entity.ID.Uint64())
+			}
+		}
+
+		return resultEntities
+	} else if len(firstDegreeSets) == 1 { //If every nodeset (unrolled) except one includes Auth. Users/Everyone then return that one nodeset (first degree)
+		return firstDegreeSets[0]
+	} else {
+		// This means that len(firstDegreeSets) must be greater than or equal to 2 i.e. we have at least two nodesets (unrolled) without Auth. Users/Everyone
+		checkSet.Or(unrolledSets[1])
+
+		for _, unrolledSet := range unrolledSets[2:] {
+			checkSet.And(unrolledSet)
 		}
 	}
 
-	tempMap := map[uint32]uint64{}
-	//Find all the groups in our secondary targets and map them to their cardinality in our expansions
-	//Saving off to a map to prevent multiple lookups on the expansions
-	//Unhandled error here is irrelevant, we can never return an error
-	unrollSet.Each(func(id uint32) bool {
-		//If group expansions contains this ID and its cardinality is > 0, it's a group/localgroup
-		idCardinality := groupExpansions.Cardinality(id).Cardinality()
-		if idCardinality > 0 {
-			tempMap[id] = idCardinality
-		}
-
-		return true
-	})
-
-	//Save the map keys to a new slice, this represents our list of groups in the expansion
-	keys := make([]uint32, len(tempMap))
-	i := 0
-	for key := range tempMap {
-		keys[i] = key
-		i++
-	}
-
-	//Sort by cardinality we saved in the map, which will give us all the groups sorted by their number of members
-	sort.Slice(keys, func(i, j int) bool {
-		return tempMap[keys[i]] < tempMap[keys[j]]
-	})
-
-	for _, groupId := range keys {
-		//If the set doesn't contain our key, it means that we've already encapsulated this group in a previous shortcut so skip it
-		if !unrollSet.Contains(groupId) {
-			continue
-		}
-		if checkSet.Contains(groupId) {
-			//If this entity is a cross product, add it to result entities, remove the group id from the second set and xor the group's membership with the result set
-			resultEntities.Add(groupId)
-			unrollSet.Remove(groupId)
-			unrollSet.Xor(groupExpansions.Cardinality(groupId).(cardinality.Duplex[uint32]))
-		} else {
-			//If this isn't a match, remove it from the second set to ensure we don't check it again, but leave its membership
-			unrollSet.Remove(groupId)
-		}
-	}
-
-	unrollSet.Each(func(remainder uint32) bool {
-		if checkSet.Contains(remainder) {
-			resultEntities.Add(remainder)
-		}
-
-		return true
-	})
-
-	return resultEntities
-}
-
-func CalculateCrossProductBitmaps(groupExpansions impact.PathAggregator, nodeSets ...cardinality.Duplex[uint32]) cardinality.Duplex[uint32] {
-	if len(nodeSets) < 2 {
-		log.Errorf("Cross products require at least 2 nodesets")
-		return cardinality.NewBitmap32()
-	}
-
-	//The intention is that the node sets being passed into this function contain all the first degree principals for control
-	var (
-		resultEntities   = cardinality.NewBitmap32()
-		unrollSet        = cardinality.NewBitmap32()
-		cardinalityCache = map[uint32]uint64{}
-		checkSet         = cardinality.NewBitmap32()
-	)
-
-	//Take the second of our node sets and unroll it all into a single bitmap
-	nodeSets[1].Each(func(id uint32) bool {
-		checkSet.Add(id)
-		idCardinality := groupExpansions.Cardinality(id)
-		idCardinalityCount := getCardinalityCount(id, idCardinality, cardinalityCache)
-		cardinalityCache[id] = idCardinalityCount
-		if idCardinalityCount > 0 {
-			checkSet.Or(idCardinality.(cardinality.Duplex[uint32]))
-		}
-
-		return true
-	})
-
-	//If we have more than 2 bitmaps, we need to AND everything together
-	if len(nodeSets) > 2 {
-		for i := 2; i < len(nodeSets); i++ {
-			tempSet := cardinality.NewBitmap32()
-			nodeSets[i].Each(func(id uint32) bool {
-				tempSet.Add(id)
-				idCardinality := groupExpansions.Cardinality(id)
-				idCardinalityCount := getCardinalityCount(id, idCardinality, cardinalityCache)
-				cardinalityCache[id] = idCardinalityCount
-				if idCardinalityCount > 0 {
-					tempSet.Or(idCardinality.(cardinality.Duplex[uint32]))
-				}
-
-				return true
-			})
-
-			checkSet.And(tempSet)
-		}
-	}
-
-	//checkSet should have all the valid principals from all other sets at this point
-	//Check first degree principals in our reference set first
-	nodeSets[0].Each(func(id uint32) bool {
+	//Check first degree principals in our reference set (firstDegreeSets[0]) first
+	firstDegreeSets[0].Each(func(id uint64) bool {
 		if checkSet.Contains(id) {
 			resultEntities.Add(id)
 		} else {
-			idCardinality := groupExpansions.Cardinality(id)
-			idCardinalityCount := getCardinalityCount(id, idCardinality, cardinalityCache)
-			cardinalityCache[id] = idCardinalityCount
-			if idCardinalityCount > 0 {
-				unrollSet.Or(idCardinality.(cardinality.Duplex[uint32]))
-			}
+			unrolledRefSet.Or(groupExpansions.Cardinality(id))
 		}
 
 		return true
 	})
 
-	tempMap := map[uint32]uint64{}
 	//Find all the groups in our secondary targets and map them to their cardinality in our expansions
 	//Saving off to a map to prevent multiple lookups on the expansions
-	//Unhandled error here is irrelevant, we can never return an error
-	unrollSet.Each(func(id uint32) bool {
+	tempMap := map[uint64]uint64{}
+	unrolledRefSet.Each(func(id uint64) bool {
 		//If group expansions contains this ID and its cardinality is > 0, it's a group/localgroup
 		idCardinality := groupExpansions.Cardinality(id).Cardinality()
 		if idCardinality > 0 {
@@ -476,11 +425,10 @@ func CalculateCrossProductBitmaps(groupExpansions impact.PathAggregator, nodeSet
 	})
 
 	//Save the map keys to a new slice, this represents our list of groups in the expansion
-	keys := make([]uint32, len(tempMap))
-	i := 0
+	keys := make([]uint64, 0, len(tempMap))
+
 	for key := range tempMap {
-		keys[i] = key
-		i++
+		keys = append(keys, key)
 	}
 
 	//Sort by cardinality we saved in the map, which will give us all the groups sorted by their number of members
@@ -490,21 +438,23 @@ func CalculateCrossProductBitmaps(groupExpansions impact.PathAggregator, nodeSet
 
 	for _, groupId := range keys {
 		//If the set doesn't contain our key, it means that we've already encapsulated this group in a previous shortcut so skip it
-		if !unrollSet.Contains(groupId) {
+		if !unrolledRefSet.Contains(groupId) {
 			continue
 		}
+
 		if checkSet.Contains(groupId) {
 			//If this entity is a cross product, add it to result entities, remove the group id from the second set and xor the group's membership with the result set
 			resultEntities.Add(groupId)
-			unrollSet.Remove(groupId)
-			unrollSet.Xor(groupExpansions.Cardinality(groupId).(cardinality.Duplex[uint32]))
+
+			unrolledRefSet.Remove(groupId)
+			unrolledRefSet.Xor(groupExpansions.Cardinality(groupId))
 		} else {
 			//If this isn't a match, remove it from the second set to ensure we don't check it again, but leave its membership
-			unrollSet.Remove(groupId)
+			unrolledRefSet.Remove(groupId)
 		}
 	}
 
-	unrollSet.Each(func(remainder uint32) bool {
+	unrolledRefSet.Each(func(remainder uint64) bool {
 		if checkSet.Contains(remainder) {
 			resultEntities.Add(remainder)
 		}
@@ -513,15 +463,6 @@ func CalculateCrossProductBitmaps(groupExpansions impact.PathAggregator, nodeSet
 	})
 
 	return resultEntities
-}
-
-func getCardinalityCount(id uint32, expansions cardinality.Provider[uint32], cardinalityCache map[uint32]uint64) uint64 {
-	if idCardinality, ok := cardinalityCache[id]; ok {
-		return idCardinality
-	} else {
-		idCardinality = expansions.Cardinality()
-		return idCardinality
-	}
 }
 
 func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {

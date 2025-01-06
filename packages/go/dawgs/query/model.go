@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	cypherModel "github.com/specterops/bloodhound/cypher/model"
+	cypherModel "github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -145,21 +145,15 @@ func DeleteProperties(reference graph.Criteria, propertyNames ...string) *cypher
 	return cypherModel.NewUpdatingClause(removeClause)
 }
 
-func Kind(reference graph.Criteria, kind graph.Kind) *cypherModel.KindMatcher {
+func Kind(reference graph.Criteria, kinds ...graph.Kind) *cypherModel.KindMatcher {
 	return &cypherModel.KindMatcher{
 		Reference: reference,
-		Kinds:     graph.Kinds{kind},
+		Kinds:     kinds,
 	}
 }
 
-func KindIn(reference graph.Criteria, kinds ...graph.Kind) *cypherModel.Parenthetical {
-	expressions := make([]graph.Criteria, len(kinds))
-
-	for idx, kind := range kinds {
-		expressions[idx] = Kind(reference, kind)
-	}
-
-	return Or(expressions...)
+func KindIn(reference graph.Criteria, kinds ...graph.Kind) *cypherModel.KindMatcher {
+	return cypherModel.NewKindMatcher(reference, kinds)
 }
 
 func NodeProperty(name string) *cypherModel.PropertyLookup {
@@ -360,6 +354,10 @@ func In(reference graph.Criteria, value any) *cypherModel.Comparison {
 	return cypherModel.NewComparison(reference, cypherModel.OperatorIn, Parameter(value))
 }
 
+func InInverted(reference graph.Criteria, value any) *cypherModel.Comparison {
+	return cypherModel.NewComparison(Parameter(value), cypherModel.OperatorIn, reference)
+}
+
 func InIDs[T *cypherModel.FunctionInvocation | *cypherModel.Variable](reference T, ids ...graph.ID) *cypherModel.Comparison {
 	switch any(reference).(type) {
 	case *cypherModel.FunctionInvocation:
@@ -528,9 +526,15 @@ func Returning(elements ...graph.Criteria) *cypherModel.Return {
 	}
 }
 
+func Size(expression graph.Criteria) *cypherModel.FunctionInvocation {
+	return cypherModel.NewSimpleFunctionInvocation("size", expression)
+}
+
 func Not(expression graph.Criteria) *cypherModel.Negation {
 	return &cypherModel.Negation{
-		Expression: expression,
+		Expression: &cypherModel.Parenthetical{
+			Expression: expression,
+		},
 	}
 }
 

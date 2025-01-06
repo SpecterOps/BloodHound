@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, AlertTitle, Box, Button, Grid } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Alert, AlertTitle, Box, Grid } from '@mui/material';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from 'src/ducks/auth/authSlice';
@@ -42,12 +43,9 @@ const DisabledUser: React.FC = () => {
                                 navigate(ROUTE_LOGIN);
                             }}
                             data-testid='disabled-user-back-to-login'
-                            color='inherit'
-                            variant='contained'
                             size='large'
                             type='button'
-                            fullWidth
-                            disableElevation>
+                            className='w-full'>
                             Back to Login
                         </Button>
                     </Box>

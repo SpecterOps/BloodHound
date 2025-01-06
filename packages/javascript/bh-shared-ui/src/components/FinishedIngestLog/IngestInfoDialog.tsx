@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, DialogActions, DialogContent } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogActions, DialogContent } from '@mui/material';
 
 const IngestInfoDialog: React.FC<{
     open: boolean;
@@ -47,7 +48,7 @@ const IngestInfoDialog: React.FC<{
                 </p>
             </DialogContent>
             <DialogActions>
-                <Button color='inherit' onClick={onClose}>
+                <Button variant='tertiary' onClick={onClose}>
                     Close
                 </Button>
             </DialogActions>

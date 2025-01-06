@@ -1,7 +1,6 @@
 _default:
 	@just --list --unsorted
 
-golangci-lint-version := "v1.53.3"
 host_os := if os() == "macos" { "darwin" } else { os() }
 host_arch := if arch() == "x86" { "386" } else { if arch() == "x86_64" { "amd64" } else { if arch() == "aarch64" { "arm64" } else { arch() } } }
 
@@ -30,6 +29,11 @@ generate *FLAGS:
   @just stbernard generate {{FLAGS}}
   @just check-license
 
+# run the code generation from the cue schema
+schemagen: yarn-local && check-license (yarn "format") goimports
+  go run github.com/specterops/bloodhound/schemagen
+
+
 # Show repository status
 show *FLAGS:
   @just stbernard show {{FLAGS}}
@@ -57,11 +61,16 @@ _prep-steps:
   @just ensure-deps
   @just modsync
   @just generate
+  @just goimports
   @just show > tmp/repo-status.txt
   @just analyze > tmp/analysis-report.txt
   @just build > tmp/build-output.txt
   @just test -y > tmp/yarn-test-output.txt
   @just test -g -i > tmp/go-test-output.txt
+
+goimports:
+  @ echo "Running goimports, check for file drift"
+  @ find . -name \*.go -exec goimports -w {} \;
 
 # check license is applied to source files
 check-license:
@@ -87,7 +96,6 @@ build-js-client *ARGS="":
 build-shared-ui *ARGS="":
   @cd packages/javascript/bh-shared-ui && yarn build
 
-
 # updates favicon.ico, logo192.png and logo512.png from logo.svg
 update-favicon:
   @just imagemagick convert -background none ./cmd/ui/public/logo-light.svg -define icon:auto-resize ./cmd/ui/public/favicon-light.ico
@@ -101,9 +109,9 @@ update-favicon:
 imagemagick *ARGS:
   @docker run -it --rm -v {{justfile_directory()}}:/workdir -w /workdir --entrypoint magick cblunt/imagemagick {{ARGS}}
 
-# generates the openapi json doc from the yaml source (requires `redocly` cli)
+# generates the openapi json doc from the yaml source
 gen-spec:
-  @cd packages/go/openapi && redocly bundle src/openapi.yaml --output doc/openapi.json
+  @npx @redocly/cli@1.18.1 bundle {{absolute_path('./packages/go/openapi/src/openapi.yaml')}} --output {{absolute_path('packages/go/openapi/doc/openapi.json')}}
 
 # run git pruning on merged branches to clean up local workspace (run with `nuclear` to clean up orphaned branches)
 prune-my-branches nuclear='no':
@@ -135,6 +143,18 @@ bh-api-only *ARGS='up':
 # run docker compose commands for the BH ui-only profile (Default: up)
 bh-ui-only *ARGS='up':
   @docker compose --profile ui-only -f docker-compose.dev.yml {{ARGS}}
+
+# run docker compose commands for the pg-only profile (Default: up)
+pg-only *ARGS='up':
+  @docker compose --profile pg-only -f docker-compose.dev.yml {{ARGS}}
+
+# run docker compose commands for the BH dev profile with SSO IDP Authentik (Default: up)
+bh-sso *ARGS='up':
+  @docker compose --profile sso -f docker-compose.dev.yml {{ARGS}}
+
+# run docker compose commands for the SSO IDP Authentik only (Default: up)
+bh-sso-only *ARGS='up':
+  @docker compose --profile sso-only -f docker-compose.dev.yml {{ARGS}}
 
 # run docker compose commands for the BH testing databases (Default: up)
 bh-testing *ARGS='up -d':
@@ -174,6 +194,10 @@ init wipe="":
     echo "Backing up build.config.json and resetting"
     mv ./local-harnesses/build.config.json ./local-harnesses/build.config.json.bak
     cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
+  elif [[ -d "./local-harnesses/build.config.json" ]]; then
+    echo "Removing junk directory and resetting build.config.json"
+    rm -r ./local-harnesses/build.config.json
+    cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
   else
     cp ./local-harnesses/build.config.json.template ./local-harnesses/build.config.json
   fi
@@ -184,6 +208,10 @@ init wipe="":
     echo "Backing up integration.config.json and resetting"
     mv ./local-harnesses/integration.config.json ./local-harnesses/integration.config.json.bak
     cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
+  elif [[ -d "./local-harnesses/integration.config.json" ]]; then
+    echo "Removing junk directory and resetting integration.config.json"
+    rm -r ./local-harnesses/integration.config.json
+    cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
   else
     cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
   fi
@@ -193,11 +221,11 @@ init wipe="":
     mv ./.env ./.env.bak
   fi
 
-  echo "Install additional Go tools"
-  go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
-
   echo "Run modsync to ensure workspace is up to date"
   just modsync
+
+  echo "Ensure dependencies"
+  just stbernard deps
 
   echo "Ensure containers have been rebuilt"
   if [[ "{{wipe}}" != "clean" ]]; then

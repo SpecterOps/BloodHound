@@ -14,9 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { faFolderOpen, faPlay, faQuestion, faSave } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, Collapse, SvgIcon } from '@mui/material';
+import { Box, Link, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
@@ -41,9 +42,6 @@ const useStyles = makeStyles((theme) => ({
     button: {
         minWidth: '35px',
         height: '35px',
-        borderRadius: theme.shape.borderRadius,
-        borderColor: 'rgba(0,0,0,0.23)',
-        color: 'black',
     },
     iconButton: {
         padding: 0,
@@ -56,12 +54,33 @@ const useStyles = makeStyles((theme) => ({
         borderColor: 'rgba(0,0,0,.23)',
         borderRadius: theme.shape.borderRadius,
         backgroundColor: 'white',
-        paddingTop: '5px',
-        minHeight: '120px',
-        // enables drag n drop resizing of editor
-        resize: 'vertical',
-        maxHeight: '500px',
+        minHeight: '94px',
+        maxHeight: '94px',
         overflow: 'auto',
+        '@media (min-height: 720px)': {
+            maxHeight: '276px',
+        },
+        '& .cm-tooltip': {
+            maxWidth: '512px',
+        },
+    },
+    cypherEditorDark: {
+        display: 'flex',
+        flexGrow: 1,
+        flexDirection: 'column',
+        border: '1px solid',
+        borderColor: 'rgba(0,0,0,.23)',
+        borderRadius: theme.shape.borderRadius,
+        backgroundColor: '#002b36',
+        minHeight: '94px',
+        maxHeight: '94px',
+        overflow: 'auto',
+        '@media (min-height: 720px)': {
+            maxHeight: '278px',
+        },
+        '& .cm-tooltip': {
+            maxWidth: '512px',
+        },
     },
 }));
 
@@ -107,6 +126,7 @@ const CypherSearch = () => {
     const [showEgg, setShowEgg] = useState(false);
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const dispatch = useAppDispatch();
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
     const handleCypherSearch = () => {
         if (cypherQuery) {
@@ -147,87 +167,80 @@ const CypherSearch = () => {
 
     return (
         <>
-            <Box display={'flex'} gap={1}>
-                <Button
-                    className={`${classes.button} ${classes.iconButton}`}
-                    onClick={() => {
-                        setShowCommonQueries((v) => !v);
-                    }}
-                    variant='outlined'
-                    aria-label='Show/Hide Saved Queries'>
-                    <FontAwesomeIcon icon={faFolderOpen} />
-                </Button>
-
-                <div onClick={setFocusOnCypherEditor} style={{ flex: 1 }} role='textbox'>
-                    <CypherEditor
-                        className={classes.cypherEditor}
-                        value={cypherQuery}
-                        onValueChanged={(val: string) => {
-                            setCypherQuery(val);
+            <Box display='flex' flexDirection='column' height='100%'>
+                <Box display={'flex'} gap={1} flexShrink={0}>
+                    <Button
+                        className={`${classes.button} ${classes.iconButton}`}
+                        variant={'secondary'}
+                        onClick={() => {
+                            setShowCommonQueries((v) => !v);
                         }}
-                        onKeyDown={(e: any) => {
-                            // if enter and shift key is pressed, execute cypher search
-                            if (e.key === 'Enter' && e.shiftKey) {
-                                e.preventDefault();
-                                handleCypherSearch();
-                            }
-                        }}
-                        schema={schema}
-                        lineWrapping
-                        lint
-                        placeholder='Cypher Query'
-                    />
-                </div>
-            </Box>
+                        aria-label='Show/Hide Saved Queries'>
+                        <FontAwesomeIcon icon={faFolderOpen} />
+                    </Button>
 
-            <Box display={'flex'} gap={1} mt={1} justifyContent={'end'}>
-                <Button
-                    className={classes.button}
-                    onClick={() => {
-                        setShowSaveQueryDialog(true);
-                    }}
-                    variant='outlined'
-                    startIcon={
-                        <SvgIcon>
+                    <div onClick={setFocusOnCypherEditor} style={{ flex: 1 }} role='textbox'>
+                        <CypherEditor
+                            className={darkMode ? classes.cypherEditorDark : classes.cypherEditor}
+                            value={cypherQuery}
+                            onValueChanged={(val: string) => {
+                                setCypherQuery(val);
+                            }}
+                            theme={darkMode ? 'dark' : 'light'}
+                            onKeyDown={(e: any) => {
+                                // if enter and shift key is pressed, execute cypher search
+                                if (e.key === 'Enter' && e.shiftKey) {
+                                    e.preventDefault();
+                                    handleCypherSearch();
+                                }
+                            }}
+                            schema={schema}
+                            lineWrapping
+                            lint
+                            placeholder='Cypher Query'
+                            tooltipAbsolute={false}
+                        />
+                    </div>
+                </Box>
+
+                <Box display={'flex'} gap={1} mt={1} justifyContent={'end'} flexShrink={0}>
+                    <Button
+                        variant='secondary'
+                        onClick={() => {
+                            setShowSaveQueryDialog(true);
+                        }}
+                        size={'small'}>
+                        <Box display={'flex'} alignItems={'center'}>
                             <FontAwesomeIcon icon={faSave} />
-                        </SvgIcon>
-                    }>
-                    Save Query
-                </Button>
+                            <Typography ml='8px'>Save Query</Typography>
+                        </Box>
+                    </Button>
 
-                <Button
-                    href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
-                    target='_blank'
-                    rel='noreferrer'
-                    variant='outlined'
-                    className={classes.button}
-                    startIcon={
-                        <SvgIcon>
-                            <FontAwesomeIcon icon={faQuestion} />
-                        </SvgIcon>
-                    }>
-                    Help
-                </Button>
+                    <Button asChild variant='secondary' rel='noreferrer' size={'small'}>
+                        <Link
+                            href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
+                            target='_blank'>
+                            <Box display={'flex'} alignItems={'center'}>
+                                <FontAwesomeIcon icon={faQuestion} />
+                                <Typography ml='8px'>Help</Typography>
+                            </Box>
+                        </Link>
+                    </Button>
 
-                <Button
-                    className={classes.button}
-                    onClick={() => handleCypherSearch()}
-                    variant='outlined'
-                    startIcon={
-                        <SvgIcon>
+                    <Button onClick={() => handleCypherSearch()} size={'small'}>
+                        <Box display={'flex'} alignItems={'center'}>
                             <FontAwesomeIcon icon={faPlay} />
-                        </SvgIcon>
-                    }>
-                    Run
-                </Button>
+                            <Typography ml='8px'>Run</Typography>
+                        </Box>
+                    </Button>
+                </Box>
+
+                <Box display={showCommonQueries ? 'initial' : 'none'} flexGrow={1} minHeight={0}>
+                    <CommonSearches />
+                </Box>
+
+                {showEgg && <EasterEgg />}
             </Box>
-
-            <Collapse in={showCommonQueries}>
-                <CommonSearches />
-            </Collapse>
-
-            {showEgg && <EasterEgg />}
-
             <SaveQueryDialog
                 open={showSaveQueryDialog}
                 onClose={handleCloseSaveQueryDialog}
@@ -242,11 +255,11 @@ const CypherSearch = () => {
 /*What is graphed will never die*/
 const EasterEgg = () => {
     return (
-        <div style={{ display: 'block', position: 'relative', bottom: 0, left: 0 }}>
+        <div style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto', marginTop: '1em' }}>
             <img
                 src={`${import.meta.env.BASE_URL}/img/logo-animated.gif`}
                 alt='What is graphed will never die'
-                style={{ width: '200px' }}
+                style={{ width: '64px' }}
             />
         </div>
     );

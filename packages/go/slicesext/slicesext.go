@@ -17,11 +17,14 @@
 // Package slicesext extends the standard library slices package with additional slice utilities
 package slicesext
 
-import "slices"
+import (
+	"fmt"
+	"slices"
+)
 
 // Filter applies a predicate function over each element in a given slice and returns a new slice containing only the elements in which the predicate returns true
 func Filter[T any](slice []T, fn func(T) bool) []T {
-	var out []T
+	out := make([]T, 0, len(slice))
 	for _, t := range slice {
 		if fn(t) {
 			out = append(out, t)
@@ -32,7 +35,7 @@ func Filter[T any](slice []T, fn func(T) bool) []T {
 
 // Map applies a mapping/transformation function over each element in a given slice and returns a new slice of the transformed values or nil
 func Map[T, U any](slice []T, fn func(T) U) []U {
-	var out []U
+	out := make([]U, 0, len(slice))
 	for _, t := range slice {
 		out = append(out, fn(t))
 	}
@@ -56,9 +59,25 @@ func MapWithErr[T, U any](s []T, f func(T) (U, error)) ([]U, error) {
 	return conv, nil
 }
 
+// ConvertType is a mapping function constructor that takes a generic defined type T and attempts to convert every value
+// within the mapped slice to type T. Upon failure to convert types, this function returns an error that identifies
+// the offending type name.
+func ConvertType[F, T any]() func(value F) (T, error) {
+	return func(value F) (T, error) {
+		switch typedValue := any(value).(type) {
+		case T:
+			return typedValue, nil
+
+		default:
+			var emptyT T
+			return emptyT, fmt.Errorf("type %T does not coerce to %T", value, emptyT)
+		}
+	}
+}
+
 // FlatMap applies a mapping/transformation function over each element in a given slice, concatenates the results and returns a new flattened slice of the transformed values or nil
 func FlatMap[T, U any](slice []T, fn func(T) []U) []U {
-	var out []U
+	out := make([]U, 0, len(slice))
 	for _, t := range slice {
 		out = append(out, fn(t)...)
 	}

@@ -21,13 +21,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/specterops/bloodhound/cypher/backend/cypher"
 	"github.com/specterops/bloodhound/cypher/frontend"
+	"github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
 )
 
-func updateKey(identityKind graph.Kind, identityProperties []string, updateKinds graph.Kinds) string {
+func newUpdateKey(identityKind graph.Kind, identityProperties []string, updateKinds graph.Kinds) string {
 	keys := []string{
 		identityKind.String(),
 	}
@@ -42,12 +42,10 @@ func updateKey(identityKind graph.Kind, identityProperties []string, updateKinds
 
 func relUpdateKey(update graph.RelationshipUpdate) string {
 	keys := []string{
-		updateKey(update.Relationship.Kind, update.IdentityProperties, nil),
-		updateKey(update.StartIdentityKind, update.StartIdentityProperties, update.Start.Kinds),
-		updateKey(update.EndIdentityKind, update.EndIdentityProperties, update.End.Kinds),
+		newUpdateKey(update.StartIdentityKind, update.StartIdentityProperties, update.Start.Kinds),
+		newUpdateKey(update.Relationship.Kind, update.IdentityProperties, nil),
+		newUpdateKey(update.EndIdentityKind, update.EndIdentityProperties, update.End.Kinds),
 	}
-
-	sort.Strings(keys)
 
 	return strings.Join(keys, "")
 }
@@ -207,13 +205,14 @@ type nodeUpdates struct {
 	identityKind       graph.Kind
 	identityProperties []string
 	nodeKindsToAdd     graph.Kinds
+	nodeKindsToRemove  graph.Kinds
 	properties         []map[string]any
 }
 
 type nodeUpdateByMap map[string]*nodeUpdates
 
 func (s nodeUpdateByMap) add(update graph.NodeUpdate) {
-	updateKey := updateKey(update.IdentityKind, update.IdentityProperties, update.Node.Kinds)
+	updateKey := newUpdateKey(update.IdentityKind, update.IdentityProperties, update.Node.Kinds)
 
 	if updates, hasUpdates := s[updateKey]; hasUpdates {
 		updates.properties = append(updates.properties, update.Node.Properties.Map)
@@ -222,6 +221,7 @@ func (s nodeUpdateByMap) add(update graph.NodeUpdate) {
 			identityKind:       update.IdentityKind,
 			identityProperties: update.IdentityProperties,
 			nodeKindsToAdd:     update.Node.Kinds,
+			nodeKindsToRemove:  update.Node.DeletedKinds,
 			properties: []map[string]any{
 				update.Node.Properties.Map,
 			},
@@ -274,6 +274,19 @@ func cypherBuildNodeUpdateQueryBatch(updates []graph.NodeUpdate) ([]string, []ma
 			}
 		}
 
+		if len(batch.nodeKindsToRemove) > 0 {
+			output.WriteString(" remove ")
+
+			for idx, kindToRemove := range batch.nodeKindsToRemove {
+				if idx > 0 {
+					output.WriteString(",")
+				}
+
+				output.WriteString("n:")
+				output.WriteString(kindToRemove.String())
+			}
+		}
+
 		output.WriteString(";")
 
 		// Write out the query to be run
@@ -290,7 +303,7 @@ func cypherBuildNodeUpdateQueryBatch(updates []graph.NodeUpdate) ([]string, []ma
 
 func stripCypherQuery(rawQuery string) string {
 	var (
-		strippedEmitter = cypher.NewCypherEmitter(true)
+		strippedEmitter = format.NewCypherEmitter(true)
 		buffer          = &bytes.Buffer{}
 	)
 

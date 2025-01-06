@@ -44,6 +44,11 @@ const LinuxAbuse: FC = () => {
                 created in Step 1 and the IP of a domain controller:
             </Typography>
             <Typography component={'pre'}>{'certipy auth -pfx administrator.pfx -dc-ip 172.16.126.128'}</Typography>
+            <Typography variant='body2'>
+                If the authentication fails then it may be because the DC enforces strong certificate mapping. This
+                requirement can be met by including a URL parameter in the SAN with the target's SID, however not
+                supported by Certipy. See the Windows abuse section for example.
+            </Typography>
         </>
     );
 };

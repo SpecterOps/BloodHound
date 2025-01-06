@@ -53,7 +53,7 @@ const WindowsAbuse: FC = () => {
                 attacker identity, the PFX-formatted certificate created in Step 2, and the certificate password:
             </Typography>
             <Typography component={'pre'}>
-                {'Rubeus asktgt /user:"forestroot\\attacker" /certificate:cert.pfx /password:asdf /ptt'}
+                {'Rubeus asktgt /user:attacker /domain:forestroot.com /certificate:cert.pfx /password:asdf /ptt'}
             </Typography>
             <Typography variant='body2'>
                 <b>Step 5</b>: Optionally verify the TGT by listing it with the klist command:

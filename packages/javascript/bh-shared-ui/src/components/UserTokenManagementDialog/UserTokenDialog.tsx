@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, useTheme } from '@mui/material';
 import { NewAuthToken } from 'js-client-library';
 import React from 'react';
 
@@ -23,6 +24,7 @@ const UserTokenDialog: React.FC<{
     onClose: () => void;
     token?: NewAuthToken;
 }> = ({ open, token, onClose }) => {
+    const theme = useTheme();
     return (
         <Dialog
             open={open}
@@ -37,14 +39,21 @@ const UserTokenDialog: React.FC<{
                 <DialogContentText>
                     Below is the new authentication token. Make sure to save this key, it will not be displayed again.
                 </DialogContentText>
-                <DialogContentText variant={'body2'}>
+                <DialogContentText
+                    variant={'body2'}
+                    sx={{
+                        backgroundColor: theme.palette.neutral.tertiary,
+                        mt: '8px',
+                        padding: '8px',
+                        borderRadius: '8px',
+                    }}>
                     Key: {token?.key}
                     <br />
                     ID: {token?.id}
                 </DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Button color='inherit' onClick={onClose} data-testid='user-token-dialog_button-close'>
+                <Button variant='tertiary' onClick={onClose} data-testid='user-token-dialog_button-close'>
                     Close
                 </Button>
             </DialogActions>

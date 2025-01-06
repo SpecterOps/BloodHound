@@ -25,13 +25,6 @@ const useStyles = makeStyles({
         left: 0,
         right: 0,
     },
-    progressRoot: {
-        backgroundColor: '#6798b9',
-
-        '& .MuiLinearProgress-barColorPrimary': {
-            backgroundColor: '#406f8e',
-        },
-    },
 });
 
 const GraphProgress: React.FC<{
@@ -43,7 +36,7 @@ const GraphProgress: React.FC<{
 
     return (
         <div className={styles.container}>
-            <LinearProgress color='primary' className={styles.progressRoot} />
+            <LinearProgress color='primary' />
         </div>
     );
 };

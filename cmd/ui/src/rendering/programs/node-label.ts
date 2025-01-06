@@ -23,19 +23,16 @@ export default function drawLabel(
     data: PartialButFor<NodeDisplayData & { inverseSqrtZoomRatio: number }, 'x' | 'y' | 'size' | 'label' | 'color'>,
     settings: Settings
 ): void {
-    if (!data.label) return;
+    if (!data.label || !settings.labelColor.color) return;
     const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
 
     const size = settings.labelSize * inverseSqrtZoomRatio,
         font = settings.labelFont,
-        weight = settings.labelWeight,
-        color = settings.labelColor.attribute
-            ? data[settings.labelColor.attribute] || settings.labelColor.color || '#000'
-            : settings.labelColor.color;
+        weight = settings.labelWeight;
 
     context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio);
 
-    context.fillStyle = color;
+    context.fillStyle = settings.labelColor.color;
     context.font = `${weight} ${size}px ${font}`;
 
     context.fillText(

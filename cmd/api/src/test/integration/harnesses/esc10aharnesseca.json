@@ -56,7 +56,7 @@
     {
       "id": "n0",
       "position": {
-        "x": 1838.2521199214677,
+        "x": 2108.1858772570004,
         "y": 2555.736538757399
       },
       "caption": "Domain1",
@@ -69,7 +69,7 @@
     {
       "id": "n1",
       "position": {
-        "x": 1442.701427932503,
+        "x": 1712.635185268036,
         "y": 2273.231824786215
       },
       "caption": "NTAuthStore1",
@@ -83,7 +83,7 @@
     {
       "id": "n2",
       "position": {
-        "x": 1442.701427932503,
+        "x": 1712.635185268036,
         "y": 2428.987863580507
       },
       "caption": "RootCA1",
@@ -97,13 +97,13 @@
     {
       "id": "n3",
       "position": {
-        "x": 446.2054422641352,
+        "x": 716.139199599668,
         "y": 2273.231824786215
       },
       "caption": "CertTemplate1",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1",
         "SubjectAltRequireUPN": "True"
@@ -115,12 +115,14 @@
     {
       "id": "n4",
       "position": {
-        "x": 1442.701427932503,
+        "x": 1712.635185268036,
         "y": 2117.4757859919237
       },
       "caption": "DC1",
       "labels": [],
-      "properties": {},
+      "properties": {
+        "CertificateMappingMethodsRaw": "31"
+      },
       "style": {
         "node-color": "#f44e3b",
         "caption-position": "inside",
@@ -131,7 +133,7 @@
     {
       "id": "n5",
       "position": {
-        "x": 956.6260599607343,
+        "x": 1226.5598172962673,
         "y": 2273.231824786215
       },
       "caption": "EnterpriseCA1",
@@ -145,7 +147,7 @@
     {
       "id": "n6",
       "position": {
-        "x": 75.00000000000023,
+        "x": 344.93375733553313,
         "y": 2555.736538757399
       },
       "caption": "User1",
@@ -157,112 +159,9 @@
       }
     },
     {
-      "id": "n7",
-      "position": {
-        "x": 1838.2521199214673,
-        "y": 2038.867592259418
-      },
-      "caption": "Domain2",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "node-color": "#68ccca"
-      }
-    },
-    {
-      "id": "n8",
-      "position": {
-        "x": 1442.7014279325028,
-        "y": 1756.3628782882338
-      },
-      "caption": "NTAuthStore2",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "node-color": "#653294",
-        "caption-color": "#ffffff"
-      }
-    },
-    {
-      "id": "n9",
-      "position": {
-        "x": 1442.7014279325028,
-        "y": 1912.118917082525
-      },
-      "caption": "RootCA2",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "node-color": "#653294",
-        "caption-color": "#ffffff"
-      }
-    },
-    {
-      "id": "n10",
-      "position": {
-        "x": 446.20544226413443,
-        "y": 1756.3628782882338
-      },
-      "caption": "CertTemplate2",
-      "labels": [],
-      "properties": {
-        "AuthenticationEnabled": "True",
-        "RequireManagerApproval": "False",
-        "SchemaVersion": "1",
-        "SubjectAltRequireUPN": "True"
-      },
-      "style": {
-        "node-color": "#fda1ff"
-      }
-    },
-    {
-      "id": "n11",
-      "position": {
-        "x": 1442.7014279325028,
-        "y": 1600.6068394939425
-      },
-      "caption": "DC2",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "node-color": "#f44e3b",
-        "caption-position": "inside",
-        "property-alignment": "colon",
-        "property-position": "outside"
-      }
-    },
-    {
-      "id": "n12",
-      "position": {
-        "x": 956.6260599607343,
-        "y": 1756.3628782882338
-      },
-      "caption": "EnterpriseCA2",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "node-color": "#194d33",
-        "caption-color": "#ffffff"
-      }
-    },
-    {
-      "id": "n13",
-      "position": {
-        "x": 75.00000000000034,
-        "y": 2038.867592259418
-      },
-      "caption": "User2",
-      "labels": [],
-      "properties": {},
-      "style": {
-        "node-color": "#a4dd00",
-        "border-color": "#000000"
-      }
-    },
-    {
       "id": "n14",
       "position": {
-        "x": 1838.2521199214673,
+        "x": 2108.1858772570004,
         "y": 1521.9986457614368
       },
       "caption": "Domain3",
@@ -275,7 +174,7 @@
     {
       "id": "n15",
       "position": {
-        "x": 1442.7014279325022,
+        "x": 1712.635185268035,
         "y": 1239.4939317902526
       },
       "caption": "NTAuthStore3",
@@ -289,7 +188,7 @@
     {
       "id": "n16",
       "position": {
-        "x": 1442.7014279325022,
+        "x": 1712.635185268035,
         "y": 1395.249970584544
       },
       "caption": "RootCA3",
@@ -303,13 +202,13 @@
     {
       "id": "n17",
       "position": {
-        "x": 446.20544226413415,
+        "x": 716.1391995996671,
         "y": 1239.4939317902526
       },
       "caption": "CertTemplate3",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1",
         "SubjectAltRequireUPN": "True"
@@ -321,12 +220,14 @@
     {
       "id": "n18",
       "position": {
-        "x": 1442.7014279325022,
+        "x": 1712.635185268035,
         "y": 1083.7378929959623
       },
       "caption": "DC3",
       "labels": [],
-      "properties": {},
+      "properties": {
+        "CertificateMappingMethodsRaw": "31"
+      },
       "style": {
         "node-color": "#f44e3b",
         "caption-position": "inside",
@@ -337,7 +238,7 @@
     {
       "id": "n19",
       "position": {
-        "x": 956.6260599607343,
+        "x": 1226.5598172962673,
         "y": 1239.4939317902526
       },
       "caption": "EnterpriseCA3",
@@ -351,7 +252,7 @@
     {
       "id": "n20",
       "position": {
-        "x": 75,
+        "x": 344.9337573355329,
         "y": 1521.9986457614368
       },
       "caption": "User3",
@@ -365,7 +266,7 @@
     {
       "id": "n21",
       "position": {
-        "x": 1838.2521199214677,
+        "x": 2108.1858772570004,
         "y": 1005.1296992634557
       },
       "caption": "Domain4",
@@ -378,7 +279,7 @@
     {
       "id": "n22",
       "position": {
-        "x": 1442.7014279325026,
+        "x": 1712.6351852680355,
         "y": 722.6249852922715
       },
       "caption": "NTAuthStore4",
@@ -392,7 +293,7 @@
     {
       "id": "n23",
       "position": {
-        "x": 1442.7014279325026,
+        "x": 1712.6351852680355,
         "y": 878.3810240865628
       },
       "caption": "RootCA4",
@@ -406,13 +307,13 @@
     {
       "id": "n24",
       "position": {
-        "x": 446.2054422641343,
+        "x": 716.1391995996672,
         "y": 722.6249852922715
       },
       "caption": "CertTemplate4",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1",
         "SubjectAltRequireUPN": "True"
@@ -424,12 +325,14 @@
     {
       "id": "n25",
       "position": {
-        "x": 1442.7014279325026,
+        "x": 1712.6351852680355,
         "y": 566.8689464979814
       },
       "caption": "DC4",
       "labels": [],
-      "properties": {},
+      "properties": {
+        "CertificateMappingMethodsRaw": "31"
+      },
       "style": {
         "node-color": "#f44e3b",
         "caption-position": "inside",
@@ -440,7 +343,7 @@
     {
       "id": "n26",
       "position": {
-        "x": 956.6260599607343,
+        "x": 1226.5598172962673,
         "y": 722.6249852922715
       },
       "caption": "EnterpriseCA4",
@@ -454,7 +357,7 @@
     {
       "id": "n27",
       "position": {
-        "x": 75.00000000000023,
+        "x": 344.93375733553313,
         "y": 1005.1296992634557
       },
       "caption": "User4",
@@ -468,7 +371,7 @@
     {
       "id": "n28",
       "position": {
-        "x": 1838.2521199214682,
+        "x": 2108.1858772570013,
         "y": 488.26075276547454
       },
       "caption": "Domain5",
@@ -481,7 +384,7 @@
     {
       "id": "n29",
       "position": {
-        "x": 1442.7014279325024,
+        "x": 1712.6351852680352,
         "y": 205.75603879429036
       },
       "caption": "NTAuthStore5",
@@ -495,7 +398,7 @@
     {
       "id": "n30",
       "position": {
-        "x": 1442.7014279325024,
+        "x": 1712.6351852680352,
         "y": 361.51207758858163
       },
       "caption": "RootCA5",
@@ -509,13 +412,13 @@
     {
       "id": "n31",
       "position": {
-        "x": 446.2054422641345,
+        "x": 716.1391995996673,
         "y": 205.75603879429036
       },
       "caption": "CertTemplate5",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1",
         "SubjectAltRequireUPN": "True"
@@ -527,12 +430,14 @@
     {
       "id": "n32",
       "position": {
-        "x": 1442.7014279325024,
+        "x": 1712.6351852680352,
         "y": 50
       },
       "caption": "DC5",
       "labels": [],
-      "properties": {},
+      "properties": {
+        "CertificateMappingMethodsRaw": "31"
+      },
       "style": {
         "node-color": "#f44e3b",
         "caption-position": "inside",
@@ -543,7 +448,7 @@
     {
       "id": "n33",
       "position": {
-        "x": 956.6260599607343,
+        "x": 1226.5598172962673,
         "y": 205.75603879429036
       },
       "caption": "EnterpriseCA5",
@@ -557,7 +462,7 @@
     {
       "id": "n34",
       "position": {
-        "x": 75.00000000000034,
+        "x": 344.93375733553324,
         "y": 488.26075276547454
       },
       "caption": "User5",
@@ -571,34 +476,20 @@
     {
       "id": "n35",
       "position": {
-        "x": -194.9337573355329,
+        "x": 75,
         "y": 2761.1687609848414
       },
       "caption": "Group1",
-      "style": {
-        "node-color": "#fcdc00"
-      },
-      "labels": [],
-      "properties": {}
-    },
-    {
-      "id": "n36",
-      "position": {
-        "x": -194.9337573355329,
-        "y": 2244.299814486861
-      },
-      "caption": "Group2",
       "labels": [],
       "properties": {},
       "style": {
-        "node-color": "#fcdc00",
-        "border-color": "#73d8ff"
+        "node-color": "#fcdc00"
       }
     },
     {
       "id": "n37",
       "position": {
-        "x": -194.9337573355329,
+        "x": 75,
         "y": 1727.430867988881
       },
       "caption": "Group3",
@@ -612,7 +503,7 @@
     {
       "id": "n38",
       "position": {
-        "x": -194.9337573355329,
+        "x": 75,
         "y": 1210.5619214909007
       },
       "caption": "Group4",
@@ -626,7 +517,7 @@
     {
       "id": "n39",
       "position": {
-        "x": -194.9337573355329,
+        "x": 75,
         "y": 693.6929749929204
       },
       "caption": "Group5",
@@ -710,14 +601,6 @@
     },
     {
       "id": "n7",
-      "fromId": "n5",
-      "toId": "n4",
-      "type": "CanAbuseUPNCertMapping",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n8",
       "fromId": "n6",
       "toId": "n3",
       "type": "Enroll",
@@ -725,84 +608,7 @@
       "style": {}
     },
     {
-      "id": "n9",
-      "fromId": "n9",
-      "toId": "n7",
-      "type": "RootCAFor",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n10",
-      "fromId": "n8",
-      "toId": "n7",
-      "type": "NTAuthStoreFor",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n11",
-      "fromId": "n11",
-      "toId": "n7",
-      "type": "DCFor",
-      "properties": {},
-      "style": {
-        "type-color": "#000000",
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n12",
-      "fromId": "n10",
-      "toId": "n12",
-      "type": "PublishedTo",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n13",
-      "fromId": "n12",
-      "toId": "n9",
-      "type": "IssuedSignedBy",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n14",
-      "fromId": "n12",
-      "toId": "n8",
-      "type": "TrustedForNTAuth",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n15",
-      "fromId": "n13",
-      "toId": "n12",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
       "id": "n16",
-      "fromId": "n13",
-      "toId": "n10",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n17",
       "fromId": "n16",
       "toId": "n14",
       "type": "RootCAFor",
@@ -812,7 +618,7 @@
       }
     },
     {
-      "id": "n18",
+      "id": "n17",
       "fromId": "n15",
       "toId": "n14",
       "type": "NTAuthStoreFor",
@@ -822,7 +628,7 @@
       }
     },
     {
-      "id": "n19",
+      "id": "n18",
       "fromId": "n18",
       "toId": "n14",
       "type": "DCFor",
@@ -833,7 +639,7 @@
       }
     },
     {
-      "id": "n20",
+      "id": "n19",
       "fromId": "n17",
       "toId": "n19",
       "type": "PublishedTo",
@@ -843,7 +649,7 @@
       }
     },
     {
-      "id": "n21",
+      "id": "n20",
       "fromId": "n19",
       "toId": "n16",
       "type": "IssuedSignedBy",
@@ -853,7 +659,7 @@
       }
     },
     {
-      "id": "n22",
+      "id": "n21",
       "fromId": "n20",
       "toId": "n19",
       "type": "Enroll",
@@ -861,15 +667,7 @@
       "style": {}
     },
     {
-      "id": "n23",
-      "fromId": "n19",
-      "toId": "n18",
-      "type": "CanAbuseUPNCertMapping",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n24",
+      "id": "n22",
       "fromId": "n20",
       "toId": "n17",
       "type": "Enroll",
@@ -877,7 +675,7 @@
       "style": {}
     },
     {
-      "id": "n25",
+      "id": "n23",
       "fromId": "n23",
       "toId": "n21",
       "type": "RootCAFor",
@@ -887,7 +685,7 @@
       }
     },
     {
-      "id": "n26",
+      "id": "n24",
       "fromId": "n22",
       "toId": "n21",
       "type": "NTAuthStoreFor",
@@ -897,7 +695,7 @@
       }
     },
     {
-      "id": "n27",
+      "id": "n25",
       "fromId": "n25",
       "toId": "n21",
       "type": "DCFor",
@@ -908,7 +706,7 @@
       }
     },
     {
-      "id": "n28",
+      "id": "n26",
       "fromId": "n24",
       "toId": "n26",
       "type": "PublishedTo",
@@ -918,7 +716,7 @@
       }
     },
     {
-      "id": "n29",
+      "id": "n27",
       "fromId": "n26",
       "toId": "n22",
       "type": "TrustedForNTAuth",
@@ -928,7 +726,7 @@
       }
     },
     {
-      "id": "n30",
+      "id": "n28",
       "fromId": "n27",
       "toId": "n26",
       "type": "Enroll",
@@ -936,15 +734,7 @@
       "style": {}
     },
     {
-      "id": "n31",
-      "fromId": "n26",
-      "toId": "n25",
-      "type": "CanAbuseUPNCertMapping",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n32",
+      "id": "n29",
       "fromId": "n27",
       "toId": "n24",
       "type": "Enroll",
@@ -952,7 +742,7 @@
       "style": {}
     },
     {
-      "id": "n33",
+      "id": "n30",
       "fromId": "n30",
       "toId": "n28",
       "type": "RootCAFor",
@@ -962,7 +752,7 @@
       }
     },
     {
-      "id": "n34",
+      "id": "n31",
       "fromId": "n29",
       "toId": "n28",
       "type": "NTAuthStoreFor",
@@ -972,7 +762,7 @@
       }
     },
     {
-      "id": "n35",
+      "id": "n32",
       "fromId": "n32",
       "toId": "n28",
       "type": "DCFor",
@@ -983,7 +773,7 @@
       }
     },
     {
-      "id": "n36",
+      "id": "n33",
       "fromId": "n33",
       "toId": "n30",
       "type": "IssuedSignedBy",
@@ -993,7 +783,7 @@
       }
     },
     {
-      "id": "n37",
+      "id": "n34",
       "fromId": "n33",
       "toId": "n29",
       "type": "TrustedForNTAuth",
@@ -1003,7 +793,7 @@
       }
     },
     {
-      "id": "n38",
+      "id": "n35",
       "fromId": "n34",
       "toId": "n33",
       "type": "Enroll",
@@ -1011,15 +801,7 @@
       "style": {}
     },
     {
-      "id": "n39",
-      "fromId": "n33",
-      "toId": "n32",
-      "type": "CanAbuseUPNCertMapping",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n40",
+      "id": "n36",
       "fromId": "n34",
       "toId": "n31",
       "type": "Enroll",
@@ -1027,52 +809,44 @@
       "style": {}
     },
     {
-      "id": "n41",
-      "type": "GenericAll",
-      "style": {},
-      "properties": {},
+      "id": "n37",
       "fromId": "n35",
-      "toId": "n6"
+      "toId": "n6",
+      "type": "GenericAll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n38",
+      "fromId": "n35",
+      "toId": "n0",
+      "type": "ADCSESC10a",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n40",
+      "fromId": "n39",
+      "toId": "n34",
+      "type": "GenericAll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n41",
+      "fromId": "n38",
+      "toId": "n27",
+      "type": "GenericAll",
+      "properties": {},
+      "style": {}
     },
     {
       "id": "n42",
-      "type": "ADCSESC10a",
-      "style": {},
-      "properties": {},
-      "fromId": "n35",
-      "toId": "n0"
-    },
-    {
-      "id": "n43",
-      "type": "GenericAll",
-      "style": {},
-      "properties": {},
-      "fromId": "n36",
-      "toId": "n13"
-    },
-    {
-      "id": "n44",
-      "type": "GenericAll",
-      "style": {},
-      "properties": {},
-      "fromId": "n39",
-      "toId": "n34"
-    },
-    {
-      "id": "n45",
-      "type": "GenericAll",
-      "style": {},
-      "properties": {},
-      "fromId": "n38",
-      "toId": "n27"
-    },
-    {
-      "id": "n46",
-      "type": "GenericAll",
-      "style": {},
-      "properties": {},
       "fromId": "n37",
-      "toId": "n20"
+      "toId": "n20",
+      "type": "GenericAll",
+      "properties": {},
+      "style": {}
     }
   ]
 }

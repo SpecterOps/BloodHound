@@ -21,17 +21,19 @@ package azure_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	schema "github.com/specterops/bloodhound/graphschema"
 	azure2 "github.com/specterops/bloodhound/src/analysis/azure"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestAnalysisAzure_GraphStats(t *testing.T) {
 	testCtx := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testCtx.SetupAzure()
 	testCtx.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
 
 		_, agg, err := azure2.GraphStats(context.TODO(), testCtx.Graph.Database)

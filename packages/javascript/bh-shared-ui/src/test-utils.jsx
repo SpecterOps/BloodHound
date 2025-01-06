@@ -20,7 +20,18 @@ import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material'
 import { render } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { NotificationsProvider } from '.';
+import { darkPalette } from '.';
 
+const theme = createTheme(darkPalette);
+const defaultTheme = {
+    ...theme,
+    palette: {
+        ...theme.palette,
+        neutral: { ...darkPalette.neutral },
+        color: { ...darkPalette.color },
+        tertiary: { ...darkPalette.tertiary },
+    },
+};
 const customRender = (
     ui,
     queryClient = new QueryClient({
@@ -30,34 +41,7 @@ const customRender = (
             },
         },
     }),
-    {
-        theme = createTheme({
-            palette: {
-                primary: {
-                    main: '#406f8e',
-                    light: '#709dbe',
-                    dark: '#064460',
-                    contrastText: '#ffffff',
-                },
-                neutral: {
-                    main: '#e0e0e0',
-                    light: '#ffffff',
-                    dark: '#cccccc',
-                    contrastText: '#000000',
-                },
-                background: {
-                    paper: '#fafafa',
-                    default: '#e4e9eb',
-                },
-                low: 'rgb(255, 195, 15)',
-                moderate: 'rgb(255, 97, 66)',
-                high: 'rgb(205, 0, 117)',
-                critical: 'rgb(76, 29, 143)',
-            },
-        }),
-
-        ...renderOptions
-    } = {}
+    { theme = defaultTheme, ...renderOptions } = {}
 ) => {
     const AllTheProviders = ({ children }) => {
         return (

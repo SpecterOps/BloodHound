@@ -20,8 +20,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/specterops/bloodhound/cypher/models/cypher"
+
 	"github.com/antlr4-go/antlr/v4"
-	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/parser"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -29,12 +30,12 @@ import (
 type WhereVisitor struct {
 	BaseVisitor
 
-	Where *model.Where
+	Where *cypher.Where
 }
 
 func NewWhereVisitor() *WhereVisitor {
 	return &WhereVisitor{
-		Where: model.NewWhere(),
+		Where: cypher.NewWhere(),
 	}
 }
 
@@ -49,7 +50,7 @@ func (s *WhereVisitor) ExitOC_Expression(ctx *parser.OC_ExpressionContext) {
 type NodePatternVisitor struct {
 	BaseVisitor
 
-	NodePattern *model.NodePattern
+	NodePattern *cypher.NodePattern
 }
 
 func (s *NodePatternVisitor) EnterOC_Variable(ctx *parser.OC_VariableContext) {
@@ -80,7 +81,7 @@ func (s *NodePatternVisitor) ExitOC_Properties(ctx *parser.OC_PropertiesContext)
 type RelationshipPatternVisitor struct {
 	BaseVisitor
 
-	RelationshipPattern *model.RelationshipPattern
+	RelationshipPattern *cypher.RelationshipPattern
 }
 
 func (s *RelationshipPatternVisitor) EnterOC_RelTypeName(ctx *parser.OC_RelTypeNameContext) {
@@ -123,7 +124,7 @@ func (s *RelationshipPatternVisitor) EnterOC_RangeLiteral(ctx *parser.OC_RangeLi
 	)
 
 	// Create a new relationship pattern range for the relationship pattern being built
-	s.RelationshipPattern.Range = &model.PatternRange{}
+	s.RelationshipPattern.Range = &cypher.PatternRange{}
 
 	// Start at the start state for the mini-parser below
 	state := stateStart
@@ -172,18 +173,18 @@ func (s *RelationshipPatternVisitor) ExitOC_Properties(ctx *parser.OC_Properties
 type PatternPredicateVisitor struct {
 	BaseVisitor
 
-	PatternPredicate *model.PatternPredicate
+	PatternPredicate *cypher.PatternPredicate
 }
 
 func NewPatternPredicateVisitor() *PatternPredicateVisitor {
 	return &PatternPredicateVisitor{
-		PatternPredicate: model.NewPatternPredicate(),
+		PatternPredicate: cypher.NewPatternPredicate(),
 	}
 }
 
 func (s *PatternPredicateVisitor) EnterOC_NodePattern(ctx *parser.OC_NodePatternContext) {
 	s.ctx.Enter(&NodePatternVisitor{
-		NodePattern: &model.NodePattern{},
+		NodePattern: &cypher.NodePattern{},
 	})
 }
 
@@ -193,7 +194,7 @@ func (s *PatternPredicateVisitor) ExitOC_NodePattern(ctx *parser.OC_NodePatternC
 
 func (s *PatternPredicateVisitor) EnterOC_RelationshipPattern(ctx *parser.OC_RelationshipPatternContext) {
 	s.ctx.Enter(&RelationshipPatternVisitor{
-		RelationshipPattern: &model.RelationshipPattern{
+		RelationshipPattern: &cypher.RelationshipPattern{
 			Direction: graph.DirectionBoth,
 		},
 	})
@@ -206,12 +207,12 @@ func (s *PatternPredicateVisitor) ExitOC_RelationshipPattern(ctx *parser.OC_Rela
 type PatternVisitor struct {
 	BaseVisitor
 
-	PatternParts []*model.PatternPart
+	PatternParts []*cypher.PatternPart
 }
 
 func (s *PatternVisitor) EnterOC_PatternPart(ctx *parser.OC_PatternPartContext) {
 	s.ctx.Enter(&PatternPartVisitor{
-		PatternPart: &model.PatternPart{},
+		PatternPart: &cypher.PatternPart{},
 	})
 }
 
@@ -222,11 +223,11 @@ func (s *PatternVisitor) ExitOC_PatternPart(ctx *parser.OC_PatternPartContext) {
 type PatternPartVisitor struct {
 	BaseVisitor
 
-	PatternPart *model.PatternPart
+	PatternPart *cypher.PatternPart
 }
 
 func (s *PatternPartVisitor) EnterOC_PatternPart(ctx *parser.OC_PatternPartContext) {
-	s.PatternPart = &model.PatternPart{}
+	s.PatternPart = &cypher.PatternPart{}
 }
 
 func (s *PatternPartVisitor) EnterOC_ShortestPathPattern(ctx *parser.OC_ShortestPathPatternContext) {
@@ -247,7 +248,7 @@ func (s *PatternPartVisitor) ExitOC_Variable(ctx *parser.OC_VariableContext) {
 
 func (s *PatternPartVisitor) EnterOC_NodePattern(ctx *parser.OC_NodePatternContext) {
 	s.ctx.Enter(&NodePatternVisitor{
-		NodePattern: &model.NodePattern{},
+		NodePattern: &cypher.NodePattern{},
 	})
 }
 
@@ -257,7 +258,7 @@ func (s *PatternPartVisitor) ExitOC_NodePattern(ctx *parser.OC_NodePatternContex
 
 func (s *PatternPartVisitor) EnterOC_RelationshipPattern(ctx *parser.OC_RelationshipPatternContext) {
 	s.ctx.Enter(&RelationshipPatternVisitor{
-		RelationshipPattern: &model.RelationshipPattern{
+		RelationshipPattern: &cypher.RelationshipPattern{
 			Direction: graph.DirectionBoth,
 		},
 	})

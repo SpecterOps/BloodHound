@@ -21,10 +21,11 @@ package migration_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestMigration_AssetGroups(t *testing.T) {

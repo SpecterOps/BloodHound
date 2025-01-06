@@ -19,6 +19,7 @@ body,
 #root {
     height: 100%;
     background-color: #e4e9eb;
+    overscroll-behavior: none;
 }
 
 body {
@@ -69,27 +70,6 @@ form {
     /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
-.even-item {
-    background-color: #fafafa;
-}
-
-.even-item:hover {
-    background-color: #ccc;
-}
-
-.odd-item {
-    background-color: #eee;
-}
-
-.odd-item:hover {
-    background-color: #ccc;
-}
-
-* {
-    scrollbar-width: thin;
-    scrollbar-color: $lighter-blue #aaa;
-}
-
 svg {
     display: block;
 }
@@ -102,18 +82,4 @@ hr.MuiDivider-middle {
     border-top: thin solid #a9a9a9;
     background: none;
     margin: 0 14px 0 14px;
-}
-
-::-webkit-scrollbar {
-    width: 7px;
-    height: 7px;
-}
-
-::-webkit-scrollbar-track {
-    background: #aaa;
-    box-shadow: inset 0 0 2px #444;
-}
-
-::-webkit-scrollbar-thumb {
-    background: $lighter-blue;
 }

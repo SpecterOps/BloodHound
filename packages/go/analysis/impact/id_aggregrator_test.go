@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package impact_test
@@ -19,11 +19,11 @@ package impact_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAggregator_Cardinality(t *testing.T) {
@@ -70,8 +70,8 @@ func TestAggregator_Cardinality(t *testing.T) {
 		node11to10Terminal = idDescend(node11Segment, node10)
 
 		// Make sure to use an exact cardinality container (bitset in this case)
-		agg = impact.NewIDA(func() cardinality.Provider[uint32] {
-			return cardinality.NewBitmap32()
+		agg = impact.NewIDA(func() cardinality.Provider[uint64] {
+			return cardinality.NewBitmap64()
 		})
 	)
 
@@ -84,7 +84,7 @@ func TestAggregator_Cardinality(t *testing.T) {
 	agg.AddShortcut(node7to3Shortcut)
 	agg.AddShortcut(node8to10Shortcut)
 
-	nodeImpact := agg.Cardinality(2).(cardinality.Duplex[uint32])
+	nodeImpact := agg.Cardinality(2).(cardinality.Duplex[uint64])
 
 	assert.Equal(t, 4, int(agg.Resolved().Cardinality()))
 
@@ -104,7 +104,7 @@ func TestAggregator_Cardinality(t *testing.T) {
 	require.True(t, nodeImpact.Contains(6))
 	require.True(t, nodeImpact.Contains(8))
 
-	nodeImpact = agg.Cardinality(1).(cardinality.Duplex[uint32])
+	nodeImpact = agg.Cardinality(1).(cardinality.Duplex[uint64])
 
 	require.Equal(t, 5, int(agg.Resolved().Cardinality()))
 
@@ -124,7 +124,7 @@ func TestAggregator_Cardinality(t *testing.T) {
 	require.True(t, nodeImpact.Contains(9))
 	require.True(t, nodeImpact.Contains(10))
 
-	nodeImpact = agg.Cardinality(11).(cardinality.Duplex[uint32])
+	nodeImpact = agg.Cardinality(11).(cardinality.Duplex[uint64])
 
 	require.Equal(t, 7, int(agg.Resolved().Cardinality()))
 
@@ -148,7 +148,7 @@ func TestAggregator_Cardinality(t *testing.T) {
 	require.True(t, nodeImpact.Contains(10))
 
 	// Validate cached resolutions are correct
-	nodeImpact = agg.Cardinality(2).(cardinality.Duplex[uint32])
+	nodeImpact = agg.Cardinality(2).(cardinality.Duplex[uint64])
 
 	require.Equal(t, 8, int(nodeImpact.Cardinality()))
 

@@ -17,9 +17,10 @@
 import React from 'react';
 
 import { Navigate } from 'react-router-dom';
+import { PutUserAuthSecretRequest } from 'js-client-library';
+import { PasswordResetForm } from 'bh-shared-ui';
 import { authExpiredSelector, logout, updateExpiredPassword } from 'src/ducks/auth/authSlice';
 import LoginPage from 'src/components/LoginPage';
-import PasswordResetForm from 'src/components/PasswordResetForm';
 import { ROUTE_HOME } from 'src/ducks/global/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
@@ -30,8 +31,8 @@ const PasswordReset: React.FC = () => {
     const authExpired = useAppSelector(authExpiredSelector);
 
     /* Event Handlers */
-    const handleSubmit = (password: string) => {
-        dispatch(updateExpiredPassword({ password }));
+    const handleSubmit = (payload: PutUserAuthSecretRequest) => {
+        dispatch(updateExpiredPassword(payload));
     };
 
     const handleCancel = () => {

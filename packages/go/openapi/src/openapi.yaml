@@ -141,7 +141,535 @@ security:
     RequestDate: []
     HMACSignature: []
 
-paths: {}
+##
+# This section is used by ReDoc to organize endpoint groups in the sidebar.
+# Two top level tag groups help users find Community and Enterprise features.
+#
+## ALL TAGS MUST BE LISTED HERE TO SHOW UP IN THE NAVIGATION. ##
+x-tagGroups:
+  - name: Community & Enterprise
+    tags:
+      - Auth
+      - Roles
+      - Permissions
+      - API Tokens
+      - BloodHound Users
+      - Collectors
+      - Collection Uploads
+      - API Info
+      - Search
+      - Audit
+      - Config
+      - Asset Isolation
+      - Graph
+      - Azure Entities
+      - AD Base Entities
+      - Computers
+      - Containers
+      - Domains
+      - GPOs
+      - AIA CAs
+      - Root CAs
+      - Enterprise CAs
+      - NT Auth Stores
+      - Cert Templates
+      - OUs
+      - AD Users
+      - Groups
+      - Data Quality
+      - Datapipe
+      - Cypher
+  - name: Enterprise Only
+    tags:
+      - EULA
+      - BHE Users
+      - Analysis
+      - Client Ingest
+      - Clients
+      - Jobs
+      - Tasks
+      - Events (Schedules)
+      - Attack Paths
+      - Risk Posture
+      - Meta Entities
+
+paths:
+  ##
+  # Community + Enterprise Endpoints
+  ##
+
+  # auth
+  /api/v2/login:
+    $ref: './paths/auth.login.yaml'
+  /api/v2/logout:
+    $ref: './paths/auth.logout.yaml'
+  /api/v2/self:
+    $ref: './paths/auth.self.yaml'
+  /api/v2/saml:
+    $ref: './paths/auth.saml.yaml'
+  /api/v2/saml/sso:
+    $ref: './paths/auth.saml.sso.yaml'
+  /api/v2/saml/providers:
+    $ref: './paths/auth.saml.providers.yaml'
+  /api/v2/saml/providers/{saml_provider_id}:
+    $ref: './paths/auth.saml.providers.id.yaml'
+
+  # Undocumented, not sure how this endpoint actually works.
+  #/api/v2/login/saml/{saml_provider_name}:
+
+  # sso
+  /api/v2/sso-providers:
+    $ref: './paths/sso.sso-providers.yaml'
+  /api/v2/sso-providers/oidc:
+    $ref: './paths/sso.sso-providers.oidc.yaml'
+  /api/v2/sso-providers/saml:
+    $ref: './paths/auth.sso-providers.saml.yaml'
+  /api/v2/sso-providers/{sso_provider_id}:
+    $ref: './paths/sso.sso-providers.id.yaml'
+  /api/v2/sso-providers/{sso_provider_id}/signing-certificate:
+      $ref: './paths/sso.sso-providers.id.signing-certificate.yaml'
+
+  # permissions
+  /api/v2/permissions:
+    $ref: './paths/permissions.permissions.yaml'
+  /api/v2/permissions/{permission_id}:
+    $ref: './paths/permissions.permissions.id.yaml'
+
+  # roles
+  /api/v2/roles:
+    $ref: './paths/roles.roles.yaml'
+  /api/v2/roles/{role_id}:
+    $ref: './paths/roles.roles.id.yaml'
+
+  # api tokens
+  /api/v2/tokens:
+    $ref: './paths/tokens.tokens.yaml'
+  /api/v2/tokens/{token_id}:
+    $ref: './paths/tokens.tokens.id.yaml'
+
+  # user management
+  /api/v2/bloodhound-users:
+    $ref: './paths/bh-users.bloodhound-users.yaml'
+  /api/v2/bloodhound-users/{user_id}:
+    $ref: './paths/bh-users.bloodhound-users.id.yaml'
+  /api/v2/bloodhound-users/{user_id}/secret:
+    $ref: './paths/bh-users.bloodhound-users.id.secret.yaml'
+  /api/v2/bloodhound-users/{user_id}/mfa:
+    $ref: './paths/bh-users.bloodhound-users.id.mfa.yaml'
+  /api/v2/bloodhound-users/{user_id}/mfa-activation:
+    $ref: './paths/bh-users.bloodhound-users.id.mfa-activation.yaml'
+
+  # collectors
+  /api/v2/collectors/{collector_type}:
+    $ref: './paths/collectors.collectors.type.yaml'
+  /api/v2/collectors/{collector_type}/{release_tag}:
+    $ref: './paths/collectors.collectors.type.tag.yaml'
+  /api/v2/collectors/{collector_type}/{release_tag}/checksum:
+    $ref: './paths/collectors.collectors.type.tag.checksum.yaml'
+
+  # collection uploads
+  /api/v2/file-upload:
+    $ref: './paths/collection-uploads.file-upload.yaml'
+  /api/v2/file-upload/start:
+    $ref: './paths/collection-uploads.file-upload.start.yaml'
+  /api/v2/file-upload/{file_upload_job_id}:
+    $ref: './paths/collection-uploads.file-upload.id.yaml'
+  /api/v2/file-upload/{file_upload_job_id}/end:
+    $ref: './paths/collection-uploads.file-upload.id.end.yaml'
+  /api/v2/file-upload/accepted-types:
+    $ref: './paths/collection-uploads.file-upload.accepted-types.yaml'
+
+  # api info
+  /api/version:
+    $ref: './paths/api-info.version.yaml'
+  /api/v2/spec/openapi.yaml:
+    $ref: './paths/api-info.spec.yaml'
+
+  # search
+  /api/v2/search:
+    $ref: './paths/search.search.yaml'
+  /api/v2/available-domains:
+    $ref: './paths/search.available-domains.yaml'
+
+  # audit
+  /api/v2/audit:
+    $ref: './paths/audit.audit.yaml'
+
+  # config
+  /api/v2/config:
+    $ref: './paths/config.config.yaml'
+  /api/v2/features:
+    $ref: './paths/config.features.yaml'
+  /api/v2/features/{feature_id}/toggle:
+    $ref: './paths/config.features.id.toggle.yaml'
+
+  # asset isolation
+  /api/v2/asset-groups:
+    $ref: './paths/asset-isolation.asset-groups.yaml'
+  /api/v2/asset-groups/{asset_group_id}:
+    $ref: './paths/asset-isolation.asset-groups.id.yaml'
+  /api/v2/asset-groups/{asset_group_id}/collections:
+    $ref: './paths/asset-isolation.asset-groups.id.collections.yaml'
+  /api/v2/asset-groups/{asset_group_id}/selectors:
+    $ref: './paths/asset-isolation.asset-groups.id.selectors.yaml'
+  /api/v2/asset-groups/{asset_group_id}/selectors/{asset_group_selector_id}:
+    $ref: './paths/asset-isolation.asset-groups.id.selectors.id.yaml'
+  /api/v2/asset-groups/{asset_group_id}/custom-selectors:
+    $ref: './paths/asset-isolation.asset-groups.id.custom-selectors.yaml'
+  /api/v2/asset-groups/{asset_group_id}/members:
+    $ref: './paths/asset-isolation.asset-groups.id.members.yaml'
+  /api/v2/asset-groups/{asset_group_id}/members/counts:
+    $ref: './paths/asset-isolation.asset-groups.id.members.counts.yaml'
+
+  # graph
+  /api/v2/pathfinding:
+    $ref: './paths/graph.pathfinding.yaml'
+  /api/v2/graph-search:
+    $ref: './paths/graph.graph-search.yaml'
+  /api/v2/graphs/shortest-path:
+    $ref: './paths/graph.graphs.shortest-path.yaml'
+  /api/v2/graphs/edge-composition:
+    $ref: './paths/graph.graphs.edge-composition.yaml'
+
+  # cypher
+  /api/v2/saved-queries:
+    $ref: './paths/cypher.saved-queries.yaml'
+  /api/v2/saved-queries/{saved_query_id}:
+    $ref: './paths/cypher.saved-queries.id.yaml'
+  /api/v2/saved-queries/{saved_query_id}/permissions:
+    $ref: './paths/cypher.saved-queries.id.permissions.yaml'
+  /api/v2/graphs/cypher:
+    $ref: './paths/cypher.graphs.cypher.yaml'
+
+  # azure entities
+  /api/v2/azure/{entity_type}:
+    $ref: './paths/azure.entity.yaml'
+
+  # ad base entities
+  /api/v2/base/{object_id}:
+    $ref: './paths/base.base.id.yaml'
+  /api/v2/base/{object_id}/controllables:
+    $ref: './paths/base.base.id.controllables.yaml'
+  /api/v2/base/{object_id}/controllers:
+    $ref: './paths/base.base.id.controllers.yaml'
+
+  # computers
+  /api/v2/computers/{object_id}:
+    $ref: './paths/computers.computers.id.yaml'
+  /api/v2/computers/{object_id}/admin-rights:
+    $ref: './paths/computers.computers.id.admin-rights.yaml'
+  /api/v2/computers/{object_id}/admin-users:
+    $ref: './paths/computers.computers.id.admin-users.yaml'
+  /api/v2/computers/{object_id}/constrained-delegation-rights:
+    $ref: './paths/computers.computers.id.constrained-delegation-rights.yaml'
+  /api/v2/computers/{object_id}/constrained-users:
+    $ref: './paths/computers.computers.id.constrained-users.yaml'
+  /api/v2/computers/{object_id}/controllables:
+    $ref: './paths/computers.computers.id.controllables.yaml'
+  /api/v2/computers/{object_id}/controllers:
+    $ref: './paths/computers.computers.id.controllers.yaml'
+  /api/v2/computers/{object_id}/dcom-rights:
+    $ref: './paths/computers.computers.id.dcom-rights.yaml'
+  /api/v2/computers/{object_id}/dcom-users:
+    $ref: './paths/computers.computers.id.dcom-users.yaml'
+  /api/v2/computers/{object_id}/group-membership:
+    $ref: './paths/computers.computers.id.group-membership.yaml'
+  /api/v2/computers/{object_id}/ps-remote-rights:
+    $ref: './paths/computers.computers.id.ps-remote-rights.yaml'
+  /api/v2/computers/{object_id}/ps-remote-users:
+    $ref: './paths/computers.computers.id.ps-remote-users.yaml'
+  /api/v2/computers/{object_id}/rdp-rights:
+    $ref: './paths/computers.computers.id.rdp-rights.yaml'
+  /api/v2/computers/{object_id}/rdp-users:
+    $ref: './paths/computers.computers.id.rdp-users.yaml'
+  /api/v2/computers/{object_id}/sessions:
+    $ref: './paths/computers.computers.id.sessions.yaml'
+  /api/v2/computers/{object_id}/sql-admins:
+    $ref: './paths/computers.computers.id.sql-admins.yaml'
+
+  # containers
+  /api/v2/containers/{object_id}:
+    $ref: './paths/containers.containers.id.yaml'
+  /api/v2/containers/{object_id}/controllers:
+    $ref: './paths/containers.containers.id.controllers.yaml'
+
+  # domains
+  /api/v2/domains/{object_id}:
+    $ref: './paths/domains.domains.id.yaml'
+  /api/v2/domains/{object_id}/computers:
+    $ref: './paths/domains.domains.id.computers.yaml'
+  /api/v2/domains/{object_id}/controllers:
+    $ref: './paths/domains.domains.id.controllers.yaml'
+  /api/v2/domains/{object_id}/dc-syncers:
+    $ref: './paths/domains.domains.id.dc-syncers.yaml'
+  /api/v2/domains/{object_id}/foreign-admins:
+    $ref: './paths/domains.domains.id.foreign-admins.yaml'
+  /api/v2/domains/{object_id}/foreign-gpo-controllers:
+    $ref: './paths/domains.domains.id.foreign-gpo-controllers.yaml'
+  /api/v2/domains/{object_id}/foreign-groups:
+    $ref: './paths/domains.domains.id.foreign-groups.yaml'
+  /api/v2/domains/{object_id}/foreign-users:
+    $ref: './paths/domains.domains.id.foreign-users.yaml'
+  /api/v2/domains/{object_id}/gpos:
+    $ref: './paths/domains.domains.id.gpos.yaml'
+  /api/v2/domains/{object_id}/groups:
+    $ref: './paths/domains.domains.id.groups.yaml'
+  /api/v2/domains/{object_id}/inbound-trusts:
+    $ref: './paths/domains.domains.id.inbound-trusts.yaml'
+  /api/v2/domains/{object_id}/linked-gpos:
+    $ref: './paths/domains.domains.id.linked-gpos.yaml'
+  /api/v2/domains/{object_id}/ous:
+    $ref: './paths/domains.domains.id.ous.yaml'
+  /api/v2/domains/{object_id}/outbound-trusts:
+    $ref: './paths/domains.domains.id.outbound-trusts.yaml'
+  /api/v2/domains/{object_id}/users:
+    $ref: './paths/domains.domains.id.users.yaml'
+
+  # gpos
+  /api/v2/gpos/{object_id}:
+    $ref: './paths/gpos.gpos.id.yaml'
+  /api/v2/gpos/{object_id}/computers:
+    $ref: './paths/gpos.gpos.id.computers.yaml'
+  /api/v2/gpos/{object_id}/controllers:
+    $ref: './paths/gpos.gpos.id.controllers.yaml'
+  /api/v2/gpos/{object_id}/ous:
+    $ref: './paths/gpos.gpos.id.ous.yaml'
+  /api/v2/gpos/{object_id}/tier-zero:
+    $ref: './paths/gpos.gpos.id.tier-zero.yaml'
+  /api/v2/gpos/{object_id}/users:
+    $ref: './paths/gpos.gpos.id.users.yaml'
+
+  # aiacas
+  /api/v2/aiacas/{object_id}:
+    $ref: './paths/aiacas.aiaca.id.yaml'
+  /api/v2/aiacas/{object_id}/controllers:
+    $ref: './paths/aiacas.aiaca.id.controllers.yaml'
+
+  # root cas
+  /api/v2/rootcas/{object_id}:
+    $ref: './paths/rootcas.rootcas.id.yaml'
+  /api/v2/rootcas/{object_id}/controllers:
+    $ref: './paths/rootcas.rootcas.id.controllers.yaml'
+
+  # enterprise cas
+  /api/v2/enterprisecas/{object_id}:
+    $ref: './paths/enterprisecas.enterprisecas.id.controllers.yaml'
+  /api/v2/enterprisecas/{object_id}/controllers:
+    $ref: './paths/enterprisecas.enterprisecas.id.yaml'
+
+  # nt auth stores
+  /api/v2/ntauthstores/{object_id}:
+    $ref: './paths/ntauthstores.ntauthstores.id.yaml'
+  /api/v2/ntauthstores/{object_id}/controllers:
+    $ref: './paths/ntauthstores.ntauthstores.id.controllers.yaml'
+
+  # cert templates
+  /api/v2/certtemplates/{object_id}:
+    $ref: './paths/certtemplate.certtemplates.id.yaml'
+  /api/v2/certtemplates/{object_id}/controllers:
+    $ref: './paths/certtemplate.certtemplates.id.controllers.yaml'
+
+  # ous
+  /api/v2/ous/{object_id}:
+    $ref: './paths/ous.ous.id.yaml'
+  /api/v2/ous/{object_id}/computers:
+    $ref: './paths/ous.ous.id.computers.yaml'
+  /api/v2/ous/{object_id}/gpos:
+    $ref: './paths/ous.ous.id.gpos.yaml'
+  /api/v2/ous/{object_id}/groups:
+    $ref: './paths/ous.ous.id.groups.yaml'
+  /api/v2/ous/{object_id}/users:
+    $ref: './paths/ous.ous.id.users.yaml'
+
+  # ad users
+  /api/v2/users/{object_id}:
+    $ref: './paths/users.users.id.yaml'
+  /api/v2/users/{object_id}/admin-rights:
+    $ref: './paths/users.users.id.admin-rights.yaml'
+  /api/v2/users/{object_id}/constrained-delegation-rights:
+    $ref: './paths/users.users.id.constrained-delegation-rights.yaml'
+  /api/v2/users/{object_id}/controllables:
+    $ref: './paths/users.users.id.controllables.yaml'
+  /api/v2/users/{object_id}/controllers:
+    $ref: './paths/users.users.id.controllers.yaml'
+  /api/v2/users/{object_id}/dcom-rights:
+    $ref: './paths/users.users.id.dcom-rights.yaml'
+  /api/v2/users/{object_id}/memberships:
+    $ref: './paths/users.users.id.memberships.yaml'
+  /api/v2/users/{object_id}/ps-remote-rights:
+    $ref: './paths/users.users.id.ps-remote-rights.yaml'
+  /api/v2/users/{object_id}/rdp-rights:
+    $ref: './paths/users.users.id.rdp-rights.yaml'
+  /api/v2/users/{object_id}/sessions:
+    $ref: './paths/users.users.id.sessions.yaml'
+  /api/v2/users/{object_id}/sql-admin-rights:
+    $ref: './paths/users.users.id.sql-admin-rights.yaml'
+
+  # groups
+  /api/v2/groups/{object_id}:
+    $ref: './paths/groups.groups.id.yaml'
+  /api/v2/groups/{object_id}/admin-rights:
+    $ref: './paths/groups.groups.id.admins-rights.yaml'
+  /api/v2/groups/{object_id}/controllables:
+    $ref: './paths/groups.groups.id.controllables.yaml'
+  /api/v2/groups/{object_id}/controllers:
+    $ref: './paths/groups.groups.id.controllers.yaml'
+  /api/v2/groups/{object_id}/dcom-rights:
+    $ref: './paths/groups.groups.id.dcom-rights.yaml'
+  /api/v2/groups/{object_id}/members:
+    $ref: './paths/groups.groups.id.members.yaml'
+  /api/v2/groups/{object_id}/memberships:
+    $ref: './paths/groups.groups.id.memberships.yaml'
+  /api/v2/groups/{object_id}/ps-remote-rights:
+    $ref: './paths/groups.groups.id.ps-remote-rights.yaml'
+  /api/v2/groups/{object_id}/rdp-rights:
+    $ref: './paths/groups.groups.id.rdp-rights.yaml'
+  /api/v2/groups/{object_id}/sessions:
+    $ref: './paths/groups.groups.id.sessions.yaml'
+
+  # data quality
+  /api/v2/completeness:
+    $ref: './paths/data-quality.completeness.yaml'
+  /api/v2/ad-domains/{domain_id}/data-quality-stats:
+    $ref: './paths/data-quality.ad-domains.id.data-quality-stats.yaml'
+  /api/v2/azure-tenants/{tenant_id}/data-quality-stats:
+    $ref: './paths/data-quality.azure-tenants.id.data-quality-stats.yaml'
+  /api/v2/platform/{platform_id}/data-quality-stats:
+    $ref: './paths/data-quality.platform.id.data-quality-stats.yaml'
+  /api/v2/clear-database:
+    $ref: './paths/data-quality.clear-database.yaml'
+
+  # datapipe
+  /api/v2/datapipe/status:
+    $ref: './paths/datapipe.datapipe.status.yaml'
+  /api/v2/analysis:
+    $ref: './paths/datapipe.analysis.yaml'
+
+  ##
+  # Enterprise Endpoints
+  ##
+
+  # auth
+  /api/v2/accept-eula:
+    $ref: './paths/eula.accept-eula.yaml'
+
+  #  # bhe user management (deprecated)
+  #  /api/v2/bhe-users:
+  #    $ref: './paths/bhe-users/bhe-users.yaml'
+  #  /api/v2/bhe-users/{user_id}:
+  #    $ref: './paths/bhe-users/bhe-users.id.yaml'
+  #  /api/v2/bhe-users/{user_id}/secret:
+  #    $ref: './paths/bhe-users/bhe-users.id.secret.yaml'
+  #  /api/v2/bhe-users/{user_id}/mfa:
+  #    $ref: './paths/bhe-users/bhe-users.id.mfa.yaml'
+  #  /api/v2/bhe-users/{user_id}/mfa-activation:
+  #    $ref: './paths/bhe-users/bhe-users.id.mfa-activation.yaml'
+
+  # analysis
+  /api/v2/meta-nodes/{domain_id}:
+    $ref: './paths/analysis.meta-nodes.id.yaml'
+  /api/v2/meta-trees/{domain_id}:
+    $ref: './paths/analysis.meta-trees.id.yaml'
+  /api/v2/asset-groups/{asset_group_id}/combo-node:
+    $ref: './paths/analysis.asset-groups.id.combo-node.yaml'
+
+  # client ingest
+  /api/v2/ingest:
+    $ref: './paths/client-ingest.ingest.yaml'
+
+  # clients
+  /api/v2/clients:
+    $ref: './paths/clients.clients.yaml'
+  /api/v2/clients/error:
+    $ref: './paths/clients.clients.error.yaml'
+  /api/v2/clients/update:
+    $ref: './paths/clients.clients.update.yaml'
+  /api/v2/clients/{client_id}:
+    $ref: './paths/clients.clients.id.yaml'
+  /api/v2/clients/{client_id}/token:
+    $ref: './paths/clients.clients.id.token.yaml'
+  /api/v2/clients/{client_id}/completed-tasks:
+    $ref: './paths/clients.clients.id.completed-tasks.yaml'
+  /api/v2/clients/{client_id}/completed-jobs:
+    $ref: './paths/clients.clients.id.completed-jobs.yaml'
+  /api/v2/clients/{client_id}/tasks:
+    $ref: './paths/clients.clients.id.tasks.yaml'
+  /api/v2/clients/{client_id}/jobs:
+    $ref: './paths/clients.clients.id.jobs.yaml'
+
+  # jobs
+  /api/v2/jobs/available:
+    $ref: './paths/jobs.jobs.available.yaml'
+  /api/v2/jobs/finished:
+    $ref: './paths/jobs.jobs.finished.yaml'
+  /api/v2/jobs:
+    $ref: './paths/jobs.jobs.yaml'
+  /api/v2/jobs/current:
+    $ref: './paths/jobs.jobs.current.yaml'
+  /api/v2/jobs/start:
+    $ref: './paths/jobs.jobs.start.yaml'
+  /api/v2/jobs/end:
+    $ref: './paths/jobs.jobs.end.yaml'
+  /api/v2/jobs/{job_id}:
+    $ref: './paths/jobs.jobs.id.yaml'
+  /api/v2/jobs/{job_id}/cancel:
+    $ref: './paths/jobs.jobs.id.cancel.yaml'
+  /api/v2/jobs/{job_id}/log:
+    $ref: './paths/jobs.jobs.id.log.yaml'
+
+  #  # tasks (deprecated)
+  #  /api/v2/tasks/available:
+  #    $ref: './paths/tasks/tasks.available.yaml'
+  #  /api/v2/tasks/finished:
+  #    $ref: './paths/tasks/tasks.finished.yaml'
+  #  /api/v2/tasks/end:
+  #    $ref: './paths/tasks/tasks.end.yaml'
+  #  /api/v2/tasks/start:
+  #    $ref: './paths/tasks/tasks.start.yaml'
+  #  /api/v2/tasks:
+  #    $ref: './paths/tasks/tasks.yaml'
+  #  /api/v2/tasks/{task_id}:
+  #    $ref: './paths/tasks/tasks.id.yaml'
+  #  /api/v2/tasks/{task_id}/cancel:
+  #    $ref: './paths/tasks/tasks.id.cancel.yaml'
+  #  /api/v2/tasks/{task_id}/log:
+  #    $ref: './paths/tasks/tasks.id.log.yaml'
+  #  /api/v2/tasks/current:
+  #    $ref: './paths/tasks/tasks.current.yaml'
+
+  # events
+  /api/v2/events:
+    $ref: './paths/events.events.yaml'
+  /api/v2/events/{event_id}:
+    $ref: './paths/events.events.id.yaml'
+
+  # attack paths
+  /api/v2/domains/{domain_id}/attack-path-findings:
+    $ref: './paths/attack-paths.domains.id.attack-path-findings.yaml'
+#  /api/v2/domains/{environment_id}/finding-trends:
+#    $ref: './paths/attack-paths.environment.id.finding-trends.yaml'
+  /api/v2/attack-path-types:
+    $ref: './paths/attack-paths.attack-path-types.yaml'
+  /api/v2/attack-paths:
+    $ref: './paths/attack-paths.attack-paths.yaml'
+  /api/v2/domains/{domain_id}/available-types:
+    $ref: './paths/attack-paths.domains.id.available-types.yaml'
+  /api/v2/domains/{domain_id}/details:
+    $ref: './paths/attack-paths.domains.id.details.yaml'
+  /api/v2/domains/{domain_id}/sparkline:
+    $ref: './paths/attack-paths.domains.id.sparkline.yaml'
+  /api/v2/attack-paths/{attack_path_id}/acceptance:
+    $ref: './paths/attack-paths.attack-paths.id.acceptance.yaml'
+
+  # risk posture
+  /api/v2/posture-stats:
+    $ref: './paths/risk-posture.posture-stats.yaml'
+#  /api/v2/domains/{environment_id}/posture-history/{data_type}:
+#    $ref: './paths/risk-posture.environment.id.posture-history.type.yaml'
+
+  # meta entity
+  /api/v2/meta/{object_id}:
+    $ref: './paths/meta-entity.meta.id.yaml'
 
 components:
   ##
@@ -153,7 +681,7 @@ components:
       description: >
         `Authorization: Bearer $JWT_TOKEN`
       type: http
-      scheme: Bearer
+      scheme: bearer
       bearerFormat: JWT
     # BHE Signature
     SignedRequest:

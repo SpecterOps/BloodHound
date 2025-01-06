@@ -18,13 +18,14 @@ package database
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strings"
 	"time"
 
-	"gorm.io/gorm"
-
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
+	"gorm.io/gorm"
 )
 
 func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error) {
@@ -44,7 +45,15 @@ func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, s
 	)
 
 	err = s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.Create(&assetGroup))
+		err := tx.Create(&assetGroup).Error
+		if err != nil {
+			if strings.Contains(err.Error(), "duplicate key value violates unique constraint \"asset_groups_name_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateAGName, err)
+			} else if strings.Contains(err.Error(), "duplicate key value violates unique constraint \"asset_groups_tag_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateAGTag, err)
+			}
+		}
+		return err
 	})
 
 	return assetGroup, err
@@ -77,45 +86,51 @@ func (s *BloodhoundDB) DeleteAssetGroup(ctx context.Context, assetGroup model.As
 }
 
 func (s *BloodhoundDB) GetAssetGroup(ctx context.Context, id int32) (model.AssetGroup, error) {
-	var (
-		assetGroup model.AssetGroup
-		result     = s.preload(model.AssetGroupAssociations()).WithContext(ctx).First(&assetGroup, id)
-	)
-	return assetGroup, CheckError(result)
+	var assetGroup model.AssetGroup
+	if result := s.preload(model.AssetGroupAssociations()).WithContext(ctx).First(&assetGroup, id); errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return assetGroup, ErrNotFound
+	} else if result.Error != nil {
+		return assetGroup, result.Error
+	} else if latestCollection, collectionErr := s.GetLatestAssetGroupCollection(ctx, id); errors.Is(collectionErr, ErrNotFound) {
+		assetGroup.MemberCount = 0
+		return assetGroup, nil
+	} else if collectionErr != nil {
+		return assetGroup, fmt.Errorf("error getting latest collection for asset group %s: %w", assetGroup.Name, collectionErr)
+	} else {
+		assetGroup.MemberCount = len(latestCollection.Entries)
+		return assetGroup, nil
+	}
 }
 
 func (s *BloodhoundDB) GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error) {
 	var (
 		assetGroups model.AssetGroups
-		result      *gorm.DB
+		result      = s.preload(model.AssetGroupAssociations()).WithContext(ctx)
 	)
 
-	if order != "" && filter.SQLString == "" {
-		result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Order(order).Find(&assetGroups)
-	} else if order != "" && filter.SQLString != "" {
-		result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Where(filter.SQLString, filter.Params).Order(order).Find(&assetGroups)
-	} else if order == "" && filter.SQLString != "" {
-		result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Where(filter.SQLString, filter.Params).Find(&assetGroups)
-	} else {
-		result = s.preload(model.AssetGroupAssociations()).WithContext(ctx).Find(&assetGroups)
+	if order != "" {
+		result = result.Order(order)
 	}
 
-	if result.Error != nil {
-		return assetGroups, CheckError(result)
+	if filter.SQLString != "" {
+		result = result.Where(filter.SQLString, filter.Params...)
 	}
 
-	for idx, assetGroup := range assetGroups {
-		if latestCollection, err := s.GetLatestAssetGroupCollection(ctx, assetGroup.ID); err != nil {
-			if errors.Is(err, ErrNotFound) {
-				assetGroup.MemberCount = 0
-			} else {
-				return assetGroups, err
-			}
+	if result = result.Find(&assetGroups); errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return assetGroups, ErrNotFound
+	} else if result.Error != nil {
+		return assetGroups, result.Error
+	}
+
+	for idx := range assetGroups {
+		if latestCollection, collectionErr := s.GetLatestAssetGroupCollection(ctx, assetGroups[idx].ID); errors.Is(collectionErr, ErrNotFound) {
+			assetGroups[idx].MemberCount = 0
+		} else if collectionErr != nil {
+			return assetGroups, fmt.Errorf("error getting latest collection for asset group %s: %w", assetGroups[idx].Name, collectionErr)
 		} else {
 			assetGroups[idx].MemberCount = len(latestCollection.Entries)
 		}
 	}
-
 	return assetGroups, nil
 }
 
@@ -134,18 +149,27 @@ func (s *BloodhoundDB) GetAssetGroupCollections(ctx context.Context, assetGroupI
 	} else if order != "" && filter.SQLString == "" {
 		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Order(order).Where("asset_group_id = ?", assetGroupID).Find(&collections)
 	} else if order == "" && filter.SQLString != "" {
-		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Where("asset_group_id = ?", assetGroupID).Where(filter.SQLString, filter.Params).Find(&collections)
+		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Where("asset_group_id = ?", assetGroupID).Where(filter.SQLString, filter.Params...).Find(&collections)
 	} else {
-		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Order(order).Where("asset_group_id = ?", assetGroupID).Where(filter.SQLString, filter.Params).Find(&collections)
+		result = s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Order(order).Where("asset_group_id = ?", assetGroupID).Where(filter.SQLString, filter.Params...).Find(&collections)
 	}
 	return collections, CheckError(result)
 }
 
 func (s *BloodhoundDB) GetLatestAssetGroupCollection(ctx context.Context, assetGroupID int32) (model.AssetGroupCollection, error) {
-	var collection model.AssetGroupCollection
+	var (
+		latestCollection model.AssetGroupCollection
+		result           = s.preload(model.AssetGroupCollectionAssociations()).
+					WithContext(ctx).
+					Where("asset_group_id = ?", assetGroupID).
+					Order("created_at DESC").
+					First(&latestCollection)
+	)
 
-	result := s.preload(model.AssetGroupCollectionAssociations()).WithContext(ctx).Where("asset_group_id = ?", assetGroupID).Last(&collection)
-	return collection, CheckError(result)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return latestCollection, ErrNotFound
+	}
+	return latestCollection, result.Error
 }
 
 func (s *BloodhoundDB) GetTimeRangedAssetGroupCollections(ctx context.Context, assetGroupID int32, from int64, to int64, order string) (model.AssetGroupCollections, error) {

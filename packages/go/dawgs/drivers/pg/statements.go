@@ -17,20 +17,18 @@
 package pg
 
 const (
-	fetchNodeStatement                = `select kinds, properties from node where node.id = $1;`
-	fetchNodeSliceStatement           = `select id, kinds, properties from node where node.id = any($1);`
-	createNodeStatement               = `insert into node (graph_id, kind_ids, properties) values ($1, $2, $3) returning id;`
+	createNodeStatement               = `insert into node (graph_id, kind_ids, properties) values (@graph_id, @kind_ids, @properties) returning (id, kind_ids, properties)::nodeComposite;`
 	createNodeWithoutIDBatchStatement = `insert into node (graph_id, kind_ids, properties) select $1, unnest($2::text[])::int2[], unnest($3::jsonb[])`
-	createNodeWithIDBatchStatement    = `insert into node (graph_id, id, kind_ids, properties) select $1, unnest($2::int4[]), unnest($3::text[])::int2[], unnest($4::jsonb[])`
-	deleteNodeStatement               = `delete from node where node.id = $1`
+	createNodeWithIDBatchStatement    = `insert into node (graph_id, id, kind_ids, properties) select $1, unnest($2::int8[]), unnest($3::text[])::int2[], unnest($4::jsonb[])`
 	deleteNodeWithIDStatement         = `delete from node where node.id = any($1)`
-	upsertNodeStatement               = `insert into node (graph_id, )`
 
-	fetchEdgeStatement        = `select start_id, end_id, kind, properties from relationships where relationships.id = $1;`
-	fetchEdgeSliceStatement   = `select id, start_id, end_id, kind, properties from node where relationships.id = any($1);`
-	createEdgeStatement       = `insert into edge (graph_id, start_id, end_id, kind_id, properties) values ($1, $2, $3, $4, $5) returning id;`
-	createEdgeBatchStatement  = `merge into edge as e using (select $1::int4 as gid, unnest($2::int4[]) as sid, unnest($3::int4[]) as eid, unnest($4::int2[]) as kid, unnest($5::jsonb[]) as p) as ei on e.start_id = ei.sid and e.end_id = ei.eid and e.kind_id = ei.kid when matched then update set properties = e.properties || ei.p when not matched then insert (graph_id, start_id, end_id, kind_id, properties) values (ei.gid, ei.sid, ei.eid, ei.kid, ei.p);`
-	deleteEdgeStatement       = `delete from edge as e where e.id = $1`
+	createEdgeStatement = `insert into edge (graph_id, start_id, end_id, kind_id, properties) values (@graph_id, @start_id, @end_id, @kind_id, @properties) returning (id, start_id, end_id, kind_id, properties)::edgeComposite;`
+
+	// TODO: The query below is not a pure creation statement as it contains an `on conflict` clause to dance around
+	//	     Azure post-processing. This was done because Azure post will submit the same creation request hundreds of
+	// 		 times for the same edge. In PostgreSQL this results in a constraint violation. For now this is best-effort
+	//		 until Azure post-processing can be refactored.
+	createEdgeBatchStatement  = `insert into edge as e (graph_id, start_id, end_id, kind_id, properties) select $1, unnest($2::int8[]), unnest($3::int8[]), unnest($4::int2[]), unnest($5::jsonb[]) on conflict (graph_id, start_id, end_id, kind_id) do update set properties = e.properties || excluded.properties;`
 	deleteEdgeWithIDStatement = `delete from edge as e where e.id = any($1)`
 
 	edgePropertySetOnlyStatement      = `update edge set properties = properties || $1::jsonb where edge.id = $2`

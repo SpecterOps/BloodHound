@@ -22,8 +22,8 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/serde"
 )
 
 const PermissionURIScheme = "permission"
@@ -94,7 +94,7 @@ func (s Permissions) IsString(column string) bool {
 }
 
 func (s Permissions) GetFilterableColumns() []string {
-	var columns = make([]string, 0)
+	columns := make([]string, 0)
 	for column := range s.ValidFilters() {
 		columns = append(columns, column)
 	}
@@ -105,7 +105,7 @@ func (s Permissions) GetValidFilterPredicatesAsStrings(column string) ([]string,
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, fmt.Errorf("the specified column cannot be filtered")
 	} else {
-		var stringPredicates = make([]string, 0)
+		stringPredicates := make([]string, 0)
 		for _, predicate := range predicates {
 			stringPredicates = append(stringPredicates, string(predicate))
 		}
@@ -211,7 +211,7 @@ func (s AuthTokens) IsString(column string) bool {
 }
 
 func (s AuthTokens) GetFilterableColumns() []string {
-	var columns = make([]string, 0)
+	columns := make([]string, 0)
 	for column := range s.ValidFilters() {
 		columns = append(columns, column)
 	}
@@ -222,7 +222,7 @@ func (s AuthTokens) GetValidFilterPredicatesAsStrings(column string) ([]string, 
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, fmt.Errorf("the specified column cannot be filtered")
 	} else {
-		var stringPredicates = make([]string, 0)
+		stringPredicates := make([]string, 0)
 		for _, predicate := range predicates {
 			stringPredicates = append(stringPredicates, string(predicate))
 		}
@@ -273,41 +273,6 @@ func (s AuthSecret) AuditData() AuditData {
 		"secret_expires_at": s.ExpiresAt.UTC(),
 	}
 }
-
-type SAMLProvider struct {
-	Name            string `json:"name" gorm:"unique;index"`
-	DisplayName     string `json:"display_name"`
-	IssuerURI       string `json:"idp_issuer_uri"`
-	SingleSignOnURI string `json:"idp_sso_uri"`
-	MetadataXML     []byte `json:"-"`
-
-	// PrincipalAttributeMapping is an array of OID or XML Namespace element mapping strings that can be used to map a
-	// SAML assertion to a user in the database.
-	//
-	// For example: ["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", "urn:oid:0.9.2342.19200300.100.1.3"]
-	PrincipalAttributeMappings []string `json:"principal_attribute_mappings" gorm:"type:text[];column:ous"`
-
-	// The below values generated values that point a client to SAML related resources hosted on the BloodHound instance
-	// and should not be persisted to the database due to the fact that the URLs rely on the Host header that the user is
-	// using to communicate to the API
-	ServiceProviderIssuerURI     serde.URL `json:"sp_issuer_uri" gorm:"-"`
-	ServiceProviderInitiationURI serde.URL `json:"sp_sso_uri" gorm:"-"`
-	ServiceProviderMetadataURI   serde.URL `json:"sp_metadata_uri" gorm:"-"`
-	ServiceProviderACSURI        serde.URL `json:"sp_acs_uri" gorm:"-"`
-
-	Serial
-}
-
-func (s SAMLProvider) AuditData() AuditData {
-	return AuditData{
-		"saml_id":                      s.ID,
-		"saml_name":                    s.Name,
-		"principal_attribute_mappings": s.PrincipalAttributeMappings,
-		"idp_url":                      s.IssuerURI,
-	}
-}
-
-type SAMLProviders []SAMLProvider
 
 func RoleAssociations() []string {
 	return []string{
@@ -361,7 +326,7 @@ func (s Roles) IsString(column string) bool {
 }
 
 func (s Roles) GetFilterableColumns() []string {
-	var columns = make([]string, 0)
+	columns := make([]string, 0)
 	for column := range s.ValidFilters() {
 		columns = append(columns, column)
 	}
@@ -372,12 +337,22 @@ func (s Roles) GetValidFilterPredicatesAsStrings(column string) ([]string, error
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, fmt.Errorf("the specified column cannot be filtered")
 	} else {
-		var stringPredicates = make([]string, 0)
+		stringPredicates := make([]string, 0)
 		for _, predicate := range predicates {
 			stringPredicates = append(stringPredicates, string(predicate))
 		}
 		return stringPredicates, nil
 	}
+}
+
+func (s Roles) Names() []string {
+	names := make([]string, len(s))
+
+	for idx, role := range s {
+		names[idx] = role.Name
+	}
+
+	return names
 }
 
 func (s Roles) IDs() []int32 {
@@ -440,9 +415,12 @@ func (s Roles) FindByPermissions(permissions Permissions) (Role, bool) {
 	return Role{}, false
 }
 
+// Used by gorm to preload / instantiate the user FK'd tables data
 func UserAssociations() []string {
 	return []string{
-		"SAMLProvider",
+		"SSOProvider",
+		"SSOProvider.SAMLProvider", // Needed to populate the child provider
+		"SSOProvider.OIDCProvider", // Needed to populate the child provider
 		"AuthSecret",
 		"AuthTokens",
 		"Roles.Permissions",
@@ -450,17 +428,18 @@ func UserAssociations() []string {
 }
 
 type User struct {
-	SAMLProviderID null.Int32    `json:"saml_provider_id,omitempty"`
-	SAMLProvider   *SAMLProvider `json:"-" `
-	AuthSecret     *AuthSecret   `gorm:"constraint:OnDelete:CASCADE;"`
-	AuthTokens     AuthTokens    `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
-	Roles          Roles         `json:"roles" gorm:"many2many:users_roles"`
-	FirstName      null.String   `json:"first_name"`
-	LastName       null.String   `json:"last_name"`
-	EmailAddress   null.String   `json:"email_address"`
-	PrincipalName  string        `json:"principal_name" gorm:"unique;index"`
-	LastLogin      time.Time     `json:"last_login"`
-	IsDisabled     bool          `json:"is_disabled"`
+	SSOProvider   *SSOProvider `json:"-" `
+	SSOProviderID null.Int32   `json:"sso_provider_id,omitempty"`
+	AuthSecret    *AuthSecret  `gorm:"constraint:OnDelete:CASCADE;"`
+	AuthTokens    AuthTokens   `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
+	Roles         Roles        `json:"roles" gorm:"many2many:users_roles"`
+	FirstName     null.String  `json:"first_name"`
+	LastName      null.String  `json:"last_name"`
+	EmailAddress  null.String  `json:"email_address"`
+	PrincipalName string       `json:"principal_name" gorm:"unique;index"`
+	LastLogin     time.Time    `json:"last_login"`
+	IsDisabled    bool         `json:"is_disabled"`
+
 	// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
 	// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.
 	EULAAccepted bool `json:"eula_accepted"`
@@ -470,15 +449,15 @@ type User struct {
 
 func (s *User) AuditData() AuditData {
 	return AuditData{
-		"id":               s.ID,
-		"principal_name":   s.PrincipalName,
-		"first_name":       s.FirstName.ValueOrZero(),
-		"last_name":        s.LastName.ValueOrZero(),
-		"email_address":    s.EmailAddress.ValueOrZero(),
-		"roles":            s.Roles.IDs(),
-		"saml_provider_id": s.SAMLProviderID.ValueOrZero(),
-		"is_disabled":      s.IsDisabled,
-		"eula_accepted":    s.EULAAccepted,
+		"id":              s.ID,
+		"principal_name":  s.PrincipalName,
+		"first_name":      s.FirstName.ValueOrZero(),
+		"last_name":       s.LastName.ValueOrZero(),
+		"email_address":   s.EmailAddress.ValueOrZero(),
+		"roles":           s.Roles.IDs(),
+		"sso_provider_id": s.SSOProviderID.ValueOrZero(),
+		"is_disabled":     s.IsDisabled,
+		"eula_accepted":   s.EULAAccepted,
 	}
 }
 
@@ -531,7 +510,7 @@ func (s Users) IsString(column string) bool {
 }
 
 func (s Users) GetFilterableColumns() []string {
-	var columns = make([]string, 0)
+	columns := make([]string, 0)
 	for column := range s.ValidFilters() {
 		columns = append(columns, column)
 	}
@@ -542,7 +521,7 @@ func (s Users) GetValidFilterPredicatesAsStrings(column string) ([]string, error
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, fmt.Errorf("the specified column cannot be filtered")
 	} else {
-		var stringPredicates = make([]string, 0)
+		stringPredicates := make([]string, 0)
 		for _, predicate := range predicates {
 			stringPredicates = append(stringPredicates, string(predicate))
 		}
@@ -550,9 +529,12 @@ func (s Users) GetValidFilterPredicatesAsStrings(column string) ([]string, error
 	}
 }
 
+// Used by gorm to preload / instantiate the user FK'd tables data
 func UserSessionAssociations() []string {
 	return []string{
-		"User.SAMLProvider",
+		"User.SSOProvider",
+		"User.SSOProvider.SAMLProvider", // Needed to populate the child provider
+		"User.SSOProvider.OIDCProvider", // Needed to populate the child provider
 		"User.AuthSecret",
 		"User.AuthTokens",
 		"User.Roles.Permissions",
@@ -564,14 +546,35 @@ type SessionAuthProvider int
 const (
 	SessionAuthProviderSecret SessionAuthProvider = 0
 	SessionAuthProviderSAML   SessionAuthProvider = 1
+	SessionAuthProviderOIDC   SessionAuthProvider = 2
+)
+
+func (s SessionAuthProvider) String() string {
+	switch s {
+	case SessionAuthProviderSecret:
+		return "Secret"
+	case SessionAuthProviderSAML:
+		return "SAML"
+	case SessionAuthProviderOIDC:
+		return "OIDC"
+	default:
+		return "Unknown"
+	}
+}
+
+type SessionFlagKey string
+
+const (
+	SessionFlagFedEULAAccepted SessionFlagKey = "fed_eula_accepted" // INFO: The FedEULA is only applicable to select enterprise installations
 )
 
 type UserSession struct {
 	User             User `gorm:"constraint:OnDelete:CASCADE;"`
 	UserID           uuid.UUID
 	AuthProviderType SessionAuthProvider
-	AuthProviderID   int32
+	AuthProviderID   int32 // If SSO Session, this will be the child saml or oidc provider id
 	ExpiresAt        time.Time
+	Flags            types.JSONBBoolObject `json:"flags"`
 
 	BigSerial
 }
@@ -579,4 +582,9 @@ type UserSession struct {
 // Expired returns true if the user session has expired, false otherwise
 func (s UserSession) Expired() bool {
 	return s.ExpiresAt.Before(time.Now().UTC())
+}
+
+// corresponding set function is cmd/api/src/database/auth.go:SetUserSessionFlag()
+func (s UserSession) GetFlag(key SessionFlagKey) bool {
+	return s.Flags[string(key)]
 }

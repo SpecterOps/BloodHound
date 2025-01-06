@@ -587,3 +587,78 @@ ALTER TABLE ONLY users_roles
     ADD CONSTRAINT fk_users_roles_user FOREIGN KEY (user_id) REFERENCES users(id);
 ALTER TABLE ONLY users
     ADD CONSTRAINT fk_users_saml_provider FOREIGN KEY (saml_provider_id) REFERENCES saml_providers(id);
+
+-- Populate asset group table
+INSERT INTO asset_groups (name, tag, system_group, created_at, updated_at) VALUES ('Admin Tier Zero', 'admin_tier_0', true, current_timestamp, current_timestamp);
+
+-- Populate permissions table
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('app', 'ReadAppConfig', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('app', 'WriteAppConfig', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('risks', 'GenerateReport', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('risks', 'ManageRisks', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('auth', 'CreateToken', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('auth', 'ManageAppConfig', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('auth', 'ManageProviders', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('auth', 'ManageSelf', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('auth', 'ManageUsers', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('clients', 'Manage', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('clients', 'Tasking', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('collection', 'ManageJobs', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('graphdb', 'Read', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('graphdb', 'Write', current_timestamp, current_timestamp);
+
+-- Populate roles table
+INSERT INTO roles (name, description, created_at, updated_at) VALUES ('Administrator', 'Can manage users, clients, and application configuration', current_timestamp, current_timestamp);
+INSERT INTO roles (name, description, created_at, updated_at) VALUES ('User', 'Can read data, modify asset group memberships', current_timestamp, current_timestamp);
+INSERT INTO roles (name, description, created_at, updated_at) VALUES ('Read-Only', 'Used for integrations', current_timestamp, current_timestamp);
+INSERT INTO roles (name, description, created_at, updated_at) VALUES ('Upload-Only', 'Used for data collection clients, can post data but cannot read data', current_timestamp, current_timestamp);
+
+
+-- Populate roles_permissions table
+-- Administrator
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'app'  and permissions.name = 'ReadAppConfig'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'app'  and permissions.name = 'WriteAppConfig'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'risks'  and permissions.name = 'GenerateReport'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'risks'  and permissions.name = 'ManageRisks'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'auth'  and permissions.name = 'CreateToken'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'auth'  and permissions.name = 'ManageAppConfig'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'auth'  and permissions.name = 'ManageProviders'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'auth'  and permissions.name = 'ManageSelf'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'auth'  and permissions.name = 'ManageUsers'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'clients'  and permissions.name = 'Manage'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'clients'  and permissions.name = 'Tasking'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'collection'  and permissions.name = 'ManageJobs'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'graphdb'  and permissions.name = 'Read'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Administrator'), (SELECT id FROM permissions WHERE permissions.authority  = 'graphdb'  and permissions.name = 'Write'));
+
+-- User
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'User'), (SELECT id FROM permissions WHERE permissions.authority  = 'app'  and permissions.name = 'ReadAppConfig'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'User'), (SELECT id FROM permissions WHERE permissions.authority  = 'risks'  and permissions.name = 'GenerateReport'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'User'), (SELECT id FROM permissions WHERE permissions.authority  = 'auth'  and permissions.name = 'CreateToken'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'User'), (SELECT id FROM permissions WHERE permissions.authority  = 'auth'  and permissions.name = 'ManageSelf'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'User'), (SELECT id FROM permissions WHERE permissions.authority  = 'clients'  and permissions.name = 'Manage'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'User'), (SELECT id FROM permissions WHERE permissions.authority  = 'graphdb'  and permissions.name = 'Read'));
+
+-- Read-Only
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Read-Only'), (SELECT id FROM permissions WHERE permissions.authority  = 'app'  and permissions.name = 'ReadAppConfig'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Read-Only'), (SELECT id FROM permissions WHERE permissions.authority  = 'risks'  and permissions.name = 'GenerateReport'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Read-Only'), (SELECT id FROM permissions WHERE permissions.authority  = 'auth'  and permissions.name = 'ManageSelf'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Read-Only'), (SELECT id FROM permissions WHERE permissions.authority  = 'graphdb'  and permissions.name = 'Read'));
+
+-- Upload-Only
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Upload-Only'), (SELECT id FROM permissions WHERE permissions.authority  = 'clients'  and permissions.name = 'Tasking'));
+INSERT INTO roles_permissions (role_id, permission_id) VALUES ((SELECT id FROM roles WHERE roles.name  = 'Upload-Only'), (SELECT id FROM permissions WHERE permissions.authority  = 'graphdb'  and permissions.name = 'Write'));
+
+-- Populate feature_flags table
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 'butterfly_analysis', 'Enhanced Asset Inbound-Outbound Exposure Analysis', 'Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.', false, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 'enable_saml_sso', 'SAML Single Sign-On Support', 'Enables SSO authentication flows and administration panels to third party SAML identity providers.', true, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 'scope_collection_by_ou', 'Enable SharpHound OU Scoped Collections', 'Enables scoping SharpHound collections to specific lists of OUs.', true, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 'azure_support', 'Enable Azure Support', 'Enables Azure support.', true, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 'reconciliation', 'Reconciliation', 'Enables Reconciliation', true, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 'entity_panel_cache', 'Enable application level caching', 'Enables the use of application level caching for entity panel queries', true, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 'adcs', 'Enable collection and processing of Active Directory Certificate Services Data', 'Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.', false, false );
+
+
+-- Populate parameters table
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('auth.password_expiration_window', 'Local Auth Password Expiry Window', 'This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601.', '{"duration": "P90D"}', current_timestamp, current_timestamp);
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('neo4j.configuration', 'Neo4j Configuration Parameters', 'This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J.', '{"batch_write_size": 20000, "write_flush_size": 100000}', current_timestamp, current_timestamp);

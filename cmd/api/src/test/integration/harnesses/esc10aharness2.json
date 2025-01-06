@@ -54,10 +54,10 @@
   },
   "nodes": [
     {
-      "id": "n1",
+      "id": "n0",
       "position": {
-        "x": 129,
-        "y": 1327.41620651926
+        "x": 75,
+        "y": 1381.41620651926
       },
       "caption": "Domain",
       "labels": [],
@@ -67,10 +67,10 @@
       }
     },
     {
-      "id": "n2",
+      "id": "n1",
       "position": {
-        "x": 1664.8135268077572,
-        "y": 1118.6584948427476
+        "x": 1610.8135268077572,
+        "y": 1172.6584948427476
       },
       "caption": "NTAuthStore",
       "labels": [],
@@ -81,10 +81,10 @@
       }
     },
     {
-      "id": "n3",
+      "id": "n2",
       "position": {
-        "x": 1734.0761748485493,
-        "y": 1226.5718804439516
+        "x": 1680.0761748485493,
+        "y": 1280.5718804439516
       },
       "caption": "RootCA",
       "labels": [],
@@ -95,10 +95,10 @@
       }
     },
     {
-      "id": "n4",
+      "id": "n3",
       "position": {
-        "x": 2089.3408145645117,
-        "y": 922.3660942769798
+        "x": 2035.3408145645117,
+        "y": 976.3660942769798
       },
       "caption": "EnterpriseCA",
       "labels": [],
@@ -109,14 +109,16 @@
       }
     },
     {
-      "id": "n5",
+      "id": "n4",
       "position": {
-        "x": 1855.4850232261435,
-        "y": 1327.41620651926
+        "x": 1801.4850232261435,
+        "y": 1381.41620651926
       },
       "caption": "DC",
       "labels": [],
-      "properties": {},
+      "properties": {
+        "CertificateMappingMethodsRaw": "31"
+      },
       "style": {
         "node-color": "#f44e3b",
         "caption-position": "inside",
@@ -125,10 +127,10 @@
       }
     },
     {
-      "id": "n6",
+      "id": "n5",
       "position": {
-        "x": 1324.7762805968055,
-        "y": 922.3660942769798
+        "x": 1270.7762805968055,
+        "y": 976.3660942769798
       },
       "caption": "Group0",
       "labels": [],
@@ -138,15 +140,15 @@
       }
     },
     {
-      "id": "n7",
+      "id": "n6",
       "position": {
-        "x": 1855.4850232261435,
-        "y": 649.2340527998417
+        "x": 1801.4850232261435,
+        "y": 703.2340527998417
       },
       "caption": "CertTemplate1",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "2",
         "AuthorizedSignatures": "0",
@@ -162,10 +164,10 @@
       }
     },
     {
-      "id": "n8",
+      "id": "n7",
       "position": {
-        "x": 973.639047876434,
-        "y": 727.2392440430749
+        "x": 919.639047876434,
+        "y": 781.2392440430749
       },
       "caption": "Group1",
       "labels": [],
@@ -175,15 +177,15 @@
       }
     },
     {
-      "id": "n9",
+      "id": "n8",
       "position": {
-        "x": 1855.4850232261435,
-        "y": 366.352007001999
+        "x": 1801.4850232261435,
+        "y": 420.352007001999
       },
       "caption": "CertTemplate2",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "2",
         "AuthorizedSignatures": "0",
@@ -199,15 +201,15 @@
       }
     },
     {
-      "id": "n10",
+      "id": "n9",
       "position": {
-        "x": 1855.4850232261435,
-        "y": 74.00519124323318
+        "x": 1801.4850232261435,
+        "y": 128.00519124323318
       },
       "caption": "CertTemplate3",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "2",
         "AuthorizedSignatures": "0",
@@ -223,10 +225,10 @@
       }
     },
     {
-      "id": "n11",
+      "id": "n10",
       "position": {
-        "x": 883.4172386161655,
-        "y": 649.2340527998417
+        "x": 829.4172386161655,
+        "y": 703.2340527998417
       },
       "caption": "Computer1",
       "labels": [],
@@ -236,10 +238,10 @@
       }
     },
     {
-      "id": "n12",
+      "id": "n11",
       "position": {
-        "x": 973.639047876434,
-        "y": 571.2288615566085
+        "x": 919.639047876434,
+        "y": 625.2288615566085
       },
       "caption": "User1",
       "labels": [],
@@ -249,10 +251,10 @@
       }
     },
     {
-      "id": "n13",
+      "id": "n12",
       "position": {
-        "x": 973.639047876434,
-        "y": 444.3571982452322
+        "x": 919.639047876434,
+        "y": 498.3571982452322
       },
       "caption": "Group2",
       "labels": [],
@@ -262,10 +264,10 @@
       }
     },
     {
-      "id": "n14",
+      "id": "n13",
       "position": {
-        "x": 883.4172386161655,
-        "y": 366.352007001999
+        "x": 829.4172386161655,
+        "y": 420.352007001999
       },
       "caption": "Computer2",
       "labels": [],
@@ -275,10 +277,10 @@
       }
     },
     {
-      "id": "n15",
+      "id": "n14",
       "position": {
-        "x": 973.639047876434,
-        "y": 288.3468157587656
+        "x": 919.639047876434,
+        "y": 342.3468157587656
       },
       "caption": "User2",
       "labels": [],
@@ -289,10 +291,10 @@
       }
     },
     {
-      "id": "n16",
+      "id": "n15",
       "position": {
-        "x": 973.639047876434,
-        "y": 152.01038248646637
+        "x": 919.639047876434,
+        "y": 206.01038248646637
       },
       "caption": "Group3",
       "labels": [],
@@ -302,10 +304,10 @@
       }
     },
     {
-      "id": "n17",
+      "id": "n16",
       "position": {
-        "x": 883.4172386161655,
-        "y": 74.00519124323318
+        "x": 829.4172386161655,
+        "y": 128.00519124323318
       },
       "caption": "Computer3",
       "labels": [],
@@ -315,10 +317,10 @@
       }
     },
     {
-      "id": "n18",
+      "id": "n17",
       "position": {
-        "x": 973.639047876434,
-        "y": -4
+        "x": 919.639047876434,
+        "y": 50
       },
       "caption": "User3",
       "labels": [],
@@ -329,10 +331,10 @@
       }
     },
     {
-      "id": "n19",
+      "id": "n18",
       "position": {
-        "x": 695.1130959232657,
-        "y": 727.2392440430749
+        "x": 641.1130959232657,
+        "y": 781.2392440430749
       },
       "caption": "Group4",
       "labels": [],
@@ -343,10 +345,10 @@
       }
     },
     {
-      "id": "n20",
+      "id": "n19",
       "position": {
-        "x": 619.2141547864899,
-        "y": 649.2340527998417
+        "x": 565.2141547864899,
+        "y": 703.2340527998417
       },
       "caption": "Group5",
       "labels": [],
@@ -356,10 +358,10 @@
       }
     },
     {
-      "id": "n21",
+      "id": "n20",
       "position": {
-        "x": 541.4379963358472,
-        "y": 571.2288615566085
+        "x": 487.4379963358472,
+        "y": 625.2288615566085
       },
       "caption": "Group6",
       "labels": [],
@@ -369,10 +371,10 @@
       }
     },
     {
-      "id": "n22",
+      "id": "n21",
       "position": {
-        "x": 498.952275954523,
-        "y": 444.3571982452322
+        "x": 444.952275954523,
+        "y": 498.3571982452322
       },
       "caption": "Computer4",
       "labels": [],
@@ -383,10 +385,10 @@
       }
     },
     {
-      "id": "n23",
+      "id": "n22",
       "position": {
-        "x": 419.9345466228922,
-        "y": 366.352007001999
+        "x": 365.9345466228922,
+        "y": 420.352007001999
       },
       "caption": "Computer5",
       "labels": [],
@@ -396,10 +398,10 @@
       }
     },
     {
-      "id": "n24",
+      "id": "n23",
       "position": {
-        "x": 343.33133116590204,
-        "y": 288.3468157587656
+        "x": 289.33133116590204,
+        "y": 342.3468157587656
       },
       "caption": "Computer6",
       "labels": [],
@@ -410,10 +412,10 @@
       }
     },
     {
-      "id": "n25",
+      "id": "n24",
       "position": {
-        "x": 282.15189381679534,
-        "y": 152.01038248646637
+        "x": 228.15189381679534,
+        "y": 206.01038248646637
       },
       "caption": "User4",
       "labels": [],
@@ -424,10 +426,10 @@
       }
     },
     {
-      "id": "n26",
+      "id": "n25",
       "position": {
-        "x": 206.68013167102274,
-        "y": 74.00519124323318
+        "x": 152.68013167102274,
+        "y": 128.00519124323318
       },
       "caption": "User5",
       "labels": [],
@@ -437,10 +439,10 @@
       }
     },
     {
-      "id": "n27",
+      "id": "n26",
       "position": {
-        "x": 129,
-        "y": -4
+        "x": 75,
+        "y": 50
       },
       "caption": "User6",
       "labels": [],
@@ -454,8 +456,8 @@
   "relationships": [
     {
       "id": "n0",
-      "fromId": "n3",
-      "toId": "n1",
+      "fromId": "n2",
+      "toId": "n0",
       "type": "RootCAFor",
       "properties": {},
       "style": {
@@ -464,8 +466,8 @@
     },
     {
       "id": "n1",
-      "fromId": "n4",
-      "toId": "n3",
+      "fromId": "n3",
+      "toId": "n2",
       "type": "IssuedSignedBy",
       "properties": {},
       "style": {
@@ -474,8 +476,8 @@
     },
     {
       "id": "n2",
-      "fromId": "n2",
-      "toId": "n1",
+      "fromId": "n1",
+      "toId": "n0",
       "type": "NTAuthStoreFor",
       "properties": {},
       "style": {
@@ -484,8 +486,8 @@
     },
     {
       "id": "n3",
-      "fromId": "n4",
-      "toId": "n2",
+      "fromId": "n3",
+      "toId": "n1",
       "type": "TrustedForNTAuth",
       "properties": {},
       "style": {
@@ -495,17 +497,7 @@
     {
       "id": "n4",
       "fromId": "n4",
-      "toId": "n5",
-      "type": "CanAbuseUPNCertMapping",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n5",
-      "fromId": "n5",
-      "toId": "n1",
+      "toId": "n0",
       "type": "DCFor",
       "properties": {},
       "style": {
@@ -514,41 +506,49 @@
       }
     },
     {
+      "id": "n5",
+      "fromId": "n5",
+      "toId": "n3",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
       "id": "n6",
       "fromId": "n6",
-      "toId": "n4",
-      "type": "Enroll",
+      "toId": "n3",
+      "type": "PublishedTo",
       "properties": {},
       "style": {}
     },
     {
       "id": "n7",
       "fromId": "n7",
-      "toId": "n4",
-      "type": "PublishedTo",
+      "toId": "n6",
+      "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n8",
-      "fromId": "n8",
-      "toId": "n7",
-      "type": "Enroll",
+      "fromId": "n7",
+      "toId": "n5",
+      "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
       "id": "n9",
       "fromId": "n8",
-      "toId": "n6",
-      "type": "MemberOf",
+      "toId": "n3",
+      "type": "PublishedTo",
       "properties": {},
       "style": {}
     },
     {
       "id": "n10",
       "fromId": "n9",
-      "toId": "n4",
+      "toId": "n3",
       "type": "PublishedTo",
       "properties": {},
       "style": {}
@@ -556,16 +556,16 @@
     {
       "id": "n11",
       "fromId": "n10",
-      "toId": "n4",
-      "type": "PublishedTo",
+      "toId": "n6",
+      "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n12",
-      "fromId": "n11",
-      "toId": "n7",
-      "type": "Enroll",
+      "fromId": "n10",
+      "toId": "n5",
+      "type": "MemberOf",
       "properties": {},
       "style": {}
     },
@@ -573,22 +573,22 @@
       "id": "n13",
       "fromId": "n11",
       "toId": "n6",
-      "type": "MemberOf",
+      "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n14",
-      "fromId": "n12",
-      "toId": "n7",
-      "type": "Enroll",
+      "fromId": "n11",
+      "toId": "n5",
+      "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
       "id": "n15",
       "fromId": "n12",
-      "toId": "n6",
+      "toId": "n5",
       "type": "MemberOf",
       "properties": {},
       "style": {}
@@ -596,7 +596,7 @@
     {
       "id": "n16",
       "fromId": "n13",
-      "toId": "n6",
+      "toId": "n5",
       "type": "MemberOf",
       "properties": {},
       "style": {}
@@ -604,47 +604,47 @@
     {
       "id": "n17",
       "fromId": "n14",
-      "toId": "n6",
+      "toId": "n5",
       "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
       "id": "n18",
-      "fromId": "n15",
-      "toId": "n6",
-      "type": "MemberOf",
+      "fromId": "n14",
+      "toId": "n8",
+      "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n19",
-      "fromId": "n15",
-      "toId": "n9",
+      "fromId": "n13",
+      "toId": "n8",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n20",
-      "fromId": "n14",
-      "toId": "n9",
+      "fromId": "n12",
+      "toId": "n8",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n21",
-      "fromId": "n13",
-      "toId": "n9",
-      "type": "Enroll",
+      "fromId": "n15",
+      "toId": "n5",
+      "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
       "id": "n22",
       "fromId": "n16",
-      "toId": "n6",
+      "toId": "n5",
       "type": "MemberOf",
       "properties": {},
       "style": {}
@@ -652,23 +652,23 @@
     {
       "id": "n23",
       "fromId": "n17",
-      "toId": "n6",
+      "toId": "n5",
       "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
       "id": "n24",
-      "fromId": "n18",
-      "toId": "n6",
-      "type": "MemberOf",
+      "fromId": "n15",
+      "toId": "n9",
+      "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n25",
       "fromId": "n16",
-      "toId": "n10",
+      "toId": "n9",
       "type": "Enroll",
       "properties": {},
       "style": {}
@@ -676,29 +676,13 @@
     {
       "id": "n26",
       "fromId": "n17",
-      "toId": "n10",
+      "toId": "n9",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
       "id": "n27",
-      "fromId": "n18",
-      "toId": "n10",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n28",
-      "fromId": "n27",
-      "toId": "n18",
-      "type": "GenericAll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n29",
       "fromId": "n26",
       "toId": "n17",
       "type": "GenericAll",
@@ -706,7 +690,7 @@
       "style": {}
     },
     {
-      "id": "n30",
+      "id": "n28",
       "fromId": "n25",
       "toId": "n16",
       "type": "GenericAll",
@@ -714,7 +698,7 @@
       "style": {}
     },
     {
-      "id": "n31",
+      "id": "n29",
       "fromId": "n24",
       "toId": "n15",
       "type": "GenericAll",
@@ -722,7 +706,7 @@
       "style": {}
     },
     {
-      "id": "n32",
+      "id": "n30",
       "fromId": "n23",
       "toId": "n14",
       "type": "GenericAll",
@@ -730,7 +714,7 @@
       "style": {}
     },
     {
-      "id": "n33",
+      "id": "n31",
       "fromId": "n22",
       "toId": "n13",
       "type": "GenericAll",
@@ -738,7 +722,7 @@
       "style": {}
     },
     {
-      "id": "n34",
+      "id": "n32",
       "fromId": "n21",
       "toId": "n12",
       "type": "GenericAll",
@@ -746,7 +730,7 @@
       "style": {}
     },
     {
-      "id": "n35",
+      "id": "n33",
       "fromId": "n20",
       "toId": "n11",
       "type": "GenericAll",
@@ -754,41 +738,49 @@
       "style": {}
     },
     {
-      "id": "n36",
+      "id": "n34",
       "fromId": "n19",
-      "toId": "n8",
+      "toId": "n10",
       "type": "GenericAll",
       "properties": {},
       "style": {}
     },
     {
+      "id": "n35",
+      "fromId": "n18",
+      "toId": "n7",
+      "type": "GenericAll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n36",
+      "fromId": "n25",
+      "toId": "n0",
+      "type": "ADCSESC10a",
+      "properties": {},
+      "style": {}
+    },
+    {
       "id": "n37",
-      "fromId": "n26",
-      "toId": "n1",
+      "fromId": "n22",
+      "toId": "n0",
+      "type": "ADCSESC10a",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n38",
+      "fromId": "n20",
+      "toId": "n0",
       "type": "ADCSESC10a",
       "properties": {},
       "style": {}
     },
     {
       "id": "n39",
-      "fromId": "n23",
-      "toId": "n1",
-      "type": "ADCSESC10a",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n41",
-      "fromId": "n21",
-      "toId": "n1",
-      "type": "ADCSESC10a",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n42",
-      "fromId": "n20",
-      "toId": "n1",
+      "fromId": "n19",
+      "toId": "n0",
       "type": "ADCSESC10a",
       "properties": {},
       "style": {}

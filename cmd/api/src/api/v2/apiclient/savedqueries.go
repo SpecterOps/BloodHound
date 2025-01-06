@@ -17,10 +17,11 @@
 package apiclient
 
 import (
+	"net/http"
+
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/model"
-	"net/http"
 )
 
 func (s Client) ListSavedQueries() (model.SavedQueries, error) {

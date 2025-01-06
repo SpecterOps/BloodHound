@@ -24,6 +24,7 @@ const nodes: GraphNodes = {
         kind: 'Computer',
         objectId: '001',
         isTierZero: false,
+        isOwnedObject: false,
         lastSeen: '',
     },
     '2': {
@@ -31,6 +32,7 @@ const nodes: GraphNodes = {
         kind: 'User',
         objectId: '002',
         isTierZero: false,
+        isOwnedObject: false,
         lastSeen: '',
     },
     '3': {
@@ -38,6 +40,7 @@ const nodes: GraphNodes = {
         kind: 'Group',
         objectId: '003',
         isTierZero: false,
+        isOwnedObject: false,
         lastSeen: '',
     },
 };

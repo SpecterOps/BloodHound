@@ -38,6 +38,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		queryParams   = request.URL.Query()
 		sortByColumns = queryParams[api.QueryParameterSortBy]
 		savedQueries  model.SavedQueries
+		scopes        = queryParams[api.QueryParameterScope]
 	)
 
 	for _, column := range sortByColumns {
@@ -75,7 +76,6 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
-
 					queryFilters[name][i].IsStringData = savedQueries.IsString(filter.Name)
 				}
 			}
@@ -89,9 +89,47 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 10000); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if queries, count, err := s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
-			api.HandleDatabaseError(request, response, err)
+		} else if len(scopes) == 0 {
+			if queries, count, err := s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
+			}
 		} else {
+			var queries []model.SavedQueryResponse
+			var count int
+			for _, scope := range strings.Split(scopes[0], ",") {
+				var scopedQueries model.SavedQueries
+				var scopedCount int
+
+				switch strings.ToLower(scope) {
+				case string(model.SavedQueryScopePublic):
+					scopedQueries, err = s.DB.GetPublicSavedQueries(request.Context())
+					scopedCount = len(scopedQueries)
+				case string(model.SavedQueryScopeShared):
+					scopedQueries, err = s.DB.GetSharedSavedQueries(request.Context(), user.ID)
+					scopedCount = len(scopedQueries)
+				case string(model.SavedQueryScopeOwned):
+					scopedQueries, scopedCount, err = s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit)
+				default:
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid scope param", request), response)
+					return
+				}
+
+				if err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
+
+				for _, query := range scopedQueries {
+					queries = append(queries, model.SavedQueryResponse{
+						SavedQuery: query,
+						Scope:      scope,
+					})
+				}
+				count += scopedCount
+
+			}
 			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
 		}
 	}
@@ -99,8 +137,9 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 }
 
 type CreateSavedQueryRequest struct {
-	Query string `json:"query"`
-	Name  string `json:"name"`
+	Query       string `json:"query"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
 }
 
 func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.Request) {
@@ -114,7 +153,7 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if createRequest.Name == "" || createRequest.Query == "" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "the name and/or query field is empty", request), response)
-	} else if savedQuery, err := s.DB.CreateSavedQuery(request.Context(), user.ID, createRequest.Name, createRequest.Query); err != nil {
+	} else if savedQuery, err := s.DB.CreateSavedQuery(request.Context(), user.ID, createRequest.Name, createRequest.Query, createRequest.Description); err != nil {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
 		} else {
@@ -125,6 +164,58 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 	}
 }
 
+func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.Request) {
+	var (
+		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
+		updateRequest   CreateSavedQueryRequest
+		savedQuery      model.SavedQuery
+		err             error
+	)
+
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+		return
+	} else if err := api.ReadJSONRequestPayloadLimited(&updateRequest, request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+		return
+	} else if savedQuery, err = s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		return
+	} else if savedQuery.UserID != user.ID.String() {
+		if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
+			return
+		} else {
+			if isPublic, err := s.DB.IsSavedQueryPublic(request.Context(), savedQuery.ID); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+				return
+			} else if !isPublic {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
+				return
+			}
+		}
+	}
+
+	if updateRequest.Query != "" {
+		savedQuery.Query = updateRequest.Query
+	}
+	if updateRequest.Name != "" {
+		savedQuery.Name = updateRequest.Name
+	}
+	if updateRequest.Description != "" {
+		savedQuery.Description = updateRequest.Description
+	}
+
+	if savedQuery, err = s.DB.UpdateSavedQuery(request.Context(), savedQuery); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		api.WriteBasicResponse(request.Context(), savedQuery, http.StatusOK, response)
+	}
+}
+
 func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
@@ -132,22 +223,36 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 
 	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
-	} else if savedQueryID, err := strconv.Atoi(rawSavedQueryID); err != nil {
+	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if savedQueryBelongsToUser, err := s.DB.SavedQueryBelongsToUser(request.Context(), user.ID, savedQueryID); errors.Is(err, database.ErrNotFound) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-	} else if !savedQueryBelongsToUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid saved_query_id supplied", request), response)
-	} else if err := s.DB.DeleteSavedQuery(request.Context(), savedQueryID); errors.Is(err, database.ErrNotFound) {
-		// This is an edge case and can only occur if the database has a concurrent operation that deletes the saved query
-		// after the check at s.DB.SavedQueryBelongsToUser but before getting here.
-		// Still, adding in the same check for good measure.
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
-	} else if err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
-		response.WriteHeader(http.StatusNoContent)
+		if !savedQueryBelongsToUser {
+			if _, isAdmin := user.Roles.FindByName(auth.RoleAdministrator); !isAdmin {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to delete this query", request), response)
+				return
+			} else if isPublicQuery, err := s.DB.IsSavedQueryPublic(request.Context(), savedQueryID); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else if !isPublicQuery {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to delete this query", request), response)
+				return
+			}
+		}
+
+		if err := s.DB.DeleteSavedQuery(request.Context(), savedQueryID); errors.Is(err, database.ErrNotFound) {
+			// This is an edge case and can only occur if the database has a concurrent operation that deletes the saved query
+			// after the check at s.DB.SavedQueryBelongsToUser but before getting here.
+			// Still, adding in the same check for good measure.
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
+		} else if err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		} else {
+			response.WriteHeader(http.StatusNoContent)
+		}
+
 	}
 }

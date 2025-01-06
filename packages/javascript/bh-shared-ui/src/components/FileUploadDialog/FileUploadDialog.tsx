@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Button, Dialog, DialogActions, DialogContent } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Box, Dialog, DialogActions, DialogContent, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import FileDrop from '../FileDrop';
 import FileStatusListItem from '../FileStatusListItem';
@@ -32,6 +33,8 @@ const FileUploadDialog: React.FC<{
     open: boolean;
     onClose: () => void;
 }> = ({ open, onClose }) => {
+    const theme = useTheme();
+
     const [filesForIngest, setFilesForIngest] = useState<FileForIngest[]>([]);
     const [fileUploadStep, setFileUploadStep] = useState<FileUploadStep>(FileUploadStep.ADD_FILES);
     const [submitDialogDisabled, setSubmitDialogDisabled] = useState<boolean>(false);
@@ -228,8 +231,14 @@ const FileUploadDialog: React.FC<{
                     )}
 
                     {filesForIngest.length > 0 && (
-                        <Box sx={{ marginTop: 1, marginBottom: 1 }}>
-                            <Box sx={{ backgroundColor: 'black', color: 'white', fontWeight: 'bold', padding: '4px' }}>
+                        <Box sx={{ my: '8px' }}>
+                            <Box
+                                sx={{
+                                    backgroundColor: theme.palette.neutral.tertiary,
+                                    color: theme.palette.color.primary,
+                                    fontWeight: 'bold',
+                                    padding: '4px',
+                                }}>
                                 Files
                             </Box>
                             {filesForIngest.map((file, index) => {
@@ -254,11 +263,10 @@ const FileUploadDialog: React.FC<{
             <DialogActions>
                 {(fileUploadStep === FileUploadStep.ADD_FILES || fileUploadStep === FileUploadStep.CONFIRMATION) && (
                     <>
-                        <Button autoFocus color='inherit' onClick={onClose} data-testid='confirmation-dialog_button-no'>
+                        <Button variant='tertiary' onClick={onClose} data-testid='confirmation-dialog_button-no'>
                             Cancel
                         </Button>
                         <Button
-                            color='primary'
                             disabled={submitDialogDisabled}
                             onClick={handleSubmit}
                             data-testid='confirmation-dialog_button-yes'>
@@ -268,7 +276,6 @@ const FileUploadDialog: React.FC<{
                 )}
                 {fileUploadStep === FileUploadStep.UPLOAD && (
                     <Button
-                        color='primary'
                         onClick={onClose}
                         disabled={uploadDialogDisabled}
                         data-testid='confirmation-dialog_button-yes'>

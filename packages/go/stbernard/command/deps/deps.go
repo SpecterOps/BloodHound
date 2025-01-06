@@ -78,6 +78,8 @@ func (s *command) Run() error {
 		return fmt.Errorf("finding workspace paths: %w", err)
 	} else if err := golang.InstallGolangCiLint(paths.Root, s.env); err != nil {
 		return fmt.Errorf("installing golangci-lint: %w", err)
+	} else if err := golang.InstallGoimports(paths.Root, s.env); err != nil {
+		return fmt.Errorf("installing goimports: %w", err)
 	} else if err := yarn.InstallWorkspaceDeps(paths.Root, paths.YarnWorkspaces, s.env); err != nil {
 		return fmt.Errorf("installing yarn dependencies: %w", err)
 	} else {

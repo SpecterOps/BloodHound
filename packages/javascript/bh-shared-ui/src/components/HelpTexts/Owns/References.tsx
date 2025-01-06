@@ -122,6 +122,27 @@ const References: FC = () => {
                 href='https://posts.specterops.io/shadow-credentials-abusing-key-trust-account-mapping-for-takeover-8ee1a53566ab'>
                 https://posts.specterops.io/shadow-credentials-abusing-key-trust-account-mapping-for-takeover-8ee1a53566ab
             </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
+                https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://decoder.cloud/2023/11/20/a-deep-dive-in-cert-publishers-group/'>
+                https://decoder.cloud/2023/11/20/a-deep-dive-in-cert-publishers-group/
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://posts.specterops.io/adcs-esc13-abuse-technique-fda4272fbd53'>
+                https://posts.specterops.io/adcs-esc13-abuse-technique-fda4272fbd53
+            </Link>
         </Box>
     );
 };

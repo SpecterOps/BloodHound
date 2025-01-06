@@ -15,12 +15,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Container, Paper } from '@mui/material';
+import { useAppSelector } from 'src/store';
 
 interface LoginPageProps {
     children: React.ReactNode;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ children }) => {
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+    const imageUrl = darkMode ? '/img/logo-secondary-transparent-full.svg' : '/img/logo-transparent-full.svg';
+
     return (
         <>
             <Box paddingY={'64px'}>
@@ -28,7 +32,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ children }) => {
                     <Paper sx={{ px: 8, pb: 8, pt: 4 }}>
                         <Box height='100%' width='auto' textAlign='center' boxSizing='content-box' padding='64px'>
                             <img
-                                src={`${import.meta.env.BASE_URL}/img/logo-transparent-full.svg`}
+                                src={`${import.meta.env.BASE_URL}${imageUrl}`}
                                 alt='BloodHound'
                                 style={{
                                     width: '100%',

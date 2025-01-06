@@ -19,7 +19,8 @@ package query
 import (
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/cypher/model"
+
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -31,7 +32,7 @@ type Cache struct {
 }
 
 type Builder struct {
-	regularQuery *model.RegularQuery
+	regularQuery *cypher.RegularQuery
 	cache        *Cache
 }
 
@@ -49,21 +50,21 @@ func NewBuilderWithCriteria(criteria ...graph.Criteria) *Builder {
 	return builder
 }
 
-func (s *Builder) RegularQuery() *model.RegularQuery {
+func (s *Builder) RegularQuery() *cypher.RegularQuery {
 	return s.regularQuery
 }
 
-func (s *Builder) Build() (*model.RegularQuery, error) {
-	if err := s.prepareMatch(); err != nil {
+func (s *Builder) Build(allShortestPaths bool) (*cypher.RegularQuery, error) {
+	if err := s.prepareMatch(allShortestPaths); err != nil {
 		return nil, err
 	}
 
 	return s.regularQuery, nil
 }
 
-func (s *Builder) prepareMatch() error {
+func (s *Builder) prepareMatch(allShortestPaths bool) error {
 	var (
-		patternPart = &model.PatternPart{}
+		patternPart = &cypher.PatternPart{}
 
 		singleNodeBound    = false
 		creatingSingleNode = false
@@ -77,9 +78,9 @@ func (s *Builder) prepareMatch() error {
 
 		isRelationshipQuery = false
 
-		bindWalk = model.NewVisitor(func(stack *model.WalkStack, branch model.Expression) error {
+		bindWalk = cypher.NewVisitor(func(stack *cypher.WalkStack, branch cypher.Expression) error {
 			switch typedElement := branch.(type) {
-			case *model.Variable:
+			case *cypher.Variable:
 				switch typedElement.Symbol {
 				case NodeSymbol:
 					singleNodeBound = true
@@ -104,18 +105,18 @@ func (s *Builder) prepareMatch() error {
 
 	// Zip through updating clauses first
 	for _, updatingClause := range s.regularQuery.SingleQuery.SinglePartQuery.UpdatingClauses {
-		typedUpdatingClause, isUpdatingClause := updatingClause.(*model.UpdatingClause)
+		typedUpdatingClause, isUpdatingClause := updatingClause.(*cypher.UpdatingClause)
 
 		if !isUpdatingClause {
 			return fmt.Errorf("unexpected type for updating clause: %T", updatingClause)
 		}
 
 		switch typedClause := typedUpdatingClause.Clause.(type) {
-		case *model.Create:
-			if err := model.Walk(typedClause, model.NewVisitor(func(stack *model.WalkStack, element model.Expression) error {
+		case *cypher.Create:
+			if err := cypher.Walk(typedClause, cypher.NewVisitor(func(stack *cypher.WalkStack, element cypher.Expression) error {
 				switch typedElement := element.(type) {
-				case *model.NodePattern:
-					if patternBinding, typeOK := typedElement.Binding.(*model.Variable); !typeOK {
+				case *cypher.NodePattern:
+					if patternBinding, typeOK := typedElement.Binding.(*cypher.Variable); !typeOK {
 						return fmt.Errorf("expected variable for pattern binding but got: %T", typedElement.Binding)
 					} else {
 						switch patternBinding.Symbol {
@@ -130,8 +131,8 @@ func (s *Builder) prepareMatch() error {
 						}
 					}
 
-				case *model.RelationshipPattern:
-					if patternBinding, typeOK := typedElement.Binding.(*model.Variable); !typeOK {
+				case *cypher.RelationshipPattern:
+					if patternBinding, typeOK := typedElement.Binding.(*cypher.Variable); !typeOK {
 						return fmt.Errorf("expected variable for pattern binding but got: %T", typedElement.Binding)
 					} else {
 						switch patternBinding.Symbol {
@@ -146,8 +147,8 @@ func (s *Builder) prepareMatch() error {
 				return err
 			}
 
-		case *model.Delete:
-			if err := model.Walk(typedClause, bindWalk); err != nil {
+		case *cypher.Delete:
+			if err := cypher.Walk(typedClause, bindWalk); err != nil {
 				return err
 			}
 		}
@@ -155,14 +156,14 @@ func (s *Builder) prepareMatch() error {
 
 	// Is there a where clause?
 	if firstReadingClause := GetFirstReadingClause(s.regularQuery); firstReadingClause != nil && firstReadingClause.Match.Where != nil {
-		if err := model.Walk(firstReadingClause.Match.Where, bindWalk); err != nil {
+		if err := cypher.Walk(firstReadingClause.Match.Where, bindWalk); err != nil {
 			return err
 		}
 	}
 
 	// Is there a return clause
 	if s.regularQuery.SingleQuery.SinglePartQuery.Return != nil {
-		if err := model.Walk(s.regularQuery.SingleQuery.SinglePartQuery.Return, bindWalk); err != nil {
+		if err := cypher.Walk(s.regularQuery.SingleQuery.SinglePartQuery.Return, bindWalk); err != nil {
 			return err
 		}
 	}
@@ -174,56 +175,68 @@ func (s *Builder) prepareMatch() error {
 
 	if singleNodeBound && !creatingSingleNode {
 		// Bind the single-node variable
-		patternPart.AddPatternElements(&model.NodePattern{
-			Binding: model.NewVariableWithSymbol(NodeSymbol),
+		patternPart.AddPatternElements(&cypher.NodePattern{
+			Binding: cypher.NewVariableWithSymbol(NodeSymbol),
 		})
 	}
 
 	if startNodeBound {
 		// Bind the start-node variable
-		patternPart.AddPatternElements(&model.NodePattern{
-			Binding: model.NewVariableWithSymbol(EdgeStartSymbol),
+		patternPart.AddPatternElements(&cypher.NodePattern{
+			Binding: cypher.NewVariableWithSymbol(EdgeStartSymbol),
 		})
 	}
 
 	if isRelationshipQuery {
 		if !startNodeBound && !creatingStartNode {
 			// Add an empty node pattern if the start node isn't bound, and we aren't creating it
-			patternPart.AddPatternElements(&model.NodePattern{})
+			patternPart.AddPatternElements(&cypher.NodePattern{})
 		}
 
 		if !creatingEdge {
 			if edgeBound {
 				// Bind the edge variable
-				patternPart.AddPatternElements(&model.RelationshipPattern{
-					Binding:   model.NewVariableWithSymbol(EdgeSymbol),
+				patternPart.AddPatternElements(&cypher.RelationshipPattern{
+					Binding:   cypher.NewVariableWithSymbol(EdgeSymbol),
 					Direction: graph.DirectionOutbound,
 				})
 			} else {
-				patternPart.AddPatternElements(&model.RelationshipPattern{
+				patternPart.AddPatternElements(&cypher.RelationshipPattern{
 					Direction: graph.DirectionOutbound,
 				})
 			}
 		}
 
 		if !endNodeBound && !creatingEndNode {
-			patternPart.AddPatternElements(&model.NodePattern{})
+			patternPart.AddPatternElements(&cypher.NodePattern{})
 		}
 	}
 
 	if endNodeBound {
 		// Add an empty node pattern if the end node isn't bound, and we aren't creating it
-		patternPart.AddPatternElements(&model.NodePattern{
-			Binding: model.NewVariableWithSymbol(EdgeEndSymbol),
+		patternPart.AddPatternElements(&cypher.NodePattern{
+			Binding: cypher.NewVariableWithSymbol(EdgeEndSymbol),
 		})
 	}
 
+	if allShortestPaths {
+		patternPart.AllShortestPathsPattern = true
+		patternPart.Binding = cypher.NewVariableWithSymbol(PathSymbol)
+
+		// Update all relationship PatternElements to expand fully (*..)
+		for _, patternElement := range patternPart.PatternElements {
+			if relationshipPattern, isRelationshipPattern := patternElement.AsRelationshipPattern(); isRelationshipPattern {
+				relationshipPattern.Range = &cypher.PatternRange{}
+			}
+		}
+	}
+
 	if firstReadingClause := GetFirstReadingClause(s.regularQuery); firstReadingClause != nil {
-		firstReadingClause.Match.Pattern = []*model.PatternPart{patternPart}
+		firstReadingClause.Match.Pattern = []*cypher.PatternPart{patternPart}
 	} else if len(patternPart.PatternElements) > 0 {
-		s.regularQuery.SingleQuery.SinglePartQuery.AddReadingClause(&model.ReadingClause{
-			Match: &model.Match{
-				Pattern: []*model.PatternPart{
+		s.regularQuery.SingleQuery.SinglePartQuery.AddReadingClause(&cypher.ReadingClause{
+			Match: &cypher.Match{
+				Pattern: []*cypher.PatternPart{
 					patternPart,
 				},
 			},
@@ -239,44 +252,44 @@ func (s *Builder) Apply(criteria ...graph.Criteria) {
 		case []graph.Criteria:
 			s.Apply(typedCriteria...)
 
-		case *model.Where:
+		case *cypher.Where:
 			firstReadingClause := GetFirstReadingClause(s.regularQuery)
 
 			if firstReadingClause == nil {
-				firstReadingClause = &model.ReadingClause{
-					Match: model.NewMatch(false),
+				firstReadingClause = &cypher.ReadingClause{
+					Match: cypher.NewMatch(false),
 				}
 
 				s.regularQuery.SingleQuery.SinglePartQuery.AddReadingClause(firstReadingClause)
 			}
 
-			firstReadingClause.Match.Where = model.Copy(typedCriteria)
+			firstReadingClause.Match.Where = cypher.Copy(typedCriteria)
 
-		case *model.Return:
+		case *cypher.Return:
 			s.regularQuery.SingleQuery.SinglePartQuery.Return = typedCriteria
 
-		case *model.Limit:
+		case *cypher.Limit:
 			if s.regularQuery.SingleQuery.SinglePartQuery.Return != nil {
-				s.regularQuery.SingleQuery.SinglePartQuery.Return.Projection.Limit = model.Copy(typedCriteria)
+				s.regularQuery.SingleQuery.SinglePartQuery.Return.Projection.Limit = cypher.Copy(typedCriteria)
 			}
 
-		case *model.Skip:
+		case *cypher.Skip:
 			if s.regularQuery.SingleQuery.SinglePartQuery.Return != nil {
-				s.regularQuery.SingleQuery.SinglePartQuery.Return.Projection.Skip = model.Copy(typedCriteria)
+				s.regularQuery.SingleQuery.SinglePartQuery.Return.Projection.Skip = cypher.Copy(typedCriteria)
 			}
 
-		case *model.Order:
+		case *cypher.Order:
 			if s.regularQuery.SingleQuery.SinglePartQuery.Return != nil {
-				s.regularQuery.SingleQuery.SinglePartQuery.Return.Projection.Order = model.Copy(typedCriteria)
+				s.regularQuery.SingleQuery.SinglePartQuery.Return.Projection.Order = cypher.Copy(typedCriteria)
 			}
 
-		case []*model.UpdatingClause:
+		case []*cypher.UpdatingClause:
 			for _, updatingClause := range typedCriteria {
 				s.Apply(updatingClause)
 			}
 
-		case *model.UpdatingClause:
-			s.regularQuery.SingleQuery.SinglePartQuery.AddUpdatingClause(model.Copy(typedCriteria))
+		case *cypher.UpdatingClause:
+			s.regularQuery.SingleQuery.SinglePartQuery.AddUpdatingClause(cypher.Copy(typedCriteria))
 
 		default:
 			panic(fmt.Errorf("invalid type for dawgs query: %T %+v", criteria, criteria))

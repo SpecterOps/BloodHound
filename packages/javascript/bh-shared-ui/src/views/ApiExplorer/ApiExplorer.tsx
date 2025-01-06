@@ -44,7 +44,7 @@ const ApiExplorer: React.FC = () => {
     return (
         <Suspense fallback={<GraphProgress loading={true} />}>
             <SwaggerUI
-                url='/api/v2/swagger/doc.json'
+                url='/api/v2/spec'
                 requestInterceptor={authInterceptor}
                 plugins={[
                     HideEditionTagsPlugin,

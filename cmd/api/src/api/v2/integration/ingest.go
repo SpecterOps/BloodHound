@@ -18,12 +18,14 @@ package integration
 
 import (
 	"encoding/json"
-	"github.com/specterops/bloodhound/src/model/appcfg"
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/graphschema"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/fixtures"
 	"github.com/specterops/bloodhound/src/test/integration"
@@ -198,7 +200,7 @@ func (s *Context) WaitForDatapipeAnalysis(timeout time.Duration, originalWrapper
 type IngestAssertion func(testCtrl test.Controller, tx graph.Transaction)
 
 func (s *Context) AssertIngest(assertion IngestAssertion) {
-	graphDB := integration.OpenGraphDB(s.TestCtrl)
+	graphDB := integration.OpenGraphDB(s.TestCtrl, graphschema.DefaultGraphSchema())
 	defer graphDB.Close(s.ctx)
 
 	require.Nil(s.TestCtrl, graphDB.ReadTransaction(s.ctx, func(tx graph.Transaction) error {
@@ -208,7 +210,7 @@ func (s *Context) AssertIngest(assertion IngestAssertion) {
 }
 
 func (s *Context) AssertIngestProperties(assertion IngestAssertion) {
-	graphDB := integration.OpenGraphDB(s.TestCtrl)
+	graphDB := integration.OpenGraphDB(s.TestCtrl, graphschema.DefaultGraphSchema())
 	defer graphDB.Close(s.ctx)
 
 	require.Nil(s.TestCtrl, graphDB.ReadTransaction(s.ctx, func(tx graph.Transaction) error {

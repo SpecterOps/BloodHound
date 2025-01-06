@@ -27,11 +27,25 @@ import (
 func InstallGolangCiLint(path string, env environment.Environment) error {
 	var (
 		command = "go"
-		args    = []string{"install", "github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2"}
+		args    = []string{"install", "github.com/golangci/golangci-lint/cmd/golangci-lint@v1.60.3"}
 	)
 
 	if err := cmdrunner.Run(command, args, path, env); err != nil {
 		return fmt.Errorf("golangci-lint install: %w", err)
+	}
+
+	return nil
+}
+
+// InstallGoimports runs go install for the latest version of `goimports`
+func InstallGoimports(path string, env environment.Environment) error {
+	var (
+		command = "go"
+		args    = []string{"install", "golang.org/x/tools/cmd/goimports@latest"}
+	)
+
+	if err := cmdrunner.Run(command, args, path, env); err != nil {
+		return fmt.Errorf("goimports install: %w", err)
 	}
 
 	return nil

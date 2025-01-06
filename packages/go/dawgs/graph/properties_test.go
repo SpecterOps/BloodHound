@@ -17,10 +17,11 @@
 package graph_test
 
 import (
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
+
+	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewProperties(t *testing.T) {
@@ -79,4 +80,29 @@ func TestSizeOfProperties(t *testing.T) {
 
 	require.Equal(t, 1784, int(properties.SizeOf()))
 
+}
+
+func TestGetWithFallbackProperties(t *testing.T) {
+	properties := graph.NewProperties()
+
+	// Set an initial value to force allocation
+	properties.SetAll(map[string]any{"sugar": "Sugar", "spice": "Spice", "everythingNice": "Everything Nice"})
+
+	t.Run("returns property when exists", func(t *testing.T) {
+		value, err := properties.GetWithFallback("sugar", "").String()
+		require.Nil(t, err)
+		require.Equal(t, "Sugar", value)
+	})
+
+	t.Run("returns fallback property when original property doesn't exists", func(t *testing.T) {
+		value, err := properties.GetWithFallback("missing", "", "spice").String()
+		require.Nil(t, err)
+		require.Equal(t, "Spice", value)
+	})
+
+	t.Run("returns default property when neither fallback nor property exists", func(t *testing.T) {
+		value, err := properties.GetWithFallback("", "ChemicalX", "").String()
+		require.Nil(t, err)
+		require.Equal(t, "ChemicalX", value)
+	})
 }

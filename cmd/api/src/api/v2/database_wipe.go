@@ -24,6 +24,8 @@ import (
 
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 )
@@ -108,7 +110,18 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			)
 			return
 		} else {
-			s.TaskNotifier.RequestDeletion()
+			var userId string
+			if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+				log.Warnf("encountered request analysis for unknown user, this shouldn't happen")
+				userId = "unknown-user-database-wipe"
+			} else {
+				userId = user.ID.String()
+			}
+
+			if err := s.DB.RequestCollectedGraphDataDeletion(request.Context(), userId); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			}
 			s.handleAuditLogForDatabaseWipe(request.Context(), &auditEntry, true, "collected graph data")
 		}
 
@@ -125,7 +138,18 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	// if deleting `nodes` or deleting `asset group selectors` is successful, kickoff an analysis
 	if kickoffAnalysis {
-		s.TaskNotifier.RequestAnalysis()
+		var userId string
+		if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+			log.Warnf("encountered request analysis for unknown user, this shouldn't happen")
+			userId = "unknown-user-database-wipe"
+		} else {
+			userId = user.ID.String()
+		}
+
+		if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
 	}
 
 	// delete file ingest history
@@ -142,7 +166,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		}
 	}
 
-	// return a user friendly error message indicating what operations failed
+	// return a user-friendly error message indicating what operations failed
 	if len(errors) > 0 {
 		api.WriteErrorResponse(
 			request.Context(),

@@ -17,7 +17,7 @@
 package model
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"net/url"
 	"slices"
@@ -76,7 +76,7 @@ func (s DomainSelectors) GetFilterableColumns() []string {
 
 func (s DomainSelectors) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
-		return []string{}, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
+		return []string{}, errors.New(ErrResponseDetailsColumnNotFilterable)
 	} else {
 		var stringPredicates = make([]string, 0)
 		for _, predicate := range predicates {
@@ -94,10 +94,10 @@ type OrderCriterion struct {
 type OrderCriteria []OrderCriterion
 
 const (
-	ErrorResponseDetailsBadQueryParameterFilters    = "there are errors in the query parameter filters specified"
-	ErrorResponseDetailsFilterPredicateNotSupported = "the specified filter predicate is not supported for this column"
-	ErrorResponseDetailsColumnNotFilterable         = "the specified column cannot be filtered"
-	ErrorResponseDetailsColumnNotSortable           = "the specified column cannot be sorted"
+	ErrResponseDetailsBadQueryParameterFilters    = "there are errors in the query parameter filters specified"
+	ErrResponseDetailsFilterPredicateNotSupported = "the specified filter predicate is not supported for this column"
+	ErrResponseDetailsColumnNotFilterable         = "the specified column cannot be filtered"
+	ErrResponseDetailsColumnNotSortable           = "the specified column cannot be sorted"
 )
 
 func (s DomainSelectors) GetOrderCriteria(params url.Values) (OrderCriteria, error) {
@@ -118,7 +118,7 @@ func (s DomainSelectors) GetOrderCriteria(params url.Values) (OrderCriteria, err
 		criterion.Property = column
 
 		if !s.IsSortable(column) {
-			return OrderCriteria{}, fmt.Errorf(ErrorResponseDetailsColumnNotSortable)
+			return OrderCriteria{}, errors.New(ErrResponseDetailsColumnNotSortable)
 		}
 
 		orderCriteria = append(orderCriteria, criterion)
@@ -133,28 +133,25 @@ func (s DomainSelectors) GetFilterCriteria(request *http.Request) (graph.Criteri
 	)
 
 	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
-		return nil, fmt.Errorf(ErrorResponseDetailsBadQueryParameterFilters)
+		return nil, errors.New(ErrResponseDetailsBadQueryParameterFilters)
 	} else {
 		for name, filters := range queryFilters {
 			if valid := slices.Contains(s.GetFilterableColumns(), name); !valid {
-				return nil, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
+				return nil, errors.New(ErrResponseDetailsColumnNotFilterable)
 			}
-
 			if validPredicates, err := s.GetValidFilterPredicatesAsStrings(name); err != nil {
-				return nil, fmt.Errorf(ErrorResponseDetailsColumnNotFilterable)
+				return nil, errors.New(ErrResponseDetailsColumnNotFilterable)
 			} else {
 				for i, filter := range filters {
 					if !slices.Contains(validPredicates, string(filter.Operator)) {
-						return nil, fmt.Errorf(ErrorResponseDetailsFilterPredicateNotSupported)
+						return nil, errors.New(ErrResponseDetailsFilterPredicateNotSupported)
 					}
-
 					queryFilters[name][i].IsStringData = s.IsString(filter.Name)
 				}
 			}
 		}
 		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
 		criteria = query.And(queryFilters.BuildGDBNodeFilter(), query.KindIn(query.Node(), ad.Domain, azure.Tenant))
-
 		return criteria, nil
 	}
 }

@@ -19,15 +19,12 @@ package auth
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/crewjam/saml"
-	"github.com/crewjam/saml/samlsp"
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -37,7 +34,6 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/auth/bhsaml"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
@@ -45,15 +41,14 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/serde"
-	"github.com/specterops/bloodhound/src/utils"
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
 const (
-	ErrorResponseDetailsNumRoles               = "a user can only have one role"
-	ErrorResponseDetailsInvalidCurrentPassword = "unable to verify current password"
-	ErrorResponseDetailsMFAActivated           = "multi-factor authentication already active"
-	ErrorResponseDetailsMFAEnrollmentRequired  = "multi-factor authentication enrollment is required before activation"
+	ErrResponseDetailsNumRoles               = "a user can only have one role"
+	ErrResponseDetailsInvalidCurrentPassword = "unable to verify current password"
+	ErrResponseDetailsMFAActivated           = "multi-factor authentication already active"
+	ErrResponseDetailsMFAEnrollmentRequired  = "multi-factor authentication enrollment is required before activation"
 )
 
 type ManagementResource struct {
@@ -61,143 +56,21 @@ type ManagementResource struct {
 	secretDigester             crypto.SecretDigester
 	db                         database.Database
 	QueryParameterFilterParser model.QueryParameterFilterParser
-	authorizer                 auth.Authorizer
+	authorizer                 auth.Authorizer   // Used for Permissions
+	authenticator              api.Authenticator // Used for secrets
 }
 
-func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer) ManagementResource {
+func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator) ManagementResource {
 	return ManagementResource{
 		config:                     authConfig,
 		secretDigester:             authConfig.Crypto.Argon2.NewDigester(),
 		db:                         db,
 		QueryParameterFilterParser: model.NewQueryParameterFilterParser(),
 		authorizer:                 authorizer,
+		authenticator:              authenticator,
 	}
 }
 
-func (s ManagementResource) ListSAMLSignOnEndpoints(response http.ResponseWriter, request *http.Request) {
-	if samlProviders, err := bhsaml.GetAllSAMLProviders(s.db, request.Context()); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		var (
-			samlSignOnEndpoints = make([]v2.SAMLSignOnEndpoint, len(samlProviders))
-			requestContext      = ctx.Get(request.Context())
-		)
-
-		for idx, samlProvider := range samlProviders {
-			providerURLs := bhsaml.FormatServiceProviderURLs(*requestContext.Host, samlProviders[idx].Name)
-
-			samlSignOnEndpoints[idx].Name = samlProvider.Name
-			samlSignOnEndpoints[idx].InitiationURL = serde.FromURL(providerURLs.SingleSignOnService)
-		}
-
-		api.WriteBasicResponse(request.Context(), v2.ListSAMLSignOnEndpointsResponse{
-			Endpoints: samlSignOnEndpoints,
-		}, http.StatusOK, response)
-	}
-}
-
-func (s ManagementResource) ListSAMLProviders(response http.ResponseWriter, request *http.Request) {
-	if samlProviders, err := bhsaml.GetAllSAMLProviders(s.db, request.Context()); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), v2.ListSAMLProvidersResponse{SAMLProviders: samlProviders}, http.StatusOK, response)
-	}
-}
-
-func (s ManagementResource) GetSAMLProvider(response http.ResponseWriter, request *http.Request) {
-	pathVars := mux.Vars(request)
-
-	if rawProviderID, hasID := pathVars[api.URIPathVariableSAMLProviderID]; !hasID {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
-	} else if providerID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if provider, err := s.db.GetSAMLProvider(request.Context(), int32(providerID)); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), provider, http.StatusOK, response)
-	}
-}
-
-func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWriter, request *http.Request) {
-	var samlIdentityProvider model.SAMLProvider
-
-	if err := request.ParseMultipartForm(api.DefaultAPIPayloadReadLimitBytes); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if providerNames, hasProviderName := request.MultipartForm.Value["name"]; !hasProviderName {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"name\" parameter", request), response)
-	} else if numProviderNames := len(providerNames); numProviderNames == 0 || numProviderNames > 1 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"name\" parameter", request), response)
-	} else if metadataXMLFileHandles, hasMetadataXML := request.MultipartForm.File["metadata"]; !hasMetadataXML {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"metadata\" parameter", request), response)
-	} else if numHeaders := len(metadataXMLFileHandles); numHeaders == 0 || numHeaders > 1 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"metadata\" parameter", request), response)
-	} else if metadataXMLReader, err := metadataXMLFileHandles[0].Open(); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else {
-		defer metadataXMLReader.Close()
-
-		if metadataXML, err := io.ReadAll(metadataXMLReader); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if metadata, err := samlsp.ParseMetadata(metadataXML); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if ssoDescriptor, err := bhsaml.GetIDPSingleSignOnDescriptor(metadata, saml.HTTPPostBinding); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if ssoURL, err := bhsaml.GetIDPSingleSignOnServiceURL(ssoDescriptor, saml.HTTPPostBinding); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
-		} else {
-			samlIdentityProvider.Name = providerNames[0]
-			samlIdentityProvider.DisplayName = providerNames[0]
-			samlIdentityProvider.MetadataXML = metadataXML
-			samlIdentityProvider.IssuerURI = metadata.EntityID
-			samlIdentityProvider.SingleSignOnURI = ssoURL
-
-			if newSAMLProvider, err := s.db.CreateSAMLIdentityProvider(request.Context(), samlIdentityProvider); err != nil {
-				api.HandleDatabaseError(request, response, err)
-			} else {
-				api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
-			}
-		}
-	}
-}
-
-func (s ManagementResource) disassociateUsersFromSAMLProvider(request *http.Request, providerUsers model.Users) error {
-	for _, user := range providerUsers {
-		user.SAMLProvider = nil
-		user.SAMLProviderID = null.NewInt32(0, false)
-
-		if err := s.db.UpdateUser(request.Context(), user); err != nil {
-			return api.FormatDatabaseError(err)
-		}
-	}
-
-	return nil
-}
-
-func (s ManagementResource) DeleteSAMLProvider(response http.ResponseWriter, request *http.Request) {
-	var (
-		identityProvider model.SAMLProvider
-		rawProviderID    = mux.Vars(request)[api.URIPathVariableSAMLProviderID]
-		requestContext   = ctx.FromRequest(request)
-	)
-
-	if providerID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if identityProvider, err = s.db.GetSAMLProvider(request.Context(), int32(providerID)); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if user, isUser := auth.GetUserFromAuthCtx(requestContext.AuthCtx); isUser && int64(user.SAMLProviderID.Int32) == providerID {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "user may not delete their own SAML auth provider", request), response)
-	} else if providerUsers, err := s.db.GetSAMLProviderUsers(request.Context(), identityProvider.ID); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if err := s.disassociateUsersFromSAMLProvider(request, providerUsers); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if err := s.db.DeleteSAMLProvider(request.Context(), identityProvider); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), v2.DeleteSAMLProviderResponse{
-			AffectedUsers: providerUsers,
-		}, http.StatusOK, response)
-	}
-}
 func (s ManagementResource) ListPermissions(response http.ResponseWriter, request *http.Request) {
 	var (
 		order         []string
@@ -427,7 +300,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 	if err := api.ReadJSONRequestPayloadLimited(&createUserRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if len(createUserRequest.Roles) > 1 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsNumRoles, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsNumRoles, request), response)
 	} else if roles, err := s.db.GetRoles(request.Context(), createUserRequest.Roles); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
@@ -441,17 +314,15 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 
 		if createUserRequest.Secret != "" {
 			if errs := validation.Validate(createUserRequest.SetUserSecretRequest); errs != nil {
-				msg := strings.Join(utils.Errors(errs).AsStringSlice(), ", ")
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, msg, request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 				return
 			} else if secretDigest, err := s.secretDigester.Digest(createUserRequest.Secret); err != nil {
 				log.Errorf("Error while attempting to digest secret for user: %v", err)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 				return
-			} else if passwordExpiration, err := appcfg.GetPasswordExpiration(request.Context(), s.db); err != nil {
-				log.Errorf("Error while attempting to fetch password expiration window: %v", err)
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 			} else {
+				passwordExpiration := appcfg.GetPasswordExpiration(request.Context(), s.db)
+
 				userTemplate.AuthSecret = &model.AuthSecret{
 					Digest:       secretDigest.String(),
 					DigestMethod: s.secretDigester.Method(),
@@ -467,16 +338,29 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		if createUserRequest.SAMLProviderID != "" {
 			if samlProviderID, err := serde.ParseInt32(createUserRequest.SAMLProviderID); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
+				return
 			} else if samlProvider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
-				log.Errorf("Error while attempting to fetch SAML provider %d: %v", createUserRequest.SAMLProviderID, err)
+				log.Errorf("Error while attempting to fetch SAML provider %s: %v", createUserRequest.SAMLProviderID, err)
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else {
-				userTemplate.SAMLProviderID = null.Int32From(samlProvider.ID)
+				userTemplate.SSOProviderID = samlProvider.SSOProviderID
+			}
+		} else if createUserRequest.SSOProviderID.Valid {
+			if _, err := s.db.GetSSOProviderById(request.Context(), createUserRequest.SSOProviderID.Int32); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else {
+				userTemplate.SSOProviderID = createUserRequest.SSOProviderID
 			}
 		}
 
 		if newUser, err := s.db.CreateUser(request.Context(), userTemplate); err != nil {
-			api.HandleDatabaseError(request, response, err)
+			if errors.Is(err, database.ErrDuplicateUserPrincipal) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicatePrincipal, request), response)
+			} else {
+				api.HandleDatabaseError(request, response, err)
+			}
 		} else {
 			api.WriteBasicResponse(request.Context(), newUser, http.StatusOK, response)
 		}
@@ -484,32 +368,12 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 	}
 }
 
-func (s ManagementResource) updateUser(response http.ResponseWriter, request *http.Request, user model.User) {
-	if err := s.db.UpdateUser(request.Context(), user); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		response.WriteHeader(http.StatusOK)
-	}
-}
-
-func (s ManagementResource) ensureUserHasNoAuthSecret(ctx context.Context, user model.User) error {
-	if user.AuthSecret != nil {
-		if err := s.db.DeleteAuthSecret(ctx, *user.AuthSecret); err != nil {
-			return api.FormatDatabaseError(err)
-		} else {
-			return nil
-		}
-	}
-
-	return nil
-}
-
 func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *http.Request) {
 	var (
 		updateUserRequest v2.UpdateUserRequest
 		pathVars          = mux.Vars(request)
 		rawUserID         = pathVars[api.URIPathVariableUserID]
-		context           = *ctx.FromRequest(request)
+		authCtx           = *ctx.FromRequest(request)
 	)
 
 	if userID, err := uuid.FromString(rawUserID); err != nil {
@@ -530,8 +394,10 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		user.PrincipalName = updateUserRequest.Principal
 		user.IsDisabled = updateUserRequest.IsDisabled
 
+		loggedInUser, _ := auth.GetUserFromAuthCtx(authCtx.AuthCtx)
+
 		if user.IsDisabled {
-			if loggedInUser, _ := auth.GetUserFromAuthCtx(context.AuthCtx); user.ID == loggedInUser.ID {
+			if user.ID == loggedInUser.ID {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSelfDisable, request), response)
 				return
 			} else if userSessions, err := s.db.LookupActiveSessionsByUser(request.Context(), user); err != nil {
@@ -548,24 +414,48 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			// We're setting a SAML provider. If the user has an associated secret the secret will be removed.
 			if samlProviderID, err := serde.ParseInt32(updateUserRequest.SAMLProviderID); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
-			} else if err := s.ensureUserHasNoAuthSecret(request.Context(), user); err != nil {
-				api.HandleDatabaseError(request, response, err)
+				return
 			} else if provider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else {
-				// Ensure that the AuthSecret reference is nil and that the SAML provider is set
-				user.AuthSecret = nil
-				user.SAMLProvider = &provider
-				user.SAMLProviderID = null.Int32From(samlProviderID)
-
-				s.updateUser(response, request, user)
+				// Ensure that the AuthSecret reference is nil and the SSO provider is set
+				user.AuthSecret = nil // Required or the below updateUser will re-add the authSecret
+				user.SSOProviderID = provider.SSOProviderID
+			}
+		} else if updateUserRequest.SSOProviderID.Valid {
+			if _, err := s.db.GetSSOProviderById(request.Context(), updateUserRequest.SSOProviderID.Int32); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else {
+				user.AuthSecret = nil // Required or the below updateUser will re-add the authSecret
+				user.SSOProviderID = updateUserRequest.SSOProviderID
 			}
 		} else {
-			// Default SAMLProviderID to null if the update request contains no SAMLProviderID
-			user.SAMLProviderID = null.NewInt32(0, false)
-			user.SAMLProvider = nil
+			// Default SSOProviderID to null if the update request contains no SSOProviderID
+			user.SSOProvider = nil
+			user.SSOProviderID = null.NewInt32(0, false)
+		}
 
-			s.updateUser(response, request, user)
+		// Prevent a user from modifying their own roles/permissions
+		if user.ID == loggedInUser.ID {
+			if !slices.Equal(roles.IDs(), loggedInUser.Roles.IDs()) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSelfRoleChange, request), response)
+				return
+			} else if !user.SSOProviderID.Equal(loggedInUser.SSOProviderID) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSelfSSOProviderChange, request), response)
+				return
+			}
+		}
+
+		if err := s.db.UpdateUser(request.Context(), user); err != nil {
+			if errors.Is(err, database.ErrDuplicateUserPrincipal) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicatePrincipal, request), response)
+			} else {
+				api.HandleDatabaseError(request, response, err)
+			}
+		} else {
+			response.WriteHeader(http.StatusOK)
 		}
 	}
 }
@@ -634,39 +524,50 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 		setUserSecretRequest v2.SetUserSecretRequest
 		pathVars             = mux.Vars(request)
 		rawUserID            = pathVars[api.URIPathVariableUserID]
+		bhCtx                = ctx.FromRequest(request)
 	)
 
-	if userID, err := uuid.FromString(rawUserID); err != nil {
+	if loggedInUser, found := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !found {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+	} else if targetUserID, err := uuid.FromString(rawUserID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&setUserSecretRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if errs := validation.Validate(setUserSecretRequest); errs != nil {
-		msg := strings.Join(utils.Errors(errs).AsStringSlice(), ", ")
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, msg, request), response)
-	} else if targetUser, err := s.db.GetUser(request.Context(), userID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
+	} else if targetUser, err := s.db.GetUser(request.Context(), targetUserID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if targetUser.SAMLProviderID.Valid {
+	} else if targetUser.SSOProviderID.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid operation, user is SSO", request), response)
-	} else if passwordExpiration, err := appcfg.GetPasswordExpiration(request.Context(), s.db); err != nil {
-		log.Errorf("Error while attempting to fetch password expiration window: %v", err)
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseCodeInternalServerError, request), response)
-	} else if secretDigest, err := s.secretDigester.Digest(setUserSecretRequest.Secret); err != nil {
-		log.Errorf("Error while attempting to digest secret for user: %v", err)
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
-		authSecret.UserID = targetUser.ID
-		authSecret.Digest = secretDigest.String()
-		authSecret.DigestMethod = s.secretDigester.Method()
-		authSecret.ExpiresAt = time.Now().Add(passwordExpiration).UTC()
-
-		if setUserSecretRequest.NeedsPasswordReset {
-			authSecret.ExpiresAt = time.Time{}
+		if loggedInUser.ID == targetUserID {
+			if targetUser.AuthSecret == nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrNoUserSecret.Error(), request), response)
+			} else if err := s.authenticator.ValidateSecret(request.Context(), setUserSecretRequest.CurrentSecret, *targetUser.AuthSecret); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Invalid current password", request), response)
+				return
+			}
 		}
 
-		if err := s.setUserSecret(request.Context(), targetUser, authSecret); err != nil {
-			api.HandleDatabaseError(request, response, err)
+		passwordExpiration := appcfg.GetPasswordExpiration(request.Context(), s.db)
+		if secretDigest, err := s.secretDigester.Digest(setUserSecretRequest.Secret); err != nil {
+			log.Errorf("Error while attempting to digest secret for user: %v", err)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		} else {
-			response.WriteHeader(http.StatusOK)
+			authSecret.UserID = targetUser.ID
+			authSecret.Digest = secretDigest.String()
+			authSecret.DigestMethod = s.secretDigester.Method()
+			authSecret.ExpiresAt = time.Now().Add(passwordExpiration).UTC()
+
+			if setUserSecretRequest.NeedsPasswordReset {
+				authSecret.ExpiresAt = time.Time{}
+			}
+
+			if err := s.setUserSecret(request.Context(), targetUser, authSecret); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				response.WriteHeader(http.StatusOK)
+			}
 		}
 	}
 }
@@ -680,7 +581,7 @@ func (s ManagementResource) ExpireUserAuthSecret(response http.ResponseWriter, r
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if targetUser, err := s.db.GetUser(request.Context(), userID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if targetUser.SAMLProviderID.Valid {
+	} else if targetUser.SSOProviderID.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, "user has SAML auth enabled", request), response)
 	} else {
 		authSecret := targetUser.AuthSecret
@@ -813,9 +714,10 @@ func verifyUserID(createUserTokenRequest *v2.CreateUserToken, user model.User, b
 
 func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, request *http.Request) {
 	var (
-		pathVars   = mux.Vars(request)
-		rawTokenID = pathVars[api.URIPathVariableTokenID]
-		bhCtx      = ctx.FromRequest(request)
+		pathVars      = mux.Vars(request)
+		rawTokenID    = pathVars[api.URIPathVariableTokenID]
+		bhCtx         = ctx.FromRequest(request)
+		auditLogEntry model.AuditEntry
 	)
 
 	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !isUser {
@@ -824,13 +726,36 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if token, err := s.db.GetAuthToken(request.Context(), tokenID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if token.UserID.Valid && token.UserID.UUID != user.ID && !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
-		log.Errorf("Bad user ID: %s != %s", token.UserID.UUID.String(), user.ID.String())
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if err := s.db.DeleteAuthToken(request.Context(), token); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else {
-		response.WriteHeader(http.StatusOK)
+		// Log Intent to delete auth token for target user
+		if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionDeleteAuthToken, model.AuditLogStatusIntent, model.AuditData{"target_user_id": token.UserID.UUID, "id": token.ID.String()}); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+			return
+		} else if err = s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else if token.UserID.Valid && token.UserID.UUID != user.ID && !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
+		} else if err := s.db.DeleteAuthToken(request.Context(), token); err != nil {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			auditLogEntry.Status = model.AuditLogStatusSuccess
+			response.WriteHeader(http.StatusOK)
+		}
+
+		// Audit Log Result to delete auth token for target user
+		if err := s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+			// We want to keep err scoped because response trumps this error
+			if errors.Is(err, database.ErrNotFound) {
+				log.Errorf("resource not found: %v", err)
+			} else if errors.Is(err, context.DeadlineExceeded) {
+				log.Errorf("context deadline exceeded: %v", err)
+			} else {
+				log.Errorf("unexpected database error: %v", err)
+			}
+		}
 	}
 }
 
@@ -870,17 +795,17 @@ func (s ManagementResource) EnrollMFA(response http.ResponseWriter, request *htt
 	} else if userId, err := uuid.FromString(rawUserId); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorContentTypeJson.Error(), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrContentTypeJson.Error(), request), response)
 	} else if user, err := s.db.GetUser(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if user.SAMLProviderID.Valid {
+	} else if user.SSOProviderID.Valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid operation, user is SSO", request), response)
 	} else if user.AuthSecret.TOTPActivated {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsMFAActivated, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsMFAActivated, request), response)
 	} else if err := api.ValidateSecret(s.secretDigester, payload.Secret, *user.AuthSecret); err != nil {
 		// In this context an authenticated user revalidating their password for mfa enrollment should get a 400 bad request
 		// b/c the bearer token is valid despite the secret in the request payload being invalid
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsInvalidCurrentPassword, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsInvalidCurrentPassword, request), response)
 	} else if totpSecret, err := auth.GenerateTOTPSecret(host.String(), user.PrincipalName); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
@@ -910,7 +835,7 @@ func (s ManagementResource) DisenrollMFA(response http.ResponseWriter, request *
 	} else if userId, err := uuid.FromString(rawUserId); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorContentTypeJson.Error(), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrContentTypeJson.Error(), request), response)
 	} else if user, err := s.db.GetUser(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
@@ -934,7 +859,7 @@ func (s ManagementResource) DisenrollMFA(response http.ResponseWriter, request *
 		if err := api.ValidateSecret(s.secretDigester, payload.Secret, secretToValidate); err != nil {
 			// In this context an authenticated user revalidating their password for mfa enrollment should get a 400 bad request
 			// b/c the bearer token is valid despite the secret in the request payload being invalid
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsInvalidCurrentPassword, request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsInvalidCurrentPassword, request), response)
 			return
 		}
 
@@ -982,11 +907,11 @@ func (s ManagementResource) ActivateMFA(response http.ResponseWriter, request *h
 	} else if userId, err := uuid.FromString(rawUserId); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorContentTypeJson.Error(), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrContentTypeJson.Error(), request), response)
 	} else if user, err := s.db.GetUser(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if user.AuthSecret.TOTPSecret == "" {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorResponseDetailsMFAEnrollmentRequired, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsMFAEnrollmentRequired, request), response)
 	} else if !totp.Validate(payload.OTP, user.AuthSecret.TOTPSecret) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsOTPInvalid, request), response)
 	} else {

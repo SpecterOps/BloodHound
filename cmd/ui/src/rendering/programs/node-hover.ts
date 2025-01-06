@@ -17,12 +17,7 @@
 import { Settings } from 'sigma/settings';
 import { NodeDisplayData, PartialButFor } from 'sigma/types';
 import drawLabel from 'src/rendering/programs/node-label';
-import {
-    HIGHLIGHTED_LABEL_BACKGROUND_COLOR,
-    HIGHLIGHTED_LABEL_FONT_COLOR,
-    calculateLabelOpacity,
-    getNodeRadius,
-} from 'src/rendering/utils/utils';
+import { calculateLabelOpacity, getNodeRadius } from 'src/rendering/utils/utils';
 
 export default function drawHover(
     context: CanvasRenderingContext2D,
@@ -36,7 +31,7 @@ export default function drawHover(
     const size = settings.labelSize * inverseSqrtZoomRatio;
 
     context.font = `${weight} ${size}px ${font}`;
-    context.fillStyle = HIGHLIGHTED_LABEL_BACKGROUND_COLOR;
+    context.fillStyle = data.highlightedBackground;
 
     const PADDING = 2;
     const radius = getNodeRadius(true, inverseSqrtZoomRatio, data.size);
@@ -75,7 +70,7 @@ export default function drawHover(
 
     // toggle the default text color before/after this drawLabel call so that the color is only
     // changed for hovered nodes
-    settings.labelColor.color = HIGHLIGHTED_LABEL_FONT_COLOR;
+    settings.labelColor.color = data.highlightedText;
     drawLabel(context, data, settings);
-    settings.labelColor.color = '#000';
+    settings.labelColor.color = data.labelColor;
 }

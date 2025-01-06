@@ -19,6 +19,8 @@ package query
 import (
 	_ "embed"
 	"fmt"
+	"strings"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -282,7 +284,7 @@ func (s Query) SelectTableIndexDefinitions(tableName string) ([]string, error) {
 			return nil, err
 		}
 
-		definitions = append(definitions, definition)
+		definitions = append(definitions, strings.ToLower(definition))
 	}
 
 	return definitions, result.Error()

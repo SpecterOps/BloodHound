@@ -406,11 +406,22 @@ func (s *Properties) Exists(key string) bool {
 // GetOrDefault fetches a value from the Properties by key. If the key is not present in the Properties this
 // function returns the given default value instead.
 func (s *Properties) GetOrDefault(key string, defaultValue any) PropertyValue {
+	return s.GetWithFallback(key, defaultValue)
+}
+
+func (s *Properties) GetWithFallback(key string, defaultValue any, fallbackKeys ...string) PropertyValue {
 	value := defaultValue
 
 	if s.Map != nil {
 		if mapValue, found := s.Map[key]; found && mapValue != nil {
 			value = mapValue
+		} else if !found && len(fallbackKeys) > 0 {
+			for _, fallbackKey := range fallbackKeys {
+				if fallbackValue, fallbackFound := s.Map[fallbackKey]; fallbackFound && fallbackValue != nil {
+					value = fallbackValue
+					break
+				}
+			}
 		}
 	}
 

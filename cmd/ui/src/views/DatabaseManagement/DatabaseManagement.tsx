@@ -14,15 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Button, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
-import { ContentPage, apiClient } from 'bh-shared-ui';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Alert, Box, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
+import { PageWithTitle, apiClient, FeatureFlag } from 'bh-shared-ui';
 import { useReducer } from 'react';
 import ConfirmationDialog from './ConfirmationDialog';
 import { useMutation } from 'react-query';
 import { useSelector } from 'react-redux';
 import { selectAllAssetGroupIds, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { ClearDatabaseRequest } from 'js-client-library';
-import FeatureFlag from 'src/components/FeatureFlag';
 
 const initialState: State = {
     deleteCollectedGraphData: false,
@@ -220,11 +220,15 @@ const DatabaseManagement = () => {
     };
 
     return (
-        <ContentPage title='Clear BloodHound Data'>
-            <Box>
-                <Typography variant='body1'>
+        <PageWithTitle
+            title='Database Management'
+            data-testid='database-management'
+            pageDescription={
+                <Typography variant='body2' paragraph>
                     Manage your BloodHound data. Select from the options below which data should be deleted.
                 </Typography>
+            }>
+            <Box>
                 <Alert severity='warning' sx={{ mt: '1rem' }}>
                     <strong>Caution: </strong> This change is irreversible and will delete data from your environment.
                 </Alert>
@@ -308,14 +312,7 @@ const DatabaseManagement = () => {
                         </FormGroup>
                     </FormControl>
 
-                    <Button
-                        color='primary'
-                        variant='contained'
-                        disableElevation
-                        sx={{ width: '150px' }}
-                        onClick={() => dispatch({ type: 'open_dialog' })}>
-                        Proceed
-                    </Button>
+                    <Button onClick={() => dispatch({ type: 'open_dialog' })}>Proceed</Button>
                 </Box>
             </Box>
 
@@ -324,7 +321,7 @@ const DatabaseManagement = () => {
                 handleClose={() => dispatch({ type: 'close_dialog' })}
                 handleDelete={() => handleMutation()}
             />
-        </ContentPage>
+        </PageWithTitle>
     );
 };
 

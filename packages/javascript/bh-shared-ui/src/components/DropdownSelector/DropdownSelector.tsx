@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Button, MenuItem, Popover, Tooltip, Typography } from '@mui/material';
+import { Box, MenuItem, Popover, Tooltip, Typography } from '@mui/material';
 import { FC, useState } from 'react';
 import { DropdownOption } from './types';
 
@@ -24,7 +25,7 @@ const DropdownSelector: FC<{
     selectedText: string;
     fullWidth?: boolean;
     onChange: (selection: DropdownOption) => void;
-}> = ({ options, selectedText, fullWidth, onChange }) => {
+}> = ({ options, selectedText, onChange, fullWidth }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
 
@@ -39,16 +40,14 @@ const DropdownSelector: FC<{
     return (
         <Box p={1}>
             <Button
-                sx={{
+                style={{
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     display: 'block',
+                    width: fullWidth ? '100%' : '',
+                    textTransform: 'uppercase',
                 }}
-                fullWidth={fullWidth}
-                variant='contained'
-                disableElevation
-                color='primary'
                 onClick={handleClick}
                 data-testid='dropdown_context-selector'>
                 {selectedText}

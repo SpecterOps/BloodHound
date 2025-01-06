@@ -15,7 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Divider, Typography, useTheme } from '@mui/material';
-import { EdgeCompositionRelationships, EdgeInfoComponents, EdgeSections, SelectedEdge, apiClient } from 'bh-shared-ui';
+import {
+    EdgeCompositionRelationships,
+    EdgeInfoComponents,
+    EdgeSections,
+    SelectedEdge,
+    apiClient,
+    useFetchEntityProperties,
+} from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import { Dispatch, FC, Fragment } from 'react';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
@@ -61,6 +68,8 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
 
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
+    const { objectId, type } = targetNode;
+    const { entityProperties: targetNodeProperties } = useFetchEntityProperties({ objectId, nodeType: type });
 
     return (
         <Box>
@@ -99,7 +108,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                         targetName={targetNode.name}
                                         targetType={targetNode.type}
                                         targetId={targetNode.objectId}
-                                        haslaps={!!targetNode.haslaps}
+                                        haslaps={!!targetNodeProperties?.haslaps}
                                     />
                                 </EdgeInfoCollapsibleSection>
                             </Fragment>

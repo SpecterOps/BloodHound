@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package impact_test
@@ -19,10 +19,10 @@ package impact_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -60,8 +60,8 @@ func node(nodeKinds ...graph.Kind) *graph.Node {
 	return graph.NewNode(getNextID(), nil, nodeKinds...)
 }
 
-func requireImpact(t *testing.T, agg impact.Aggregator, nodeID uint32, containedNodes ...uint32) {
-	nodeImpact := agg.Cardinality(nodeID).(cardinality.Duplex[uint32])
+func requireImpact(t *testing.T, agg impact.Aggregator, nodeID uint64, containedNodes ...uint64) {
+	nodeImpact := agg.Cardinality(nodeID).(cardinality.Duplex[uint64])
 
 	if int(nodeImpact.Cardinality()) != len(containedNodes) {
 		t.Fatalf("Expected node %d to contain %d impacting nodes but saw %d: %v", int(nodeID), len(containedNodes), int(nodeImpact.Cardinality()), nodeImpact.Slice())
@@ -93,8 +93,8 @@ func TestAggregator_NonImpactingShortcut(t *testing.T) {
 		node2Segment         = descend(rootSegment, node2)
 		node1ToNode2Shortcut = descend(node2Segment, node1)
 
-		agg = impact.NewAggregator(func() cardinality.Provider[uint32] {
-			return cardinality.NewBitmap32()
+		agg = impact.NewAggregator(func() cardinality.Provider[uint64] {
+			return cardinality.NewBitmap64()
 		})
 	)
 
@@ -152,8 +152,8 @@ func TestAggregator_Impact(t *testing.T) {
 		node11to10Terminal = descend(node11Segment, node10)
 
 		// Make sure to use an exact cardinality container (bitset in this case)
-		agg = impact.NewAggregator(func() cardinality.Provider[uint32] {
-			return cardinality.NewBitmap32()
+		agg = impact.NewAggregator(func() cardinality.Provider[uint64] {
+			return cardinality.NewBitmap64()
 		})
 	)
 

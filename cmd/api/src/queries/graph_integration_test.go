@@ -165,6 +165,7 @@ func TestGetEntityResults(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
+	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
 		objectID, err := harness.InboundControl.ControlledUser.Properties.Get(common.ObjectID.String()).String()
 		require.Nil(t, err)
@@ -197,6 +198,7 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
 
+	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
 		objectID, err := harness.InboundControl.ControlledUser.Properties.Get(common.ObjectID.String()).String()
 		require.Nil(t, err)
@@ -230,6 +232,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 2})
 	require.Nil(t, err)
 
+	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
 		objectID, err := harness.InboundControl.ControlledUser.Properties.Get(common.ObjectID.String()).String()
 		require.Nil(t, err)
@@ -270,6 +273,7 @@ func TestGetEntityResults_Cache(t *testing.T) {
 
 func TestGetAssetGroupComboNode(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
 		graphQuery := queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
 		comboNode, err := graphQuery.GetAssetGroupComboNode(context.Background(), "", ad.AdminTierZero)
@@ -284,6 +288,35 @@ func TestGetAssetGroupComboNode(t *testing.T) {
 		// ensure that nodes from within T0 as well as from other domains all have the category tagged
 		require.Equal(t, "Asset Groups", groupACategory)
 		require.Equal(t, "Asset Groups", groupBCategory)
+	})
+}
+
+func TestGetAssetGroupNodes(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.AssetGroupNodesHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		graphQuery := queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
+
+		tierZeroNodes, err := graphQuery.GetAssetGroupNodes(context.Background(), harness.AssetGroupNodesHarness.TierZeroTag, true)
+		require.Nil(t, err)
+
+		customGroup1Nodes, err := graphQuery.GetAssetGroupNodes(context.Background(), harness.AssetGroupNodesHarness.CustomTag1, false)
+		require.Nil(t, err)
+
+		customGroup2Nodes, err := graphQuery.GetAssetGroupNodes(context.Background(), harness.AssetGroupNodesHarness.CustomTag2, false)
+		require.Nil(t, err)
+
+		require.True(t, tierZeroNodes.Contains(harness.AssetGroupNodesHarness.GroupB))
+		require.True(t, tierZeroNodes.Contains(harness.AssetGroupNodesHarness.GroupC))
+		require.Equal(t, 2, len(tierZeroNodes))
+
+		require.True(t, customGroup1Nodes.Contains(harness.AssetGroupNodesHarness.GroupD))
+		require.Equal(t, 1, len(customGroup1Nodes))
+
+		require.True(t, customGroup2Nodes.Contains(harness.AssetGroupNodesHarness.GroupE))
+		require.Equal(t, 1, len(customGroup2Nodes))
 	})
 }
 

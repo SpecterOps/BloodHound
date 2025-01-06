@@ -23,6 +23,7 @@ import {
     NodeIcon,
     searchbarActions,
     TIER_ZERO_TAG,
+    OWNED_OBJECT_TAG,
 } from 'bh-shared-ui';
 import { useAppDispatch } from 'src/store';
 
@@ -71,6 +72,7 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
     return (
         <>
             {props.system_tags?.includes(TIER_ZERO_TAG) && <Field label='Tier Zero:' value={true} />}
+            {props.system_tags?.includes(OWNED_OBJECT_TAG) && <Field label='Owned Object:' value={true} />}
             {props.displayname && <Field label='Display Name:' value={props.displayname} />}
             <Field label='Object ID:' value={props.objectid} />
             {props.service_principal_id &&

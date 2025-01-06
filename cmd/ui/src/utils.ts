@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { apiClient } from 'bh-shared-ui';
+import { GlyphIconInfo, apiClient } from 'bh-shared-ui';
 import { FlatGraphResponse, GraphData, GraphResponse, StyledGraphEdge, StyledGraphNode } from 'js-client-library';
 import identity from 'lodash/identity';
 import throttle from 'lodash/throttle';
@@ -24,6 +24,8 @@ import { addSnackbar } from 'src/ducks/global/actions';
 import { isLink, isNode } from 'src/ducks/graph/utils';
 import { Glyph } from 'src/rendering/programs/node.glyphs';
 import { store } from 'src/store';
+
+const IGNORE_401_LOGOUT = ['/api/v2/login', '/api/v2/logout', '/api/v2/features'];
 
 export const getDatesInRange = (startDate: Date, endDate: Date) => {
     const date = new Date(startDate.getTime());
@@ -74,19 +76,42 @@ export const initializeBHEClient = () => {
 
         (error) => {
             if (error?.response) {
-                if (
-                    error?.response?.status === 401 &&
-                    error?.response?.config.url !== '/api/v2/login' &&
-                    error?.response?.config.url !== '/api/v2/logout'
+                if (error?.response?.status === 401) {
+                    if (IGNORE_401_LOGOUT.includes(error?.response?.config.url) === false) {
+                        throttledLogout();
+                    }
+                } else if (
+                    error?.response?.status === 403 &&
+                    !error?.response?.config.url.match('/api/v2/bloodhound-users/[a-z0-9-]+/secret')
                 ) {
-                    throttledLogout();
-                } else if (error?.response?.status === 403) {
                     store.dispatch(addSnackbar('Permission denied!', 'permissionDenied'));
                 }
             }
             return Promise.reject(error);
         }
     );
+};
+
+type ThemedLabels = {
+    labelColor: string;
+    backgroundColor: string;
+    highlightedBackground: string;
+    highlightedText: string;
+};
+
+type ThemedGlyph = {
+    colors: {
+        backgroundColor: string;
+        color: string;
+    };
+    tierZeroGlyph: GlyphIconInfo;
+    ownedObjectGlyph: GlyphIconInfo;
+};
+
+export type ThemedOptions = {
+    labels: ThemedLabels;
+    nodeBorderColor: string;
+    glyph: ThemedGlyph;
 };
 
 export type NodeParams = {
@@ -101,7 +126,7 @@ export type NodeParams = {
     label?: string;
     glyphs?: Glyph[];
     forceLabel?: boolean;
-};
+} & ThemedLabels;
 
 export interface Index<T> {
     [id: string]: T;
@@ -118,7 +143,6 @@ export type EdgeParams = {
     size: number;
     type: string;
     label: string;
-    color: string;
     exploreGraphId: string;
     groupPosition?: number;
     groupSize?: number;
@@ -126,7 +150,7 @@ export type EdgeParams = {
     control?: Coordinates;
     controlInViewport?: Coordinates;
     forceLabel?: boolean;
-};
+} & ThemedLabels;
 
 const getLastSeenValue = (object: any): string => {
     if (object.lastSeen) return object.lastSeen;
@@ -153,6 +177,7 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
                 kind: node.data.nodetype,
                 objectId: node.data.objectid,
                 isTierZero: !!(node.data.system_tags && node.data.system_tags.indexOf('admin_tier_0') !== -1),
+                isOwnedObject: !!(node.data.system_tags && node.data.system_tags.indexOf('owned') !== -1),
                 lastSeen: lastSeen,
             };
         } else if (isLink(item)) {
@@ -178,6 +203,14 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
     const result: any = {};
     for (const [key, value] of Object.entries(graph.data.nodes)) {
         const lastSeen = getLastSeenValue(value);
+        // Check and add needed system_tags to node
+        const tags = [];
+        {
+            value.isTierZero ? tags.push('admin_tier_0') : null;
+        }
+        {
+            value.isOwnedObject ? tags.push('owned') : null;
+        }
         result[key] = {
             label: {
                 text: value.label,
@@ -186,7 +219,7 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 nodetype: value.kind,
                 name: value.label,
                 objectid: value.objectId,
-                system_tags: value.isTierZero ? 'admin_tier_0' : undefined,
+                system_tags: tags.join(' '),
                 lastseen: lastSeen,
             },
         };

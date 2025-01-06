@@ -22,16 +22,16 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"gorm.io/gorm"
-
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
+	"gorm.io/gorm"
 )
 
 // NewClientAuthToken creates a new Client AuthToken row using the details provided
@@ -103,7 +103,7 @@ func (s *BloodhoundDB) GetAllRoles(ctx context.Context, order string, filter mod
 		cursor = cursor.Order(order)
 	}
 	if filter.SQLString != "" {
-		cursor = cursor.Where(filter.SQLString, filter.Params)
+		cursor = cursor.Where(filter.SQLString, filter.Params...)
 	}
 
 	return roles, CheckError(cursor.Find(&roles))
@@ -144,7 +144,7 @@ func (s *BloodhoundDB) GetAllPermissions(ctx context.Context, order string, filt
 	}
 
 	if filter.SQLString != "" {
-		cursor = cursor.Where(filter.SQLString, filter.Params)
+		cursor = cursor.Where(filter.SQLString, filter.Params...)
 	}
 
 	return permissions, CheckError(cursor.Find(&permissions))
@@ -263,7 +263,15 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 		Model:  &updatedUser,
 	}
 	return updatedUser, s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Create(&updatedUser))
+		result := tx.WithContext(ctx).Create(&updatedUser)
+
+		if result.Error != nil {
+			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"users_principal_name_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateUserPrincipal, tx.Error)
+			}
+		}
+
+		return CheckError(result)
 	})
 }
 
@@ -281,7 +289,27 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 			return err
 		}
 
+		// AuthSecret must be manually retrieved and deleted
+		if user.AuthSecret == nil {
+			var authSecret model.AuthSecret
+			if err := tx.Raw("SELECT * FROM auth_secrets WHERE user_id = ?", user.ID).First(&authSecret).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			} else if authSecret.ID > 0 {
+				bhdb := NewBloodhoundDB(tx, s.idResolver)
+				if err := bhdb.DeleteAuthSecret(ctx, authSecret); err != nil {
+					return err
+				}
+			}
+		}
+
 		result := tx.WithContext(ctx).Save(&user)
+
+		if result.Error != nil {
+			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"users_principal_name_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateUserPrincipal, tx.Error)
+			}
+		}
+
 		return CheckError(result)
 	})
 }
@@ -298,7 +326,7 @@ func (s *BloodhoundDB) GetAllUsers(ctx context.Context, order string, filter mod
 	}
 
 	if filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params).Find(&users)
+		result = cursor.Where(filter.SQLString, filter.Params...).Find(&users)
 	} else {
 		result = cursor.Find(&users)
 	}
@@ -392,7 +420,7 @@ func (s *BloodhoundDB) GetAllAuthTokens(ctx context.Context, order string, filte
 	}
 
 	if filter.SQLString != "" {
-		cursor = cursor.Where(filter.SQLString, filter.Params)
+		cursor = cursor.Where(filter.SQLString, filter.Params...)
 	}
 
 	return tokens, CheckError(cursor.Find(&tokens))
@@ -409,14 +437,7 @@ func (s *BloodhoundDB) GetUserToken(ctx context.Context, userId, tokenId uuid.UU
 // DeleteAuthToken deletes the provided AuthToken row
 // DELETE FROM auth_tokens WHERE id = ...
 func (s *BloodhoundDB) DeleteAuthToken(ctx context.Context, authToken model.AuthToken) error {
-	auditEntry := model.AuditEntry{
-		Action: model.AuditLogActionDeleteAuthToken,
-		Model:  &authToken,
-	}
-
-	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Where("id = ?", authToken.ID).Delete(&authToken))
-	})
+	return CheckError(s.db.WithContext(ctx).Where("id = ?", authToken.ID).Delete(&authToken))
 }
 
 // CreateAuthSecret creates a new AuthSecret row
@@ -437,7 +458,7 @@ func (s *BloodhoundDB) CreateAuthSecret(ctx context.Context, authSecret model.Au
 func (s *BloodhoundDB) GetAuthSecret(ctx context.Context, id int32) (model.AuthSecret, error) {
 	var (
 		authSecret model.AuthSecret
-		result     = s.db.WithContext(ctx).Find(&authSecret, id)
+		result     = s.db.WithContext(ctx).First(&authSecret, id)
 	)
 
 	return authSecret, CheckError(result)
@@ -470,85 +491,6 @@ func (s *BloodhoundDB) DeleteAuthSecret(ctx context.Context, authSecret model.Au
 	})
 }
 
-// CreateSAMLProvider creates a new saml_providers row using the data in the input struct
-// INSERT INTO saml_identity_providers (...) VALUES (...)
-func (s *BloodhoundDB) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider) (model.SAMLProvider, error) {
-	auditEntry := model.AuditEntry{
-		Action: model.AuditLogActionCreateSAMLIdentityProvider,
-		Model:  &samlProvider, // Pointer is required to ensure success log contains updated fields after transaction
-	}
-
-	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Create(&samlProvider))
-	})
-
-	return samlProvider, err
-}
-
-// CreateSAMLProvider updates a saml_providers row using the data in the input struct
-// UPDATE saml_identity_providers SET (...) VALUES (...) WHERE id = ...
-func (s *BloodhoundDB) UpdateSAMLIdentityProvider(ctx context.Context, provider model.SAMLProvider) error {
-	auditEntry := model.AuditEntry{
-		Action: model.AuditLogActionUpdateSAMLIdentityProvider,
-		Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
-	}
-
-	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Save(&provider))
-	})
-}
-
-// LookupSAMLProviderByName returns a SAML provider corresponding to the name provided
-// SELECT * FROM saml_providers WHERE name = ....
-func (s *BloodhoundDB) LookupSAMLProviderByName(ctx context.Context, name string) (model.SAMLProvider, error) {
-	var (
-		samlProvider model.SAMLProvider
-		result       = s.db.WithContext(ctx).Where("name = ?", name).Find(&samlProvider)
-	)
-
-	return samlProvider, CheckError(result)
-}
-
-// GetAllSAMLProviders returns all SAML providers
-// SELECT * FROM saml_providers
-func (s *BloodhoundDB) GetAllSAMLProviders(ctx context.Context) (model.SAMLProviders, error) {
-	var (
-		samlProviders model.SAMLProviders
-		result        = s.db.WithContext(ctx).Find(&samlProviders)
-	)
-
-	return samlProviders, CheckError(result)
-}
-
-// GetSAMLProvider returns a SAML provider corresponding to the ID provided
-// SELECT * FOM saml_providers WHERE id = ..
-func (s *BloodhoundDB) GetSAMLProvider(ctx context.Context, id int32) (model.SAMLProvider, error) {
-	var (
-		samlProvider model.SAMLProvider
-		result       = s.db.WithContext(ctx).First(&samlProvider, id)
-	)
-
-	return samlProvider, CheckError(result)
-}
-
-func (s *BloodhoundDB) DeleteSAMLProvider(ctx context.Context, provider model.SAMLProvider) error {
-	auditEntry := model.AuditEntry{
-		Action: model.AuditLogActionDeleteSAMLIdentityProvider,
-		Model:  &provider, // Pointer is required to ensure success log contains updated fields after transaction
-	}
-
-	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		return CheckError(tx.WithContext(ctx).Delete(&provider))
-	})
-}
-
-// GetSAMLProviderUsers returns all users that are bound to the SAML provider ID provided
-// SELECT * FROM users WHERE saml_provider_id = ..
-func (s *BloodhoundDB) GetSAMLProviderUsers(ctx context.Context, id int32) (model.Users, error) {
-	var users model.Users
-	return users, CheckError(s.preload(model.UserAssociations()).WithContext(ctx).Where("saml_provider_id = ?", id).Find(&users))
-}
-
 // CreateUserSession creates a new UserSession row
 // INSERT INTO user_sessions (...) VALUES (..)
 func (s *BloodhoundDB) CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error) {
@@ -564,6 +506,29 @@ func (s *BloodhoundDB) CreateUserSession(ctx context.Context, userSession model.
 // UPDATE user_sessions SET expires_at = <now> WHERE user_id = ...
 func (s *BloodhoundDB) EndUserSession(ctx context.Context, userSession model.UserSession) {
 	s.db.Model(&userSession).WithContext(ctx).Update("expires_at", gorm.Expr("NOW()"))
+}
+
+// corresponding retrival function is model.UserSession.GetFlag()
+func (s *BloodhoundDB) SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key model.SessionFlagKey, state bool) error {
+	if userSession.ID == 0 {
+		return errors.New("invalid session - missing session id")
+	}
+
+	auditEntry := model.AuditEntry{}
+	doAudit := false
+	// only audit if the new state is true, meaning the EULA is currently being accepted
+	// INFO: The FedEULA is only applicable to select enterprise installations
+	if key == model.SessionFlagFedEULAAccepted && state {
+		doAudit = true
+		auditEntry.Action = model.AuditLogActionAcceptFedEULA
+	}
+	return s.MaybeAuditableTransaction(ctx, !doAudit, auditEntry, func(tx *gorm.DB) error {
+		if userSession.Flags == nil {
+			userSession.Flags = types.JSONBBoolObject{}
+		}
+		userSession.Flags[string(key)] = state
+		return CheckError(tx.Model(&userSession).WithContext(ctx).Update("flags", userSession.Flags))
+	})
 }
 
 func (s *BloodhoundDB) LookupActiveSessionsByUser(ctx context.Context, user model.User) ([]model.UserSession, error) {

@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/query/neo4j"
 
@@ -45,13 +45,13 @@ type QueryOutputAssertion struct {
 	Parameters map[string]any
 }
 
-func expectAnalysisError(rawQuery *model.RegularQuery) func(t *testing.T) {
+func expectAnalysisError(rawQuery *cypher.RegularQuery) func(t *testing.T) {
 	return func(t *testing.T) {
 		require.NotNil(t, neo4j.NewQueryBuilder(rawQuery).Prepare())
 	}
 }
 
-func assertQueryShortestPathResult(rawQuery *model.RegularQuery, expectedOutput string, expectedParameters ...map[string]any) func(t *testing.T) {
+func assertQueryShortestPathResult(rawQuery *cypher.RegularQuery, expectedOutput string, expectedParameters ...map[string]any) func(t *testing.T) {
 	return func(t *testing.T) {
 		builder := neo4j.NewQueryBuilder(rawQuery)
 
@@ -69,7 +69,7 @@ func assertQueryShortestPathResult(rawQuery *model.RegularQuery, expectedOutput 
 	}
 }
 
-func assertQueryResult(rawQuery *model.RegularQuery, expectedOutput string, expectedParameters ...map[string]any) func(t *testing.T) {
+func assertQueryResult(rawQuery *cypher.RegularQuery, expectedOutput string, expectedParameters ...map[string]any) func(t *testing.T) {
 	return func(t *testing.T) {
 		var (
 			builder    = neo4j.NewQueryBuilder(rawQuery)
@@ -92,7 +92,7 @@ func assertQueryResult(rawQuery *model.RegularQuery, expectedOutput string, expe
 	}
 }
 
-func assertOneOfQueryResult(rawQuery *model.RegularQuery, expectations []QueryOutputAssertion) func(t *testing.T) {
+func assertOneOfQueryResult(rawQuery *cypher.RegularQuery, expectations []QueryOutputAssertion) func(t *testing.T) {
 	return func(t *testing.T) {
 		builder := neo4j.NewQueryBuilder(rawQuery)
 
@@ -118,7 +118,7 @@ func assertOneOfQueryResult(rawQuery *model.RegularQuery, expectations []QueryOu
 				msg += "\n\t" + expectation.Query
 			}
 
-			t.Fatalf(msg)
+			t.Fatalf(msg) //nolint:all // Ignore non-constant format string failure because it's test code
 		} else if matchingExpectation.Parameters != nil {
 			require.Equal(t, matchingExpectation.Parameters, builder.Parameters)
 		}

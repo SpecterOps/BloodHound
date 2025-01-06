@@ -19,6 +19,8 @@ package v2
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/azure"
@@ -26,7 +28,6 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
-	"net/http"
 )
 
 func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Request) {

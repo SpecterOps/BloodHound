@@ -18,9 +18,12 @@ package ops
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"sync"
 
-	"github.com/RoaringBitmap/roaring/roaring64"
+	"github.com/specterops/bloodhound/dawgs/util/channels"
+
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -406,14 +409,159 @@ func FetchRelationshipNodes(tx graph.Transaction, relationship *graph.Relationsh
 	}
 }
 
-func NodeQueryToIDBitmap(query graph.NodeQuery) (*roaring64.Bitmap, error) {
-	bitmap := roaring64.NewBitmap()
+// CountNodes will fetch the current number of nodes in the database that match the given criteria
+func CountNodes(ctx context.Context, db graph.Database, criteria ...graph.Criteria) (int64, error) {
+	var (
+		nodeCount int64
 
-	return bitmap, query.FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
-		for nextID := range cursor.Chan() {
-			bitmap.Add(nextID.Uint64())
+		err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+			if fetchedNodeCount, err := tx.Nodes().Filter(query.And(criteria...)).Count(); err != nil {
+				return err
+			} else {
+				nodeCount = fetchedNodeCount
+			}
+
+			return nil
+		})
+	)
+
+	return nodeCount, err
+}
+
+// FetchLargestNodeID will fetch the current node database identifier ceiling.
+func FetchLargestNodeID(ctx context.Context, db graph.Database) (graph.ID, error) {
+	var (
+		largestNodeID graph.ID
+
+		err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+			if node, err := tx.Nodes().OrderBy(query.Order(query.NodeID(), query.Descending())).Limit(1).First(); err != nil {
+				return err
+			} else {
+				largestNodeID = node.ID
+			}
+
+			return nil
+		})
+	)
+
+	return largestNodeID, err
+}
+
+func parallelFetchNodes(ctx context.Context, db graph.Database, maxID graph.ID, criteria graph.Criteria, numWorkers int) (graph.NodeSet, error) {
+	const stride = 20_000
+
+	var (
+		rangeC   = make(chan graph.ID)
+		nodeC    = make(chan *graph.Node)
+		errorC   = make(chan error)
+		nodes    = graph.NodeSet{}
+		workerWG = &sync.WaitGroup{}
+		mergeWG  = &sync.WaitGroup{}
+		errs     []error
+	)
+
+	// Fetch workers
+	for workerID := 0; workerID < numWorkers; workerID++ {
+		workerWG.Add(1)
+
+		go func() {
+			defer workerWG.Done()
+
+			if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+				// Create a slice of criteria to join the node ID range constraints to any passed user criteria
+				var criteriaSlice []graph.Criteria
+
+				if criteria != nil {
+					criteriaSlice = append(criteriaSlice, criteria)
+				}
+
+				// Select the next node ID range floor while honoring context cancellation and channel closure
+				nextRangeFloor, channelOpen := channels.Receive(ctx, rangeC)
+
+				for channelOpen {
+					if err := tx.Nodes().Filter(query.And(
+						append(criteriaSlice,
+							query.GreaterThanOrEquals(query.NodeID(), nextRangeFloor),
+							query.LessThan(query.NodeID(), nextRangeFloor+stride),
+						)...,
+					)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+						channels.PipeAll(ctx, cursor.Chan(), nodeC)
+						return cursor.Error()
+					}); err != nil {
+						return err
+					}
+
+					nextRangeFloor, channelOpen = channels.Receive(ctx, rangeC)
+				}
+
+				return nil
+			}); err != nil {
+				channels.Submit(ctx, errorC, err)
+			}
+		}()
+	}
+
+	// Merge goroutine for fetched nodes and collected errors
+	mergeWG.Add(1)
+
+	go func() {
+		defer mergeWG.Done()
+
+		for {
+			select {
+			case <-ctx.Done():
+				// Bail if the context is canceled
+				return
+
+			case nextNode, channelOpen := <-nodeC:
+				if !channelOpen {
+					// Channel closure indicates completion of work and join of the parallel workers
+					return
+				}
+
+				nodes.Add(nextNode)
+
+			case nextErr, channelOpen := <-errorC:
+				if !channelOpen {
+					// Channel closure indicates completion of work and join of the parallel workers
+					return
+				}
+
+				errs = append(errs, nextErr)
+			}
+		}
+	}()
+
+	// Iterate through node ID ranges up to the maximum ID by the stride constant
+	for nextRangeFloor := graph.ID(0); nextRangeFloor <= maxID; nextRangeFloor += stride {
+		channels.Submit(ctx, rangeC, nextRangeFloor)
+	}
+
+	// Stop the fetch workers
+	close(rangeC)
+	workerWG.Wait()
+
+	// Wait for the merge routine to join to ensure that both the nodes instance and the errs instance contain
+	// everything to be collected from the parallel workers
+	close(nodeC)
+	close(errorC)
+	mergeWG.Wait()
+
+	// Return the fetched nodes and joined errors lastly
+	return nodes, errors.Join(errs...)
+}
+
+// ParallelFetchNodes will first look up the largest node database identifier. The function will then spin up to
+// numWorkers parallel read transactions. Each transaction will apply the user passed criteria to this function to a
+// range of node database identifiers to avoid parallel worker collisions.
+func ParallelFetchNodes(ctx context.Context, db graph.Database, criteria graph.Criteria, numWorkers int) (graph.NodeSet, error) {
+	if largestNodeID, err := FetchLargestNodeID(ctx, db); err != nil {
+		if graph.IsErrNotFound(err) {
+			return graph.NodeSet{}, nil
 		}
 
-		return cursor.Error()
-	})
+		return nil, err
+	} else {
+		return parallelFetchNodes(ctx, db, largestNodeID, criteria, numWorkers)
+	}
 }

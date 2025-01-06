@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Permission, PERMISSIONS } from 'bh-shared-ui';
+import { createAuthStateWithPermissions, Permission } from 'bh-shared-ui';
 import { renderHook } from 'src/test-utils';
 import usePermissions, { PermissionsFns } from './usePermissions';
 
@@ -22,15 +22,7 @@ describe('usePermissions', () => {
     const getPermissionsWithUser = (permissions: Permission[]): PermissionsFns => {
         return renderHook(() => usePermissions(), {
             initialState: {
-                auth: {
-                    user: {
-                        roles: [
-                            {
-                                permissions: permissions.map((p) => PERMISSIONS[p]),
-                            },
-                        ],
-                    },
-                },
+                auth: createAuthStateWithPermissions(permissions),
             },
         }).result.current;
     };

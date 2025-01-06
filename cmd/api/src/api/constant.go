@@ -22,6 +22,8 @@ const (
 
 	// Cookie Keys
 	AuthTokenCookieName = "token"
+	AuthStateCookieName = "state"
+	AuthPKCECookieName  = "pkce"
 
 	// UserInterfacePath is the static path to the UI landing page
 	UserInterfacePath = "/ui"
@@ -36,6 +38,9 @@ const (
 	QueryParameterHydrateCounts  = "counts"
 	QueryParameterHydrateDomains = "hydrate_domains"
 	QueryParameterHydrateOUs     = "hydrate_ous"
+	QueryParameterScope          = "scope"
+	QueryParameterState          = "state"
+	QueryParameterCode           = "code"
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"
@@ -43,6 +48,7 @@ const (
 	URIPathVariableAssetGroupSelectorID              = "asset_group_selector_id"
 	URIPathVariableAttackPathID                      = "attack_path_id"
 	URIPathVariableClientID                          = "client_id"
+	URIPathVariableDataType                          = "data_type"
 	URIPathVariableDomainID                          = "domain_id"
 	URIPathVariableEventID                           = "event_id"
 	URIPathVariableFeatureID                         = "feature_id"
@@ -52,10 +58,11 @@ const (
 	URIPathVariablePlatformID                        = "platform_id"
 	URIPathVariableRoleID                            = "role_id"
 	URIPathVariableSAMLProviderID                    = "saml_provider_id"
-	URIPathVariableServiceProviderName               = "saml_provider_name"
 	URIPathVariableTaskID                            = "task_id"
 	URIPathVariableTenantID                          = "tenant_id"
 	URIPathVariableTokenID                           = "token_id"
 	URIPathVariableUserID                            = "user_id"
 	URIPathVariableSavedQueryID                      = "saved_query_id"
+	URIPathVariableSSOProviderID                     = "sso_provider_id"
+	URIPathVariableSSOProviderSlug                   = "sso_provider_slug"
 )

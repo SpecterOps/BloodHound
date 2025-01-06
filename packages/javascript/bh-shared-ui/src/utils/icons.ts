@@ -46,6 +46,7 @@ import {
     faArrowsLeftRightToLine,
     faBuilding,
     faClipboardCheck,
+    faSkull,
 } from '@fortawesome/free-solid-svg-icons';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 
@@ -59,12 +60,17 @@ export type IconDictionary = {
     [index: string]: IconInfo;
 };
 
+export type GlyphIconInfo = IconInfo & { iconColor: string };
+
 export type GlyphDictionary = {
-    [index: string]: IconInfo & { iconColor: string };
+    [index: string]: GlyphIconInfo;
 };
 
 export enum GlyphKind {
     TIER_ZERO,
+    TIER_ZERO_DARK,
+    OWNED_OBJECT,
+    OWNED_OBJECT_DARK,
     EXPAND,
     COLLAPSE,
 }
@@ -234,6 +240,21 @@ export const GLYPHS: GlyphDictionary = {
         icon: faGem,
         color: '#000000',
         iconColor: '#FFFFFF',
+    },
+    [GlyphKind.TIER_ZERO_DARK]: {
+        icon: faGem,
+        color: '#FFFFFF',
+        iconColor: '#000000',
+    },
+    [GlyphKind.OWNED_OBJECT]: {
+        icon: faSkull,
+        color: '#000000',
+        iconColor: '#FFFFFF',
+    },
+    [GlyphKind.OWNED_OBJECT_DARK]: {
+        icon: faSkull,
+        color: '#FFFFFF',
+        iconColor: '#000000',
     },
     [GlyphKind.EXPAND]: {
         icon: faPlus,

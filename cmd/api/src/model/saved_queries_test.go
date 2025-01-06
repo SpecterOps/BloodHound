@@ -17,10 +17,13 @@
 package model_test
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm/utils"
-	"testing"
 )
 
 func TestSavedQueries_IsSortable(t *testing.T) {
@@ -35,29 +38,44 @@ func TestSavedQueries_IsSortable(t *testing.T) {
 func TestSavedQueries_ValidFilters(t *testing.T) {
 	savedQueries := model.SavedQueries{}
 	validFilters := savedQueries.ValidFilters()
-	require.Equal(t, 3, len(validFilters))
+	require.Equal(t, 4, len(validFilters))
 
-	for _, column := range []string{"user_id", "name", "query"} {
+	for _, column := range []string{"user_id", "query"} {
 		operators, ok := validFilters[column]
 		require.True(t, ok)
-		require.Equal(t, 2, len(operators))
+		assert.Equal(t, 2, len(operators))
+	}
+
+	for _, column := range []string{"name", "description"} {
+		operators, ok := validFilters[column]
+		require.True(t, ok)
+		assert.Equal(t, 3, len(operators))
 	}
 }
 
 func TestSavedQueries_GetValidFilterPredicatesAsStrings(t *testing.T) {
 	savedQueries := model.SavedQueries{}
-	for _, column := range []string{"user_id", "name", "query"} {
+	for _, column := range []string{"user_id", "query"} {
 		predicates, err := savedQueries.GetValidFilterPredicatesAsStrings(column)
 		require.Nil(t, err)
 		require.Equal(t, 2, len(predicates))
-		require.True(t, utils.Contains(predicates, string(model.Equals)))
-		require.True(t, utils.Contains(predicates, string(model.NotEquals)))
+		assert.True(t, utils.Contains(predicates, string(model.Equals)))
+		assert.True(t, utils.Contains(predicates, string(model.NotEquals)))
+	}
+
+	for _, column := range []string{"name", "description"} {
+		predicates, err := savedQueries.GetValidFilterPredicatesAsStrings(column)
+		require.Nil(t, err)
+		require.Equal(t, 3, len(predicates))
+		assert.True(t, utils.Contains(predicates, string(model.Equals)))
+		assert.True(t, utils.Contains(predicates, string(model.NotEquals)))
+		assert.True(t, utils.Contains(predicates, string(model.ApproximatelyEquals)))
 	}
 }
 
 func TestSavedQueries_IsString(t *testing.T) {
 	savedQueries := model.SavedQueries{}
-	for _, column := range []string{"name", "query"} {
+	for _, column := range []string{"name", "query", "description"} {
 		require.True(t, savedQueries.IsString(column))
 	}
 }

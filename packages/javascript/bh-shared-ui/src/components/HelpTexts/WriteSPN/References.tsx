@@ -27,8 +27,8 @@ const References: FC = () => {
                 https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://www.harmj0y.net/redteaming/kerberoasting-revisited/'>
-                https://www.harmj0y.net/redteaming/kerberoasting-revisited/
+            <Link target='_blank' rel='noopener' href='https://blog.harmj0y.net/redteaming/kerberoasting-revisited/'>
+                https://blog.harmj0y.net/redteaming/kerberoasting-revisited/
             </Link>
             <br />
             <Link

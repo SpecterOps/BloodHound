@@ -20,15 +20,15 @@ package main
 
 import (
 	"errors"
-	"os"
 
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 func main() {
-	const LogLevelVarName = "SB_LOG_LEVEL"
-	var rawLvl = os.Getenv(LogLevelVarName)
+	env := environment.NewEnvironment()
+	var rawLvl = env[environment.LogLevelVarName]
 
 	log.ConfigureDefaults()
 
@@ -37,12 +37,12 @@ func main() {
 	}
 
 	if lvl, err := log.ParseLevel(rawLvl); err != nil {
-		log.Errorf("Could not parse log level from %s: %v", LogLevelVarName, err)
+		log.Errorf("Could not parse log level from %s: %v", environment.LogLevelVarName, err)
 	} else {
 		log.SetGlobalLevel(lvl)
 	}
 
-	if cmd, err := command.ParseCLI(); errors.Is(err, command.ErrNoCmd) {
+	if cmd, err := command.ParseCLI(env); errors.Is(err, command.ErrNoCmd) {
 		log.Fatalf("No valid command specified")
 	} else if errors.Is(err, command.ErrHelpRequested) {
 		// No need to exit 1 if help was requested

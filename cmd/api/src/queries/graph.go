@@ -21,6 +21,7 @@ package queries
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -32,9 +33,7 @@ import (
 
 	"github.com/specterops/bloodhound/dawgs/util"
 
-	"github.com/specterops/bloodhound/cypher/backend/cypher"
-	"github.com/specterops/bloodhound/cypher/backend/pgsql"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg"
+	"github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/services/agi"
 
@@ -48,7 +47,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -85,7 +83,7 @@ type EntityQueryParameters struct {
 
 func GetEntityObjectIDFromRequestPath(request *http.Request) (string, error) {
 	if id, hasID := mux.Vars(request)["object_id"]; !hasID {
-		return "", errors.Error("no object ID found in request")
+		return "", errors.New("no object ID found in request")
 	} else {
 		return id, nil
 	}
@@ -133,7 +131,7 @@ func BuildEntityQueryParams(request *http.Request, queryName string, pathDelegat
 
 type Graph interface {
 	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string) (map[string]any, error)
-	GetAssetGroupNodes(ctx context.Context, assetGroupTag string) (graph.NodeSet, error)
+	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	SearchNodesByName(ctx context.Context, nodeKinds graph.Kinds, nameQuery string, skip int, limit int) ([]model.SearchResult, error)
 	SearchByNameOrObjectID(ctx context.Context, searchValue string, searchType string) (graph.NodeSet, error)
@@ -156,8 +154,8 @@ type GraphQuery struct {
 	SlowQueryThreshold           int64 // Threshold in milliseconds
 	DisableCypherComplexityLimit bool
 	EnableCypherMutations        bool
-	cypherEmitter                cypher.Emitter
-	strippedCypherEmitter        cypher.Emitter
+	cypherEmitter                format.Emitter
+	strippedCypherEmitter        format.Emitter
 }
 
 func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configuration) *GraphQuery {
@@ -167,8 +165,8 @@ func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configu
 		SlowQueryThreshold:           cfg.SlowQueryThreshold,
 		DisableCypherComplexityLimit: cfg.DisableCypherComplexityLimit,
 		EnableCypherMutations:        cfg.EnableCypherMutations,
-		cypherEmitter:                cypher.NewCypherEmitter(false),
-		strippedCypherEmitter:        cypher.NewCypherEmitter(true),
+		cypherEmitter:                format.NewCypherEmitter(false),
+		strippedCypherEmitter:        format.NewCypherEmitter(true),
 	}
 }
 
@@ -224,28 +222,20 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 	})
 }
 
-func (s *GraphQuery) GetAssetGroupNodes(ctx context.Context, assetGroupTag string) (graph.NodeSet, error) {
+func (s *GraphQuery) GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error) {
 	var (
 		assetGroupNodes graph.NodeSet
 		err             error
 	)
-	return assetGroupNodes, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if assetGroupNodes, err = ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
-			filters := []graph.Criteria{
-				query.KindIn(query.Node(), azure.Entity, ad.Entity),
-				query.StringContains(query.NodeProperty(common.SystemTags.String()), assetGroupTag),
-			}
 
-			return query.And(filters...)
-		})); err != nil {
+	err = s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if assetGroupNodes, err = agi.FetchAssetGroupNodes(tx, assetGroupTag, isSystemGroup); err != nil {
 			return err
-		} else {
-			for _, node := range assetGroupNodes {
-				node.Properties.Set("type", analysis.GetNodeKindDisplayLabel(node))
-			}
-			return nil
 		}
+		return nil
 	})
+
+	return assetGroupNodes, err
 }
 
 func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
@@ -350,7 +340,6 @@ func (s *GraphQuery) SearchNodesByName(ctx context.Context, nodeKinds graph.Kind
 		if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(SearchNodeByKindAndEqualsNameCriteria(kind, formattedName))); err != nil {
 				return err
-
 			} else {
 				exactResults = append(exactResults, nodesToSearchResult(exactMatchNodes...)...)
 			}
@@ -417,27 +406,13 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		return graphQuery, ErrCypherQueryTooComplex
 	}
 
-	if pgDB, isPG := s.Graph.(*pg.Driver); isPG {
-		if _, err = pgsql.Translate(queryModel, pgDB.KindMapper()); err != nil {
-			return graphQuery, err
-		}
+	graphQuery.StrippedQuery = strippedQueryBuffer.String()
+	graphQuery.complexity = complexityMeasure
 
-		if err = pgsql.NewEmitter(false, pgDB.KindMapper()).Write(queryModel, queryBuffer); err != nil {
-			return graphQuery, err
-		} else {
-			graphQuery.query = queryBuffer.String()
-		}
-
-		return graphQuery, nil
+	if err = s.cypherEmitter.Write(queryModel, queryBuffer); err != nil {
+		return graphQuery, err
 	} else {
-		graphQuery.StrippedQuery = strippedQueryBuffer.String()
-		graphQuery.complexity = complexityMeasure
-
-		if err = s.cypherEmitter.Write(queryModel, queryBuffer); err != nil {
-			return graphQuery, err
-		} else {
-			graphQuery.query = queryBuffer.String()
-		}
+		graphQuery.query = queryBuffer.String()
 	}
 
 	return graphQuery, nil
@@ -519,7 +494,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 			timeoutLog.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
 			timeoutLog.Msg("Neo4j timed out while executing cypher query")
 		} else {
-			log.Errorf("RawCypherQuery failed: %v", err)
+			log.Warnf("RawCypherQuery failed: %v", err)
 		}
 		return graphResponse, err
 	}
@@ -545,7 +520,7 @@ func applyTimeoutReduction(queryWeight int64, availableRuntime time.Duration) (t
 
 func nodeToSearchResult(node *graph.Node) model.SearchResult {
 	var (
-		name, _              = node.Properties.GetOrDefault(common.Name.String(), "NO NAME").String()
+		name, _              = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
 		objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
 		distinguishedName, _ = node.Properties.GetOrDefault(ad.DistinguishedName.String(), "").String()
 		systemTags, _        = node.Properties.GetOrDefault(common.SystemTags.String(), "").String()
@@ -661,7 +636,9 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 		go func(delegateKey string, delegate any) {
 			defer waitGroup.Done()
 
-			if result, err := runEntityQuery(ctx, s.Graph, delegate, node, 0, 0); err != nil {
+			if result, err := runEntityQuery(ctx, s.Graph, delegate, node, 0, 0); errors.Is(err, graph.ErrContextTimedOut) {
+				log.Warnf("Running entity query for key %s: %v", delegateKey, err)
+			} else if err != nil {
 				log.Errorf("Error running entity query for key %s: %v", delegateKey, err)
 				data.Store(delegateKey, 0)
 			} else {
@@ -772,7 +749,7 @@ func (s *GraphQuery) ValidateOUs(ctx context.Context, ous []string) ([]string, e
 			return nil
 		}); err != nil {
 			if graph.IsErrNotFound(err) {
-				return nil, errors.New(fmt.Sprintf("no record found for %s", ou))
+				return nil, fmt.Errorf("no record found for %s", ou)
 			} else {
 				return nil, err
 			}
@@ -892,7 +869,7 @@ func (s *GraphQuery) runListQuery(ctx context.Context, node *graph.Node, params 
 	if result, err := s.runMaybeCachedEntityQuery(ctx, node, params, cacheEnabled); err != nil {
 		return nil, 0, err
 	} else if skip > result.Len() {
-		return nil, 0, errors.New(fmt.Sprintf(utils.ErrorInvalidSkip, skip))
+		return nil, 0, fmt.Errorf(utils.ErrorInvalidSkip, skip)
 	} else {
 		if skip+limit > result.Len() {
 			limit = result.Len() - skip

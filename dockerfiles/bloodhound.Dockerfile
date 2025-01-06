@@ -17,62 +17,49 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.4.1
-ARG AZUREHOUND_VERSION=v2.1.9
+ARG SHARPHOUND_VERSION=v2.5.9
+ARG AZUREHOUND_VERSION=v2.2.1
+
+########
+# Golang Image
+################
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.23-alpine3.20 AS godeps
 
 ########
 # Builder init
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/node:20-alpine AS deps
+FROM --platform=$BUILDPLATFORM docker.io/library/node:22-alpine3.20 AS deps
 ARG version=v999.999.999
 ARG checkout_hash=""
-ENV PYTHONUNBUFFERED=1
-ENV VERSION=${version}
+ENV SB_LOG_LEVEL=debug
+ENV SB_VERSION=${version}
 ENV CHECKOUT_HASH=${checkout_hash}
 WORKDIR /bloodhound
 
-RUN apk add --update --no-cache python3 git go
-RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
-RUN python3 -m ensurepip
-RUN pip3 install --no-cache --upgrade pip setuptools
+RUN apk add --update --no-cache git
+
+COPY --from=godeps /usr/local/go/ /usr/local/go/
+ENV PATH="/usr/local/go/bin:${PATH}"
 
 COPY . /bloodhound
+RUN go run github.com/specterops/bloodhound/packages/go/stbernard deps
 
 ########
-# Build UI
+# Build
 ################
-FROM deps AS ui-builder
-
-WORKDIR /bloodhound/packages/javascript/bh-shared-ui
-RUN yarn install
-RUN yarn build
-
-WORKDIR /bloodhound/packages/javascript/js-client-library
-RUN yarn install
-RUN yarn build
-
-WORKDIR /bloodhound
-RUN python3 packages/python/beagle/main.py build bh-ui -v
-
-########
-# Build API
-################
-FROM deps AS api-builder
+FROM deps AS builder
 ARG TARGETOS
 ARG TARGETARCH
-ENV GOOS=${TARGETOS}
-ENV GOARCH=${TARGETARCH}
 ENV CGO_ENABLED=0
+ENV SB_VERSION=${version}
 WORKDIR /bloodhound
 
-COPY --from=ui-builder /bloodhound/dist /bloodhound/dist
-
-RUN python3 packages/python/beagle/main.py build bh -v -d
+RUN go run github.com/specterops/bloodhound/packages/go/stbernard build --os ${TARGETOS} --arch ${TARGETARCH}
 
 ########
 # Package other assets
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.16 as hound-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.20 as hound-builder
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 
@@ -118,7 +105,7 @@ ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 
 COPY dockerfiles/configs/bloodhound.config.json /bloodhound.config.json
-COPY --from=api-builder /bloodhound/dist/bhapi /bloodhound
+COPY --from=builder /bloodhound/dist/bhapi /bloodhound
 COPY --from=hound-builder /opt/bloodhound /etc/bloodhound /var/log /
 COPY --from=hound-builder /tmp/sharphound/sharphound-$SHARPHOUND_VERSION.zip /etc/bloodhound/collectors/sharphound/
 COPY --from=hound-builder /tmp/sharphound/sharphound-$SHARPHOUND_VERSION.zip.sha256 /etc/bloodhound/collectors/sharphound/

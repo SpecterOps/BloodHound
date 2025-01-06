@@ -1,0 +1,69 @@
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+allOf:
+  - $ref: './model.components.int64.id.yaml'
+  - $ref: './model.components.timestamps.yaml'
+  - type: object
+    properties:
+      job_id:
+        type: integer
+        format: int64
+      domain_name:
+        description: Name of the domain that was enumerated
+        type: string
+      success:
+        description: A boolean value indicating whether the domain enumeration succeeded
+        type: boolean
+      message:
+        description: A status message for a domain enumeration result
+        type: string
+      user_count:
+        description: A count of users enumerated
+        type: integer
+      group_count:
+        description: A count of groups enumerated
+        type: integer
+      computer_count:
+        description: A count of computers enumerated
+        type: integer
+      gpo_count:
+        description: A count of gpos enumerated
+        type: integer
+      ou_count:
+        description: A count of ous enumerated
+        type: integer
+      container_count:
+        description: A count of containers enumerated
+        type: integer
+      aiaca_count:
+        description: A count of aiacas enumerated
+        type: integer
+      rootca_count:
+        description: A count of rootcas enumerated
+        type: integer
+      enterpriseca_count:
+        description: A count of enterprisecas enumerated
+        type: integer
+      ntauthstore_count:
+        description: A count of ntauthstores enumerated
+        type: integer
+      certtemplate_count:
+        description: A count of certtemplates enumerated
+        type: integer
+      deleted_count:
+        description: A count of deleted objects enumerated
+        type: integer

@@ -18,6 +18,7 @@ package traversal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -30,7 +31,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/dawgs/util/atomics"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 )
 
@@ -467,7 +467,7 @@ type SegmentVisitor = func(next *graph.PathSegment)
 // UniquePathSegmentFilter is a SegmentFilter constructor that will allow a traversal to all unique paths. This is done
 // by tracking edge IDs traversed in a bitmap.
 func UniquePathSegmentFilter(delegate SegmentFilter) SegmentFilter {
-	traversalBitmap := cardinality.ThreadSafeDuplex(cardinality.NewBitmap32())
+	traversalBitmap := cardinality.ThreadSafeDuplex(cardinality.NewBitmap64())
 
 	return func(next *graph.PathSegment) bool {
 		// Bail on cycles
@@ -476,7 +476,7 @@ func UniquePathSegmentFilter(delegate SegmentFilter) SegmentFilter {
 		}
 
 		// Return if we've seen this edge before
-		if !traversalBitmap.CheckedAdd(next.Edge.ID.Uint32()) {
+		if !traversalBitmap.CheckedAdd(next.Edge.ID.Uint64()) {
 			return false
 		}
 
@@ -568,20 +568,20 @@ func LightweightDriver(direction graph.Direction, cache graphcache.Cache, criter
 			return nil, err
 		} else {
 			// Reconcile the start and end nodes of the fetched relationships with the graph cache
-			nodesToFetch := cardinality.NewBitmap32()
+			nodesToFetch := cardinality.NewBitmap64()
 
 			for _, nextRelationship := range relationships {
 				if nextID, err := direction.PickReverse(nextRelationship); err != nil {
 					return nil, err
 				} else {
-					nodesToFetch.Add(nextID.Uint32())
+					nodesToFetch.Add(nextID.Uint64())
 				}
 			}
 
 			// Shallow fetching the nodes achieves the same result as shallowFetchRelationships(...) but with the added
 			// benefit of interacting with the graph cache. Any nodes not already in the cache are fetched just-in-time
 			// from the database and stored back in the cache for later.
-			if cachedNodes, err := graphcache.ShallowFetchNodesByID(tx, cache, cardinality.DuplexToGraphIDs(nodesToFetch)); err != nil {
+			if cachedNodes, err := graphcache.ShallowFetchNodesByID(tx, cache, graph.DuplexToGraphIDs(nodesToFetch)); err != nil {
 				return nil, err
 			} else {
 				cachedNodeSet := graph.NewNodeSet(cachedNodes...)

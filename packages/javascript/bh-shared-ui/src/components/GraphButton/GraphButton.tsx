@@ -16,7 +16,7 @@
 
 import { Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -27,14 +27,14 @@ const useStyles = makeStyles((theme) => ({
         border: 'none',
         boxSizing: 'initial',
         borderRadius: theme.shape.borderRadius,
-        backgroundColor: theme.palette.background.paper,
-        color: theme.palette.common.black,
+        backgroundColor: theme.palette.neutral.secondary,
+        color: theme.palette.color.primary,
         textTransform: 'capitalize',
         minWidth: 'initial',
         '&:hover': {
-            backgroundColor: theme.palette.background.default,
+            backgroundColor: theme.palette.neutral.tertiary,
             '@media (hover: none)': {
-                backgroundColor: theme.palette.background.default,
+                backgroundColor: theme.palette.neutral.tertiary,
             },
         },
     },
@@ -42,7 +42,7 @@ const useStyles = makeStyles((theme) => ({
 
 export interface GraphButtonProps {
     onClick: (e?: any) => void;
-    displayText: string | JSX.Element;
+    displayText: string | ReactNode;
     disabled?: boolean;
 }
 

@@ -1,0 +1,63 @@
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+get:
+  operationId: GetShortestPath
+  summary: Get the shortest path graph
+  description: A graph of the shortest path from `start_node` to `end_node`.
+  tags:
+    - Graph
+    - Community
+    - Enterprise
+  parameters:
+    - name: start_node
+      description: The start node objectId
+      in: query
+      required: true
+      schema:
+        type: string
+    - name: end_node
+      description: The end node objectId
+      in: query
+      required: true
+      schema:
+        type: string
+    - name: relationship_kinds
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.contains.yaml'
+  responses:
+    200:
+      description: A graph of the shortest path from `start_node` to `end_node`.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../schemas/model.unified-graph.graph.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

@@ -17,7 +17,10 @@
 package pg
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/jackc/pgx/v5"
@@ -27,15 +30,16 @@ import (
 )
 
 type KindMapper interface {
-	MapKindID(kindID int16) (graph.Kind, bool)
-	MapKindIDs(kindIDs ...int16) (graph.Kinds, []int16)
-	MapKind(kind graph.Kind) (int16, bool)
-	MapKinds(kinds graph.Kinds) ([]int16, graph.Kinds)
-	AssertKinds(tx graph.Transaction, kinds graph.Kinds) ([]int16, error)
+	MapKindID(ctx context.Context, kindID int16) (graph.Kind, error)
+	MapKindIDs(ctx context.Context, kindIDs ...int16) (graph.Kinds, error)
+	MapKind(ctx context.Context, kind graph.Kind) (int16, error)
+	MapKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error)
+	AssertKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error)
 }
 
 type SchemaManager struct {
 	defaultGraph    model.Graph
+	database        graph.Database
 	hasDefaultGraph bool
 	graphs          map[string]model.Graph
 	kindsByID       map[graph.Kind]int16
@@ -43,8 +47,9 @@ type SchemaManager struct {
 	lock            *sync.RWMutex
 }
 
-func NewSchemaManager() *SchemaManager {
+func NewSchemaManager(database graph.Database) *SchemaManager {
 	return &SchemaManager{
+		database:        database,
 		hasDefaultGraph: false,
 		graphs:          map[string]model.Graph{},
 		kindsByID:       map[graph.Kind]int16{},
@@ -65,6 +70,12 @@ func (s *SchemaManager) fetch(tx graph.Transaction) error {
 	}
 
 	return nil
+}
+
+func (s *SchemaManager) Fetch(ctx context.Context) error {
+	return s.database.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		return s.fetch(tx)
+	}, OptionSetQueryExecMode(pgx.QueryExecModeSimpleProtocol))
 }
 
 func (s *SchemaManager) defineKinds(tx graph.Transaction, kinds graph.Kinds) error {
@@ -97,19 +108,50 @@ func (s *SchemaManager) mapKinds(kinds graph.Kinds) ([]int16, graph.Kinds) {
 	return ids, missingKinds
 }
 
-func (s *SchemaManager) MapKind(kind graph.Kind) (int16, bool) {
+func (s *SchemaManager) MapKind(ctx context.Context, kind graph.Kind) (int16, error) {
 	s.lock.RLock()
-	defer s.lock.RUnlock()
 
-	id, hasID := s.kindsByID[kind]
-	return id, hasID
+	if id, hasID := s.kindsByID[kind]; hasID {
+		s.lock.RUnlock()
+		return id, nil
+	}
+
+	s.lock.RUnlock()
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if err := s.Fetch(ctx); err != nil {
+		return -1, err
+	}
+
+	if id, hasID := s.kindsByID[kind]; hasID {
+		return id, nil
+	} else {
+		return -1, fmt.Errorf("unable to map kind: %s", kind.String())
+	}
 }
 
-func (s *SchemaManager) MapKinds(kinds graph.Kinds) ([]int16, graph.Kinds) {
+func (s *SchemaManager) MapKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error) {
 	s.lock.RLock()
-	defer s.lock.RUnlock()
 
-	return s.mapKinds(kinds)
+	if mappedKinds, missingKinds := s.mapKinds(kinds); len(missingKinds) == 0 {
+		s.lock.RUnlock()
+		return mappedKinds, nil
+	}
+
+	s.lock.RUnlock()
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if err := s.Fetch(ctx); err != nil {
+		return nil, err
+	}
+
+	if mappedKinds, missingKinds := s.mapKinds(kinds); len(missingKinds) == 0 {
+		return mappedKinds, nil
+	} else {
+		return nil, fmt.Errorf("unable to map kinds: %s", strings.Join(missingKinds.Strings(), ", "))
+	}
 }
 
 func (s *SchemaManager) mapKindIDs(kindIDs []int16) (graph.Kinds, []int16) {
@@ -129,22 +171,58 @@ func (s *SchemaManager) mapKindIDs(kindIDs []int16) (graph.Kinds, []int16) {
 	return kinds, missingIDs
 }
 
-func (s *SchemaManager) MapKindID(kindID int16) (graph.Kind, bool) {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-
-	kind, hasKind := s.kindIDsByKind[kindID]
-	return kind, hasKind
+func (s *SchemaManager) MapKindID(ctx context.Context, kindID int16) (graph.Kind, error) {
+	if kindIDs, err := s.MapKindIDs(ctx, kindID); err != nil {
+		return nil, err
+	} else {
+		return kindIDs[0], nil
+	}
 }
 
-func (s *SchemaManager) MapKindIDs(kindIDs ...int16) (graph.Kinds, []int16) {
+func (s *SchemaManager) MapKindIDs(ctx context.Context, kindIDs ...int16) (graph.Kinds, error) {
 	s.lock.RLock()
-	defer s.lock.RUnlock()
 
-	return s.mapKindIDs(kindIDs)
+	if kinds, missingKinds := s.mapKindIDs(kindIDs); len(missingKinds) == 0 {
+		s.lock.RUnlock()
+		return kinds, nil
+	}
+
+	s.lock.RUnlock()
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if err := s.Fetch(ctx); err != nil {
+		return nil, err
+	}
+
+	if kinds, missingKinds := s.mapKindIDs(kindIDs); len(missingKinds) == 0 {
+		return kinds, nil
+	} else {
+		return nil, fmt.Errorf("unable to map kind ids: %v", missingKinds)
+	}
 }
 
-func (s *SchemaManager) AssertKinds(tx graph.Transaction, kinds graph.Kinds) ([]int16, error) {
+func (s *SchemaManager) assertKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error) {
+	// Acquire a write-lock and release on-exit
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	// We have to re-acquire the missing kinds since there's a potential for another writer to acquire the write-lock
+	// in between release of the read-lock and acquisition of the write-lock for this operation
+	if _, missingKinds := s.mapKinds(kinds); len(missingKinds) > 0 {
+		if err := s.database.WriteTransaction(ctx, func(tx graph.Transaction) error {
+			return s.defineKinds(tx, missingKinds)
+		}, OptionSetQueryExecMode(pgx.QueryExecModeSimpleProtocol)); err != nil {
+			return nil, err
+		}
+	}
+
+	// Lookup the kinds again from memory as they should now be up to date
+	kindIDs, _ := s.mapKinds(kinds)
+	return kindIDs, nil
+}
+
+func (s *SchemaManager) AssertKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error) {
 	// Acquire a read-lock first to fast-pass validate if we're missing any kind definitions
 	s.lock.RLock()
 
@@ -156,49 +234,46 @@ func (s *SchemaManager) AssertKinds(tx graph.Transaction, kinds graph.Kinds) ([]
 
 	// Release the read-lock here so that we can acquire a write-lock
 	s.lock.RUnlock()
+	return s.assertKinds(ctx, kinds)
+}
 
-	// Acquire a write-lock and release on-exit
+func (s *SchemaManager) setDefaultGraph(defaultGraph model.Graph, schema graph.Graph) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	// We have to re-acquire the missing kinds since there's a potential for another writer to acquire the write-lock
-	// in between release of the read-lock and acquisition of the write-lock for this operation
-	_, missingKinds := s.mapKinds(kinds)
-
-	if err := s.defineKinds(tx, missingKinds); err != nil {
-		return nil, err
+	if s.hasDefaultGraph {
+		// Another actor has already asserted or otherwise set a default graph
+		return
 	}
 
-	kindIDs, _ := s.mapKinds(kinds)
-	return kindIDs, nil
+	s.graphs[schema.Name] = defaultGraph
+
+	s.defaultGraph = defaultGraph
+	s.hasDefaultGraph = true
 }
 
-func (s *SchemaManager) SetDefaultGraph(tx graph.Transaction, schema graph.Graph) error {
-	// Validate the schema if the graph already exists in the database
-	if definition, err := query.On(tx).SelectGraphByName(schema.Name); err != nil {
-		return err
-	} else {
-		s.graphs[schema.Name] = definition
-		
-		s.defaultGraph = definition
-		s.hasDefaultGraph = true
-	}
-
-	return nil
+func (s *SchemaManager) SetDefaultGraph(ctx context.Context, schema graph.Graph) error {
+	return s.database.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		// Validate the schema if the graph already exists in the database
+		if graphModel, err := query.On(tx).SelectGraphByName(schema.Name); err != nil {
+			return err
+		} else {
+			s.setDefaultGraph(graphModel, schema)
+			return nil
+		}
+	})
 }
 
-func (s *SchemaManager) AssertDefaultGraph(tx graph.Transaction, schema graph.Graph) error {
-	if graphInstance, err := s.AssertGraph(tx, schema); err != nil {
-		return err
-	} else {
-		s.lock.Lock()
-		defer s.lock.Unlock()
+func (s *SchemaManager) AssertDefaultGraph(ctx context.Context, schema graph.Graph) error {
+	return s.database.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		if graphModel, err := s.AssertGraph(tx, schema); err != nil {
+			return err
+		} else {
+			s.setDefaultGraph(graphModel, schema)
+		}
 
-		s.defaultGraph = graphInstance
-		s.hasDefaultGraph = true
-	}
-
-	return nil
+		return nil
+	})
 }
 
 func (s *SchemaManager) DefaultGraph() (model.Graph, bool) {
@@ -206,6 +281,33 @@ func (s *SchemaManager) DefaultGraph() (model.Graph, bool) {
 	defer s.lock.RUnlock()
 
 	return s.defaultGraph, s.hasDefaultGraph
+}
+
+func (s *SchemaManager) assertGraph(tx graph.Transaction, schema graph.Graph) (model.Graph, error) {
+	var assertedGraph model.Graph
+
+	// Validate the schema if the graph already exists in the database
+	if definition, err := query.On(tx).SelectGraphByName(schema.Name); err != nil {
+		// ErrNoRows is ignored as it signifies that this graph must be created
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return model.Graph{}, err
+		}
+
+		if newDefinition, err := query.On(tx).CreateGraph(schema); err != nil {
+			return model.Graph{}, err
+		} else {
+			assertedGraph = newDefinition
+		}
+	} else if assertedDefinition, err := query.On(tx).AssertGraph(schema, definition); err != nil {
+		return model.Graph{}, err
+	} else {
+		// Graph existed and may have been updated
+		assertedGraph = assertedDefinition
+	}
+
+	// Cache the graph definition and return it
+	s.graphs[schema.Name] = assertedGraph
+	return assertedGraph, nil
 }
 
 func (s *SchemaManager) AssertGraph(tx graph.Transaction, schema graph.Graph) (model.Graph, error) {
@@ -218,44 +320,21 @@ func (s *SchemaManager) AssertGraph(tx graph.Transaction, schema graph.Graph) (m
 		return graphInstance, nil
 	}
 
-	// Release the read-lock here so that we can acquire a write-lock
+	// Release the read-lock here so that we can acquire a write-lock next
 	s.lock.RUnlock()
 
-	// Acquire a write-lock and create the graph definition
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	if graphInstance, isDefined := s.graphs[schema.Name]; isDefined {
-		// The graph was defined by a different actor between the read unlock and the write lock.
+		// The graph was defined by a different actor between the read unlock and the write lock, return it
 		return graphInstance, nil
 	}
 
-	// Validate the schema if the graph already exists in the database
-	if definition, err := query.On(tx).SelectGraphByName(schema.Name); err != nil {
-		// ErrNoRows signifies that this graph must be created
-		if !errors.Is(err, pgx.ErrNoRows) {
-			return model.Graph{}, err
-		}
-	} else if assertedDefinition, err := query.On(tx).AssertGraph(schema, definition); err != nil {
-		return model.Graph{}, err
-	} else {
-		s.graphs[schema.Name] = assertedDefinition
-		return assertedDefinition, nil
-	}
-
-	// Create the graph
-	if definition, err := query.On(tx).CreateGraph(schema); err != nil {
-		return model.Graph{}, err
-	} else {
-		s.graphs[schema.Name] = definition
-		return definition, nil
-	}
+	return s.assertGraph(tx, schema)
 }
 
-func (s *SchemaManager) AssertSchema(tx graph.Transaction, schema graph.Schema) error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
+func (s *SchemaManager) assertSchema(tx graph.Transaction, schema graph.Schema) error {
 	if err := query.On(tx).CreateSchema(); err != nil {
 		return err
 	}
@@ -279,4 +358,13 @@ func (s *SchemaManager) AssertSchema(tx graph.Transaction, schema graph.Schema) 
 	}
 
 	return nil
+}
+
+func (s *SchemaManager) AssertSchema(ctx context.Context, schema graph.Schema) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	return s.database.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		return s.assertSchema(tx, schema)
+	}, OptionSetQueryExecMode(pgx.QueryExecModeSimpleProtocol))
 }

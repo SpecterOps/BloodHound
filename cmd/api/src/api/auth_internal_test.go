@@ -75,14 +75,14 @@ func setupRequest(user model.User) (context.Context, LoginRequest) {
 	return testCtx, loginRequest
 }
 
-func buildAuditLog(testCtx context.Context, user model.User, loginRequest LoginRequest, status model.AuditLogEntryStatus, loginError error) model.AuditLog {
+func buildAuditLog(testCtx context.Context, status model.AuditLogEntryStatus, user model.User, fields types.JSONUntypedObject) model.AuditLog {
 	bhCtx := ctx.Get(testCtx)
 
 	auditLog := model.AuditLog{
 		Action:          model.AuditLogActionLoginAttempt,
 		ActorName:       user.PrincipalName,
 		ActorEmail:      user.EmailAddress.ValueOrZero(),
-		Fields:          types.JSONUntypedObject{"username": loginRequest.Username},
+		Fields:          fields,
 		RequestID:       bhCtx.RequestID,
 		SourceIpAddress: bhCtx.RequestIP,
 		Status:          status,
@@ -93,37 +93,36 @@ func buildAuditLog(testCtx context.Context, user model.User, loginRequest LoginR
 		auditLog.ActorID = user.ID.String()
 	}
 
-	if loginError != nil {
-		auditLog.Fields["error"] = loginError
-	}
-
 	return auditLog
 }
 
 func TestAuditLogin(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	mockDB := dbMocks.NewMockDatabase(mockCtrl)
-	a := authenticator{
-		db: mockDB,
-	}
+	var (
+		mockCtrl = gomock.NewController(t)
+		mockDB   = dbMocks.NewMockDatabase(mockCtrl)
+		a        = authenticator{db: mockDB}
+	)
+
 	testCtx, loginRequest := setupRequest(testyUser)
-	expectedAuditLog := buildAuditLog(testCtx, testyUser, loginRequest, model.AuditLogStatusSuccess, nil)
+	fields := types.JSONUntypedObject{"username": loginRequest.Username, "auth_type": auth.ProviderTypeSecret}
+	expectedAuditLog := buildAuditLog(testCtx, model.AuditLogStatusSuccess, testyUser, fields)
 
 	mockDB.EXPECT().CreateAuditLog(testCtx, expectedAuditLog)
-	a.auditLogin(testCtx, commitId, testyUser, loginRequest, model.AuditLogStatusSuccess, nil)
+	a.auditLogin(testCtx, commitId, model.AuditLogStatusSuccess, testyUser, fields)
 }
 
 func TestAuditLogin_UserNotFound(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	mockDB := dbMocks.NewMockDatabase(mockCtrl)
-	a := authenticator{
-		db: mockDB,
-	}
+	var (
+		mockCtrl = gomock.NewController(t)
+		mockDB   = dbMocks.NewMockDatabase(mockCtrl)
+		a        = authenticator{db: mockDB}
+	)
 	testCtx, loginRequest := setupRequest(model.User{})
-	expectedAuditLog := buildAuditLog(testCtx, model.User{}, loginRequest, model.AuditLogStatusFailure, ErrInvalidAuth)
+	fields := types.JSONUntypedObject{"username": loginRequest.Username, "auth_type": auth.ProviderTypeSecret, "error": ErrInvalidAuth}
+	expectedAuditLog := buildAuditLog(testCtx, model.AuditLogStatusFailure, model.User{}, fields)
 
 	mockDB.EXPECT().CreateAuditLog(testCtx, expectedAuditLog)
-	a.auditLogin(testCtx, commitId, model.User{}, loginRequest, model.AuditLogStatusFailure, ErrInvalidAuth)
+	a.auditLogin(testCtx, commitId, model.AuditLogStatusFailure, model.User{}, fields)
 }
 
 func TestValidateRequestSignature(t *testing.T) {
@@ -213,7 +212,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.NoError(t, err)
 
 		req.Header.Add(headers.RequestDate.String(), time.Now().Format(time.RFC3339))
-		signature, err := NewRequestSignature(sha256.New, "token", time.Now().Format(time.RFC3339), req.Method, req.RequestURI, nil)
+		signature, err := NewRequestSignature(context.Background(), sha256.New, "token", time.Now().Format(time.RFC3339), req.Method, req.RequestURI, nil)
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
@@ -235,7 +234,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.NoError(t, err)
 
 		req.Header.Add(headers.RequestDate.String(), time.Now().Format(time.RFC3339))
-		signature, err := NewRequestSignature(sha256.New, "token", time.Now().Format(time.RFC3339), req.Method, req.RequestURI, nil)
+		signature, err := NewRequestSignature(context.Background(), sha256.New, "token", time.Now().Format(time.RFC3339), req.Method, req.RequestURI, nil)
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
@@ -260,7 +259,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		require.NoError(t, err)
 
 		req.Header.Add(headers.RequestDate.String(), time.Now().Format(time.RFC3339))
-		signature, err := NewRequestSignature(sha256.New, "token", time.Now().Format(time.RFC3339), req.Method, req.RequestURI, nil)
+		signature, err := NewRequestSignature(context.Background(), sha256.New, "token", time.Now().Format(time.RFC3339), req.Method, req.RequestURI, nil)
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
@@ -290,7 +289,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		badRequestDate := time.Now().Add(-1 * time.Hour).Format(time.RFC3339)
 		req.Header.Add(headers.RequestDate.String(), badRequestDate)
-		signature, err := NewRequestSignature(sha256.New, "token", time.Now().Format(time.RFC3339), req.Method, req.RequestURI, nil)
+		signature, err := NewRequestSignature(context.Background(), sha256.New, "token", time.Now().Format(time.RFC3339), req.Method, req.RequestURI, nil)
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
@@ -317,7 +316,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		req.ContentLength = int64(len(payload))
 		req.Header.Add(headers.RequestDate.String(), time.Now().Format(time.RFC3339))
-		signature, err := NewRequestSignature(sha256.New, "token", time.Now().Format(time.RFC3339), req.Method, req.RequestURI, bytes.NewBuffer(payload))
+		signature, err := NewRequestSignature(context.Background(), sha256.New, "token", time.Now().Format(time.RFC3339), req.Method, req.RequestURI, bytes.NewBuffer(payload))
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
@@ -359,7 +358,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		req.ContentLength = int64(len(payload) - 1)
 		req.Header.Add(headers.RequestDate.String(), time.Now().Format(time.RFC3339))
-		signature, err := NewRequestSignature(sha256.New, "token", time.Now().Format(time.RFC3339), req.Method, req.RequestURI, bytes.NewBuffer(payload))
+		signature, err := NewRequestSignature(context.Background(), sha256.New, "token", time.Now().Format(time.RFC3339), req.Method, req.RequestURI, bytes.NewBuffer(payload))
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
@@ -392,7 +391,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		datetime := time.Now().Format(time.RFC3339)
 		req.Header.Add(headers.RequestDate.String(), datetime)
-		signature, err := NewRequestSignature(sha256.New, "badtoken", datetime, http.MethodGet, req.RequestURI, nil)
+		signature, err := NewRequestSignature(context.Background(), sha256.New, "badtoken", datetime, http.MethodGet, req.RequestURI, nil)
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 
@@ -420,7 +419,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		datetime := time.Now().Format(time.RFC3339)
 		req.Header.Add(headers.RequestDate.String(), datetime)
-		signature, err := NewRequestSignature(sha256.New, "token", datetime, req.Method, req.RequestURI, nil)
+		signature, err := NewRequestSignature(context.Background(), sha256.New, "token", datetime, req.Method, req.RequestURI, nil)
 		require.NoError(t, err)
 		req.Header.Add(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
 

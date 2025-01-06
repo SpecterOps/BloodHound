@@ -19,6 +19,7 @@ import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from 'src/test-utils';
+import userEvent from '@testing-library/user-event';
 
 const server = setupServer(
     rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
@@ -42,6 +43,40 @@ const server = setupServer(
                 },
             })
         );
+    }),
+    rest.get(`/api/v2/users/:id`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    props: {
+                        objectid: '2',
+                    },
+                },
+            })
+        );
+    }),
+    rest.get(`/api/v2/computers/testing-node-123`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    props: {
+                        haslaps: true,
+                        objectid: 'testing-node-123',
+                    },
+                },
+            })
+        );
+    }),
+    rest.get(`/api/v2/computers/testing-node-456`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    props: {
+                        objectid: 'testing-node-456',
+                    },
+                },
+            })
+        );
     })
 );
 
@@ -57,6 +92,45 @@ const selectedEdge: SelectedEdge = {
     },
     targetNode: { name: 'target node', id: '2', objectId: '2', type: 'User' },
 };
+
+const selectedEdgeHasLapsEnabled: SelectedEdge = {
+    id: '2',
+    name: 'GenericAll',
+    data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
+    sourceNode: {
+        name: 'source node',
+        id: '1',
+        objectId: '1',
+        type: 'User',
+    },
+    targetNode: { name: 'target node', id: '3', objectId: 'testing-node-123', type: 'Computer' },
+};
+
+const selectedEdgeHasLapsDisabled: SelectedEdge = {
+    id: '3',
+    name: 'GenericAll',
+    data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
+    sourceNode: {
+        name: 'source node',
+        id: '1',
+        objectId: '1',
+        type: 'User',
+    },
+    targetNode: { name: 'target node', id: '4', objectId: 'testing-node-456', type: 'Computer' },
+};
+
+const windowsAbuseHasLapsText = (sourceName: string, targetName: string) => {
+    return `The GenericAll permission grants ${sourceName} the ability to obtain the LAPS (RID 500 administrator) password of ${targetName}.`;
+};
+
+const hasLapsEnabledTestText = windowsAbuseHasLapsText(
+    selectedEdgeHasLapsEnabled.sourceNode.name,
+    selectedEdgeHasLapsEnabled.targetNode.name
+);
+const hasLapsDisabledTestText = windowsAbuseHasLapsText(
+    selectedEdgeHasLapsDisabled.sourceNode.name,
+    selectedEdgeHasLapsDisabled.targetNode.name
+);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
@@ -86,5 +160,23 @@ describe('EdgeInfoContent', () => {
         expect(
             screen.queryByText('An unexpected error has occurred. Please refresh the page and try again.')
         ).not.toBeInTheDocument();
+    });
+    test('Selecting an edge with a Computer target node that haslaps is enabled shows correct Windows Abuse text', async () => {
+        render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsEnabled} />);
+
+        const user = userEvent.setup();
+        const windowAbuseAccordion = screen.getByTestId('windowsabuse-accordion');
+        await user.click(windowAbuseAccordion);
+
+        expect(screen.getByText(hasLapsEnabledTestText, { exact: false })).toBeInTheDocument();
+    });
+    test('Selecting an edge with a Computer target node that does not have haslaps enabled shows correct Windows Abuse text', async () => {
+        render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsDisabled} />);
+
+        const user = userEvent.setup();
+        const windowAbuseAccordion = screen.getByTestId('windowsabuse-accordion');
+        await user.click(windowAbuseAccordion);
+
+        expect(screen.queryByText(hasLapsDisabledTestText, { exact: false })).not.toBeInTheDocument();
     });
 });

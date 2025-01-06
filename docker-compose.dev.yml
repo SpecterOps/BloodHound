@@ -28,8 +28,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
   app-db:
-    image: docker.io/library/postgres:13.2
+    profiles:
+      - dev
+      - api-only
+      - ui-only
+      - debug-api
+      - pg-only
+      - sso
+    image: docker.io/library/postgres:16
     environment:
+      - PGUSER=${BH_POSTGRES_USER:-bloodhound}
       - POSTGRES_USER=${BH_POSTGRES_USER:-bloodhound}
       - POSTGRES_PASSWORD=${BH_POSTGRES_PASSWORD:-bloodhoundcommunityedition}
       - POSTGRES_DB=${BH_POSTGRES_DB:-bloodhound}
@@ -41,7 +49,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${BH_POSTGRES_USER:-bloodhound} -d 'dbname=${BH_POSTGRES_DB:-bloodhound}' -h 127.0.0.1 -p 5432"
+          "pg_isready -U ${BH_POSTGRES_USER:-bloodhound} -d 'dbname=${BH_POSTGRES_DB:-bloodhound}' -h 127.0.0.1 -p 5432",
         ]
       interval: 10s
       timeout: 5s
@@ -49,6 +57,13 @@ services:
       start_period: 30s
 
   pgadmin:
+    profiles:
+      - dev
+      - api-only
+      - ui-only
+      - debug-api
+      - pg-only
+      - sso
     build:
       context: tools/docker-compose
       dockerfile: pgadmin.Dockerfile
@@ -68,6 +83,12 @@ services:
         condition: service_healthy
 
   graph-db:
+    profiles:
+      - dev
+      - api-only
+      - ui-only
+      - debug-api
+      - sso
     build:
       args:
         memconfig: true
@@ -88,16 +109,13 @@ services:
       - traefik.http.services.neo4jbrowser.loadbalancer.server.port=7474
     healthcheck:
       test:
-        [
-          "CMD-SHELL",
-          "wget -O /dev/null -q http://localhost:7474 || exit 1"
-        ]
+        ["CMD-SHELL", "wget -O /dev/null -q http://localhost:7474 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
 
-  bh-api:
+  bh-api: &bh-api
     profiles:
       - dev
       - api-only
@@ -107,6 +125,7 @@ services:
     command: "-c .air.toml ${AIR_FLAGS:-''}"
     ports:
       - ${BH_API_PORT:-127.0.0.1:8080}:8080
+      - ${TOOLAPI_PORT:-127.0.0.1:2112}:2112
     labels:
       - traefik.enable=true
       - traefik.http.routers.bhapi.rule=Host(`${BH_HOSTNAME:-bloodhound.localhost}`) && PathPrefix(`/api`)
@@ -127,6 +146,7 @@ services:
       - dev
       - ui-only
       - debug-api
+      - sso
     build:
       context: .
       dockerfile: tools/docker-compose/ui.Dockerfile
@@ -153,6 +173,7 @@ services:
     command: "-c .air.debug.toml ${AIR_FLAGS:-''}"
     ports:
       - ${BH_API_PORT:-127.0.0.1:8080}:8080
+      - ${TOOLAPI_PORT:-127.0.0.1:2112}:2112
       - ${DEBUG_PORT:-127.0.0.1:3456}:2345
     labels:
       - traefik.enable=true
@@ -168,8 +189,91 @@ services:
       graph-db:
         condition: service_healthy
 
+  bh-api-sso:
+    <<: *bh-api
+    profiles:
+      - sso
+    links:
+      - authentik:authentik.localhost
+
+  authentik:
+    profiles:
+      - sso
+      - sso-only
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.10.7}
+    restart: unless-stopped
+    command: server
+    environment:
+      AUTHENTIK_LISTEN__HTTP: 0.0.0.0:80
+      AUTHENTIK_REDIS__HOST: authentik-valkey
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
+      AUTHENTIK_POSTGRESQL__USER: ${ATK_BH_PG_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__NAME: ${ATK_BH_PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${ATK_BH_PG_PASS:-bloodhoundcommunityedition}
+      AUTHENTIK_SECRET_KEY: ${ATK_BH_SECRET:-bloodhoundcommunityedition}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.authentik.rule=Host(`${BH_AUTHENTIK_HOSTNAME:-authentik.localhost}`)
+      - traefik.http.routers.authentik.service=authentik
+      - traefik.http.services.authentik.loadbalancer.server.port=80
+    ports:
+      - "${COMPOSE_PORT_HTTP:-9000}:80"
+      - "${COMPOSE_PORT_HTTPS:-9443}:9443"
+    depends_on:
+      - authentik-db
+      - authentik-valkey
+
+  authentik-worker:
+    profiles:
+      - sso
+      - sso-only
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.10.7}
+    restart: unless-stopped
+    command: worker
+    environment:
+      AUTHENTIK_REDIS__HOST: authentik-valkey
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
+      AUTHENTIK_POSTGRESQL__USER: ${ATK_BH_PG_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__NAME: ${ATK_BH_PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${ATK_BH_PG_PASS:-bloodhoundcommunityedition}
+      AUTHENTIK_SECRET_KEY: ${ATK_BH_SECRET:-bloodhoundcommunityedition}
+    depends_on:
+      - authentik-db
+      - authentik-valkey
+
+  authentik-valkey:
+    profiles:
+      - sso
+      - sso-only
+    image: docker.io/valkey/valkey:alpine
+    command: --save 60 1 --loglevel warning
+    restart: unless-stopped
+    volumes:
+      - authentik-valkey:/data
+
+  authentik-db:
+    profiles:
+      - sso
+      - sso-only
+    image: docker.io/library/postgres:13.2-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 5s
+    volumes:
+      - authentik-db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: ${ATK_BH_PG_PASS:-bloodhoundcommunityedition}
+      POSTGRES_USER: ${ATK_BH_PG_USER:-authentik}
+      POSTGRES_DB: ${ATK_BH_PG_DB:-authentik}
+
 volumes:
   neo4j-data:
   postgres-data:
   go-pkg-mod:
   ui-cache:
+  authentik-valkey:
+  authentik-db:

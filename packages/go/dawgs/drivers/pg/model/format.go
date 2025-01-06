@@ -17,9 +17,10 @@
 package model
 
 import (
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"strconv"
 	"strings"
+
+	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 const (

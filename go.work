@@ -14,18 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-go 1.21
+go 1.23
 
 use (
 	./cmd/api/src
 	./packages/go/analysis
+	./packages/go/bomenc
 	./packages/go/cache
 	./packages/go/conftool
 	./packages/go/crypto
 	./packages/go/cypher
 	./packages/go/dawgs
 	./packages/go/ein
-	./packages/go/errors
 	./packages/go/graphschema
 	./packages/go/headers
 	./packages/go/lab

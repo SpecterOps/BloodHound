@@ -20,8 +20,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/src/model/ingest"
 	"io"
+
+	"github.com/specterops/bloodhound/src/model/ingest"
 )
 
 func SeekToDataTag(decoder *json.Decoder) error {

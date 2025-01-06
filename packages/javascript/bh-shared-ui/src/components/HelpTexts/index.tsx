@@ -64,10 +64,9 @@ import AdminTo from './AdminTo/AdminTo';
 import AllExtendedRights from './AllExtendedRights/AllExtendedRights';
 import AllowedToAct from './AllowedToAct/AllowedToAct';
 import AllowedToDelegate from './AllowedToDelegate/AllowedToDelegate';
-import CanAbuseUPNCertMapping from './CanAbuseUPNCertMapping/CanAbuseUPNCertMapping';
-import CanAbuseWeakCertBinding from './CanAbuseWeakCertBinding/CanAbuseWeakCertBinding';
 import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
+import CoerceToTGT from './CoerceToTGT/CoerceToTGT';
 import Contains from './Contains/Contains';
 import DCSync from './DCSync/DCSync';
 import DCFor from './DCFor/DCFor';
@@ -100,10 +99,13 @@ import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
 import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
 import RootCAFor from './RootCAFor/RootCAFor';
 import SQLAdmin from './SQLAdmin/SQLAdmin';
+import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
+import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
 import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import TrustedBy from './TrustedBy/TrustedBy';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
+import WriteGPLink from './WriteGPLink/WriteGPLink';
 import WriteDacl from './WriteDacl/WriteDacl';
 import WriteOwner from './WriteOwner/WriteOwner';
 import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
@@ -145,6 +147,7 @@ const EdgeInfoComponents = {
     CanRDP: CanRDP,
     ExecuteDCOM: ExecuteDCOM,
     AllowedToDelegate: AllowedToDelegate,
+    CoerceToTGT: CoerceToTGT,
     GetChanges: GetChanges,
     GetChangesAll: GetChangesAll,
     ReadLAPSPassword: ReadLAPSPassword,
@@ -156,8 +159,6 @@ const EdgeInfoComponents = {
     ReadGMSAPassword: ReadGMSAPassword,
     HasSIDHistory: HasSIDHistory,
     TrustedBy: TrustedBy,
-    CanAbuseUPNCertMapping: CanAbuseUPNCertMapping,
-    CanAbuseWeakCertBinding: CanAbuseWeakCertBinding,
     CanPSRemote: CanPSRemote,
     AZAddMembers: AZAddMembers,
     AZAddSecret: AZAddSecret,
@@ -188,6 +189,7 @@ const EdgeInfoComponents = {
     DCSync: DCSync,
     SyncLAPSPassword: SyncLAPSPassword,
     WriteAccountRestrictions: WriteAccountRestrictions,
+    WriteGPLink: WriteGPLink,
     DumpSMSAPassword: DumpSMSAPassword,
     AZMGAddMember: AZMGAddMember,
     AZMGAddOwner: AZMGAddOwner,
@@ -236,6 +238,8 @@ const EdgeInfoComponents = {
     DCFor: DCFor,
     OIDGroupLink: OIDGroupLink,
     ExtendedByPolicy: ExtendedByPolicy,
+    SyncedToADUser: SyncedToADUser,
+    SyncedToEntraUser: SyncedToEntraUser,
 };
 
 export default EdgeInfoComponents;

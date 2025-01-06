@@ -40,6 +40,13 @@ const References: FC = () => {
                 href='https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#editf_attributesubjectaltname2-esc6'>
                 Domain Escalation Edit Attributes
             </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://techcommunity.microsoft.com/t5/ask-the-directory-services-team/preview-of-san-uri-for-certificate-strong-mapping-for-kb5014754/ba-p/3789785'>
+                Preview of SAN URI for Certificate Strong Mapping for KB5014754
+            </Link>
         </Box>
     );
 };

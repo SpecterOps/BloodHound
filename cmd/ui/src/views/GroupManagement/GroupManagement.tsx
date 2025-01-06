@@ -19,6 +19,7 @@ import {
     DropdownOption,
     EntityKinds,
     GroupManagementContent,
+    Permission,
     searchbarActions,
     TIER_ZERO_LABEL,
     TIER_ZERO_TAG,
@@ -32,6 +33,7 @@ import { ROUTE_EXPLORE } from 'src/ducks/global/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
 import { dataCollectionMessage } from '../QA/utils';
+import usePermissions from 'src/hooks/usePermissions/usePermissions';
 
 const GroupManagement = () => {
     const dispatch = useAppDispatch();
@@ -41,6 +43,8 @@ const GroupManagement = () => {
 
     // Kept out of the shared UI due to diff between GraphNodeTypes across apps
     const [openNode, setOpenNode] = useState<SelectedNode | null>(null);
+
+    const { checkPermission } = usePermissions();
 
     const handleClickMember = (member: AssetGroupMember) => {
         setOpenNode({
@@ -88,6 +92,7 @@ const GroupManagement = () => {
             onShowNodeInExplore={handleShowNodeInExplore}
             onClickMember={handleClickMember}
             mapAssetGroups={mapAssetGroups}
+            userHasEditPermissions={checkPermission(Permission.GRAPH_DB_WRITE)}
         />
     );
 };

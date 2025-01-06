@@ -16,15 +16,15 @@
 
 module github.com/specterops/bloodhound/packages/go/stbernard
 
-go 1.21
+go 1.23
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/specterops/bloodhound/log v0.0.0-00010101000000-000000000000
 	github.com/specterops/bloodhound/slicesext v0.0.0-00010101000000-000000000000
-	github.com/stretchr/testify v1.8.4
-	golang.org/x/mod v0.14.0
+	github.com/stretchr/testify v1.9.0
+	golang.org/x/mod v0.21.0
 )
 
 require (
@@ -34,8 +34,8 @@ require (
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rs/zerolog v1.29.1 // indirect
-	golang.org/x/sys v0.17.0 // indirect
-	golang.org/x/tools v0.13.0
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/tools v0.26.0
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

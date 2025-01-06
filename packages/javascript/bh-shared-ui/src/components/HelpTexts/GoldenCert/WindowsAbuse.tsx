@@ -60,7 +60,9 @@ const Abuse: FC = () => {
                 <br />
                 2) Request a TGT for the targeted principal using the certificate with Rubeus:
                 <Typography component={'pre'}>
-                    {'Rubeus.exe asktgt /user:Roshi /certificate:target.pfx /password:NewPassword123!'}
+                    {
+                        'Rubeus.exe asktgt /user:Roshi /domain:dumpster.fire /certificate:target.pfx /password:NewPassword123!'
+                    }
                 </Typography>
             </Typography>
         </>

@@ -430,6 +430,77 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography component={'pre'}>
                         {'pyLAPS.py --action get -d "DOMAIN" -u "ControlledUser" -p "ItsPassword"'}
                     </Typography>
+
+                    <Typography variant='body1'>Generic Descendent Object Takeover</Typography>
+                    <Typography variant='body2'>
+                        The simplest and most straight forward way to obtain control of the objects of the domain is to
+                        apply a GenericAll ACE on the domain that will inherit down to all object types. This can be
+                        done using Impacket's dacledit (cf. "grant rights" reference for the link).
+                    </Typography>
+
+                    <Typography component={'pre'}>
+                        {
+                            "dacledit.py -action 'write' -rights 'FullControl' -inheritance -principal 'JKHOLER' -target-dn 'DomainDistinguishedName' 'domain'/'user':'password'"
+                        }
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Now, the "JKOHLER" user will have full control of all descendent objects of each type.
+                    </Typography>
+
+                    <Typography variant='body1'>Objects for which ACL inheritance is disabled</Typography>
+
+                    <Typography variant='body2'>
+                        The compromise vector described above relies on ACL inheritance and will not work for objects
+                        with ACL inheritance disabled, such as objects protected by AdminSDHolder (attribute
+                        adminCount=1). This observation applies to any user or computer with inheritance disabled,
+                        including objects located in nested OUs.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        In such a situation, it may still be possible to exploit GenericAll permissions on a domain
+                        object through an alternative attack vector. Indeed, with GenericAll permissions over a domain
+                        object, you may make modifications to the gPLink attribute of the domain. The ability to alter
+                        the gPLink attribute of a domain may allow an attacker to apply a malicious Group Policy Object
+                        (GPO) to all of the domain user and computer objects (including the ones located in nested OUs).
+                        This can be exploited to make said child objects execute arbitrary commands through an immediate
+                        scheduled task, thus compromising them.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Successful exploitation will require the possibility to add non-existing DNS records to the
+                        domain and to create machine accounts. Alternatively, an already compromised domain-joined
+                        machine may be used to perform the attack. Note that the attack vector implementation is not
+                        trivial and will require some setup.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        From a Linux machine, the gPLink manipulation attack vector may be exploited using the{' '}
+                        <Link target='_blank' rel='noopener' href='https://github.com/synacktiv/OUned'>
+                            OUned.py
+                        </Link>{' '}
+                        tool. For a detailed outline of exploit requirements and implementation, you can refer to{' '}
+                        <Link
+                            target='_blank'
+                            rel='noopener'
+                            href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
+                            the article associated to the OUned.py tool
+                        </Link>
+                        .
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Be mindful of the number of users and computers that are in the given domain as they all will
+                        attempt to fetch and apply the malicious GPO.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Alternatively, the ability to modify the gPLink attribute of a domain can be exploited in
+                        conjunction with write permissions on a GPO. In such a situation, an attacker could first inject
+                        a malicious scheduled task in the controlled GPO, and then link the GPO to the target domain
+                        through its gPLink attribute, making all child users and computers apply the malicious GPO and
+                        execute arbitrary commands.
+                    </Typography>
                 </>
             );
         case 'GPO':
@@ -509,6 +580,67 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         right you want to apply to precisely which kinds of descendent objects. Refer to the Windows
                         Abuse info for this.
                     </Typography>
+
+                    <Typography variant='body1'>Objects for which ACL inheritance is disabled</Typography>
+
+                    <Typography variant='body2'>
+                        It is important to note that the compromise vector described above relies on ACL inheritance and
+                        will not work for objects with ACL inheritance disabled, such as objects protected by
+                        AdminSDHolder (attribute adminCount=1). This observation applies to any OU child user or
+                        computer with ACL inheritance disabled, including objects located in nested sub-OUs.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        In such a situation, it may still be possible to exploit GenericAll permissions on an OU through
+                        an alternative attack vector. Indeed, with GenericAll permissions over an OU, you may make
+                        modifications to the gPLink attribute of the OU. The ability to alter the gPLink attribute of an
+                        OU may allow an attacker to apply a malicious Group Policy Object (GPO) to all of the OU's child
+                        user and computer objects (including the ones located in nested sub-OUs). This can be exploited
+                        to make said child objects execute arbitrary commands through an immediate scheduled task, thus
+                        compromising them.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Successful exploitation will require the possibility to add non-existing DNS records to the
+                        domain and to create machine accounts. Alternatively, an already compromised domain-joined
+                        machine may be used to perform the attack. Note that the attack vector implementation is not
+                        trivial and will require some setup.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Successful exploitation will require the possibility to add non-existing DNS records to the
+                        domain and to create machine accounts. Alternatively, an already compromised domain-joined
+                        machine may be used to perform the attack. Note that the attack vector implementation is not
+                        trivial and will require some setup.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        From a Linux machine, the gPLink manipulation attack vector may be exploited using the{' '}
+                        <Link target='_blank' rel='noopener' href='https://github.com/synacktiv/OUned'>
+                            OUned.py
+                        </Link>{' '}
+                        tool. For a detailed outline of exploit requirements and implementation, you can refer to{' '}
+                        <Link
+                            target='_blank'
+                            rel='noopener'
+                            href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
+                            the article associated to the OUned.py tool
+                        </Link>
+                        .
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Be mindful of the number of users and computers that are in the given OU as they all will
+                        attempt to fetch and apply the malicious GPO.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Alternatively, the ability to modify the gPLink attribute of an OU can be exploited in
+                        conjunction with write permissions on a GPO. In such a situation, an attacker could first inject
+                        a malicious scheduled task in the controlled GPO, and then link the GPO to the target OU through
+                        its gPLink attribute, making all child users and computers apply the malicious GPO and execute
+                        arbitrary commands.
+                    </Typography>
                 </>
             );
         case 'Container':
@@ -546,8 +678,67 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     </Typography>
                 </>
             );
+        case 'CertTemplate':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With ownership over a certificate template, you can grant yourself GenericAll. With GenericAll,
+                        you may be able to perform an ESC4 attack by modifying the template's attributes. BloodHound
+                        will in that case create an ADCSESC4 edge from the principal to the forest domain node.
+                    </Typography>
+                </>
+            );
+        case 'EnterpriseCA':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With ownership over an enterprise CA, you can grant yourself GenericAll. With GenericAll, you
+                        can publish certificate templates to the enterprise CA by adding the CN name of the template in
+                        the enterprise CA object's certificateTemplates attribute. This action may enable you to perform
+                        an ADCS domain escalation.
+                    </Typography>
+                </>
+            );
+        case 'RootCA':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With ownership over a root CA, you can grant yourself GenericAll. With GenericAll, you can make
+                        a rogue certificate trusted as a root CA in the AD forest by adding the certificate in the root
+                        CA object's cACertificate attribute. This action may enable you to perform an ADCS domain
+                        escalation.
+                    </Typography>
+                </>
+            );
+        case 'NTAuthStore':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With ownership over a NTAuth store, you can grant yourself GenericAll. With GenericAll, you can
+                        make an enterprise CA certificate trusted for NT (domain) authentication in the AD forest by
+                        adding the certificate in the root CA object's cACertificate attribute. This action may enable
+                        you to perform an ADCS domain escalation. This action may enable you to perform an ADCS domain
+                        escalation.
+                    </Typography>
+                </>
+            );
+        case 'IssuancePolicy':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        With ownership over an issuance policy object, you can grant yourself GenericAll. With
+                        GenericAll, you create a OID group link to a targeted group by adding the groups
+                        distinguishedName in the msDS-OIDToGroupLink attribute of the issuance policy object. This
+                        action may enable you to gain membership of the group through an ADCS ESC13 attack.
+                    </Typography>
+                </>
+            );
         default:
-            return null;
+            return (
+                <>
+                    <Typography variant='body2'>No abuse information available for this node type.</Typography>
+                </>
+            );
     }
 };
 

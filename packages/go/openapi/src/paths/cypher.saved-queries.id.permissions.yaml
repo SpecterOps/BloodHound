@@ -1,0 +1,112 @@
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+  - name: saved_query_id
+    description: ID of the saved query
+    in: path
+    required: true
+    schema:
+      type: integer
+      format: int32
+delete:
+  operationId: DeleteSavedQueryPermissions
+  summary: Revokes permission of a saved query from users
+  description: Revokes permission of a saved query from a given set of users
+  tags:
+    - Cypher
+    - Community
+    - Enterprise
+  requestBody:
+    description: The request body for revoking permissions of a saved query from users
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            user_ids:
+              type: array
+              description: A list of user ids that will have their permission revoked from the given saved query
+              items:
+                type: string
+                format: uuid
+  responses:
+    204:
+      $ref: './../responses/no-content.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
+put:
+  operationId: ShareSavedQuery
+  summary: Share a saved query or set it to public
+  description: Shares an existing saved query or makes it public
+  tags:
+    - Cypher
+    - Community
+    - Enterprise
+  requestBody:
+    description: The request body for sharing a saved query or making it public
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties: 
+            user_ids:
+              type: array
+              items: 
+                type: string
+                format: uuid
+            public:
+              type: boolean
+
+  responses:
+    201:
+      description: Created
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: './../schemas/model.saved-queries-permissions.yaml'
+    204:
+      $ref: './../responses/no-content.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

@@ -9,7 +9,7 @@
         "README.md"
     ],
     "scripts": {
-        "build": "rollup --config rollup.config.js",
+        "build": "yarn check-types && rollup --config rollup.config.js",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "test": "echo \"Warning: no test specified\"",
         "check-types": "tsc --noEmit --pretty",
@@ -17,7 +17,7 @@
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
     },
     "dependencies": {
-        "axios": "^1.6.8"
+        "axios": "^1.7.4"
     },
     "devDependencies": {
         "@rollup/plugin-typescript": "^11.1.6",

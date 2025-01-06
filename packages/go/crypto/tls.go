@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package crypto
@@ -39,6 +39,9 @@ const (
 
 func tryParsePrivateKey(key string) (*rsa.PrivateKey, error) {
 	keyBlock, _ := pem.Decode([]byte(key))
+	if keyBlock == nil {
+		return nil, fmt.Errorf("unsupported key type")
+	}
 
 	if pkcs8PrivateKey, err := x509.ParsePKCS8PrivateKey(keyBlock.Bytes); err == nil {
 		if rsaPrivateKey, ok := pkcs8PrivateKey.(*rsa.PrivateKey); !ok {
@@ -71,16 +74,20 @@ func X509ParseCert(cert string) (*x509.Certificate, error) {
 	}
 }
 
+func FormatCert(cert string) string {
+	if !strings.HasPrefix(cert, "-----BEGIN CERTIFICATE-----") {
+		cert = "-----BEGIN CERTIFICATE-----\n" + cert
+	}
+
+	if !strings.HasSuffix(cert, "-----END CERTIFICATE-----") {
+		cert = cert + "\n-----END CERTIFICATE-----"
+	}
+
+	return cert
+}
+
 func X509ParsePair(cert, key string) (*x509.Certificate, *rsa.PrivateKey, error) {
-	formattedCert := cert
-
-	if !strings.HasPrefix("-----BEGIN CERTIFICATE-----", formattedCert) {
-		formattedCert = "-----BEGIN CERTIFICATE-----\n" + formattedCert
-	}
-
-	if !strings.HasSuffix("-----END CERTIFICATE----- ", formattedCert) {
-		formattedCert = formattedCert + "\n-----END CERTIFICATE----- "
-	}
+	formattedCert := FormatCert(cert)
 
 	if certBlock, _ := pem.Decode([]byte(formattedCert)); certBlock == nil {
 		return nil, nil, fmt.Errorf("unable to decode cert")

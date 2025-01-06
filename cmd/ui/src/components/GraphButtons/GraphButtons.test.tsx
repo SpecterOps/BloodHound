@@ -23,9 +23,32 @@ describe('GraphLayoutButtons', () => {
     const user = userEvent.setup();
 
     it('should render', () => {
+        const testOnReset = vi.fn();
+        const testOnRunStandardLayout = vi.fn();
+        const testOnRunSequentialLayout = vi.fn();
+        const testOnExportJson = vi.fn();
+        const testOnSearchCurrentResults = vi.fn();
+        const testOnToggleAllLabels = vi.fn();
+        const testOnToggleNodeLabels = vi.fn();
+        const testOnToggleEdgeLabels = vi.fn();
+        const testShowNodeLabels = true;
+        const testShowEdgeLabels = true;
+        const testIsCurrentSearchOpen = false;
         render(
             <SigmaContainer>
-                <GraphButtons options={{ standard: false, sequential: true }} />
+                <GraphButtons
+                    onReset={testOnReset}
+                    onRunStandardLayout={testOnRunStandardLayout}
+                    onRunSequentialLayout={testOnRunSequentialLayout}
+                    onExportJson={testOnExportJson}
+                    onSearchCurrentResults={testOnSearchCurrentResults}
+                    onToggleAllLabels={testOnToggleAllLabels}
+                    onToggleNodeLabels={testOnToggleNodeLabels}
+                    onToggleEdgeLabels={testOnToggleEdgeLabels}
+                    showNodeLabels={testShowNodeLabels}
+                    showEdgeLabels={testShowEdgeLabels}
+                    isCurrentSearchOpen={testIsCurrentSearchOpen}
+                />
             </SigmaContainer>
         );
 
@@ -36,29 +59,33 @@ describe('GraphLayoutButtons', () => {
         expect(exportButton).toBeInTheDocument();
     });
 
-    it('should render only the layout button options specified', async () => {
-        render(
-            <SigmaContainer>
-                <GraphButtons options={{ standard: false, sequential: true }} />
-            </SigmaContainer>
-        );
-
-        const layoutButton = screen.getByRole('button', { name: /layout/i });
-        expect(layoutButton).toBeInTheDocument();
-
-        await user.click(layoutButton);
-
-        const sequentialMenuItem = screen.getByRole('menuitem', { name: /sequential/i });
-        expect(sequentialMenuItem).toBeInTheDocument();
-
-        const standardMenuItem = screen.queryByRole('menuitem', { name: /standard/i });
-        expect(standardMenuItem).not.toBeInTheDocument();
-    });
-
     it('interacting with any menu item closes the menu', async () => {
+        const testOnReset = vi.fn();
+        const testOnRunStandardLayout = vi.fn();
+        const testOnRunSequentialLayout = vi.fn();
+        const testOnExportJson = vi.fn();
+        const testOnSearchCurrentResults = vi.fn();
+        const testOnToggleAllLabels = vi.fn();
+        const testOnToggleNodeLabels = vi.fn();
+        const testOnToggleEdgeLabels = vi.fn();
+        const testShowNodeLabels = true;
+        const testShowEdgeLabels = true;
+        const testIsCurrentSearchOpen = false;
         render(
             <SigmaContainer>
-                <GraphButtons options={{ standard: false, sequential: true }} />
+                <GraphButtons
+                    onReset={testOnReset}
+                    onRunStandardLayout={testOnRunStandardLayout}
+                    onRunSequentialLayout={testOnRunSequentialLayout}
+                    onExportJson={testOnExportJson}
+                    onSearchCurrentResults={testOnSearchCurrentResults}
+                    onToggleAllLabels={testOnToggleAllLabels}
+                    onToggleNodeLabels={testOnToggleNodeLabels}
+                    onToggleEdgeLabels={testOnToggleEdgeLabels}
+                    showNodeLabels={testShowNodeLabels}
+                    showEdgeLabels={testShowEdgeLabels}
+                    isCurrentSearchOpen={testIsCurrentSearchOpen}
+                />
             </SigmaContainer>
         );
 
@@ -75,9 +102,32 @@ describe('GraphLayoutButtons', () => {
     });
 
     it('export action is disabled if the canvas is empty', async () => {
+        const testOnReset = vi.fn();
+        const testOnRunStandardLayout = vi.fn();
+        const testOnRunSequentialLayout = vi.fn();
+        const testOnExportJson = vi.fn();
+        const testOnSearchCurrentResults = vi.fn();
+        const testOnToggleAllLabels = vi.fn();
+        const testOnToggleNodeLabels = vi.fn();
+        const testOnToggleEdgeLabels = vi.fn();
+        const testShowNodeLabels = true;
+        const testShowEdgeLabels = true;
+        const testIsCurrentSearchOpen = false;
         render(
             <SigmaContainer>
-                <GraphButtons />
+                <GraphButtons
+                    onReset={testOnReset}
+                    onRunStandardLayout={testOnRunStandardLayout}
+                    onRunSequentialLayout={testOnRunSequentialLayout}
+                    onExportJson={testOnExportJson}
+                    onSearchCurrentResults={testOnSearchCurrentResults}
+                    onToggleAllLabels={testOnToggleAllLabels}
+                    onToggleNodeLabels={testOnToggleNodeLabels}
+                    onToggleEdgeLabels={testOnToggleEdgeLabels}
+                    showNodeLabels={testShowNodeLabels}
+                    showEdgeLabels={testShowEdgeLabels}
+                    isCurrentSearchOpen={testIsCurrentSearchOpen}
+                />
             </SigmaContainer>
         );
 
@@ -91,9 +141,32 @@ describe('GraphLayoutButtons', () => {
     });
 
     it('export action is enabled if the there is graph data saved in redux', async () => {
+        const testOnReset = vi.fn();
+        const testOnRunStandardLayout = vi.fn();
+        const testOnRunSequentialLayout = vi.fn();
+        const testOnExportJson = vi.fn();
+        const testOnSearchCurrentResults = vi.fn();
+        const testOnToggleAllLabels = vi.fn();
+        const testOnToggleNodeLabels = vi.fn();
+        const testOnToggleEdgeLabels = vi.fn();
+        const testShowNodeLabels = true;
+        const testShowEdgeLabels = true;
+        const testIsCurrentSearchOpen = false;
         render(
             <SigmaContainer>
-                <GraphButtons />
+                <GraphButtons
+                    onReset={testOnReset}
+                    onRunStandardLayout={testOnRunStandardLayout}
+                    onRunSequentialLayout={testOnRunSequentialLayout}
+                    onExportJson={testOnExportJson}
+                    onSearchCurrentResults={testOnSearchCurrentResults}
+                    onToggleAllLabels={testOnToggleAllLabels}
+                    onToggleNodeLabels={testOnToggleNodeLabels}
+                    onToggleEdgeLabels={testOnToggleEdgeLabels}
+                    showNodeLabels={testShowNodeLabels}
+                    showEdgeLabels={testShowEdgeLabels}
+                    isCurrentSearchOpen={testIsCurrentSearchOpen}
+                />
             </SigmaContainer>,
             {
                 initialState: {

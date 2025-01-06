@@ -21,11 +21,11 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/mediatypes"
 	"io"
 	"net/http"
 
 	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
 )

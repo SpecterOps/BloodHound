@@ -17,14 +17,15 @@
 package pg
 
 import (
-	"bytes"
 	"context"
 	"fmt"
+
+	"github.com/specterops/bloodhound/cypher/models/pgsql"
+	"github.com/specterops/bloodhound/cypher/models/pgsql/translate"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/specterops/bloodhound/cypher/backend/pgsql"
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -130,21 +131,27 @@ func (s *transaction) getTargetGraph() (model.Graph, error) {
 func (s *transaction) CreateNode(properties *graph.Properties, kinds ...graph.Kind) (*graph.Node, error) {
 	if graphTarget, err := s.getTargetGraph(); err != nil {
 		return nil, err
-	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s, kinds); err != nil {
+	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s.ctx, kinds); err != nil {
 		return nil, err
 	} else if propertiesJSONB, err := pgsql.PropertiesToJSONB(properties); err != nil {
 		return nil, err
 	} else {
 		var (
-			nodeID int32
-			result = s.queryRow(createNodeStatement, s.queryExecMode, graphTarget.ID, kindIDSlice, propertiesJSONB)
+			node   graph.Node
+			result = s.Raw(createNodeStatement, map[string]any{
+				"graph_id":   graphTarget.ID,
+				"kind_ids":   kindIDSlice,
+				"properties": propertiesJSONB,
+			})
 		)
 
-		if err := result.Scan(&nodeID); err != nil {
-			return nil, err
+		defer result.Close()
+
+		if !result.Next() {
+			return nil, result.Error()
 		}
 
-		return graph.NewNode(graph.ID(nodeID), properties, kinds...), nil
+		return &node, result.Scan(&node)
 	}
 }
 
@@ -185,21 +192,29 @@ func (s *transaction) Nodes() graph.NodeQuery {
 func (s *transaction) CreateRelationshipByIDs(startNodeID, endNodeID graph.ID, kind graph.Kind, properties *graph.Properties) (*graph.Relationship, error) {
 	if graphTarget, err := s.getTargetGraph(); err != nil {
 		return nil, err
-	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s, graph.Kinds{kind}); err != nil {
+	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s.ctx, graph.Kinds{kind}); err != nil {
 		return nil, err
 	} else if propertiesJSONB, err := pgsql.PropertiesToJSONB(properties); err != nil {
 		return nil, err
 	} else {
 		var (
-			edgeID int32
-			result = s.queryRow(createEdgeStatement, s.queryExecMode, graphTarget.ID, startNodeID, endNodeID, kindIDSlice[0], propertiesJSONB)
+			edge   graph.Relationship
+			result = s.Raw(createEdgeStatement, map[string]any{
+				"graph_id":   graphTarget.ID,
+				"start_id":   startNodeID,
+				"end_id":     endNodeID,
+				"kind_id":    kindIDSlice[0],
+				"properties": propertiesJSONB,
+			})
 		)
 
-		if err := result.Scan(&edgeID); err != nil {
-			return nil, err
+		defer result.Close()
+
+		if !result.Next() {
+			return nil, result.Error()
 		}
 
-		return graph.NewRelationship(graph.ID(edgeID), startNodeID, endNodeID, properties, kind), nil
+		return &edge, result.Scan(&edge)
 	}
 }
 
@@ -252,17 +267,10 @@ func (s *transaction) Relationships() graph.RelationshipQuery {
 	}
 }
 
-func (s *transaction) queryRow(query string, parameters ...any) pgx.Row {
-	queryArgs := []any{s.queryExecMode, s.queryResultsFormat}
-	queryArgs = append(queryArgs, parameters...)
-
-	return s.driver().QueryRow(s.ctx, query, queryArgs...)
-}
-
 func (s *transaction) query(query string, parameters map[string]any) (pgx.Rows, error) {
 	queryArgs := []any{s.queryExecMode, s.queryResultsFormat}
 
-	if parameters != nil || len(parameters) > 0 {
+	if len(parameters) > 0 {
 		queryArgs = append(queryArgs, pgx.NamedArgs(parameters))
 	}
 
@@ -272,27 +280,12 @@ func (s *transaction) query(query string, parameters map[string]any) (pgx.Rows, 
 func (s *transaction) Query(query string, parameters map[string]any) graph.Result {
 	if parsedQuery, err := frontend.ParseCypher(frontend.NewContext(), query); err != nil {
 		return graph.NewErrorResult(err)
-	} else if translatedParams, err := pgsql.Translate(parsedQuery, s.schemaManager); err != nil {
+	} else if translated, err := translate.Translate(s.ctx, parsedQuery, s.schemaManager, parameters); err != nil {
+		return graph.NewErrorResult(err)
+	} else if sqlQuery, err := translate.Translated(translated); err != nil {
 		return graph.NewErrorResult(err)
 	} else {
-		var (
-			buffer  = &bytes.Buffer{}
-			emitter = pgsql.NewEmitter(false, s.schemaManager)
-		)
-
-		for key, value := range parameters {
-			if _, hasKey := translatedParams[key]; hasKey {
-				return graph.NewErrorResult(fmt.Errorf("Query specifies a parameter value that is overwritten by translation: %s", key))
-			}
-
-			translatedParams[key] = value
-		}
-
-		if err := emitter.Write(parsedQuery, buffer); err != nil {
-			return graph.NewErrorResult(err)
-		}
-
-		return s.Raw(buffer.String(), parameters)
+		return s.Raw(sqlQuery, translated.Parameters)
 	}
 }
 
@@ -301,6 +294,7 @@ func (s *transaction) Raw(query string, parameters map[string]any) graph.Result 
 		return graph.NewErrorResult(err)
 	} else {
 		return &queryResult{
+			ctx:        s.ctx,
 			rows:       rows,
 			kindMapper: s.schemaManager,
 		}

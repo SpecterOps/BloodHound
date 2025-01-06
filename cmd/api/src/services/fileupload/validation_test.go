@@ -17,11 +17,12 @@
 package fileupload_test
 
 import (
+	"strings"
+	"testing"
+
 	"github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/specterops/bloodhound/src/services/fileupload"
 	"github.com/stretchr/testify/assert"
-	"strings"
-	"testing"
 )
 
 type metaTagAssertion struct {

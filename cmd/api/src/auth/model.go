@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -27,7 +28,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
@@ -35,6 +35,8 @@ import (
 
 const (
 	ProviderTypeSecret = "secret"
+	ProviderTypeSAML   = "saml"
+	ProviderTypeOIDC   = "oidc"
 
 	HMAC_SHA2_256 = "hmac-sha2-256"
 )

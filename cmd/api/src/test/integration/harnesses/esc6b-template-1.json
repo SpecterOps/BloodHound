@@ -56,8 +56,8 @@
     {
       "id": "n0",
       "position": {
-        "x": 999.1771632055348,
-        "y": 914.8643979069452
+        "x": 2249.2203162289243,
+        "y": 860.2137545310194
       },
       "caption": "Domain",
       "labels": [],
@@ -67,10 +67,10 @@
       }
     },
     {
-      "id": "n8",
+      "id": "n1",
       "position": {
-        "x": 584.7176209699408,
-        "y": 736.1700780919049
+        "x": 1834.7607739933303,
+        "y": 681.5194347159791
       },
       "caption": "NTAuthStore",
       "labels": [],
@@ -81,10 +81,10 @@
       }
     },
     {
-      "id": "n9",
+      "id": "n2",
       "position": {
-        "x": 584.7176209699408,
-        "y": 914.8643979069452
+        "x": 1834.7607739933303,
+        "y": 860.2137545310194
       },
       "caption": "RootCA",
       "labels": [],
@@ -95,10 +95,10 @@
       }
     },
     {
-      "id": "n11",
+      "id": "n3",
       "position": {
-        "x": 114.21355561509618,
-        "y": 905.4549679136305
+        "x": 1364.2567086384856,
+        "y": 850.8043245377047
       },
       "caption": "EnterpriseCA",
       "labels": [],
@@ -111,15 +111,15 @@
       }
     },
     {
-      "id": "n12",
+      "id": "n4",
       "position": {
-        "x": -119.64223572327218,
-        "y": 500.404855671351
+        "x": 1130.4009173001173,
+        "y": 445.75421229542525
       },
       "caption": "CertTemplate2",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelSchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1"
       },
@@ -129,14 +129,16 @@
       }
     },
     {
-      "id": "n16",
+      "id": "n5",
       "position": {
-        "x": 584.7176209699408,
-        "y": 556.672392102639
+        "x": 1834.7607739933303,
+        "y": 502.02174872671327
       },
       "caption": "DC",
       "labels": [],
-      "properties": {},
+      "properties": {
+        "CertificateMappingMethodsRaw": "31"
+      },
       "style": {
         "node-color": "#f44e3b",
         "caption-position": "inside",
@@ -145,10 +147,10 @@
       }
     },
     {
-      "id": "n18",
+      "id": "n6",
       "position": {
-        "x": -840.4250547789109,
-        "y": 1557.7106975990384
+        "x": 409.6180982444787,
+        "y": 1503.0600542231127
       },
       "caption": "",
       "labels": [],
@@ -158,10 +160,10 @@
       }
     },
     {
-      "id": "n20",
+      "id": "n7",
       "position": {
-        "x": -1007.7341039011505,
-        "y": 736.1700780919049
+        "x": 242.309049122239,
+        "y": 681.5194347159791
       },
       "caption": "Group4",
       "labels": [],
@@ -172,15 +174,15 @@
       }
     },
     {
-      "id": "n21",
+      "id": "n8",
       "position": {
-        "x": -119.64223572327218,
-        "y": 368.48678490620927
+        "x": 1130.4009173001173,
+        "y": 313.8361415302835
       },
       "caption": "CertTemplate3",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "False",
+        "SchannelSchannelAuthenticationEnabled": "False",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1"
       },
@@ -190,10 +192,10 @@
       }
     },
     {
-      "id": "n22",
+      "id": "n9",
       "position": {
-        "x": -840.4250547789109,
-        "y": 736.1700780919049
+        "x": 409.6180982444787,
+        "y": 681.5194347159791
       },
       "caption": "Group3",
       "labels": [],
@@ -204,10 +206,10 @@
       }
     },
     {
-      "id": "n24",
+      "id": "n10",
       "position": {
-        "x": -565.7054997705179,
-        "y": 1371.2693937344893
+        "x": 684.3376532528716,
+        "y": 1316.6187503585636
       },
       "caption": "Group2",
       "labels": [],
@@ -217,15 +219,15 @@
       }
     },
     {
-      "id": "n25",
+      "id": "n11",
       "position": {
-        "x": -119.64223572327218,
-        "y": 236.56871414106752
+        "x": 1130.4009173001173,
+        "y": 181.91807076514175
       },
       "caption": "CertTemplate4",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelSchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "True",
         "SchemaVersion": "1"
       },
@@ -236,10 +238,10 @@
       }
     },
     {
-      "id": "n26",
+      "id": "n12",
       "position": {
-        "x": -760.8871309137112,
-        "y": 1033.2048918903108
+        "x": 489.15602210967836,
+        "y": 978.554248514385
       },
       "caption": "Group0",
       "labels": [],
@@ -249,15 +251,15 @@
       }
     },
     {
-      "id": "n29",
+      "id": "n13",
       "position": {
-        "x": -119.64223572327218,
-        "y": 104.65064337592578
+        "x": 1130.4009173001173,
+        "y": 50
       },
       "caption": "CertTemplate5",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelSchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "2",
         "AuthorizedSignatures": "1"
@@ -268,15 +270,15 @@
       }
     },
     {
-      "id": "n30",
+      "id": "n14",
       "position": {
-        "x": -119.64223572327218,
-        "y": 632.3229264364927
+        "x": 1130.4009173001173,
+        "y": 577.6722830605669
       },
       "caption": "CertTemplate1",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "2",
         "AuthorizedSignatures": "0"
@@ -287,10 +289,10 @@
       }
     },
     {
-      "id": "n31",
+      "id": "n15",
       "position": {
-        "x": -1175.0431530233896,
-        "y": 736.1700780919049
+        "x": 75,
+        "y": 681.5194347159791
       },
       "caption": "Group5",
       "labels": [],
@@ -301,10 +303,10 @@
       }
     },
     {
-      "id": "n32",
+      "id": "n16",
       "position": {
-        "x": -379.48539540269724,
-        "y": 1371.2693937344893
+        "x": 870.5577576206923,
+        "y": 1316.6187503585636
       },
       "caption": "Group1",
       "labels": [],
@@ -316,9 +318,9 @@
   ],
   "relationships": [
     {
-      "id": "n12",
-      "fromId": "n12",
-      "toId": "n11",
+      "id": "n0",
+      "fromId": "n4",
+      "toId": "n3",
       "type": "PublishedTo",
       "properties": {},
       "style": {
@@ -326,8 +328,8 @@
       }
     },
     {
-      "id": "n13",
-      "fromId": "n9",
+      "id": "n1",
+      "fromId": "n2",
       "toId": "n0",
       "type": "RootCAFor",
       "properties": {},
@@ -336,9 +338,9 @@
       }
     },
     {
-      "id": "n57",
-      "fromId": "n11",
-      "toId": "n9",
+      "id": "n2",
+      "fromId": "n3",
+      "toId": "n2",
       "type": "IssuedSignedBy",
       "properties": {},
       "style": {
@@ -346,8 +348,8 @@
       }
     },
     {
-      "id": "n59",
-      "fromId": "n8",
+      "id": "n3",
+      "fromId": "n1",
       "toId": "n0",
       "type": "NTAuthStoreFor",
       "properties": {},
@@ -356,9 +358,9 @@
       }
     },
     {
-      "id": "n60",
-      "fromId": "n11",
-      "toId": "n8",
+      "id": "n4",
+      "fromId": "n3",
+      "toId": "n1",
       "type": "TrustedForNTAuth",
       "properties": {},
       "style": {
@@ -366,18 +368,8 @@
       }
     },
     {
-      "id": "n70",
-      "type": "CanAbuseUPNCertMapping",
-      "style": {
-        "arrow-color": "#000000"
-      },
-      "properties": {},
-      "fromId": "n11",
-      "toId": "n16"
-    },
-    {
-      "id": "n73",
-      "fromId": "n16",
+      "id": "n5",
+      "fromId": "n5",
       "toId": "n0",
       "type": "DCFor",
       "properties": {},
@@ -387,25 +379,25 @@
       }
     },
     {
-      "id": "n86",
-      "fromId": "n22",
-      "toId": "n21",
+      "id": "n6",
+      "fromId": "n9",
+      "toId": "n8",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n96",
-      "fromId": "n21",
-      "toId": "n11",
+      "id": "n7",
+      "fromId": "n8",
+      "toId": "n3",
       "type": "PublishedTo",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n99",
-      "fromId": "n25",
-      "toId": "n11",
+      "id": "n8",
+      "fromId": "n11",
+      "toId": "n3",
       "type": "PublishedTo",
       "properties": {},
       "style": {
@@ -413,113 +405,113 @@
       }
     },
     {
-      "id": "n100",
-      "fromId": "n20",
-      "toId": "n25",
+      "id": "n9",
+      "fromId": "n7",
+      "toId": "n11",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n101",
-      "fromId": "n24",
+      "id": "n10",
+      "fromId": "n10",
+      "toId": "n4",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n11",
+      "fromId": "n12",
+      "toId": "n3",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n12",
+      "fromId": "n10",
       "toId": "n12",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n102",
-      "fromId": "n26",
-      "toId": "n11",
-      "type": "Enroll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n103",
-      "fromId": "n24",
-      "toId": "n26",
       "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n104",
-      "fromId": "n22",
-      "toId": "n26",
+      "id": "n13",
+      "fromId": "n9",
+      "toId": "n12",
       "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n105",
-      "fromId": "n20",
-      "toId": "n26",
+      "id": "n14",
+      "fromId": "n7",
+      "toId": "n12",
       "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n109",
+      "id": "n15",
+      "fromId": "n10",
+      "toId": "n0",
       "type": "ADCSESC6b",
-      "style": {},
       "properties": {},
-      "fromId": "n24",
-      "toId": "n0"
+      "style": {}
     },
     {
-      "id": "n111",
-      "fromId": "n31",
-      "toId": "n26",
+      "id": "n16",
+      "fromId": "n15",
+      "toId": "n12",
       "type": "MemberOf",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n112",
-      "fromId": "n31",
-      "toId": "n29",
+      "id": "n17",
+      "fromId": "n15",
+      "toId": "n13",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n113",
-      "fromId": "n29",
-      "toId": "n11",
+      "id": "n18",
+      "fromId": "n13",
+      "toId": "n3",
       "type": "PublishedTo",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n114",
-      "fromId": "n30",
-      "toId": "n11",
+      "id": "n19",
+      "fromId": "n14",
+      "toId": "n3",
       "type": "PublishedTo",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n115",
-      "fromId": "n32",
-      "toId": "n30",
+      "id": "n20",
+      "fromId": "n16",
+      "toId": "n14",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n116",
+      "id": "n21",
+      "fromId": "n16",
+      "toId": "n0",
       "type": "ADCSESC6b",
-      "style": {},
       "properties": {},
-      "fromId": "n32",
-      "toId": "n0"
+      "style": {}
     },
     {
-      "id": "n117",
-      "fromId": "n32",
-      "toId": "n26",
+      "id": "n22",
+      "fromId": "n16",
+      "toId": "n12",
       "type": "MemberOf",
       "properties": {},
       "style": {}

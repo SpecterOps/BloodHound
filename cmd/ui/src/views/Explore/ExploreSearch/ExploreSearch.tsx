@@ -16,7 +16,7 @@
 
 import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Collapse, Paper, Tab, Tabs, Theme, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Paper, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { CYPHER_SEARCH, Icon, PATHFINDING_SEARCH, PRIMARY_SEARCH, searchbarActions } from 'bh-shared-ui';
 import React, { useState } from 'react';
@@ -37,7 +37,16 @@ const useStyles = makeStyles((theme) => ({
         boxSizing: 'border-box',
         padding: theme.spacing(2),
         fontSize: theme.typography.fontSize,
-        color: theme.palette.common.black,
+        color: theme.palette.color.primary,
+    },
+    tab: {
+        height: '40px',
+        minHeight: '40px',
+        color: theme.palette.primary.main,
+        opacity: 1,
+        padding: 0,
+        flexGrow: 1,
+        minWidth: theme.spacing(2),
     },
 }));
 
@@ -49,42 +58,63 @@ const tabNameMap = {
 };
 
 interface ExploreSearchProps {
-    handleColumns?: (isCypherEditorActive: boolean) => void;
+    onTabChange?: (tab: string) => void;
 }
 
-const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
+const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
+    /* Hooks */
     const classes = useStyles();
+
     const theme = useTheme();
+
     const matches = useMediaQuery(theme.breakpoints.down('md'));
+
     const dispatch = useAppDispatch();
 
     const tabKey = useAppSelector((state) => state.search.activeTab);
+
     const activeTab = tabNameMap[tabKey];
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
 
+    /* Event Handlers */
     const handleTabChange = (newTabIndex: number) => {
         switch (newTabIndex) {
             case 0:
+                onTabChange('search');
                 dispatch(searchbarActions.primarySearch());
                 return dispatch(searchbarActions.tabChanged(PRIMARY_SEARCH));
             case 1:
+                onTabChange('pathfinding');
                 dispatch(searchbarActions.pathfindingSearch());
                 return dispatch(searchbarActions.tabChanged(PATHFINDING_SEARCH));
             case 2:
+                onTabChange('cypher');
                 dispatch(searchbarActions.cypherSearch());
                 return dispatch(searchbarActions.tabChanged(CYPHER_SEARCH));
-        }
-
-        const cypherTabIndex = 2;
-        if (handleColumns) {
-            handleColumns(newTabIndex === cypherTabIndex);
         }
     };
 
     return (
-        <Box sx={{ pointerEvents: 'auto' }}>
-            <Paper sx={{ height: '40px', display: 'flex', flexShrink: 4, gap: 1 }} elevation={0}>
+        <Box
+            sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 0,
+                gap: 1,
+            }}>
+            <Paper
+                sx={{
+                    height: '40px',
+                    display: 'flex',
+                    flexShrink: 0,
+                    gap: 1,
+                    backgroundColor: theme.palette.neutral.secondary,
+                    borderRadius: '8px',
+                    pointerEvents: 'auto',
+                }}
+                elevation={0}>
                 <Icon
                     className={classes.icon}
                     click={() => {
@@ -107,12 +137,26 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
                     TabIndicatorProps={{
                         sx: { height: 3, backgroundColor: '#6798B9' },
                     }}>
-                    {getTabsContent(theme, matches)}
+                    {getTabsContent(classes.tab, matches)}
                 </Tabs>
             </Paper>
 
-            <Collapse in={showSearchWidget}>
-                <Paper sx={{ mt: 1, p: 1 }} elevation={0}>
+            <Box
+                display={showSearchWidget ? 'flex' : 'none'}
+                sx={{
+                    minHeight: 0,
+                    flexDirection: 'column',
+                }}>
+                <Paper
+                    sx={{
+                        p: 1,
+                        backgroundColor: theme.palette.neutral.secondary,
+                        borderRadius: '8px',
+                        boxSizing: 'border-box',
+                        height: '100%',
+                        pointerEvents: 'auto',
+                    }}
+                    elevation={0}>
                     <TabPanels
                         tabs={[
                             // This linting rule is disabled because the elements in this array do not require a key prop.
@@ -125,12 +169,12 @@ const ExploreSearch = ({ handleColumns }: ExploreSearchProps) => {
                         activeTab={activeTab}
                     />
                 </Paper>
-            </Collapse>
+            </Box>
         </Box>
     );
 };
 
-const getTabsContent = (theme: Theme, matches: boolean) => {
+const getTabsContent = (className: string, matches: boolean) => {
     const tabs = [
         {
             label: 'Search',
@@ -153,15 +197,7 @@ const getTabsContent = (theme: Theme, matches: boolean) => {
             icon={<FontAwesomeIcon icon={icon} />}
             iconPosition='start'
             title={label}
-            sx={{
-                height: '40px',
-                minHeight: '40px',
-                color: 'black',
-                opacity: 1,
-                padding: 0,
-                flexGrow: 1,
-                minWidth: theme.spacing(2),
-            }}
+            className={className}
         />
     ));
 };
@@ -175,11 +211,15 @@ const TabPanels = ({ tabs, activeTab }: TabPanelsProps) => {
     return (
         <>
             {tabs.map((tab, index) => {
-                return (
-                    <Box role='tabpanel' key={index}>
-                        {activeTab === index && tab}
-                    </Box>
-                );
+                if (activeTab === index) {
+                    return (
+                        <Box role='tabpanel' key={index} height='100%'>
+                            {tab}
+                        </Box>
+                    );
+                } else {
+                    return null;
+                }
             })}
         </>
     );

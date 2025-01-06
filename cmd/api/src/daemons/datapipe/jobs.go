@@ -19,17 +19,19 @@ package datapipe
 import (
 	"archive/zip"
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 
-	"github.com/specterops/bloodhound/src/model/appcfg"
-
-	"github.com/specterops/bloodhound/src/database"
-
+	"github.com/specterops/bloodhound/bomenc"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/fileupload"
 )
 
@@ -140,28 +142,41 @@ func (s *Daemon) clearFileTask(ingestTask model.IngestTask) {
 }
 
 // preProcessIngestFile will take a path and extract zips if necessary, returning the paths for files to process
-func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]string, error) {
+// along with any errors and the number of failed files (in the case of a zip archive)
+func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]string, int, error) {
 	if fileType == model.FileTypeJson {
 		//If this isn't a zip file, just return a slice with the path in it and let stuff process as normal
-		return []string{path}, nil
+		return []string{path}, 0, nil
 	} else if archive, err := zip.OpenReader(path); err != nil {
-		return []string{}, err
+		return []string{}, 0, err
 	} else {
-		filePaths := make([]string, len(archive.File))
+		var (
+			errs      = util.NewErrorCollector()
+			failed    = 0
+			filePaths = make([]string, len(archive.File))
+		)
+
 		for i, f := range archive.File {
 			//skip directories
 			if f.FileInfo().IsDir() {
 				continue
 			}
-			//Break out on an error creating files
+			// Break out if temp file creation fails
+			// Collect errors for other failures within the archive
 			if tempFile, err := os.CreateTemp(s.cfg.TempDirectory(), "bh"); err != nil {
-				return []string{}, err
+				return []string{}, 0, err
 			} else if srcFile, err := f.Open(); err != nil {
-				log.Errorf("Error opening file %s in archive %s: %v", f.Name, path, err)
-			} else if _, err := io.Copy(tempFile, srcFile); err != nil {
-				log.Errorf("Error extracting file %s in archive %s: %v", f.Name, path, err)
+				errs.Add(fmt.Errorf("error opening file %s in archive %s: %v", f.Name, path, err))
+				failed++
+			} else if normFile, err := bomenc.NormalizeToUTF8(srcFile); err != nil {
+				errs.Add(fmt.Errorf("error normalizing file %s to UTF8 in archive %s: %v", f.Name, path, err))
+				failed++
+			} else if _, err := io.Copy(tempFile, normFile); err != nil {
+				errs.Add(fmt.Errorf("error extracting file %s in archive %s: %v", f.Name, path, err))
+				failed++
 			} else if err := tempFile.Close(); err != nil {
-				log.Errorf("Error closing temp file %s: %v", f.Name, err)
+				errs.Add(fmt.Errorf("error closing temp file %s: %v", f.Name, err))
+				failed++
 			} else {
 				filePaths[i] = tempFile.Name()
 			}
@@ -174,7 +189,7 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 			log.Errorf("Error deleting archive %s: %v", path, err)
 		}
 
-		return filePaths, nil
+		return filePaths, failed, errs.Combined()
 	}
 }
 
@@ -187,10 +202,10 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 	} else {
 		adcsEnabled = adcsFlag.Enabled
 	}
-	if paths, err := s.preProcessIngestFile(path, fileType); err != nil {
-		return 0, 0, err
+	if paths, failed, err := s.preProcessIngestFile(path, fileType); err != nil {
+		return 0, failed, err
 	} else {
-		failed := 0
+		failed = 0
 
 		return len(paths), failed, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
 			for _, filePath := range paths {
@@ -205,7 +220,9 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 
 				if err := file.Close(); err != nil {
 					log.Errorf("Error closing ingest file %s: %v", filePath, err)
-				} else if err := os.Remove(filePath); err != nil {
+				} else if err := os.Remove(filePath); errors.Is(err, fs.ErrNotExist) {
+					log.Warnf("Removing ingest file %s: %w", filePath, err)
+				} else if err != nil {
 					log.Errorf("Error removing ingest file %s: %v", filePath, err)
 				}
 			}
@@ -217,8 +234,11 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 
 // processIngestTasks covers the generic file upload case for ingested data.
 func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.IngestTasks) {
-	s.status.Update(model.DatapipeStatusIngesting, false)
-	defer s.status.Update(model.DatapipeStatusIdle, false)
+	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIngesting, false); err != nil {
+		log.Errorf("Error setting datapipe status: %v", err)
+		return
+	}
+	defer s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
 
 	for _, ingestTask := range ingestTasks {
 		// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
@@ -232,10 +252,13 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 			return
 		}
 
-		if job, err := s.db.GetFileUploadJob(ctx, ingestTask.TaskID.ValueOrZero()); err != nil {
-			log.Errorf("Failed to fetch job for ingest task %d: %v", ingestTask.ID, err)
-		} else if total, failed, err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType); err != nil {
+		total, failed, err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType)
+		if errors.Is(err, fs.ErrNotExist) {
+			log.Warnf("Did not process ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
+		} else if err != nil {
 			log.Errorf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
+		} else if job, err := s.db.GetFileUploadJob(ctx, ingestTask.TaskID.ValueOrZero()); err != nil {
+			log.Errorf("Failed to fetch job for ingest task %d: %v", ingestTask.ID, err)
 		} else {
 			job.TotalFiles = total
 			job.FailedFiles += failed

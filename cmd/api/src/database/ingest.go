@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -32,6 +33,16 @@ func (s *BloodhoundDB) GetAllIngestTasks(ctx context.Context) (model.IngestTasks
 	result := s.db.WithContext(ctx).Find(&ingestTasks)
 
 	return ingestTasks, CheckError(result)
+}
+
+func (s *BloodhoundDB) CountAllIngestTasks(ctx context.Context) (int64, error) {
+	var (
+		ingestTaskCount  int64
+		ingestTasksModel model.IngestTasks
+	)
+
+	result := s.db.Model(&ingestTasksModel).WithContext(ctx).Count(&ingestTaskCount)
+	return ingestTaskCount, CheckError(result)
 }
 
 func (s *BloodhoundDB) DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error {

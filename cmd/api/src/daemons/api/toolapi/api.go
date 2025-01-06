@@ -18,20 +18,19 @@ package toolapi
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/pprof"
-	"time"
-
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/errors"
-	"github.com/specterops/bloodhound/src/bootstrap"
-	"github.com/specterops/bloodhound/src/database"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/tools"
+	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/database"
 )
 
 // Daemon holds data relevant to the tools API daemon
@@ -42,10 +41,9 @@ type Daemon struct {
 
 func NewDaemon[DBType database.Database](ctx context.Context, connections bootstrap.DatabaseConnections[DBType, *graph.DatabaseSwitch], cfg config.Configuration, graphSchema graph.Schema, extensions ...func(router *chi.Mux)) Daemon {
 	var (
-		networkTimeout = time.Duration(cfg.NetTimeoutSeconds) * time.Second
-		pgMigrator     = tools.NewPGMigrator(ctx, cfg, graphSchema, connections.Graph)
-		router         = chi.NewRouter()
-		toolContainer  = tools.NewToolContainer(connections.RDMS)
+		pgMigrator    = tools.NewPGMigrator(ctx, cfg, graphSchema, connections.Graph)
+		router        = chi.NewRouter()
+		toolContainer = tools.NewToolContainer(connections.RDMS)
 	)
 
 	router.Mount("/metrics", promhttp.Handler())
@@ -69,11 +67,28 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 	router.Get("/pg-migration/status", pgMigrator.MigrationStatus)
 	router.Put("/pg-migration/cancel", pgMigrator.MigrationCancel)
 
+	// Allow query of datapipe status for infrastructure tooling
+	router.Get("/datapipe/status", func(w http.ResponseWriter, r *http.Request) {
+		if dpStatus, err := connections.RDMS.GetDatapipeStatus(ctx); err != nil {
+			api.HandleDatabaseError(r, w, err)
+		} else {
+			api.WriteJSONResponse(r.Context(), dpStatus, http.StatusOK, w)
+		}
+	})
+
+	// Health endpoint that is online even during migrations
+	router.Get("/health", func(response http.ResponseWriter, _ *http.Request) {
+		response.WriteHeader(http.StatusOK)
+	})
+
 	router.Get("/logging", tools.GetLoggingDetails)
 	router.Put("/logging", tools.PutLoggingDetails)
 
 	router.Get("/features", toolContainer.GetFlags)
 	router.Put("/features/{feature_id:[0-9]+}/toggle", toolContainer.ToggleFlag)
+
+	router.Get("/analysis/schedule", toolContainer.GetScheduledAnalysisConfiguration)
+	router.Put("/analysis/schedule", toolContainer.SetScheduledAnalysisConfiguration)
 
 	for _, extension := range extensions {
 		extension(router)
@@ -82,12 +97,9 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 	return Daemon{
 		cfg: cfg,
 		server: &http.Server{
-			Addr:         cfg.MetricsPort,
-			Handler:      router,
-			WriteTimeout: networkTimeout,
-			ReadTimeout:  networkTimeout,
-			IdleTimeout:  networkTimeout,
-			ErrorLog:     log.Adapter(log.LevelError, "ToolAPI", 0),
+			Addr:     cfg.MetricsPort,
+			Handler:  router,
+			ErrorLog: log.Adapter(log.LevelError, "ToolAPI", 0),
 		},
 	}
 }

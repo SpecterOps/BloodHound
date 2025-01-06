@@ -18,8 +18,10 @@ package fixtures
 
 import (
 	"bytes"
-	"github.com/specterops/bloodhound/cypher/backend/cypher"
-	"github.com/specterops/bloodhound/cypher/model"
+
+	"github.com/specterops/bloodhound/cypher/models/cypher/format"
+
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
@@ -155,6 +157,12 @@ var (
 			query.Kind(query.Relationship(), ad.HasSession),
 			query.Kind(query.End(), ad.User),
 			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1108")),
+		query.And(
+			query.Kind(query.Start(), ad.Computer),
+			query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-2120"),
+			query.Kind(query.Relationship(), ad.CoerceToTGT),
+			query.Kind(query.End(), ad.Domain),
+			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446")),
 
 		//// GPOs
 		query.And(
@@ -240,6 +248,12 @@ var (
 			query.Kind(query.Relationship(), ad.AllExtendedRights),
 			query.Kind(query.End(), ad.User),
 			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1106")),
+		query.And(
+			query.Kind(query.Start(), ad.User),
+			query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-2125"),
+			query.Kind(query.Relationship(), ad.CoerceToTGT),
+			query.Kind(query.End(), ad.Domain),
+			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446")),
 
 		//// SESSIONS
 		query.And(
@@ -275,11 +289,11 @@ var (
 
 func FormatQueryComponent(criteria graph.Criteria) string {
 	var (
-		emitter      = cypher.NewCypherEmitter(false)
+		emitter      = format.NewCypherEmitter(false)
 		stringBuffer = &bytes.Buffer{}
 	)
 
-	if err := emitter.WriteExpression(stringBuffer, criteria.(model.Expression)); err != nil {
+	if err := emitter.WriteExpression(stringBuffer, criteria.(cypher.Expression)); err != nil {
 		return "ERROR"
 	}
 

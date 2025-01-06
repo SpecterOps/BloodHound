@@ -14,23 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    Box,
-    Button,
-    Grid,
-    IconButton,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-} from '@mui/material';
-import NodeIcon from '../NodeIcon';
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { AssetGroupChangelogEntry } from './types';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box, Grid, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { FC } from 'react';
+import NodeIcon from '../NodeIcon';
+import { AssetGroupChangelogEntry } from './types';
 
 const AssetGroupChangelogTable: FC<{
     addRows: AssetGroupChangelogEntry[];
@@ -54,12 +44,12 @@ const AssetGroupChangelogTable: FC<{
             <Box mt={1}>
                 <Grid container direction='row' justifyContent='flex-end' spacing={1}>
                     <Grid item>
-                        <Button color='inherit' size='small' onClick={onCancel}>
+                        <Button variant='tertiary' size='small' onClick={onCancel}>
                             Cancel
                         </Button>
                     </Grid>
                     <Grid item>
-                        <Button size='small' color='primary' variant='contained' disableElevation onClick={onSubmit}>
+                        <Button size='small' onClick={onSubmit} type='submit'>
                             Confirm Changes
                         </Button>
                     </Grid>

@@ -141,6 +141,7 @@ func testRoleAccess(t *testing.T, roleName string) {
 			userClient, ok := lab.Unpack(harness, userClientFixture)
 			assert.True(ok)
 
+			// TODO when formally deprecated update this to another endpoint
 			_, err := userClient.ListSAMLIdentityProviders()
 			if role.Permissions.Has(auth.Permissions().AuthManageProviders) {
 				assert.Nil(err)
@@ -189,8 +190,20 @@ func testRoleAccess(t *testing.T, roleName string) {
 			userClient, ok := lab.Unpack(harness, userClientFixture)
 			assert.True(ok)
 
-			_, err := userClient.CreateFileUploadTask()
+			_, err := userClient.CreateAssetGroup(v2.CreateAssetGroupRequest{Name: "test", Tag: "test"})
 			if role.Permissions.Has(auth.Permissions().GraphDBWrite) {
+				assert.Nil(err)
+			} else {
+				requireForbidden(assert, err)
+			}
+		}),
+
+		lab.TestCase(fmt.Sprintf("%s be able to access GraphDBIngest endpoints", testCondition(role, auth.Permissions().GraphDBIngest)), func(assert *require.Assertions, harness *lab.Harness) {
+			userClient, ok := lab.Unpack(harness, userClientFixture)
+			assert.True(ok)
+
+			_, err := userClient.CreateFileUploadTask()
+			if role.Permissions.Has(auth.Permissions().GraphDBIngest) {
 				assert.Nil(err)
 			} else {
 				requireForbidden(assert, err)

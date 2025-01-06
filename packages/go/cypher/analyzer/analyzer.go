@@ -18,15 +18,16 @@ package analyzer
 
 import (
 	"errors"
-	"github.com/specterops/bloodhound/cypher/model"
+
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 type Analyzer struct {
-	handlers []func(stack *model.WalkStack, node model.Expression) error
+	handlers []func(stack *cypher.WalkStack, node cypher.Expression) error
 }
 
-func (s *Analyzer) walkFunc(stack *model.WalkStack, expression model.Expression) error {
+func (s *Analyzer) walkFunc(stack *cypher.WalkStack, expression cypher.Expression) error {
 	var errs []error
 
 	for _, handler := range s.handlers {
@@ -38,21 +39,21 @@ func (s *Analyzer) walkFunc(stack *model.WalkStack, expression model.Expression)
 	return errors.Join(errs...)
 }
 
-func (s *Analyzer) analyze(query any, extensions ...model.CollectorFunc) error {
-	return model.Walk(query, model.NewVisitor(s.walkFunc, nil), extensions...)
+func (s *Analyzer) analyze(query any, extensions ...cypher.CollectorFunc) error {
+	return cypher.Walk(query, cypher.NewVisitor(s.walkFunc, nil), extensions...)
 }
 
-func Analyze(query any, registrationFunc func(analyzerInst *Analyzer), extensions ...model.CollectorFunc) error {
+func Analyze(query any, registrationFunc func(analyzerInst *Analyzer), extensions ...cypher.CollectorFunc) error {
 	analyzer := &Analyzer{}
 	registrationFunc(analyzer)
 
 	return analyzer.analyze(query, extensions...)
 }
 
-type typedVisitor[T model.Expression] func(stack *model.WalkStack, node T) error
+type typedVisitor[T cypher.Expression] func(stack *cypher.WalkStack, node T) error
 
-func WithVisitor[T model.Expression](analyzer *Analyzer, visitorFunc typedVisitor[T]) {
-	analyzer.handlers = append(analyzer.handlers, func(walkStack *model.WalkStack, node model.Expression) error {
+func WithVisitor[T cypher.Expression](analyzer *Analyzer, visitorFunc typedVisitor[T]) {
+	analyzer.handlers = append(analyzer.handlers, func(walkStack *cypher.WalkStack, node cypher.Expression) error {
 		if typedNode, typeOK := node.(T); typeOK {
 			if err := visitorFunc(walkStack, typedNode); err != nil {
 				return err
@@ -63,7 +64,7 @@ func WithVisitor[T model.Expression](analyzer *Analyzer, visitorFunc typedVisito
 	})
 }
 
-func QueryComplexity(query *model.RegularQuery) (*ComplexityMeasure, error) {
+func QueryComplexity(query *cypher.RegularQuery) (*ComplexityMeasure, error) {
 	var (
 		analyzer = &Analyzer{}
 		measure  = &ComplexityMeasure{

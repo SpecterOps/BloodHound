@@ -16,12 +16,13 @@
 
 import { Menu, MenuItem } from '@mui/material';
 
-import { searchbarActions } from 'bh-shared-ui';
+import { Permission, searchbarActions } from 'bh-shared-ui';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
+import usePermissions from 'src/hooks/usePermissions/usePermissions';
 
 const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; handleClose: () => void }> = ({
     contextMenu,
@@ -33,6 +34,8 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
 
     const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
+
+    const { checkPermission } = usePermissions();
 
     const handleSetStartingNode = () => {
         if (selectedNode) {
@@ -72,9 +75,14 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
 
-            <AssetGroupMenuItem assetGroupId={tierZeroAssetGroupId} assetGroupName='High Value' />
-            <AssetGroupMenuItem assetGroupId={ownedAssetGroupId} assetGroupName='Owned' />
-
+            {checkPermission(Permission.GRAPH_DB_WRITE) && [
+                <AssetGroupMenuItem
+                    key={tierZeroAssetGroupId}
+                    assetGroupId={tierZeroAssetGroupId}
+                    assetGroupName='High Value'
+                />,
+                <AssetGroupMenuItem key={ownedAssetGroupId} assetGroupId={ownedAssetGroupId} assetGroupName='Owned' />,
+            ]}
             <CopyMenuItem />
         </Menu>
     );

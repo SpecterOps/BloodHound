@@ -18,13 +18,16 @@ package fixtures
 
 import (
 	"fmt"
-	"github.com/specterops/bloodhound/src/config"
 	"log"
 
 	"github.com/specterops/bloodhound/lab"
+	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apiclient"
 	"github.com/specterops/bloodhound/src/api/v2/integration"
+	"github.com/specterops/bloodhound/src/config"
 )
+
+const UserUpdateSecret = "userUser123***"
 
 var BHAdminApiClientFixture = NewAdminApiClientFixture(ConfigFixture, BHApiFixture)
 
@@ -48,7 +51,10 @@ func NewAdminApiClientFixture(cfgFixture *lab.Fixture[config.Configuration], api
 
 			if user, err := client.GetSelf(); err != nil {
 				return apiclient.Client{}, fmt.Errorf("failed looking up user details: %w", err)
-			} else if err := client.SetUserSecret(user.ID, integration.AdminUpdatedSecret, false); err != nil {
+			} else if err := client.SetUserSecretWithCurrentPassword(user.ID, v2.SetUserSecretRequest{
+				CurrentSecret: integration.AdminInitialSecret,
+				Secret:        integration.AdminUpdatedSecret,
+			}); err != nil {
 				return apiclient.Client{}, fmt.Errorf("failed resetting expired user password: %w", err)
 			}
 
@@ -74,12 +80,14 @@ func NewUserApiClientFixture(cfgFixture *lab.Fixture[config.Configuration], admi
 			return apiclient.Client{}, fmt.Errorf("unable to unpack adminApiFixture")
 		} else if username, err := config.GenerateSecureRandomString(7); err != nil {
 			return apiclient.Client{}, fmt.Errorf("unable to generate random username")
-		} else if secret, err := config.GenerateRandomBase64String(32); err != nil {
-			return apiclient.Client{}, fmt.Errorf("unable to generate secret")
 		} else if roles, err := adminClient.ListRoles(); err != nil {
 			return apiclient.Client{}, fmt.Errorf("unable to get roles")
 		} else {
-			var roleIds []int32
+			var (
+				roleIds []int32
+				secret  = integration.UserInitialSecret
+			)
+
 			for _, r := range roleNames {
 				if foundRole, found := roles.Roles.FindByName(r); !found {
 					return apiclient.Client{}, fmt.Errorf("unable to find role")

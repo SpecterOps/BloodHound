@@ -19,9 +19,10 @@ package fileupload
 import (
 	"encoding/json"
 	"errors"
+	"io"
+
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/model/ingest"
-	"io"
 )
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}

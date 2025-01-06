@@ -19,13 +19,14 @@ package pg
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/specterops/bloodhound/cypher/model/pg"
+	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
-	"time"
 )
 
 const (
@@ -33,13 +34,14 @@ const (
 
 	poolInitConnectionTimeout = time.Second * 10
 	defaultTransactionTimeout = time.Minute * 15
-	defaultBatchWriteSize     = 20_000
+
+	// defaultBatchWriteSize is currently set to 2k. This is meant to strike a balance between the cost of thousands
+	// of round-trips against the cost of locking tables for too long.
+	defaultBatchWriteSize = 2_000
 )
 
 func afterPooledConnectionEstablished(ctx context.Context, conn *pgx.Conn) error {
-	log.Debugf("Established a new database connection.")
-
-	for _, dataType := range pg.CompositeTypes {
+	for _, dataType := range pgsql.CompositeTypes {
 		if definition, err := conn.LoadType(ctx, dataType.String()); err != nil {
 			if !StateObjectDoesNotExist.ErrorMatches(err) {
 				return fmt.Errorf("failed to match composite type %s to database: %w", dataType, err)
@@ -53,7 +55,7 @@ func afterPooledConnectionEstablished(ctx context.Context, conn *pgx.Conn) error
 }
 
 func afterPooledConnectionRelease(conn *pgx.Conn) bool {
-	for _, dataType := range pg.CompositeTypes {
+	for _, dataType := range pgsql.CompositeTypes {
 		if _, hasType := conn.TypeMap().TypeForName(dataType.String()); !hasType {
 			// This connection should be destroyed since it does not contain information regarding the schema's
 			// composite types
@@ -85,12 +87,16 @@ func newDatabase(connectionString string) (*Driver, error) {
 		if pool, err := pgxpool.NewWithConfig(poolCtx, poolCfg); err != nil {
 			return nil, err
 		} else {
-			return &Driver{
+			driverInst := &Driver{
 				pool:                      pool,
-				schemaManager:             NewSchemaManager(),
 				defaultTransactionTimeout: defaultTransactionTimeout,
 				batchWriteSize:            defaultBatchWriteSize,
-			}, nil
+			}
+
+			// Because the schema manager will act on the database on its own it needs a reference to the driver
+			// TODO: This cyclical dependency might want to be unwound
+			driverInst.schemaManager = NewSchemaManager(driverInst)
+			return driverInst, nil
 		}
 	}
 }

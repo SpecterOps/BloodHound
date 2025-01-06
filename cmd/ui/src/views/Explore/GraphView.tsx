@@ -14,26 +14,27 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Grid, Link, useTheme } from '@mui/material';
+import { Box, Grid, Link, Popper, useTheme } from '@mui/material';
 import {
     EdgeInfoState,
-    GraphButtonProps,
     GraphProgress,
     NoDataAlert,
+    SearchCurrentNodes,
+    WebGLDisabledAlert,
+    exportToJson,
+    isWebGLEnabled,
     setEdgeInfoOpen,
     setSelectedEdge,
     useAvailableDomains,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
-import { random } from 'graphology-layout';
-import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
-import { GraphButtonOptions } from 'src/components/GraphButtons/GraphButtons';
+import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import SigmaChart from 'src/components/SigmaChart';
 import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { GraphState } from 'src/ducks/explore/types';
@@ -41,33 +42,81 @@ import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { ROUTE_ADMINISTRATION_FILE_INGEST } from 'src/ducks/global/routes';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
-import { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
-import useToggle from 'src/hooks/useToggle';
+import { useToggle } from 'bh-shared-ui';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { transformFlatGraphResponse } from 'src/utils';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
-import { initGraphEdges, initGraphNodes } from 'src/views/Explore/utils';
+import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
+
+const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
+
+const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
+
+const columnStyles = { height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' };
+
+const dataCollectionLink = (
+    <Link
+        target='_blank'
+        href={'https://support.bloodhoundenterprise.io/hc/en-us/sections/17274904083483-BloodHound-CE-Collection'}>
+        Data Collection
+    </Link>
+);
+
+const fileIngestLink = (
+    <Link component={RouterLink} to={ROUTE_ADMINISTRATION_FILE_INGEST}>
+        File Ingest
+    </Link>
+);
+
+const sampleDataLink = (
+    <Link target='_blank' href={'https://github.com/SpecterOps/BloodHound/wiki/Example-Data'}>
+        GitHub Sample Collection
+    </Link>
+);
 
 const GraphView: FC = () => {
     /* Hooks */
     const theme = useTheme();
+
     const dispatch = useAppDispatch();
 
     const graphState: GraphState = useAppSelector((state) => state.explore);
+
     const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
+
     const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
 
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
 
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
+
     const { data, isLoading, isError } = useAvailableDomains();
 
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+
+    const exportableGraphState = useAppSelector((state) => state.explore.export);
+
+    const sigmaChartRef = useRef<any>(null);
+
+    const currentSearchAnchorElement = useRef(null);
+
+    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
+
+    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
+
+    const [columns, setColumns] = useState(columnsDefault);
+
+    const [showNodeLabels, setShowNodeLabels] = useState(true);
+
+    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;
@@ -76,24 +125,13 @@ const GraphView: FC = () => {
         if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
-        const nodeSize = 25;
 
-        initGraphNodes(graph, items.nodes, nodeSize);
-        initGraphEdges(graph, items.edges);
+        initGraph(graph, items, theme, darkMode);
 
         setCurrentNodes(items.nodes);
 
-        random.assign(graph, { scale: 1000 });
-
-        forceAtlas2.assign(graph, {
-            iterations: 128,
-            settings: {
-                scalingRatio: 1000,
-                barnesHutOptimize: true,
-            },
-        });
         setGraphologyGraph(graph);
-    }, [graphState.chartProps.items]);
+    }, [graphState.chartProps.items, theme, darkMode]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {
@@ -121,27 +159,11 @@ const GraphView: FC = () => {
         );
     }
 
-    const dataCollectionLink = (
-        <Link
-            target='_blank'
-            href={'https://support.bloodhoundenterprise.io/hc/en-us/sections/17274904083483-BloodHound-CE-Collection'}>
-            Data Collection
-        </Link>
-    );
-
-    const fileIngestLink = (
-        <Link component={RouterLink} to={ROUTE_ADMINISTRATION_FILE_INGEST}>
-            File Ingest
-        </Link>
-    );
-
-    const sampleDataLink = (
-        <Link target='_blank' href={'https://github.com/SpecterOps/BloodHound/tree/main/examples/sample-data'}>
-            GitHub Sample Collection
-        </Link>
-    );
-
     if (isError) throw new Error();
+
+    if (!isWebGLEnabled()) {
+        return <WebGLDisabledAlert />;
+    }
 
     if (!data.length)
         return (
@@ -154,16 +176,7 @@ const GraphView: FC = () => {
             </Box>
         );
 
-    const options: GraphButtonOptions = { standard: true, sequential: true };
-
-    const nonLayoutButtons: GraphButtonProps[] = [
-        {
-            displayText: 'Search Current Results',
-            onClick: toggleCurrentSearch,
-            disabled: currentSearchOpen,
-        },
-    ];
-
+    /* Event Handlers */
     const findNodeAndSelect = (id: string) => {
         const selectedItem = graphState.chartProps.items?.[id];
         if (selectedItem?.data?.nodetype) {
@@ -179,19 +192,15 @@ const GraphView: FC = () => {
         }
     };
 
-    /* Event Handlers */
-    const onClickNode = (id: string) => {
+    const handleClickNode = (id: string) => {
         dispatch(setEdgeInfoOpen(false));
         dispatch(setEntityInfoOpen(true));
-
         findNodeAndSelect(id);
     };
 
     const handleContextMenu = (event: SigmaNodeEventPayload) => {
         setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
-
         const nodeId = event.node;
-
         findNodeAndSelect(nodeId);
     };
 
@@ -199,21 +208,27 @@ const GraphView: FC = () => {
         setContextMenu(null);
     };
 
-    return (
-        <Box sx={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
-            <SigmaChart
-                rankDirection={RankDirection.LEFT_RIGHT}
-                options={options}
-                graph={graphologyGraph}
-                currentNodes={currentNodes}
-                onClickNode={onClickNode}
-                nonLayoutButtons={nonLayoutButtons}
-                isCurrentSearchOpen={currentSearchOpen}
-                toggleCurrentSearch={toggleCurrentSearch}
-                handleContextMenu={handleContextMenu}
-            />
+    const handleCypherTab = (tab: string) => {
+        tab === 'cypher' ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
+    };
 
-            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
+    return (
+        <Box
+            sx={{
+                position: 'relative',
+                height: '100%',
+                width: '100%',
+                overflow: 'hidden',
+            }}
+            data-testid='explore'>
+            <SigmaChart
+                graph={graphologyGraph}
+                onClickNode={handleClickNode}
+                handleContextMenu={handleContextMenu}
+                showNodeLabels={showNodeLabels}
+                showEdgeLabels={showEdgeLabels}
+                ref={sigmaChartRef}
+            />
 
             <Grid
                 container
@@ -222,50 +237,98 @@ const GraphView: FC = () => {
                 alignItems='flex-start'
                 sx={{
                     position: 'relative',
-                    margin: theme.spacing(2, 2, 0),
+                    padding: theme.spacing(2),
+                    boxSizing: 'border-box',
                     pointerEvents: 'none',
                     height: '100%',
                 }}>
-                <GridItems />
+                <Grid
+                    item
+                    {...columns}
+                    sx={{
+                        ...columnStyles,
+                        justifyContent: 'space-between',
+                        height: '100%',
+                        maxHeight: '100%',
+                        gap: 2,
+                    }}
+                    key={'exploreSearch'}>
+                    <ExploreSearch onTabChange={handleCypherTab} />
+                    <Box
+                        sx={{
+                            pointerEvents: 'auto',
+                            width: '100%',
+                            position: 'relative',
+                        }}
+                        ref={currentSearchAnchorElement}>
+                        <GraphButtons
+                            onExportJson={() => {
+                                exportToJson(exportableGraphState);
+                            }}
+                            onReset={() => {
+                                sigmaChartRef.current?.resetCamera();
+                            }}
+                            onRunSequentialLayout={() => {
+                                sigmaChartRef.current?.runSequentialLayout();
+                            }}
+                            onRunStandardLayout={() => {
+                                sigmaChartRef.current?.runStandardLayout();
+                            }}
+                            onSearchCurrentResults={() => {
+                                toggleCurrentSearch();
+                            }}
+                            onToggleAllLabels={() => {
+                                if (!showNodeLabels || !showEdgeLabels) {
+                                    setShowNodeLabels(true);
+                                    setShowEdgeLabels(true);
+                                } else {
+                                    setShowNodeLabels(false);
+                                    setShowEdgeLabels(false);
+                                }
+                            }}
+                            onToggleNodeLabels={() => {
+                                setShowNodeLabels((prev) => !prev);
+                            }}
+                            onToggleEdgeLabels={() => {
+                                setShowEdgeLabels((prev) => !prev);
+                            }}
+                            showNodeLabels={showNodeLabels}
+                            showEdgeLabels={showEdgeLabels}
+                            isCurrentSearchOpen={false}
+                        />
+                        <Popper
+                            open={currentSearchOpen}
+                            anchorEl={currentSearchAnchorElement.current}
+                            placement='top'
+                            disablePortal
+                            sx={{
+                                width: '90%',
+                                zIndex: 1,
+                            }}>
+                            <SearchCurrentNodes
+                                sx={{ padding: 1, marginBottom: 1 }}
+                                currentNodes={currentNodes || {}}
+                                onSelect={(node) => {
+                                    handleClickNode?.(node.id);
+                                    toggleCurrentSearch?.();
+                                }}
+                                onClose={toggleCurrentSearch}
+                            />
+                        </Popper>
+                    </Box>
+                </Grid>
+                <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
+                    {edgeInfoState.open ? (
+                        <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} />
+                    ) : (
+                        <EntityInfoPanel selectedNode={selectedNode} />
+                    )}
+                </Grid>
             </Grid>
+            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphState.loading} />
         </Box>
     );
-};
-
-const GridItems = () => {
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
-
-    const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
-    const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
-
-    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
-    const [columns, setColumns] = useState(columnsDefault);
-    const theme = useTheme();
-
-    const columnStyles = { height: '100%' };
-
-    const infoPanelStyles = {
-        margin: theme.spacing(0, 4, 2, 2),
-        maxHeight: '95%',
-    };
-
-    const handleCypherTab = (isCypherEditorActive: boolean) => {
-        isCypherEditorActive ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
-    };
-
-    return [
-        <Grid item {...columns} sx={columnStyles} key={'exploreSearch'}>
-            <ExploreSearch handleColumns={handleCypherTab} />
-        </Grid>,
-        <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
-            {edgeInfoState.open ? (
-                <EdgeInfoPane sx={infoPanelStyles} selectedEdge={edgeInfoState.selectedEdge} />
-            ) : (
-                <EntityInfoPanel sx={infoPanelStyles} selectedNode={selectedNode} />
-            )}
-        </Grid>,
-    ];
 };
 
 export default GraphView;

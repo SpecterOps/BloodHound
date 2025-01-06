@@ -18,14 +18,15 @@ package datapipe_test
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
-	"github.com/specterops/bloodhound/src/daemons/datapipe/mocks"
-	"go.uber.org/mock/gomock"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"sync"
 	"testing"
+
+	"github.com/specterops/bloodhound/src/daemons/datapipe"
+	"github.com/specterops/bloodhound/src/daemons/datapipe/mocks"
+	"go.uber.org/mock/gomock"
 )
 
 type dirEntry struct {
@@ -132,6 +133,30 @@ func TestOrphanFileSweeper_Clear(t *testing.T) {
 		// empty and therefore the sweeper MUST NOT call RemoveAll() on the FileOperations mock. If RemoveAll() is
 		// called then this test MUST fail.
 		sweeper.Clear(context.Background(), []string{"1"})
+	})
+
+	t.Run("Exclude Files With Paths", func(t *testing.T) {
+		var (
+			mockCtrl    = gomock.NewController(t)
+			mockFileOps = mocks.NewMockFileOperations(mockCtrl)
+			sweeper     = datapipe.NewOrphanFileSweeper(mockFileOps, workDir)
+		)
+
+		defer mockCtrl.Finish()
+
+		mockFileOps.EXPECT().ReadDir(workDir).Return([]os.DirEntry{
+			dirEntry{
+				name: "1",
+			},
+			dirEntry{
+				name: "2",
+			},
+		}, nil)
+
+		// This one is a negative assertion. Because we're passing in paths to be excluded the listed dirEntries will be
+		// empty and therefore the sweeper MUST NOT call RemoveAll() on the FileOperations mock. If RemoveAll() is
+		// called then this test MUST fail.
+		sweeper.Clear(context.Background(), []string{"1", workDir + "/2"})
 	})
 
 	t.Run("Exit on Context Cancellation", func(t *testing.T) {

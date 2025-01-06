@@ -18,8 +18,14 @@ export { default as ApiExplorer } from './ApiExplorer';
 
 export { default as UserProfile } from './UserProfile';
 
+export { default as SSOConfiguration } from './SSOConfiguration';
+
+export { default as Users } from './Users';
+
 export * from './Explore';
 
 export * from './DataQuality';
 
 export * from './Explore/ExploreSearch';
+
+export * from './Users';

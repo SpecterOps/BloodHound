@@ -21,12 +21,23 @@ package common
 
 import (
 	"errors"
+
 	graph "github.com/specterops/bloodhound/dawgs/graph"
 )
 
 var (
 	MigrationData = graph.StringKind("MigrationData")
 )
+
+func Nodes() []graph.Kind {
+	return []graph.Kind{MigrationData}
+}
+func Relationships() []graph.Kind {
+	return []graph.Kind{}
+}
+func NodeKinds() []graph.Kind {
+	return []graph.Kind{MigrationData}
+}
 
 type Property string
 
@@ -173,13 +184,4 @@ func (s Property) Is(others ...graph.Kind) bool {
 		}
 	}
 	return false
-}
-func Nodes() []graph.Kind {
-	return []graph.Kind{MigrationData}
-}
-func Relationships() []graph.Kind {
-	return []graph.Kind{}
-}
-func NodeKinds() []graph.Kind {
-	return []graph.Kind{MigrationData}
 }

@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Alert,
     AlertTitle,
     Box,
-    Button,
     Dialog,
     DialogActions,
     DialogContent,
@@ -30,10 +30,11 @@ import {
     Skeleton,
     Typography,
 } from '@mui/material';
+import { PageWithTitle, Flag, useFeatureFlags, useToggleFeatureFlag } from 'bh-shared-ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Flag, useFeatureFlags, useToggleFeatureFlag } from 'src/hooks/useFeatureFlags';
-import { ContentPage } from 'bh-shared-ui';
+import { setDarkMode } from 'src/ducks/global/actions';
+import { useAppDispatch } from 'src/store';
 
 export const EarlyAccessFeatureToggle: React.FC<{
     flag: Flag;
@@ -46,24 +47,20 @@ export const EarlyAccessFeatureToggle: React.FC<{
 
     return (
         <Paper>
-            <Box p={2} display='flex' justifyContent='space-between' flexWrap='wrap' style={{ rowGap: '1rem' }}>
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
                 <Box overflow='hidden'>
                     <Typography variant='h6'>{flag.name}</Typography>
                     <Typography variant='body1'>{flag.description}</Typography>
                 </Box>
-                <Box>
-                    <Button
-                        disabled={disabled}
-                        variant='outlined'
-                        color={flag.enabled ? 'primary' : 'inherit'}
-                        sx={{
-                            borderColor: () => {
-                                if (!flag.enabled) return 'rgba(0,0,0,0.23)';
-                            },
-                        }}
-                        onClick={handleOnClick}
-                        startIcon={flag.enabled ? <FontAwesomeIcon icon={faCheckCircle} fixedWidth /> : null}>
-                        {flag.enabled ? 'Enabled' : 'Disabled'}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {/* TODO: replace style prop with TW classes once TW is added */}
+                    <Button disabled={disabled} onClick={handleOnClick} style={{ width: '132px' }}>
+                        <Box display={'flex'} alignItems={'center'}>
+                            {flag.enabled ? (
+                                <FontAwesomeIcon style={{ marginRight: '8px' }} icon={faCheckCircle} fixedWidth />
+                            ) : null}
+                            <Typography>{flag.enabled ? 'Enabled' : 'Disabled'}</Typography>
+                        </Box>
                     </Button>
                 </Box>
             </Box>
@@ -92,13 +89,13 @@ export const EarlyAccessFeaturesWarningDialog: React.FC<{
             </DialogContent>
             <DialogActions>
                 <Button
-                    color='inherit'
+                    variant='tertiary'
                     onClick={onCancel}
                     data-testid='early-access-features-warning-dialog_button-close'>
                     {'Take me back'}
                 </Button>
                 <Button
-                    color='primary'
+                    variant='primary'
                     onClick={onConfirm}
                     data-testid='early-access-features-warning-dialog_button-confirm'>
                     {'I understand, show me the new stuff!'}
@@ -113,10 +110,19 @@ const EarlyAccessFeatures: React.FC = () => {
     const { data, isLoading, isError } = useFeatureFlags();
     const toggleFeatureFlag = useToggleFeatureFlag();
     const [showWarningDialog, setShowWarningDialog] = useState(true);
+    const dispatch = useAppDispatch();
 
     return (
         <>
-            <ContentPage title='Early Access Features' data-testid='early-access-features'>
+            <PageWithTitle
+                title='Early Access Features'
+                data-testid='early-access-features'
+                pageDescription={
+                    <Typography variant='body2' paragraph>
+                        Enable or disable features available under early access. These features may be unstable, broken,
+                        or incomplete, but are available for testing.
+                    </Typography>
+                }>
                 {!showWarningDialog &&
                     (isLoading ? (
                         <Paper elevation={0}>
@@ -155,6 +161,10 @@ const EarlyAccessFeatures: React.FC = () => {
                                     <EarlyAccessFeatureToggle
                                         flag={flag}
                                         onClick={(flagId) => {
+                                            // TODO: Consider adding more flexibility/composability to side effects for toggling feature flags on and off
+                                            if (flag.key === 'dark_mode') {
+                                                dispatch(setDarkMode(false));
+                                            }
                                             toggleFeatureFlag.mutate(flagId);
                                         }}
                                         disabled={showWarningDialog}
@@ -162,7 +172,7 @@ const EarlyAccessFeatures: React.FC = () => {
                                 </Box>
                             ))
                     ))}
-            </ContentPage>
+            </PageWithTitle>
             <EarlyAccessFeaturesWarningDialog
                 open={showWarningDialog}
                 onCancel={() => navigate(-1)}

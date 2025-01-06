@@ -14,13 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/tasker.go -package=mocks . Tasker
 package datapipe
 
 import (
 	"context"
 	"errors"
-	"sync/atomic"
 	"time"
 
 	"github.com/specterops/bloodhound/cache"
@@ -38,21 +36,12 @@ const (
 	pruningInterval = time.Hour * 24
 )
 
-type Tasker interface {
-	RequestAnalysis()
-	RequestDeletion()
-	GetStatus() model.DatapipeStatusWrapper
-}
-
 type Daemon struct {
 	db                  database.Database
 	graphdb             graph.Database
 	cache               cache.Cache
 	cfg                 config.Configuration
-	analysisRequested   *atomic.Bool
-	deletionRequested   *atomic.Bool
 	tickInterval        time.Duration
-	status              model.DatapipeStatusWrapper
 	ctx                 context.Context
 	orphanedFileSweeper *OrphanFileSweeper
 }
@@ -68,69 +57,44 @@ func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootst
 		cache:               cache,
 		cfg:                 cfg,
 		ctx:                 ctx,
-		deletionRequested:   &atomic.Bool{},
-		analysisRequested:   &atomic.Bool{},
 		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
 		tickInterval:        tickInterval,
-		status: model.DatapipeStatusWrapper{
-			Status:    model.DatapipeStatusIdle,
-			UpdatedAt: time.Now().UTC(),
-		},
 	}
-}
-
-func (s *Daemon) RequestAnalysis() {
-	if s.getDeletionRequested() {
-		log.Warnf("Rejecting analysis request as deletion is in progress")
-		return
-	}
-	s.setAnalysisRequested(true)
-}
-
-func (s *Daemon) RequestDeletion() {
-	s.setAnalysisRequested(false)
-	s.setDeletionRequested(true)
-}
-
-func (s *Daemon) GetStatus() model.DatapipeStatusWrapper {
-	return s.status
-}
-
-func (s *Daemon) getAnalysisRequested() bool {
-	return s.analysisRequested.Load()
-}
-
-func (s *Daemon) setAnalysisRequested(requested bool) {
-	s.analysisRequested.Store(requested)
-}
-
-func (s *Daemon) setDeletionRequested(requested bool) {
-	s.deletionRequested.Store(requested)
-}
-
-func (s *Daemon) getDeletionRequested() bool {
-	return s.deletionRequested.Load()
 }
 
 func (s *Daemon) analyze() {
-	// Ensure that the user-requested analysis switch is flipped back to false. This is done at the beginning of the
+	// Ensure that the user-requested analysis switch is deleted. This is done at the beginning of the
 	// function so that any re-analysis requests are caught while analysis is in-progress.
-	s.setAnalysisRequested(false)
+	if err := s.db.DeleteAnalysisRequest(s.ctx); err != nil {
+		log.Errorf("Error deleting analysis request: %v", err)
+		return
+	}
 
 	if s.cfg.DisableAnalysis {
 		return
 	}
 
-	s.status.Update(model.DatapipeStatusAnalyzing, false)
+	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusAnalyzing, false); err != nil {
+		log.Errorf("Error setting datapipe status: %v", err)
+		return
+	}
+
 	defer log.LogAndMeasure(log.LevelInfo, "Graph Analysis")()
 
 	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
 		if errors.Is(err, ErrAnalysisFailed) {
 			FailAnalyzedFileUploadJobs(s.ctx, s.db)
-			s.status.Update(model.DatapipeStatusIdle, false)
+			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
+				log.Errorf("Error setting datapipe status: %v", err)
+				return
+			}
+
 		} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
 			PartialCompleteFileUploadJobs(s.ctx, s.db)
-			s.status.Update(model.DatapipeStatusIdle, true)
+			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
+				log.Errorf("Error setting datapipe status: %v", err)
+				return
+			}
 		}
 	} else {
 		CompleteAnalyzedFileUploadJobs(s.ctx, s.db)
@@ -141,11 +105,14 @@ func (s *Daemon) analyze() {
 			resetCache(s.cache, entityPanelCachingFlag.Enabled)
 		}
 
-		s.status.Update(model.DatapipeStatusIdle, true)
+		if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
+			log.Errorf("Error setting datapipe status: %v", err)
+			return
+		}
 	}
 }
 
-func resetCache(cacher cache.Cache, cacheEnabled bool) {
+func resetCache(cacher cache.Cache, _ bool) {
 	if err := cacher.Reset(); err != nil {
 		log.Errorf("Error while resetting the cache: %v", err)
 	} else {
@@ -178,7 +145,7 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.clearOrphanedData()
 
 		case <-datapipeLoopTimer.C:
-			if s.getDeletionRequested() {
+			if s.db.HasCollectedGraphDataDeletionRequest(s.ctx) {
 				s.deleteData()
 			}
 
@@ -194,7 +161,7 @@ func (s *Daemon) Start(ctx context.Context) {
 			// If there are completed file upload jobs or if analysis was user-requested, perform analysis.
 			if hasJobsWaitingForAnalysis, err := HasFileUploadJobsWaitingForAnalysis(s.ctx, s.db); err != nil {
 				log.Errorf("Failed looking up jobs waiting for analysis: %v", err)
-			} else if hasJobsWaitingForAnalysis || s.getAnalysisRequested() {
+			} else if hasJobsWaitingForAnalysis || s.db.HasAnalysisRequest(s.ctx) {
 				s.analyze()
 			}
 
@@ -208,12 +175,17 @@ func (s *Daemon) Start(ctx context.Context) {
 
 func (s *Daemon) deleteData() {
 	defer func() {
-		s.status.Update(model.DatapipeStatusIdle, false)
-		s.setDeletionRequested(false)
-		s.setAnalysisRequested(true)
+		_ = s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
+		_ = s.db.DeleteAnalysisRequest(s.ctx)
+		_ = s.db.RequestAnalysis(s.ctx, "datapie")
 	}()
 	defer log.Measure(log.LevelInfo, "Purge Graph Data Completed")()
-	s.status.Update(model.DatapipeStatusPurging, false)
+
+	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusPurging, false); err != nil {
+		log.Errorf("Error setting datapipe status: %v", err)
+		return
+	}
+
 	log.Infof("Begin Purge Graph Data")
 
 	if err := s.db.CancelAllFileUploads(s.ctx); err != nil {

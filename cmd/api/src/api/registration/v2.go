@@ -25,23 +25,16 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/middleware"
 	"github.com/specterops/bloodhound/src/api/router"
-	"github.com/specterops/bloodhound/src/api/saml"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	authapi "github.com/specterops/bloodhound/src/api/v2/auth"
 	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 )
 
-func samlWriteAPIErrorResponse(request *http.Request, response http.ResponseWriter, statusCode int, message string) {
-	api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(statusCode, message, request), response)
-}
-
-func registerV2Auth(cfg config.Configuration, db database.Database, permissions auth.PermissionSet, routerInst *router.Router, authenticator api.Authenticator) {
+func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissions auth.PermissionSet) {
 	var (
-		loginResource      = authapi.NewLoginResource(cfg, authenticator, db)
-		managementResource = authapi.NewManagementResource(cfg, db, auth.NewAuthorizer(db))
-		samlResource       = saml.NewSAMLRootResource(cfg, db, samlWriteAPIErrorResponse)
+		loginResource      = authapi.NewLoginResource(resources.Config, resources.Authenticator, resources.DB)
+		managementResource = authapi.NewManagementResource(resources.Config, resources.DB, resources.Authorizer, resources.Authenticator)
 	)
 
 	router.With(middleware.DefaultRateLimitMiddleware,
@@ -50,15 +43,30 @@ func registerV2Auth(cfg config.Configuration, db database.Database, permissions 
 		routerInst.GET("/api/v2/self", managementResource.GetSelf),
 		routerInst.POST("/api/v2/logout", loginResource.Logout),
 
-		// Login path prefix matcher for SAML providers
-		routerInst.PathPrefix("/api/v2/login/saml/{saml_provider_name}", middleware.ContextMiddleware(samlResource)),
+		// Login path prefix matcher for SAML providers, order matters here due to PathPrefix
+		routerInst.POST(fmt.Sprintf("/api/{version}/login/saml/{%s}/acs", api.URIPathVariableSSOProviderSlug), managementResource.SAMLCallbackRedirect),
+		routerInst.GET(fmt.Sprintf("/api/{version}/login/saml/{%s}/metadata", api.URIPathVariableSSOProviderSlug), managementResource.ServeMetadata),
+		routerInst.PathPrefix(fmt.Sprintf("/api/{version}/login/saml/{%s}", api.URIPathVariableSSOProviderSlug), http.HandlerFunc(managementResource.SAMLLoginRedirect)),
 
 		// SAML resources
+		// DEPRECATED as of v6.4.0: Please use /api/v2/sso-providers/* endpoints instead of /api/v2/saml/*
 		routerInst.GET("/api/v2/saml", managementResource.ListSAMLProviders).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.GET("/api/v2/saml/sso", managementResource.ListSAMLSignOnEndpoints),
 		routerInst.POST("/api/v2/saml/providers", managementResource.CreateSAMLProviderMultipart).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.GET(fmt.Sprintf("/api/v2/saml/providers/{%s}", api.URIPathVariableSAMLProviderID), managementResource.GetSAMLProvider).RequirePermissions(permissions.AuthManageProviders),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saml/providers/{%s}", api.URIPathVariableSAMLProviderID), managementResource.DeleteSAMLProvider).RequirePermissions(permissions.AuthManageProviders),
+
+		// SSO
+		routerInst.GET("/api/v2/sso-providers", managementResource.ListAuthProviders),
+		routerInst.POST("/api/v2/sso-providers/saml", managementResource.CreateSAMLProviderMultipart).RequirePermissions(permissions.AuthManageProviders),
+		routerInst.POST("/api/v2/sso-providers/oidc", managementResource.CreateOIDCProvider).CheckFeatureFlag(resources.DB, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders),
+		routerInst.DELETE(fmt.Sprintf("/api/v2/sso-providers/{%s}", api.URIPathVariableSSOProviderID), managementResource.DeleteSSOProvider).RequirePermissions(permissions.AuthManageProviders),
+		routerInst.PATCH(fmt.Sprintf("/api/v2/sso-providers/{%s}", api.URIPathVariableSSOProviderID), managementResource.UpdateSSOProvider).RequirePermissions(permissions.AuthManageProviders),
+		routerInst.GET(fmt.Sprintf("/api/v2/sso-providers/{%s}/signing-certificate", api.URIPathVariableSSOProviderID), managementResource.ServeSigningCertificate).RequirePermissions(permissions.AuthManageProviders),
+
+		routerInst.GET(fmt.Sprintf("/api/v2/sso/{%s}/login", api.URIPathVariableSSOProviderSlug), managementResource.SSOLoginHandler),
+		routerInst.PathPrefix(fmt.Sprintf("/api/v2/sso/{%s}/callback", api.URIPathVariableSSOProviderSlug), http.HandlerFunc(managementResource.SSOCallbackHandler)),
+		routerInst.GET(fmt.Sprintf("/api/v2/sso/{%s}/metadata", api.URIPathVariableSSOProviderSlug), managementResource.ServeMetadata),
 
 		// Permissions
 		routerInst.GET("/api/v2/permissions", managementResource.ListPermissions).RequirePermissions(permissions.AuthManageSelf),
@@ -91,11 +99,11 @@ func registerV2Auth(cfg config.Configuration, db database.Database, permissions 
 }
 
 // NewV2API sets up dependencies, authorization and a router, and then defines the BloodHound V2 API endpoints on said router
-func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *router.Router, authenticator api.Authenticator) {
+func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	var permissions = auth.Permissions()
 
 	// Register the auth API endpoints
-	registerV2Auth(cfg, resources.DB, permissions, routerInst, authenticator)
+	registerV2Auth(resources, routerInst, permissions)
 
 	// Collector APIs
 	routerInst.GET(fmt.Sprintf("/api/v2/collectors/{%s}", v2.CollectorTypePathParameterName), resources.GetCollectorManifest).RequireAuth()
@@ -105,16 +113,16 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 	// Collection File Upload API
 	routerInst.GET("/api/v2/file-upload", resources.ListFileUploadJobs).RequireAuth()
 	routerInst.GET("/api/v2/file-upload/accepted-types", resources.ListAcceptedFileUploadTypes).RequireAuth()
-	routerInst.POST("/api/v2/file-upload/start", resources.StartFileUploadJob).RequirePermissions(permissions.GraphDBWrite)
-	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessFileUpload).RequirePermissions(permissions.GraphDBWrite)
-	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndFileUploadJob).RequirePermissions(permissions.GraphDBWrite)
+	routerInst.POST("/api/v2/file-upload/start", resources.StartFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
+	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessFileUpload).RequirePermissions(permissions.GraphDBIngest)
+	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
 
 	router.With(middleware.DefaultRateLimitMiddleware,
 		// Version API
 		routerInst.GET("/api/version", v2.GetVersion).RequireAuth(),
 
 		// API Spec
-		routerInst.PathPrefix("/api/v2/swagger", v2.SwaggerHandler()),
+		routerInst.PathPrefix("/api/v2/swagger", http.HandlerFunc(openapi.HttpHandler)),
 		routerInst.GET("/api/v2/spec", openapi.HttpHandler),
 
 		// Search API
@@ -163,7 +171,10 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		routerInst.POST("/api/v2/graphs/cypher", resources.CypherQuery).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/saved-queries", resources.ListSavedQueries).RequirePermissions(permissions.SavedQueriesRead),
 		routerInst.POST("/api/v2/saved-queries", resources.CreateSavedQuery).RequirePermissions(permissions.SavedQueriesWrite),
+		routerInst.PUT(fmt.Sprintf("/api/v2/saved-queries/{%s}", api.URIPathVariableSavedQueryID), resources.UpdateSavedQuery).RequirePermissions(permissions.SavedQueriesWrite),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saved-queries/{%s}", api.URIPathVariableSavedQueryID), resources.DeleteSavedQuery).RequirePermissions(permissions.SavedQueriesWrite),
+		routerInst.DELETE(fmt.Sprintf("/api/v2/saved-queries/{%s}/permissions", api.URIPathVariableSavedQueryID), resources.DeleteSavedQueryPermissions).RequirePermissions(permissions.SavedQueriesWrite),
+		routerInst.PUT(fmt.Sprintf("/api/v2/saved-queries/{%s}/permissions", api.URIPathVariableSavedQueryID), resources.ShareSavedQueries).RequirePermissions(permissions.SavedQueriesWrite),
 
 		// Azure Entity API
 		routerInst.GET("/api/v2/azure/{entity_type}", resources.GetAZEntity).RequirePermissions(permissions.GraphDBRead),
@@ -286,6 +297,7 @@ func NewV2API(cfg config.Configuration, resources v2.Resources, routerInst *rout
 		// Datapipe API
 		routerInst.GET("/api/v2/datapipe/status", resources.GetDatapipeStatus).RequireAuth(),
 		//TODO: Update the permission on this once we get something more concrete
+		routerInst.GET("/api/v2/analysis/status", resources.GetAnalysisRequest).RequirePermissions(permissions.GraphDBRead),
 		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
 	)
 }

@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package channels_test
@@ -22,9 +22,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -91,14 +91,14 @@ func TestBufferedPipe_DumpOnContextCancel(t *testing.T) {
 func TestBufferedPipe_HappyPath(t *testing.T) {
 	var (
 		ctx, done        = context.WithTimeout(context.Background(), time.Second*5)
-		writerC, readerC = channels.BufferedPipe[uint32](ctx)
+		writerC, readerC = channels.BufferedPipe[uint64](ctx)
 	)
 
 	// Ensure that the context done function is always called
 	defer done()
 
 	// Submit the values first to demonstrate buffering
-	for i := uint32(0); i < numValuesToSend; i++ {
+	for i := uint64(0); i < numValuesToSend; i++ {
 		require.True(t, channels.Submit(ctx, writerC, i))
 	}
 
@@ -107,7 +107,7 @@ func TestBufferedPipe_HappyPath(t *testing.T) {
 
 	var (
 		workerWG = &sync.WaitGroup{}
-		seen     = cardinality.ThreadSafeDuplex(cardinality.NewBitmap32())
+		seen     = cardinality.ThreadSafeDuplex(cardinality.NewBitmap64())
 	)
 
 	for workerID := 0; workerID < 10; workerID++ {
@@ -128,7 +128,7 @@ func TestBufferedPipe_HappyPath(t *testing.T) {
 
 	workerWG.Wait()
 
-	for i := uint32(0); i < numValuesToSend; i++ {
+	for i := uint64(0); i < numValuesToSend; i++ {
 		require.True(t, seen.Contains(i))
 	}
 }

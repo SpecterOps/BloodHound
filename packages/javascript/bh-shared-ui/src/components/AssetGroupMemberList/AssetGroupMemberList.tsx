@@ -93,7 +93,10 @@ const AssetGroupMemberList: FC<{
     };
 
     return (
-        <TableContainer sx={{ maxHeight: '100%' }} component={Paper} elevation={0}>
+        <TableContainer
+            sx={{ maxHeight: '100%', bgcolor: theme.palette.neutral.secondary }}
+            component={Paper}
+            elevation={0}>
             <Table stickyHeader sx={{ height: '100%', position: 'relative' }}>
                 <colgroup>
                     <col width='80%' />
@@ -101,8 +104,8 @@ const AssetGroupMemberList: FC<{
                 </colgroup>
                 <TableHead>
                     <TableRow>
-                        <TableCell sx={{ bgcolor: theme.palette.background.paper }}>Name</TableCell>
-                        <TableCell sx={{ bgcolor: theme.palette.background.paper, textAlign: 'center' }} align='right'>
+                        <TableCell sx={{ bgcolor: theme.palette.neutral.secondary }}>Name</TableCell>
+                        <TableCell sx={{ bgcolor: theme.palette.neutral.secondary, textAlign: 'center' }} align='right'>
                             Custom Member
                         </TableCell>
                     </TableRow>
@@ -136,7 +139,7 @@ const AssetGroupMemberList: FC<{
                                 sx={{
                                     position: 'sticky',
                                     bottom: 0,
-                                    bgcolor: theme.palette.background.paper,
+                                    bgcolor: theme.palette.neutral.secondary,
                                     borderTop: '1px solid #E0E0E0',
                                 }}
                                 colSpan={2}
@@ -166,7 +169,7 @@ const AssetGroupMemberRow: FC<{
 
     const rowStyles = {
         '&:hover': {
-            backgroundColor: theme.palette.action.hover,
+            backgroundColor: theme.palette.neutral.quaternary,
             cursor: 'pointer',
         },
     };

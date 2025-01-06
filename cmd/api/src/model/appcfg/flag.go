@@ -22,87 +22,22 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
+// AvailableFlags has been removed and the db feature_flags table is the source of truth. Feature flag defaults should be added via migration *.sql files.
 const (
 	FeatureButterflyAnalysis          = "butterfly_analysis"
 	FeatureEnableSAMLSSO              = "enable_saml_sso"
 	FeatureScopeCollectionByOU        = "scope_collection_by_ou"
 	FeatureAzureSupport               = "azure_support"
-	FeatureReconciliation             = "reconciliation"
 	FeatureEntityPanelCaching         = "entity_panel_cache"
 	FeatureAdcs                       = "adcs"
+	FeaturePGMigrationDualIngest      = "pg_migration_dual_ingest"
 	FeatureClearGraphData             = "clear_graph_data"
 	FeatureRiskExposureNewCalculation = "risk_exposure_new_calculation"
+	FeatureFedRAMPEULA                = "fedramp_eula"
+	FeatureDarkMode                   = "dark_mode"
+	FeatureAutoTagT0ParentObjects     = "auto_tag_t0_parent_objects"
+	FeatureOIDCSupport                = "oidc_support"
 )
-
-// AvailableFlags returns a FeatureFlagSet of expected feature flags. Feature flag defaults introduced here will become the initial
-// default value of the feature flag once it is inserted into the database.
-func AvailableFlags() FeatureFlagSet {
-	return FeatureFlagSet{
-		FeatureButterflyAnalysis: {
-			Key:           FeatureButterflyAnalysis,
-			Name:          "Enhanced Asset Inbound-Outbound Exposure Analysis",
-			Description:   "Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.",
-			Enabled:       false,
-			UserUpdatable: false,
-		},
-		FeatureEnableSAMLSSO: {
-			Key:           FeatureEnableSAMLSSO,
-			Name:          "SAML Single Sign-On Support",
-			Description:   "Enables SSO authentication flows and administration panels to third party SAML identity providers.",
-			Enabled:       true,
-			UserUpdatable: false,
-		},
-		FeatureScopeCollectionByOU: {
-			Key:           FeatureScopeCollectionByOU,
-			Name:          "Enable SharpHound OU Scoped Collections",
-			Description:   "Enables scoping SharpHound collections to specific lists of OUs.",
-			Enabled:       true,
-			UserUpdatable: false,
-		},
-		FeatureAzureSupport: {
-			Key:           FeatureAzureSupport,
-			Name:          "Enable Azure Support",
-			Description:   "Enables Azure support.",
-			Enabled:       true,
-			UserUpdatable: false,
-		},
-		FeatureReconciliation: {
-			Key:           FeatureReconciliation,
-			Name:          "Reconciliation",
-			Description:   "Enables Reconciliation",
-			Enabled:       true,
-			UserUpdatable: false,
-		},
-		FeatureEntityPanelCaching: {
-			Key:           FeatureEntityPanelCaching,
-			Name:          "Enable application level caching",
-			Description:   "Enables the use of application level caching for entity panel queries",
-			Enabled:       true,
-			UserUpdatable: false,
-		},
-		FeatureAdcs: {
-			Key:           FeatureAdcs,
-			Name:          "Enable collection and processing of Active Directory Certificate Services Data",
-			Description:   "Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.",
-			Enabled:       false,
-			UserUpdatable: false,
-		},
-		FeatureClearGraphData: {
-			Key:           FeatureClearGraphData,
-			Name:          "Clear Graph Data",
-			Description:   "Enables the ability to delete all nodes and edges from the graph database.",
-			Enabled:       true,
-			UserUpdatable: false,
-		},
-		FeatureRiskExposureNewCalculation: {
-			Key:           FeatureRiskExposureNewCalculation,
-			Name:          "Use new tier zero risk exposure calculation",
-			Description:   "Enables the use of new tier zero risk exposure metatree metrics.",
-			Enabled:       false,
-			UserUpdatable: false,
-		},
-	}
-}
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
 // self-descriptive as many use-cases will involve iterating over all available flags to display them back to the

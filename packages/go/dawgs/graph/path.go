@@ -550,7 +550,9 @@ func (s PathSet) AllNodes() NodeSet {
 }
 
 func (s *PathSet) AddPath(path Path) {
-	*s = append(*s, path)
+	if len(path.Edges) > 0 {
+		*s = append(*s, path)
+	}
 }
 
 func (s *PathSet) AddPathSet(pathSet PathSet) {

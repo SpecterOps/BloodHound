@@ -18,27 +18,34 @@ package ad
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/traversal"
+	"errors"
 	"sync"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
 )
 
 func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	if publishedCertTemplates, ok := cache.PublishedTemplateCache[eca.ID]; !ok {
+	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
+		return nil
+	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
+		ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID)
 		for _, template := range publishedCertTemplates {
-			if isValid, err := isCertTemplateValidForESC13(template); err != nil {
-				log.Errorf("Error checking esc13 cert template: %v", err)
+			if isValid, err := isCertTemplateValidForESC13(template); errors.Is(err, graph.ErrPropertyNotFound) {
+				log.Warnf("Checking esc13 cert template PostADCSESC13: %v", err)
+			} else if err != nil {
+				log.Errorf("Error checking esc13 cert template PostADCSESC13: %v", err)
 			} else if !isValid {
 				continue
 			} else if groupNodes, err := getCertTemplateGroupLinks(template, tx); err != nil {
@@ -46,14 +53,14 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else if len(groupNodes) == 0 {
 				continue
 			} else {
-				controlBitmap := CalculateCrossProductNodeSets(groupExpansions, cache.CertTemplateEnrollers[template.ID], cache.EnterpriseCAEnrollers[eca.ID])
+				controlBitmap := CalculateCrossProductNodeSets(tx, domainsid, groupExpansions, ecaEnrollers, cache.GetCertTemplateEnrollers(template.ID))
 				if filtered, err := filterUserDNSResults(tx, controlBitmap, template); err != nil {
 					log.Warnf("Error filtering users from victims for esc13: %v", err)
 					continue
 				} else {
 					for _, group := range groupNodes.Slice() {
 						if groupIsContainedOrTrusted(tx, group, domain) {
-							filtered.Each(func(value uint32) bool {
+							filtered.Each(func(value uint64) bool {
 								channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 									FromID: graph.ID(value),
 									ToID:   group.ID,
@@ -72,37 +79,47 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 }
 
 func groupIsContainedOrTrusted(tx graph.Transaction, group, domain *graph.Node) bool {
-	var matchFound bool
-	if err := ops.Traversal(tx, ops.TraversalPlan{
-		Root:      group,
-		Direction: graph.DirectionInbound,
-		BranchQuery: func() graph.Criteria {
-			return query.KindIn(query.Relationship(), ad.Contains, ad.TrustedBy)
-		},
-		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.Kinds.ContainsOneOf(ad.Domain)
-		},
-	}, func(ctx *ops.TraversalContext, segment *graph.PathSegment) error {
-		//Check to make sure that this segment contains our target domain id
-		segment.WalkReverse(func(nextSegment *graph.PathSegment) bool {
-			if nextSegment.Node.ID == domain.ID {
-				matchFound = true
-				return false
-			}
+	var (
+		matchFound    = false
+		visitedBitmap = cardinality.NewBitmap64()
+		traversalPlan = ops.TraversalPlan{
+			Root:      group,
+			Direction: graph.DirectionInbound,
+			ExpansionFilter: func(segment *graph.PathSegment) bool {
+				return visitedBitmap.CheckedAdd(segment.Node.ID.Uint64())
+			},
+			BranchQuery: func() graph.Criteria {
+				return query.KindIn(query.Relationship(), ad.Contains, ad.TrustedBy)
+			},
+			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+				return segment.Node.Kinds.ContainsOneOf(ad.Domain)
+			},
+		}
+		pathVisitor = func(ctx *ops.TraversalContext, segment *graph.PathSegment) error {
+			//Check to make sure that this segment contains our target domain id
+			segment.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+				if nextSegment.Node.ID == domain.ID {
+					matchFound = true
+					return false
+				}
 
-			if !nextSegment.Node.Kinds.ContainsOneOf(ad.Domain) {
-				return false
-			}
+				if !nextSegment.Node.Kinds.ContainsOneOf(ad.Domain) {
+					return false
+				}
 
-			return true
-		})
+				return true
+			})
 
-		return nil
-	}); err != nil {
-		return false
-	} else {
-		return matchFound
+			return nil
+		}
+	)
+
+	if err := ops.Traversal(tx, traversalPlan, pathVisitor); err != nil {
+		log.Debugf("groupIsContainedOrTrusted traversal error: %v", err)
 	}
+
+	return matchFound
+
 }
 
 func isCertTemplateValidForESC13(ct *graph.Node) (bool, error) {
@@ -174,19 +191,20 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 	*/
 
 	var (
-		startNode *graph.Node
-		endNode   *graph.Node
+		startNode  *graph.Node
+		endNode    *graph.Node
+		startNodes = graph.NodeSet{}
 
 		traversalInst          = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		paths                  = graph.PathSet{}
 		path1CandidateSegments = map[graph.ID][]*graph.PathSegment{}
-		path1EnterpriseCAs     = cardinality.NewBitmap32()
-		path1DomainNodes       = cardinality.NewBitmap32()
-		path1CertTemplates     = cardinality.NewBitmap32()
+		path1EnterpriseCAs     = cardinality.NewBitmap64()
+		path1DomainNodes       = cardinality.NewBitmap64()
+		path1CertTemplates     = cardinality.NewBitmap64()
 		path2CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		path3CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		path4CandidateSegments = map[graph.ID][]*graph.PathSegment{}
-		path2EnterpriseCAs     = cardinality.NewBitmap32()
+		path2EnterpriseCAs     = cardinality.NewBitmap64()
 		lock                   = &sync.Mutex{}
 	)
 
@@ -203,61 +221,81 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		return nil, err
 	}
 
-	//Manifest P1
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: adcsESC13Path1Pattern().Do(func(terminal *graph.PathSegment) error {
-			domainNode := terminal.Node
-			var enterpriseCANode *graph.Node
-			terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
-				if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-					enterpriseCANode = nextSegment.Node
-				}
-				return true
-			})
-
-			certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
-			})
-
-			lock.Lock()
-			path1CandidateSegments[enterpriseCANode.ID] = append(path1CandidateSegments[enterpriseCANode.ID], terminal)
-			path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
-			path1DomainNodes.Add(domainNode.ID.Uint32())
-			path1CertTemplates.Add(certTemplate.ID.Uint32())
-			lock.Unlock()
+	// Add startnode, Auth. Users, and Everyone to start nodes
+	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		log.Warnf("Error getting domain SID for domain %d: %v", endNode.ID, err)
+		return nil, err
+	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
+			return err
+		} else {
+			startNodes.AddSet(nodeSet)
 			return nil
-		}),
+		}
 	}); err != nil {
 		return nil, err
 	}
+	startNodes.Add(startNode)
+
+	//Manifest P1
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: adcsESC13Path1Pattern().Do(func(terminal *graph.PathSegment) error {
+				domainNode := terminal.Node
+				var enterpriseCANode *graph.Node
+				terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+					if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+						enterpriseCANode = nextSegment.Node
+					}
+					return true
+				})
+
+				certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+				})
+
+				lock.Lock()
+				path1CandidateSegments[enterpriseCANode.ID] = append(path1CandidateSegments[enterpriseCANode.ID], terminal)
+				path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
+				path1DomainNodes.Add(domainNode.ID.Uint64())
+				path1CertTemplates.Add(certTemplate.ID.Uint64())
+				lock.Unlock()
+				return nil
+			}),
+		}); err != nil {
+			return nil, err
+		}
+	}
 
 	//Manifest P2 and key it to the enterprise CA nodes to cross product
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
-		Driver: adcsESC13Path2Pattern(cardinality.DuplexToGraphIDs(path1EnterpriseCAs), cardinality.DuplexToGraphIDs(path1DomainNodes)).Do(func(terminal *graph.PathSegment) error {
-			var enterpriseCANode *graph.Node
-			terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
-				if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-					enterpriseCANode = nextSegment.Node
-				}
-				return true
-			})
-			lock.Lock()
-			path2CandidateSegments[enterpriseCANode.ID] = append(path2CandidateSegments[enterpriseCANode.ID], terminal)
-			path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint32())
-			lock.Unlock()
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: adcsESC13Path2Pattern(graph.DuplexToGraphIDs(path1EnterpriseCAs), graph.DuplexToGraphIDs(path1DomainNodes)).Do(func(terminal *graph.PathSegment) error {
+				var enterpriseCANode *graph.Node
+				terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+					if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+						enterpriseCANode = nextSegment.Node
+					}
+					return true
+				})
+				lock.Lock()
+				path2CandidateSegments[enterpriseCANode.ID] = append(path2CandidateSegments[enterpriseCANode.ID], terminal)
+				path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
+				lock.Unlock()
 
-			return nil
-		}),
-	}); err != nil {
-		return nil, err
+				return nil
+			}),
+		}); err != nil {
+			return nil, err
+		}
 	}
 
 	//Manifest P3 keyed to cert template nodes
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 		Root: endNode,
-		Driver: adcsESC13Path3Pattern(cardinality.DuplexToGraphIDs(path1CertTemplates)).Do(func(terminal *graph.PathSegment) error {
+		Driver: adcsESC13Path3Pattern(graph.DuplexToGraphIDs(path1CertTemplates)).Do(func(terminal *graph.PathSegment) error {
 			certTemplate := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 				return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
 			})
@@ -361,6 +399,10 @@ func adcsESC13Path1Pattern() traversal.PatternContinuation {
 		query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
+		)).
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
 		)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),

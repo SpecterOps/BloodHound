@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package model_test
@@ -76,19 +76,28 @@ func TestModel_BuildSQLFilter_Success(t *testing.T) {
 		IsStringData: false,
 	}
 
+	approximatelyEquals := model.QueryParameterFilter{
+		Name:         "filtercolumn6",
+		Operator:     model.ApproximatelyEquals,
+		Value:        "testing value",
+		IsStringData: true,
+	}
+
 	expectedResults := map[string]model.SQLFilter{
-		"numericMin":    {SQLString: fmt.Sprintf("%s > ?", numericMin.Name), Params: []any{numericMin.Value}},
-		"numericMax":    {SQLString: fmt.Sprintf("%s < ?", numericMax.Name), Params: []any{numericMax.Value}},
-		"stringValue":   {SQLString: fmt.Sprintf("%s = ?", stringValue.Name), Params: []any{stringValue.Value}},
-		"boolEquals":    {SQLString: fmt.Sprintf("%s = ?", boolEquals.Name), Params: []any{boolEquals.Value}},
-		"boolNotEquals": {SQLString: fmt.Sprintf("%s <> ?", boolNotEquals.Name), Params: []any{boolNotEquals.Value}},
+		"numericMin":                {SQLString: fmt.Sprintf("%s > ?", numericMin.Name), Params: []any{numericMin.Value}},
+		"numericMax":                {SQLString: fmt.Sprintf("%s < ?", numericMax.Name), Params: []any{numericMax.Value}},
+		"stringValue":               {SQLString: fmt.Sprintf("%s = ?", stringValue.Name), Params: []any{stringValue.Value}},
+		"boolEquals":                {SQLString: fmt.Sprintf("%s = ?", boolEquals.Name), Params: []any{boolEquals.Value}},
+		"boolNotEquals":             {SQLString: fmt.Sprintf("%s <> ?", boolNotEquals.Name), Params: []any{boolNotEquals.Value}},
+		"stringApproximatelyEquals": {SQLString: fmt.Sprintf("%s ILIKE ?", approximatelyEquals.Name), Params: []any{approximatelyEquals.Value}},
 	}
 
 	queryParameterFilterMap := model.QueryParameterFilterMap{
-		numericMax.Name:    model.QueryParameterFilters{numericMin, numericMax},
-		stringValue.Name:   model.QueryParameterFilters{stringValue},
-		boolEquals.Name:    model.QueryParameterFilters{boolEquals},
-		boolNotEquals.Name: model.QueryParameterFilters{boolNotEquals},
+		numericMax.Name:          model.QueryParameterFilters{numericMin, numericMax},
+		stringValue.Name:         model.QueryParameterFilters{stringValue},
+		boolEquals.Name:          model.QueryParameterFilters{boolEquals},
+		boolNotEquals.Name:       model.QueryParameterFilters{boolNotEquals},
+		approximatelyEquals.Name: model.QueryParameterFilters{approximatelyEquals},
 	}
 
 	result, err := queryParameterFilterMap.BuildSQLFilter()

@@ -16,18 +16,9 @@
 
 import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    Box,
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    TextField,
-    Typography,
-    useTheme,
-} from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography, useTheme } from '@mui/material';
 import { FC, useState } from 'react';
+import { Button } from '@bloodhoundenterprise/doodleui';
 
 const confirmationText = 'Please delete my data';
 
@@ -97,12 +88,12 @@ const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void; handleDel
             </DialogContent>
             <DialogActions>
                 <Button
+                    variant='tertiary'
                     onClick={() => {
                         handleClose();
                         setError(false);
                         setInput('');
-                    }}
-                    sx={{ color: 'black' }}>
+                    }}>
                     Cancel
                 </Button>
                 <Button onClick={handleConfirm}>Confirm</Button>

@@ -14,27 +14,30 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Switch } from '@bloodhoundenterprise/doodleui';
 import {
+    faCircleHalfStroke,
+    faCompass,
     faDownload,
     faQuestionCircle,
     faSignOutAlt,
     faUser,
     faUserShield,
-    faCompass,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Divider } from '@mui/material';
+import { Box, Divider, useTheme } from '@mui/material';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Menu, { MenuProps } from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import withStyles from '@mui/styles/withStyles';
+import { EnterpriseIcon, FeatureFlag } from 'bh-shared-ui';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from 'src/ducks/auth/authSlice';
+import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/ducks/global/routes';
-import { useAppDispatch } from 'src/store';
-import { EnterpriseIcon } from 'bh-shared-ui';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 interface Props {
     anchorEl: null | HTMLElement;
@@ -63,6 +66,8 @@ const StyledMenu = withStyles({
 const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+    const theme = useTheme();
 
     const navigateTo = (route: string) => {
         handleClose();
@@ -72,6 +77,10 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
     const handleLogout: React.MouseEventHandler<HTMLLIElement> = () => {
         handleClose();
         dispatch(logout());
+    };
+
+    const toggleDarkMode: React.MouseEventHandler<HTMLLIElement> = () => {
+        dispatch(setDarkMode(!darkMode));
     };
 
     const openInNewTab = (url: string) => {
@@ -116,7 +125,7 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                 <MenuItem
                     onClick={() => handleClose()}
                     component='a'
-                    href='https://support.bloodhoundenterprise.io'
+                    href='https://support.bloodhoundenterprise.io/hc'
                     target='_blank'
                     rel='noreferrer'
                     data-testid='global_header_settings-menu_nav-support'>
@@ -139,10 +148,25 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                     onClick={() => openInNewTab('https://bloodhoundenterprise.io/our-solution/')}
                     data-testid='global_header_settings-menu_nav-checkout-BHE'>
                     <ListItemIcon>
-                        <EnterpriseIcon fill={'#000000'} width='1rem' height='1rem' />
+                        <EnterpriseIcon fill={theme.palette.color.primary} width='1rem' height='1rem' />
                     </ListItemIcon>
                     <ListItemText primary='BloodHound Enterprise' />
                 </MenuItem>
+
+                <FeatureFlag
+                    flagKey='dark_mode'
+                    errorFallback={null}
+                    loadingFallback={null}
+                    enabled={
+                        <MenuItem onClick={toggleDarkMode} data-testid={'global_header_settings-menu_nav-logout'}>
+                            <ListItemIcon>
+                                <FontAwesomeIcon icon={faCircleHalfStroke} />
+                            </ListItemIcon>
+                            <ListItemText primary={'Dark Mode'} />
+                            <Switch checked={darkMode}>Dark Mode</Switch>
+                        </MenuItem>
+                    }
+                />
 
                 <Box my={1}>
                     <Divider />

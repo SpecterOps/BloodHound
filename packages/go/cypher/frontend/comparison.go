@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package frontend
@@ -19,8 +19,9 @@ package frontend
 import (
 	"fmt"
 
+	"github.com/specterops/bloodhound/cypher/models/cypher"
+
 	"github.com/antlr4-go/antlr/v4"
-	"github.com/specterops/bloodhound/cypher/model"
 	"github.com/specterops/bloodhound/cypher/parser"
 )
 
@@ -37,12 +38,12 @@ import (
 type PartialComparisonVisitor struct {
 	BaseVisitor
 
-	PartialComparison *model.PartialComparison
+	PartialComparison *cypher.PartialComparison
 }
 
 func NewPartialComparisonVisitor() *PartialComparisonVisitor {
 	return &PartialComparisonVisitor{
-		PartialComparison: &model.PartialComparison{},
+		PartialComparison: &cypher.PartialComparison{},
 	}
 }
 
@@ -59,7 +60,7 @@ func (s *PartialComparisonVisitor) ExitOC_StringListNullPredicateExpression(ctx 
 type ComparisonVisitor struct {
 	BaseVisitor
 
-	Comparison *model.Comparison
+	Comparison *cypher.Comparison
 }
 
 func (s *ComparisonVisitor) EnterOC_StringListNullPredicateExpression(ctx *parser.OC_StringListNullPredicateExpressionContext) {
@@ -69,7 +70,7 @@ func (s *ComparisonVisitor) EnterOC_StringListNullPredicateExpression(ctx *parse
 func (s *ComparisonVisitor) ExitOC_StringListNullPredicateExpression(ctx *parser.OC_StringListNullPredicateExpressionContext) {
 	result := s.ctx.Exit().(*StringListNullPredicateExpressionVisitor).Expression
 
-	s.Comparison = &model.Comparison{
+	s.Comparison = &cypher.Comparison{
 		Left: result,
 	}
 }
@@ -79,7 +80,7 @@ func (s *ComparisonVisitor) EnterOC_PartialComparisonExpression(ctx *parser.OC_P
 
 	switch operatorChild := ctx.GetChild(0).(type) {
 	case *antlr.TerminalNodeImpl:
-		if operator, err := model.ParseOperator(operatorChild.GetText()); err != nil {
+		if operator, err := cypher.ParseOperator(operatorChild.GetText()); err != nil {
 			s.ctx.AddErrors(err)
 		} else {
 			partialComparisonVisitor.PartialComparison.Operator = operator

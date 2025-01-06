@@ -1,17 +1,17 @@
 // Copyright 2023 Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
 
 package model
@@ -21,12 +21,12 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/specterops/bloodhound/cypher/model"
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 
-	"github.com/stretchr/testify/require"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDomainSelectors_TestIsSortable(t *testing.T) {
@@ -44,7 +44,7 @@ func TestDomainSelectors_GetFilterableColumns(t *testing.T) {
 func TestDomainSelectors_GetValidFilterPredicatesAsStrings(t *testing.T) {
 	domains := DomainSelectors{}
 	_, err := domains.GetValidFilterPredicatesAsStrings("foo")
-	require.Equal(t, ErrorResponseDetailsColumnNotFilterable, err.Error())
+	require.Equal(t, ErrResponseDetailsColumnNotFilterable, err.Error())
 
 	columns := []string{"name", "objectid", "collected"}
 
@@ -63,7 +63,7 @@ func TestDomainSelectors_GetOrderCriteria_InvalidSortColumn(t *testing.T) {
 	params.Add("sort_by", "invalidColumn")
 
 	_, err := domains.GetOrderCriteria(params)
-	require.Equal(t, ErrorResponseDetailsColumnNotSortable, err.Error())
+	require.Equal(t, ErrResponseDetailsColumnNotSortable, err.Error())
 }
 
 func TestDomainSelectors_GetOrderCriteria_Success(t *testing.T) {
@@ -75,10 +75,10 @@ func TestDomainSelectors_GetOrderCriteria_Success(t *testing.T) {
 	orderCriteria, err := domains.GetOrderCriteria(params)
 	require.Nil(t, err)
 	require.Equal(t, orderCriteria[0].Property, "objectid")
-	require.True(t, orderCriteria[0].Order.(model.SortOrder) == query.Ascending())
+	require.True(t, orderCriteria[0].Order.(cypher.SortOrder) == query.Ascending())
 
 	require.Equal(t, orderCriteria[1].Property, "name")
-	require.True(t, orderCriteria[0].Order.(model.SortOrder) == query.Ascending())
+	require.True(t, orderCriteria[0].Order.(cypher.SortOrder) == query.Ascending())
 }
 
 func TestDomainSelectors_GetFilterCriteria_InvalidFilterColumn(t *testing.T) {
@@ -92,7 +92,7 @@ func TestDomainSelectors_GetFilterCriteria_InvalidFilterColumn(t *testing.T) {
 	domains := DomainSelectors{}
 
 	_, err = domains.GetFilterCriteria(request)
-	require.Equal(t, ErrorResponseDetailsColumnNotFilterable, err.Error())
+	require.Equal(t, ErrResponseDetailsColumnNotFilterable, err.Error())
 }
 
 func TestDomainSelectors_GetFilterCriteria_InvalidFilterPredicate(t *testing.T) {
@@ -106,7 +106,7 @@ func TestDomainSelectors_GetFilterCriteria_InvalidFilterPredicate(t *testing.T) 
 	domains := DomainSelectors{}
 
 	_, err = domains.GetFilterCriteria(request)
-	require.Equal(t, ErrorResponseDetailsFilterPredicateNotSupported, err.Error())
+	require.Equal(t, ErrResponseDetailsFilterPredicateNotSupported, err.Error())
 }
 
 func TestDomainSelectors_GetFilterCriteria_Success(t *testing.T) {

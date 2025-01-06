@@ -14,9 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import {
     Box,
-    Button,
+    Button as MuiButton,
     Dialog,
     DialogActions,
     DialogContent,
@@ -41,7 +42,7 @@ const BarcodeButton = withStyles((theme) => ({
     label: {
         padding: 0,
     },
-}))(Button);
+}))(MuiButton);
 
 const Enable2FADialog: React.FC<{
     open: boolean;
@@ -210,17 +211,22 @@ const Enable2FADialog: React.FC<{
                     <DialogActions>
                         {!(secretAccepted && OTPAccepted) ? (
                             <>
-                                <Button color='inherit' onClick={onCancel} data-testid='enable-2fa-dialog_button-close'>
+                                <Button
+                                    type='button'
+                                    variant='tertiary'
+                                    onClick={onCancel}
+                                    data-testid='enable-2fa-dialog_button-close'>
                                     Cancel
                                 </Button>
-                                <Button color='primary' type='submit' data-testid='enable-2fa-dialog_button-next'>
+                                <Button type='submit' data-testid='enable-2fa-dialog_button-next'>
                                     Next
                                 </Button>
                             </>
                         ) : (
                             <>
                                 <Button
-                                    color='primary'
+                                    type='button'
+                                    variant='tertiary'
                                     onClick={handleOnClose}
                                     data-testid='enable-2fa-dialog_button-close'>
                                     Close

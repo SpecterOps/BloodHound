@@ -19,10 +19,10 @@ package pg
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -59,9 +59,7 @@ type Driver struct {
 }
 
 func (s *Driver) SetDefaultGraph(ctx context.Context, graphSchema graph.Graph) error {
-	return s.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		return s.schemaManager.SetDefaultGraph(tx, graphSchema)
-	})
+	return s.schemaManager.SetDefaultGraph(ctx, graphSchema)
 }
 
 func (s *Driver) KindMapper() KindMapper {
@@ -176,19 +174,19 @@ func (s *Driver) FetchSchema(ctx context.Context) (graph.Schema, error) {
 }
 
 func (s *Driver) AssertSchema(ctx context.Context, schema graph.Schema) error {
-	if err := s.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		if err := s.schemaManager.AssertSchema(tx, schema); err != nil {
-			return err
-		} else if schema.DefaultGraph.Name != "" {
-			return s.schemaManager.AssertDefaultGraph(tx, schema.DefaultGraph)
-		}
+	// Resetting the pool must be done on every schema assertion as composite types may have changed OIDs
+	defer s.pool.Reset()
 
-		return nil
-	}, OptionSetQueryExecMode(pgx.QueryExecModeSimpleProtocol)); err != nil {
+	// Assert that the base graph schema exists and has a matching schema definition
+	if err := s.schemaManager.AssertSchema(ctx, schema); err != nil {
 		return err
-	} else {
-		// Resetting the pool must be done on every schema assertion as composite types may have changed OIDs
-		s.pool.Reset()
+	}
+
+	if schema.DefaultGraph.Name != "" {
+		// There's a default graph defined. Assert that it exists and has a matching schema
+		if err := s.schemaManager.AssertDefaultGraph(ctx, schema.DefaultGraph); err != nil {
+			return err
+		}
 	}
 
 	return nil

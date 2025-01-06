@@ -20,13 +20,15 @@
 package v2_test
 
 import (
+	"errors"
 	"net/http"
 	"testing"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/integration"
 	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/require"
 )
 
@@ -194,7 +196,7 @@ func Test_NonAdminFunctionality(t *testing.T) {
 			t.Fail()
 		}
 
-		err = nonAdminClient.DeleteUserToken(nonAdminUser.ID, tokenToDelete.ID)
+		err = nonAdminClient.DeleteUserToken(tokenToDelete.ID)
 		require.Nilf(t, err, "Received unexpected error when deleting token: %s", err)
 
 		// Ensure the token gets cleaned up if there was an error above
@@ -207,8 +209,18 @@ func Test_NonAdminFunctionality(t *testing.T) {
 	t.Run("Deleting tokens for other user as nonadmin should fail", func(t *testing.T) {
 		tokenToDelete := testCtx.CreateAuthToken(newUser.ID, "newUser token to delete")
 
-		err := nonAdminClient.DeleteUserToken(newUser.ID, tokenToDelete.ID)
-		require.Equalf(t, errors.Error("API returned a 404 error"), err, "Expected to receive a 404 error when attempting to delete a token, got: %s", err)
+		err := nonAdminClient.DeleteUserToken(tokenToDelete.ID)
+		errWrapper := api.ErrorWrapper{}
+		if errors.As(err, &errWrapper) {
+			require.Equal(t, errWrapper.HTTPStatus, http.StatusForbidden)
+		} else {
+			t.Logf("Encountered unknown error deleting auth token: %s", err)
+			t.Fail()
+		}
+
+		err = test.AssertAuditLogs(testCtx.GetLatestAuditLogs(), model.AuditLogActionDeleteAuthToken, model.AuditLogStatusFailure, model.AuditData{
+			"target_user_id": newUser.ID.String(), "id": tokenToDelete.ID.String()})
+		require.Nil(t, err)
 
 		// Use the admin session to cleanup the newly created token
 		testCtx.DeleteAuthToken(newUser.ID, tokenToDelete.ID)

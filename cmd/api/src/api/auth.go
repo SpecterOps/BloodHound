@@ -24,16 +24,17 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/specterops/bloodhound/crypto"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
@@ -44,10 +45,12 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-const (
-	ErrInvalidAuth  = errors.Error("invalid authentication")
-	ErrNoUserSecret = errors.Error("user does not have a secret auth provider registered")
-	ErrUserDisabled = errors.Error("user disabled")
+var (
+	ErrInvalidAuth                  = errors.New("invalid authentication")
+	ErrNoUserSecret                 = errors.New("user does not have a secret auth provider registered")
+	ErrUserDisabled                 = errors.New("user disabled")
+	ErrUserNotAuthorizedForProvider = errors.New("user not authorized for this provider")
+	ErrInvalidAuthProvider          = errors.New("invalid auth provider")
 )
 
 func parseRequestDate(rawDate string) (time.Time, error) {
@@ -68,6 +71,7 @@ type Authenticator interface {
 	ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error
 	ValidateRequestSignature(tokenID uuid.UUID, request *http.Request, serverTime time.Time) (auth.Context, int, error)
 	CreateSession(ctx context.Context, user model.User, authProvider any) (string, error)
+	CreateSSOSession(request *http.Request, response http.ResponseWriter, principalNameOrEmail string, ssoProvider model.SSOProvider)
 	ValidateSession(ctx context.Context, jwtTokenString string) (auth.Context, error)
 }
 
@@ -89,11 +93,11 @@ func NewAuthenticator(cfg config.Configuration, db database.Database, ctxInitial
 	}
 }
 
-func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.UUID, user model.User, loginRequest LoginRequest, status model.AuditLogEntryStatus, loginError error) {
+func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.UUID, status model.AuditLogEntryStatus, user model.User, fields types.JSONUntypedObject) {
 	bhCtx := ctx.Get(requestContext)
 	auditLog := model.AuditLog{
 		Action:          model.AuditLogActionLoginAttempt,
-		Fields:          types.JSONUntypedObject{"username": loginRequest.Username},
+		Fields:          fields,
 		RequestID:       bhCtx.RequestID,
 		SourceIpAddress: bhCtx.RequestIP,
 		Status:          status,
@@ -106,11 +110,10 @@ func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.
 		auditLog.ActorEmail = user.EmailAddress.ValueOrZero()
 	}
 
-	if status == model.AuditLogStatusFailure {
-		auditLog.Fields["error"] = loginError
+	err := s.db.CreateAuditLog(requestContext, auditLog)
+	if err != nil {
+		log.Warnf("failed to write login audit log %+v", err)
 	}
-
-	s.db.CreateAuditLog(requestContext, auditLog)
 }
 
 func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest LoginRequest) (model.User, string, error) {
@@ -134,32 +137,25 @@ func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest Log
 }
 
 func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error) {
-	var (
-		commitID     uuid.UUID
-		err          error
-		sessionToken string
-		user         model.User
-	)
+	auditLogFields := types.JSONUntypedObject{"username": loginRequest.Username, "auth_type": auth.ProviderTypeSecret}
 
-	commitID, err = uuid.NewV4()
-	if err != nil {
+	if commitID, err := uuid.NewV4(); err != nil {
 		log.Errorf("Error generating commit ID for login: %s", err)
 		return LoginDetails{}, err
-	}
-
-	s.auditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusIntent, err)
-
-	user, sessionToken, err = s.validateSecretLogin(ctx, loginRequest)
-
-	if err != nil {
-		s.auditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusFailure, err)
-		return LoginDetails{}, err
 	} else {
-		s.auditLogin(ctx, commitID, user, loginRequest, model.AuditLogStatusSuccess, err)
-		return LoginDetails{
-			User:         user,
-			SessionToken: sessionToken,
-		}, nil
+		s.auditLogin(ctx, commitID, model.AuditLogStatusIntent, model.User{}, auditLogFields)
+
+		if user, sessionToken, err := s.validateSecretLogin(ctx, loginRequest); err != nil {
+			auditLogFields["error"] = err
+			s.auditLogin(ctx, commitID, model.AuditLogStatusFailure, user, auditLogFields)
+			return LoginDetails{}, err
+		} else {
+			s.auditLogin(ctx, commitID, model.AuditLogStatusSuccess, user, auditLogFields)
+			return LoginDetails{
+				User:         user,
+				SessionToken: sessionToken,
+			}, nil
+		}
 	}
 }
 
@@ -243,7 +239,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 	} else if authContext, err := s.ctxInitializer.InitContextFromToken(request.Context(), authToken); err != nil {
 		return handleAuthDBError(err)
 	} else if user, isUser := auth.GetUserFromAuthCtx(authContext); isUser && user.IsDisabled {
-		return authContext, http.StatusForbidden, errors.Error("user disabled")
+		return authContext, http.StatusForbidden, ErrUserDisabled
 	} else if err := validateRequestTime(serverTime, requestDate); err != nil {
 		return auth.Context{}, http.StatusUnauthorized, err
 	} else {
@@ -269,7 +265,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 			}
 		}
 
-		if digestNow, err := NewRequestSignature(sha256.New, authToken.Key, requestDate.Format(time.RFC3339), request.Method, request.RequestURI, teeReader); err != nil {
+		if digestNow, err := NewRequestSignature(request.Context(), sha256.New, authToken.Key, requestDate.Format(time.RFC3339), request.Method, request.RequestURI, teeReader); err != nil {
 			if readCloser != nil {
 				readCloser.Close()
 			}
@@ -299,6 +295,123 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 	}
 }
 
+func DeleteBrowserCookie(request *http.Request, response http.ResponseWriter, name string) {
+	SetSecureBrowserCookie(request, response, name, "", time.Now().UTC(), false)
+}
+
+func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter, name, value string, expires time.Time, httpOnly bool) {
+	var (
+		hostURL       = *ctx.FromRequest(request).Host
+		sameSiteValue = http.SameSiteDefaultMode
+		domainValue   string
+	)
+
+	if hostURL.Scheme == "https" {
+		sameSiteValue = http.SameSiteStrictMode
+	}
+
+	// NOTE: Set-Cookie should generally have the Domain field blank to ensure the cookie is only included with requests against the host, excluding subdomains; however,
+	// most browsers will ignore Set-Cookie headers from localhost responses if the Domain field is not set explicitly.
+	if strings.Contains(hostURL.Hostname(), "localhost") {
+		domainValue = hostURL.Hostname()
+	}
+
+	// Set the token cookie
+	http.SetCookie(response, &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Expires:  expires,
+		Secure:   hostURL.Scheme == "https",
+		HttpOnly: httpOnly,
+		SameSite: sameSiteValue,
+		Path:     "/",
+		Domain:   domainValue,
+	})
+}
+
+func (s authenticator) CreateSSOSession(request *http.Request, response http.ResponseWriter, principalNameOrEmail string, ssoProvider model.SSOProvider) {
+	var (
+		hostURL    = *ctx.FromRequest(request).Host
+		requestCtx = request.Context()
+		err        error
+
+		authProvider any
+		user         model.User
+
+		commitID        uuid.UUID
+		auditLogFields  = types.JSONUntypedObject{"username": principalNameOrEmail, "sso_provider_id": ssoProvider.ID}
+		auditLogOutcome = model.AuditLogStatusFailure
+	)
+
+	switch ssoProvider.Type {
+	case model.SessionAuthProviderSAML:
+		auditLogFields["auth_type"] = auth.ProviderTypeSAML
+		if ssoProvider.SAMLProvider != nil {
+			auditLogFields["saml_provider_id"] = ssoProvider.SAMLProvider.ID
+			authProvider = *ssoProvider.SAMLProvider
+		}
+	case model.SessionAuthProviderOIDC:
+		auditLogFields["auth_type"] = auth.ProviderTypeOIDC
+		if ssoProvider.OIDCProvider != nil {
+			auditLogFields["oidc_provider_id"] = ssoProvider.OIDCProvider.ID
+			authProvider = *ssoProvider.OIDCProvider
+		}
+		DeleteBrowserCookie(request, response, AuthStateCookieName)
+		DeleteBrowserCookie(request, response, AuthPKCECookieName)
+	}
+
+	// Generate commit ID for audit logging
+	if commitID, err = uuid.NewV4(); err != nil {
+		log.Errorf("Error generating commit ID for login: %s", err)
+		WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusInternalServerError, "audit log creation failure", request), response)
+		return
+	}
+
+	// Log the intent to authenticate
+	s.auditLogin(requestCtx, commitID, model.AuditLogStatusIntent, user, auditLogFields)
+
+	// Log authentication success or failure
+	defer func() {
+		s.auditLogin(requestCtx, commitID, auditLogOutcome, user, auditLogFields)
+	}()
+
+	if user, err = s.db.LookupUser(requestCtx, principalNameOrEmail); err != nil {
+		auditLogFields["error"] = err
+		if !errors.Is(err, database.ErrNotFound) {
+			HandleDatabaseError(request, response, err)
+		} else {
+			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
+		}
+	} else {
+		if !user.SSOProviderID.Valid || ssoProvider.ID != user.SSOProviderID.Int32 {
+			auditLogFields["error"] = ErrUserNotAuthorizedForProvider
+			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
+			return
+		}
+
+		if sessionJWT, err := s.CreateSession(requestCtx, user, authProvider); err != nil {
+			auditLogFields["error"] = err
+			if locationURL := URLJoinPath(hostURL, UserDisabledPath); errors.Is(err, ErrUserDisabled) {
+				response.Header().Add(headers.Location.String(), locationURL.String())
+				response.WriteHeader(http.StatusFound)
+			} else {
+				WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusInternalServerError, "session creation failure", request), response)
+			}
+		} else {
+			auditLogOutcome = model.AuditLogStatusSuccess
+
+			locationURL := URLJoinPath(hostURL, UserInterfacePath)
+
+			// Set the token cookie
+			SetSecureBrowserCookie(request, response, AuthTokenCookieName, sessionJWT, time.Now().UTC().Add(s.cfg.AuthSessionTTL()), false)
+
+			// Redirect back to the UI landing page
+			response.Header().Add(headers.Location.String(), locationURL.String())
+			response.WriteHeader(http.StatusFound)
+		}
+	}
+}
+
 func (s authenticator) CreateSession(ctx context.Context, user model.User, authProvider any) (string, error) {
 	if user.IsDisabled {
 		return "", ErrUserDisabled
@@ -316,10 +429,14 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 	case model.AuthSecret:
 		userSession.AuthProviderType = model.SessionAuthProviderSecret
 		userSession.AuthProviderID = typedAuthProvider.ID
-
 	case model.SAMLProvider:
 		userSession.AuthProviderType = model.SessionAuthProviderSAML
 		userSession.AuthProviderID = typedAuthProvider.ID
+	case model.OIDCProvider:
+		userSession.AuthProviderType = model.SessionAuthProviderOIDC
+		userSession.AuthProviderID = typedAuthProvider.ID
+	default:
+		return "", ErrInvalidAuthProvider
 	}
 
 	if newSession, err := s.db.CreateUserSession(ctx, userSession); err != nil {
@@ -367,7 +484,7 @@ func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString strin
 		log.Infof("Unable to find session %d", sessionID)
 		return auth.Context{}, ErrInvalidAuth
 	} else if session.Expired() {
-		log.Infof("Session %s is expired", sessionID)
+		log.Infof("Session %d is expired", sessionID)
 		return auth.Context{}, ErrInvalidAuth
 	} else {
 		authContext := auth.Context{

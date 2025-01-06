@@ -17,10 +17,11 @@
 package datapipe_test
 
 import (
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
+
+	"github.com/specterops/bloodhound/src/daemons/datapipe"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRandomDurationBetween(t *testing.T) {

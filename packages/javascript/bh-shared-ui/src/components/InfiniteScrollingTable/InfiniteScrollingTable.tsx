@@ -20,8 +20,24 @@ import React, { memo, useState } from 'react';
 import { areEqual, FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
 import NodeIcon from '../NodeIcon';
+import makeStyles from '@mui/styles/makeStyles';
 
 const ITEM_SIZE = 32;
+
+const useStyles = makeStyles((theme) => ({
+    evenItem: {
+        backgroundColor: theme.palette.neutral.secondary,
+        '&:hover': {
+            backgroundColor: theme.palette.neutral.quaternary,
+        },
+    },
+    oddItem: {
+        backgroundColor: theme.palette.neutral.tertiary,
+        '&:hover': {
+            backgroundColor: theme.palette.neutral.quaternary,
+        },
+    },
+}));
 
 const InnerElement = ({ style, ...rest }: any) => (
     <List
@@ -29,6 +45,7 @@ const InnerElement = ({ style, ...rest }: any) => (
         data-testid='infinite-scroll-table'
         disablePadding
         style={{ ...style, overflowX: 'hidden' }}
+        className={style.table}
         {...rest}
     />
 );
@@ -50,9 +67,11 @@ const createItemData = memoize((items, onClick) => ({
 }));
 
 const Row = memo(function Row({ data, index, style }: ListChildComponentProps) {
+    const tableStyle = useStyles();
+
     const { items, onClick } = data;
     const item = items[index];
-    const itemClass = index % 2 ? 'odd-item' : 'even-item';
+    const itemClass = index % 2 ? tableStyle.oddItem : tableStyle.evenItem;
 
     if (item === undefined) {
         return (

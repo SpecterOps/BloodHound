@@ -50,6 +50,13 @@ AppDisplayName: types.#StringEnum & {
 	representation: "appdisplayname"
 }
 
+LoginURL: types.#StringEnum & {
+	symbol:         "LoginURL"
+	schema:         "azure"
+	name:           "Login URL"
+	representation: "loginurl"
+}
+
 ServicePrincipalType: types.#StringEnum & {
 	symbol:         "ServicePrincipalType"
 	schema:         "azure"
@@ -269,6 +276,7 @@ Properties: [
 	MFAEnabled,
 	License,
 	Licenses,
+	LoginURL,
 	MFAEnforced,
 	UserPrincipalName,
 	IsAssignableToRole,
@@ -709,6 +717,12 @@ LogicAppContributor: types.#Kind & {
 	representation:	"AZLogicAppContributor"
 }
 
+SyncedToADUser: types.#Kind & {
+	symbol:			"SyncedToADUser"
+	schema:			"azure"
+	representation:	"SyncedToADUser"
+}
+
 RelationshipKinds: [
 	AvereContributor,
 	Contains,
@@ -756,6 +770,7 @@ RelationshipKinds: [
 	AZMGAddSecret,
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
+	SyncedToADUser,
 ]
 
 AppRoleTransitRelationshipKinds: [
@@ -855,4 +870,5 @@ PathfindingRelationships: [
 	AZMGAddSecret,
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
+	SyncedToADUser,
 ]

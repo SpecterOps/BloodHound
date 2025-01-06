@@ -14,13 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
 import { apiClient, useNotifications } from 'bh-shared-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
-import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { toggleTierZeroNode } from 'src/ducks/explore/actions';
+import { selectTierZeroAssetGroupId, selectOwnedAssetGroupId } from 'src/ducks/assetgroups/reducer';
+import { toggleTierZeroNode, toggleOwnedObjectNode } from 'src/ducks/explore/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
+import { Button } from '@bloodhoundenterprise/doodleui';
 
 const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
     const { addNotification } = useNotifications();
@@ -30,8 +31,10 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
 
     const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
+    const ownedObjectAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
 
     const isMenuItemForTierZero = assetGroupId === tierZeroAssetGroupId;
+    const isMenuItemForOwnedObject = assetGroupId === ownedObjectAssetGroupId;
 
     const mutation = useMutation({
         mutationFn: ({ nodeId, action }: { nodeId: string; action: 'add' | 'remove' }) => {
@@ -44,8 +47,12 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
             ]);
         },
         onSuccess: () => {
-            if (selectedNode?.graphId && isMenuItemForTierZero) {
-                dispatch(toggleTierZeroNode(selectedNode.graphId));
+            if (selectedNode?.graphId) {
+                if (isMenuItemForTierZero) {
+                    dispatch(toggleTierZeroNode(selectedNode.graphId));
+                } else if (isMenuItemForOwnedObject) {
+                    dispatch(toggleOwnedObjectNode(selectedNode.graphId));
+                }
             }
 
             addNotification('Update successful.', 'AssetGroupUpdateSuccess');
@@ -142,10 +149,12 @@ const ConfirmationDialog: FC<{
             <DialogTitle>Confirm Selection</DialogTitle>
             <DialogContent>{dialogContent}</DialogContent>
             <DialogActions>
-                <Button autoFocus onClick={handleCancel}>
+                <Button variant='tertiary' onClick={handleCancel}>
                     Cancel
                 </Button>
-                <Button onClick={handleApply}>Ok</Button>
+                <Button variant='primary' onClick={handleApply}>
+                    Ok
+                </Button>
             </DialogActions>
         </Dialog>
     );

@@ -17,11 +17,11 @@
 package test
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/stretchr/testify/require"
 )
 
 func RequireProperty[T any](t *testing.T, expected T, actual graph.PropertyValue, msg ...any) {

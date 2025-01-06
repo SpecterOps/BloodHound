@@ -29,113 +29,113 @@ EdgeCompositionRelationships: [...types.#Kind]
 // Property name enumerations
 
 CertChain: types.#StringEnum & {
-	symbol: 		"CertChain"
-	schema: 		"ad"
+	symbol:         "CertChain"
+	schema:         "ad"
 	name:           "Certificate Chain"
 	representation: "certchain"
 }
 
 CertName: types.#StringEnum & {
-	symbol: 		"CertName"
-	schema: 		"ad"
+	symbol:         "CertName"
+	schema:         "ad"
 	name:           "Certificate Name"
 	representation: "certname"
 }
 
 CertThumbprint: types.#StringEnum & {
-	symbol: 		"CertThumbprint"
-	schema: 		"ad"
+	symbol:         "CertThumbprint"
+	schema:         "ad"
 	name:           "Certificate Thumbprint"
 	representation: "certthumbprint"
 }
 
 CertThumbprints: types.#StringEnum & {
-	symbol: 		"CertThumbprints"
-	schema: 		"ad"
+	symbol:         "CertThumbprints"
+	schema:         "ad"
 	name:           "Certificate Thumbprints"
 	representation: "certthumbprints"
 }
 
 CAName: types.#StringEnum & {
-	symbol: 		"CAName"
-	schema: 		"ad"
+	symbol:         "CAName"
+	schema:         "ad"
 	name:           "CA Name"
 	representation: "caname"
 }
 
 CASecurityCollected: types.#StringEnum & {
-	symbol: 		"CASecurityCollected"
-	schema: 		"ad"
+	symbol:         "CASecurityCollected"
+	schema:         "ad"
 	name:           "CA Security Collected"
 	representation: "casecuritycollected"
 }
 
 HasEnrollmentAgentRestrictions: types.#StringEnum & {
-	symbol: 		"HasEnrollmentAgentRestrictions"
-	schema: 		"ad"
+	symbol:         "HasEnrollmentAgentRestrictions"
+	schema:         "ad"
 	name:           "Has Enrollment Agent Restrictions"
 	representation: "hasenrollmentagentrestrictions"
 }
 
 EnrollmentAgentRestrictionsCollected: types.#StringEnum & {
-	symbol: 		"EnrollmentAgentRestrictionsCollected"
-	schema: 		"ad"
+	symbol:         "EnrollmentAgentRestrictionsCollected"
+	schema:         "ad"
 	name:           "Enrollment Agent Restrictions Collected"
 	representation: "enrollmentagentrestrictionscollected"
 }
 
 IsUserSpecifiesSanEnabled: types.#StringEnum & {
-	symbol: 		"IsUserSpecifiesSanEnabled"
-	schema: 		"ad"
+	symbol:         "IsUserSpecifiesSanEnabled"
+	schema:         "ad"
 	name:           "Is User Specifies San Enabled"
 	representation: "isuserspecifiessanenabled"
 }
 
 IsUserSpecifiesSanEnabledCollected: types.#StringEnum & {
-	symbol: 		"IsUserSpecifiesSanEnabledCollected"
-	schema: 		"ad"
+	symbol:         "IsUserSpecifiesSanEnabledCollected"
+	schema:         "ad"
 	name:           "Is User Specifies San Enabled Collected"
 	representation: "isuserspecifiessanenabledcollected"
 }
 
 RoleSeparationEnabled: types.#StringEnum & {
-	symbol: 		"RoleSeparationEnabled"
-	schema: 		"ad"
+	symbol:         "RoleSeparationEnabled"
+	schema:         "ad"
 	name:           "Role Separation Enabled"
 	representation: "roleseparationenabled"
 }
 
 RoleSeparationEnabledCollected: types.#StringEnum & {
-	symbol: 		"RoleSeparationEnabledCollected"
-	schema: 		"ad"
+	symbol:         "RoleSeparationEnabledCollected"
+	schema:         "ad"
 	name:           "Role Separation Enabled Collected"
 	representation: "roleseparationenabledcollected"
 }
 
 HasBasicConstraints: types.#StringEnum & {
-	symbol: 		"HasBasicConstraints"
-	schema: 		"ad"
+	symbol:         "HasBasicConstraints"
+	schema:         "ad"
 	name:           "Has Basic Constraints"
 	representation: "hasbasicconstraints"
 }
 
 BasicConstraintPathLength: types.#StringEnum & {
-	symbol: 		"BasicConstraintPathLength"
-	schema: 		"ad"
+	symbol:         "BasicConstraintPathLength"
+	schema:         "ad"
 	name:           "Basic Constraint Path Length"
 	representation: "basicconstraintpathlength"
 }
 
 UnresolvedPublishedTemplates: types.#StringEnum & {
-	symbol: 		"UnresolvedPublishedTemplates"
-	schema: 		"ad"
+	symbol:         "UnresolvedPublishedTemplates"
+	schema:         "ad"
 	name:           "Unresolved Published Certificate Templates"
 	representation: "unresolvedpublishedtemplates"
 }
 
 DNSHostname: types.#StringEnum & {
-	symbol: 		"DNSHostname"
-	schema: 		"ad"
+	symbol:         "DNSHostname"
+	schema:         "ad"
 	name:           "DNS Hostname"
 	representation: "dnshostname"
 }
@@ -178,7 +178,7 @@ HighValue: types.#StringEnum & {
 BlocksInheritance: types.#StringEnum & {
 	symbol:         "BlocksInheritance"
 	schema:         "ad"
-	name:           "Blocks Inheritance"
+	name:           "Blocks GPO Inheritance"
 	representation: "blocksinheritance"
 }
 
@@ -239,9 +239,9 @@ HasSPN: types.#StringEnum & {
 }
 
 HasLAPS: types.#StringEnum & {
-	symbol: "HasLAPS"
-	schema: "ad"
-	name: "LAPS Enabled"
+	symbol:         "HasLAPS"
+	schema:         "ad"
+	name:           "LAPS Enabled"
 	representation: "haslaps"
 }
 
@@ -281,72 +281,72 @@ AdminCount: types.#StringEnum & {
 }
 
 DontRequirePreAuth: types.#StringEnum & {
-	symbol: "DontRequirePreAuth"
-	schema: "ad"
-	name: "Do Not Require Pre-Authentication"
+	symbol:         "DontRequirePreAuth"
+	schema:         "ad"
+	name:           "Do Not Require Pre-Authentication"
 	representation: "dontreqpreauth"
 }
 
 HasURA: types.#StringEnum & {
-	symbol: "HasURA"
-	schema: "ad"
-	name: "Has User Rights Assignment Collection"
+	symbol:         "HasURA"
+	schema:         "ad"
+	name:           "Has User Rights Assignment Collection"
 	representation: "hasura"
 }
 
 PasswordNeverExpires: types.#StringEnum & {
-	symbol: "PasswordNeverExpires"
-	schema: "ad"
-	name: "Password Never Expires"
+	symbol:         "PasswordNeverExpires"
+	schema:         "ad"
+	name:           "Password Never Expires"
 	representation: "pwdneverexpires"
 }
 
 PasswordNotRequired: types.#StringEnum & {
-	symbol: "PasswordNotRequired"
-	schema: "ad"
-	name: "Password Not Required"
+	symbol:         "PasswordNotRequired"
+	schema:         "ad"
+	name:           "Password Not Required"
 	representation: "passwordnotreqd"
 }
 
 FunctionalLevel: types.#StringEnum & {
-	symbol: "FunctionalLevel"
-	schema: "ad"
-	name: "Functional Level"
+	symbol:         "FunctionalLevel"
+	schema:         "ad"
+	name:           "Functional Level"
 	representation: "functionallevel"
 }
 
 TrustType: types.#StringEnum & {
-	symbol: "TrustType"
-	schema: "ad"
-	name: "Trust Type"
+	symbol:         "TrustType"
+	schema:         "ad"
+	name:           "Trust Type"
 	representation: "trusttype"
 }
 
 SidFiltering: types.#StringEnum & {
-	symbol: "SidFiltering"
-	schema: "ad"
-	name: "SID Filtering Enabled"
+	symbol:         "SidFiltering"
+	schema:         "ad"
+	name:           "SID Filtering Enabled"
 	representation: "sidfiltering"
 }
 
 TrustedToAuth: types.#StringEnum & {
-	symbol: "TrustedToAuth"
-	schema: "ad"
-	name: "Trusted For Constrained Delegation"
+	symbol:         "TrustedToAuth"
+	schema:         "ad"
+	name:           "Trusted For Constrained Delegation"
 	representation: "trustedtoauth"
 }
 
 SamAccountName: types.#StringEnum & {
-	symbol: "SamAccountName"
-	schema: "ad"
-	name: "SAM Account Name"
+	symbol:         "SamAccountName"
+	schema:         "ad"
+	name:           "SAM Account Name"
 	representation: "samaccountname"
 }
 
 HomeDirectory: types.#StringEnum & {
-	symbol: "HomeDirectory"
-	schema: "ad"
-	name: "Home Directory"
+	symbol:         "HomeDirectory"
+	schema:         "ad"
+	name:           "Home Directory"
 	representation: "homedirectory"
 }
 
@@ -379,199 +379,360 @@ StrongCertificateBindingEnforcement: types.#StringEnum & {
 }
 
 CrossCertificatePair: types.#StringEnum & {
-	symbol: "CrossCertificatePair"
-	schema: "ad"
-	name: "Cross Certificate Pair"
+	symbol:         "CrossCertificatePair"
+	schema:         "ad"
+	name:           "Cross Certificate Pair"
 	representation: "crosscertificatepair"
 }
 
 EKUs: types.#StringEnum & {
-	symbol: "EKUs"
-	schema: "ad"
-	name: "Enhanced Key Usage"
+	symbol:         "EKUs"
+	schema:         "ad"
+	name:           "Enhanced Key Usage"
 	representation: "ekus"
 }
 
 SubjectAltRequireUPN: types.#StringEnum & {
-	symbol: "SubjectAltRequireUPN"
-	schema: "ad"
-	name: "Subject Alternative Name Require UPN"
+	symbol:         "SubjectAltRequireUPN"
+	schema:         "ad"
+	name:           "Subject Alternative Name Require UPN"
 	representation: "subjectaltrequireupn"
 }
 
 SubjectAltRequireDNS: types.#StringEnum & {
-	symbol: "SubjectAltRequireDNS"
-	schema: "ad"
-	name: "Subject Alternative Name Require DNS"
+	symbol:         "SubjectAltRequireDNS"
+	schema:         "ad"
+	name:           "Subject Alternative Name Require DNS"
 	representation: "subjectaltrequiredns"
 }
 
 SubjectAltRequireDomainDNS: types.#StringEnum & {
-	symbol: "SubjectAltRequireDomainDNS"
-	schema: "ad"
-	name: "Subject Alternative Name Require Domain DNS"
+	symbol:         "SubjectAltRequireDomainDNS"
+	schema:         "ad"
+	name:           "Subject Alternative Name Require Domain DNS"
 	representation: "subjectaltrequiredomaindns"
 }
 
 SubjectAltRequireEmail: types.#StringEnum & {
-	symbol: "SubjectAltRequireEmail"
-	schema: "ad"
-	name: "Subject Alternative Name Require Email"
+	symbol:         "SubjectAltRequireEmail"
+	schema:         "ad"
+	name:           "Subject Alternative Name Require Email"
 	representation: "subjectaltrequireemail"
 }
 
 SubjectAltRequireSPN: types.#StringEnum & {
-	symbol: "SubjectAltRequireSPN"
-	schema: "ad"
-	name: "Subject Alternative Name Require SPN"
+	symbol:         "SubjectAltRequireSPN"
+	schema:         "ad"
+	name:           "Subject Alternative Name Require SPN"
 	representation: "subjectaltrequirespn"
 }
 
 SubjectRequireEmail: types.#StringEnum & {
-	symbol: "SubjectRequireEmail"
-	schema: "ad"
-	name: "Subject Require Email"
+	symbol:         "SubjectRequireEmail"
+	schema:         "ad"
+	name:           "Subject Require Email"
 	representation: "subjectrequireemail"
 }
 
 AuthorizedSignatures: types.#StringEnum & {
-	symbol: "AuthorizedSignatures"
-	schema: "ad"
-	name: "Authorized Signatures Required"
+	symbol:         "AuthorizedSignatures"
+	schema:         "ad"
+	name:           "Authorized Signatures Required"
 	representation: "authorizedsignatures"
 }
 
 ApplicationPolicies: types.#StringEnum & {
-	symbol: "ApplicationPolicies"
-	schema: "ad"
-	name: "Application Policies"
+	symbol:         "ApplicationPolicies"
+	schema:         "ad"
+	name:           "Application Policies Required"
 	representation: "applicationpolicies"
 }
 
 IssuancePolicies: types.#StringEnum & {
-	symbol: "IssuancePolicies"
-	schema: "ad"
-	name: "Issuance Policies"
+	symbol:         "IssuancePolicies"
+	schema:         "ad"
+	name:           "Issuance Policies Required"
 	representation: "issuancepolicies"
 }
 
 SchemaVersion: types.#StringEnum & {
-	symbol: "SchemaVersion"
-	schema: "ad"
-	name: "Schema Version"
+	symbol:         "SchemaVersion"
+	schema:         "ad"
+	name:           "Schema Version"
 	representation: "schemaversion"
 }
 
 RequiresManagerApproval: types.#StringEnum & {
-	symbol: "RequiresManagerApproval"
-	schema: "ad"
-	name: "Requires Manager Approval"
+	symbol:         "RequiresManagerApproval"
+	schema:         "ad"
+	name:           "Requires Manager Approval"
 	representation: "requiresmanagerapproval"
 }
 
 AuthenticationEnabled: types.#StringEnum & {
-	symbol: "AuthenticationEnabled"
-	schema: "ad"
-	name: "Authentication Enabled"
+	symbol:         "AuthenticationEnabled"
+	schema:         "ad"
+	name:           "Authentication Enabled"
 	representation: "authenticationenabled"
 }
 
+SchannelAuthenticationEnabled: types.#StringEnum & {
+	symbol:         "SchannelAuthenticationEnabled"
+	schema:         "ad"
+	name:           "Schannel Authentication Enabled"
+	representation: "schannelauthenticationenabled"
+}
+
 EnrolleeSuppliesSubject: types.#StringEnum & {
-	symbol: "EnrolleeSuppliesSubject"
-	schema: "ad"
-	name: "Enrollee Supplies Subject"
+	symbol:         "EnrolleeSuppliesSubject"
+	schema:         "ad"
+	name:           "Enrollee Supplies Subject"
 	representation: "enrolleesuppliessubject"
 }
 
 CertificateApplicationPolicy: types.#StringEnum & {
-	symbol: "CertificateApplicationPolicy"
-	schema: "ad"
-	name: "Certificate Application Policies"
+	symbol:         "CertificateApplicationPolicy"
+	schema:         "ad"
+	name:           "Application Policy Extensions"
 	representation: "certificateapplicationpolicy"
 }
 
 CertificateNameFlag: types.#StringEnum & {
-	symbol: "CertificateNameFlag"
-	schema: "ad"
-	name: "Certificate Name Flags"
+	symbol:         "CertificateNameFlag"
+	schema:         "ad"
+	name:           "Certificate Name Flags"
 	representation: "certificatenameflag"
 }
 
 EffectiveEKUs: types.#StringEnum & {
-	symbol: "EffectiveEKUs"
-	schema: "ad"
-	name: "Effective EKUs"
+	symbol:         "EffectiveEKUs"
+	schema:         "ad"
+	name:           "Effective EKUs"
 	representation: "effectiveekus"
 }
 
 EnrollmentFlag: types.#StringEnum & {
-	symbol: "EnrollmentFlag"
-	schema: "ad"
-	name: "Enrollment Flags"
+	symbol:         "EnrollmentFlag"
+	schema:         "ad"
+	name:           "Enrollment Flags"
 	representation: "enrollmentflag"
 }
 
 Flags: types.#StringEnum & {
-	symbol: "Flags"
-	schema: "ad"
-	name: "Flags"
+	symbol:         "Flags"
+	schema:         "ad"
+	name:           "Flags"
 	representation: "flags"
 }
 
 NoSecurityExtension: types.#StringEnum & {
-	symbol: "NoSecurityExtension"
-	schema: "ad"
-	name: "No Security Extension"
+	symbol:         "NoSecurityExtension"
+	schema:         "ad"
+	name:           "No Security Extension"
 	representation: "nosecurityextension"
 }
 
 RenewalPeriod: types.#StringEnum & {
-	symbol: "RenewalPeriod"
-	schema: "ad"
-	name: "Renewal Period"
+	symbol:         "RenewalPeriod"
+	schema:         "ad"
+	name:           "Renewal Period"
 	representation: "renewalperiod"
 }
 
 ValidityPeriod: types.#StringEnum & {
-	symbol: "ValidityPeriod"
-	schema: "ad"
-	name: "Validity Period"
+	symbol:         "ValidityPeriod"
+	schema:         "ad"
+	name:           "Validity Period"
 	representation: "validityperiod"
 }
 
 OID: types.#StringEnum & {
-	symbol: "OID"
-	schema: "ad"
-	name: "OID"
+	symbol:         "OID"
+	schema:         "ad"
+	name:           "OID"
 	representation: "oid"
 }
 
 CertificatePolicy: types.#StringEnum & {
-	symbol: "CertificatePolicy"
-	schema: "ad"
-	name: "Issuance Policy Extensions"
+	symbol:         "CertificatePolicy"
+	schema:         "ad"
+	name:           "Issuance Policy Extensions"
 	representation: "certificatepolicy"
 }
 
 CertTemplateOID: types.#StringEnum & {
-	symbol: "CertTemplateOID"
-	schema: "ad"
-	name: "Certificate Template OID"
+	symbol:         "CertTemplateOID"
+	schema:         "ad"
+	name:           "Certificate Template OID"
 	representation: "certtemplateoid"
 }
 
 GroupLinkID: types.#StringEnum & {
-	symbol: "GroupLinkID"
-	schema: "ad"
-	name: "Group Link ID"
+	symbol:         "GroupLinkID"
+	schema:         "ad"
+	name:           "Group Link ID"
 	representation: "grouplinkid"
 }
 
 ObjectGUID: types.#StringEnum & {
-	symbol: "ObjectGUID"
-	schema: "ad"
-	name: "Object GUID"
+	symbol:         "ObjectGUID"
+	schema:         "ad"
+	name:           "Object GUID"
 	representation: "objectguid"
+}
+
+ExpirePasswordsOnSmartCardOnlyAccounts: types.#StringEnum & {
+	symbol:         "ExpirePasswordsOnSmartCardOnlyAccounts"
+	schema:         "ad"
+	name:           "Expire Passwords on Smart Card only Accounts"
+	representation: "expirepasswordsonsmartcardonlyaccounts"
+}
+
+MachineAccountQuota: types.#StringEnum & {
+	symbol:         "MachineAccountQuota"
+	schema:         "ad"
+	name:           "Machine Account Quota"
+	representation: "machineaccountquota"
+}
+
+SupportedKerberosEncryptionTypes: types.#StringEnum & {
+	symbol:         "SupportedKerberosEncryptionTypes"
+	schema:         "ad"
+	name:           "Supported Kerberos Encryption Types"
+	representation: "supportedencryptiontypes"
+}
+
+TGTDelegationEnabled: types.#StringEnum & {
+	symbol:         "TGTDelegationEnabled"
+	schema:         "ad"
+	name:           "TGT Delegation Enabled"
+	representation: "tgtdelegationenabled"
+}
+
+PasswordStoredUsingReversibleEncryption: types.#StringEnum & {
+	symbol:         "PasswordStoredUsingReversibleEncryption"
+	schema:         "ad"
+	name:           "Password Stored Using Reversible Encryption"
+	representation: "encryptedtextpwdallowed"
+}
+
+SmartcardRequired: types.#StringEnum & {
+	symbol:         "SmartcardRequired"
+	schema:         "ad"
+	name:           "Smartcard Required"
+	representation: "smartcardrequired"
+}
+
+UseDESKeyOnly: types.#StringEnum & {
+	symbol:         "UseDESKeyOnly"
+	schema:         "ad"
+	name:           "Use DES Key Only"
+	representation: "usedeskeyonly"
+}
+
+LogonScriptEnabled: types.#StringEnum & {
+	symbol:         "LogonScriptEnabled"
+	schema:         "ad"
+	name:           "Logon Script Enabled"
+	representation: "logonscriptenabled"
+}
+
+LockedOut: types.#StringEnum & {
+	symbol:         "LockedOut"
+	schema:         "ad"
+	name:           "Locked Out"
+	representation: "lockedout"
+}
+
+UserCannotChangePassword: types.#StringEnum & {
+	symbol:         "UserCannotChangePassword"
+	schema:         "ad"
+	name:           "User Cannot Change Password"
+	representation: "passwordcantchange"
+}
+
+PasswordExpired: types.#StringEnum & {
+	symbol:         "PasswordExpired"
+	schema:         "ad"
+	name:           "Password Expired"
+	representation: "passwordexpired"
+}
+
+DSHeuristics: types.#StringEnum & {
+	symbol:         "DSHeuristics"
+	schema:         "ad"
+	name:           "DSHeuristics"
+	representation: "dsheuristics"
+}
+
+UserAccountControl: types.#StringEnum & {
+	symbol:         "UserAccountControl"
+	schema:         "ad"
+	name:           "User Account Control"
+	representation: "useraccountcontrol"
+}
+
+TrustAttributes: types.#StringEnum & {
+	symbol:         "TrustAttributes"
+	schema:         "ad"
+	name:           "Trust Attributes"
+	representation: "trustattributes"
+}
+
+LockoutDuration: types.#StringEnum & {
+	symbol:         "LockoutDuration"
+	schema:         "ad"
+	name:           "Lockout Duration"
+	representation: "lockoutduration"
+}
+
+LockoutObservationWindow: types.#StringEnum & {
+	symbol:         "LockoutObservationWindow"
+	schema:         "ad"
+	name:           "Lockout Observation Window"
+	representation: "lockoutobservationwindow"
+}
+
+MaxPwdAge: types.#StringEnum & {
+	symbol:         "MaxPwdAge"
+	schema:         "ad"
+	name:           "Maximum Password Age"
+	representation: "maxpwdage"
+}
+
+MinPwdAge: types.#StringEnum & {
+	symbol:         "MinPwdAge"
+	schema:         "ad"
+	name:           "Minimum Password Age"
+	representation: "minpwdage"
+}
+
+LockoutThreshold: types.#StringEnum & {
+	symbol:         "LockoutThreshold"
+	schema:         "ad"
+	name:           "Lockout Threshold"
+	representation: "lockoutthreshold"
+}
+
+PwdHistoryLength: types.#StringEnum & {
+	symbol:         "PwdHistoryLength"
+	schema:         "ad"
+	name:           "Password History Length"
+	representation: "pwdhistorylength"
+}
+
+PwdProperties: types.#StringEnum & {
+	symbol:         "PwdProperties"
+	schema:         "ad"
+	name:           "Password Properties"
+	representation: "pwdproperties"
+}
+
+MinPwdLength: types.#StringEnum & {
+	symbol:         "MinPwdLength"
+	schema:         "ad"
+	name:           "Minimum password length"
+	representation: "minpwdlength"
 }
 
 Properties: [
@@ -638,6 +799,7 @@ Properties: [
 	SchemaVersion,
 	RequiresManagerApproval,
 	AuthenticationEnabled,
+	SchannelAuthenticationEnabled,
 	EnrolleeSuppliesSubject,
 	CertificateApplicationPolicy,
 	CertificateNameFlag,
@@ -652,7 +814,29 @@ Properties: [
 	CertificatePolicy,
 	CertTemplateOID,
 	GroupLinkID,
-	ObjectGUID
+	ObjectGUID,
+	ExpirePasswordsOnSmartCardOnlyAccounts,
+	MachineAccountQuota,
+	SupportedKerberosEncryptionTypes,
+	TGTDelegationEnabled,
+	PasswordStoredUsingReversibleEncryption,
+	SmartcardRequired,
+	UseDESKeyOnly,
+	LogonScriptEnabled,
+	LockedOut,
+	UserCannotChangePassword,
+	PasswordExpired,
+	DSHeuristics,
+	UserAccountControl,
+	TrustAttributes,
+	MinPwdLength,
+	PwdProperties,
+	PwdHistoryLength,
+	LockoutThreshold,
+	MinPwdAge,
+	MaxPwdAge,
+	LockoutDuration,
+	LockoutObservationWindow,
 ]
 
 // Kinds
@@ -755,7 +939,7 @@ NodeKinds: [
 	EnterpriseCA,
 	NTAuthStore,
 	CertTemplate,
-	IssuancePolicy
+	IssuancePolicy,
 ]
 
 Owns: types.#Kind & {
@@ -831,6 +1015,11 @@ GPLink: types.#Kind & {
 
 AllowedToDelegate: types.#Kind & {
 	symbol: "AllowedToDelegate"
+	schema: "active_directory"
+}
+
+CoerceToTGT: types.#Kind & {
+	symbol: "CoerceToTGT"
 	schema: "active_directory"
 }
 
@@ -924,8 +1113,8 @@ AddKeyCredentialLink: types.#Kind & {
 	schema: "active_directory"
 }
 
-RemoteInteractiveLogonPrivilege: types.#Kind & {
-	symbol: "RemoteInteractiveLogonPrivilege"
+RemoteInteractiveLogonRight: types.#Kind & {
+	symbol: "RemoteInteractiveLogonRight"
 	schema: "active_directory"
 }
 
@@ -936,6 +1125,11 @@ SyncLAPSPassword: types.#Kind & {
 
 WriteAccountRestrictions: types.#Kind & {
 	symbol: "WriteAccountRestrictions"
+	schema: "active_directory"
+}
+
+WriteGPLink: types.#Kind & {
+	symbol: "WriteGPLink"
 	schema: "active_directory"
 }
 
@@ -1009,16 +1203,6 @@ EnterpriseCAFor: types.#Kind & {
 	schema: "active_directory"
 }
 
-CanAbuseUPNCertMapping: types.#Kind & {
-	symbol: "CanAbuseUPNCertMapping"
-	schema: "active_directory"
-}
-
-CanAbuseWeakCertBinding: types.#Kind & {
-	symbol: "CanAbuseWeakCertBinding"
-	schema: "active_directory"
-}
-
 IssuedSignedBy: types.#Kind & {
 	symbol: "IssuedSignedBy"
 	schema: "active_directory"
@@ -1064,11 +1248,6 @@ ADCSESC4: types.#Kind & {
 	schema: "active_directory"
 }
 
-ADCSESC5: types.#Kind & {
-	symbol: "ADCSESC5"
-	schema: "active_directory"
-}
-
 ADCSESC6a: types.#Kind & {
 	symbol: "ADCSESC6a"
 	schema: "active_directory"
@@ -1076,11 +1255,6 @@ ADCSESC6a: types.#Kind & {
 
 ADCSESC6b: types.#Kind & {
 	symbol: "ADCSESC6b"
-	schema: "active_directory"
-}
-
-ADCSESC7: types.#Kind & {
-	symbol: "ADCSESC7"
 	schema: "active_directory"
 }
 
@@ -1109,6 +1283,11 @@ ADCSESC13: types.#Kind & {
 	schema: "active_directory"
 }
 
+SyncedToEntraUser: types.#Kind & {
+	symbol: "SyncedToEntraUser"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1124,6 +1303,7 @@ RelationshipKinds: [
 	Contains,
 	GPLink,
 	AllowedToDelegate,
+	CoerceToTGT,
 	GetChanges,
 	GetChangesAll,
 	GetChangesInFilteredSet,
@@ -1145,9 +1325,10 @@ RelationshipKinds: [
 	AddKeyCredentialLink,
 	LocalToComputer,
 	MemberOfLocalGroup,
-	RemoteInteractiveLogonPrivilege,
+	RemoteInteractiveLogonRight,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
+	WriteGPLink,
 	RootCAFor,
 	DCFor,
 	PublishedTo,
@@ -1161,8 +1342,6 @@ RelationshipKinds: [
 	NTAuthStoreFor,
 	TrustedForNTAuth,
 	EnterpriseCAFor,
-	CanAbuseUPNCertMapping,
-	CanAbuseWeakCertBinding,
 	IssuedSignedBy,
 	GoldenCert,
 	EnrollOnBehalfOf,
@@ -1171,15 +1350,14 @@ RelationshipKinds: [
 	ADCSESC1,
 	ADCSESC3,
 	ADCSESC4,
-	ADCSESC5,
 	ADCSESC6a,
 	ADCSESC6b,
-	ADCSESC7,
 	ADCSESC9a,
 	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
-	ADCSESC13
+	ADCSESC13,
+	SyncedToEntraUser,
 ]
 
 // ACL Relationships
@@ -1202,13 +1380,14 @@ ACLRelationships: [
 	GetChangesAll,
 	GetChangesInFilteredSet,
 	WriteAccountRestrictions,
+	WriteGPLink,
 	SyncLAPSPassword,
 	DCSync,
 	ManageCertificates,
 	ManageCA,
 	Enroll,
 	WritePKIEnrollmentFlag,
-	WritePKINameFlag
+	WritePKINameFlag,
 ]
 
 // Edges that are used in pathfinding
@@ -1226,6 +1405,7 @@ PathfindingRelationships: [
 	Contains,
 	GPLink,
 	AllowedToDelegate,
+	CoerceToTGT,
 	TrustedBy,
 	AllowedToAct,
 	AdminTo,
@@ -1244,20 +1424,20 @@ PathfindingRelationships: [
 	AddKeyCredentialLink,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
+	WriteGPLink,
 	GoldenCert,
 	ADCSESC1,
 	ADCSESC3,
 	ADCSESC4,
-	ADCSESC5,
 	ADCSESC6a,
 	ADCSESC6b,
-	ADCSESC7,
 	ADCSESC9a,
 	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
-	DCFor
+	DCFor,
+	SyncedToEntraUser,
 ]
 
 EdgeCompositionRelationships: [
@@ -1271,5 +1451,5 @@ EdgeCompositionRelationships: [
 	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
-	ADCSESC13
+	ADCSESC13,
 ]

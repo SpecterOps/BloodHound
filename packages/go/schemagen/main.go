@@ -38,7 +38,11 @@ func GenerateGolang(projectRoot string, rootSchema Schema) error {
 		return err
 	}
 
-	if err := generator.GenerateGolangGraphModel("common", filepath.Join(projectRoot, "packages/go/graphschema/common"), rootSchema.Common); err != nil {
+	writeable, path := generator.GenerateGolangGraphModel("common", filepath.Join(projectRoot, "packages/go/graphschema/common"), rootSchema.Common)
+
+	generator.WriteGolangStringEnumeration(writeable, "Property", rootSchema.Common.Properties)
+
+	if err := generator.WriteSourceFile(writeable, path); err != nil {
 		return err
 	}
 

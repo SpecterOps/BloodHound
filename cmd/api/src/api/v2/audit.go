@@ -38,6 +38,7 @@ func (s Resources) ListAuditLogs(response http.ResponseWriter, request *http.Req
 		order         []string
 		auditLogs     model.AuditLogs
 		sortByColumns = request.URL.Query()[api.QueryParameterSortBy]
+		skip          int
 	)
 
 	const (
@@ -94,22 +95,33 @@ func (s Resources) ListAuditLogs(response http.ResponseWriter, request *http.Req
 
 		queryParams := request.URL.Query()
 
+		// Note: Handling both 'skip' and 'offset' query parameters to maintain backward compatibility
+		if queryParams.Has(model.PaginationQueryParameterSkip) {
+			if skip, err = ParseSkipQueryParameter(queryParams, 0); err != nil {
+				api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
+				return
+			}
+		} else if queryParams.Has(offsetQueryParam) {
+			if skip, err = ParseSkipQueryParameterWithKey(queryParams, offsetQueryParam, 0); err != nil {
+				api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, offsetQueryParam, err), response)
+				return
+			}
+		}
+
 		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 			return
-		} else if offset, err := ParseIntQueryParameter(queryParams, offsetQueryParam, 0); err != nil {
-			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, offsetQueryParam, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 1000); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, limitQueryParam, err), response)
 		} else if getLogsBefore, err := ParseTimeQueryParameter(queryParams, logsBeforeQueryParam, time.Now()); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, logsBeforeQueryParam, err), response)
 		} else if getLogsAfter, err := ParseTimeQueryParameter(queryParams, logsAfterQueryParam, getLogsBefore.Add(-time.Hour*24*365)); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, logsAfterQueryParam, err), response)
-		} else if logs, count, err := s.DB.ListAuditLogs(request.Context(), getLogsBefore, getLogsAfter, offset, limit, strings.Join(order, ", "), sqlFilter); err != nil {
+		} else if logs, count, err := s.DB.ListAuditLogs(request.Context(), getLogsBefore, getLogsAfter, skip, limit, strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			api.WriteResponseWrapperWithPagination(request.Context(), AuditLogsResponse{Logs: logs}, limit, offset, count, http.StatusOK, response)
+			api.WriteResponseWrapperWithPagination(request.Context(), AuditLogsResponse{Logs: logs}, limit, skip, count, http.StatusOK, response)
 		}
 	}
 }

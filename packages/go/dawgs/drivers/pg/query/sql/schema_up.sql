@@ -71,7 +71,7 @@ create extension if not exists intarray;
 -- corresponding table partitions for the node and edge tables.
 create table if not exists graph
 (
-  id   serial,
+  id   bigserial,
   name varchar(256) not null,
   primary key (id),
   unique (name)
@@ -93,7 +93,7 @@ $$
   begin
     create type nodeComposite as
     (
-      id         integer,
+      id         bigint,
       kind_ids   smallint[8],
       properties jsonb
     );
@@ -106,7 +106,7 @@ $$;
 -- contain a disjunction of up to 8 kinds for creating clique subsets without requiring edges.
 create table if not exists node
 (
-  id         serial      not null,
+  id         bigserial   not null,
   graph_id   integer     not null,
   kind_ids   smallint[8] not null,
   properties jsonb       not null,
@@ -133,9 +133,9 @@ $$
   begin
     create type edgeComposite as
     (
-      id         integer,
-      start_id   integer,
-      end_id     integer,
+      id         bigint,
+      start_id   bigint,
+      end_id     bigint,
       kind_id    smallint,
       properties jsonb
     );
@@ -147,15 +147,17 @@ $$;
 -- The edge table is a partitioned table view that partitions over the graph ID that each edge belongs to.
 create table if not exists edge
 (
-  id         serial   not null,
-  graph_id   integer  not null,
-  start_id   integer  not null,
-  end_id     integer  not null,
-  kind_id    smallint not null,
-  properties jsonb    not null,
+  id         bigserial not null,
+  graph_id   integer   not null,
+  start_id   bigint    not null,
+  end_id     bigint    not null,
+  kind_id    smallint  not null,
+  properties jsonb     not null,
 
   primary key (id, graph_id),
-  foreign key (graph_id) references graph (id) on delete cascade
+  foreign key (graph_id) references graph (id) on delete cascade,
+
+  unique (graph_id, start_id, end_id, kind_id)
 ) partition by list (graph_id);
 
 -- delete_node_edges is a trigger and associated plpgsql function to cascade delete edges when attached nodes are
@@ -168,7 +170,9 @@ begin
   return null;
 end
 $$
-  language plpgsql;
+  language plpgsql
+  volatile
+  strict;
 
 -- Drop and create the delete_node_edges trigger for the delete_node_edges() plpgsql function. See the function comment
 -- for more information.
@@ -185,7 +189,6 @@ execute procedure delete_node_edges();
 -- page.
 alter table edge
   alter column properties set storage main;
-
 
 -- Index on the graph ID of each edge.
 create index if not exists edge_graph_id_index on edge using btree (graph_id);
@@ -318,260 +321,115 @@ $$
   parallel safe
   strict;
 
--- Graph helper functions
-create or replace function public.kinds(target anyelement) returns text[] as
+create or replace function public.jsonb_to_text_array(target jsonb)
+  returns text[]
+as
 $$
-begin
-  if pg_typeof(target) = 'node'::regtype then
-    return (select array_agg(k.name) from kind k where k.id = any (target.kind_ids));
-  elsif pg_typeof(target) = 'edge'::regtype then
-    return (select array_agg(k.name) from kind k where k.id = target.kind_id);
-  elsif pg_typeof(target) = 'int[]'::regtype then
-    return (select array_agg(k.name) from kind k where k.id = any (target::int2[]));
-  elsif pg_typeof(target) = 'int'::regtype then
-    return (select array_agg(k.name) from kind k where k.id = target::int2);
-  elsif pg_typeof(target) = 'int2[]'::regtype then
-    return (select array_agg(k.name) from kind k where k.id = any (target));
-  elsif pg_typeof(target) = 'int2'::regtype then
-    return (select array_agg(k.name) from kind k where k.id = target);
-  else
-    raise exception 'Invalid argument type: %', pg_typeof(target) using hint = 'Type must be either node, edge, int[], int, int2[] or int2';
-  end if;
-end;
+select array(select jsonb_array_elements_text(target));
 $$
-  language plpgsql immutable
-                   parallel safe
-                   strict;
+  language sql
+  immutable
+  parallel safe
+  strict;
 
-create or replace function public.has_kind(target anyelement, variadic kind_name_in text[]) returns bool as
-$$
-begin
-  if pg_typeof(target) = 'node'::regtype then
-    return exists(select 1
-                  where target.kind_ids operator (pg_catalog.&&)
-                        (select array_agg(id) from kind k where k.name = any (kind_name_in)));
-  elsif pg_typeof(target) = 'edge'::regtype then
-    return exists(select 1
-                  where target.kind_id in (select id from kind k where k.name = any (kind_name_in)));
-  else
-    raise exception 'Invalid argument type: %', pg_typeof(target) using hint = 'Type must be either node or edge';
-  end if;
-end;
-$$
-  language plpgsql immutable
-                   parallel safe
-                   strict;
-
-create
-  or replace function public.get_node(id_in int4)
-  returns setof node as
-$$
-select *
-from node n
-where n.id = id_in;
-$$
-  language sql immutable
-               parallel safe
-               strict;
-
-create
-  or replace function public.node_prop(target anyelement, property_name text)
-  returns jsonb as
-$$
-begin
-  if pg_typeof(target) = 'node'::regtype then
-    return target.properties -> property_name;
-  elsif pg_typeof(target) = 'int4'::regtype then
-    return (select n.properties -> property_name from node n where n.id = target limit 1);
-  else
-    raise exception 'Invalid argument type: %', pg_typeof(target) using hint = 'Type must be either node or edge';
-  end if;
-end;
-$$
-  language plpgsql immutable
-                   parallel safe
-                   strict;
-
-
-create or replace function public.mt_get_root(owner_object_id text) returns setof node as
-$$
-select *
-from node n
-where has_kind(n, 'Meta')
-  and n.properties ->> 'system_tags' like '%admin_tier_0%'
-  and n.properties ->> 'owner_objectid' = owner_object_id;
-$$
-  language sql immutable
-               parallel safe
-               strict;
-
--- All shortest path traversal functions and schema
-
-create or replace function public._format_asp_where_clause(root_criteria text, where_clause text) returns text as
-$$
-declare
-  formatted_query text := '';
-begin
-  if length(root_criteria) > 0 then
-    if length(where_clause) > 0 then
-      formatted_query := ' where ' || root_criteria || ' and ' || where_clause;
-    else
-      formatted_query := ' where ' || root_criteria;
-    end if;
-  elsif length(where_clause) > 0 then
-    formatted_query := ' where ' || where_clause;
-  end if;
-
-  return formatted_query;
-end;
-$$
-  language plpgsql immutable
-                   parallel safe
-                   strict;
-
-create or replace function public._format_asp_query(terminal_criteria text, cycle_criteria text,
-                                                    traversal_criteria text default '',
-                                                    root_criteria text default '',
-                                                    bind_pathspace bool default true,
-                                                    bind_start bool default false,
-                                                    bind_end bool default false) returns text as
-$$
-declare
-  formatted_query text := 'insert into pathspace_next (path, next, is_terminal, is_cycle) ';
-begin
-  if bind_pathspace then
-    formatted_query :=
-      formatted_query || 'select p.path || r.id, r.end_id, ' || terminal_criteria || ', ' || cycle_criteria ||
-      ' from edge r join pathspace_current p on p.next = r.start_id';
-  else
-    formatted_query := formatted_query || 'select array [r.id]::int4[], r.end_id, ' || terminal_criteria || ', ' ||
-                       cycle_criteria ||
-                       ' from edge r';
-  end if;
-
-  if bind_start then
-    formatted_query := formatted_query || ' join node s on s.id = r.start_id';
-  end if;
-
-  if bind_end then
-    formatted_query := formatted_query || ' join node e on e.id = r.end_id ';
-  end if;
-
-  formatted_query := formatted_query || _format_asp_where_clause(root_criteria, traversal_criteria) || ';';
-
-  raise notice '_format_asp_query -> %', formatted_query;
-  return formatted_query;
-end;
-$$
-  language plpgsql immutable
-                   parallel safe
-                   strict;
-
-create or replace function public._all_shortest_paths(root_criteria text,
-                                                      traversal_criteria text,
-                                                      terminal_criteria text,
-                                                      max_depth int4)
+-- All shortest path traversal harness.
+create or replace function public.asp_harness(primer_query text, recursive_query text, max_depth int4)
+  -- | Column      | type    | Usage                                                                                  |
+  -- |-------------|---------|----------------------------------------------------------------------------------------|
+  -- | `root_id`   | Int8    | Node that the path originated from. Simplifies referencing the root node of each path. |
+  -- | `next_id`   | Int8    | Next node to expand to.                                                                |
+  -- | `depth`     | Int4    | Depth of the current traversal.                                                        |
+  -- | `satisfied` | Boolean | True if the expansion is satisfied.                                                    |
+  -- | `is_cycle`  | Boolean | True if the expansion is a cycle.                                                      |
+  -- | `path`      | Int8[]  | Array of edges in order of traversal.                                                  |
   returns table
           (
-            path int4[]
+            root_id   int8,
+            next_id   int8,
+            depth     int4,
+            satisfied bool,
+            is_cycle  bool,
+            path      int8[]
           )
 as
 $$
 declare
-  has_root_criteria         bool := length(root_criteria) > 0;
-  has_traversal_criteria    bool := length(traversal_criteria) > 0;
-  has_terminal_criteria     bool := length(terminal_criteria) > 0;
-
-  -- Make sure to take into account if queries will need the start or end node of edges bound by a join
-  bind_root_node            bool := has_root_criteria and root_criteria like '%s.%';
-  bind_terminal_node        bool := has_terminal_criteria and terminal_criteria like '%e.%';
-  bind_traversal_start_node bool := has_traversal_criteria and traversal_criteria like '%s.%';
-  bind_traversal_end_node   bool := has_traversal_criteria and traversal_criteria like '%e.%';
-  depth                     int4 := 1;
+  depth int4 := 1;
 begin
-  -- Create two unlogged (no WAL writes) temporary tables (invisible to other sessions) for storing traversal
-  -- fronts during path expansion.
-  create temporary table pathspace_current
+  -- Define two tables to represent pathspace of the recursive expansion. These are temporary and as such are unlogged.
+  create temporary table pathspace
   (
-    path        int4[] not null,
-    next        int4   not null,
-    is_terminal bool   not null,
-    is_cycle    bool   not null,
+    root_id   int8   not null,
+    next_id   int8   not null,
+    depth     int4   not null,
+    satisfied bool   not null,
+    is_cycle  bool   not null,
+    path      int8[] not null,
     primary key (path)
   ) on commit drop;
 
-  create temporary table pathspace_next
+  create temporary table next_pathspace
   (
-    path        int4[] not null,
-    next        int4   not null,
-    is_terminal bool   not null,
-    is_cycle    bool   not null,
+    root_id   int8   not null,
+    next_id   int8   not null,
+    depth     int4   not null,
+    satisfied bool   not null,
+    is_cycle  bool   not null,
+    path      int8[] not null,
     primary key (path)
   ) on commit drop;
 
-  -- Create an index on the next node ID to accelerate joins
-  create index if not exists pathspace_current_next_index on pathspace_current using btree (next);
-  create index if not exists pathspace_next_next_index on pathspace_next using btree (next);
+  -- Creating these indexes should speed up certain operations during recursive expansion. Benchmarking should be done
+  -- to validate assumptions here.
+  create index pathspace_next_id_index on pathspace using btree (next_id);
+  create index pathspace_satisfied_index on pathspace using btree (satisfied);
+  create index pathspace_is_cycle_index on pathspace using btree (is_cycle);
 
-  -- Create an index on the is_terminal boolean to accelerate aggregation and selection
-  create index if not exists pathspace_current_terminal_index on pathspace_current using btree (is_terminal);
-  create index if not exists pathspace_next_terminal_index on pathspace_next using btree (is_terminal);
+  create index next_pathspace_next_id_index on next_pathspace using btree (next_id);
+  create index next_pathspace_satisfied_index on next_pathspace using btree (satisfied);
+  create index next_pathspace_is_cycle_index on next_pathspace using btree (is_cycle);
 
-  -- Initial expansion to acquire the first traversal front
-  execute _format_asp_query(terminal_criteria := terminal_criteria,
-                            cycle_criteria := 'r.start_id = r.end_id',
-                            bind_pathspace := false,
-                            bind_start := bind_traversal_start_node or bind_root_node,
-                            bind_end := bind_traversal_end_node or bind_terminal_node,
-                            root_criteria := root_criteria,
-                            traversal_criteria := traversal_criteria);
+  -- Populate initial pathspace with the primer query
+  execute primer_query;
 
-  -- Copy from the next pathspace table to the current pathspace table. Any non-terminal cycles are omitted as
-  -- part of this copy to prune visited branches.
-  insert into pathspace_current select * from pathspace_next p where not p.is_cycle or p.is_terminal;
-
-  -- Truncate the next pathspace table to clear it
-  truncate pathspace_next;
-
-  -- Loop until either the current depth exceeds the max allowed depth or if any of the paths are terminal
-  while depth < max_depth and (select count(*) from pathspace_current p where p.is_terminal) = 0
+  -- Iterate until either we reach a depth limit or if there are satisfied paths
+  while depth < max_depth and not exists(select 1 from next_pathspace np where np.satisfied)
     loop
-      -- Increase the depth counter as we're expanding a new front
+      -- Rename tables to swap in the next pathspace as the current pathspace for the next traversal step
+      alter table pathspace
+        rename to pathspace_old;
+      alter table next_pathspace
+        rename to pathspace;
+      alter table pathspace_old
+        rename to next_pathspace;
+
+      -- Clear the next pathspace scratch
+      truncate table next_pathspace;
+
+      -- Remove any non-satisfied terminals and cycles from pathspace to prune any terminal, non-satisfied paths
+      delete
+      from pathspace p
+      where p.is_cycle
+         or not exists(select 1 from edge e where e.start_id = p.next_id);
+
+      -- Increase the current depth and execute the recursive query
       depth := depth + 1;
-
-      -- Perform the next pathspace expansion
-      execute _format_asp_query(terminal_criteria := terminal_criteria,
-                                cycle_criteria := 'r.id = any (p.path)',
-                                bind_pathspace := true,
-                                bind_start := bind_traversal_start_node,
-                                bind_end := bind_terminal_node or bind_traversal_end_node,
-                                traversal_criteria := traversal_criteria);
-
-      -- Truncate the old pathspace table to clear it
-      truncate pathspace_current;
-
-      -- Copy from the next pathspace table to the current pathspace table. Any non-terminal cycles are omitted as
-      -- part of this copy to prune visited branches.
-      insert into pathspace_current select * from pathspace_next p where not p.is_cycle or p.is_terminal;
-
-      -- Truncate the next pathspace table to clear it
-      truncate pathspace_next;
+      execute recursive_query;
     end loop;
 
-  -- Return the raw path (set of edge IDs) for each path found in pathspace
-  return query select p.path
-               from pathspace_current p
-               -- Select only terminal paths
-               where p.is_terminal;
+  -- Return all satisfied paths from the next pathspace table
+  return query select *
+               from next_pathspace np
+               where np.satisfied;
 
-  -- Close the set
+  -- Close the result set
   return;
 end;
 $$
   language plpgsql volatile
                    strict;
 
-create or replace function public.edges_to_path(path variadic int4[]) returns pathComposite as
+create or replace function public.edges_to_path(path variadic int8[]) returns pathComposite as
 $$
 select row (array_agg(distinct (n.id, n.kind_ids, n.properties)::nodeComposite)::nodeComposite[],
          array_agg(distinct (r.id, r.start_id, r.end_id, r.kind_id, r.properties)::edgeComposite)::edgeComposite[])::pathComposite
@@ -583,359 +441,3 @@ $$
   immutable
   parallel safe
   strict;
-
-create or replace function public.all_shortest_paths(root_criteria text,
-                                                     traversal_criteria text,
-                                                     terminal_criteria text,
-                                                     max_depth int4)
-  returns pathComposite
-as
-$$
-declare
-  paths pathcomposite;
-begin
-  select array_agg(distinct (n.id, n.kind_ids, n.properties)::nodeComposite)::nodeComposite[],
-         array_agg(distinct
-                   (r.id, r.start_id, r.end_id, r.kind_id, r.properties)::edgeComposite)::edgeComposite[]
-  into paths
-  from _all_shortest_paths(root_criteria, traversal_criteria, terminal_criteria,
-                           max_depth) as t
-         join edge r on r.id = any (t.path)
-         join node n on n.id = r.start_id or n.id = r.end_id;
-
-  return paths;
-end;
-$$
-  language plpgsql
-  immutable
-  strict;
-
--- Generic traversal functions and schema
-do
-$$
-  begin
-    create type _traversal_step as
-    (
-      root_criteria      text,
-      traversal_criteria text,
-      terminal_criteria  text,
-      max_depth          integer
-    );
-  exception
-    when duplicate_object then null;
-  end
-$$;
-
-create or replace function public.traversal_step(root_criteria text default '',
-                                                 traversal_criteria text default '',
-                                                 terminal_criteria text default '',
-                                                 max_depth integer default 0)
-  returns _traversal_step as
-$$
-begin
-  return (root_criteria, traversal_criteria, terminal_criteria, max_depth)::_traversal_step;
-end;
-$$
-  language plpgsql immutable
-                   parallel safe
-                   strict;
-
-create or replace function public._format_traversal_continuation_termination(terminal_criteria text,
-                                                                             bind_traversal_start_node bool,
-                                                                             bind_traversal_end_node bool)
-  returns text as
-$$
-declare
-  formatted_query text := 'update pathspace_current p set terminal = true from edge r';
-  where_clause    text := ' where not p.terminal and p.exhausted and r.start_id = p.path[array_length(p.path, 1)]';
-begin
-  if bind_traversal_start_node then
-    formatted_query := formatted_query || ', node s';
-    where_clause := where_clause || ' and s.id = r.start_id';
-  end if;
-
-  if bind_traversal_end_node then
-    formatted_query := formatted_query || ', node e';
-    where_clause := where_clause || ' and e.id = r.end_id';
-  end if;
-
-  return formatted_query || where_clause || ' and ' || terminal_criteria;
-end;
-$$
-  language plpgsql immutable
-                   parallel safe
-                   strict;
-
-create or replace function public._format_traversal_query(traversal_criteria text,
-                                                          terminal_criteria text,
-                                                          mark_terminal bool,
-                                                          bind_traversal_start_node bool,
-                                                          bind_traversal_end_node bool)
-  returns text as
-$$
-declare
-  formatted_query text := 'with inserts as (insert into pathspace_next (path, next, terminal, exhausted, rejected) ';
-begin
-  formatted_query := formatted_query || 'select $1 || r.id, r.end_id, ';
-
-  if length(terminal_criteria) > 0 then
-    formatted_query := formatted_query || terminal_criteria || ', ';
-  else
-    formatted_query := formatted_query || mark_terminal || ', ';
-  end if;
-
-  formatted_query :=
-    formatted_query || 'false, r.id = any ($1) from edge r ';
-
-  if bind_traversal_start_node then
-    formatted_query := formatted_query || ' join node s on s.id = r.start_id';
-  end if;
-
-  if bind_traversal_end_node then
-    formatted_query := formatted_query || ' join node e on e.id = r.end_id ';
-  end if;
-
-  formatted_query := formatted_query || ' where r.start_id = $2';
-
-  if length(traversal_criteria) > 0 then
-    formatted_query := formatted_query || ' and ' || traversal_criteria;
-  end if;
-
-  return formatted_query || ' returning true) select count(*) from inserts;';
-end;
-$$
-  language plpgsql immutable
-                   parallel safe
-                   strict;
-
-create or replace function public._format_traversal_initial_query(root_criteria text,
-                                                                  terminal_criteria text,
-                                                                  mark_terminal bool,
-                                                                  traversal_criteria text,
-                                                                  bind_root_node bool,
-                                                                  bind_terminal_node bool) returns text as
-$$
-declare
-  formatted_query text := 'insert into pathspace_current (path, next, terminal, exhausted, rejected) ';
-begin
-  formatted_query := formatted_query || 'select array [r.id]::int4[], r.end_id, ';
-
-  if length(terminal_criteria) > 0 then
-    formatted_query := formatted_query || terminal_criteria || ', ';
-  else
-    formatted_query := formatted_query || mark_terminal || ', ';
-  end if;
-
-  formatted_query := formatted_query || 'false, r.start_id = r.end_id from edge r';
-
-  if bind_root_node then
-    formatted_query := formatted_query || ' join node s on s.id = r.start_id';
-  end if;
-
-  if bind_terminal_node then
-    formatted_query := formatted_query || ' join node e on e.id = r.end_id ';
-  end if;
-
-  if length(root_criteria) > 0 then
-    if length(traversal_criteria) > 0 then
-      formatted_query := formatted_query || ' where ' || root_criteria || ' and ' || traversal_criteria;
-    else
-      formatted_query := formatted_query || ' where ' || root_criteria;
-    end if;
-  elsif length(traversal_criteria) > 0 then
-    formatted_query := formatted_query || ' where ' || traversal_criteria;
-  end if;
-
-  return formatted_query;
-end;
-$$
-  language plpgsql immutable
-                   parallel safe
-                   strict;
-
-create or replace function public.expand_traversal_step(step _traversal_step,
-                                                        continuation bool default false,
-                                                        last_continuation bool default false)
-  returns void as
-$$
-declare
-  incomplete_path           record;
-  num_expansions            int8;
-  has_root_criteria         bool := length(step.root_criteria) > 0;
-  has_traversal_criteria    bool := length(step.traversal_criteria) > 0;
-  has_terminal_criteria     bool := length(step.terminal_criteria) > 0;
-
-  -- Make sure to take into account if queries will need the start or end node of edges bound by a join
-  bind_root_node            bool := has_root_criteria and step.root_criteria like '%s.%';
-  bind_terminal_node        bool := has_terminal_criteria and step.terminal_criteria like '%e.%';
-  bind_traversal_start_node bool := has_traversal_criteria and step.traversal_criteria like '%s.%';
-  bind_traversal_end_node   bool := has_traversal_criteria and step.traversal_criteria like '%e.%';
-  depth                     int4 := 0;
-begin
-  if not continuation then
-    raise notice 'Starting a new traversal';
-
-    -- Increase the depth counter as we're expanding a new front
-    depth := depth + 1;
-
-    -- Perform the initial expansion to acquire the first traversal front
-    execute _format_traversal_initial_query(
-      root_criteria := step.root_criteria,
-      bind_root_node := bind_root_node or bind_traversal_start_node,
-      terminal_criteria := step.terminal_criteria,
-      mark_terminal := last_continuation and not has_terminal_criteria and depth = step.max_depth,
-      bind_terminal_node := bind_terminal_node or bind_traversal_end_node,
-      traversal_criteria := step.traversal_criteria);
-
-    -- Copy from the next pathspace table to the current pathspace table and omit rejected segments.
-    insert into pathspace_current select * from pathspace_next p where not p.rejected or p.terminal;
-
-    -- Truncate the next pathspace table to clear it
-    truncate pathspace_next;
-  else
-    raise notice 'Continuing traversal';
-
-    if last_continuation then
-      raise notice 'This is the last continuation.';
-    end if;
-
-    if has_terminal_criteria then
-      -- If this is a traversal continuation then we must validate any exhausted paths that may also be terminal
-      execute _format_traversal_continuation_termination(
-        terminal_criteria := step.terminal_criteria,
-        bind_traversal_start_node := bind_traversal_start_node,
-        bind_traversal_end_node := bind_terminal_node or bind_traversal_end_node);
-
-      -- Dump any paths that are not terminal but exhausted as this will prune pathspace to only paths that are
-      -- eligible for further expansion
-      delete from pathspace_current p where not p.terminal and p.exhausted;
-    else
-      -- Mark all non-terminal paths as no longer exhausted as this is a continuation
-      update pathspace_current p set exhausted = false where not p.terminal;
-    end if;
-  end if;
-
-  raise notice 'Current pathspace:';
-
-  for incomplete_path in select * from pathspace_current p
-    loop
-      raise notice 'path: % - terminal: %, exhausted: %, rejected: %', incomplete_path.path, incomplete_path.terminal, incomplete_path.exhausted, incomplete_path.rejected;
-    end loop;
-
-  -- Loop until either the current depth exceeds the max allowed depth or if any of the paths are terminal
-  while depth < step.max_depth and
-        exists(select true from pathspace_current p where not p.terminal and not p.exhausted)
-    loop
-      raise notice 'Incomplete paths:';
-
-      for incomplete_path in select * from pathspace_current p where not p.terminal and not p.exhausted
-        loop
-          raise notice 'path: % - terminal: %, exhausted: %, rejected: %', incomplete_path.path, incomplete_path.terminal, incomplete_path.exhausted, incomplete_path.rejected;
-        end loop;
-
-      -- Increase the depth counter as we're expanding a new front
-      depth := depth + 1;
-
-      -- Copy all terminal segments
-      insert into pathspace_next select * from pathspace_current p where p.terminal;
-
-      -- Expand all non-terminal, unexhausted segments
-      for incomplete_path in select * from pathspace_current p where not p.terminal and not p.exhausted
-        loop
-          -- Expand the next front for this segment
-          execute _format_traversal_query(
-            traversal_criteria := step.traversal_criteria,
-            terminal_criteria := step.terminal_criteria,
-            mark_terminal := last_continuation and not has_terminal_criteria and depth = step.max_depth,
-            bind_traversal_start_node := bind_traversal_start_node,
-            bind_traversal_end_node := bind_terminal_node or bind_traversal_end_node)
-            into num_expansions
-            using incomplete_path.path, incomplete_path.next;
-
-          if num_expansions = 0 then
-            -- If there were no more expansions for this segment, insert into the next pathspace it as
-            -- exhausted. The terminal status of the segment may be set to true if this is the last
-            -- traversal continuation and there is no terminal criteria set.
-            insert into pathspace_next (path, next, terminal, exhausted, rejected)
-            values (incomplete_path.path, 0, last_continuation and not has_terminal_criteria, true,
-                    false);
-          end if;
-        end loop;
-
-      -- Truncate the old pathspace table to clear it
-      truncate pathspace_current;
-
-      -- Copy from the next pathspace into the current pathspace
-      insert into pathspace_current select * from pathspace_next p where not p.rejected;
-
-      -- Truncate the next pathspace table to clear it
-      truncate pathspace_next;
-    end loop;
-
-  raise notice 'Step pathspace:';
-  for incomplete_path in select * from pathspace_current p
-    loop
-      raise notice 'path: % - terminal: %, exhausted: %, rejected: %', incomplete_path.path, incomplete_path.terminal, incomplete_path.exhausted, incomplete_path.rejected;
-    end loop;
-
-  return;
-end;
-$$
-  language plpgsql volatile
-                   strict;
-
-create or replace function public.traverse(steps variadic _traversal_step[])
-  returns table
-          (
-            path int4[][]
-          )
-as
-$$
-declare
-  step_idx  int4 = 0;
-  next_step _traversal_step;
-begin
-  -- Create two unlogged (no WAL writes) temporary tables (invisible to other sessions) for storing traversal
-  -- fronts during path expansion.
-  create temporary table pathspace_current
-  (
-    path      int4[] not null,
-    next      int4   not null,
-    terminal  bool   not null,
-    exhausted bool   not null,
-    rejected  bool   not null,
-    primary key (path)
-  ) on commit drop;
-
-  create temporary table pathspace_next
-  (
-    path      int4[] not null,
-    next      int4   not null,
-    terminal  bool   not null,
-    exhausted bool   not null,
-    rejected  bool   not null,
-    primary key (path)
-  ) on commit drop;
-
-  -- Iterate through the traversal steps
-  foreach next_step in array steps
-    loop
-      step_idx := step_idx + 1;
-
-      raise notice 'Array length: % - Is last continuation: %', array_length(steps, 1), step_idx = array_length(steps, 1);
-
-      perform expand_traversal_step(
-        step := next_step,
-        continuation := step_idx > 1,
-        last_continuation := step_idx = array_length(steps, 1));
-    end loop;
-
-  -- Return the paths
-  return query select p.path from pathspace_current p where p.terminal;
-
-  -- Close the set
-  return;
-end;
-$$
-  language plpgsql volatile
-                   strict;

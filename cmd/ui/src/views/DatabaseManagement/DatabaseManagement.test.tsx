@@ -52,7 +52,7 @@ describe('DatabaseManagement', () => {
     afterAll(() => server.close());
 
     it('renders', async () => {
-        const title = screen.getByText(/clear bloodhound data/i);
+        const title = screen.getByText(/Database Management/i);
         const button = screen.getByRole('button', { name: /proceed/i });
 
         expect(title).toBeInTheDocument();

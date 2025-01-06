@@ -26,29 +26,16 @@ import { Router } from 'react-router-dom';
 import createSagaMiddleware from 'redux-saga';
 import { rootReducer } from 'src/store';
 import { NotificationsProvider } from 'bh-shared-ui';
+import { darkPalette } from 'bh-shared-ui';
 
+const theme = createTheme(darkPalette);
 const defaultTheme = {
+    ...theme,
     palette: {
-        primary: {
-            main: '#406f8e',
-            light: '#709dbe',
-            dark: '#064460',
-            contrastText: '#ffffff',
-        },
-        neutral: {
-            main: '#e0e0e0',
-            light: '#ffffff',
-            dark: '#cccccc',
-            contrastText: '#000000',
-        },
-        background: {
-            paper: '#fafafa',
-            default: '#e4e9eb',
-        },
-        low: 'rgb(255, 195, 15)',
-        moderate: 'rgb(255, 97, 66)',
-        high: 'rgb(205, 0, 117)',
-        critical: 'rgb(76, 29, 143)',
+        ...theme.palette,
+        neutral: { ...darkPalette.neutral },
+        color: { ...darkPalette.color },
+        tertiary: { ...darkPalette.tertiary },
     },
 };
 
@@ -78,8 +65,8 @@ const createProviders = ({ queryClient, history, theme, store, children }) => {
             <QueryClientProvider client={queryClient}>
                 <StyledEngineProvider injectFirst>
                     <ThemeProvider theme={theme}>
+                        <CssBaseline />
                         <NotificationsProvider>
-                            <CssBaseline />
                             <Router location={history.location} navigator={history}>
                                 <SnackbarProvider>{children}</SnackbarProvider>
                             </Router>
@@ -97,7 +84,7 @@ const customRender = (
         initialState = {},
         queryClient = createDefaultQueryClient(),
         history = createMemoryHistory(),
-        theme = createTheme(defaultTheme),
+        theme = defaultTheme,
         store = createDefaultStore(initialState),
         ...renderOptions
     } = {}
@@ -112,7 +99,7 @@ const customRenderHook = (
         initialState = {},
         queryClient = createDefaultQueryClient(),
         history = createMemoryHistory(),
-        theme = createTheme(defaultTheme),
+        theme = defaultTheme,
         store = createDefaultStore(initialState),
         ...renderOptions
     } = {}

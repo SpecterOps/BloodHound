@@ -26,11 +26,7 @@ export const colors = {
     red: '#e52d2d',
     green: '#03b603',
     softRed: '#FF7E79',
+    softRed2: '#E15851',
     softGreen: '#A8D08D',
-    exposureSeverity: {
-        critical: '#B58BE5',
-        high: '#EA8181',
-        moderate: '#FFA86D',
-        low: '#FFD64C',
-    },
+    softGreen2: '#02C577',
 };

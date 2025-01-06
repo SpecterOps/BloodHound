@@ -18,6 +18,7 @@ package datapipe
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -190,7 +191,9 @@ func convertAzureAppOwner(raw json.RawMessage, converted *ConvertedAzureData) {
 			)
 			if err := json.Unmarshal(raw.Owner, &owner); err != nil {
 				log.Errorf(SerialError, "app owner", err)
-			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); err != nil {
+			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); errors.Is(err, ein.ErrInvalidType) {
+				log.Warnf(ExtractError, err)
+			} else if err != nil {
 				log.Errorf(ExtractError, err)
 			} else {
 				converted.RelProps = append(converted.RelProps, ein.ConvertAzureOwnerToRel(owner, ownerType, azure.App, data.AppId))
@@ -235,7 +238,9 @@ func convertAzureDeviceOwner(raw json.RawMessage, converted *ConvertedAzureData)
 			)
 			if err := json.Unmarshal(raw.Owner, &owner); err != nil {
 				log.Errorf(SerialError, "device owner", err)
-			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); err != nil {
+			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); errors.Is(err, ein.ErrInvalidType) {
+				log.Warnf(ExtractError, err)
+			} else if err != nil {
 				log.Errorf(ExtractError, err)
 			} else {
 				converted.RelProps = append(converted.RelProps, ein.ConvertAzureOwnerToRel(owner, ownerType, azure.Device, data.DeviceId))

@@ -22,7 +22,6 @@ import (
 	"sync"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 type ErrorCollector interface {
@@ -63,11 +62,7 @@ func IsNeoTimeoutError(err error) bool {
 	switch e := err.(type) {
 	case *neo4j.Neo4jError:
 		return strings.Contains(e.Code, "TransactionTimedOut")
-	case graph.Error:
-		return strings.Contains(e.Error(), "Neo.ClientError.Transaction.TransactionTimedOut")
-	case *graph.Error:
-		return strings.Contains(e.Error(), "Neo.ClientError.Transaction.TransactionTimedOut")
 	default:
-		return false
+		return strings.Contains(e.Error(), "Neo.ClientError.Transaction.TransactionTimedOut")
 	}
 }

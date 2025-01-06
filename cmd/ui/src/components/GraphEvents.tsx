@@ -16,8 +16,10 @@
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
 import { setSelectedEdge } from 'bh-shared-ui';
+import { random } from 'graphology-layout';
+import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { AbstractGraph, Attributes } from 'graphology-types';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import {
     getEdgeDataFromKey,
@@ -25,6 +27,7 @@ import {
     graphToFramedGraph,
     resetCamera,
 } from 'src/ducks/graph/utils';
+import layoutDagre, { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { bezier } from 'src/rendering/utils/bezier';
 import { getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppDispatch, useAppSelector } from 'src/store';
@@ -36,16 +39,23 @@ export interface GraphEventProps {
     onClickStage?: () => void;
     edgeReducer?: (edge: string, data: Attributes, graph: AbstractGraph) => Attributes;
     onRightClickNode?: (event: SigmaNodeEventPayload) => void;
+    showNodeLabels?: boolean;
+    showEdgeLabels?: boolean;
 }
 
-export const GraphEvents: FC<GraphEventProps> = ({
-    onDoubleClickNode,
-    onClickNode,
-    onClickEdge,
-    onClickStage,
-    onRightClickNode,
-    edgeReducer,
-}) => {
+export const GraphEvents = forwardRef(function GraphEvents(
+    {
+        onDoubleClickNode,
+        onClickNode,
+        onClickEdge,
+        onClickStage,
+        onRightClickNode,
+        edgeReducer,
+        showNodeLabels = true,
+        showEdgeLabels = true,
+    }: GraphEventProps,
+    ref
+) {
     const dispatch = useAppDispatch();
     const selectedEdge = useAppSelector((state) => state.edgeinfo.selectedEdge);
     const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
@@ -63,6 +73,45 @@ export const GraphEvents: FC<GraphEventProps> = ({
     const dragTimerRef = useRef<ReturnType<typeof setTimeout>>();
     const clickTimerRef = useRef<ReturnType<typeof setTimeout>>();
     const prevent = useRef(false);
+
+    const graph = sigma.getGraph();
+    const { assign: assignDagre } = layoutDagre(
+        {
+            graph: {
+                rankdir: RankDirection.LEFT_RIGHT,
+                ranksep: 500,
+            },
+        },
+        graph
+    );
+
+    useImperativeHandle(
+        ref,
+        () => {
+            return {
+                resetCamera: () => {
+                    resetCamera(sigma);
+                },
+
+                runSequentialLayout: () => {
+                    assignDagre();
+                    resetCamera(sigma);
+                },
+                runStandardLayout: () => {
+                    random.assign(graph, { scale: 1000 });
+                    forceAtlas2.assign(graph, {
+                        iterations: 128,
+                        settings: {
+                            scalingRatio: 1000,
+                            barnesHutOptimize: true,
+                        },
+                    });
+                    resetCamera(sigma);
+                },
+            };
+        },
+        [sigma, assignDagre, graph]
+    );
 
     const sigmaContainer = document.getElementById('sigma-container');
     const { getControlAtMidpoint, getLineLength, calculateCurveHeight } = bezier;
@@ -264,9 +313,9 @@ export const GraphEvents: FC<GraphEventProps> = ({
         if (draggedNode) {
             setSettings({ renderEdgeLabels: false });
         } else {
-            setSettings({ renderEdgeLabels: true });
+            setSettings({ renderEdgeLabels: showEdgeLabels });
         }
-    }, [draggedNode, setSettings]);
+    }, [draggedNode, setSettings, showEdgeLabels]);
 
     useEffect(() => {
         resetCamera(sigma);
@@ -283,5 +332,12 @@ export const GraphEvents: FC<GraphEventProps> = ({
         }
     }, [selectedNode]);
 
+    useEffect(() => {
+        setSettings({
+            renderLabels: showNodeLabels,
+            renderEdgeLabels: showEdgeLabels,
+        });
+    }, [setSettings, showNodeLabels, showEdgeLabels]);
+
     return null;
-};
+});

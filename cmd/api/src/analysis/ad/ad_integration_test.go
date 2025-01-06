@@ -26,9 +26,10 @@ import (
 	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/src/test"
 
-	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/ops"
+	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/test/integration"
@@ -840,41 +841,6 @@ func TestCreateDomainTrustListDelegate(t *testing.T) {
 	})
 }
 
-func TestGetDCSyncers(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.TrustDCSync.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		dcSyncers, err := analysis.GetDCSyncers(tx, harness.TrustDCSync.DomainA)
-
-		test.RequireNilErr(t, err)
-		require.Equal(t, 2, len(dcSyncers))
-		ids := make([]graph.ID, len(dcSyncers))
-		for _, node := range dcSyncers {
-			ids = append(ids, node.ID)
-		}
-		require.Contains(t, ids, harness.TrustDCSync.UserA.ID)
-		require.Contains(t, ids, harness.TrustDCSync.UserB.ID)
-
-		// Verify T0 users are included
-		harness.TrustDCSync.UserA.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
-		tx.UpdateNode(harness.TrustDCSync.UserA)
-
-		dcSyncers, err = analysis.GetDCSyncers(tx, harness.TrustDCSync.DomainA)
-
-		test.RequireNilErr(t, err)
-		require.Equal(t, 2, len(dcSyncers))
-		ids = make([]graph.ID, len(dcSyncers))
-		for _, node := range dcSyncers {
-			ids = append(ids, node.ID)
-		}
-		require.Contains(t, ids, harness.TrustDCSync.UserA.ID)
-		require.Contains(t, ids, harness.TrustDCSync.UserB.ID)
-	})
-}
-
 func TestFetchDCSyncers(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
@@ -1085,5 +1051,67 @@ func TestFetchUserSessionCompleteness(t *testing.T) {
 
 		test.RequireNilErr(t, err)
 		require.Equal(t, .5, completeness)
+	})
+}
+
+func TestSyncLAPSPassword(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.SyncLAPSPasswordHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(testContext.Context(), db); err != nil {
+			t.Fatalf("error expanding groups in integration test; %v", err)
+		} else if _, err := adAnalysis.PostSyncLAPSPassword(testContext.Context(), db, groupExpansions); err != nil {
+			t.Fatalf("error creating SyncLAPSPassword edges in integration test; %v", err)
+		} else {
+			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+				if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+					return query.Kind(query.Relationship(), ad.SyncLAPSPassword)
+				})); err != nil {
+					t.Fatalf("error fetching SyncLAPSPassword edges in integration test; %v", err)
+				} else {
+					require.Equal(t, 4, len(results))
+
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.Group1))
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.Group4))
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User3))
+					require.True(t, results.Contains(harness.SyncLAPSPasswordHarness.User5))
+				}
+				return nil
+			})
+		}
+	})
+}
+
+func TestDCSync(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.DCSyncHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(testContext.Context(), db); err != nil {
+			t.Fatalf("error expanding groups in integration test; %v", err)
+		} else if _, err := adAnalysis.PostDCSync(testContext.Context(), db, groupExpansions); err != nil {
+			t.Fatalf("error creating DCSync edges in integration test; %v", err)
+		} else {
+			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+				if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+					return query.Kind(query.Relationship(), ad.DCSync)
+				})); err != nil {
+					t.Fatalf("error fetching DCSync edges in integration test; %v", err)
+				} else {
+					require.Equal(t, 3, len(results))
+
+					require.True(t, results.Contains(harness.DCSyncHarness.User1))
+					require.True(t, results.Contains(harness.DCSyncHarness.User2))
+					require.True(t, results.Contains(harness.DCSyncHarness.Group3))
+
+				}
+				return nil
+			})
+		}
 	})
 }

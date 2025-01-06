@@ -19,14 +19,14 @@ package azure
 import (
 	"context"
 	"fmt"
-	"github.com/RoaringBitmap/roaring"
+	"slices"
+
+	"github.com/specterops/bloodhound/dawgs/cardinality"
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/log"
-	"slices"
-
-	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 func NewRoleEntityDetails(node *graph.Node) RoleDetails {
@@ -88,33 +88,34 @@ func (s RoleAssignmentMap) HasRole(id graph.ID, roleTemplateIDs ...string) bool 
 
 type RoleAssignments struct {
 	Principals graph.NodeKindSet
-	RoleMap    map[string]*roaring.Bitmap
+	RoleMap    map[string]cardinality.Duplex[uint64]
 }
 
-func (s RoleAssignments) GetNodeKindSet(bm *roaring.Bitmap) graph.NodeKindSet {
-	var (
-		result = graph.NewNodeKindSet()
-		iter   = bm.Iterator()
-	)
-	for iter.HasNext() {
-		node := s.Principals.GetNode(graph.ID(iter.Next()))
+func (s RoleAssignments) GetNodeKindSet(bm cardinality.Duplex[uint64]) graph.NodeKindSet {
+	result := graph.NewNodeKindSet()
+
+	bm.Each(func(nextID uint64) bool {
+		node := s.Principals.GetNode(graph.ID(nextID))
 		result.Add(node)
-	}
+
+		return true
+	})
+
 	return result
 }
 
-func (s RoleAssignments) GetNodeSet(bm *roaring.Bitmap) graph.NodeSet {
+func (s RoleAssignments) GetNodeSet(bm cardinality.Duplex[uint64]) graph.NodeSet {
 	return s.GetNodeKindSet(bm).AllNodes()
 }
 
-func (s RoleAssignments) Users() *roaring.Bitmap {
+func (s RoleAssignments) Users() cardinality.Duplex[uint64] {
 	return s.Principals.Get(azure.User).IDBitmap()
 }
 
-func (s RoleAssignments) UsersWithAnyRole() *roaring.Bitmap {
+func (s RoleAssignments) UsersWithAnyRole() cardinality.Duplex[uint64] {
 	users := s.Users()
 
-	principalsWithRoles := roaring.New()
+	principalsWithRoles := cardinality.NewBitmap64()
 	for _, bitmap := range s.RoleMap {
 		principalsWithRoles.Or(bitmap)
 	}
@@ -122,27 +123,27 @@ func (s RoleAssignments) UsersWithAnyRole() *roaring.Bitmap {
 	return principalsWithRoles
 }
 
-func (s RoleAssignments) UsersWithoutRoles() *roaring.Bitmap {
+func (s RoleAssignments) UsersWithoutRoles() cardinality.Duplex[uint64] {
 	result := s.Users()
 	result.AndNot(s.UsersWithAnyRole())
 	return result
 }
 
-func (s RoleAssignments) UsersWithRole(roleTemplateIDs ...string) *roaring.Bitmap {
+func (s RoleAssignments) UsersWithRole(roleTemplateIDs ...string) cardinality.Duplex[uint64] {
 	result := s.PrincipalsWithRole(roleTemplateIDs...)
 	result.And(s.Users())
 	return result
 }
 
-func (s RoleAssignments) UsersWithRolesExclusive(roleTemplateIDs ...string) *roaring.Bitmap {
+func (s RoleAssignments) UsersWithRolesExclusive(roleTemplateIDs ...string) cardinality.Duplex[uint64] {
 	result := s.PrincipalsWithRolesExclusive(roleTemplateIDs...)
 	result.And(s.Users())
 	return result
 }
 
 // PrincipalsWithRole returns a roaring bitmap of principals that have been assigned one or more of the matching roles from list of role template IDs
-func (s RoleAssignments) PrincipalsWithRole(roleTemplateIDs ...string) *roaring.Bitmap {
-	result := roaring.New()
+func (s RoleAssignments) PrincipalsWithRole(roleTemplateIDs ...string) cardinality.Duplex[uint64] {
+	result := cardinality.NewBitmap64()
 	for _, roleTemplateID := range roleTemplateIDs {
 		if bitmap, ok := s.RoleMap[roleTemplateID]; ok {
 			result.Or(bitmap)
@@ -152,10 +153,10 @@ func (s RoleAssignments) PrincipalsWithRole(roleTemplateIDs ...string) *roaring.
 }
 
 // PrincipalsWithRole returns a roaring bitmap of principals that have been assigned one or more of the matching roles from list of role template IDs but excluding principals with non-matching roles
-func (s RoleAssignments) PrincipalsWithRolesExclusive(roleTemplateIDs ...string) *roaring.Bitmap {
+func (s RoleAssignments) PrincipalsWithRolesExclusive(roleTemplateIDs ...string) cardinality.Duplex[uint64] {
 	var (
-		result             = roaring.New()
-		excludedPrincipals = roaring.New()
+		result             = cardinality.NewBitmap64()
+		excludedPrincipals = cardinality.NewBitmap64()
 	)
 	for roleID, bitmap := range s.RoleMap {
 		if slices.Contains(roleTemplateIDs, roleID) {
@@ -177,7 +178,7 @@ func (s RoleAssignments) NodesWithRolesExclusive(roleTemplateIDs ...string) grap
 func (s RoleAssignments) NodeHasRole(id graph.ID, roleTemplateIDs ...string) bool {
 	for _, roleID := range roleTemplateIDs {
 		if bm, ok := s.RoleMap[roleID]; ok {
-			if bm.Contains(uint32(id)) {
+			if bm.Contains(id.Uint64()) {
 				return true
 			}
 		}
@@ -193,7 +194,7 @@ func initTenantRoleAssignments(tx graph.Transaction, tenant *graph.Node) (RoleAs
 	} else {
 		return RoleAssignments{
 			Principals: roleMembers.KindSet(),
-			RoleMap:    make(map[string]*roaring.Bitmap),
+			RoleMap:    make(map[string]cardinality.Duplex[uint64]),
 		}, nil
 	}
 }

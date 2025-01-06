@@ -53,10 +53,10 @@ const useStyles = makeStyles((theme: Theme) =>
             fontSize: '1rem',
         },
         listSubheaderSelected: {
-            color: theme.palette.primary.main,
+            color: theme.palette.color.links,
         },
         listItemSelected: {
-            color: theme.palette.primary.main,
+            color: theme.palette.color.links,
         },
     })
 );

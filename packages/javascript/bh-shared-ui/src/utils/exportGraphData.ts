@@ -29,8 +29,7 @@ export const downloadFile = ({ data, fileName, fileType }: { data: any; fileName
     a.remove();
 };
 
-export const exportToJson = (e: React.MouseEvent<Element, MouseEvent>, data: any) => {
-    e.preventDefault();
+export const exportToJson = (data: any) => {
     downloadFile({
         data: JSON.stringify(data),
         fileName: 'bh-graph.json',

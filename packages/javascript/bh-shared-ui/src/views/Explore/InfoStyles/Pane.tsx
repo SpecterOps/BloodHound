@@ -25,20 +25,19 @@ const usePaneStyles = makeStyles((theme: Theme) => ({
         overflowY: 'hidden',
     },
     headerPaperRoot: {
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: theme.palette.neutral.secondary,
         pointerEvents: 'auto',
     },
     contentPaperRoot: {
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: theme.palette.neutral.secondary,
         marginTop: theme.spacing(1),
         overflowX: 'hidden',
         overflowY: 'auto',
         padding: theme.spacing(1, 2),
         pointerEvents: 'auto',
         '& > div.node:nth-child(odd)': {
-            background: '#eee',
+            background: theme.palette.neutral.tertiary,
         },
-        scrollbarGutter: 'stable',
     },
     breadcrumbs: {
         margin: '6px 10px 6px 10px',

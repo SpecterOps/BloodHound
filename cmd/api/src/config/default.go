@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
-
 	"github.com/specterops/bloodhound/src/serde"
 )
 
@@ -36,7 +35,6 @@ func NewDefaultConfiguration() (Configuration, error) {
 		return Configuration{
 			Version:                      0,
 			BindAddress:                  "127.0.0.1",
-			NetTimeoutSeconds:            70,  // Default timeout to avoid race conditions with 60 second gateway timeouts
 			SlowQueryThreshold:           100, // Threshold in ms for caching queries
 			MaxGraphQueryCacheSize:       100, // Number of cache items for graph queries
 			MaxAPICacheSize:              200, // Number of cache items for API utilities
@@ -54,8 +52,9 @@ func NewDefaultConfiguration() (Configuration, error) {
 			DisableIngest:                false,
 			DisableMigrations:            false,
 			EnableCypherMutations:        false,
-			AuthSessionTTLHours:          8, // Default to a logged in auth session time to live of 8 hours
-			GraphQueryMemoryLimit:        2, // 2 GiB by default
+			AuthSessionTTLHours:          8,  // Default to a logged in auth session time to live of 8 hours
+			GraphQueryMemoryLimit:        2,  // 2 GiB by default
+			FedRAMPEULAText:              "", // Enterprise only
 			TLS:                          TLSConfiguration{},
 			SAML:                         SAMLConfiguration{},
 			GraphDriver:                  neo4j.DriverName, // Default to Neo4j as the graph driver

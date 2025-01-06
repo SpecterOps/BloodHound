@@ -121,10 +121,19 @@ func TestPGMigrator(t *testing.T) {
 			sourceEdgeKinds graph.Kinds
 			sourceNodes     []*graph.Node
 			sourceEdges     []*graph.Relationship
-			err             error
 		)
 
-		migrator.StartMigration()
+		pgDB, err := migrator.OpenPostgresGraphConnection()
+		require.Nil(t, err)
+
+		// clear out nodes to avoid conflict when running the test multiple times
+		err = pgDB.WriteTransaction(testContext.Context(), func(tx graph.Transaction) error {
+			return tx.Nodes().Delete()
+		})
+		require.Nil(t, err)
+
+		err = migrator.StartMigration()
+		require.Nil(t, err)
 
 		// wait until migration status returns to "idle"
 		for {
@@ -138,7 +147,7 @@ func TestPGMigrator(t *testing.T) {
 		}
 
 		// query nodes/relationships in neo4j
-		neo4jDB.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+		err = neo4jDB.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
 			sourceNodes, err = ops.FetchNodes(tx.Nodes())
 			require.Nil(t, err)
 
@@ -147,6 +156,7 @@ func TestPGMigrator(t *testing.T) {
 
 			return nil
 		})
+		require.Nil(t, err)
 
 		// grab source kinds
 		// NOTE: the call to db.labels() in our migrator returns all possible node kinds in neo4j, while db.relationshipTypes()
@@ -159,12 +169,8 @@ func TestPGMigrator(t *testing.T) {
 			}
 		}
 
-		// get reference to pg graph db
-		pgDB, err := migrator.OpenPostgresGraphConnection()
-		require.Nil(t, err)
-
 		// confirm that all the data from neo4j made it to pg
-		pgDB.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+		err = pgDB.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
 
 			// check nodes
 			for _, sourceNode := range sourceNodes {
@@ -206,6 +212,7 @@ func TestPGMigrator(t *testing.T) {
 
 			return nil
 		})
+		require.Nil(t, err)
 	})
 }
 

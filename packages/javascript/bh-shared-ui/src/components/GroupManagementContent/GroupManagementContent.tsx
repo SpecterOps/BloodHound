@@ -14,10 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { FC, ReactNode, useEffect, useState } from 'react';
 import DropdownSelector, { DropdownOption } from '../DropdownSelector';
-import { Box, Button, Grid, Paper, Typography, useTheme } from '@mui/material';
+import { Box, Grid, Paper, Typography, useTheme } from '@mui/material';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
 import { faExternalLink } from '@fortawesome/free-solid-svg-icons';
@@ -40,6 +41,7 @@ const GroupManagementContent: FC<{
     onShowNodeInExplore: () => void;
     onClickMember: (member: AssetGroupMember) => void;
     mapAssetGroups: (assetGroups: AssetGroup[]) => DropdownOption[];
+    userHasEditPermissions: boolean;
 }> = ({
     globalDomain,
     showExplorePageLink,
@@ -50,6 +52,7 @@ const GroupManagementContent: FC<{
     onShowNodeInExplore,
     onClickMember,
     mapAssetGroups,
+    userHasEditPermissions,
 }) => {
     const theme = useTheme();
 
@@ -135,7 +138,7 @@ const GroupManagementContent: FC<{
             <Grid container height={'100%'} spacing={2}>
                 <Grid item xs={3} md={3}>
                     <Box component={Paper} elevation={0} marginBottom={1}>
-                        <Grid container>
+                        <Grid container sx={{ bgcolor: theme.palette.neutral.secondary }}>
                             <Grid item sm={4} sx={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
                                 <Typography variant='button'>Group:</Typography>
                             </Grid>
@@ -170,6 +173,7 @@ const GroupManagementContent: FC<{
                             assetGroup={selectedAssetGroup}
                             filter={filterParams}
                             memberCounts={memberCounts}
+                            isEditable={userHasEditPermissions}
                         />
                     )}
                 </Grid>
@@ -187,13 +191,10 @@ const GroupManagementContent: FC<{
                     {showExplorePageLink && (
                         <Button
                             data-testid='group-management_explore-link'
-                            variant='contained'
-                            disableElevation
-                            fullWidth
-                            sx={{ borderRadius: '4px', marginTop: '8px' }}
-                            onClick={onShowNodeInExplore}
-                            startIcon={<FontAwesomeIcon icon={faExternalLink} />}>
-                            Open in Explore
+                            style={{ borderRadius: '4px', marginTop: '8px', width: '100%' }}
+                            onClick={onShowNodeInExplore}>
+                            <FontAwesomeIcon icon={faExternalLink} />
+                            <Typography ml='8px'>Open in Explore</Typography>
                         </Button>
                     )}
                 </Grid>

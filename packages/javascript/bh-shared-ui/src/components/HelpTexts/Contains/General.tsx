@@ -25,9 +25,6 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, target
             <Typography variant='body2'>
                 {typeFormat(sourceType)} {sourceName} contains the {typeFormat(targetType)} {targetName}.
             </Typography>
-            <Typography variant='body2'>
-                GPOs linked to a container apply to all objects that are contained by the container.
-            </Typography>
         </>
     );
 };

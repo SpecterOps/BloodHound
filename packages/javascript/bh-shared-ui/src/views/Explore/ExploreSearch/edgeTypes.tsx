@@ -62,6 +62,7 @@ export const AllEdgeTypes: Category[] = [
             {
                 name: 'Credential Access',
                 edgeTypes: [
+                    ActiveDirectoryRelationshipKind.CoerceToTGT,
                     ActiveDirectoryRelationshipKind.DCSync,
                     ActiveDirectoryRelationshipKind.DumpSMSAPassword,
                     ActiveDirectoryRelationshipKind.HasSession,
@@ -90,6 +91,7 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.AddAllowedToAct,
                     ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
                     ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
+                    ActiveDirectoryRelationshipKind.WriteGPLink,
                     ActiveDirectoryRelationshipKind.WriteSPN,
                 ],
             },
@@ -108,6 +110,10 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.ADCSESC10b,
                     ActiveDirectoryRelationshipKind.ADCSESC13,
                 ],
+            },
+            {
+                name: 'Cross Platform',
+                edgeTypes: [ActiveDirectoryRelationshipKind.SyncedToEntraUser],
             },
         ],
     },
@@ -181,6 +187,10 @@ export const AllEdgeTypes: Category[] = [
                     AzureRelationshipKind.LogicAppContributor,
                     AzureRelationshipKind.WebsiteContributor,
                 ],
+            },
+            {
+                name: 'Cross Platform',
+                edgeTypes: [AzureRelationshipKind.SyncedToADUser],
             },
         ],
     },

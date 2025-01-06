@@ -19,7 +19,10 @@ package agi
 
 import (
 	"context"
+	"slices"
+	"strings"
 
+	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -36,7 +39,38 @@ type AgiData interface {
 	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
 }
 
-func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB graph.Database, kindGetter func(*graph.Node) string) error {
+func FetchAssetGroupNodes(tx graph.Transaction, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error) {
+	var (
+		assetGroupNodes graph.NodeSet
+		tagPropertyStr  = common.SystemTags.String()
+		err             error
+	)
+
+	if !isSystemGroup {
+		tagPropertyStr = common.UserTags.String()
+	}
+
+	if assetGroupNodes, err = ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.KindIn(query.Node(), ad.Entity, azure.Entity),
+			query.StringContains(query.NodeProperty(tagPropertyStr), assetGroupTag),
+		)
+	})); err != nil {
+		return graph.NodeSet{}, err
+	} else {
+		// tags are space seperated, so we have to loop and remove any that are not exact matches
+		for _, node := range assetGroupNodes {
+			tags, _ := node.Properties.Get(tagPropertyStr).String()
+			if !slices.Contains(strings.Split(tags, " "), assetGroupTag) {
+				assetGroupNodes.Remove(node.ID)
+			}
+		}
+	}
+
+	return assetGroupNodes, err
+}
+
+func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB graph.Database) error {
 	defer log.Measure(log.LevelInfo, "Asset Group Isolation Collections")()
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
@@ -44,18 +78,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB 
 	} else {
 		return graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
 			for _, assetGroup := range assetGroups {
-				if assetGroupNodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
-					tagPropertyStr := common.SystemTags.String()
-
-					if !assetGroup.SystemGroup {
-						tagPropertyStr = common.UserTags.String()
-					}
-
-					return query.And(
-						query.KindIn(query.Node(), ad.Entity, azure.Entity),
-						query.StringContains(query.NodeProperty(tagPropertyStr), assetGroup.Tag),
-					)
-				})); err != nil {
+				if assetGroupNodes, err := FetchAssetGroupNodes(tx, assetGroup.Tag, assetGroup.SystemGroup); err != nil {
 					return err
 				} else {
 					var (
@@ -65,16 +88,18 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB 
 						}
 					)
 
-					for idx, node := range assetGroupNodes {
+					idx := 0
+					for _, node := range assetGroupNodes {
 						if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
 							log.Errorf("Node %d that does not have valid %s property", node.ID, common.ObjectID)
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,
-								NodeLabel:  kindGetter(node),
+								NodeLabel:  analysis.GetNodeKindDisplayLabel(node),
 								Properties: node.Properties.Map,
 							}
 						}
+						idx++
 					}
 
 					// Enter a collection, even if it's empty to signal that we did do a tagging/collection run

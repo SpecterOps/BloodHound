@@ -1,0 +1,616 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 1858.5359677978236,
+        "y": 1436.4362283610988
+      },
+      "caption": "John",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#fa28ff"
+      }
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 75,
+        "y": 993.3605231845804
+      },
+      "caption": "RDPGroup",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#000000"
+      }
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 1506.9936386956233,
+        "y": 993.3605231845804
+      },
+      "caption": "Computer",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#194d33"
+      }
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 1067.9568787557453,
+        "y": 1840.9670953014515
+      },
+      "caption": "Group A",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 1858.5359677978236,
+        "y": 1113.3723556301861
+      },
+      "caption": "Group F",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 2210.078296900024,
+        "y": 993.3605231845804
+      },
+      "caption": "Rohan",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#fa28ff"
+      }
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 2210.078296900024,
+        "y": 1457.695969575189
+      },
+      "caption": "Domain Users",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#fa28ff"
+      }
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 675.431201442582,
+        "y": 1088.588987530268
+      },
+      "caption": "Andy",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#fa28ff"
+      }
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 1067.9568787557453,
+        "y": 1329.179328584462
+      },
+      "caption": "Group B",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 1067.9568787557453,
+        "y": 1566.6444444279005
+      },
+      "caption": "Eli",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": 675.431201442582,
+        "y": -29.126792002940533
+      },
+      "caption": "Group C",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": 1882.6268885240816,
+        "y": 59.33121557319919
+      },
+      "caption": "Dillon",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n12",
+      "position": {
+        "x": 675.431201442582,
+        "y": 425.89686901502307
+      },
+      "caption": "Uli",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n13",
+      "position": {
+        "x": 675.431201442582,
+        "y": 828.3756856463712
+      },
+      "caption": "Local Group A",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n14",
+      "position": {
+        "x": 675.431201442582,
+        "y": 227.39967895563223
+      },
+      "caption": "Irshad",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n15",
+      "position": {
+        "x": 1067.9568787557453,
+        "y": 227.39967895563223
+      },
+      "caption": "Group D",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#4d4d4d"
+      }
+    },
+    {
+      "id": "n16",
+      "position": {
+        "x": 1858.5359677978236,
+        "y": 695.3139541656336
+      },
+      "caption": "Alex",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n17",
+      "position": {
+        "x": 1506.9936386956233,
+        "y": 227.39967895563223
+      },
+      "caption": "Group E",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n18",
+      "position": {
+        "x": -114.42765768189122,
+        "y": 314.07033468628157
+      },
+      "caption": "Direct Access Users Group ",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "fromId": "n0",
+      "toId": "n3",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n1",
+      "fromId": "n3",
+      "toId": "n1",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n2",
+      "fromId": "n1",
+      "toId": "n2",
+      "type": "LocalToComputer",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n3",
+      "fromId": "n3",
+      "toId": "n2",
+      "type": "RIL",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n4",
+      "fromId": "n5",
+      "toId": "n4",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n5",
+      "fromId": "n4",
+      "toId": "n2",
+      "type": "RIL",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n6",
+      "fromId": "n6",
+      "toId": "n3",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n8",
+      "fromId": "n0",
+      "toId": "n6",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n9",
+      "fromId": "n5",
+      "toId": "n6",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n10",
+      "fromId": "n7",
+      "toId": "n8",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n11",
+      "fromId": "n8",
+      "toId": "n1",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n12",
+      "fromId": "n8",
+      "toId": "n2",
+      "type": "RIL",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n14",
+      "fromId": "n9",
+      "toId": "n2",
+      "type": "RIL",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n15",
+      "fromId": "n9",
+      "toId": "n1",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n17",
+      "fromId": "n10",
+      "toId": "n1",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n18",
+      "fromId": "n11",
+      "toId": "n2",
+      "type": "RIL",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n19",
+      "fromId": "n11",
+      "toId": "n10",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n20",
+      "fromId": "n12",
+      "toId": "n1",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n21",
+      "fromId": "n13",
+      "toId": "n2",
+      "type": "RIL",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n22",
+      "fromId": "n13",
+      "toId": "n2",
+      "type": "LocalToComputer",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n23",
+      "fromId": "n12",
+      "toId": "n13",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n24",
+      "fromId": "n12",
+      "toId": "n2",
+      "type": "CanRDP",
+      "properties": {},
+      "style": {
+        "arrow-color": "#f44e3b"
+      }
+    },
+    {
+      "id": "n26",
+      "fromId": "n14",
+      "toId": "n15",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n27",
+      "fromId": "n14",
+      "toId": "n1",
+      "type": "MemberOfLocalGroup",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n28",
+      "fromId": "n14",
+      "toId": "n2",
+      "type": "CanRDP",
+      "properties": {},
+      "style": {
+        "arrow-color": "#f44e3b"
+      }
+    },
+    {
+      "id": "n29",
+      "fromId": "n16",
+      "toId": "n2",
+      "type": "RIL",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n30",
+      "fromId": "n15",
+      "toId": "n17",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n31",
+      "fromId": "n17",
+      "toId": "n2",
+      "type": "RIL",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n34",
+      "type": "MemberOfLocalGroup",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n18"
+    },
+    {
+      "id": "n35",
+      "type": "LocalToComputer",
+      "style": {},
+      "properties": {},
+      "fromId": "n18",
+      "toId": "n2"
+    },
+    {
+      "id": "n36",
+      "type": "MemberOfLocalGroup",
+      "style": {},
+      "properties": {},
+      "fromId": "n14",
+      "toId": "n18"
+    },
+    {
+      "id": "n37",
+      "type": "MemberOfLocalGroup",
+      "style": {},
+      "properties": {},
+      "fromId": "n12",
+      "toId": "n18"
+    },
+    {
+      "id": "n38",
+      "type": "CanRDP",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n11",
+      "toId": "n2"
+    }
+  ]
+}

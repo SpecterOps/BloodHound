@@ -15,6 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './api';
+export * from './colors';
+export * from './compatibility';
 export * from './content';
 export * from './datetime';
 export * from './exportGraphData';
@@ -24,3 +26,5 @@ export * from './user';
 export * from './icons';
 export * from './permissions';
 export * from './copyToClipboard';
+export * from './types';
+export * from './theme';

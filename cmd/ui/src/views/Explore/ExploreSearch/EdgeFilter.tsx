@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { faFilter } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Button } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { EdgeCheckboxType, searchbarActions } from 'bh-shared-ui';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
 
@@ -30,7 +30,7 @@ const useStyles = makeStyles((theme) => ({
         minWidth: '25px',
         borderRadius: theme.shape.borderRadius,
         borderColor: 'rgba(0,0,0,0.23)',
-        color: 'black',
+        color: theme.palette.common.white,
         padding: 0,
     },
 }));
@@ -40,19 +40,9 @@ const EdgeFilter = () => {
     const dispatch = useAppDispatch();
 
     const [isOpenDialog, setIsOpenDialog] = useState(false);
-    const [isActiveFilters, setIsActiveFilters] = useState(false);
 
     const initialFilterState = useRef<EdgeCheckboxType[]>([]);
     const pathFilters = useAppSelector((state) => state.search.pathFilters);
-
-    useEffect(() => {
-        // if user has applied filters, set active
-        if (pathFilters?.some((filter) => !filter.checked)) {
-            setIsActiveFilters(true);
-        } else {
-            setIsActiveFilters(false);
-        }
-    }, [pathFilters]);
 
     const handlePathfindingSearch = () => {
         dispatch(searchbarActions.pathfindingSearch());
@@ -62,13 +52,12 @@ const EdgeFilter = () => {
         <>
             <Button
                 className={classes.pathfindingButton}
-                variant='outlined'
                 onClick={() => {
                     setIsOpenDialog(true);
                     // what is the initial state of edge filters?  save it
                     initialFilterState.current = pathFilters;
                 }}>
-                <FontAwesomeIcon icon={faFilter} color={isActiveFilters ? '#406F8E' : 'black'} />
+                <FontAwesomeIcon icon={faFilter} />
             </Button>
             <EdgeFilteringDialog
                 isOpen={isOpenDialog}

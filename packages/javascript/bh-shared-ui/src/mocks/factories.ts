@@ -17,6 +17,7 @@
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams, AssetGroupMemberCounts } from 'js-client-library';
 import { SearchResults } from '../hooks';
 import { ActiveDirectoryNodeKind } from '../graphSchema';
+import { PERMISSIONS, Permission } from '../utils';
 
 export const createMockAssetGroupMembers = (): { members: AssetGroupMember[] } => {
     return {
@@ -99,6 +100,18 @@ export const createMockMemberCounts = (): AssetGroupMemberCounts => {
             [ActiveDirectoryNodeKind.User]: 1,
             [ActiveDirectoryNodeKind.Computer]: 23,
             [ActiveDirectoryNodeKind.Domain]: 123,
+        },
+    };
+};
+
+export const createAuthStateWithPermissions = (permissions: Permission[]) => {
+    return {
+        user: {
+            roles: [
+                {
+                    permissions: permissions.map((p) => PERMISSIONS[p]),
+                },
+            ],
         },
     };
 };

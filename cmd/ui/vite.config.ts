@@ -55,6 +55,7 @@ export default defineConfig(({ mode }) => {
                 'downshift',
                 'react-query',
                 'notistack',
+                '@bloodhoundenterprise/doodleui',
             ],
             preserveSymlinks: true,
         },

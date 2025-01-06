@@ -16,7 +16,7 @@
 
 import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import {
     DestinationNodeEditedAction,
     DestinationNodeSelectedAction,
@@ -81,12 +81,13 @@ const PathfindingSearch = () => {
 };
 
 const SourceToBullseyeIcon = () => {
+    const theme = useTheme();
     return (
         <Box display={'flex'} flexDirection={'column'} alignItems={'center'}>
             <FontAwesomeIcon icon={faCircle} size='xs' />
             <Box
                 border={'none'}
-                borderLeft={'1px dotted black'}
+                borderLeft={`1px dotted ${theme.palette.color.primary}`}
                 marginTop={'0.5em'}
                 marginBottom={'0.5em'}
                 height='1em'></Box>

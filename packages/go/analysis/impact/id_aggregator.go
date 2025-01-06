@@ -17,15 +17,16 @@
 package impact
 
 import (
+	"sync"
+
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
-	"sync"
 )
 
 type PathAggregator interface {
-	Cardinality(targets ...uint32) cardinality.Provider[uint32]
-	Contains(target uint32) bool
+	Cardinality(targets ...uint64) cardinality.Provider[uint64]
+	Contains(target uint64) bool
 	AddPath(path *graph.IDSegment)
 	AddShortcut(path *graph.IDSegment)
 }
@@ -35,14 +36,14 @@ type ThreadSafeAggregator struct {
 	lock       *sync.RWMutex
 }
 
-func (s ThreadSafeAggregator) Contains(target uint32) bool {
+func (s ThreadSafeAggregator) Contains(target uint64) bool {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
 	return s.aggregator.Contains(target)
 }
 
-func (s ThreadSafeAggregator) Cardinality(targets ...uint32) cardinality.Provider[uint32] {
+func (s ThreadSafeAggregator) Cardinality(targets ...uint64) cardinality.Provider[uint64] {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -80,31 +81,31 @@ func NewThreadSafeAggregator(aggregator PathAggregator) PathAggregator {
 // of nodes by calling the cardinality functions of the aggregator. Resolution is accomplished using a recursive
 // depth-first strategy.
 type IDA struct {
-	resolved               cardinality.Duplex[uint32]
-	cardinalities          *graph.IndexedSlice[uint32, cardinality.Provider[uint32]]
-	dependencies           map[uint32]cardinality.Duplex[uint32]
-	newCardinalityProvider cardinality.ProviderConstructor[uint32]
+	resolved               cardinality.Duplex[uint64]
+	cardinalities          *graph.IndexedSlice[uint64, cardinality.Provider[uint64]]
+	dependencies           map[uint64]cardinality.Duplex[uint64]
+	newCardinalityProvider cardinality.ProviderConstructor[uint64]
 }
 
-func (s IDA) Contains(target uint32) bool {
+func (s IDA) Contains(target uint64) bool {
 	return s.cardinalities.Has(target)
 }
 
-func NewIDA(newCardinalityProvider cardinality.ProviderConstructor[uint32]) IDA {
+func NewIDA(newCardinalityProvider cardinality.ProviderConstructor[uint64]) IDA {
 	return IDA{
-		cardinalities:          graph.NewIndexedSlice[uint32, cardinality.Provider[uint32]](),
-		dependencies:           map[uint32]cardinality.Duplex[uint32]{},
-		resolved:               cardinality.NewBitmap32(),
+		cardinalities:          graph.NewIndexedSlice[uint64, cardinality.Provider[uint64]](),
+		dependencies:           map[uint64]cardinality.Duplex[uint64]{},
+		resolved:               cardinality.NewBitmap64(),
 		newCardinalityProvider: newCardinalityProvider,
 	}
 }
 
 // pushDependency adds a new dependency for the given target.
-func (s IDA) pushDependency(target, dependency uint32) {
+func (s IDA) pushDependency(target, dependency uint64) {
 	if dependencies, hasDependencies := s.dependencies[target]; hasDependencies {
 		dependencies.Add(dependency)
 	} else {
-		newDependencies := cardinality.NewBitmap32()
+		newDependencies := cardinality.NewBitmap64()
 		newDependencies.Add(dependency)
 
 		s.dependencies[target] = newDependencies
@@ -113,9 +114,9 @@ func (s IDA) pushDependency(target, dependency uint32) {
 
 // popDependencies will take the simplex cardinality provider reference for the given target, remove it from the
 // containing map in the aggregator and then return it
-func (s IDA) popDependencies(targetUint32ID uint32) []uint32 {
-	dependencies, hasDependencies := s.dependencies[targetUint32ID]
-	delete(s.dependencies, targetUint32ID)
+func (s IDA) popDependencies(targetID uint64) []uint64 {
+	dependencies, hasDependencies := s.dependencies[targetID]
+	delete(s.dependencies, targetID)
 
 	if hasDependencies {
 		return dependencies.Slice()
@@ -124,38 +125,38 @@ func (s IDA) popDependencies(targetUint32ID uint32) []uint32 {
 	return nil
 }
 
-func (s IDA) membership(targetUint32ID uint32) cardinality.Provider[uint32] {
-	return s.cardinalities.GetOr(targetUint32ID, s.newCardinalityProvider)
+func (s IDA) membership(targetID uint64) cardinality.Provider[uint64] {
+	return s.cardinalities.GetOr(targetID, s.newCardinalityProvider)
 }
 
 // idaRes is a cursor type that tracks the resolution of a node's pathMembers
 type idaRes struct {
-	// target is the uint32 ID of the node being resolved
-	target uint32
+	// target is the uint64 ID of the node being resolved
+	target uint64
 
 	// pathMembers stores the cardinality of the target's path membership
-	pathMembers cardinality.Provider[uint32]
+	pathMembers cardinality.Provider[uint64]
 
 	// completions are cardinality providers that will have this resolution's pathMembers merged into them
-	completions []cardinality.Provider[uint32]
+	completions []cardinality.Provider[uint64]
 
-	// dependencies contains a slice of uint32 node IDs that this resolution depends on
-	dependencies []uint32
+	// dependencies contains a slice of uint64 node IDs that this resolution depends on
+	dependencies []uint64
 }
 
-// resolve takes the target uint32 ID of a node and calculates the cardinality of nodes that have a path that traverse
+// resolve takes the target uint64 ID of a node and calculates the cardinality of nodes that have a path that traverse
 // it
-func (s IDA) resolve(targetUint32ID uint32) cardinality.Provider[uint32] {
+func (s IDA) resolve(targetID uint64) cardinality.Provider[uint64] {
 	var (
-		targetImpact = s.membership(targetUint32ID)
-		resolutions  = map[uint32]*idaRes{
-			targetUint32ID: {
-				target:       targetUint32ID,
+		targetImpact = s.membership(targetID)
+		resolutions  = map[uint64]*idaRes{
+			targetID: {
+				target:       targetID,
 				pathMembers:  targetImpact,
-				dependencies: s.popDependencies(targetUint32ID),
+				dependencies: s.popDependencies(targetID),
 			},
 		}
-		stack = []uint32{targetUint32ID}
+		stack = []uint64{targetID}
 	)
 
 	for len(stack) > 0 {
@@ -180,7 +181,7 @@ func (s IDA) resolve(targetUint32ID uint32) cardinality.Provider[uint32] {
 				resolutions[nextDependency] = &idaRes{
 					target:       nextDependency,
 					pathMembers:  s.membership(nextDependency),
-					completions:  []cardinality.Provider[uint32]{next.pathMembers},
+					completions:  []cardinality.Provider[uint64]{next.pathMembers},
 					dependencies: s.popDependencies(nextDependency),
 				}
 			}
@@ -209,7 +210,7 @@ func (s IDA) resolve(targetUint32ID uint32) cardinality.Provider[uint32] {
 	return targetImpact
 }
 
-func (s IDA) Cardinality(targets ...uint32) cardinality.Provider[uint32] {
+func (s IDA) Cardinality(targets ...uint64) cardinality.Provider[uint64] {
 	log.Debugf("Calculating pathMembers cardinality for %d targets", len(targets))
 	defer log.Measure(log.LevelDebug, "Calculated pathMembers cardinality for %d targets", len(targets))()
 
@@ -227,25 +228,25 @@ func (s IDA) Cardinality(targets ...uint32) cardinality.Provider[uint32] {
 }
 
 func (s IDA) AddPath(path *graph.IDSegment) {
-	pathMembers := []uint32{path.Node.Uint32()}
+	pathMembers := []uint64{path.Node.Uint64()}
 
 	for cursor := path.Trunk; cursor != nil; cursor = cursor.Trunk {
-		cursorNodeUint32ID := cursor.Node.Uint32()
+		cursorNodeUint32ID := cursor.Node.Uint64()
 
 		// Roll up cardinalities for nodes that belong to the path
 		s.membership(cursorNodeUint32ID).Add(pathMembers...)
-		pathMembers = append(pathMembers, cursor.Node.Uint32())
+		pathMembers = append(pathMembers, cursor.Node.Uint64())
 	}
 }
 
 func (s IDA) AddShortcut(path *graph.IDSegment) {
 	var (
-		terminalUint32ID = path.Node.Uint32()
-		pathMembers      = []uint32{terminalUint32ID}
+		terminalUint32ID = path.Node.Uint64()
+		pathMembers      = []uint64{terminalUint32ID}
 	)
 
 	for cursor := path.Trunk; cursor != nil; cursor = cursor.Trunk {
-		cursorNodeUint32ID := cursor.Node.Uint32()
+		cursorNodeUint32ID := cursor.Node.Uint64()
 
 		// The terminal node of this path was not fully traversed, so push it as a dependency of all ascending nodes
 		// above it
@@ -257,6 +258,6 @@ func (s IDA) AddShortcut(path *graph.IDSegment) {
 	}
 }
 
-func (s IDA) Resolved() cardinality.Duplex[uint32] {
+func (s IDA) Resolved() cardinality.Duplex[uint64] {
 	return s.resolved
 }

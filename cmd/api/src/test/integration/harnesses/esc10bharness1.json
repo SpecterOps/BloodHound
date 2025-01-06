@@ -56,8 +56,8 @@
     {
       "id": "n0",
       "position": {
-        "x": 1010.3487027070256,
-        "y": 1550.0642276957929
+        "x": 854.4572522558551,
+        "y": 1418.1461569306496
       },
       "caption": "Domain",
       "labels": [],
@@ -69,8 +69,8 @@
     {
       "id": "n1",
       "position": {
-        "x": 1607.9254921887946,
-        "y": 1426.238554260292
+        "x": 1452.0340417376242,
+        "y": 1294.3204834951487
       },
       "caption": "NTAuthStore",
       "labels": [],
@@ -83,8 +83,8 @@
     {
       "id": "n2",
       "position": {
-        "x": 1607.9254921887946,
-        "y": 1550.0642276957929
+        "x": 1452.0340417376242,
+        "y": 1418.1461569306496
       },
       "caption": "RootCA",
       "labels": [],
@@ -97,8 +97,8 @@
     {
       "id": "n3",
       "position": {
-        "x": 2187.6076945803557,
-        "y": 1150.8075921885152
+        "x": 2031.7162441291853,
+        "y": 1018.8895214233719
       },
       "caption": "EnterpriseCA",
       "labels": [],
@@ -111,13 +111,13 @@
     {
       "id": "n4",
       "position": {
-        "x": 1801.8571272978766,
-        "y": 313.83614153028515
+        "x": 1645.9656768467062,
+        "y": 181.9180707651419
       },
       "caption": "CertTemplate2",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1",
         "SubjectAltRequireDNS": "True"
@@ -131,12 +131,14 @@
     {
       "id": "n5",
       "position": {
-        "x": 1607.9254921887946,
-        "y": 1300.4144481846656
+        "x": 1452.0340417376242,
+        "y": 1168.4963774195223
       },
       "caption": "ComputerDC",
       "labels": [],
-      "properties": {},
+      "properties": {
+        "CertificateMappingMethodsRaw": "31"
+      },
       "style": {
         "node-color": "#f44e3b",
         "caption-position": "inside",
@@ -147,8 +149,8 @@
     {
       "id": "n6",
       "position": {
-        "x": 698.5658018046837,
-        "y": 841.5084245908528
+        "x": 542.6743513535132,
+        "y": 709.5903538257095
       },
       "caption": "Computer4",
       "labels": [],
@@ -161,13 +163,13 @@
     {
       "id": "n7",
       "position": {
-        "x": 1801.8571272978766,
-        "y": 445.7542122954269
+        "x": 1645.9656768467062,
+        "y": 313.8361415302836
       },
       "caption": "CertTemplate3",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1",
         "SubjectAltRequireDNS": "False"
@@ -181,8 +183,8 @@
     {
       "id": "n8",
       "position": {
-        "x": 542.6743513535127,
-        "y": 841.5084245908528
+        "x": 386.78290090234225,
+        "y": 709.5903538257095
       },
       "caption": "Computer3",
       "labels": [],
@@ -195,8 +197,8 @@
     {
       "id": "n9",
       "position": {
-        "x": 386.78290090234157,
-        "y": 841.5084245908528
+        "x": 230.89145045117107,
+        "y": 709.5903538257095
       },
       "caption": "Computer2",
       "labels": [],
@@ -208,13 +210,13 @@
     {
       "id": "n10",
       "position": {
-        "x": 1801.8571272978766,
-        "y": 577.6722830605681
+        "x": 1645.9656768467062,
+        "y": 445.75421229542485
       },
       "caption": "CertTemplate4",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "True",
         "SchemaVersion": "1",
         "SubjectAltRequireDNS": "True"
@@ -229,8 +231,8 @@
     {
       "id": "n11",
       "position": {
-        "x": 1010.3487027070256,
-        "y": 1150.8075921885152
+        "x": 854.4572522558551,
+        "y": 1018.8895214233719
       },
       "caption": "Group0",
       "labels": [],
@@ -242,13 +244,13 @@
     {
       "id": "n12",
       "position": {
-        "x": 1801.8571272978766,
-        "y": 709.5903538257093
+        "x": 1645.9656768467062,
+        "y": 577.672283060566
       },
       "caption": "CertTemplate5",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "False",
+        "SchannelAuthenticationEnabled": "False",
         "RequireManagerApproval": "False",
         "SchemaVersion": "1",
         "SubjectAltRequireDNS": "True"
@@ -262,8 +264,8 @@
     {
       "id": "n13",
       "position": {
-        "x": 854.4572522558548,
-        "y": 841.5084245908528
+        "x": 698.5658018046843,
+        "y": 709.5903538257095
       },
       "caption": "Computer5",
       "labels": [],
@@ -276,13 +278,13 @@
     {
       "id": "n14",
       "position": {
-        "x": 1801.8571272978766,
-        "y": 841.508424590851
+        "x": 1645.9656768467062,
+        "y": 709.5903538257077
       },
       "caption": "CertTemplate6",
       "labels": [],
       "properties": {
-        "AuthenticationEnabled": "True",
+        "SchannelAuthenticationEnabled": "True",
         "RequireManagerApproval": "False",
         "SchemaVersion": "2",
         "SubjectAltRequireDNS": "True",
@@ -297,8 +299,8 @@
     {
       "id": "n15",
       "position": {
-        "x": 1801.8571272978766,
-        "y": 181.91807076514326
+        "x": 1645.9656768467062,
+        "y": 50
       },
       "caption": "CertTemplate1",
       "labels": [],
@@ -318,8 +320,8 @@
     {
       "id": "n16",
       "position": {
-        "x": 1010.3487027070256,
-        "y": 841.508424590851
+        "x": 854.4572522558551,
+        "y": 709.5903538257077
       },
       "caption": "Computer6",
       "labels": [],
@@ -332,8 +334,8 @@
     {
       "id": "n17",
       "position": {
-        "x": 230.8914504511705,
-        "y": 841.5084245908528
+        "x": 75,
+        "y": 709.5903538257095
       },
       "caption": "Computer1",
       "labels": [],
@@ -343,10 +345,10 @@
       }
     },
     {
-      "id": "n21",
+      "id": "n18",
       "position": {
-        "x": 1010.3487027070256,
-        "y": 181.91807076514326
+        "x": 854.4572522558551,
+        "y": 50
       },
       "caption": "Group6",
       "labels": [],
@@ -357,10 +359,10 @@
       }
     },
     {
-      "id": "n22",
+      "id": "n19",
       "position": {
-        "x": 854.4572522558547,
-        "y": 181.91807076514326
+        "x": 698.5658018046842,
+        "y": 50
       },
       "caption": "Group5",
       "labels": [],
@@ -371,10 +373,10 @@
       }
     },
     {
-      "id": "n23",
+      "id": "n20",
       "position": {
-        "x": 698.5658018046835,
-        "y": 181.91807076514326
+        "x": 542.674351353513,
+        "y": 50
       },
       "caption": "Group4",
       "labels": [],
@@ -385,10 +387,10 @@
       }
     },
     {
-      "id": "n24",
+      "id": "n21",
       "position": {
-        "x": 542.6743513535139,
-        "y": 181.91807076514436
+        "x": 386.7829009023434,
+        "y": 50.00000000000111
       },
       "caption": "Group3",
       "labels": [],
@@ -399,10 +401,10 @@
       }
     },
     {
-      "id": "n25",
+      "id": "n22",
       "position": {
-        "x": 386.78290090234157,
-        "y": 1426.238554260292
+        "x": 230.89145045117107,
+        "y": 1294.3204834951487
       },
       "caption": "Group2",
       "labels": [],
@@ -413,10 +415,10 @@
       }
     },
     {
-      "id": "n26",
+      "id": "n23",
       "position": {
-        "x": 230.8914504511705,
-        "y": 1550.0642276957929
+        "x": 75,
+        "y": 1418.1461569306496
       },
       "caption": "Group1",
       "labels": [],
@@ -480,16 +482,6 @@
     },
     {
       "id": "n5",
-      "fromId": "n3",
-      "toId": "n5",
-      "type": "CanAbuseUPNCertMapping",
-      "properties": {},
-      "style": {
-        "arrow-color": "#000000"
-      }
-    },
-    {
-      "id": "n6",
       "fromId": "n5",
       "toId": "n0",
       "type": "DCFor",
@@ -500,7 +492,7 @@
       }
     },
     {
-      "id": "n7",
+      "id": "n6",
       "fromId": "n8",
       "toId": "n7",
       "type": "Enroll",
@@ -508,7 +500,7 @@
       "style": {}
     },
     {
-      "id": "n8",
+      "id": "n7",
       "fromId": "n7",
       "toId": "n3",
       "type": "PublishedTo",
@@ -516,7 +508,7 @@
       "style": {}
     },
     {
-      "id": "n9",
+      "id": "n8",
       "fromId": "n10",
       "toId": "n3",
       "type": "PublishedTo",
@@ -526,7 +518,7 @@
       }
     },
     {
-      "id": "n10",
+      "id": "n9",
       "fromId": "n6",
       "toId": "n10",
       "type": "Enroll",
@@ -534,7 +526,7 @@
       "style": {}
     },
     {
-      "id": "n11",
+      "id": "n10",
       "fromId": "n9",
       "toId": "n4",
       "type": "Enroll",
@@ -542,7 +534,7 @@
       "style": {}
     },
     {
-      "id": "n12",
+      "id": "n11",
       "fromId": "n11",
       "toId": "n3",
       "type": "Enroll",
@@ -550,7 +542,7 @@
       "style": {}
     },
     {
-      "id": "n13",
+      "id": "n12",
       "fromId": "n9",
       "toId": "n11",
       "type": "MemberOf",
@@ -558,7 +550,7 @@
       "style": {}
     },
     {
-      "id": "n14",
+      "id": "n13",
       "fromId": "n8",
       "toId": "n11",
       "type": "MemberOf",
@@ -566,7 +558,7 @@
       "style": {}
     },
     {
-      "id": "n15",
+      "id": "n14",
       "fromId": "n6",
       "toId": "n11",
       "type": "MemberOf",
@@ -574,7 +566,7 @@
       "style": {}
     },
     {
-      "id": "n16",
+      "id": "n15",
       "fromId": "n12",
       "toId": "n3",
       "type": "PublishedTo",
@@ -584,7 +576,7 @@
       }
     },
     {
-      "id": "n17",
+      "id": "n16",
       "fromId": "n13",
       "toId": "n12",
       "type": "Enroll",
@@ -592,8 +584,16 @@
       "style": {}
     },
     {
-      "id": "n18",
+      "id": "n17",
       "fromId": "n13",
+      "toId": "n11",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n18",
+      "fromId": "n16",
       "toId": "n11",
       "type": "MemberOf",
       "properties": {},
@@ -602,21 +602,13 @@
     {
       "id": "n19",
       "fromId": "n16",
-      "toId": "n11",
-      "type": "MemberOf",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n20",
-      "fromId": "n16",
       "toId": "n14",
       "type": "Enroll",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n21",
+      "id": "n20",
       "fromId": "n14",
       "toId": "n3",
       "type": "PublishedTo",
@@ -624,7 +616,7 @@
       "style": {}
     },
     {
-      "id": "n22",
+      "id": "n21",
       "fromId": "n15",
       "toId": "n3",
       "type": "PublishedTo",
@@ -632,7 +624,7 @@
       "style": {}
     },
     {
-      "id": "n23",
+      "id": "n22",
       "fromId": "n17",
       "toId": "n15",
       "type": "Enroll",
@@ -640,7 +632,7 @@
       "style": {}
     },
     {
-      "id": "n24",
+      "id": "n23",
       "fromId": "n17",
       "toId": "n11",
       "type": "MemberOf",
@@ -648,9 +640,49 @@
       "style": {}
     },
     {
-      "id": "n29",
-      "fromId": "n21",
+      "id": "n24",
+      "fromId": "n18",
       "toId": "n16",
+      "type": "GenericAll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n25",
+      "fromId": "n19",
+      "toId": "n13",
+      "type": "GenericAll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n26",
+      "fromId": "n20",
+      "toId": "n6",
+      "type": "GenericAll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n27",
+      "fromId": "n21",
+      "toId": "n8",
+      "type": "GenericAll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n28",
+      "fromId": "n22",
+      "toId": "n9",
+      "type": "GenericAll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n29",
+      "fromId": "n23",
+      "toId": "n17",
       "type": "GenericAll",
       "properties": {},
       "style": {}
@@ -658,54 +690,14 @@
     {
       "id": "n30",
       "fromId": "n22",
-      "toId": "n13",
-      "type": "GenericAll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n31",
-      "fromId": "n23",
-      "toId": "n6",
-      "type": "GenericAll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n32",
-      "fromId": "n24",
-      "toId": "n8",
-      "type": "GenericAll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n33",
-      "fromId": "n25",
-      "toId": "n9",
-      "type": "GenericAll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n34",
-      "fromId": "n26",
-      "toId": "n17",
-      "type": "GenericAll",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n35",
-      "fromId": "n25",
       "toId": "n0",
       "type": "ADCSESC10b",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n36",
-      "fromId": "n26",
+      "id": "n31",
+      "fromId": "n23",
       "toId": "n0",
       "type": "ADCSESC10b",
       "properties": {},

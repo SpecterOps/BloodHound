@@ -17,79 +17,9 @@
 package pg
 
 import (
-	"bytes"
-	"context"
-	"github.com/specterops/bloodhound/cypher/backend/pgsql"
-	"github.com/specterops/bloodhound/cypher/backend/pgsql/pgtransition"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
 )
-
-type liveQuery struct {
-	ctx          context.Context
-	tx           graph.Transaction
-	kindMapper   KindMapper
-	emitter      *pgsql.Emitter
-	parameters   map[string]any
-	queryBuilder *query.Builder
-}
-
-func newLiveQuery(ctx context.Context, tx graph.Transaction, kindMapper KindMapper) liveQuery {
-	return liveQuery{
-		ctx:          ctx,
-		tx:           tx,
-		kindMapper:   kindMapper,
-		emitter:      pgsql.NewEmitter(false, kindMapper),
-		parameters:   map[string]any{},
-		queryBuilder: query.NewBuilder(nil),
-	}
-}
-
-func (s *liveQuery) runAllShortestPathsQuery() graph.Result {
-	if aspArguments, err := pgtransition.TranslateAllShortestPaths(s.queryBuilder.RegularQuery(), s.kindMapper); err != nil {
-		return graph.NewErrorResult(err)
-	} else {
-		return s.tx.Raw(`select (t.nodes, t.edges)::pathComposite from all_shortest_paths(@p1, @p2, @p3, @p4) as t`, map[string]any{
-			"p1": aspArguments.RootCriteria,
-			"p2": aspArguments.TraversalCriteria,
-			"p3": aspArguments.TerminalCriteria,
-			"p4": aspArguments.MaxDepth,
-		})
-	}
-}
-
-func (s *liveQuery) runRegularQuery() graph.Result {
-	buffer := &bytes.Buffer{}
-
-	if regularQuery, err := s.queryBuilder.Build(); err != nil {
-		return graph.NewErrorResult(err)
-	} else if arguments, err := pgsql.Translate(regularQuery, s.kindMapper); err != nil {
-		return graph.NewErrorResult(err)
-	} else if err := s.emitter.Write(regularQuery, buffer); err != nil {
-		return graph.NewErrorResult(err)
-	} else {
-		return s.tx.Raw(buffer.String(), arguments)
-	}
-}
-
-func (s *liveQuery) Query(delegate func(results graph.Result) error, finalCriteria ...graph.Criteria) error {
-	for _, criteria := range finalCriteria {
-		s.queryBuilder.Apply(criteria)
-	}
-
-	if result := s.runRegularQuery(); result.Error() != nil {
-		return result.Error()
-	} else {
-		defer result.Close()
-		return delegate(result)
-	}
-}
-
-func (s *liveQuery) exec(finalCriteria ...graph.Criteria) error {
-	return s.Query(func(results graph.Result) error {
-		return results.Error()
-	}, finalCriteria...)
-}
 
 type nodeQuery struct {
 	liveQuery

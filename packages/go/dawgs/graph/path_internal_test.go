@@ -17,18 +17,17 @@
 package graph
 
 import (
-	"github.com/stretchr/testify/require"
 	"sync/atomic"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 var (
 	groupKind      = StringKind("group")
 	domainKind     = StringKind("domain")
 	userKind       = StringKind("user")
-	computerKind   = StringKind("computer")
 	permissionKind = StringKind("permission")
-	membershipKind = StringKind("member")
 )
 
 func Test_ComputeAndSetSize(t *testing.T) {

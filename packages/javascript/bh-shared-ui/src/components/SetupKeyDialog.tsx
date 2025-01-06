@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import React from 'react';
 
 const SetupKeyDialog: React.FC<{
@@ -37,8 +38,7 @@ const SetupKeyDialog: React.FC<{
             <DialogActions>
                 <Button
                     type='button'
-                    color='inherit'
-                    autoFocus
+                    variant='tertiary'
                     onClick={onClose}
                     data-testid={'setup-key-dialog_button-close'}>
                     Close

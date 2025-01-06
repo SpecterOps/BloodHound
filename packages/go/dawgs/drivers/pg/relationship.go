@@ -18,6 +18,7 @@ package pg
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
 )
@@ -109,20 +110,17 @@ func (s *relationshipQuery) Count() (int64, error) {
 
 // TODO: Max depth is relying on an uninformed default and should be passed either with criteria as an AST node or as an explicit parameter to this function
 func (s *relationshipQuery) FetchAllShortestPaths(delegate func(cursor graph.Cursor[graph.Path]) error) error {
-	result := s.runAllShortestPathsQuery()
-	defer result.Close()
+	return s.QueryAllShortestPaths(func(results graph.Result) error {
+		cursor := graph.NewResultIterator(s.ctx, results, func(scanner graph.Scanner) (graph.Path, error) {
+			var path graph.Path
+			return path, scanner.Scan(&path)
+		})
 
-	if result.Error() != nil {
-		return result.Error()
-	}
-
-	cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (graph.Path, error) {
-		var path graph.Path
-		return path, scanner.Scan(&path)
-	})
-	defer cursor.Close()
-
-	return delegate(cursor)
+		defer cursor.Close()
+		return delegate(cursor)
+	}, query.Returning(
+		query.Path(),
+	))
 }
 
 func (s *relationshipQuery) FetchTriples(delegate func(cursor graph.Cursor[graph.RelationshipTripleResult]) error) error {

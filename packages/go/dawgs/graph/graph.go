@@ -108,9 +108,9 @@ func (s Direction) String() string {
 	}
 }
 
-// ID is a 32-bit database Entity identifier type. Negative ID value associations in DAWGS drivers are not recommended
+// ID is a 64-bit database Entity identifier type. Negative ID value associations in DAWGS drivers are not recommended
 // and should not be considered during driver implementation.
-type ID uint32
+type ID uint64
 
 // Uint64 returns the ID typed as an uint64 and is shorthand for uint64(id).
 func (s ID) Uint64() uint64 {
@@ -128,7 +128,7 @@ func (s ID) Int64() int64 {
 }
 
 func (s ID) Sizeof() size.Size {
-	return size.Size(unsafe.Sizeof(s.Uint32()))
+	return size.Size(unsafe.Sizeof(s))
 }
 
 // String formats the int64 value of the ID as a string.
@@ -317,10 +317,10 @@ type Batch interface {
 	// TODO: Existing batch logic expects this to perform an upsert on conficts with (start_id, end_id, kind). This is incorrect and should be refactored
 	CreateRelationship(relationship *Relationship) error
 
+	// Deprecated: Use CreateRelationship Instead
+	//
 	// CreateRelationshipByIDs creates a new Relationship from the start Node to the end Node with the given Kind and
 	// Properties and returns the creation as a RelationshipResult.
-	//
-	// Deprecated: Use CreateRelationship
 	CreateRelationshipByIDs(startNodeID, endNodeID ID, kind Kind, properties *Properties) error
 
 	// DeleteRelationship deletes a relationship by the given ID.
