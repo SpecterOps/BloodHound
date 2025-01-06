@@ -194,12 +194,6 @@ func (s DataType) CoerceToSupertype(other DataType) (DataType, bool) {
 
 	case Int2:
 		switch other {
-		case Int, Int8, Int4, Int2:
-			return other, true
-		}
-
-	case Int4:
-		switch other {
 		case Int2:
 			return s, true
 
@@ -207,18 +201,27 @@ func (s DataType) CoerceToSupertype(other DataType) (DataType, bool) {
 			return other, true
 		}
 
-	case Int8:
+	case Int4:
 		switch other {
-		case Int2, Int4:
+		case Int4, Int2:
 			return s, true
 
 		case Int, Int8:
 			return other, true
 		}
 
+	case Int8:
+		switch other {
+		case Int, Int8, Int4, Int2:
+			return s, true
+		}
+
 	case Int:
 		switch other {
-		case Int, Int8:
+		case Int:
+			return s, true
+
+		case Int8:
 			return other, true
 		}
 
@@ -239,7 +242,7 @@ func (s DataType) CoerceToSupertype(other DataType) (DataType, bool) {
 
 	case Numeric:
 		switch other {
-		case Float4, Float8, Int8, Int4, Int2:
+		case Float4, Float8, Int8, Int, Int4, Int2:
 			return s, true
 
 		case Numeric:

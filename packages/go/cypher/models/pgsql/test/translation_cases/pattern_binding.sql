@@ -265,4 +265,3 @@ from s1;
 
 -- todo: the case below covers untyped array literals but has not yet been fixed
 -- case: match p = (:NodeKind1)-[:EdgeKind1|EdgeKind2]->(e:NodeKind2)-[:EdgeKind2]->(:NodeKind1) where (e.a = [] or 'a' in e.a) and (e.b = 0 or e.b = 1) return p
-

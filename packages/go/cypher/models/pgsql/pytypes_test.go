@@ -25,7 +25,79 @@ import (
 )
 
 func TestDataType_CoerceToSupertype(t *testing.T) {
+	testCases := []struct {
+		LeftTypes       []DataType
+		RightTypes      []DataType
+		Expected        DataType
+		ExpectRightType bool
+	}{{
+		LeftTypes:  []DataType{UnknownDataType},
+		RightTypes: []DataType{Int},
+		Expected:   Int,
+	}, {
+		LeftTypes:  []DataType{Int},
+		RightTypes: []DataType{UnknownDataType},
+		Expected:   Int,
+	}, {
+		LeftTypes:  []DataType{Int8},
+		RightTypes: []DataType{Int2, Int4, Int, Int8},
+		Expected:   Int8,
+	}, {
+		LeftTypes:  []DataType{Int4},
+		RightTypes: []DataType{Int2, Int4},
+		Expected:   Int4,
+	}, {
+		LeftTypes:  []DataType{Int4},
+		RightTypes: []DataType{Int},
+		Expected:   Int,
+	}, {
+		LeftTypes:  []DataType{Int4},
+		RightTypes: []DataType{Int8},
+		Expected:   Int8,
+	}, {
+		LeftTypes:       []DataType{Int2},
+		RightTypes:      []DataType{Int2, Int4, Int, Int8},
+		ExpectRightType: true,
+	}, {
+		LeftTypes:       []DataType{Int},
+		RightTypes:      []DataType{Int, Int8},
+		ExpectRightType: true,
+	}, {
+		LeftTypes:       []DataType{Float4},
+		RightTypes:      []DataType{Float4, Float8, Numeric},
+		ExpectRightType: true,
+	}, {
+		LeftTypes:  []DataType{Float8},
+		RightTypes: []DataType{Float4},
+		Expected:   Float8,
+	}, {
+		LeftTypes:       []DataType{Float8},
+		RightTypes:      []DataType{Float8, Numeric},
+		ExpectRightType: true,
+	}, {
+		LeftTypes:  []DataType{Numeric},
+		RightTypes: []DataType{Numeric, Float8, Float4, Int8, Int, Int4, Int2},
+		Expected:   Numeric,
+	}}
 
+	for _, testCase := range testCases {
+		for _, leftType := range testCase.LeftTypes {
+			for _, rightType := range testCase.RightTypes {
+				superType, coerced := leftType.CoerceToSupertype(rightType)
+
+				if !coerced {
+					t.Fatalf("coercing left type %s to right type %s failed", leftType, rightType)
+				}
+
+				if testCase.ExpectRightType {
+					require.Equalf(t, rightType, superType, "expected type %s does not match super type %s", rightType, superType)
+				} else {
+					require.Equalf(t, testCase.Expected, superType, "expected type %s does not match super type %s", testCase.Expected, superType)
+				}
+
+			}
+		}
+	}
 }
 
 func TestDataType_Comparable(t *testing.T) {
