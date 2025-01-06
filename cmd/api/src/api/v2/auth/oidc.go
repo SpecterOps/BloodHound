@@ -18,15 +18,21 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"mime"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/config"
@@ -165,7 +171,7 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 			ClientID:    ssoProvider.OIDCProvider.ClientID,
 			Endpoint:    provider.Endpoint(),
 			RedirectURL: getRedirectURL(hostURL, ssoProvider),
-			Scopes:      []string{"openid", "profile", "email"},
+			Scopes:      []string{oidc.ScopeOpenID, "profile", "email"},
 		}
 
 		// use PKCE to protect against CSRF attacks
@@ -228,22 +234,86 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 	}
 }
 
-func getOIDCClaims(reqCtx context.Context, provider *oidc.Provider, ssoProvider model.SSOProvider, pkceVerifier *http.Cookie, code string) (oidcClaims, error) {
+// OIDC Token exchange adapted from golang.org/x/oauth2
+func exchangeCodeForToken(reqCtx context.Context, ssoProvider model.SSOProvider, tokenUrl string, pkceVerifier *http.Cookie, code string) (*oauth2.Token, error) {
 	var (
-		hostURL      = *ctx.Get(reqCtx).Host
-		oidcVerifier = provider.Verifier(&oidc.Config{ClientID: ssoProvider.OIDCProvider.ClientID})
-		oauth2Conf   = &oauth2.Config{
-			ClientID:    ssoProvider.OIDCProvider.ClientID,
-			Endpoint:    provider.Endpoint(),
-			RedirectURL: getRedirectURL(hostURL, ssoProvider), // Required as verification check
+		hostUrl = *ctx.Get(reqCtx).Host
+		payload = url.Values{
+			"grant_type":    {"authorization_code"},
+			"client_id":     {ssoProvider.OIDCProvider.ClientID},
+			"redirect_uri":  {getRedirectURL(hostUrl, ssoProvider)},
+			"code":          {code},
+			"code_verifier": {pkceVerifier.Value},
 		}
-		claims = oidcClaims{}
 	)
 
-	if token, err := oauth2Conf.Exchange(reqCtx, code, oauth2.VerifierOption(pkceVerifier.Value)); err != nil {
-		return claims, fmt.Errorf("id token exchange: %v", err)
+	if req, err := http.NewRequest("POST", tokenUrl, strings.NewReader(payload.Encode())); err != nil {
+		return nil, fmt.Errorf("failed to init exchange request %v", err)
+	} else {
+		// Set custom headers
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationXWwwFormUrlencoded.String())
+		req.Header.Set(headers.Origin.String(), hostUrl.String())
+
+		r, err := http.DefaultClient.Do(req.WithContext(reqCtx))
+		if err != nil {
+			return nil, err
+		}
+		defer r.Body.Close()
+
+		if body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)); err != nil {
+			return nil, fmt.Errorf("cannot fetch token: %v", err)
+		} else {
+			var token *oauth2.Token
+			content, _, _ := mime.ParseMediaType(r.Header.Get(headers.ContentType.String()))
+			switch content {
+			case mediatypes.ApplicationXWwwFormUrlencoded.String(), "text/plain":
+				// some endpoints return a query string
+				if vals, err := url.ParseQuery(string(body)); err != nil {
+					return nil, fmt.Errorf("cannot parse token response: %v", err)
+				} else {
+					token = &oauth2.Token{
+						AccessToken:  vals.Get("access_token"),
+						TokenType:    vals.Get("token_type"),
+						RefreshToken: vals.Get("refresh_token"),
+					}
+					token = token.WithExtra(vals)
+
+					expires, _ := strconv.Atoi(vals.Get("expires_in"))
+					if expires != 0 {
+						token.Expiry = time.Now().Add(time.Duration(expires) * time.Second)
+					}
+				}
+			default:
+				if err = json.Unmarshal(body, &token); err != nil {
+					return nil, fmt.Errorf("cannot parse token json: %v", err)
+				}
+
+				optionalFields := make(map[string]interface{})
+				_ = json.Unmarshal(body, &optionalFields) // no error checks for optional fields
+				token = token.WithExtra(optionalFields)
+			}
+
+			if token.AccessToken == "" {
+				return nil, errors.New("server response missing access_token")
+			}
+
+			return token, nil
+		}
+	}
+}
+
+func getOIDCClaims(reqCtx context.Context, provider *oidc.Provider, ssoProvider model.SSOProvider, pkceVerifier *http.Cookie, code string) (oidcClaims, error) {
+	var (
+		oidcVerifier = provider.Verifier(&oidc.Config{ClientID: ssoProvider.OIDCProvider.ClientID})
+		claims       = oidcClaims{}
+	)
+
+	if token, err := exchangeCodeForToken(reqCtx, ssoProvider, provider.Endpoint().TokenURL, pkceVerifier, code); err != nil {
+		return claims, fmt.Errorf("token exchange: %v", err)
+	} else if token == nil {
+		return claims, fmt.Errorf("token is nil somehow... abort")
 	} else if rawIDToken, ok := token.Extra("id_token").(string); !ok { // Extract the ID Token from OAuth2 token
-		return claims, fmt.Errorf("id token missing key id_token: %v", err)
+		return claims, fmt.Errorf("token missing key id_token: %v", err)
 	} else if idToken, err := oidcVerifier.Verify(reqCtx, rawIDToken); err != nil {
 		return claims, fmt.Errorf("id token verification: %v", err)
 	} else if err := idToken.Claims(&claims); err != nil {
