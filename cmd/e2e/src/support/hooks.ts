@@ -39,7 +39,7 @@ Before(async function (this: PlaywrightWorld) {
 
 After(async function ({ result, pickle }) {
     // capture screenshot for failed step
-    if (result?.status == Status.FAILED) {
+    if (result?.status === Status.FAILED) {
         const img = await this.fixture.page.screenshot({
             path: `./test-results/screenshots/+${pickle.name}`,
             type: 'png',

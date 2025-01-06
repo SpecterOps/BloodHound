@@ -16,7 +16,7 @@
 
 import { Given, When } from '@cucumber/cucumber';
 import { User, IUserResult } from '../../../prisma/seed.js';
-import LoginPage from '../pageObjects/loginPage.js';
+import LoginPage from '../../helpers/pageObjects/loginPage.js';
 import PlaywrightWorld from '../worlds/playwrightWorld.js';
 
 let loginPageObject: LoginPage;

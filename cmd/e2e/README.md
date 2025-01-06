@@ -13,13 +13,17 @@ yarn install
 
 ## Run Tests Locally
 
-Setup Prisma Schema and Client 
+- `just bh-dev` standup BHCE instance 
+
+End2End [just](https://github.com/casey/just) recipes are also avaible at the root level of BHCE
+
+Setup Prisma Schema and Client: 
 - `cp .env.example .env` & update DB URL
 - `just prisma-generate`
 
 Update Cross-Enviroment variables
 - `cp .env-cmdrc.example .env-cmdrc` 
 
-Scripts configured in `package.json` to support running different type of tests.
+Runs Cucumber BDD tests with `@e2e` tag
+- `just run-e2e-tests` 
 
-- `just run-e2e-tests` runs all cucumber BDD tests using [just](https://github.com/casey/just) 
