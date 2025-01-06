@@ -22,17 +22,16 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"gorm.io/gorm"
-
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
+	"gorm.io/gorm"
 )
 
 // NewClientAuthToken creates a new Client AuthToken row using the details provided
@@ -512,7 +511,7 @@ func (s *BloodhoundDB) EndUserSession(ctx context.Context, userSession model.Use
 // corresponding retrival function is model.UserSession.GetFlag()
 func (s *BloodhoundDB) SetUserSessionFlag(ctx context.Context, userSession *model.UserSession, key model.SessionFlagKey, state bool) error {
 	if userSession.ID == 0 {
-		return errors.Error("invalid session - missing session id")
+		return errors.New("invalid session - missing session id")
 	}
 
 	auditEntry := model.AuditEntry{}

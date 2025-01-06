@@ -21,7 +21,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { OIDCProviderInfo, SSOProvider, UpsertOIDCProviderRequest } from 'js-client-library';
 
 const UpsertOIDCProviderForm: FC<{
-    error: any;
+    error?: any;
     oldSSOProvider?: SSOProvider;
     onClose: () => void;
     onSubmit: (data: UpsertOIDCProviderRequest) => void;

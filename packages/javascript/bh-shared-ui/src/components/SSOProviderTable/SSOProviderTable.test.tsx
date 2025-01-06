@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider } from 'js-client-library';
+import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 import { render, screen } from '../../test-utils';
 import { SortOrder } from '../../utils';
 import SSOProviderTable from './SSOProviderTable';
@@ -25,9 +25,12 @@ const samlProvider: SSOProvider = {
     slug: 'gotham-saml',
     name: 'Gotham SAML',
     type: 'SAML',
+    login_uri: '',
+    callback_uri: '',
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
     details: {} as SAMLProviderInfo,
+    config: {} as SSOProviderConfiguration['config'],
 };
 
 const oidcProvider: SSOProvider = {
@@ -35,9 +38,12 @@ const oidcProvider: SSOProvider = {
     slug: 'gotham-oidc',
     name: 'Gotham OIDC',
     type: 'OIDC',
+    login_uri: '',
+    callback_uri: '',
     created_at: '2022-02-24T23:38:41.420271Z',
     updated_at: '2022-02-24T23:38:41.420271Z',
     details: {} as OIDCProviderInfo,
+    config: {} as SSOProviderConfiguration['config'],
 };
 
 const ssoProviders = [samlProvider, oidcProvider];
@@ -45,6 +51,7 @@ const ssoProviders = [samlProvider, oidcProvider];
 describe('SSOProviderTable', () => {
     const onClickSSOProvider = vi.fn();
     const onDeleteSSOProvider = vi.fn();
+    const onUpdateSSOProvider = vi.fn();
 
     it('should render', async () => {
         const onToggleTypeSortOrder = vi.fn();
@@ -55,6 +62,7 @@ describe('SSOProviderTable', () => {
                 loading={false}
                 onClickSSOProvider={onClickSSOProvider}
                 onDeleteSSOProvider={onDeleteSSOProvider}
+                onUpdateSSOProvider={onUpdateSSOProvider}
                 onToggleTypeSortOrder={onToggleTypeSortOrder}
             />
         );
@@ -82,6 +90,7 @@ describe('SSOProviderTable', () => {
                 loading={false}
                 onClickSSOProvider={onClickSSOProvider}
                 onDeleteSSOProvider={onDeleteSSOProvider}
+                onUpdateSSOProvider={onUpdateSSOProvider}
                 onToggleTypeSortOrder={onToggleTypeSortOrder}
                 typeSortOrder={typeSortOrder}
             />

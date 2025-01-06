@@ -18,16 +18,10 @@ package version
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/specterops/bloodhound/errors"
-)
-
-var (
-	// See: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-	semverParsingRegex = regexp.MustCompile(`^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`)
 )
 
 const (
@@ -38,6 +32,14 @@ const (
 	minorCaptureGroup      = 2
 	patchCaptureGroup      = 3
 	prereleaseCaptureGroup = 4
+)
+
+var (
+	// See: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+	semverParsingRegex = regexp.MustCompile(`^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`)
+
+	ErrUnexpectedVersionFormat = errors.New("expected version to be formatted: <major>.<minor>.<patch>[-<prerelease>]")
+	ErrMissingPrefix           = fmt.Errorf("prefix `%s` is missing", Prefix)
 )
 
 type Version struct {
@@ -104,11 +106,11 @@ func (s Version) String() string {
 
 func Parse(rawVersion string) (Version, error) {
 	if !strings.HasPrefix(rawVersion, Prefix) {
-		return Version{}, fmt.Errorf("version string %s does not start with the prefix %s", rawVersion, Prefix)
+		return Version{}, fmt.Errorf("%w: version string %s", ErrMissingPrefix, rawVersion)
 	}
 
 	if matches := semverParsingRegex.FindAllStringSubmatch(rawVersion[1:], 1); len(matches) != 1 {
-		return Version{}, errors.Error("expected version to be formatted: <major>.<minor>.<patch>[-<prerelease>]")
+		return Version{}, ErrUnexpectedVersionFormat
 	} else {
 		// Map to the first set of capture groups
 		versionParts := matches[0]

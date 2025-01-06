@@ -1,4 +1,4 @@
--- Copyright 2024 Specter Ops, Inc.
+-- Copyright 2025 Specter Ops, Inc.
 --
 -- Licensed under the Apache License, Version 2.0
 -- you may not use this file except in compliance with the License.
@@ -16,3 +16,9 @@
 
 -- Delete the `updated_posture_page` feature flag
 DELETE FROM feature_flags WHERE key = 'updated_posture_page';
+
+-- Add new config column in sso_providers table
+ALTER TABLE IF EXISTS sso_providers ADD COLUMN IF NOT EXISTS config jsonb;
+
+-- Update sso_providers table by backfilling existing sso providers' new config column with default values
+UPDATE sso_providers set config = '{"auto_provision": {"enabled": false, "default_role_id": 0, "role_provision": false}}';

@@ -1053,7 +1053,7 @@ func TestCreateUser_Failure(t *testing.T) {
 			}},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: auth.ErrorResponseDetailsNumRoles}},
+				Errors:     []api.ErrorDetails{{Message: auth.ErrResponseDetailsNumRoles}},
 			},
 		},
 		{
@@ -2563,7 +2563,7 @@ func TestEnrollMFA(t *testing.T) {
 			Input{userId.String(), "imnotjson"},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: api.ErrorContentTypeJson.Error()}},
+				Errors:     []api.ErrorDetails{{Message: api.ErrContentTypeJson.Error()}},
 			},
 		},
 		{
@@ -2577,14 +2577,14 @@ func TestEnrollMFA(t *testing.T) {
 			Input{activatedId.String(), nil},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: auth.ErrorResponseDetailsMFAActivated}},
+				Errors:     []api.ErrorDetails{{Message: auth.ErrResponseDetailsMFAActivated}},
 			},
 		},
 		{
 			Input{badPassId.String(), nil},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: auth.ErrorResponseDetailsInvalidCurrentPassword}},
+				Errors:     []api.ErrorDetails{{Message: auth.ErrResponseDetailsInvalidCurrentPassword}},
 			},
 		},
 		{
@@ -2648,7 +2648,7 @@ func TestDisenrollMFA_Failure(t *testing.T) {
 			Input{userId.String(), "imnotjson"},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: api.ErrorContentTypeJson.Error()}},
+				Errors:     []api.ErrorDetails{{Message: api.ErrContentTypeJson.Error()}},
 			},
 		},
 		{
@@ -2800,7 +2800,7 @@ func TestDisenrollMFA_Admin_FailureIncorrectPassword(t *testing.T) {
 			*req,
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: auth.ErrorResponseDetailsInvalidCurrentPassword}},
+				Errors:     []api.ErrorDetails{{Message: auth.ErrResponseDetailsInvalidCurrentPassword}},
 			},
 		)
 	}
@@ -2954,7 +2954,7 @@ func TestActivateMFA_Failure(t *testing.T) {
 			Input{unenrolledId.String(), "imnotjson"},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: api.ErrorContentTypeJson.Error()}},
+				Errors:     []api.ErrorDetails{{Message: api.ErrContentTypeJson.Error()}},
 			},
 		},
 		{
@@ -2968,7 +2968,7 @@ func TestActivateMFA_Failure(t *testing.T) {
 			Input{unenrolledId.String(), nil},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: auth.ErrorResponseDetailsMFAEnrollmentRequired}},
+				Errors:     []api.ErrorDetails{{Message: auth.ErrResponseDetailsMFAEnrollmentRequired}},
 			},
 		},
 	}

@@ -18,6 +18,7 @@ package traversal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -30,7 +31,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/dawgs/util/atomics"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 )
 

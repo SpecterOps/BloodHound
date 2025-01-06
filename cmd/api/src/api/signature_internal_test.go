@@ -20,13 +20,13 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"errors"
 	"io"
 	"strings"
 	"testing"
 	"testing/iotest"
 	"time"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/stretchr/testify/require"
 )
 
