@@ -735,15 +735,15 @@ MinPwdLength: types.#StringEnum & {
 	representation: "minpwdlength"
 }
 
-SmbSigning: types.#StringEnum & {
-	symbol: "SmbSigning"
+SMBSigning: types.#StringEnum & {
+	symbol: "SMBSigning"
 	schema: "ad"
 	name: "SMB Signing"
 	representation: "smbsigning"
 }
 
-RestrictOutboundNtlm: types.#StringEnum & {
-	symbol: "RestrictOutboundNtlm"
+RestrictOutboundNTLM: types.#StringEnum & {
+	symbol: "RestrictOutboundNTLM"
 	schema: "ad"
 	name: "Restrict Outbound NTLM"
 	representation: "restrictoutboundntlm"
@@ -851,8 +851,8 @@ Properties: [
 	MaxPwdAge,
 	LockoutDuration,
 	LockoutObservationWindow,
-	SmbSigning,
-	RestrictOutboundNtlm
+	SMBSigning,
+	RestrictOutboundNTLM
 ]
 
 // Kinds

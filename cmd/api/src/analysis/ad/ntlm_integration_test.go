@@ -41,12 +41,12 @@ func TestPostNtlm(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.NtlmCoerceAndRelayNtlmToSmb.Setup(testContext)
+		harness.NTLMCoerceAndRelayNTLMToSMB.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNtlmToSmb")
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToSMB")
 
-		groupExpansions, computers, domains, authenticatedUsers, err := fetchNtlmPrereqs(db)
+		groupExpansions, computers, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
 
 		for _, domain := range domains {
@@ -56,8 +56,9 @@ func TestPostNtlm(t *testing.T) {
 				for _, computer := range computers {
 					innerComputer := computer
 					domainSid, _ := innerDomain.Properties.Get(ad.Domain.String()).String()
+					authenticatedUserID := authenticatedUsers[domainSid]
 
-					if err = ad2.PostCoerceAndRelayNtlmToSmb(tx, outC, groupExpansions, innerComputer, domainSid, authenticatedUsers); err != nil {
+					if err = ad2.PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID); err != nil {
 						t.Logf("failed post processig for %s: %v", ad.CoerceAndRelayNTLMToSMB.String(), err)
 					}
 				}
@@ -102,10 +103,10 @@ func TestPostNtlm(t *testing.T) {
 				objectId := results.Get(resultIds[0]).Properties.Get("objectid")
 				require.False(t, objectId.IsNil())
 
-				smbSigning, err := results.Get(resultIds[0]).Properties.Get(ad.SmbSigning.String()).Bool()
+				smbSigning, err := results.Get(resultIds[0]).Properties.Get(ad.SMBSigning.String()).Bool()
 				require.NoError(t, err)
 
-				restrictOutbountNtlm, err := results.Get(resultIds[0]).Properties.Get(ad.RestrictOutboundNtlm.String()).Bool()
+				restrictOutbountNtlm, err := results.Get(resultIds[0]).Properties.Get(ad.RestrictOutboundNTLM.String()).Bool()
 				require.NoError(t, err)
 
 				assert.False(t, smbSigning)
@@ -116,7 +117,7 @@ func TestPostNtlm(t *testing.T) {
 	})
 }
 
-func fetchNtlmPrereqs(db graph.Database) (expansions impact.PathAggregator, computers []*graph.Node, domains []*graph.Node, authenticatedUsers map[string]graph.ID, err error) {
+func fetchNTLMPrereqs(db graph.Database) (expansions impact.PathAggregator, computers []*graph.Node, domains []*graph.Node, authenticatedUsers map[string]graph.ID, err error) {
 	cache := make(map[string]graph.ID)
 	if expansions, err = ad2.ExpandAllRDPLocalGroups(context.Background(), db); err != nil {
 		return nil, nil, nil, cache, err

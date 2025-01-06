@@ -22,7 +22,7 @@ package ad
 import (
 	"errors"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
+	graph "github.com/specterops/bloodhound/dawgs/graph"
 )
 
 var (
@@ -217,12 +217,12 @@ const (
 	MaxPwdAge                               Property = "maxpwdage"
 	LockoutDuration                         Property = "lockoutduration"
 	LockoutObservationWindow                Property = "lockoutobservationwindow"
-	SmbSigning                              Property = "smbsigning"
-	RestrictOutboundNtlm                    Property = "restrictoutboundntlm"
+	SMBSigning                              Property = "smbsigning"
+	RestrictOutboundNTLM                    Property = "restrictoutboundntlm"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationEnabled, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributes, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, SmbSigning, RestrictOutboundNtlm}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationEnabled, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributes, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, SMBSigning, RestrictOutboundNTLM}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -429,9 +429,9 @@ func ParseProperty(source string) (Property, error) {
 	case "lockoutobservationwindow":
 		return LockoutObservationWindow, nil
 	case "smbsigning":
-		return SmbSigning, nil
+		return SMBSigning, nil
 	case "restrictoutboundntlm":
-		return RestrictOutboundNtlm, nil
+		return RestrictOutboundNTLM, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -640,10 +640,10 @@ func (s Property) String() string {
 		return string(LockoutDuration)
 	case LockoutObservationWindow:
 		return string(LockoutObservationWindow)
-	case SmbSigning:
-		return string(SmbSigning)
-	case RestrictOutboundNtlm:
-		return string(RestrictOutboundNtlm)
+	case SMBSigning:
+		return string(SMBSigning)
+	case RestrictOutboundNTLM:
+		return string(RestrictOutboundNTLM)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -852,9 +852,9 @@ func (s Property) Name() string {
 		return "Lockout Duration"
 	case LockoutObservationWindow:
 		return "Lockout Observation Window"
-	case SmbSigning:
+	case SMBSigning:
 		return "SMB Signing"
-	case RestrictOutboundNtlm:
+	case RestrictOutboundNTLM:
 		return "Restrict Outbound NTLM"
 	default:
 		return "Invalid enumeration case: " + string(s)

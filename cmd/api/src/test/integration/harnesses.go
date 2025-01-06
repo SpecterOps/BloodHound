@@ -8456,7 +8456,7 @@ func (s *ESC10bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.DC1)
 }
 
-type NtlmCoerceAndRelayNtlmToSmb struct {
+type NTLMCoerceAndRelayNTLMToSMB struct {
 	AuthenticatedUsers *graph.Node
 	DomainAdminsUser   *graph.Node
 	ServerAdmins       *graph.Node
@@ -8464,7 +8464,7 @@ type NtlmCoerceAndRelayNtlmToSmb struct {
 	computer8          *graph.Node
 }
 
-func (s *NtlmCoerceAndRelayNtlmToSmb) Setup(graphTestContext *GraphTestContext) {
+func (s *NTLMCoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
 	domainSid := RandomDomainSID()
 	s.AuthenticatedUsers = graphTestContext.NewActiveDirectoryGroup("Authenticated Users", domainSid)
 	s.AuthenticatedUsers.Properties.Set("objectid", fmt.Sprintf("authenticated-users%s", adAnalysis.AuthenticatedUsersSuffix))
@@ -8482,8 +8482,8 @@ func (s *NtlmCoerceAndRelayNtlmToSmb) Setup(graphTestContext *GraphTestContext) 
 	s.computer3 = graphTestContext.NewActiveDirectoryComputer("computer3", domainSid)
 
 	s.computer8 = graphTestContext.NewActiveDirectoryComputer("computer8", domainSid)
-	s.computer8.Properties.Set(ad.SmbSigning.String(), false)
-	s.computer8.Properties.Set(ad.RestrictOutboundNtlm.String(), false)
+	s.computer8.Properties.Set(ad.SMBSigning.String(), false)
+	s.computer8.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
 	graphTestContext.UpdateNode(s.computer8)
 
 	graphTestContext.NewRelationship(s.computer3, s.ServerAdmins, ad.MemberOf)
@@ -8591,5 +8591,5 @@ type HarnessDetails struct {
 	DCSyncHarness                                   DCSyncHarness
 	SyncLAPSPasswordHarness                         SyncLAPSPasswordHarness
 	HybridAttackPaths                               HybridAttackPaths
-	NtlmCoerceAndRelayNtlmToSmb                     NtlmCoerceAndRelayNtlmToSmb
+	NTLMCoerceAndRelayNTLMToSMB                     NTLMCoerceAndRelayNTLMToSMB
 }
