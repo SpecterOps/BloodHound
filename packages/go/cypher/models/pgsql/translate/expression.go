@@ -213,6 +213,7 @@ func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 
 		// Infer type information for well known column names
 		switch typedExpression[1] {
+// TODO: Graph ID should be int2
 		case pgsql.ColumnGraphID, pgsql.ColumnID, pgsql.ColumnStartID, pgsql.ColumnEndID:
 			return pgsql.Int8, nil
 
@@ -395,8 +396,6 @@ func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
 			if !typedLOperand.CastType.IsKnown() {
 				typedLOperand.CastType = rOperandTypeHint
 				expression.LOperand = typedLOperand
-			} else if !rOperandTypeHint.IsKnown() {
-				expression.LOperand = pgsql.NewTypeCast(expression.LOperand, typedLOperand.CastType)
 			}
 
 			if pgsql.OperatorIsComparator(expression.Operator) && !typedLOperand.CastType.IsComparable(rOperandTypeHint, expression.Operator) {
@@ -437,8 +436,6 @@ func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
 			if !typedROperand.CastType.IsKnown() {
 				typedROperand.CastType = lOperandTypeHint
 				expression.ROperand = typedROperand
-			} else if !lOperandTypeHint.IsKnown() {
-				expression.LOperand = pgsql.NewTypeCast(expression.LOperand, typedROperand.CastType)
 			}
 
 			if pgsql.OperatorIsComparator(expression.Operator) && !typedROperand.CastType.IsComparable(lOperandTypeHint, expression.Operator) {

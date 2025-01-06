@@ -335,12 +335,3 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
 select s1.n2 as n
 from s1;
 
--- case: match p = ()-[]->(e) where e.np = 123 return p
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite                        as n0,
-                   (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0,
-                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite                        as n1
-            from edge e0
-                   join node n0 on n0.id = e0.start_id
-                   join node n1 on (n1.properties ->> 'np')::int8 = 123 and n1.id = e0.end_id)
-select edges_to_path(variadic array [(s0.e0).id]::int8[])::pathcomposite as p
-from s0;

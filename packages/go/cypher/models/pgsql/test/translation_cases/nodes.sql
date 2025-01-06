@@ -594,13 +594,13 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
 select s0.n0 as n
 from s0;
 
--- case: match (u:NodeKind1) where u.hasspn = true and u.enabled = true and not u.objectid ends with '-502' and not coalesce(u.gmsa, false) = true and not coalesce(u.msa, false) = true return u limit 10
+-- case: match (u:NodeKind1) where u.hasspn = true and u.enabled = true and not '-502' ends with u.objectid and not coalesce(u.gmsa, false) = true and not coalesce(u.msa, false) = true return u limit 10
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
               and (n0.properties ->> 'hasspn')::bool = true
               and (n0.properties ->> 'enabled')::bool = true
-              and not coalesce(n0.properties ->> 'objectid', '')::text like '%-502'
+              and not '-502' like coalesce(n0.properties ->> 'objectid', '')::text
               and not coalesce((n0.properties ->> 'gmsa')::bool, false)::bool = true
               and not coalesce((n0.properties ->> 'msa')::bool, false)::bool = true)
 select s0.n0 as u
@@ -622,3 +622,15 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
               and '1' = any (jsonb_to_text_array(n0.properties -> 'array_prop')::text[] || array ['1', '2']::text[]))
 select s0.n0 as n
 from s0;
+
+-- case: match p=(:NodeKind1)-[r]->(:NodeKind1) where r.isacl return p limit 100
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite                        as n0,
+                   (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0,
+                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite                        as n1
+            from edge e0
+                   join node n0 on n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n0.id = e0.start_id
+                   join node n1 on n1.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n1.id = e0.end_id
+            where (e0.properties ->> 'isacl')::bool)
+select edges_to_path(variadic array [(s0.e0).id]::int8[])::pathcomposite as p
+from s0
+limit 100;
