@@ -45,6 +45,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const oidcTokenExchangeBodyLimit = 1 << 20
+
 var (
 	ErrOIDCProviderMissing  = errors.New("oidc provider missing")
 	ErrOIDCIssuerURLInvalid = errors.New("oidc provider issuer url invalid")
@@ -266,7 +268,7 @@ func exchangeCodeForToken(reqCtx context.Context, ssoProvider model.SSOProvider,
 		}
 		defer r.Body.Close()
 
-		if body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)); err != nil {
+		if body, err := io.ReadAll(io.LimitReader(r.Body, oidcTokenExchangeBodyLimit)); err != nil {
 			return nil, fmt.Errorf("cannot fetch token: %v", err)
 		} else {
 			var token *oauth2.Token
