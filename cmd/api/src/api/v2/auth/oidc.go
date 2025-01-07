@@ -351,7 +351,7 @@ func jitOIDCUserCreation(ctx context.Context, ssoProvider model.SSOProvider, ema
 	} else if errors.Is(err, database.ErrNotFound) {
 		var user = model.User{
 			EmailAddress:  null.StringFrom(email),
-			PrincipalName: claims.Email,
+			PrincipalName: email,
 			Roles:         roles,
 			SSOProviderID: null.Int32From(ssoProvider.ID),
 			EULAAccepted:  true, // EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users
