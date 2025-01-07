@@ -18,10 +18,12 @@ import prisma from './client.js';
 import { v4 as uuidv4 } from 'uuid';
 import hashPassword from '../src/helpers/hashpassword.js';
 import { faker } from '@faker-js/faker';
-import { exit } from 'process';
 import { users } from '@prisma/client';
 
 let uniquePassword: string;
+
+// const is exported to ensure deletion of the test data.
+export const qaEmailDomain = '@test.com';
 
 export interface IUserResult extends users {
     email_address: string;
@@ -48,7 +50,7 @@ export class User {
         firstName = faker.person.firstName(),
         lastName = faker.person.lastName(),
         principalName = `${firstName}-${lastName}`,
-        email = `${firstName}@test.com`,
+        email = `${firstName}${qaEmailDomain}`,
         role = 'Administrator',
         password = '',
         eulaAccepted = true,
@@ -62,23 +64,23 @@ export class User {
         this.principalName = principalName;
         this.email = email;
         this.password = password;
-        (this.role = role),
-            (this.eulaAccepted = eulaAccepted),
-            (this.isDisabled = isDisabled),
-            (this.isExpired = isExpired),
-            (this.totpSecret = totpSecret),
-            (this.totpActivated = totpActivated);
+        this.role = role;
+        this.eulaAccepted = eulaAccepted;
+        this.isDisabled = isDisabled;
+        this.isExpired = isExpired;
+        this.totpSecret = totpSecret;
+        this.totpActivated = totpActivated;
     }
     async create() {
         // sanity check when running against production environment
         // production tagged tests should not include any seeding data.
         if (process.env.ENV === 'production') {
-            console.error('exiting tests: no seeding data in production environment');
-            exit(1);
+            // throwing an _uncaught_ error exception to allow the process to be terminated accordingly
+            throw new Error('Error: no seeding data in production environment');
         }
 
         // option to set the password in table driven tests
-        if (this.password == '') {
+        if (this.password === '') {
             uniquePassword = faker.lorem.word({ length: { min: 5, max: 10 } });
         } else {
             uniquePassword = this.password as string;

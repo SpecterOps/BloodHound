@@ -15,15 +15,51 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import prisma from './client.js';
+import { qaEmailDomain } from './seed.js';
 
 export class dbOPS {
     // delete test data in dev environment only
     async deleteUsers() {
         const baseURL = `${process.env.BASEURL}`.toLowerCase();
         if (`${process.env.ENV}` === 'dev' && (baseURL.includes('localhost') || baseURL.includes('127.0.0.1'))) {
-            const deleteUsers = prisma.users.deleteMany();
-            const deleteUserRoles = prisma.users_roles.deleteMany();
-            await prisma.$transaction([deleteUserRoles, deleteUsers]);
+            const fetchAllTestUsers = await prisma.users.findMany({
+                where: {
+                    email_address: {
+                        contains: qaEmailDomain,
+                    },
+                },
+            });
+            for (const user of fetchAllTestUsers) {
+                const deleteUserRoles = prisma.users_roles.deleteMany({
+                    where: {
+                        user_id: user.id,
+                    },
+                });
+                const deleteUserSessions = prisma.user_sessions.deleteMany({
+                    where: {
+                        user_id: user.id,
+                    },
+                });
+                const deleteAuthSecrets = prisma.auth_secrets.deleteMany({
+                    where: {
+                        user_id: user.id,
+                    },
+                });
+                const deleteAuthTokens = prisma.auth_tokens.deleteMany({
+                    where: {
+                        user_id: user.id,
+                    },
+                });
+                await prisma.$transaction([deleteUserRoles, deleteUserSessions, deleteAuthSecrets, deleteAuthTokens]);
+            }
+            const deleteUsers = prisma.users.deleteMany({
+                where: {
+                    email_address: {
+                        contains: qaEmailDomain,
+                    },
+                },
+            });
+            await prisma.$transaction([deleteUsers]);
         } else {
             console.log(
                 `Skipping deletion test data, baseURL: ${process.env.BASEURL} does not target local environment`

@@ -14,21 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import globals from "globals";
-import pluginJs from "@eslint/js";
-import tseslint from "typescript-eslint";
-import eslintConfigPrettier from "eslint-config-prettier";
-
+import globals from 'globals';
+import pluginJs from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import eslintConfigPrettier from 'eslint-config-prettier';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  {files: ["**/*.{js,mjs,cjs,ts}"]},
-  {ignores: [
-    "prisma/client.ts",
-    "prisma/seed.ts"
-  ]},
-  eslintConfigPrettier,
-  {languageOptions: { globals: globals.node }},
-  pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
+    { files: ['**/*.{js,mjs,cjs,ts}'] },
+    { languageOptions: { globals: globals.node } },
+    pluginJs.configs.recommended,
+    ...tseslint.configs.recommended,
+    {
+      rules: {
+        eqeqeq: ['error', 'always'],
+      }
+    },
+    eslintConfigPrettier,
 ];
