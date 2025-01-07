@@ -40,6 +40,7 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/utils"
 	"github.com/specterops/bloodhound/src/utils/validation"
 	"golang.org/x/oauth2"
 )
@@ -48,16 +49,18 @@ var (
 	ErrOIDCProviderMissing  = errors.New("oidc provider missing")
 	ErrOIDCIssuerURLInvalid = errors.New("oidc provider issuer url invalid")
 	ErrRoleIDInvalid        = errors.New("role id invalid")
-	ErrEmailClaimMissing    = errors.New("")
+	ErrEmailMissing         = errors.New("email missing")
 )
 
 type oidcClaims struct {
-	Name        string   `json:"name"`
-	FamilyName  string   `json:"family_name"`
-	DisplayName string   `json:"given_name"`
-	Email       string   `json:"email"`
-	Verified    bool     `json:"email_verified"`
-	Roles       []string `json:"roles"`
+	Name              string `json:"name"`
+	FamilyName        string `json:"family_name"`
+	DisplayName       string `json:"given_name"`
+	Email             string `json:"email"` // Not always present
+	Verified          bool   `json:"email_verified"`
+	PreferredUsername string `json:"preferred_username"` // Present in Entra claims, may be an email
+
+	Roles []string `json:"roles"`
 }
 
 // UpsertOIDCProviderRequest represents the body of create & update provider endpoints
@@ -222,15 +225,18 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 	} else if claims, err := getOIDCClaims(request.Context(), provider, ssoProvider, pkceVerifier, code[0]); err != nil {
 		log.Errorf("[OIDC] %v", err)
 		v2.RedirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
+	} else if email, err := getEmailFromOIDCClaims(claims); errors.Is(err, ErrEmailMissing) { // Note email claims are not always present so we will check different claim keys for possible email
+		log.Errorf("[OIDC] Claims did not contain any valid email address")
+		v2.RedirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
-			if err := jitOIDCUserCreation(request.Context(), ssoProvider, claims, s.db); err != nil {
+			if err := jitOIDCUserCreation(request.Context(), ssoProvider, email, claims, s.db); err != nil {
 				// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
 				log.Errorf("[OIDC] Error during JIT User Creation: %v", err)
 			}
 		}
 
-		s.authenticator.CreateSSOSession(request, response, claims.Email, ssoProvider)
+		s.authenticator.CreateSSOSession(request, response, email, ssoProvider)
 	}
 }
 
@@ -318,28 +324,36 @@ func getOIDCClaims(reqCtx context.Context, provider *oidc.Provider, ssoProvider 
 		return claims, fmt.Errorf("id token verification: %v", err)
 	} else if err := idToken.Claims(&claims); err != nil {
 		return claims, fmt.Errorf("parse claims: %v", err)
-	} else if claims.Email == "" {
-		return claims, ErrEmailClaimMissing
 	} else {
 		return claims, nil
 	}
 }
 
-func jitOIDCUserCreation(ctx context.Context, ssoProvider model.SSOProvider, claims oidcClaims, u jitUserCreator) error {
+func getEmailFromOIDCClaims(claims oidcClaims) (string, error) {
+	if claims.Email != "" {
+		return claims.Email, nil
+	} else if utils.IsValidEmail(claims.PreferredUsername) {
+		return claims.PreferredUsername, nil
+	}
+
+	return "", ErrEmailMissing
+}
+
+func jitOIDCUserCreation(ctx context.Context, ssoProvider model.SSOProvider, email string, claims oidcClaims, u jitUserCreator) error {
 	if roles, err := SanitizeAndGetRoles(ctx, ssoProvider.Config.AutoProvision, claims.Roles, u); err != nil {
 		return fmt.Errorf("sanitize roles: %v", err)
 	} else if len(roles) != 1 {
 		return fmt.Errorf("invalid roles")
-	} else if _, err := u.LookupUser(ctx, claims.Email); err != nil && !errors.Is(err, database.ErrNotFound) {
+	} else if _, err := u.LookupUser(ctx, email); err != nil && !errors.Is(err, database.ErrNotFound) {
 		return fmt.Errorf("lookup user: %v", err)
 	} else if errors.Is(err, database.ErrNotFound) {
 		var user = model.User{
-			EmailAddress:  null.StringFrom(claims.Email),
+			EmailAddress:  null.StringFrom(email),
 			PrincipalName: claims.Email,
 			Roles:         roles,
 			SSOProviderID: null.Int32From(ssoProvider.ID),
 			EULAAccepted:  true, // EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users
-			FirstName:     null.StringFrom(claims.Email),
+			FirstName:     null.StringFrom(email),
 			LastName:      null.StringFrom("Last name not found"),
 		}
 
