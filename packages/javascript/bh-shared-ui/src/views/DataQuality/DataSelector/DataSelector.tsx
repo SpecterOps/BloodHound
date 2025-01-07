@@ -21,11 +21,12 @@ import { Alert, Box, Divider, MenuItem, Popover, Skeleton, TextField, Tooltip, T
 import { useAvailableDomains } from '../../../hooks';
 import React, { ReactNode, useState } from 'react';
 import { Domain } from 'js-client-library';
+import { DataSelectorValueTypes } from './types';
 
 const DataSelector: React.FC<{
-    value: { type: string | null; id: string | null };
+    value: { type: DataSelectorValueTypes | null; id: string | null };
     errorMessage: ReactNode;
-    onChange?: (newValue: { type: string; id: string | null }) => void;
+    onChange?: (newValue: { type: DataSelectorValueTypes; id: string | null }) => void;
     fullWidth?: boolean;
 }> = ({ value, errorMessage, onChange = () => {}, fullWidth = false }) => {
     const [anchorEl, setAnchorEl] = useState(null);

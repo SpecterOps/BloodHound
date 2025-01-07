@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { SnackbarKey } from 'notistack';
 import { Notification } from 'bh-shared-ui';
+import { Domain } from 'js-client-library';
 
 const GLOBAL_ADD_SNACKBAR = 'app/global/ADDSNACKBAR';
 const GLOBAL_CLOSE_SNACKBAR = 'app/global/CLOSESNACKBAR';
@@ -106,14 +107,6 @@ export type GlobalOptionsActionTypes =
     | SetAssetGroupsAction
     | SetAssetGroupIndexAction
     | SetAssetGroupEditAction;
-
-export interface Domain {
-    type: string;
-    impactValue: number;
-    name: string;
-    id: string;
-    collected: boolean;
-}
 
 export interface SetExpandedAction {
     type: typeof GLOBAL_SET_EXPANDED;

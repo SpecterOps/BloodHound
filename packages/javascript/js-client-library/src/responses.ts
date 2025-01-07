@@ -42,7 +42,7 @@ type TimestampFields = {
 };
 
 export type Domain = {
-    type: string;
+    type: 'active-directory' | 'azure';
     impactValue: number;
     name: string;
     id: string;

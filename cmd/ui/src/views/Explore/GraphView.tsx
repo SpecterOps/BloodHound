@@ -165,7 +165,7 @@ const GraphView: FC = () => {
         return <WebGLDisabledAlert />;
     }
 
-    if (!data.length)
+    if (!data?.length)
         return (
             <Box position={'relative'} height={'100%'} width={'100%'} overflow={'hidden'}>
                 <NoDataAlert

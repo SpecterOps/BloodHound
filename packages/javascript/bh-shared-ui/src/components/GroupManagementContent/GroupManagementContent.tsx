@@ -26,7 +26,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AssetGroupEdit from '../AssetGroupEdit';
 import AssetGroupMemberList from '../AssetGroupMemberList';
 import { SelectedDomain } from './types';
-import DataSelector from '../../views/DataQuality/DataSelector';
+import { DataSelector } from '../../views/DataQuality/DataSelector';
 import AssetGroupFilters from '../AssetGroupFilters';
 import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
 

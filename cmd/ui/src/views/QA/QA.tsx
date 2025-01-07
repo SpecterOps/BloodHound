@@ -19,6 +19,7 @@ import {
     ActiveDirectoryPlatformInfo,
     AzurePlatformInfo,
     DataSelector,
+    DataSelectorValueTypes,
     DomainInfo,
     PageWithTitle,
     TenantInfo,
@@ -38,7 +39,7 @@ const useStyles = makeStyles((theme) => ({
 
 const QualityAssurance: React.FC = () => {
     const domain = useAppSelector((state) => state.global.options.domain);
-    const [contextType, setContextType] = useState(domain?.type || null);
+    const [contextType, setContextType] = useState<DataSelectorValueTypes | null>(domain?.type || null);
     const [contextId, setContextId] = useState(domain?.id || null);
     const [dataError, setDataError] = useState(false);
     const classes = useStyles();

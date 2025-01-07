@@ -14,9 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DataSelectorValueTypes } from '../../views/DataQuality/DataSelector/types';
+import DataSelector from './DataSelector';
+import * as utils from './types';
 
-export type SelectedDomain = {
-    id: string | null;
-    type: DataSelectorValueTypes | null;
-};
+export { DataSelector, utils };
