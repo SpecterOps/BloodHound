@@ -17,13 +17,14 @@
 package pg
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 type queryResult struct {
+	ctx        context.Context
 	rows       pgx.Rows
 	kindMapper KindMapper
 }
@@ -36,7 +37,7 @@ func (s *queryResult) Values() (graph.ValueMapper, error) {
 	if values, err := s.rows.Values(); err != nil {
 		return nil, err
 	} else {
-		return NewValueMapper(values, s.kindMapper), nil
+		return NewValueMapper(s.ctx, values, s.kindMapper), nil
 	}
 }
 
@@ -72,24 +73,24 @@ func (s *queryResult) Scan(targets ...any) error {
 	for idx, pgTarget := range pgTargets {
 		switch typedPGTarget := pgTarget.(type) {
 		case *pathComposite:
-			if err := typedPGTarget.ToPath(s.kindMapper, targets[idx].(*graph.Path)); err != nil {
+			if err := typedPGTarget.ToPath(s.ctx, s.kindMapper, targets[idx].(*graph.Path)); err != nil {
 				return err
 			}
 
 		case *edgeComposite:
-			if err := typedPGTarget.ToRelationship(s.kindMapper, targets[idx].(*graph.Relationship)); err != nil {
+			if err := typedPGTarget.ToRelationship(s.ctx, s.kindMapper, targets[idx].(*graph.Relationship)); err != nil {
 				return err
 			}
 
 		case *nodeComposite:
-			if err := typedPGTarget.ToNode(s.kindMapper, targets[idx].(*graph.Node)); err != nil {
+			if err := typedPGTarget.ToNode(s.ctx, s.kindMapper, targets[idx].(*graph.Node)); err != nil {
 				return err
 			}
 
 		case *int16:
 			if kindPtr, isKindType := targets[idx].(*graph.Kind); isKindType {
-				if kind, hasKind := s.kindMapper.MapKindID(*typedPGTarget); !hasKind {
-					return fmt.Errorf("unable to map kind ID %d", *typedPGTarget)
+				if kind, err := s.kindMapper.MapKindID(s.ctx, *typedPGTarget); err != nil {
+					return err
 				} else {
 					*kindPtr = kind
 				}
@@ -97,8 +98,8 @@ func (s *queryResult) Scan(targets ...any) error {
 
 		case *[]int16:
 			if kindsPtr, isKindsType := targets[idx].(*graph.Kinds); isKindsType {
-				if kinds, missingKindIDs := s.kindMapper.MapKindIDs(*typedPGTarget...); len(missingKindIDs) > 0 {
-					return fmt.Errorf("unable to map kind IDs %+v", missingKindIDs)
+				if kinds, err := s.kindMapper.MapKindIDs(s.ctx, *typedPGTarget...); err != nil {
+					return err
 				} else {
 					*kindsPtr = kinds
 				}

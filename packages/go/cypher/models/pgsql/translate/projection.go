@@ -197,7 +197,7 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 				pgsql.OperatorConcatenate,
 				pgsql.ArrayLiteral{
 					Values:   edgeReferences,
-					CastType: pgsql.Int4Array,
+					CastType: pgsql.Int8Array,
 				},
 			)
 		}

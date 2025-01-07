@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -25,8 +26,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/errors"
+	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
 )
@@ -35,6 +37,20 @@ type DataType int
 
 func ErrBadQueryParameter(request *http.Request, key string, err error) *api.ErrorWrapper {
 	return api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("query parameter \"%s\" is malformed: %v", key, err), request)
+}
+
+func RedirectToLoginPage(response http.ResponseWriter, request *http.Request, errorMessage string) {
+	hostURL := *ctx.FromRequest(request).Host
+	redirectURL := api.URLJoinPath(hostURL, api.UserInterfacePath)
+
+	// Optionally, include the error message as a query parameter or in session storage
+	query := redirectURL.Query()
+	query.Set("error", errorMessage)
+	redirectURL.RawQuery = query.Encode()
+
+	// Redirect to the login page
+	response.Header().Add(headers.Location.String(), redirectURL.String())
+	response.WriteHeader(http.StatusFound)
 }
 
 func ParseIntQueryParameter(params url.Values, key string, defaultValue int) (int, error) {
@@ -91,7 +107,7 @@ func ParseTimeQueryParameter(params url.Values, key string, defaultValue time.Ti
 
 func GetEntityObjectIDFromRequestPath(req *http.Request) (string, error) {
 	if id, hasID := mux.Vars(req)["object_id"]; !hasID {
-		return "", errors.Error("no object ID found in request")
+		return "", errors.New("no object ID found in request")
 	} else {
 		return id, nil
 	}

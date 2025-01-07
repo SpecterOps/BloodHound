@@ -56,8 +56,10 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					if err != nil {
 						continue
 					} else {
-						if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-							return PostCoerceAndRelayNtlmToSmb(tx, outC, groupExpansions, innerComputer, domain, authenticatedUsersCache)
+						if authenticatedUserID, ok := authenticatedUsersCache[domain]; !ok {
+							continue
+						} else if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+							return PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID)
 						}); err != nil {
 							log.Warnf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToSMB, err)
 							// Additional analysis may occur if one of our analysis errors
@@ -198,16 +200,16 @@ func isCertTemplateValidForADCSRelay(ct *graph.Node) (bool, error) {
 
 // PostCoerceAndRelayNtlmToSmb creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
 // Comprised solely of adminTo and memberOf edges
-func PostCoerceAndRelayNtlmToSmb(tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, computer *graph.Node, domain string, authenticaedUserNodes map[string]graph.ID) error {
-	if authenticatedUserID, ok := authenticaedUserNodes[domain]; !ok {
+func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, computer *graph.Node, authenticatedUserID graph.ID) error {
+	if smbSigningEnabled, err := computer.Properties.Get(ad.SMBSigning.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
 		return nil
-	} else if smbSigningEnabled, err := computer.Properties.Get(ad.SmbSigning.String()).Bool(); err != nil {
-		if errors.Is(err, graph.ErrPropertyNotFound) {
-			return nil
-		} else {
-			return err
-		}
-	} else if !smbSigningEnabled {
+	} else if err != nil {
+		return err
+	} else if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
+		return nil
+	} else if err != nil {
+		return err
+	} else if !smbSigningEnabled && !restrictOutboundNtlm {
 
 		// Fetch the admins with edges to the provided computer
 		if firstDegreeAdmins, err := fetchFirstDegreeNodes(tx, computer, ad.AdminTo); err != nil {
@@ -220,15 +222,15 @@ func PostCoerceAndRelayNtlmToSmb(tx graph.Transaction, outC chan<- analysis.Crea
 					Kind:   ad.CoerceAndRelayNTLMToSMB,
 				}
 			} else {
-				allAdmins := cardinality.NewBitmap64()
+				allAdminGroups := cardinality.NewBitmap64()
 				for group := range firstDegreeAdmins.ContainingNodeKinds(ad.Group) {
-					allAdmins.And(expandedGroups.Cardinality(group.Uint64()))
+					allAdminGroups.And(expandedGroups.Cardinality(group.Uint64()))
 				}
 
-				// Fetch nodes where the node id is in our allAdmins bitmap and are of type Computer
+				// Fetch nodes where the node id is in our allAdminGroups bitmap and are of type Computer
 				if computerIds, err := ops.FetchNodeIDs(tx.Nodes().Filter(
 					query.And(
-						query.InIDs(query.Node(), graph.DuplexToGraphIDs(allAdmins)...),
+						query.InIDs(query.Node(), graph.DuplexToGraphIDs(allAdminGroups)...),
 						query.Kind(query.Node(), ad.Computer),
 					),
 				)); err != nil {

@@ -16,6 +16,7 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import {
+    Alert,
     Checkbox,
     DialogActions,
     DialogContent,
@@ -48,6 +49,7 @@ const CreateUserForm: React.FC<{
         handleSubmit,
         setValue,
         formState: { errors },
+        setError,
     } = useForm<CreateUserRequestForm>({
         defaultValues: {
             emailAddress: '',
@@ -67,7 +69,22 @@ const CreateUserForm: React.FC<{
         if (authenticationMethod === 'password') {
             setValue('SSOProviderId', undefined);
         }
-    }, [authenticationMethod, setValue]);
+
+        if (error) {
+            if (error?.response?.status === 409) {
+                if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
+                    setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
+                } else {
+                    setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
+                }
+            } else {
+                setError('root.generic', {
+                    type: 'custom',
+                    message: 'An unexpected error occurred. Please try again.',
+                });
+            }
+        }
+    }, [authenticationMethod, setValue, error, setError]);
 
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
         apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)
@@ -335,14 +352,14 @@ const CreateUserForm: React.FC<{
                                     )}
                                 />
                             </Grid>
+                            {!!errors.root?.generic && (
+                                <Grid item xs={12}>
+                                    <Alert severity='error'>{errors.root.generic.message}</Alert>
+                                </Grid>
+                            )}
                         </Grid>
                     </DialogContent>
                     <DialogActions>
-                        {error && (
-                            <FormHelperText error style={{ margin: 0 }}>
-                                An unexpected error occurred. Please try again.
-                            </FormHelperText>
-                        )}
                         <Button
                             type='button'
                             variant={'tertiary'}

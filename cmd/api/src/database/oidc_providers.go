@@ -31,12 +31,12 @@ const (
 
 // OIDCProviderData defines the interface required to interact with the oidc_providers table
 type OIDCProviderData interface {
-	CreateOIDCProvider(ctx context.Context, name, issuer, clientID string) (model.OIDCProvider, error)
+	CreateOIDCProvider(ctx context.Context, name, issuer, clientID string, config model.SSOProviderConfig) (model.OIDCProvider, error)
 	UpdateOIDCProvider(ctx context.Context, ssoProvider model.SSOProvider) (model.OIDCProvider, error)
 }
 
 // CreateOIDCProvider creates a new entry for an OIDC provider as well as the associated SSO provider
-func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, issuer, clientID string) (model.OIDCProvider, error) {
+func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, issuer, clientID string, config model.SSOProviderConfig) (model.OIDCProvider, error) {
 	var (
 		oidcProvider = model.OIDCProvider{
 			ClientID: clientID,
@@ -54,7 +54,7 @@ func (s *BloodhoundDB) CreateOIDCProvider(ctx context.Context, name, issuer, cli
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
 
-		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, name, model.SessionAuthProviderOIDC); err != nil {
+		if ssoProvider, err := bhdb.CreateSSOProvider(ctx, name, model.SessionAuthProviderOIDC, config); err != nil {
 			return err
 		} else {
 			oidcProvider.SSOProviderID = int(ssoProvider.ID)

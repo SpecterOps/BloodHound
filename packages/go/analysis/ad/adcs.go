@@ -49,8 +49,8 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 	} else {
 		operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
-		operation.Stats.Merge(step1Stats)
-		operation.Stats.Merge(step2Stats)
+			operation.Stats.Merge(step1Stats)
+			operation.Stats.Merge(step2Stats)
 
 		for _, domain := range cache.GetDomains() {
 			innerDomain := domain
@@ -58,13 +58,14 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 			for _, enterpriseCA := range cache.GetEnterpriseCertAuthorities() {
 				innerEnterpriseCA := enterpriseCA
 
-				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
-					processEnterpriseCAWithValidCertChainToDomain(innerEnterpriseCA, innerDomain, groupExpansions, cache, operation)
+					if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
+						processEnterpriseCAWithValidCertChainToDomain(innerEnterpriseCA, innerDomain, groupExpansions, cache, operation)
+					}
 				}
 			}
-		}
+			return &operation.Stats, operation.Done()
 
-		return &operation.Stats, operation.Done()
+		}
 	}
 }
 
@@ -91,10 +92,10 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 }
 
 // postADCSPreProcessStep2 Processes the edges that are dependent on those processed in postADCSPreProcessStep1
-func postADCSPreProcessStep2(ctx context.Context, db graph.Database, certTemplates []*graph.Node) (*analysis.AtomicPostProcessingStats, error) {
+func postADCSPreProcessStep2(ctx context.Context, db graph.Database, domains, enterpriseCertAuthorities, certTemplates []*graph.Node, cache ADCSCache) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 2")
 
-	if err := PostEnrollOnBehalfOf(certTemplates, operation); err != nil {
+	if err := PostEnrollOnBehalfOf(domains, enterpriseCertAuthorities, certTemplates, cache, operation); err != nil {
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnrollOnBehalfOf.String(), err)
 	} else {

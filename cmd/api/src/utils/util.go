@@ -19,6 +19,7 @@ package utils
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -26,15 +27,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 )
 
-var ErrInvalidSharpHoundVersion = errors.New("invalid sharphound version string")
-var ErrInvalidAzureHoundVersion = errors.New("invalid azurehound version string")
-var ErrRecommendSharphoundVersion = errors.New("please upgrade to sharphound v2.0.3 or above")
-var ErrInvalidClientType = errors.New("invalid client type")
+var (
+	ErrInvalidSharpHoundVersion   = errors.New("invalid sharphound version string")
+	ErrInvalidAzureHoundVersion   = errors.New("invalid azurehound version string")
+	ErrRecommendSharphoundVersion = errors.New("please upgrade to sharphound v2.0.3 or above")
+	ErrInvalidClientType          = errors.New("invalid client type")
+)
 
 type ClientType int
 
