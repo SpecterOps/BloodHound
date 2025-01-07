@@ -19,6 +19,7 @@ package ad
 import (
 	"context"
 	"errors"
+
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"

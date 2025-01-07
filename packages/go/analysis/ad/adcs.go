@@ -44,13 +44,13 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed building ADCS cache: %w", err)
 	} else if step1Stats, err := postADCSPreProcessStep1(ctx, db, cache.GetEnterpriseCertAuthorities(), rootCertAuthorities, aiaCertAuthorities, cache.GetCertTemplates()); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 1: %w", err)
-	} else if step2Stats, err := postADCSPreProcessStep2(ctx, db, cache.GetCertTemplates()); err != nil {
+	} else if step2Stats, err := postADCSPreProcessStep2(ctx, db, cache); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed adcs pre-processing step 2: %w", err)
 	} else {
 		operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
-			operation.Stats.Merge(step1Stats)
-			operation.Stats.Merge(step2Stats)
+		operation.Stats.Merge(step1Stats)
+		operation.Stats.Merge(step2Stats)
 
 		for _, domain := range cache.GetDomains() {
 			innerDomain := domain
@@ -58,14 +58,12 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 			for _, enterpriseCA := range cache.GetEnterpriseCertAuthorities() {
 				innerEnterpriseCA := enterpriseCA
 
-					if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
-						processEnterpriseCAWithValidCertChainToDomain(innerEnterpriseCA, innerDomain, groupExpansions, cache, operation)
-					}
+				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
+					processEnterpriseCAWithValidCertChainToDomain(innerEnterpriseCA, innerDomain, groupExpansions, cache, operation)
 				}
 			}
-			return &operation.Stats, operation.Done()
-
 		}
+		return &operation.Stats, operation.Done()
 	}
 }
 
@@ -92,10 +90,10 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 }
 
 // postADCSPreProcessStep2 Processes the edges that are dependent on those processed in postADCSPreProcessStep1
-func postADCSPreProcessStep2(ctx context.Context, db graph.Database, domains, enterpriseCertAuthorities, certTemplates []*graph.Node, cache ADCSCache) (*analysis.AtomicPostProcessingStats, error) {
+func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache ADCSCache) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 2")
 
-	if err := PostEnrollOnBehalfOf(domains, enterpriseCertAuthorities, certTemplates, cache, operation); err != nil {
+	if err := PostEnrollOnBehalfOf(cache, operation); err != nil {
 		operation.Done()
 		return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnrollOnBehalfOf.String(), err)
 	} else {
@@ -104,7 +102,6 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, domains, en
 }
 
 func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.Node, groupExpansions impact.PathAggregator, cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
-
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostGoldenCert(ctx, tx, outC, domain, enterpriseCA); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf("Post processing for %s: %v", ad.GoldenCert.String(), err)

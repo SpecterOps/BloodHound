@@ -879,7 +879,7 @@ Properties: [
 	MaxPwdAge,
 	LockoutDuration,
 	LockoutObservationWindow,
-	SmbSigning,
+	SMBSigning,
 	WebClientRunning,
 	RestrictOutboundNTLM,
 	ADCSWebEnrollmentHTTP,
