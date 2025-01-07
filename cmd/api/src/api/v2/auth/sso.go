@@ -17,15 +17,17 @@
 package auth
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"path"
 	"strconv"
 	"strings"
 
-	"github.com/specterops/bloodhound/headers"
-
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -37,11 +39,12 @@ import (
 
 // AuthProvider represents a unified SSO provider (either OIDC or SAML)
 type AuthProvider struct {
-	ID      int32       `json:"id"`
-	Name    string      `json:"name"`
-	Type    string      `json:"type"`
-	Slug    string      `json:"slug"`
-	Details interface{} `json:"details"`
+	ID      int32                   `json:"id"`
+	Name    string                  `json:"name"`
+	Type    string                  `json:"type"`
+	Slug    string                  `json:"slug"`
+	Details interface{}             `json:"details"`
+	Config  model.SSOProviderConfig `json:"config"`
 
 	LoginUri    serde.URL `json:"login_uri"`
 	CallbackUri serde.URL `json:"callback_uri"`
@@ -53,6 +56,21 @@ func (s *AuthProvider) FormatProviderURLs(hostUrl url.URL) {
 
 	s.LoginUri = serde.FromURL(*root.JoinPath("login"))
 	s.CallbackUri = serde.FromURL(*root.JoinPath("callback"))
+}
+
+type getRoler interface {
+	GetRole(ctx context.Context, roleID int32) (model.Role, error)
+}
+
+type getAllRoler interface {
+	GetAllRoles(ctx context.Context, order string, filter model.SQLFilter) (model.Roles, error)
+}
+
+type jitUserCreator interface {
+	getAllRoler
+
+	LookupUser(ctx context.Context, principalNameOrEmail string) (model.User, error)
+	CreateUser(ctx context.Context, user model.User) (model.User, error)
 }
 
 // ListAuthProviders lists all available SSO providers (SAML and OIDC) with sorting and filtering
@@ -119,10 +137,11 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 		} else {
 			for _, ssoProvider := range ssoProviders {
 				provider := AuthProvider{
-					ID:   ssoProvider.ID,
-					Name: ssoProvider.Name,
-					Type: ssoProvider.Type.String(),
-					Slug: ssoProvider.Slug,
+					ID:     ssoProvider.ID,
+					Name:   ssoProvider.Name,
+					Type:   ssoProvider.Type.String(),
+					Slug:   ssoProvider.Slug,
+					Config: ssoProvider.Config,
 				}
 
 				// Format callback url from host
@@ -231,16 +250,45 @@ func (s ManagementResource) SSOCallbackHandler(response http.ResponseWriter, req
 	}
 }
 
-func redirectToLoginPage(response http.ResponseWriter, request *http.Request, errorMessage string) {
-	hostURL := *ctx.FromRequest(request).Host
-	redirectURL := api.URLJoinPath(hostURL, api.UserInterfacePath)
+func SanitizeAndGetRoles(ctx context.Context, autoProvisionConfig model.SSOProviderAutoProvisionConfig, maybeBHRoles []string, r getAllRoler) (model.Roles, error) {
+	if dbRoles, err := r.GetAllRoles(ctx, "", model.SQLFilter{}); err != nil {
+		return nil, err
+	} else {
+		var defaultRole model.Role
+		dbRolesBySlug := make(map[string]*model.Role)
+		// Make quick lookup by role slug -> lower cased, dashes for spaces, and prefixed by `bh` e.g. bh-power-user
+		for _, r := range dbRoles {
+			dbRolesBySlug[fmt.Sprintf("bh-%s", strings.ReplaceAll(strings.ToLower(r.Name), " ", "-"))] = &r
+			if r.ID == autoProvisionConfig.DefaultRoleId {
+				defaultRole = r
+			}
+		}
 
-	// Optionally, include the error message as a query parameter or in session storage
-	query := redirectURL.Query()
-	query.Set("error", errorMessage)
-	redirectURL.RawQuery = query.Encode()
+		if autoProvisionConfig.RoleProvision {
+			var validRoles model.Roles
+			validRolesSeen := cardinality.NewBitmap32() // Ensure no dupes
+			// Only add valid roles
+			for _, r := range maybeBHRoles {
+				if dbRole := dbRolesBySlug[strings.ReplaceAll(strings.ToLower(r), " ", "-")]; dbRole != nil && !validRolesSeen.Contains(uint32(dbRole.ID)) {
+					validRoles = append(validRoles, *dbRole)
+					validRolesSeen.Add(uint32(dbRole.ID))
+				}
+			}
+			switch {
+			case len(validRoles) == 1:
+				return validRoles, nil
+			case len(validRoles) > 1:
+				log.Warnf("[SSO] JIT Role Provision detected multiple valid roles - %s , falling back to default role %s", validRoles.Names(), defaultRole.Name)
+			default:
+				log.Warnf("[SSO] JIT Role Provision detected no valid roles from %s , falling back to default role %s", maybeBHRoles, defaultRole.Name)
+			}
+		}
 
-	// Redirect to the login page
-	response.Header().Add(headers.Location.String(), redirectURL.String())
-	response.WriteHeader(http.StatusFound)
+		/* Fallback to default role:
+		- Role provision is disabled
+		- Role provision is enabled but no valid roles are found
+		- Role provision is enabled but multiple valid roles are found
+		*/
+		return model.Roles{defaultRole}, nil
+	}
 }

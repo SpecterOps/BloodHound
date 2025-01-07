@@ -29,6 +29,7 @@ import os
 import pathlib
 import re
 
+from datetime import datetime
 from typing import List
 
 # Source root files for license information
@@ -240,7 +241,7 @@ LICENSE = """                                 Apache License
 """
 
 # Apache License 2.0 header copy
-LICENSE_HEADER = """Copyright 2024 Specter Ops, Inc.
+LICENSE_HEADER = """Copyright {year} Specter Ops, Inc.
 
 Licensed under the Apache License, Version 2.0
 you may not use this file except in compliance with the License.
@@ -254,7 +255,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-SPDX-License-Identifier: Apache-2.0"""
+SPDX-License-Identifier: Apache-2.0""".format(
+    year=str(datetime.now().year)
+)
 
 # XML requires a block quote, so it's easier to just hand format it here
 XML_LICENSE_HEADER = "<!--\n" + LICENSE_HEADER + "\n-->"
@@ -267,17 +270,13 @@ IGNORED_PATH_ELEMENTS = [
     ".beagle",
     ".yarn",
     "cmd/api/src/api/static/assets",
-
     # This is generated code that we don't really care about
     "packages/go/cypher/parser",
-
     # These are vendored packages
     "packages/python/beagle/beagle/semver",
     "cmd/api/src/cmd/testidp/samlidp",
-
     # Ignore checksums
     "sha256",
-
     # Ignore this file
     "license_check.py",
 ]
@@ -317,9 +316,7 @@ IGNORED_EXTENSIONS = [
 ]
 
 # Any file listed below is included regardless of exclusions.
-MUST_CHECK_PATHS = [
-    ".yarn/plugins/nested-workspace/plugin-nested-workspace.js"
-]
+MUST_CHECK_PATHS = [".yarn/plugins/nested-workspace/plugin-nested-workspace.js"]
 
 
 def is_path_ignored(path: str) -> bool:
@@ -366,9 +363,8 @@ LICENSE_HEADERS_BY_EXTENSION = {
 FILE_HEADER_PREFIXES = [
     # POSIX exec header
     "#!",
-
     # XML header
-    "<?xml"
+    "<?xml",
 ]
 
 
@@ -390,8 +386,8 @@ def content_has_header(path: str, content_lines: List[str], header: str) -> bool
             if header_lineno >= len(header_lines):
                 return True
 
-        elif re.search('Copyright \d{4} Specter Ops, Inc.', line.strip()):
-            matching_header=True
+        elif re.search("Copyright \d{4} Specter Ops, Inc.", line.strip()):
+            matching_header = True
             header_lineno += 1
 
         elif matching_header:

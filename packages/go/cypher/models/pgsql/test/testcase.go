@@ -17,6 +17,7 @@
 package test
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -82,7 +83,7 @@ func (s *TranslationTestCase) Assert(t *testing.T, expectedSQL string, kindMappe
 			}
 		}
 
-		if translation, err := translate.Translate(regularQuery, kindMapper); err != nil {
+		if translation, err := translate.Translate(context.Background(), regularQuery, kindMapper, nil); err != nil {
 			t.Fatalf("Failed to translate cypher query: %s - %v", s.Cypher, err)
 		} else if formattedQuery, err := translate.Translated(translation); err != nil {
 			t.Fatalf("Failed to format SQL translatedQuery: %v", err)

@@ -64,7 +64,7 @@ func TestValidateTOTPSecret(t *testing.T) {
 	}{
 		{Input{code, mfaSecret}, nil},
 		{Input{"", secret}, nil},
-		{Input{"", mfaSecret}, auth.ErrorInvalidOTP},
+		{Input{"", mfaSecret}, auth.ErrInvalidOTP},
 	}
 
 	for _, tc := range cases {

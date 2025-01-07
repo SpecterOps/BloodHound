@@ -67,7 +67,7 @@ func (s *GraphContext) End(t test.Context) {
 func NewGraphContext(ctx test.Context, schema graph.Schema) *GraphContext {
 	graphContext := &GraphContext{
 		schema:   schema,
-		Database: OpenGraphDB(ctx),
+		Database: OpenGraphDB(ctx, schema),
 	}
 
 	// Initialize the graph context

@@ -191,7 +191,7 @@ func convertAzureAppOwner(raw json.RawMessage, converted *ConvertedAzureData) {
 			)
 			if err := json.Unmarshal(raw.Owner, &owner); err != nil {
 				log.Errorf(SerialError, "app owner", err)
-			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); errors.Is(err, ein.InvalidTypeErr) {
+			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); errors.Is(err, ein.ErrInvalidType) {
 				log.Warnf(ExtractError, err)
 			} else if err != nil {
 				log.Errorf(ExtractError, err)
@@ -238,7 +238,7 @@ func convertAzureDeviceOwner(raw json.RawMessage, converted *ConvertedAzureData)
 			)
 			if err := json.Unmarshal(raw.Owner, &owner); err != nil {
 				log.Errorf(SerialError, "device owner", err)
-			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); errors.Is(err, ein.InvalidTypeErr) {
+			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); errors.Is(err, ein.ErrInvalidType) {
 				log.Warnf(ExtractError, err)
 			} else if err != nil {
 				log.Errorf(ExtractError, err)

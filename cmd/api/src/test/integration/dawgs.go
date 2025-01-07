@@ -23,7 +23,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/integration/utils"
@@ -39,7 +38,7 @@ func LoadConfiguration(testCtrl test.Controller) config.Configuration {
 	return cfg
 }
 
-func OpenGraphDB(testCtrl test.Controller) graph.Database {
+func OpenGraphDB(testCtrl test.Controller, schema graph.Schema) graph.Database {
 	var (
 		cfg           = LoadConfiguration(testCtrl)
 		graphDatabase graph.Database
@@ -62,7 +61,7 @@ func OpenGraphDB(testCtrl test.Controller) graph.Database {
 	}
 
 	test.RequireNilErrf(testCtrl, err, "Failed connecting to graph database: %v", err)
-	test.RequireNilErr(testCtrl, graphDatabase.AssertSchema(context.Background(), schema.DefaultGraphSchema()))
+	test.RequireNilErr(testCtrl, graphDatabase.AssertSchema(context.Background(), schema))
 
 	return graphDatabase
 }

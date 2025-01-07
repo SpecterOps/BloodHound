@@ -185,7 +185,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
             from edge e0
                    join node n0 on n0.id = e0.start_id
                    join node n1 on n1.id = e0.end_id
-            where e0.kind_id = any (array [11]::int2[])),
+            where e0.kind_id = any (array [3]::int2[])),
      s1 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, path) as (select e1.start_id,
                                                                                               e1.end_id,
                                                                                               1,
@@ -194,7 +194,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                                                                                               array [e1.id]
                                                                                        from s0
                                                                                               join edge e1
-                                                                                                   on e1.kind_id = any (array [11]::int2[]) and (s0.n1).id = e1.start_id
+                                                                                                   on e1.kind_id = any (array [3]::int2[]) and (s0.n1).id = e1.start_id
                                                                                               join node n2 on n2.id = e1.end_id
                                                                                        union
                                                                                        select ex0.root_id,
@@ -234,7 +234,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                    join node n1 on n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and
                                    not upper(n1.properties ->> 'operatingsystem')::text like '%SERVER%' and
                                    n1.id = e0.end_id
-            where e0.kind_id = any (array [11]::int2[]))
+            where e0.kind_id = any (array [3]::int2[]))
 select edges_to_path(variadic array [(s0.e0).id]::int8[])::pathcomposite as p
 from s0
 limit 1000;

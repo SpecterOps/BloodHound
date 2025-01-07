@@ -31,9 +31,9 @@ import (
 )
 
 const (
-	ErrorNoTenantId        string = "no tenant id specified in url"
-	ErrorNoPlatformId      string = "no platform id specified in url"
-	ErrorInvalidPlatformId string = "invalid platform id specified in url: %v"
+	ErrNoTenantId        string = "no tenant id specified in url"
+	ErrNoPlatformId      string = "no platform id specified in url"
+	ErrInvalidPlatformId string = "invalid platform id specified in url: %v"
 )
 
 func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request *http.Request) {
@@ -90,7 +90,7 @@ func (s *Resources) GetADDataQualityStats(response http.ResponseWriter, request 
 	}
 
 	if id, hasDomainID := mux.Vars(request)[api.URIPathVariableDomainID]; !hasDomainID {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorNoDomainId, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrNoDomainId, request), response)
 	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrorInvalidRFC3339, queryParams["start"]), request), response)
 	} else if end, err := ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
@@ -134,7 +134,7 @@ func (s *Resources) GetAzureDataQualityStats(response http.ResponseWriter, reque
 	}
 
 	if id, hasTenantID := mux.Vars(request)[api.URIPathVariableTenantID]; !hasTenantID {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorNoTenantId, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrNoTenantId, request), response)
 	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrorInvalidRFC3339, queryParams["start"]), request), response)
 	} else if end, err := ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
@@ -180,7 +180,7 @@ func (s *Resources) GetPlatformAggregateStats(response http.ResponseWriter, requ
 	}
 
 	if id, hasPlatformID := mux.Vars(request)[api.URIPathVariablePlatformID]; !hasPlatformID {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrorNoPlatformId, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrNoPlatformId, request), response)
 	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrorInvalidRFC3339, queryParams["start"]), request), response)
 	} else if end, err := ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
@@ -209,7 +209,7 @@ func (s *Resources) GetPlatformAggregateStats(response http.ResponseWriter, requ
 				return
 			}
 		default:
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrorInvalidPlatformId, id), request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(ErrInvalidPlatformId, id), request), response)
 			return
 		}
 

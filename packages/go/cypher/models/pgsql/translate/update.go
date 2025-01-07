@@ -43,9 +43,7 @@ func (s *Translator) translateUpdates(scope *Scope) error {
 							if rewrittenProjections, err := buildProjection(identifierMutation.TargetBinding.Identifier, identifierMutation.UpdateBinding, scope); err != nil {
 								return err
 							} else {
-								for _, rewrittenProjection := range rewrittenProjections {
-									identifierMutation.Projection = append(identifierMutation.Projection, rewrittenProjection)
-								}
+								identifierMutation.Projection = append(identifierMutation.Projection, rewrittenProjections...)
 							}
 
 							continue
@@ -105,8 +103,8 @@ func (s *Translator) buildUpdates(scope *Scope) error {
 		}
 
 		if len(identifierMutation.KindAssignments) > 0 {
-			if kindIDs, missing := s.kindMapper.MapKinds(identifierMutation.KindAssignments); len(missing) > 0 {
-				return fmt.Errorf("unable to map kinds: %v", missing)
+			if kindIDs, err := s.kindMapper.MapKinds(s.ctx, identifierMutation.KindAssignments); err != nil {
+				s.SetError(fmt.Errorf("failed to translate kinds: %w", err))
 			} else {
 				arrayLiteral := pgsql.ArrayLiteral{
 					Values:   make([]pgsql.Expression, len(kindIDs)),
@@ -122,8 +120,8 @@ func (s *Translator) buildUpdates(scope *Scope) error {
 		}
 
 		if len(identifierMutation.KindRemovals) > 0 {
-			if kindIDs, missing := s.kindMapper.MapKinds(identifierMutation.KindRemovals); len(missing) > 0 {
-				return fmt.Errorf("unable to map kinds: %v", missing)
+			if kindIDs, err := s.kindMapper.MapKinds(s.ctx, identifierMutation.KindRemovals); err != nil {
+				s.SetError(fmt.Errorf("failed to translate kinds: %w", err))
 			} else {
 				arrayLiteral := pgsql.ArrayLiteral{
 					Values:   make([]pgsql.Expression, len(kindIDs)),
