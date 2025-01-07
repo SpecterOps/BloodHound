@@ -165,12 +165,16 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 
 func TestManagementResource_EnableUserSAML(t *testing.T) {
 	var (
+		adminUser         = model.User{Unique: model.Unique{ID: must.NewUUIDv4()}}
 		goodRoles         = []int32{0}
 		goodUserID        = must.NewUUIDv4()
 		badUserID         = must.NewUUIDv4()
 		mockCtrl          = gomock.NewController(t)
 		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
 	)
+
+	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx.AuthCtx.Owner = adminUser
 
 	defer mockCtrl.Finish()
 
@@ -181,6 +185,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
 		test.Request(t).
+			WithContext(bhCtx).
 			WithURLPathVars(map[string]string{"user_id": goodUserID.String()}).
 			WithBody(v2.UpdateUserRequest{
 				Principal:      "tester",
@@ -197,9 +202,9 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 		mockDB.EXPECT().GetUser(gomock.Any(), badUserID).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
 		mockDB.EXPECT().GetSAMLProvider(gomock.Any(), samlProviderID).Return(model.SAMLProvider{}, nil)
 		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
-		mockDB.EXPECT().DeleteAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
 		test.Request(t).
+			WithContext(bhCtx).
 			WithURLPathVars(map[string]string{"user_id": badUserID.String()}).
 			WithBody(v2.UpdateUserRequest{
 				Principal:      "tester",
@@ -218,6 +223,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
 		test.Request(t).
+			WithContext(bhCtx).
 			WithURLPathVars(map[string]string{"user_id": goodUserID.String()}).
 			WithBody(v2.UpdateUserRequest{
 				Principal:     "tester",
@@ -1047,7 +1053,7 @@ func TestCreateUser_Failure(t *testing.T) {
 			}},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: auth.ErrorResponseDetailsNumRoles}},
+				Errors:     []api.ErrorDetails{{Message: auth.ErrResponseDetailsNumRoles}},
 			},
 		},
 		{
@@ -1509,6 +1515,64 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, response.Code)
 	require.Contains(t, response.Body.String(), api.ErrorResponseUserSelfDisable)
+}
+
+func TestManagementResource_UpdateUser_UserSelfModify(t *testing.T) {
+	var (
+		adminRole = model.Role{
+			Serial: model.Serial{
+				ID: 1,
+			},
+		}
+		goodRoles = []int32{1}
+		badRole   = model.Role{
+			Serial: model.Serial{
+				ID: 2,
+			},
+		}
+		badRoles          = []int32{2}
+		adminUser         = model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword"), Unique: model.Unique{ID: must.NewUUIDv4()}, Roles: model.Roles{adminRole}}
+		mockCtrl          = gomock.NewController(t)
+		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+	)
+
+	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx.AuthCtx.Owner = adminUser
+
+	defer mockCtrl.Finish()
+
+	t.Run("Prevent users from changing their own SSO provider", func(t *testing.T) {
+		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{adminRole}, nil)
+		mockDB.EXPECT().GetUser(gomock.Any(), adminUser.ID).Return(adminUser, nil)
+		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), ssoProviderID).Return(model.SSOProvider{}, nil)
+		test.Request(t).
+			WithContext(bhCtx).
+			WithURLPathVars(map[string]string{"user_id": adminUser.ID.String()}).
+			WithBody(v2.UpdateUserRequest{
+				Principal:     "tester",
+				Roles:         goodRoles,
+				SSOProviderID: null.Int32From(123),
+			}).
+			OnHandlerFunc(resources.UpdateUser).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest)
+	})
+
+	t.Run("Prevent users from changing their own roles", func(t *testing.T) {
+		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{badRole}, nil)
+		mockDB.EXPECT().GetUser(gomock.Any(), adminUser.ID).Return(adminUser, nil)
+
+		test.Request(t).
+			WithContext(bhCtx).
+			WithURLPathVars(map[string]string{"user_id": adminUser.ID.String()}).
+			WithBody(v2.UpdateUserRequest{
+				Principal: "tester",
+				Roles:     badRoles,
+			}).
+			OnHandlerFunc(resources.UpdateUser).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest)
+	})
 }
 
 func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
@@ -2499,7 +2563,7 @@ func TestEnrollMFA(t *testing.T) {
 			Input{userId.String(), "imnotjson"},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: api.ErrorContentTypeJson.Error()}},
+				Errors:     []api.ErrorDetails{{Message: api.ErrContentTypeJson.Error()}},
 			},
 		},
 		{
@@ -2513,14 +2577,14 @@ func TestEnrollMFA(t *testing.T) {
 			Input{activatedId.String(), nil},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: auth.ErrorResponseDetailsMFAActivated}},
+				Errors:     []api.ErrorDetails{{Message: auth.ErrResponseDetailsMFAActivated}},
 			},
 		},
 		{
 			Input{badPassId.String(), nil},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: auth.ErrorResponseDetailsInvalidCurrentPassword}},
+				Errors:     []api.ErrorDetails{{Message: auth.ErrResponseDetailsInvalidCurrentPassword}},
 			},
 		},
 		{
@@ -2584,7 +2648,7 @@ func TestDisenrollMFA_Failure(t *testing.T) {
 			Input{userId.String(), "imnotjson"},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: api.ErrorContentTypeJson.Error()}},
+				Errors:     []api.ErrorDetails{{Message: api.ErrContentTypeJson.Error()}},
 			},
 		},
 		{
@@ -2736,7 +2800,7 @@ func TestDisenrollMFA_Admin_FailureIncorrectPassword(t *testing.T) {
 			*req,
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: auth.ErrorResponseDetailsInvalidCurrentPassword}},
+				Errors:     []api.ErrorDetails{{Message: auth.ErrResponseDetailsInvalidCurrentPassword}},
 			},
 		)
 	}
@@ -2890,7 +2954,7 @@ func TestActivateMFA_Failure(t *testing.T) {
 			Input{unenrolledId.String(), "imnotjson"},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: api.ErrorContentTypeJson.Error()}},
+				Errors:     []api.ErrorDetails{{Message: api.ErrContentTypeJson.Error()}},
 			},
 		},
 		{
@@ -2904,7 +2968,7 @@ func TestActivateMFA_Failure(t *testing.T) {
 			Input{unenrolledId.String(), nil},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: auth.ErrorResponseDetailsMFAEnrollmentRequired}},
+				Errors:     []api.ErrorDetails{{Message: auth.ErrResponseDetailsMFAEnrollmentRequired}},
 			},
 		},
 	}

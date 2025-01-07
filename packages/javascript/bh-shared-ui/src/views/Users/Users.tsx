@@ -97,7 +97,6 @@ const Users = () => {
             const user = listUsersQuery.data?.find((user: User) => {
                 return user.id === userId;
             });
-
             if (!user) {
                 return;
             }
@@ -270,6 +269,7 @@ const Users = () => {
                 onClose={toggleUpdateUserDialog}
                 onExited={updateUserMutation.reset}
                 userId={selectedUserId!}
+                hasSelectedSelf={hasSelectedSelf}
                 onSave={updateUserMutation.mutateAsync}
                 isLoading={updateUserMutation.isLoading}
                 error={updateUserMutation.error}

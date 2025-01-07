@@ -17,14 +17,15 @@
 package azure
 
 import (
+	"errors"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/graphschema/azure"
 )
 
-const (
-	ErrNoNonEntityKindFound     = errors.Error("unable to find a non-entity kind")
-	ErrInvalidRelatedEntityType = errors.Error("invalid related entity type")
+var (
+	ErrNoNonEntityKindFound     = errors.New("unable to find a non-entity kind")
+	ErrInvalidRelatedEntityType = errors.New("invalid related entity type")
 )
 
 func GetDescendentKinds(kind graph.Kind) []graph.Kind {

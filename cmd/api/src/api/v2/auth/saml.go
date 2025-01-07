@@ -17,10 +17,12 @@
 package auth
 
 import (
+	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 	"strings"
@@ -33,9 +35,11 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
+	"github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -50,6 +54,89 @@ const (
 </html>
 `
 )
+
+var ErrSAMLProviderMissing = errors.New("saml provider missing")
+
+func getMetadataXML(fileHeader *multipart.FileHeader) ([]byte, error) {
+	reader, err := fileHeader.Open()
+	if err != nil {
+		return nil, fmt.Errorf("xml file could not be opened: %v", err)
+	}
+
+	defer reader.Close()
+
+	metadataXML, err := io.ReadAll(reader)
+	if err != nil {
+		return metadataXML, fmt.Errorf("xml file could not be read: %v", err)
+	}
+
+	return metadataXML, nil
+}
+
+func getMetadataFromMultipartRequest(multipartForm *multipart.Form, isRequired bool) ([]byte, *saml.EntityDescriptor, error) {
+	if metadataXMLFileHandles, hasMetadataXML := multipartForm.File["metadata"]; !hasMetadataXML {
+		if isRequired {
+			return nil, nil, fmt.Errorf("form is missing \"metadata\" parameter")
+		}
+		return nil, nil, nil
+	} else if numHeaders := len(metadataXMLFileHandles); numHeaders == 0 || numHeaders > 1 {
+		return nil, nil, fmt.Errorf("expected only one \"metadata\" parameter")
+	} else if metadataXML, err := getMetadataXML(metadataXMLFileHandles[0]); err != nil {
+		return nil, nil, err
+	} else if metadata, err := samlsp.ParseMetadata(metadataXML); err != nil {
+		return nil, nil, err
+	} else {
+		return metadataXML, metadata, nil
+	}
+}
+
+func getProviderNameFromMultipartRequest(multipartForm *multipart.Form, isRequired bool) (string, error) {
+	if providerNames, hasProviderName := multipartForm.Value["name"]; !hasProviderName {
+		if isRequired {
+			return "", fmt.Errorf("form is missing \"name\" parameter")
+		}
+		return "", nil
+	} else if numProviderNames := len(providerNames); numProviderNames == 0 || numProviderNames > 1 {
+		return "", fmt.Errorf("expected only one \"name\" parameter")
+	} else {
+		return providerNames[0], nil
+	}
+}
+
+func getSSOProviderConfigFromMultipartRequest(ctx context.Context, multipartForm *multipart.Form, isRequired bool, r getRoler) (*model.SSOProviderConfig, error) {
+	if autoProvisionEnabled, hasAutoProvisionEnabled := multipartForm.Value["config.auto_provision.enabled"]; !hasAutoProvisionEnabled {
+		if isRequired {
+			return nil, fmt.Errorf("form is missing \"config.auto_provision.enabled\" parameter")
+		}
+		return nil, nil
+	} else if len(autoProvisionEnabled) > 1 {
+		return nil, fmt.Errorf("expected only one \"config.auto_provision.enabled\" parameter")
+	} else if isAutoProvisionEnabled, err := strconv.ParseBool(autoProvisionEnabled[0]); err != nil {
+		return nil, fmt.Errorf("\"config.auto_provision.enabled\" parameter could not be converted to bool")
+	} else if defaultRoleId, hasDefaultRoleId := multipartForm.Value["config.auto_provision.default_role_id"]; !hasDefaultRoleId {
+		return nil, fmt.Errorf("form is missing \"config.auto_provision.default_role_id\" parameter")
+	} else if len(defaultRoleId) > 1 {
+		return nil, fmt.Errorf("\"config.auto_provision.default_role_id\" has more than one value")
+	} else if defaultRoleIdInt, err := strconv.Atoi(defaultRoleId[0]); err != nil {
+		return nil, fmt.Errorf("\"config.auto_provision.default_role_id\" parameter could not be converted to int")
+	} else if defaultRole, err := r.GetRole(ctx, int32(defaultRoleIdInt)); err != nil {
+		return nil, fmt.Errorf("\"config.auto_provision.default_role_id\" parameter is invalid")
+	} else if roleProvision, hasRoleProvisioned := multipartForm.Value["config.auto_provision.role_provision"]; !hasRoleProvisioned {
+		return nil, fmt.Errorf("form is missing \"config.auto_provision.role_provision\" parameter")
+	} else if len(roleProvision) > 1 {
+		return nil, fmt.Errorf("\"config.auto_provision.role_provision\" has more than one value")
+	} else if isRoleProvisioned, err := strconv.ParseBool(roleProvision[0]); err != nil {
+		return nil, fmt.Errorf("\"config.auto_provision.role_provision\" parameter could not be converted to bool")
+	} else {
+		return &model.SSOProviderConfig{
+			AutoProvision: model.SSOProviderAutoProvisionConfig{
+				Enabled:       isAutoProvisionEnabled,
+				DefaultRoleId: defaultRole.ID,
+				RoleProvision: isRoleProvisioned,
+			},
+		}, nil
+	}
+}
 
 // This retains support for the old saml login urls /api/{version}/login/saml/ that were added to their respective IDPs
 func (s ManagementResource) SAMLLoginRedirect(response http.ResponseWriter, request *http.Request) {
@@ -125,42 +212,28 @@ func (s ManagementResource) GetSAMLProvider(response http.ResponseWriter, reques
 }
 
 func (s ManagementResource) CreateSAMLProviderMultipart(response http.ResponseWriter, request *http.Request) {
-	var samlIdentityProvider model.SAMLProvider
-
 	if err := request.ParseMultipartForm(api.DefaultAPIPayloadReadLimitBytes); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if providerNames, hasProviderName := request.MultipartForm.Value["name"]; !hasProviderName {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"name\" parameter", request), response)
-	} else if numProviderNames := len(providerNames); numProviderNames == 0 || numProviderNames > 1 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"name\" parameter", request), response)
-	} else if metadataXMLFileHandles, hasMetadataXML := request.MultipartForm.File["metadata"]; !hasMetadataXML {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form is missing \"metadata\" parameter", request), response)
-	} else if numHeaders := len(metadataXMLFileHandles); numHeaders == 0 || numHeaders > 1 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"metadata\" parameter", request), response)
-	} else if metadataXMLReader, err := metadataXMLFileHandles[0].Open(); err != nil {
+	} else if providerName, err := getProviderNameFromMultipartRequest(request.MultipartForm, true); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if metadataXML, metadata, err := getMetadataFromMultipartRequest(request.MultipartForm, true); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if config, err := getSSOProviderConfigFromMultipartRequest(request.Context(), request.MultipartForm, true, s.db); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(metadata, saml.HTTPPostBinding); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
+	} else if newSAMLProvider, err := s.db.CreateSAMLIdentityProvider(request.Context(), model.SAMLProvider{
+		Name:            providerName,
+		DisplayName:     providerName,
+		MetadataXML:     metadataXML,
+		IssuerURI:       metadata.EntityID,
+		SingleSignOnURI: ssoURL,
+	}, *config); errors.Is(err, database.ErrDuplicateSSOProviderName) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseSSOProviderDuplicateName, request), response)
+	} else if err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
-		defer metadataXMLReader.Close()
-
-		if metadataXML, err := io.ReadAll(metadataXMLReader); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if metadata, err := samlsp.ParseMetadata(metadataXML); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(metadata, saml.HTTPPostBinding); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
-		} else {
-			samlIdentityProvider.Name = providerNames[0]
-			samlIdentityProvider.DisplayName = providerNames[0]
-			samlIdentityProvider.MetadataXML = metadataXML
-			samlIdentityProvider.IssuerURI = metadata.EntityID
-			samlIdentityProvider.SingleSignOnURI = ssoURL
-
-			if newSAMLProvider, err := s.db.CreateSAMLIdentityProvider(request.Context(), samlIdentityProvider); err != nil {
-				api.HandleDatabaseError(request, response, err)
-			} else {
-				api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
-			}
-		}
+		api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
 	}
 }
 
@@ -194,66 +267,69 @@ func (s ManagementResource) UpdateSAMLProviderRequest(response http.ResponseWrit
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if err := request.ParseMultipartForm(api.DefaultAPIPayloadReadLimitBytes); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if providerNames, hasProviderName := request.MultipartForm.Value["name"]; len(providerNames) > 1 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"name\" parameter", request), response)
-	} else if metadataXMLFileHandles, hasMetadataXML := request.MultipartForm.File["metadata"]; len(metadataXMLFileHandles) > 1 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "expected only one \"metadata\" parameter", request), response)
+	} else if providerName, err := getProviderNameFromMultipartRequest(request.MultipartForm, false); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if metadataXML, metadata, err := getMetadataFromMultipartRequest(request.MultipartForm, false); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if config, err := getSSOProviderConfigFromMultipartRequest(request.Context(), request.MultipartForm, false, s.db); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if ssoProvider, err := updateSAMLProvider(ssoProvider, providerName, metadataXML, metadata, config); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if newSAMLProvider, err := s.db.UpdateSAMLIdentityProvider(request.Context(), ssoProvider); errors.Is(err, database.ErrDuplicateSSOProviderName) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseSSOProviderDuplicateName, request), response)
+	} else if err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
-		if hasProviderName {
-			ssoProvider.Name = providerNames[0]
+		api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
+	}
+}
 
-			ssoProvider.SAMLProvider.Name = providerNames[0]
-			ssoProvider.SAMLProvider.DisplayName = providerNames[0]
+// updateSAMLProvider Assumes role id has been validated already
+func updateSAMLProvider(ssoProvider model.SSOProvider, providerName string, metadataXML []byte, metadata *saml.EntityDescriptor, config *model.SSOProviderConfig) (model.SSOProvider, error) {
+	if ssoProvider.SAMLProvider == nil {
+		return ssoProvider, ErrSAMLProviderMissing
+	}
+
+	if providerName != "" {
+		ssoProvider.Name = providerName
+
+		ssoProvider.SAMLProvider.Name = providerName
+		ssoProvider.SAMLProvider.DisplayName = providerName
+	}
+
+	if metadataXML != nil {
+		if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(metadata, saml.HTTPPostBinding); err != nil {
+			return ssoProvider, fmt.Errorf("metadata does not have a SSO service that supports HTTP POST binding")
+		} else {
+			ssoProvider.SAMLProvider.MetadataXML = metadataXML
+			ssoProvider.SAMLProvider.IssuerURI = metadata.EntityID
+			ssoProvider.SAMLProvider.SingleSignOnURI = ssoURL
 		}
 
-		if hasMetadataXML {
-			if metadataXMLReader, err := metadataXMLFileHandles[0].Open(); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-				return
-			} else {
-				defer metadataXMLReader.Close()
-
-				if metadataXML, err := io.ReadAll(metadataXMLReader); err != nil {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-					return
-				} else if metadata, err := samlsp.ParseMetadata(metadataXML); err != nil {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-					return
-				} else if ssoURL, err := auth.GetIDPSingleSignOnServiceURL(metadata, saml.HTTPPostBinding); err != nil {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a SSO service that supports HTTP POST binding", request), response)
-					return
-				} else {
-					ssoProvider.SAMLProvider.MetadataXML = metadataXML
-					ssoProvider.SAMLProvider.IssuerURI = metadata.EntityID
-					ssoProvider.SAMLProvider.SingleSignOnURI = ssoURL
-
-					// It's possible to update the ACS url which will be reflected in the metadataXML, we need to guarantee it is set to only what we expect if it is present
-					if acsUrl, err := auth.GetAssertionConsumerServiceURL(metadata, saml.HTTPPostBinding); err == nil {
-						if !strings.Contains(acsUrl, model.SAMLRootURIVersionMap[ssoProvider.SAMLProvider.RootURIVersion]) {
-							var validUri bool
-							for rootUriVersion, path := range model.SAMLRootURIVersionMap {
-								if strings.Contains(acsUrl, path) {
-									ssoProvider.SAMLProvider.RootURIVersion = rootUriVersion
-									validUri = true
-									break
-								}
-							}
-							if !validUri {
-								api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "metadata does not have a valid ACS location", request), response)
-								return
-							}
-						}
+		// It's possible to update the ACS url which will be reflected in the metadataXML, we need to guarantee it is set to only what we expect if it is present
+		if acsUrl, err := auth.GetAssertionConsumerServiceURL(metadata, saml.HTTPPostBinding); err == nil {
+			if !strings.Contains(acsUrl, model.SAMLRootURIVersionMap[ssoProvider.SAMLProvider.RootURIVersion]) {
+				var validUri bool
+				for rootUriVersion, path := range model.SAMLRootURIVersionMap {
+					if strings.Contains(acsUrl, path) {
+						ssoProvider.SAMLProvider.RootURIVersion = rootUriVersion
+						validUri = true
+						break
 					}
+				}
+				if !validUri {
+					return ssoProvider, fmt.Errorf("metadata does not have a valid ACS location")
 				}
 			}
 		}
-
-		if newSAMLProvider, err := s.db.UpdateSAMLIdentityProvider(request.Context(), ssoProvider); err != nil {
-			api.HandleDatabaseError(request, response, err)
-		} else {
-			api.WriteBasicResponse(request.Context(), newSAMLProvider, http.StatusOK, response)
-		}
 	}
+
+	// Need to ensure that if no config is specified, we don't accidentally wipe the existing configuration
+	if config != nil {
+		ssoProvider.Config = *config
+	}
+
+	return ssoProvider, nil
 }
 
 // Preserve old metadata endpoint for saml providers
@@ -302,9 +378,13 @@ func (s ManagementResource) ServeSigningCertificate(response http.ResponseWriter
 // HandleStartAuthFlow is called to start the SAML authentication process.
 func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	if ssoProvider.SAMLProvider == nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+		// SAML misconfiguration scenario
+		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		log.Errorf("[SAML] Service provider creation failed: %v", err)
+		// Technical issues scenario
+		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else {
 		var (
 			binding         = saml.HTTPRedirectBinding
@@ -318,13 +398,16 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 		// TODO: add actual relay state support - BED-5071
 		if authReq, err := serviceProvider.MakeAuthenticationRequest(bindingLocation, binding, saml.HTTPPostBinding); err != nil {
 			log.Errorf("[SAML] Failed creating SAML authentication request: %v", err)
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+			// SAML misconfiguration or technical issue
+			// Since this likely indicates a configuration problem, we treat it as a misconfiguration scenario
+			v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 		} else {
 			switch binding {
 			case saml.HTTPRedirectBinding:
 				if redirectURL, err := authReq.Redirect("", &serviceProvider); err != nil {
 					log.Errorf("[SAML] Failed to format a redirect for SAML provider %s: %v", serviceProvider.EntityID, err)
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+					// Likely a technical or configuration issue
+					v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 				} else {
 					response.Header().Add(headers.Location.String(), redirectURL.String())
 					response.WriteHeader(http.StatusFound)
@@ -337,11 +420,14 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 
 				if _, err := response.Write([]byte(fmt.Sprintf(authInitiationContentBodyFormat, authReq.Post("")))); err != nil {
 					log.Errorf("[SAML] Failed to write response with HTTP POST binding: %v", err)
+					// Technical issues scenario
+					v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 				}
 
 			default:
 				log.Errorf("[SAML] Unhandled binding type %s", binding)
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+				// Treating unknown binding as a misconfiguration
+				v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 			}
 		}
 	}
@@ -350,29 +436,72 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 // HandleStartAuthFlow is called to start the SAML authentication process.
 func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	if ssoProvider.SAMLProvider == nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+		// SAML misconfiguration
+		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		log.Errorf("[SAML] Service provider creation failed: %v", err)
+		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+	} else if err := request.ParseForm(); err != nil {
+		log.Errorf("[SAML] Failed to parse form POST: %v", err)
+		// Technical issues or invalid form data
+		// This is not covered by acceptance criteria directly; treat as technical issue
+		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+	} else if assertion, err := serviceProvider.ParseResponse(request, nil); err != nil {
+		var typedErr *saml.InvalidResponseError
+		switch {
+		case errors.As(err, &typedErr):
+			log.Errorf("[SAML] Failed to parse ACS response for provider %s: %v - %s", ssoProvider.SAMLProvider.IssuerURI, typedErr.PrivateErr, typedErr.Response)
+		default:
+			log.Errorf("[SAML] Failed to parse ACS response for provider %s: %v", ssoProvider.SAMLProvider.IssuerURI, err)
+		}
+		// SAML credentials issue scenario (authentication failed)
+		v2.RedirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
+	} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
+		log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", ssoProvider.Name, err)
+		// SAML credentials issue scenario again
+		v2.RedirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 	} else {
-		if err := request.ParseForm(); err != nil {
-			log.Errorf("[SAML] Failed to parse form POST: %v", err)
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "form POST is malformed", request), response)
-		} else {
-			if assertion, err := serviceProvider.ParseResponse(request, nil); err != nil {
-				var typedErr *saml.InvalidResponseError
-				switch {
-				case errors.As(err, &typedErr):
-					log.Errorf("[SAML] Failed to parse ACS response for provider %s: %v - %s", ssoProvider.SAMLProvider.IssuerURI, typedErr.PrivateErr, typedErr.Response)
-				default:
-					log.Errorf("[SAML] Failed to parse ACS response for provider %s: %v", ssoProvider.SAMLProvider.IssuerURI, err)
-				}
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
-			} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
-				log.Errorf("[SAML] Failed to lookup user for SAML provider %s: %v", ssoProvider.Name, err)
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "session assertion does not meet the requirements for user lookup", request), response)
-			} else {
-				s.authenticator.CreateSSOSession(request, response, principalName, ssoProvider)
+		if ssoProvider.Config.AutoProvision.Enabled {
+			if err := jitSAMLUserCreation(request.Context(), ssoProvider, principalName, assertion, s.db); err != nil {
+				// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
+				log.Errorf("[SAML] Error during JIT User Creation: %v", err)
 			}
 		}
+
+		s.authenticator.CreateSSOSession(request, response, principalName, ssoProvider)
 	}
+}
+
+func jitSAMLUserCreation(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserCreator) error {
+	if roles, err := SanitizeAndGetRoles(ctx, ssoProvider.Config.AutoProvision, ssoProvider.SAMLProvider.GetSAMLUserRolesFromAssertion(assertion), u); err != nil {
+		return fmt.Errorf("sanitize roles: %v", err)
+	} else if len(roles) != 1 {
+		return fmt.Errorf("invalid roles detected")
+	} else if _, err := u.LookupUser(ctx, principalName); err != nil && !errors.Is(err, database.ErrNotFound) {
+		return fmt.Errorf("lookup user: %v", err)
+	} else if errors.Is(err, database.ErrNotFound) {
+		user := model.User{
+			EmailAddress:  null.StringFrom(principalName),
+			PrincipalName: principalName,
+			Roles:         roles,
+			SSOProviderID: null.Int32From(ssoProvider.ID),
+			EULAAccepted:  true, // EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users
+			FirstName:     null.StringFrom(principalName),
+			LastName:      null.StringFrom("Last name not found"),
+		}
+
+		if givenName, err := ssoProvider.SAMLProvider.GetSAMLUserGivenNameFromAssertion(assertion); err == nil {
+			user.FirstName = null.StringFrom(givenName)
+		}
+
+		if surname, err := ssoProvider.SAMLProvider.GetSAMLUserSurnameFromAssertion(assertion); err == nil {
+			user.LastName = null.StringFrom(surname)
+		}
+
+		if _, err := u.CreateUser(ctx, user); err != nil {
+			return fmt.Errorf("create user: %v", err)
+		}
+	}
+
+	return nil
 }

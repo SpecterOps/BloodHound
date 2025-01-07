@@ -16,12 +16,12 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, DialogContent, DialogActions, Grid, TextField } from '@mui/material';
-import { FC } from 'react';
+import { useEffect, FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { OIDCProviderInfo, SSOProvider, UpsertOIDCProviderRequest } from 'js-client-library';
 
 const UpsertOIDCProviderForm: FC<{
-    error?: string;
+    error?: any;
     oldSSOProvider?: SSOProvider;
     onClose: () => void;
     onSubmit: (data: UpsertOIDCProviderRequest) => void;
@@ -37,7 +37,28 @@ const UpsertOIDCProviderForm: FC<{
         handleSubmit,
         reset,
         formState: { errors },
+        setError,
     } = useForm<UpsertOIDCProviderRequest>({ defaultValues });
+
+    useEffect(() => {
+        if (error) {
+            if (error?.response?.status === 409) {
+                if (error.response?.data?.errors[0]?.message.toLowerCase().includes('sso provider name')) {
+                    setError('name', { type: 'custom', message: 'SSO Provider Name is already in use.' });
+                } else {
+                    setError('root.generic', {
+                        type: 'custom',
+                        message: 'A conflict has occured.',
+                    });
+                }
+            } else {
+                setError('root.generic', {
+                    type: 'custom',
+                    message: `Unable to ${oldSSOProvider ? 'update' : 'create new'} OIDC Provider configuration. Please try again.`,
+                });
+            }
+        }
+    }, [error, setError, oldSSOProvider]);
 
     const handleClose = () => {
         onClose();
@@ -113,9 +134,9 @@ const UpsertOIDCProviderForm: FC<{
                             )}
                         />
                     </Grid>
-                    {error && (
+                    {!!errors.root?.generic && (
                         <Grid item xs={12}>
-                            <Alert severity='error'>{error}</Alert>
+                            <Alert severity='error'>{errors.root.generic.message}</Alert>
                         </Grid>
                     )}
                 </Grid>

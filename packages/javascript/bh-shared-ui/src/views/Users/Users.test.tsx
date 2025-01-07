@@ -19,7 +19,7 @@ import { setupServer } from 'msw/node';
 import { render, screen, within } from '../../test-utils';
 import Users from '.';
 import userEvent from '@testing-library/user-event';
-import { ListSSOProvidersResponse, SSOProvider } from 'js-client-library';
+import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 
 const testAuthenticatedUser = {
     sso_provider_id: null,
@@ -98,24 +98,13 @@ const testSSOProviders: SSOProvider[] = [
         name: 'saml-provider',
         slug: 'saml-provider',
         type: 'SAML',
-        details: {
-            name: 'saml-provider',
-            display_name: 'saml-provider',
-            idp_issuer_uri: 'urn:saml-provider.com',
-            idp_sso_uri: 'https://saml-provider.com/saml',
-            principal_attribute_mappings: null,
-            sp_issuer_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider',
-            sp_sso_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/sso',
-            sp_metadata_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/metadata',
-            sp_acs_uri: 'https://test.bloodhoundenterprise.io/api/v1/login/saml/saml-provider/acs',
-            sso_provider_id: 1,
-            id: 1,
-            created_at: '2024-01-01T12:00:00Z',
-            updated_at: '2024-01-01T12:00:00Z',
-        },
+        login_uri: '',
+        callback_uri: '',
         id: 1,
         created_at: '2024-01-01T12:00:00Z',
         updated_at: '2024-01-01T12:00:00Z',
+        details: {} as SAMLProviderInfo,
+        config: {} as SSOProviderConfiguration['config'],
     },
 ];
 
