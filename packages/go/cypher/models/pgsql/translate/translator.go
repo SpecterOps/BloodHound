@@ -108,26 +108,12 @@ func (s *Translator) pushState(state State) {
 	s.state = append(s.state, state)
 }
 
-func (s *Translator) popState() {
-	s.state = s.state[:len(s.state)-1]
-}
-
 func (s *Translator) exitState(expectedState State) {
 	if currentState := s.currentState(); currentState != expectedState {
 		s.SetErrorf("expected state %s but found %s", expectedState, currentState)
 	} else {
 		s.state = s.state[:len(s.state)-1]
 	}
-}
-
-func (s *Translator) inState(expectedState State) bool {
-	for _, state := range s.state {
-		if state == expectedState {
-			return true
-		}
-	}
-
-	return false
 }
 
 func (s *Translator) Enter(expression cypher.SyntaxNode) {
