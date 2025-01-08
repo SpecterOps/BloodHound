@@ -71,6 +71,13 @@ func OperatorIsPropertyLookup(operator Expression) bool {
 	)
 }
 
+func OperatorIsComparator(operator Expression) bool {
+	return OperatorIsIn(operator,
+		OperatorEquals, OperatorNotEquals, OperatorGreaterThan, OperatorGreaterThanOrEqualTo, OperatorLessThan,
+		OperatorLessThanOrEqualTo, OperatorArrayOverlap, OperatorLike, OperatorILike, OperatorPGArrayOverlap,
+		OperatorRegexMatch, OperatorSimilarTo)
+}
+
 const (
 	UnsetOperator                Operator = ""
 	OperatorUnion                Operator = "union"
@@ -107,6 +114,7 @@ const (
 	OperatorCypherStartsWith Operator = "starts with"
 	OperatorCypherContains   Operator = "contains"
 	OperatorCypherEndsWith   Operator = "ends with"
+	OperatorCypherAdd        Operator = "+"
 
 	OperatorPropertyLookup Operator = "property_lookup"
 	OperatorKindAssignment Operator = "kind_assignment"
