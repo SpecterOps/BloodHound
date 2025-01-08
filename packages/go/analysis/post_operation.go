@@ -48,7 +48,7 @@ func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operat
 
 		for nextJob := range inC {
 			if nextJob.RelProperties != nil && len(nextJob.RelProperties) > 0 {
-				tempRelProp := relProp
+				tempRelProp := relProp.Clone()
 				for key, val := range nextJob.RelProperties {
 					tempRelProp.Set(key, val)
 				}
