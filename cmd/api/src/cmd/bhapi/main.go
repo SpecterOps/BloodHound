@@ -60,7 +60,7 @@ func main() {
 		printVersion()
 	}
 
-	logger := slog.New(&handlers.ContextHandler{IdResolver: auth.NewIdentityResolver(), Handler: slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{ReplaceAttr: handlers.ReplaceAttr})})
+	logger := slog.New(&handlers.ContextHandler{IDResolver: auth.NewIdentityResolver(), Handler: slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{ReplaceAttr: handlers.ReplaceAttr})})
 	slog.SetDefault(logger)
 
 	// Initialize basic logging facilities while we start up

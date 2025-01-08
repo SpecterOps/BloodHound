@@ -9,7 +9,7 @@ import (
 )
 
 type ContextHandler struct {
-	IdResolver auth.IdentityResolver
+	IDResolver auth.IdentityResolver
 
 	slog.Handler
 }
@@ -29,7 +29,7 @@ func (h ContextHandler) Handle(c context.Context, r slog.Record) error {
 		}
 
 		if bhCtx.AuthCtx.Authenticated() {
-			if identity, err := h.IdResolver.GetIdentity(bhCtx.AuthCtx); err == nil {
+			if identity, err := h.IDResolver.GetIdentity(bhCtx.AuthCtx); err == nil {
 				r.Add(slog.String(identity.Key, identity.ID.String()))
 			}
 		}
