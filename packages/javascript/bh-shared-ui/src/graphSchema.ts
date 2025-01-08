@@ -139,6 +139,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC10b = 'ADCSESC10b',
     ADCSESC13 = 'ADCSESC13',
     SyncedToEntraUser = 'SyncedToEntraUser',
+    CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -278,6 +279,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC13';
         case ActiveDirectoryRelationshipKind.SyncedToEntraUser:
             return 'SyncedToEntraUser';
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB:
+            return 'CoerceAndRelayNTLMToSMB';
         default:
             return undefined;
     }
@@ -295,6 +298,7 @@ export const EdgeCompositionRelationships = [
     'ADCSESC10a',
     'ADCSESC10b',
     'ADCSESC13',
+    'CoerceAndRelayNTLMToSMB',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -398,6 +402,8 @@ export enum ActiveDirectoryKindProperties {
     MaxPwdAge = 'maxpwdage',
     LockoutDuration = 'lockoutduration',
     LockoutObservationWindow = 'lockoutobservationwindow',
+    SMBSigning = 'smbsigning',
+    RestrictOutboundNTLM = 'restrictoutboundntlm',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -603,6 +609,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Lockout Duration';
         case ActiveDirectoryKindProperties.LockoutObservationWindow:
             return 'Lockout Observation Window';
+        case ActiveDirectoryKindProperties.SMBSigning:
+            return 'SMB Signing';
+        case ActiveDirectoryKindProperties.RestrictOutboundNTLM:
+            return 'Restrict Outbound NTLM';
         default:
             return undefined;
     }
@@ -655,6 +665,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC13,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SyncedToEntraUser,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
     ];
 }
 export enum AzureNodeKind {

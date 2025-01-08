@@ -34,7 +34,7 @@ import (
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/api/v2"
+	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
