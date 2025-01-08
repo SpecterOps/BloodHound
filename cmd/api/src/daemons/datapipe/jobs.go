@@ -221,7 +221,7 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 				if err := file.Close(); err != nil {
 					log.Errorf(fmt.Sprintf("Error closing ingest file %s: %v", filePath, err))
 				} else if err := os.Remove(filePath); errors.Is(err, fs.ErrNotExist) {
-					log.Warnf(fmt.Sprintf("Removing ingest file %s: %w", filePath, err))
+					log.Warnf(fmt.Sprintf("Removing ingest file %s: %v", filePath, err))
 				} else if err != nil {
 					log.Errorf(fmt.Sprintf("Error removing ingest file %s: %v", filePath, err))
 				}

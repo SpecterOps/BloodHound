@@ -136,7 +136,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 			// assign a deadline, but only if a valid timeout has been supplied via the prefer header
 			timeout, err := RequestWaitDuration(request)
 			if err != nil {
-				log.Errorf(fmt.Sprintf("Error parsing prefer header for timeout: %w", err))
+				log.Errorf(fmt.Sprintf("Error parsing prefer header for timeout: %v", err))
 			} else if err == nil && timeout > 0 {
 				deadline = time.Now().Add(timeout * time.Second)
 			}
