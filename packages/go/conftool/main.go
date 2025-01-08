@@ -19,6 +19,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -38,22 +39,22 @@ func main() {
 	flag.Parse()
 
 	if configfile, err := os.Create(path); err != nil {
-		log.Fatalf("Could not create config file %s: %v", path, err)
+		log.Fatalf(fmt.Sprintf("Could not create config file %s: %v", path, err))
 	} else {
 		defer configfile.Close()
 
 		if !skipArgon2 {
-			log.Printf("Tuning Argon2 parameters to target %d milliseconds. This might take some time.", tuneMillis)
+			log.Printf(fmt.Sprintf("Tuning Argon2 parameters to target %d milliseconds. This might take some time.", tuneMillis))
 		}
 
 		if argon2Config, err := config.GenerateArgonSettings(time.Duration(tuneMillis), skipArgon2); err != nil {
-			log.Fatalf("Could not generate argon2 settings: %v", err)
+			log.Fatalf(fmt.Sprintf("Could not generate argon2 settings: %v", err))
 		} else if bytes, err := json.Marshal(argon2Config); err != nil {
-			log.Fatalf("Coule not marshal argon2 settings: %v", err)
+			log.Fatalf(fmt.Sprintf("Coule not marshal argon2 settings: %v", err))
 		} else if _, err := configfile.Write(bytes); err != nil {
-			log.Fatalf("Could not write to config file %s: %v", path, err)
+			log.Fatalf(fmt.Sprintf("Could not write to config file %s: %v", path, err))
 		} else {
-			log.Printf("Successfully wrote to config file to %s", path)
+			log.Printf(fmt.Sprintf("Successfully wrote to config file to %s", path))
 		}
 	}
 }

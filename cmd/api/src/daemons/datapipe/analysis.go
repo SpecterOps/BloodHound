@@ -103,7 +103,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 
 	if len(collectedErrors) > 0 {
 		for _, err := range collectedErrors {
-			log.Errorf("Analysis error encountered: %v", err)
+			log.Errorf(fmt.Sprintf("Analysis error encountered: %v", err))
 		}
 	}
 

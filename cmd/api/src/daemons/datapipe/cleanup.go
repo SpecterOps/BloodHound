@@ -20,6 +20,7 @@ package datapipe
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -79,11 +80,11 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 	// Release the lock once finished
 	defer s.lock.Unlock()
 
-	log.Infof("Running OrphanFileSweeper for path %s", s.tempDirectoryRootPath)
-	log.Debugf("OrphanFileSweeper expected names %v", expectedFileNames)
+	log.Infof(fmt.Sprintf("Running OrphanFileSweeper for path %s", s.tempDirectoryRootPath))
+	log.Debugf(fmt.Sprintf("OrphanFileSweeper expected names %v", expectedFileNames))
 
 	if dirEntries, err := s.fileOps.ReadDir(s.tempDirectoryRootPath); err != nil {
-		log.Errorf("Failed reading work directory %s: %v", s.tempDirectoryRootPath, err)
+		log.Errorf(fmt.Sprintf("Failed reading work directory %s: %v", s.tempDirectoryRootPath, err))
 	} else {
 		numDeleted := 0
 
@@ -93,13 +94,13 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 			if expectedDir != "" {
 				expectedDir = strings.TrimSuffix(expectedDir, string(filepath.Separator))
 				if expectedDir != s.tempDirectoryRootPath {
-					log.Warnf("directory '%s' for expectedFileName '%s' does not match tempDirectoryRootPath '%s': skipping", expectedDir, expectedFileName, s.tempDirectoryRootPath)
+					log.Warnf(fmt.Sprintf("directory '%s' for expectedFileName '%s' does not match tempDirectoryRootPath '%s': skipping", expectedDir, expectedFileName, s.tempDirectoryRootPath))
 					continue
 				}
 			}
 			for idx, dirEntry := range dirEntries {
 				if expectedFN == dirEntry.Name() {
-					log.Debugf("skipping expected file %s", expectedFN)
+					log.Debugf(fmt.Sprintf("skipping expected file %s", expectedFN))
 					dirEntries = append(dirEntries[:idx], dirEntries[idx+1:]...)
 				}
 			}
@@ -111,18 +112,18 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 				break
 			}
 
-			log.Infof("Removing orphaned file %s", orphanedDirEntry.Name())
+			log.Infof(fmt.Sprintf("Removing orphaned file %s", orphanedDirEntry.Name()))
 			fullPath := filepath.Join(s.tempDirectoryRootPath, orphanedDirEntry.Name())
 
 			if err := s.fileOps.RemoveAll(fullPath); err != nil {
-				log.Errorf("Failed removing orphaned file %s: %v", fullPath, err)
+				log.Errorf(fmt.Sprintf("Failed removing orphaned file %s: %v", fullPath, err))
 			}
 
 			numDeleted += 1
 		}
 
 		if numDeleted > 0 {
-			log.Infof("Finished removing %d orphaned ingest files", numDeleted)
+			log.Infof(fmt.Sprintf("Finished removing %d orphaned ingest files", numDeleted))
 		}
 	}
 }

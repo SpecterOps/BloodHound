@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -1513,7 +1514,7 @@ func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (f
 func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
 	defer log.Measure(log.LevelInfo, "FetchAllGroupMembers")()
 
-	log.Infof("Fetching group members for %d AD nodes", len(targets))
+	log.Infof(fmt.Sprintf("Fetching group members for %d AD nodes", len(targets)))
 
 	allGroupMembers := graph.NewNodeSet()
 
@@ -1527,7 +1528,7 @@ func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.
 		}
 	}
 
-	log.Infof("Collected %d group members", len(allGroupMembers))
+	log.Infof(fmt.Sprintf("Collected %d group members", len(allGroupMembers)))
 	return allGroupMembers, nil
 }
 

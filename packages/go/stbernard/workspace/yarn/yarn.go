@@ -164,7 +164,7 @@ func relWorkspaceToAbsWorkspace(cwd string, relWorkspace Workspace) Workspace {
 func getCoverage(coverFile string) (coverage, error) {
 	var cov coverage
 	if b, err := os.ReadFile(coverFile); err != nil {
-		log.Warnf("Could not find coverage for %s, skipping", coverFile)
+		log.Warnf(fmt.Sprintf("Could not find coverage for %s, skipping", coverFile))
 		return cov, nil
 	} else if err := json.Unmarshal(b, &cov); err != nil {
 		return cov, fmt.Errorf("unmarshal coverage file %s: %w", coverFile, err)

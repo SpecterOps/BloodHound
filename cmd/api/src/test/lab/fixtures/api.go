@@ -88,7 +88,7 @@ func NewCustomApiFixture(cfgFixture *lab.Fixture[config.Configuration]) *lab.Fix
 	})
 
 	if err := lab.SetDependency(fixture, cfgFixture); err != nil {
-		log.Fatalf("BHApiFixture dependency error: %v", err)
+		log.Fatalf(fmt.Sprintf("BHApiFixture dependency error: %v", err))
 	}
 
 	return fixture

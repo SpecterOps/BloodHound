@@ -17,6 +17,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -73,31 +74,31 @@ func main() {
 	cfgBuilder := generator.NewConfigBuilder("/schemas")
 
 	if projectRoot, err := generator.FindGolangWorkspaceRoot(); err != nil {
-		log.Fatalf("Error finding project root: %v", err)
+		log.Fatalf(fmt.Sprintf("Error finding project root: %v", err))
 	} else {
-		log.Infof("Project root is %s", projectRoot)
+		log.Infof(fmt.Sprintf("Project root is %s", projectRoot))
 
 		if err := cfgBuilder.OverlayPath(filepath.Join(projectRoot, "packages/cue")); err != nil {
-			log.Fatalf("Error: %v", err)
+			log.Fatalf(fmt.Sprintf("Error: %v", err))
 		}
 
 		cfg := cfgBuilder.Build()
 
 		if bhInstance, err := cfg.Value("/schemas/bh/bh.cue"); err != nil {
-			log.Fatalf("Error: %v", errors.Details(err, nil))
+			log.Fatalf(fmt.Sprintf("Error: %v", errors.Details(err, nil)))
 		} else {
 			var bhModels Schema
 
 			if err := bhInstance.Decode(&bhModels); err != nil {
-				log.Fatalf("Error: %v", errors.Details(err, nil))
+				log.Fatalf(fmt.Sprintf("Error: %v", errors.Details(err, nil)))
 			}
 
 			if err := GenerateGolang(projectRoot, bhModels); err != nil {
-				log.Fatalf("Error %v", err)
+				log.Fatalf(fmt.Sprintf("Error %v", err))
 			}
 
 			if err := GenerateSharedTypeScript(projectRoot, bhModels); err != nil {
-				log.Fatalf("Error %v", err)
+				log.Fatalf(fmt.Sprintf("Error %v", err))
 			}
 		}
 	}

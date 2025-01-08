@@ -138,7 +138,7 @@ func Version_513_Migration(db graph.Database) error {
 			}
 		}
 
-		log.Infof("Migration removed all non-entity kinds from %d incorrectly labeled nodes", nodes.Len())
+		log.Infof(fmt.Sprintf("Migration removed all non-entity kinds from %d incorrectly labeled nodes", nodes.Len()))
 		return nil
 	}); err != nil {
 		return err
@@ -193,7 +193,7 @@ func Version_277_Migration(db graph.Database) error {
 				var dirty = false
 
 				if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-					log.Errorf("Error getting objectid for node %d: %v", node.ID, err)
+					log.Errorf(fmt.Sprintf("Error getting objectid for node %d: %v", node.ID, err))
 					continue
 				} else if objectId != strings.ToUpper(objectId) {
 					dirty = true
@@ -224,7 +224,7 @@ func Version_277_Migration(db graph.Database) error {
 					} else if node.Kinds.ContainsOneOf(azure.Entity) {
 						identityKind = azure.Entity
 					} else {
-						log.Errorf("Unable to figure out base kind of node %d", node.ID)
+						log.Errorf(fmt.Sprintf("Unable to figure out base kind of node %d", node.ID))
 					}
 
 					if identityKind != nil {
@@ -233,17 +233,17 @@ func Version_277_Migration(db graph.Database) error {
 							IdentityKind:       identityKind,
 							IdentityProperties: []string{common.ObjectID.String()},
 						}); err != nil {
-							log.Errorf("Error updating node %d: %v", node.ID, err)
+							log.Errorf(fmt.Sprintf("Error updating node %d: %v", node.ID, err))
 						}
 					}
 				}
 
 				if count++; count%10000 == 0 {
-					log.Infof("Completed %d nodes in migration", count)
+					log.Infof(fmt.Sprintf("Completed %d nodes in migration", count))
 				}
 			}
 
-			log.Infof("Completed %d nodes in migration", count)
+			log.Infof(fmt.Sprintf("Completed %d nodes in migration", count))
 			return cursor.Error()
 		}); err != nil {
 			return err

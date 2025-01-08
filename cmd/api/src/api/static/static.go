@@ -17,6 +17,7 @@
 package static
 
 import (
+	"fmt"
 	"io"
 	"io/fs"
 	"mime"
@@ -89,7 +90,7 @@ func serve(cfg AssetConfig, response http.ResponseWriter, request *http.Request)
 		response.Header().Set(headers.StrictTransportSecurity.String(), utils.HSTSSetting)
 
 		if _, err := io.Copy(response, fin); err != nil {
-			log.Errorf("Failed flushing static file content for asset %s to client: %v", assetPath, err)
+			log.Errorf(fmt.Sprintf("Failed flushing static file content for asset %s to client: %v", assetPath, err))
 		}
 	}
 }

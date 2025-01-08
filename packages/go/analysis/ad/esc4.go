@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -38,24 +39,24 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	publishedTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID)
 	domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String()
 	if err != nil {
-		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
+		log.Warnf(fmt.Sprintf("Error getting domain SID for domain %d: %v", domain.ID, err))
 		return nil
 	}
 
 	// 2. iterate certtemplates that have an outbound `PublishedTo` edge to eca
 	for _, certTemplate := range publishedTemplates {
 		if principalsWithGenericWrite, err := FetchPrincipalsWithGenericWriteOnCertTemplate(tx, certTemplate); err != nil {
-			log.Warnf("Error fetching principals with %s on cert template: %v", ad.GenericWrite, err)
+			log.Warnf(fmt.Sprintf("Error fetching principals with %s on cert template: %v", ad.GenericWrite, err))
 		} else if principalsWithEnrollOrAllExtendedRights, err := FetchPrincipalsWithEnrollOrAllExtendedRightsOnCertTemplate(tx, certTemplate); err != nil {
-			log.Warnf("Error fetching principals with %s or %s on cert template: %v", ad.Enroll, ad.AllExtendedRights, err)
+			log.Warnf(fmt.Sprintf("Error fetching principals with %s or %s on cert template: %v", ad.Enroll, ad.AllExtendedRights, err))
 		} else if principalsWithPKINameFlag, err := FetchPrincipalsWithWritePKINameFlagOnCertTemplate(tx, certTemplate); err != nil {
-			log.Warnf("Error fetching principals with %s on cert template: %v", ad.WritePKINameFlag, err)
+			log.Warnf(fmt.Sprintf("Error fetching principals with %s on cert template: %v", ad.WritePKINameFlag, err))
 		} else if principalsWithPKIEnrollmentFlag, err := FetchPrincipalsWithWritePKIEnrollmentFlagOnCertTemplate(tx, certTemplate); err != nil {
-			log.Warnf("Error fetching principals with %s on cert template: %v", ad.WritePKIEnrollmentFlag, err)
+			log.Warnf(fmt.Sprintf("Error fetching principals with %s on cert template: %v", ad.WritePKIEnrollmentFlag, err))
 		} else if enrolleeSuppliesSubject, err := certTemplate.Properties.Get(string(ad.EnrolleeSuppliesSubject)).Bool(); err != nil {
-			log.Warnf("Error fetching %s property on cert template: %v", ad.EnrolleeSuppliesSubject, err)
+			log.Warnf(fmt.Sprintf("Error fetching %s property on cert template: %v", ad.EnrolleeSuppliesSubject, err))
 		} else if requiresManagerApproval, err := certTemplate.Properties.Get(string(ad.RequiresManagerApproval)).Bool(); err != nil {
-			log.Warnf("Error fetching %s property on cert template: %v", ad.RequiresManagerApproval, err)
+			log.Warnf(fmt.Sprintf("Error fetching %s property on cert template: %v", ad.RequiresManagerApproval, err))
 		} else {
 
 			var (
@@ -85,7 +86,7 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 
 			// 2c. kick out early if cert template does meet conditions for ESC4
 			if valid, err := isCertTemplateValidForESC4(certTemplate); err != nil {
-				log.Warnf("Error validating cert template %d: %v", certTemplate.ID, err)
+				log.Warnf(fmt.Sprintf("Error validating cert template %d: %v", certTemplate.ID, err))
 				continue
 			} else if !valid {
 				continue
@@ -621,7 +622,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 	// Add startnode, Auth. Users, and Everyone to start nodes
 	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		log.Warnf("Error getting domain SID for domain %d: %v", endNode.ID, err)
+		log.Warnf(fmt.Sprintf("Error getting domain SID for domain %d: %v", endNode.ID, err))
 		return nil, err
 	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {

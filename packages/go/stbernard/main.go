@@ -20,6 +20,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command"
@@ -37,21 +38,21 @@ func main() {
 	}
 
 	if lvl, err := log.ParseLevel(rawLvl); err != nil {
-		log.Errorf("Could not parse log level from %s: %v", environment.LogLevelVarName, err)
+		log.Errorf(fmt.Sprintf("Could not parse log level from %s: %v", environment.LogLevelVarName, err))
 	} else {
 		log.SetGlobalLevel(lvl)
 	}
 
 	if cmd, err := command.ParseCLI(env); errors.Is(err, command.ErrNoCmd) {
-		log.Fatalf("No valid command specified")
+		log.Fatalf(fmt.Sprintf("No valid command specified"))
 	} else if errors.Is(err, command.ErrHelpRequested) {
 		// No need to exit 1 if help was requested
 		return
 	} else if err != nil {
-		log.Fatalf("Error while parsing command: %v", err)
+		log.Fatalf(fmt.Sprintf("Error while parsing command: %v", err))
 	} else if err := cmd.Run(); err != nil {
-		log.Fatalf("Failed to run command `%s`: %v", cmd.Name(), err)
+		log.Fatalf(fmt.Sprintf("Failed to run command `%s`: %v", cmd.Name(), err))
 	} else {
-		log.Infof("Command `%s` completed successfully", cmd.Name())
+		log.Infof(fmt.Sprintf("Command `%s` completed successfully", cmd.Name()))
 	}
 }

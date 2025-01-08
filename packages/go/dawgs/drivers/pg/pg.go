@@ -59,7 +59,7 @@ func afterPooledConnectionRelease(conn *pgx.Conn) bool {
 		if _, hasType := conn.TypeMap().TypeForName(dataType.String()); !hasType {
 			// This connection should be destroyed since it does not contain information regarding the schema's
 			// composite types
-			log.Warnf("Unable to find expected data type: %s. This database connection will not be pooled.", dataType)
+			log.Warnf(fmt.Sprintf("Unable to find expected data type: %s. This database connection will not be pooled.", dataType))
 			return false
 		}
 	}

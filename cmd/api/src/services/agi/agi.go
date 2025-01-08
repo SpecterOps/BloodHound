@@ -19,6 +19,7 @@ package agi
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"strings"
 
@@ -91,7 +92,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB 
 					idx := 0
 					for _, node := range assetGroupNodes {
 						if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-							log.Errorf("Node %d that does not have valid %s property", node.ID, common.ObjectID)
+							log.Errorf(fmt.Sprintf("Node %d that does not have valid %s property", node.ID, common.ObjectID))
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,

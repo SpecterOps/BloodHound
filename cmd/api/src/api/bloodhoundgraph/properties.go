@@ -17,6 +17,7 @@
 package bloodhoundgraph
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -32,7 +33,7 @@ import (
 
 func getNodeLevel(target *graph.Node) (int, bool) {
 	if startSystemTags, err := target.Properties.Get(common.SystemTags.String()).String(); err == nil {
-		log.Debugf("Unable to find a %s property for node %d with kinds %v", common.SystemTags.String(), target.ID, target.Kinds)
+		log.Debugf(fmt.Sprintf("Unable to find a %s property for node %d with kinds %v", common.SystemTags.String(), target.ID, target.Kinds))
 	} else if strings.Contains(startSystemTags, ad.AdminTierZero) {
 		return 0, true
 	}

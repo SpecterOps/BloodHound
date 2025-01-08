@@ -18,6 +18,7 @@ package analysis
 
 import (
 	"context"
+	"fmt"
 	"sort"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -92,19 +93,19 @@ func (s PostProcessingStats) LogStats() {
 		return
 	}
 
-	log.Debugf("Relationships deleted before post-processing:")
+	log.Debugf(fmt.Sprintf("Relationships deleted before post-processing:"))
 
 	for _, relationship := range statsSortedKeys(s.RelationshipsDeleted) {
 		if numDeleted := s.RelationshipsDeleted[relationship]; numDeleted > 0 {
-			log.Debugf("    %s %d", relationship.String(), numDeleted)
+			log.Debugf(fmt.Sprintf("    %s %d", relationship.String(), numDeleted))
 		}
 	}
 
-	log.Debugf("Relationships created after post-processing:")
+	log.Debugf(fmt.Sprintf("Relationships created after post-processing:"))
 
 	for _, relationship := range statsSortedKeys(s.RelationshipsCreated) {
 		if numDeleted := s.RelationshipsCreated[relationship]; numDeleted > 0 {
-			log.Debugf("    %s %d", relationship.String(), s.RelationshipsCreated[relationship])
+			log.Debugf(fmt.Sprintf("    %s %d", relationship.String(), s.RelationshipsCreated[relationship]))
 		}
 	}
 }

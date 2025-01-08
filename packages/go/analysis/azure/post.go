@@ -240,7 +240,7 @@ func AppRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atomi
 				return nil
 			}); err != nil {
 				if err := operation.Done(); err != nil {
-					log.Errorf("Error caught during azure AppRoleAssignments teardown: %v", err)
+					log.Errorf(fmt.Sprintf("Error caught during azure AppRoleAssignments teardown: %v", err))
 				}
 
 				return &operation.Stats, err
@@ -660,7 +660,7 @@ func addSecret(operation analysis.StatTrackedOperation[analysis.CreatePostRelati
 		} else {
 			for _, role := range addSecretRoles {
 				for _, target := range tenantAppsAndSPs {
-					log.Debugf("Adding AZAddSecret edge from role %s to %s %d", role.ID.String(), target.Kinds.Strings(), target.ID)
+					log.Debugf(fmt.Sprintf("Adding AZAddSecret edge from role %s to %s %d", role.ID.String(), target.Kinds.Strings(), target.ID))
 					nextJob := analysis.CreatePostRelationshipJob{
 						FromID: role.ID,
 						ToID:   target.ID,
@@ -723,7 +723,7 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPos
 			return nil
 		}); err != nil {
 			if err := operation.Done(); err != nil {
-				log.Errorf("Error caught during azure ExecuteCommand teardown: %v", err)
+				log.Errorf(fmt.Sprintf("Error caught during azure ExecuteCommand teardown: %v", err))
 			}
 
 			return &operation.Stats, err
@@ -804,7 +804,7 @@ func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation
 
 		return nil
 	}); err != nil {
-		log.Errorf("Failed to submit azure global admins post processing job: %v", err)
+		log.Errorf(fmt.Sprintf("Failed to submit azure global admins post processing job: %v", err))
 	}
 }
 
@@ -822,7 +822,7 @@ func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 
 		return nil
 	}); err != nil {
-		log.Errorf("Failed to submit privileged role admins post processing job: %v", err)
+		log.Errorf(fmt.Sprintf("Failed to submit privileged role admins post processing job: %v", err))
 	}
 }
 
@@ -840,7 +840,7 @@ func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 
 		return nil
 	}); err != nil {
-		log.Errorf("Failed to submit azure privileged auth admins post processing job: %v", err)
+		log.Errorf(fmt.Sprintf("Failed to submit azure privileged auth admins post processing job: %v", err))
 	}
 }
 
@@ -864,13 +864,13 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 
 			return nil
 		}); err != nil {
-			log.Errorf("Failed to submit azure add members AddMemberAllGroupsTargetRoles post processing job: %v", err)
+			log.Errorf(fmt.Sprintf("Failed to submit azure add members AddMemberAllGroupsTargetRoles post processing job: %v", err))
 		}
 
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 			if isRoleAssignable, err := innerGroup.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil {
 				if graph.IsErrPropertyNotFound(err) {
-					log.Warnf("Node %d is missing property %s", innerGroup.ID, azure.IsAssignableToRole)
+					log.Warnf(fmt.Sprintf("Node %d is missing property %s", innerGroup.ID, azure.IsAssignableToRole))
 				} else {
 					return err
 				}
@@ -888,7 +888,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 
 			return nil
 		}); err != nil {
-			log.Errorf("Failed to submit azure add members AddMemberGroupNotRoleAssignableTargetRoles post processing job: %v", err)
+			log.Errorf(fmt.Sprintf("Failed to submit azure add members AddMemberGroupNotRoleAssignableTargetRoles post processing job: %v", err))
 		}
 	}
 }
@@ -902,14 +902,14 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atom
 		for _, tenant := range tenantNodes {
 			if roleAssignments, err := TenantRoleAssignments(ctx, db, tenant); err != nil {
 				if err := operation.Done(); err != nil {
-					log.Errorf("Error caught during azure UserRoleAssignments.TenantRoleAssignments teardown: %v", err)
+					log.Errorf(fmt.Sprintf("Error caught during azure UserRoleAssignments.TenantRoleAssignments teardown: %v", err))
 				}
 
 				return &analysis.AtomicPostProcessingStats{}, err
 			} else {
 				if err := resetPassword(operation, tenant, roleAssignments); err != nil {
 					if err := operation.Done(); err != nil {
-						log.Errorf("Error caught during azure UserRoleAssignments.resetPassword teardown: %v", err)
+						log.Errorf(fmt.Sprintf("Error caught during azure UserRoleAssignments.resetPassword teardown: %v", err))
 					}
 
 					return &analysis.AtomicPostProcessingStats{}, err

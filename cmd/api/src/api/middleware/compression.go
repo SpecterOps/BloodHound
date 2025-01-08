@@ -65,7 +65,7 @@ func CompressionMiddleware(next http.Handler) http.Handler {
 				request.Body, err = wrapBody(encoding, request.Body)
 				if err != nil {
 					errMsg := fmt.Sprintf("failed to create reader for %s encoding: %v", encoding, err)
-					log.Warnf(errMsg)
+					log.Warnf(fmt.Sprintf(errMsg))
 					if errors.Is(err, errUnsupportedEncoding) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType, fmt.Sprintf("Error trying to read request: %s", errMsg), request), responseWriter)
 					} else {
@@ -106,7 +106,7 @@ func wrapBody(encoding string, body io.ReadCloser) (io.ReadCloser, error) {
 	case "deflate":
 		newBody, err = zlib.NewReader(body)
 	default:
-		log.Infof("Unsupported encoding detected: %s", encoding)
+		log.Infof(fmt.Sprintf("Unsupported encoding detected: %s", encoding))
 		err = errUnsupportedEncoding
 	}
 	return newBody, err

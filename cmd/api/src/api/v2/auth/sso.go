@@ -278,9 +278,9 @@ func SanitizeAndGetRoles(ctx context.Context, autoProvisionConfig model.SSOProvi
 			case len(validRoles) == 1:
 				return validRoles, nil
 			case len(validRoles) > 1:
-				log.Warnf("[SSO] JIT Role Provision detected multiple valid roles - %s , falling back to default role %s", validRoles.Names(), defaultRole.Name)
+				log.Warnf(fmt.Sprintf("[SSO] JIT Role Provision detected multiple valid roles - %s , falling back to default role %s", validRoles.Names(), defaultRole.Name))
 			default:
-				log.Warnf("[SSO] JIT Role Provision detected no valid roles from %s , falling back to default role %s", maybeBHRoles, defaultRole.Name)
+				log.Warnf(fmt.Sprintf("[SSO] JIT Role Provision detected no valid roles from %s , falling back to default role %s", maybeBHRoles, defaultRole.Name))
 			}
 		}
 

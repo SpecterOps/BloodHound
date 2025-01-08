@@ -228,7 +228,7 @@ func (s AuditEntry) String() string {
 
 func NewAuditEntry(action AuditLogAction, status AuditLogEntryStatus, data AuditData) (AuditEntry, error) {
 	if commitId, err := uuid.NewV4(); err != nil {
-		log.Errorf("Error generating commit ID for audit entry: %s", err.Error())
+		log.Errorf(fmt.Sprintf("Error generating commit ID for audit entry: %s", err.Error()))
 		return AuditEntry{}, err
 	} else {
 		return AuditEntry{Action: action, Model: data, Status: status, CommitID: commitId}, nil

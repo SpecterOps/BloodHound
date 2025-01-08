@@ -62,7 +62,7 @@ func ResolveAllGroupMemberships(ctx context.Context, db graph.Database, addition
 		return memberships, err
 	}
 
-	log.Infof("Collected %d groups to resolve", len(adGroupIDs))
+	log.Infof(fmt.Sprintf("Collected %d groups to resolve", len(adGroupIDs)))
 
 	for _, adGroupID := range adGroupIDs {
 		if traversalMap.Contains(adGroupID.Uint64()) {

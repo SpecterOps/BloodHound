@@ -19,6 +19,7 @@ package tools
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/specterops/bloodhound/log"
@@ -83,7 +84,7 @@ func LookupGraphDriver(ctx context.Context, cfg config.Configuration) (string, e
 
 		if setDriverName, err := GetGraphDriver(ctx, pgxConn); err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
-				log.Infof("No database driver has been set for migration, using: %s", driverName)
+				log.Infof(fmt.Sprintf("No database driver has been set for migration, using: %s", driverName))
 			} else {
 				return "", err
 			}

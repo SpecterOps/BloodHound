@@ -17,6 +17,7 @@
 package environment
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -55,7 +56,7 @@ func (s Environment) SetIfEmpty(key string, value string) {
 
 // Overrides an environment variable with a new value
 func (s Environment) Override(key string, value string) {
-	log.Infof("Overriding environment variable %s with %s", key, value)
+	log.Infof(fmt.Sprintf("Overriding environment variable %s with %s", key, value))
 	s[key] = value
 }
 

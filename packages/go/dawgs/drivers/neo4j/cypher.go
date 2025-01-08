@@ -18,6 +18,7 @@ package neo4j
 
 import (
 	"bytes"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -308,9 +309,9 @@ func stripCypherQuery(rawQuery string) string {
 	)
 
 	if queryModel, err := frontend.ParseCypher(frontend.DefaultCypherContext(), rawQuery); err != nil {
-		log.Errorf("Error occurred parsing cypher query during sanitization: %v", err)
+		log.Errorf(fmt.Sprintf("Error occurred parsing cypher query during sanitization: %v", err))
 	} else if err = strippedEmitter.Write(queryModel, buffer); err != nil {
-		log.Errorf("Error occurred sanitizing cypher query: %v", err)
+		log.Errorf(fmt.Sprintf("Error occurred sanitizing cypher query: %v", err))
 	}
 
 	return buffer.String()

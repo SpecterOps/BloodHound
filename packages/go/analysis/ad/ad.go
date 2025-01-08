@@ -200,9 +200,9 @@ func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
 	}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 		for node := range cursor.Chan() {
 			if domainObjectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-				log.Errorf("Domain node %d does not have a valid object ID", node.ID)
+				log.Errorf(fmt.Sprintf("Domain node %d does not have a valid object ID", node.ID))
 			} else if domainName, err := node.Properties.Get(common.Name.String()).String(); err != nil {
-				log.Errorf("Domain node %d does not have a valid name", node.ID)
+				log.Errorf(fmt.Sprintf("Domain node %d does not have a valid name", node.ID))
 			} else {
 				domainNamesByObjectID[domainObjectID] = domainName
 			}
@@ -231,9 +231,9 @@ func LinkWellKnownGroups(ctx context.Context, db graph.Database) error {
 
 		for _, domain := range domains {
 			if domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				log.Errorf("Error getting domain sid for domain %d: %v", domain.ID, err)
+				log.Errorf(fmt.Sprintf("Error getting domain sid for domain %d: %v", domain.ID, err))
 			} else if domainName, err := domain.Properties.Get(common.Name.String()).String(); err != nil {
-				log.Errorf("Error getting domain name for domain %d: %v", domain.ID, err)
+				log.Errorf(fmt.Sprintf("Error getting domain name for domain %d: %v", domain.ID, err))
 			} else {
 				var (
 					domainId         = domain.ID
@@ -262,7 +262,7 @@ func LinkWellKnownGroups(ctx context.Context, db graph.Database) error {
 						return nil
 					}
 				}); err != nil {
-					log.Errorf("Error linking well known groups for domain %d: %v", domain.ID, err)
+					log.Errorf(fmt.Sprintf("Error linking well known groups for domain %d: %v", domain.ID, err))
 					errors.Add(fmt.Errorf("failed linking well known groups for domain %d: %w", domain.ID, err))
 				}
 			}
@@ -319,7 +319,7 @@ func createOrUpdateWellKnownLink(tx graph.Transaction, startNode *graph.Node, en
 // See CalculateCrossProductNodeSetsDoc.md for explaination of the specialGroups (Authenticated Users and Everyone) and why we treat them the way we do
 func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, groupExpansions impact.PathAggregator, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
 	if len(nodeSlices) < 2 {
-		log.Errorf("Cross products require at least 2 nodesets")
+		log.Errorf(fmt.Sprintf("Cross products require at least 2 nodesets"))
 		return cardinality.NewBitmap64()
 	}
 
@@ -343,7 +343,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 	specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid)
 
 	if err != nil {
-		log.Errorf("Could not fetch groups: %s", err.Error())
+		log.Errorf(fmt.Sprintf("Could not fetch groups: %s", err.Error()))
 	}
 
 	//Unroll all nodesets

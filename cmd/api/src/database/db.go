@@ -170,9 +170,9 @@ type BloodhoundDB struct {
 
 func (s *BloodhoundDB) Close(ctx context.Context) {
 	if sqlDBRef, err := s.db.WithContext(ctx).DB(); err != nil {
-		log.Errorf("Failed to fetch SQL DB reference from GORM: %v", err)
+		log.Errorf(fmt.Sprintf("Failed to fetch SQL DB reference from GORM: %v", err))
 	} else if err := sqlDBRef.Close(); err != nil {
-		log.Errorf("Failed closing database: %v", err)
+		log.Errorf(fmt.Sprintf("Failed closing database: %v", err))
 	}
 }
 
@@ -240,7 +240,7 @@ func (s *BloodhoundDB) Wipe(ctx context.Context) error {
 func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 	// Run the migrator
 	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteStepwiseMigrations(); err != nil {
-		log.Errorf("Error during SQL database migration phase: %v", err)
+		log.Errorf(fmt.Sprintf("Error during SQL database migration phase: %v", err))
 		return err
 	}
 

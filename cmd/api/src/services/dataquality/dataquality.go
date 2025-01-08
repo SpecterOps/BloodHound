@@ -36,7 +36,7 @@ type DataQualityData interface {
 }
 
 func SaveDataQuality(ctx context.Context, db DataQualityData, graphDB graph.Database) error {
-	log.Infof("Started Data Quality Stats Collection")
+	log.Infof(fmt.Sprintf("Started Data Quality Stats Collection"))
 	defer log.Measure(log.LevelInfo, "Successfully Completed Data Quality Stats Collection")()
 
 	if stats, aggregation, err := ad.GraphStats(ctx, graphDB); err != nil {

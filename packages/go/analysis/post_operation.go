@@ -18,6 +18,7 @@ package analysis
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -133,19 +134,19 @@ func (s *AtomicPostProcessingStats) LogStats() {
 		return
 	}
 
-	log.Debugf("Relationships deleted before post-processing:")
+	log.Debugf(fmt.Sprintf("Relationships deleted before post-processing:"))
 
 	for _, relationship := range atomicStatsSortedKeys(s.RelationshipsDeleted) {
 		if numDeleted := int(*s.RelationshipsDeleted[relationship]); numDeleted > 0 {
-			log.Debugf("    %s %d", relationship.String(), numDeleted)
+			log.Debugf(fmt.Sprintf("    %s %d", relationship.String(), numDeleted))
 		}
 	}
 
-	log.Debugf("Relationships created after post-processing:")
+	log.Debugf(fmt.Sprintf("Relationships created after post-processing:"))
 
 	for _, relationship := range atomicStatsSortedKeys(s.RelationshipsCreated) {
 		if numCreated := int(*s.RelationshipsCreated[relationship]); numCreated > 0 {
-			log.Debugf("    %s %d", relationship.String(), numCreated)
+			log.Debugf(fmt.Sprintf("    %s %d", relationship.String(), numCreated))
 		}
 	}
 }

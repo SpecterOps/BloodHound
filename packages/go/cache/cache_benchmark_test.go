@@ -44,7 +44,7 @@ func getObjectIDs(num int) []string {
 
 func setupLRUCache() cache.Cache {
 	if c, err := cache.NewCache(cache.Config{MaxSize: numSimulatedOUs}); err != nil {
-		log.Fatalf("Error creating cache: %v", err)
+		log.Fatalf(fmt.Sprintf("Error creating cache: %v", err))
 	} else {
 		return c
 	}

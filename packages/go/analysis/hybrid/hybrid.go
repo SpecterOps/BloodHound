@@ -179,7 +179,7 @@ func createMissingADUser(ctx context.Context, db graph.Database, objectID string
 		newNode *graph.Node
 	)
 
-	log.Debugf("Matching AD User node with objectID %s not found, creating a new one", objectID)
+	log.Debugf(fmt.Sprintf("Matching AD User node with objectID %s not found, creating a new one", objectID))
 	properties := graph.AsProperties(map[string]any{
 		common.ObjectID.String(): objectID,
 	})

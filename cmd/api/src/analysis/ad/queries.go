@@ -87,7 +87,7 @@ func GraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStat
 		} else {
 			for _, domain := range domains {
 				if domainSID, err := domain.Properties.Get(common.ObjectID.String()).String(); err != nil {
-					log.Errorf("Domain node %d does not have a valid %s property: %v", domain.ID, common.ObjectID, err)
+					log.Errorf(fmt.Sprintf("Domain node %d does not have a valid %s property: %v", domain.ID, common.ObjectID, err))
 				} else {
 					aggregation.Domains++
 

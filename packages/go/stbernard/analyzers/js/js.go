@@ -51,7 +51,7 @@ func Run(jsPaths []string, env environment.Environment) ([]codeclimate.Entry, er
 		result    = make([]codeclimate.Entry, 0, len(jsPaths))
 	)
 
-	log.Infof("Running eslint")
+	log.Infof(fmt.Sprintf("Running eslint"))
 
 	for _, path := range jsPaths {
 		entries, err := runEslint(path, env)
@@ -63,7 +63,7 @@ func Run(jsPaths []string, env environment.Environment) ([]codeclimate.Entry, er
 		result = append(result, entries...)
 	}
 
-	log.Infof("Completed eslint")
+	log.Infof(fmt.Sprintf("Completed eslint"))
 
 	return result, exitError
 }

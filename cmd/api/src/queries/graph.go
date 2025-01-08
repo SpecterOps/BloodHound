@@ -445,13 +445,13 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 		)
 
 		if bhCtxInst.Timeout > maxTimeout {
-			log.Debugf("Custom timeout is too large, using the maximum allowable timeout of %d minutes instead", maxTimeout.Minutes())
+			log.Debugf(fmt.Sprintf("Custom timeout is too large, using the maximum allowable timeout of %d minutes instead", maxTimeout.Minutes()))
 			bhCtxInst.Timeout = maxTimeout
 		}
 
 		availableRuntime := bhCtxInst.Timeout
 		if availableRuntime > 0 {
-			log.Debugf("Available timeout for query is set to: %d seconds", availableRuntime.Seconds())
+			log.Debugf(fmt.Sprintf("Available timeout for query is set to: %d seconds", availableRuntime.Seconds()))
 		} else {
 			availableRuntime = defaultTimeout
 			if !s.DisableCypherComplexityLimit {
@@ -494,7 +494,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 			timeoutLog.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
 			timeoutLog.Msg("Neo4j timed out while executing cypher query")
 		} else {
-			log.Warnf("RawCypherQuery failed: %v", err)
+			log.Warnf(fmt.Sprintf("RawCypherQuery failed: %v", err))
 		}
 		return graphResponse, err
 	}
@@ -631,15 +631,15 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 	for delegateKey, delegate := range delegates {
 		waitGroup.Add(1)
 
-		log.Infof("Running entity query %s", delegateKey)
+		log.Infof(fmt.Sprintf("Running entity query %s", delegateKey))
 
 		go func(delegateKey string, delegate any) {
 			defer waitGroup.Done()
 
 			if result, err := runEntityQuery(ctx, s.Graph, delegate, node, 0, 0); errors.Is(err, graph.ErrContextTimedOut) {
-				log.Warnf("Running entity query for key %s: %v", delegateKey, err)
+				log.Warnf(fmt.Sprintf("Running entity query for key %s: %v", delegateKey, err))
 			} else if err != nil {
-				log.Errorf("Error running entity query for key %s: %v", delegateKey, err)
+				log.Errorf(fmt.Sprintf("Error running entity query for key %s: %v", delegateKey, err))
 				data.Store(delegateKey, 0)
 			} else {
 				data.Store(delegateKey, result.Len())
@@ -787,11 +787,11 @@ func (s *GraphQuery) cacheQueryResult(queryStart time.Time, cacheKey string, res
 		// Using GuardedSet here even though it isn't necessary because it allows us to collect information on how often
 		// we run these queries in parallel
 		if set, sizeInBytes, err := s.Cache.GuardedSet(cacheKey, result); err != nil {
-			log.Errorf("[Entity Results Cache] Failed to write results to cache for key: %s", cacheKey)
+			log.Errorf(fmt.Sprintf("[Entity Results Cache] Failed to write results to cache for key: %s", cacheKey))
 		} else if !set {
-			log.Warnf("[Entity Results Cache] Cache entry for query %s not set because it already exists", cacheKey)
+			log.Warnf(fmt.Sprintf("[Entity Results Cache] Cache entry for query %s not set because it already exists", cacheKey))
 		} else {
-			log.Infof("[Entity Results Cache] Cached slow query %s (%d bytes) because it took %dms", cacheKey, sizeInBytes, queryTime)
+			log.Infof(fmt.Sprintf("[Entity Results Cache] Cached slow query %s (%d bytes) because it took %dms", cacheKey, sizeInBytes, queryTime))
 		}
 	}
 }
@@ -938,14 +938,14 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 		)
 
 		if objectId, err := props.Get(common.ObjectID.String()).String(); err != nil {
-			log.Errorf("Error getting objectid for %d: %v", node.ID, err)
+			log.Errorf(fmt.Sprintf("Error getting objectid for %d: %v", node.ID, err))
 			nodeEntry.ObjectID = ""
 		} else {
 			nodeEntry.ObjectID = objectId
 		}
 
 		if name, err := props.Get(common.Name.String()).String(); err != nil {
-			log.Errorf("Error getting name for %d: %v", node.ID, err)
+			log.Errorf(fmt.Sprintf("Error getting name for %d: %v", node.ID, err))
 			nodeEntry.Name = ""
 		} else {
 			nodeEntry.Name = name

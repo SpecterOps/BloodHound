@@ -19,6 +19,7 @@ package v2
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/specterops/bloodhound/log"
@@ -43,7 +44,7 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 
 	var userId string
 	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-		log.Warnf("encountered request analysis for unknown user, this shouldn't happen")
+		log.Warnf(fmt.Sprintf("encountered request analysis for unknown user, this shouldn't happen"))
 		userId = "unknown-user"
 	} else {
 		userId = user.ID.String()

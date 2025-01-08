@@ -18,6 +18,7 @@ package datapipe
 
 import (
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -49,7 +50,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 		// This variable needs to be initialized here, otherwise the marshaller will cache the map in the struct
 		var decodeTarget T
 		if err := decoder.Decode(&decodeTarget); err != nil {
-			log.Errorf("Error decoding %T object: %v", decodeTarget, err)
+			log.Errorf(fmt.Sprintf("Error decoding %T object: %v", decodeTarget, err))
 			if errors.Is(err, io.EOF) {
 				break
 			}
@@ -93,7 +94,7 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 	for decoder.More() {
 		var group ein.Group
 		if err = decoder.Decode(&group); err != nil {
-			log.Errorf("Error decoding group object: %v", err)
+			log.Errorf(fmt.Sprintf("Error decoding group object: %v", err))
 			if errors.Is(err, io.EOF) {
 				break
 			}
@@ -135,7 +136,7 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 	for decoder.More() {
 		var session ein.Session
 		if err = decoder.Decode(&session); err != nil {
-			log.Errorf("Error decoding session object: %v", err)
+			log.Errorf(fmt.Sprintf("Error decoding session object: %v", err))
 			if errors.Is(err, io.EOF) {
 				break
 			}
@@ -177,7 +178,7 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 	for decoder.More() {
 		var data AzureBase
 		if err = decoder.Decode(&data); err != nil {
-			log.Errorf("Error decoding azure object: %v", err)
+			log.Errorf(fmt.Sprintf("Error decoding azure object: %v", err))
 			if errors.Is(err, io.EOF) {
 				break
 			}

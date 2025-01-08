@@ -51,11 +51,11 @@ func FailAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 	}
 
 	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
-		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
+		log.Errorf(fmt.Sprintf("Failed to load file upload jobs under analysis: %v", err))
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
 			if err := fileupload.UpdateFileUploadJobStatus(ctx, db, job, model.JobStatusFailed, "Analysis failed"); err != nil {
-				log.Errorf("Failed updating file upload job %d to failed status: %v", job.ID, err)
+				log.Errorf(fmt.Sprintf("Failed updating file upload job %d to failed status: %v", job.ID, err))
 			}
 		}
 	}
@@ -69,11 +69,11 @@ func PartialCompleteFileUploadJobs(ctx context.Context, db database.Database) {
 	}
 
 	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
-		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
+		log.Errorf(fmt.Sprintf("Failed to load file upload jobs under analysis: %v", err))
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
 			if err := fileupload.UpdateFileUploadJobStatus(ctx, db, job, model.JobStatusPartiallyComplete, "Partially Completed"); err != nil {
-				log.Errorf("Failed updating file upload job %d to partially completed status: %v", job.ID, err)
+				log.Errorf(fmt.Sprintf("Failed updating file upload job %d to partially completed status: %v", job.ID, err))
 			}
 		}
 	}
@@ -87,7 +87,7 @@ func CompleteAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 	}
 
 	if fileUploadJobsUnderAnalysis, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
-		log.Errorf("Failed to load file upload jobs under analysis: %v", err)
+		log.Errorf(fmt.Sprintf("Failed to load file upload jobs under analysis: %v", err))
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
 			var (
@@ -106,7 +106,7 @@ func CompleteAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 			}
 
 			if err := fileupload.UpdateFileUploadJobStatus(ctx, db, job, status, message); err != nil {
-				log.Errorf("Error updating file upload job %d: %v", job.ID, err)
+				log.Errorf(fmt.Sprintf("Error updating file upload job %d: %v", job.ID, err))
 			}
 		}
 	}
@@ -120,14 +120,14 @@ func ProcessIngestedFileUploadJobs(ctx context.Context, db database.Database) {
 	}
 
 	if ingestingFileUploadJobs, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusIngesting); err != nil {
-		log.Errorf("Failed to look up finished file upload jobs: %v", err)
+		log.Errorf(fmt.Sprintf("Failed to look up finished file upload jobs: %v", err))
 	} else {
 		for _, ingestingFileUploadJob := range ingestingFileUploadJobs {
 			if remainingIngestTasks, err := db.GetIngestTasksForJob(ctx, ingestingFileUploadJob.ID); err != nil {
-				log.Errorf("Failed looking up remaining ingest tasks for file upload job %d: %v", ingestingFileUploadJob.ID, err)
+				log.Errorf(fmt.Sprintf("Failed looking up remaining ingest tasks for file upload job %d: %v", ingestingFileUploadJob.ID, err))
 			} else if len(remainingIngestTasks) == 0 {
 				if err := fileupload.UpdateFileUploadJobStatus(ctx, db, ingestingFileUploadJob, model.JobStatusAnalyzing, "Analyzing"); err != nil {
-					log.Errorf("Error updating fileupload job %d: %v", ingestingFileUploadJob.ID, err)
+					log.Errorf(fmt.Sprintf("Error updating fileupload job %d: %v", ingestingFileUploadJob.ID, err))
 				}
 			}
 		}
@@ -137,7 +137,7 @@ func ProcessIngestedFileUploadJobs(ctx context.Context, db database.Database) {
 // clearFileTask removes a generic file upload task for ingested data.
 func (s *Daemon) clearFileTask(ingestTask model.IngestTask) {
 	if err := s.db.DeleteIngestTask(s.ctx, ingestTask); err != nil {
-		log.Errorf("Error removing file upload task from db: %v", err)
+		log.Errorf(fmt.Sprintf("Error removing file upload task from db: %v", err))
 	}
 }
 
@@ -184,9 +184,9 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 
 		//Close the archive and delete it
 		if err := archive.Close(); err != nil {
-			log.Errorf("Error closing archive %s: %v", path, err)
+			log.Errorf(fmt.Sprintf("Error closing archive %s: %v", path, err))
 		} else if err := os.Remove(path); err != nil {
-			log.Errorf("Error deleting archive %s: %v", path, err)
+			log.Errorf(fmt.Sprintf("Error deleting archive %s: %v", path, err))
 		}
 
 		return filePaths, failed, errs.Combined()
@@ -198,7 +198,7 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType) (int, int, error) {
 	adcsEnabled := false
 	if adcsFlag, err := s.db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
-		log.Errorf("Error getting ADCS flag: %v", err)
+		log.Errorf(fmt.Sprintf("Error getting ADCS flag: %v", err))
 	} else {
 		adcsEnabled = adcsFlag.Enabled
 	}
@@ -215,15 +215,15 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 					return err
 				} else if err := ReadFileForIngest(batch, file, adcsEnabled); err != nil {
 					failed++
-					log.Errorf("Error reading ingest file %s: %v", filePath, err)
+					log.Errorf(fmt.Sprintf("Error reading ingest file %s: %v", filePath, err))
 				}
 
 				if err := file.Close(); err != nil {
-					log.Errorf("Error closing ingest file %s: %v", filePath, err)
+					log.Errorf(fmt.Sprintf("Error closing ingest file %s: %v", filePath, err))
 				} else if err := os.Remove(filePath); errors.Is(err, fs.ErrNotExist) {
-					log.Warnf("Removing ingest file %s: %w", filePath, err)
+					log.Warnf(fmt.Sprintf("Removing ingest file %s: %w", filePath, err))
 				} else if err != nil {
-					log.Errorf("Error removing ingest file %s: %v", filePath, err)
+					log.Errorf(fmt.Sprintf("Error removing ingest file %s: %v", filePath, err))
 				}
 			}
 
@@ -235,7 +235,7 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 // processIngestTasks covers the generic file upload case for ingested data.
 func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.IngestTasks) {
 	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIngesting, false); err != nil {
-		log.Errorf("Error setting datapipe status: %v", err)
+		log.Errorf(fmt.Sprintf("Error setting datapipe status: %v", err))
 		return
 	}
 	defer s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
@@ -248,22 +248,22 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 		}
 
 		if s.cfg.DisableIngest {
-			log.Warnf("Skipped processing of ingestTasks due to config flag.")
+			log.Warnf(fmt.Sprintf("Skipped processing of ingestTasks due to config flag."))
 			return
 		}
 
 		total, failed, err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType)
 		if errors.Is(err, fs.ErrNotExist) {
-			log.Warnf("Did not process ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
+			log.Warnf(fmt.Sprintf("Did not process ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err))
 		} else if err != nil {
-			log.Errorf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err)
+			log.Errorf(fmt.Sprintf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err))
 		} else if job, err := s.db.GetFileUploadJob(ctx, ingestTask.TaskID.ValueOrZero()); err != nil {
-			log.Errorf("Failed to fetch job for ingest task %d: %v", ingestTask.ID, err)
+			log.Errorf(fmt.Sprintf("Failed to fetch job for ingest task %d: %v", ingestTask.ID, err))
 		} else {
 			job.TotalFiles = total
 			job.FailedFiles += failed
 			if err = s.db.UpdateFileUploadJob(ctx, job); err != nil {
-				log.Errorf("Failed to update number of failed files for file upload job ID %s: %v", job.ID, err)
+				log.Errorf(fmt.Sprintf("Failed to update number of failed files for file upload job ID %s: %v", job.ID, err))
 			}
 		}
 

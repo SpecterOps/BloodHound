@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -45,21 +46,21 @@ func PostADCSESC10a(ctx context.Context, tx graph.Transaction, outC chan<- analy
 
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC10(template, false); err != nil {
-				log.Warnf("Error validating cert template %d: %v", template.ID, err)
+				log.Warnf(fmt.Sprintf("Error validating cert template %d: %v", template.ID, err))
 				continue
 			} else if !valid {
 				continue
 			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
-				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
+				log.Debugf(fmt.Sprintf("Failed to retrieve enrollers for cert template %d from cache", template.ID))
 				continue
 			} else {
 				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(eca.ID))
 
 				if filteredVictims, err := filterUserDNSResults(tx, victimBitmap, template); err != nil {
-					log.Warnf("Error filtering users from victims for esc9a: %v", err)
+					log.Warnf(fmt.Sprintf("Error filtering users from victims for esc9a: %v", err))
 					continue
 				} else if attackers, err := FetchAttackersForEscalations9and10(tx, filteredVictims, false); err != nil {
-					log.Warnf("Error getting start nodes for esc10a attacker nodes: %v", err)
+					log.Warnf(fmt.Sprintf("Error getting start nodes for esc10a attacker nodes: %v", err))
 					continue
 				} else {
 					results.Or(graph.NodeIDsToDuplex(attackers))
@@ -91,18 +92,18 @@ func PostADCSESC10b(ctx context.Context, tx graph.Transaction, outC chan<- analy
 
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC10(template, true); err != nil {
-				log.Warnf("Error validating cert template %d: %v", template.ID, err)
+				log.Warnf(fmt.Sprintf("Error validating cert template %d: %v", template.ID, err))
 				continue
 			} else if !valid {
 				continue
 			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
-				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
+				log.Debugf(fmt.Sprintf("Failed to retrieve enrollers for cert template %d from cache", template.ID))
 				continue
 			} else {
 				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(enterpriseCA.ID))
 
 				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
-					log.Warnf("Error getting start nodes for esc10b attacker nodes: %v", err)
+					log.Warnf(fmt.Sprintf("Error getting start nodes for esc10b attacker nodes: %v", err))
 					continue
 				} else {
 					results.Or(graph.NodeIDsToDuplex(attackers))

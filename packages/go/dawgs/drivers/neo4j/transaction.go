@@ -330,7 +330,7 @@ func (s *neo4jTransaction) Raw(stmt string, params map[string]any) graph.Result 
 			prettyParameters.WriteString(":")
 
 			if marshalledValue, err := json.Marshal(value); err != nil {
-				log.Errorf("Unable to marshal query parameter %s", key)
+				log.Errorf(fmt.Sprintf("Unable to marshal query parameter %s", key))
 			} else {
 				prettyParameters.Write(marshalledValue)
 			}

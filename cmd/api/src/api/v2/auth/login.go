@@ -55,7 +55,7 @@ func (s LoginResource) loginSecret(loginRequest api.LoginRequest, response http.
 		} else if errors.Is(err, api.ErrUserDisabled) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, err.Error(), request), response)
 		} else {
-			log.Errorf("Error during authentication for request ID %s: %v", ctx.RequestID(request), err)
+			log.Errorf(fmt.Sprintf("Error during authentication for request ID %s: %v", ctx.RequestID(request), err))
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}
 	} else {

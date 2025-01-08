@@ -66,7 +66,7 @@ func main() {
 	log.ConfigureDefaults()
 
 	if cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration); err != nil {
-		log.Fatalf("Unable to read configuration %s: %v", configFilePath, err)
+		log.Fatalf(fmt.Sprintf("Unable to read configuration %s: %v", configFilePath, err))
 	} else {
 		initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
 			Configuration:       cfg,
@@ -76,7 +76,7 @@ func main() {
 		}
 
 		if err := initializer.Launch(context.Background(), true); err != nil {
-			log.Fatalf("Failed starting the server: %v", err)
+			log.Fatalf(fmt.Sprintf("Failed starting the server: %v", err))
 		}
 	}
 }

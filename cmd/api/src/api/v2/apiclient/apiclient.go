@@ -114,7 +114,7 @@ func (s Client) ZipRequest(method, path string, params url.Values, body []byte) 
 					return nil, fmt.Errorf("waited %f seconds while retrying - Request failure cause: %w", maxSleep.Seconds(), err)
 				}
 
-				log.Infof("Request to %s failed with error: %v. Attempting a retry.", endpoint.String(), err)
+				log.Infof(fmt.Sprintf("Request to %s failed with error: %v. Attempting a retry.", endpoint.String(), err))
 				time.Sleep(sleepInterval)
 			} else {
 				return response, nil
@@ -170,7 +170,7 @@ func (s Client) Request(method, path string, params url.Values, body any, header
 					return nil, fmt.Errorf("waited %f seconds while retrying - Request failure cause: %w", maxSleep.Seconds(), err)
 				}
 
-				log.Infof("Request to %s failed with error: %v. Attempting a retry.", endpoint.String(), err)
+				log.Infof(fmt.Sprintf("Request to %s failed with error: %v. Attempting a retry.", endpoint.String(), err))
 				time.Sleep(sleepInterval)
 			} else {
 				return response, nil

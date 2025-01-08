@@ -55,7 +55,7 @@ func GraphStats(ctx context.Context, db graph.Database) (model.AzureDataQualityS
 		} else {
 			for _, tenant := range tenants {
 				if tenantObjectID, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
-					log.Errorf("Tenant node %d does not have a valid %s property: %v", tenant.ID, common.ObjectID, err)
+					log.Errorf(fmt.Sprintf("Tenant node %d does not have a valid %s property: %v", tenant.ID, common.ObjectID, err))
 				} else {
 					aggregation.Tenants++
 

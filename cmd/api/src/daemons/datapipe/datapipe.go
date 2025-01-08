@@ -19,6 +19,7 @@ package datapipe
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/specterops/bloodhound/cache"
@@ -66,7 +67,7 @@ func (s *Daemon) analyze() {
 	// Ensure that the user-requested analysis switch is deleted. This is done at the beginning of the
 	// function so that any re-analysis requests are caught while analysis is in-progress.
 	if err := s.db.DeleteAnalysisRequest(s.ctx); err != nil {
-		log.Errorf("Error deleting analysis request: %v", err)
+		log.Errorf(fmt.Sprintf("Error deleting analysis request: %v", err))
 		return
 	}
 
@@ -75,7 +76,7 @@ func (s *Daemon) analyze() {
 	}
 
 	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusAnalyzing, false); err != nil {
-		log.Errorf("Error setting datapipe status: %v", err)
+		log.Errorf(fmt.Sprintf("Error setting datapipe status: %v", err))
 		return
 	}
 
@@ -85,14 +86,14 @@ func (s *Daemon) analyze() {
 		if errors.Is(err, ErrAnalysisFailed) {
 			FailAnalyzedFileUploadJobs(s.ctx, s.db)
 			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
-				log.Errorf("Error setting datapipe status: %v", err)
+				log.Errorf(fmt.Sprintf("Error setting datapipe status: %v", err))
 				return
 			}
 
 		} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
 			PartialCompleteFileUploadJobs(s.ctx, s.db)
 			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
-				log.Errorf("Error setting datapipe status: %v", err)
+				log.Errorf(fmt.Sprintf("Error setting datapipe status: %v", err))
 				return
 			}
 		}
@@ -100,13 +101,13 @@ func (s *Daemon) analyze() {
 		CompleteAnalyzedFileUploadJobs(s.ctx, s.db)
 
 		if entityPanelCachingFlag, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureEntityPanelCaching); err != nil {
-			log.Errorf("Error retrieving entity panel caching flag: %v", err)
+			log.Errorf(fmt.Sprintf("Error retrieving entity panel caching flag: %v", err))
 		} else {
 			resetCache(s.cache, entityPanelCachingFlag.Enabled)
 		}
 
 		if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
-			log.Errorf("Error setting datapipe status: %v", err)
+			log.Errorf(fmt.Sprintf("Error setting datapipe status: %v", err))
 			return
 		}
 	}
@@ -114,15 +115,15 @@ func (s *Daemon) analyze() {
 
 func resetCache(cacher cache.Cache, _ bool) {
 	if err := cacher.Reset(); err != nil {
-		log.Errorf("Error while resetting the cache: %v", err)
+		log.Errorf(fmt.Sprintf("Error while resetting the cache: %v", err))
 	} else {
-		log.Infof("Cache successfully reset by datapipe daemon")
+		log.Infof(fmt.Sprintf("Cache successfully reset by datapipe daemon"))
 	}
 }
 
 func (s *Daemon) ingestAvailableTasks() {
 	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
-		log.Errorf("Failed fetching available ingest tasks: %v", err)
+		log.Errorf(fmt.Sprintf("Failed fetching available ingest tasks: %v", err))
 	} else {
 		s.processIngestTasks(s.ctx, ingestTasks)
 	}
@@ -160,7 +161,7 @@ func (s *Daemon) Start(ctx context.Context) {
 
 			// If there are completed file upload jobs or if analysis was user-requested, perform analysis.
 			if hasJobsWaitingForAnalysis, err := HasFileUploadJobsWaitingForAnalysis(s.ctx, s.db); err != nil {
-				log.Errorf("Failed looking up jobs waiting for analysis: %v", err)
+				log.Errorf(fmt.Sprintf("Failed looking up jobs waiting for analysis: %v", err))
 			} else if hasJobsWaitingForAnalysis || s.db.HasAnalysisRequest(s.ctx) {
 				s.analyze()
 			}
@@ -182,18 +183,18 @@ func (s *Daemon) deleteData() {
 	defer log.Measure(log.LevelInfo, "Purge Graph Data Completed")()
 
 	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusPurging, false); err != nil {
-		log.Errorf("Error setting datapipe status: %v", err)
+		log.Errorf(fmt.Sprintf("Error setting datapipe status: %v", err))
 		return
 	}
 
-	log.Infof("Begin Purge Graph Data")
+	log.Infof(fmt.Sprintf("Begin Purge Graph Data"))
 
 	if err := s.db.CancelAllFileUploads(s.ctx); err != nil {
-		log.Errorf("Error cancelling jobs during data deletion: %v", err)
+		log.Errorf(fmt.Sprintf("Error cancelling jobs during data deletion: %v", err))
 	} else if err := s.db.DeleteAllIngestTasks(s.ctx); err != nil {
-		log.Errorf("Error deleting ingest tasks during data deletion: %v", err)
+		log.Errorf(fmt.Sprintf("Error deleting ingest tasks during data deletion: %v", err))
 	} else if err := DeleteCollectedGraphData(s.ctx, s.graphdb); err != nil {
-		log.Errorf("Error deleting graph data: %v", err)
+		log.Errorf(fmt.Sprintf("Error deleting graph data: %v", err))
 	}
 }
 
@@ -203,7 +204,7 @@ func (s *Daemon) Stop(ctx context.Context) error {
 
 func (s *Daemon) clearOrphanedData() {
 	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
-		log.Errorf("Failed fetching available file upload ingest tasks: %v", err)
+		log.Errorf(fmt.Sprintf("Failed fetching available file upload ingest tasks: %v", err))
 	} else {
 		expectedFiles := make([]string, len(ingestTasks))
 

@@ -123,12 +123,12 @@ func (s *pattern) Do(delegate PatternMatchDelegate) Driver {
 func (s *pattern) OutboundWithDepth(min, max int, criteria ...graph.Criteria) PatternContinuation {
 	if min < 0 {
 		min = 1
-		log.Warnf("Negative mindepth not allowed. Setting min depth for expansion to 1")
+		log.Warnf(fmt.Sprintf("Negative mindepth not allowed. Setting min depth for expansion to 1"))
 	}
 
 	if max < 0 {
 		max = 0
-		log.Warnf("Negative maxdepth not allowed. Setting max depth for expansion to 0")
+		log.Warnf(fmt.Sprintf("Negative maxdepth not allowed. Setting max depth for expansion to 0"))
 	}
 
 	s.expansions = append(s.expansions, expansion{
@@ -151,12 +151,12 @@ func (s *pattern) Outbound(criteria ...graph.Criteria) PatternContinuation {
 func (s *pattern) InboundWithDepth(min, max int, criteria ...graph.Criteria) PatternContinuation {
 	if min < 0 {
 		min = 1
-		log.Warnf("Negative mindepth not allowed. Setting min depth for expansion to 1")
+		log.Warnf(fmt.Sprintf("Negative mindepth not allowed. Setting min depth for expansion to 1"))
 	}
 
 	if max < 0 {
 		max = 0
-		log.Warnf("Negative maxdepth not allowed. Setting max depth for expansion to 0")
+		log.Warnf(fmt.Sprintf("Negative maxdepth not allowed. Setting max depth for expansion to 0"))
 	}
 
 	s.expansions = append(s.expansions, expansion{
@@ -527,21 +527,21 @@ func FilteredSkipLimit(filter SkipLimitFilter, visitorFilter SegmentVisitor, ski
 			if skip == 0 || shouldCollect() {
 				// If we should collect this result, check to see if we're already at a limit for the number of results
 				if limit > 0 && atLimit() {
-					log.Debugf("At collection limit, rejecting path: %s", graph.FormatPathSegment(next))
+					log.Debugf(fmt.Sprintf("At collection limit, rejecting path: %s", graph.FormatPathSegment(next)))
 					return false
 				}
 
-				log.Debugf("Collected path: %s", graph.FormatPathSegment(next))
+				log.Debugf(fmt.Sprintf("Collected path: %s", graph.FormatPathSegment(next)))
 				visitorFilter(next)
 			} else {
-				log.Debugf("Skipping path visit: %s", graph.FormatPathSegment(next))
+				log.Debugf(fmt.Sprintf("Skipping path visit: %s", graph.FormatPathSegment(next)))
 			}
 		}
 
 		if shouldDescend {
-			log.Debugf("Descending into path: %s", graph.FormatPathSegment(next))
+			log.Debugf(fmt.Sprintf("Descending into path: %s", graph.FormatPathSegment(next)))
 		} else {
-			log.Debugf("Rejecting further descent into path: %s", graph.FormatPathSegment(next))
+			log.Debugf(fmt.Sprintf("Rejecting further descent into path: %s", graph.FormatPathSegment(next)))
 		}
 
 		return shouldDescend

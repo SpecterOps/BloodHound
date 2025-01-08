@@ -19,6 +19,7 @@ package toolapi
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/pprof"
 
@@ -114,13 +115,13 @@ func (s Daemon) Start(ctx context.Context) {
 	if s.cfg.TLS.Enabled() {
 		if err := s.server.ListenAndServeTLS(s.cfg.TLS.CertFile, s.cfg.TLS.KeyFile); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				log.Errorf("HTTP server listen error: %v", err)
+				log.Errorf(fmt.Sprintf("HTTP server listen error: %v", err))
 			}
 		}
 	} else {
 		if err := s.server.ListenAndServe(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				log.Errorf("HTTP server listen error: %v", err)
+				log.Errorf(fmt.Sprintf("HTTP server listen error: %v", err))
 			}
 		}
 	}

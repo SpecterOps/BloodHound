@@ -86,10 +86,10 @@ func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handle
 	}
 
 	// Log successful start and wait for a signal to exit
-	log.Infof("Server started successfully")
+	log.Infof(fmt.Sprintf("Server started successfully"))
 	<-ctx.Done()
 
-	log.Infof("Shutting down")
+	log.Infof(fmt.Sprintf("Shutting down"))
 
 	// TODO: Refactor this pattern in favor of context handling
 	daemonManager.Stop()

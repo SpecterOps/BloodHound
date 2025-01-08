@@ -246,13 +246,13 @@ func SetValuesFromEnv(varPrefix string, target any, env []string) error {
 				cfgKeyPath := strings.TrimPrefix(key, formattedPrefix)
 
 				if err := SetValue(target, cfgKeyPath, valueStr); errors.Is(err, ErrInvalidConfigurationPath) {
-					log.Warnf("%s", err)
+					log.Warnf(fmt.Sprintf("%s", err))
 				} else if err != nil {
 					return err
 				}
 			}
 		} else {
-			log.Errorf("Invalid key/value pair: %+v", kvParts)
+			log.Errorf(fmt.Sprintf("Invalid key/value pair: %+v", kvParts))
 		}
 	}
 
@@ -263,11 +263,11 @@ func getConfiguration(path string, defaultConfigFunc func() (Configuration, erro
 	if hasCfgFile, err := HasConfigurationFile(path); err != nil {
 		return Configuration{}, err
 	} else if hasCfgFile {
-		log.Infof("Reading configuration found at %s", path)
+		log.Infof(fmt.Sprintf("Reading configuration found at %s", path))
 
 		return ReadConfigurationFile(path)
 	} else {
-		log.Infof("No configuration file found at %s. Returning defaults.", path)
+		log.Infof(fmt.Sprintf("No configuration file found at %s. Returning defaults.", path))
 
 		return defaultConfigFunc()
 	}
@@ -292,13 +292,13 @@ func (s Configuration) SaveCollectorManifests() (CollectorManifests, error) {
 	manifests := CollectorManifests{}
 
 	if azureHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), azureHoundCollector)); err != nil {
-		log.Errorf("Error generating AzureHound manifest file: %s", err)
+		log.Errorf(fmt.Sprintf("Error generating AzureHound manifest file: %s", err))
 	} else {
 		manifests[azureHoundCollector] = azureHoundManifest
 	}
 
 	if sharpHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), sharpHoundCollector)); err != nil {
-		log.Errorf("Error generating SharpHound manifest file: %s", err)
+		log.Errorf(fmt.Sprintf("Error generating SharpHound manifest file: %s", err))
 	} else {
 		manifests[sharpHoundCollector] = sharpHoundManifest
 	}

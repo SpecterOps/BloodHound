@@ -76,15 +76,15 @@ type ResponseWrapper struct {
 func WriteErrorResponse(ctx context.Context, untypedError any, response http.ResponseWriter) {
 	switch typedError := untypedError.(type) {
 	case *ErrorResponse: // V1 error handling
-		log.Warnf("Writing API Error. Status: %v. Message: %v", typedError.HTTPStatus, typedError.Error)
+		log.Warnf(fmt.Sprintf("Writing API Error. Status: %v. Message: %v", typedError.HTTPStatus, typedError.Error))
 		WriteJSONResponse(context.Background(), typedError.Error, typedError.HTTPStatus, response)
 
 	case *ErrorWrapper: // V2 error handling
-		log.Warnf("Writing API Error. Status: %v. Message: %v", typedError.HTTPStatus, typedError.Errors)
+		log.Warnf(fmt.Sprintf("Writing API Error. Status: %v. Message: %v", typedError.HTTPStatus, typedError.Errors))
 		WriteJSONResponse(ctx, typedError, typedError.HTTPStatus, response)
 
 	default:
-		log.Warnf("Failure Writing API Error. Status: %v. Message: %v", http.StatusInternalServerError, "Invalid error format returned")
+		log.Warnf(fmt.Sprintf("Failure Writing API Error. Status: %v. Message: %v", http.StatusInternalServerError, "Invalid error format returned"))
 		WriteJSONResponse(ctx, "An internal error has occurred that is preventing the service from servicing this request.", http.StatusInternalServerError, response)
 	}
 }
@@ -94,7 +94,7 @@ func WriteErrorResponse(ctx context.Context, untypedError any, response http.Res
 
 func WriteBasicResponse(ctx context.Context, inputData any, statusCode int, response http.ResponseWriter) {
 	if data, err := ToJSONRawMessage(inputData); err != nil {
-		log.Errorf("Failed marshaling data for basic response: %v", err)
+		log.Errorf(fmt.Sprintf("Failed marshaling data for basic response: %v", err))
 		response.WriteHeader(http.StatusInternalServerError)
 	} else {
 		WriteJSONResponse(ctx, BasicResponse{
@@ -161,12 +161,12 @@ func WriteResponseWrapperWithTimeWindowAndPagination(ctx context.Context, data a
 func WriteJSONResponse(_ context.Context, message any, statusCode int, response http.ResponseWriter) {
 	response.Header().Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 	if content, err := json.Marshal(message); err != nil {
-		log.Errorf("Failed to marshal value into JSON for request: %v: for message: %+v", err, message)
+		log.Errorf(fmt.Sprintf("Failed to marshal value into JSON for request: %v: for message: %+v", err, message))
 		response.WriteHeader(http.StatusInternalServerError)
 	} else {
 		response.WriteHeader(statusCode)
 		if written, err := response.Write(content); err != nil {
-			log.Errorf("Writing API Error. Failed to write JSON response with %d bytes written and error: %v", written, err)
+			log.Errorf(fmt.Sprintf("Writing API Error. Failed to write JSON response with %d bytes written and error: %v", written, err))
 		}
 	}
 }
@@ -176,7 +176,7 @@ func WriteCSVResponse(_ context.Context, message model.CSVWriter, statusCode int
 	response.WriteHeader(statusCode)
 
 	if err := message.WriteCSV(response); err != nil {
-		log.Errorf("Writing API Error. Failed to write CSV for request: %v", err)
+		log.Errorf(fmt.Sprintf("Writing API Error. Failed to write CSV for request: %v", err))
 	}
 }
 
@@ -186,7 +186,7 @@ func WriteBinaryResponse(_ context.Context, data []byte, filename string, status
 	response.WriteHeader(statusCode)
 
 	if written, err := response.Write(data); err != nil {
-		log.Errorf("Writing API Error. Failed to write binary response with %d bytes written and error: %v", written, err)
+		log.Errorf(fmt.Sprintf("Writing API Error. Failed to write binary response with %d bytes written and error: %v", written, err))
 	}
 }
 

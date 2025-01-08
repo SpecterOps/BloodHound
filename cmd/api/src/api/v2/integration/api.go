@@ -18,6 +18,7 @@ package integration
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -94,7 +95,7 @@ func (s *Context) EnableAPI() {
 			}
 
 			if err := initializer.Launch(s.ctx, false); err != nil {
-				log.Errorf("Failed launching API server: %v", err)
+				log.Errorf(fmt.Sprintf("Failed launching API server: %v", err))
 			}
 		}()
 	}

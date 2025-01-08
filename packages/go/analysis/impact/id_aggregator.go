@@ -17,6 +17,7 @@
 package impact
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -211,7 +212,7 @@ func (s IDA) resolve(targetID uint64) cardinality.Provider[uint64] {
 }
 
 func (s IDA) Cardinality(targets ...uint64) cardinality.Provider[uint64] {
-	log.Debugf("Calculating pathMembers cardinality for %d targets", len(targets))
+	log.Debugf(fmt.Sprintf("Calculating pathMembers cardinality for %d targets", len(targets)))
 	defer log.Measure(log.LevelDebug, "Calculated pathMembers cardinality for %d targets", len(targets))()
 
 	impact := s.newCardinalityProvider()

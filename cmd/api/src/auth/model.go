@@ -163,10 +163,10 @@ func (s Authorizer) AuditLogUnauthorizedAccess(request *http.Request) {
 	if request.Method != "GET" {
 		data := model.AuditData{"endpoint": request.Method + " " + request.URL.Path}
 		if auditEntry, err := model.NewAuditEntry(model.AuditLogActionUnauthorizedAccessAttempt, model.AuditLogStatusFailure, data); err != nil {
-			log.Errorf("Error creating audit log for unauthorized access: %s", err.Error())
+			log.Errorf(fmt.Sprintf("Error creating audit log for unauthorized access: %s", err.Error()))
 			return
 		} else if err = s.auditLogger.AppendAuditLog(request.Context(), auditEntry); err != nil {
-			log.Errorf("Error creating audit log for unauthorized access: %s", err.Error())
+			log.Errorf(fmt.Sprintf("Error creating audit log for unauthorized access: %s", err.Error()))
 		}
 	}
 }

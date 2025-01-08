@@ -19,6 +19,7 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/specterops/bloodhound/log"
@@ -72,7 +73,7 @@ func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (
 			sql, rows := fc()
 
 			if log.GlobalAccepts(log.LevelDebug) {
-				log.Errorf("Slow database query took %d ms addressing %d rows: %s", elapsed.Milliseconds(), rows, sql)
+				log.Errorf(fmt.Sprintf("Slow database query took %d ms addressing %d rows: %s", elapsed.Milliseconds(), rows, sql))
 			} else {
 				log.Error().Stack().Msgf("Slow database query took %d ms addressing %d rows.", elapsed.Milliseconds(), rows)
 			}
@@ -80,7 +81,7 @@ func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (
 			sql, rows := fc()
 
 			if log.GlobalAccepts(log.LevelDebug) {
-				log.Warnf("Slow database query took %d ms addressing %d rows: %s", elapsed.Milliseconds(), rows, sql)
+				log.Warnf(fmt.Sprintf("Slow database query took %d ms addressing %d rows: %s", elapsed.Milliseconds(), rows, sql))
 			} else {
 				log.Warn().Stack().Msgf("Slow database query took %d ms addressing %d rows.", elapsed.Milliseconds(), rows)
 			}

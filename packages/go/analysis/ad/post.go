@@ -185,7 +185,7 @@ func getLAPSSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions im
 	)
 
 	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
+		log.Warnf(fmt.Sprintf("Error getting domain SID for domain %d: %v", domain.ID, err))
 		return nil, err
 	} else if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
 		return nil, err
@@ -205,7 +205,7 @@ func getDCSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions impa
 	)
 
 	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
+		log.Warnf(fmt.Sprintf("Error getting domain SID for domain %d: %v", domain.ID, err))
 		return nil, err
 	} else if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
 		return nil, err
@@ -252,7 +252,7 @@ func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansion
 			computerID := graph.ID(computer)
 
 			if idx > 0 && idx%10000 == 0 {
-				log.Infof("Post processed %d active directory computers", idx)
+				log.Infof(fmt.Sprintf("Post processed %d active directory computers", idx))
 			}
 
 			if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -344,7 +344,7 @@ func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansion
 			}
 		}
 
-		log.Infof("Finished post-processing %d active directory computers", computers.GetCardinality())
+		log.Infof(fmt.Sprintf("Finished post-processing %d active directory computers", computers.GetCardinality()))
 		return &operation.Stats, operation.Done()
 	}
 }
@@ -483,7 +483,7 @@ func FetchLocalGroupBitmapForComputer(tx graph.Transaction, computer graph.ID, s
 }
 
 func ExpandAllRDPLocalGroups(ctx context.Context, db graph.Database) (impact.PathAggregator, error) {
-	log.Infof("Expanding all AD group and local group memberships")
+	log.Infof(fmt.Sprintf("Expanding all AD group and local group memberships"))
 
 	return ResolveAllGroupMemberships(ctx, db, query.Not(
 		query.Or(

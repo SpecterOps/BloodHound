@@ -115,11 +115,11 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 			paddingString := strings.Repeat(" ", len(passwordMsg)-2)
 			borderString := strings.Repeat("#", len(passwordMsg))
 
-			log.Infof("%s", borderString)
-			log.Infof("#%s#", paddingString)
-			log.Infof("%s", passwordMsg)
-			log.Infof("#%s#", paddingString)
-			log.Infof("%s", borderString)
+			log.Infof(fmt.Sprintf("%s", borderString))
+			log.Infof(fmt.Sprintf("#%s#", paddingString))
+			log.Infof(fmt.Sprintf("%s", passwordMsg))
+			log.Infof(fmt.Sprintf("#%s#", paddingString))
+			log.Infof(fmt.Sprintf("%s", borderString))
 		}
 	}
 

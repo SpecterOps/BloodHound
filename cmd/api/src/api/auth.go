@@ -112,7 +112,7 @@ func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.
 
 	err := s.db.CreateAuditLog(requestContext, auditLog)
 	if err != nil {
-		log.Warnf("failed to write login audit log %+v", err)
+		log.Warnf(fmt.Sprintf("failed to write login audit log %+v", err))
 	}
 }
 
@@ -140,7 +140,7 @@ func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRe
 	auditLogFields := types.JSONUntypedObject{"username": loginRequest.Username, "auth_type": auth.ProviderTypeSecret}
 
 	if commitID, err := uuid.NewV4(); err != nil {
-		log.Errorf("Error generating commit ID for login: %s", err)
+		log.Errorf(fmt.Sprintf("Error generating commit ID for login: %s", err))
 		return LoginDetails{}, err
 	} else {
 		s.auditLogin(ctx, commitID, model.AuditLogStatusIntent, model.User{}, auditLogFields)
@@ -281,7 +281,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 			authToken.LastAccess = time.Now().UTC()
 
 			if err := s.db.UpdateAuthToken(request.Context(), authToken); err != nil {
-				log.Errorf("Error updating last access on AuthToken: %v", err)
+				log.Errorf(fmt.Sprintf("Error updating last access on AuthToken: %v", err))
 			}
 
 			if sdtf, ok := readCloser.(*SelfDestructingTempFile); ok {
@@ -362,7 +362,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 
 	// Generate commit ID for audit logging
 	if commitID, err = uuid.NewV4(); err != nil {
-		log.Errorf("Error generating commit ID for login: %s", err)
+		log.Errorf(fmt.Sprintf("Error generating commit ID for login: %s", err))
 		WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusInternalServerError, "audit log creation failure", request), response)
 		return
 	}
@@ -417,7 +417,7 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 		return "", ErrUserDisabled
 	}
 
-	log.Infof("Creating session for user: %s(%s)", user.ID, user.PrincipalName)
+	log.Infof(fmt.Sprintf("Creating session for user: %s(%s)", user.ID, user.PrincipalName))
 
 	userSession := model.UserSession{
 		User:      user,
@@ -475,16 +475,16 @@ func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString strin
 
 		return auth.Context{}, err
 	} else if !token.Valid {
-		log.Infof("Token invalid")
+		log.Infof(fmt.Sprintf("Token invalid"))
 		return auth.Context{}, ErrInvalidAuth
 	} else if sessionID, err := claims.SessionID(); err != nil {
-		log.Infof("Session ID %s invalid: %v", claims.Id, err)
+		log.Infof(fmt.Sprintf("Session ID %s invalid: %v", claims.Id, err))
 		return auth.Context{}, ErrInvalidAuth
 	} else if session, err := s.db.GetUserSession(ctx, sessionID); err != nil {
-		log.Infof("Unable to find session %d", sessionID)
+		log.Infof(fmt.Sprintf("Unable to find session %d", sessionID))
 		return auth.Context{}, ErrInvalidAuth
 	} else if session.Expired() {
-		log.Infof("Session %d is expired", sessionID)
+		log.Infof(fmt.Sprintf("Session %d is expired", sessionID))
 		return auth.Context{}, ErrInvalidAuth
 	} else {
 		authContext := auth.Context{
@@ -493,7 +493,7 @@ func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString strin
 		}
 
 		if session.AuthProviderType == model.SessionAuthProviderSecret && session.User.AuthSecret == nil {
-			log.Infof("No auth secret found for user ID %s", session.UserID.String())
+			log.Infof(fmt.Sprintf("No auth secret found for user ID %s", session.UserID.String()))
 			return auth.Context{}, ErrNoUserSecret
 		} else if session.AuthProviderType == model.SessionAuthProviderSecret && session.User.AuthSecret.Expired() {
 			var (

@@ -128,7 +128,7 @@ func clearFiles(path string, entry os.DirEntry, err error) error {
 		return nil
 	}
 
-	log.Debugf("Removing %s", filepath.Join(path, entry.Name()))
+	log.Debugf(fmt.Sprintf("Removing %s", filepath.Join(path, entry.Name())))
 
 	if entry.IsDir() {
 		if err := os.RemoveAll(filepath.Join(path, entry.Name())); err != nil {

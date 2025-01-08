@@ -106,7 +106,7 @@ func (s *command) runTests(cwd string, coverPath string, modPaths []string) erro
 	}
 
 	if !s.yarnOnly {
-		log.Infof("Checking coverage directory")
+		log.Infof(fmt.Sprintf("Checking coverage directory"))
 		if err := os.MkdirAll(coverPath, os.ModeDir+fs.ModePerm); err != nil {
 			return fmt.Errorf("making coverage directory: %w", err)
 		} else if dirList, err := os.ReadDir(coverPath); err != nil {
@@ -114,7 +114,7 @@ func (s *command) runTests(cwd string, coverPath string, modPaths []string) erro
 		} else {
 			for _, entry := range dirList {
 				if filepath.Ext(entry.Name()) == golang.CoverageExt {
-					log.Debugf("Removing %s", filepath.Join(coverPath, entry.Name()))
+					log.Debugf(fmt.Sprintf("Removing %s", filepath.Join(coverPath, entry.Name())))
 					if err := os.Remove(filepath.Join(coverPath, entry.Name())); err != nil {
 						return fmt.Errorf("removing %s: %w", filepath.Join(coverPath, entry.Name()), err)
 					}

@@ -17,13 +17,15 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/specterops/bloodhound/log"
 )
 
 func main() {
-	log.Infof("This is an info log message: %s", "test")
-	log.Warnf("This is a warning log message: %s", "test")
-	log.Errorf("This is a error log message: %s", "test")
-	log.Fatalf("This is a fatal log message and will kill the application with exit 1: %s", "test")
-	log.Errorf("This should never be seen, the Fatalf call is broken!")
+	log.Infof(fmt.Sprintf("This is an info log message: %s", "test"))
+	log.Warnf(fmt.Sprintf("This is a warning log message: %s", "test"))
+	log.Errorf(fmt.Sprintf("This is a error log message: %s", "test"))
+	log.Fatalf(fmt.Sprintf("This is a fatal log message and will kill the application with exit 1: %s", "test"))
+	log.Errorf(fmt.Sprintf("This should never be seen, the Fatalf call is broken!"))
 }

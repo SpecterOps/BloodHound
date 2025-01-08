@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -40,12 +41,12 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		ecaEnrollers := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
 		for _, certTemplate := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForEsc1(certTemplate); err != nil {
-				log.Warnf("Error validating cert template %d: %v", certTemplate.ID, err)
+				log.Warnf(fmt.Sprintf("Error validating cert template %d: %v", certTemplate.ID, err))
 				continue
 			} else if !valid {
 				continue
 			} else if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				log.Warnf("Error validating cert template %d: %v", certTemplate.ID, err)
+				log.Warnf(fmt.Sprintf("Error validating cert template %d: %v", certTemplate.ID, err))
 				continue
 			} else {
 				results.Or(CalculateCrossProductNodeSets(tx, domainsid, expandedGroups, cache.GetCertTemplateEnrollers(certTemplate.ID), ecaEnrollers))
@@ -201,7 +202,7 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 	// Add startnode, Auth. Users, and Everyone to start nodes
 	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		log.Warnf("Error getting domain SID for domain %d: %v", endNode.ID, err)
+		log.Warnf(fmt.Sprintf("Error getting domain SID for domain %d: %v", endNode.ID, err))
 		return nil, err
 	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
@@ -290,16 +291,16 @@ func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship
 			query.KindIn(query.End(), ad.EnterpriseCA),
 			query.KindIn(query.Relationship(), ad.HostsCAService),
 		))); err != nil {
-			log.Errorf("Error getting hostscaservice edge to enterprise ca for computer %d : %v", startNode.ID, err)
+			log.Errorf(fmt.Sprintf("Error getting hostscaservice edge to enterprise ca for computer %d : %v", startNode.ID, err))
 		} else {
 			for _, ecaPath := range ecaPaths {
 				eca := ecaPath.Terminal()
 				if chainToRootCAPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
-					log.Errorf("Error getting eca %d path to domain %d: %v", eca.ID, targetDomainNode.ID, err)
+					log.Errorf(fmt.Sprintf("Error getting eca %d path to domain %d: %v", eca.ID, targetDomainNode.ID, err))
 				} else if chainToRootCAPaths.Len() == 0 {
 					continue
 				} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
-					log.Errorf("Error getting eca %d path to domain %d via trusted for auth: %v", eca.ID, targetDomainNode.ID, err)
+					log.Errorf(fmt.Sprintf("Error getting eca %d path to domain %d via trusted for auth: %v", eca.ID, targetDomainNode.ID, err))
 				} else if trustedForAuthPaths.Len() == 0 {
 					continue
 				} else {

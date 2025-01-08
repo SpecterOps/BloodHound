@@ -80,11 +80,11 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 	} else {
 		switch driverName {
 		case neo4j.DriverName:
-			log.Infof("Connecting to graph using Neo4j")
+			log.Infof(fmt.Sprintf("Connecting to graph using Neo4j"))
 			connectionString = cfg.Neo4J.Neo4jConnectionString()
 
 		case pg.DriverName:
-			log.Infof("Connecting to graph using PostgreSQL")
+			log.Infof(fmt.Sprintf("Connecting to graph using PostgreSQL"))
 			connectionString = cfg.Database.PostgreSQLConnectionString()
 
 		default:
@@ -118,6 +118,6 @@ func InitializeLogging(cfg config.Configuration) error {
 
 	log.Configure(log.DefaultConfiguration().WithLevel(logLevel))
 
-	log.Infof("Logging configured")
+	log.Infof(fmt.Sprintf("Logging configured"))
 	return nil
 }
