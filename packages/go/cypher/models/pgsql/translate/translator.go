@@ -432,6 +432,11 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		} else if err := RewriteExpressionIdentifiers(lookupExpression, s.query.Scope.CurrentFrameBinding().Identifier, s.query.Scope.Visible()); err != nil {
 			s.SetError(err)
 		} else {
+			if propertyLookup, isPropertyLookup := asPropertyLookup(lookupExpression); isPropertyLookup {
+				// If sorting, use the raw type of the JSONB field
+				propertyLookup.Operator = pgsql.OperatorJSONField
+			}
+
 			s.query.CurrentOrderBy().Expression = lookupExpression
 		}
 
@@ -592,7 +597,10 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 			} else {
 				var functionCall pgsql.FunctionCall
 
-				if _, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+				if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+					// Ensure that the JSONB array length function receives the JSONB type
+					propertyLookup.Operator = pgsql.OperatorJSONField
+
 					functionCall = pgsql.FunctionCall{
 						Function:   pgsql.FunctionJSONBArrayLength,
 						Parameters: []pgsql.Expression{argument},
@@ -732,7 +740,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		s.exitState(StateTranslatingWhere)
 
 		// Assign the last operands as identifier set constraints
-		if err := s.treeTranslator.ConstrainRemainingOperands(); err != nil {
+		if err := s.treeTranslator.PopRemainingExpressionsAsConstraints(); err != nil {
 			s.SetError(err)
 		}
 

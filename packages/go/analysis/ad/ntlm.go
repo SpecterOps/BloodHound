@@ -56,16 +56,14 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 
 					if err != nil {
 						continue
-					} else {
-						if authenticatedUserID, ok := authenticatedUsersCache[domain]; !ok {
-							continue
-						} else if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-							return PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID)
-						}); err != nil {
-							log.Warnf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToSMB, err)
-							// Additional analysis may occur if one of our analysis errors
-							continue
-						}
+					} else if authenticatedUserID, ok := authenticatedUsersCache[domain]; !ok {
+						continue
+					} else if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+						return PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID)
+					}); err != nil {
+						log.Warnf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToSMB, err)
+						// Additional analysis may occur if one of our analysis errors
+						continue
 					}
 
 					if webclientRunning, err := innerComputer.Properties.Get(ad.WebClientRunning.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
@@ -82,6 +80,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		}
 	})
 	if err != nil {
+		operation.Done()
 		return nil, err
 	}
 
@@ -215,33 +214,31 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 		// Fetch the admins with edges to the provided computer
 		if firstDegreeAdmins, err := fetchFirstDegreeNodes(tx, computer, ad.AdminTo); err != nil {
 			return err
+		} else if firstDegreeAdmins.ContainingNodeKinds(ad.Computer).Len() > 0 {
+			outC <- analysis.CreatePostRelationshipJob{
+				FromID: authenticatedUserID,
+				ToID:   computer.ID,
+				Kind:   ad.CoerceAndRelayNTLMToSMB,
+			}
 		} else {
-			if firstDegreeAdmins.ContainingNodeKinds(ad.Computer).Len() > 0 {
+			allAdminGroups := cardinality.NewBitmap64()
+			for group := range firstDegreeAdmins.ContainingNodeKinds(ad.Group) {
+				allAdminGroups.And(expandedGroups.Cardinality(group.Uint64()))
+			}
+
+			// Fetch nodes where the node id is in our allAdminGroups bitmap and are of type Computer
+			if computerIds, err := ops.FetchNodeIDs(tx.Nodes().Filter(
+				query.And(
+					query.InIDs(query.Node(), graph.DuplexToGraphIDs(allAdminGroups)...),
+					query.Kind(query.Node(), ad.Computer),
+				),
+			)); err != nil {
+				return err
+			} else if len(computerIds) > 0 {
 				outC <- analysis.CreatePostRelationshipJob{
 					FromID: authenticatedUserID,
 					ToID:   computer.ID,
 					Kind:   ad.CoerceAndRelayNTLMToSMB,
-				}
-			} else {
-				allAdminGroups := cardinality.NewBitmap64()
-				for group := range firstDegreeAdmins.ContainingNodeKinds(ad.Group) {
-					allAdminGroups.And(expandedGroups.Cardinality(group.Uint64()))
-				}
-
-				// Fetch nodes where the node id is in our allAdminGroups bitmap and are of type Computer
-				if computerIds, err := ops.FetchNodeIDs(tx.Nodes().Filter(
-					query.And(
-						query.InIDs(query.Node(), graph.DuplexToGraphIDs(allAdminGroups)...),
-						query.Kind(query.Node(), ad.Computer),
-					),
-				)); err != nil {
-					return err
-				} else if len(computerIds) > 0 {
-					outC <- analysis.CreatePostRelationshipJob{
-						FromID: authenticatedUserID,
-						ToID:   computer.ID,
-						Kind:   ad.CoerceAndRelayNTLMToSMB,
-					}
 				}
 			}
 		}

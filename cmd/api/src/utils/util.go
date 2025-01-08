@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/mail"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -252,4 +253,9 @@ func HeaderMatches(headers http.Header, key string, target ...string) bool {
 		}
 	}
 	return false
+}
+
+func IsValidEmail(maybeEmail string) bool {
+	_, err := mail.ParseAddress(maybeEmail)
+	return err == nil
 }
