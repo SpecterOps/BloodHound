@@ -18,7 +18,7 @@ import { Before, After, BeforeAll, AfterAll, Status } from '@cucumber/cucumber';
 import FixtureManager from './FixtureManager.js';
 import PlaywrightWorld from '../tests/worlds/playwrightWorld.js';
 import { loadEnvs } from '../helpers/env/env.js';
-import { dbOPS } from '../../prisma/cleanup.js';
+import { DbOPS } from '../../prisma/cleanup.js';
 
 let fx: FixtureManager;
 
@@ -34,7 +34,7 @@ Before(async function (this: PlaywrightWorld) {
     // create new instance of fixture for each scenario
     await fx.openContext();
     await fx.newPage();
-    this.fixture = fx.Fixture;
+    this.fixture = fx.fixture;
 });
 
 After(async function ({ result, pickle }) {
@@ -48,7 +48,7 @@ After(async function ({ result, pickle }) {
     }
 
     // delete test users in dev environment
-    const db = new dbOPS();
+    const db = new DbOPS();
     db.deleteUsers();
 });
 

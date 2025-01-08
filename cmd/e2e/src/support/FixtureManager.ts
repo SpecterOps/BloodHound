@@ -35,7 +35,7 @@ export default class FixtureManager implements IFixture {
         this.pageManager = new PageManager();
     }
 
-    get Fixture(): IFixture {
+    get fixture(): IFixture {
         return {
             browser: this.browser,
             context: this.context,

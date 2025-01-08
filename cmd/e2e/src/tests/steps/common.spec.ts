@@ -53,7 +53,7 @@ When('User navigates to the login page', async function (this: PlaywrightWorld) 
 });
 
 When('User visits {string} page', async function (text: string) {
-    await this.fixture.page.goto(`${process.env.BASEURL}/ui/${text}`, { waitUntil: 'domcontentloaded' });
+    await this.fixture.page.goto(`${process.env.BASE_URL}/ui/${text}`, { waitUntil: 'domcontentloaded' });
 });
 
 When('User clicks on the login button', async function () {

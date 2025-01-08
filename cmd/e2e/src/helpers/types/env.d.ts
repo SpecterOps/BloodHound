@@ -21,7 +21,8 @@ declare global {
         interface ProcessEnv {
             DEFAULT_BROWSER: 'chrome' | 'firefox' | 'webkit';
             ENV: 'staging' | 'production' | 'dev';
-            BASEURL: string;
+            BASE_URL: string;
+            DATABASE_URL: string;
         }
     }
 }

@@ -72,11 +72,16 @@ export class User {
         this.totpActivated = totpActivated;
     }
     async create() {
-        // sanity check when running against production environment
-        // production tagged tests should not include any seeding data.
-        if (process.env.ENV === 'production') {
+        // sanity check when running against non dev environment
+        // production tagged tests should not include any test data.
+        const dataBaseURL = process.env.DATABASE_URL;
+
+        // prisma client will throw an error if database connetction url string is null
+        const dbHost = dataBaseURL?.split('@')[1]?.split(':')[0];
+        // comparison is a must (true|true) return false if one of the condition is false
+        if (dbHost !== 'localhost' && dbHost !== '127.0.0.1') {
             // throwing an _uncaught_ error exception to allow the process to be terminated accordingly
-            throw new Error('Error: no seeding data in production environment');
+            throw new Error('Error: no seeding data in non dev environment');
         }
 
         // option to set the password in table driven tests

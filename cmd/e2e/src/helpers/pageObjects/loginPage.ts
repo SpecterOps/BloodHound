@@ -20,7 +20,7 @@ export default class LoginPage {
     constructor(private page: Page) {}
 
     async navigateToLoginPage() {
-        this.page.goto(`${process.env.BASEURL}/ui/login`, { waitUntil: 'domcontentloaded' });
+        this.page.goto(`${process.env.BASE_URL}/ui/login`, { waitUntil: 'domcontentloaded' });
     }
 
     async enterUserName(username: string) {
