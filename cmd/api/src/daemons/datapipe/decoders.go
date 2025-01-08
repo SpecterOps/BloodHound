@@ -97,6 +97,7 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			return err
 		} else {
 			count++
 			convertGroupData(group, &convertedData)
@@ -138,6 +139,7 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			return err
 		} else {
 			count++
 			convertSessionData(session, &convertedData)
@@ -179,6 +181,7 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			return err
 		} else {
 			convert := getKindConverter(data.Kind)
 			convert(data.Data, &convertedData)

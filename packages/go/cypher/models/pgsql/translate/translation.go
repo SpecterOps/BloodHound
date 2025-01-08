@@ -252,6 +252,7 @@ func (s *Translator) translateCoalesceFunction(functionInvocation *cypher.Functi
 
 		// Find and validate types of the arguments
 		for _, argument := range arguments {
+			// Properties have no type information and should be skipped
 			if argumentType, err := InferExpressionType(argument); err != nil {
 				return err
 			} else if argumentType.IsKnown() {
@@ -345,9 +346,9 @@ func (s *Translator) translateProjectionItem(scope *Scope, projectionItem *cyphe
 			}
 
 		case *pgsql.BinaryExpression:
-			if typedSelectItem.Operator == pgsql.OperatorPropertyLookup {
-				// TODO: This probably belongs somewhere else
-				typedSelectItem.Operator = pgsql.OperatorJSONField
+			if propertyLookup, isPropertyLookup := asPropertyLookup(typedSelectItem); isPropertyLookup {
+				// Ensure that projections maintain the raw JSONB type of the field
+				propertyLookup.Operator = pgsql.OperatorJSONField
 			}
 		}
 

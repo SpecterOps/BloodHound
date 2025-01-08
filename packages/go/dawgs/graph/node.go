@@ -436,11 +436,11 @@ func IDsToUint32Slice(ids []ID) []uint32 {
 	return rawIDs
 }
 
-func IDsToUint64Slice(ids []ID) []uint32 {
-	rawIDs := make([]uint32, len(ids))
+func IDsToUint64Slice(ids []ID) []uint64 {
+	rawIDs := make([]uint64, len(ids))
 
 	for idx, id := range ids {
-		rawIDs[idx] = id.Uint32()
+		rawIDs[idx] = id.Uint64()
 	}
 
 	return rawIDs
