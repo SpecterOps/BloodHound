@@ -3,10 +3,13 @@ package handlers
 import (
 	"context"
 	"log/slog"
+	"os"
 
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 )
+
+var lvl = new(slog.LevelVar)
 
 type ContextHandler struct {
 	IDResolver auth.IdentityResolver
@@ -44,4 +47,16 @@ func ReplaceAttr(_ []string, a slog.Attr) slog.Attr {
 	}
 
 	return a
+}
+
+func NewDefaultLogger() *slog.Logger {
+	return slog.New(&ContextHandler{IDResolver: auth.NewIdentityResolver(), Handler: slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: lvl, ReplaceAttr: ReplaceAttr})})
+}
+
+func SetGlobalLevel(level slog.Level) {
+	lvl.Set(level)
+}
+
+func GlobalLevel() slog.Level {
+	return lvl.Level()
 }
