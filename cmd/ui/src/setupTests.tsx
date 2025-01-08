@@ -18,11 +18,10 @@
 import matchers from '@testing-library/jest-dom/matchers';
 import { expect } from 'vitest';
 //@ts-ignore
-import React, { lazy } from 'react';
+import React from 'react';
 //@ts-ignore
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import 'whatwg-fetch';
-
+// organize-imports-ignore
 import 'vitest-canvas-mock';
 import 'jest-webgl-canvas-mock';
 //@ts-ignore

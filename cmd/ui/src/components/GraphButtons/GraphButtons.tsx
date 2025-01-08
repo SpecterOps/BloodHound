@@ -17,7 +17,7 @@
 import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, MenuItem } from '@mui/material';
-import { GraphMenu, GraphButton } from 'bh-shared-ui';
+import { GraphButton, GraphMenu } from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import { FC } from 'react';
 import { useAppSelector } from 'src/store';

@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import userEvent from '@testing-library/user-event';
+import { apiClient, CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import * as actions from 'src/ducks/explore/actions';
 import { render, screen } from 'src/test-utils';
 import CommonSearches from './CommonSearches';
-import userEvent from '@testing-library/user-event';
-import { setupServer } from 'msw/node';
-import { rest } from 'msw';
-import * as actions from 'src/ducks/explore/actions';
-import { CommonSearches as prebuiltSearchList, apiClient } from 'bh-shared-ui';
 
 const server = setupServer(
     rest.get('/api/v2/saved-queries', (req, res, ctx) => {

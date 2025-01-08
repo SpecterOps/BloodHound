@@ -30,10 +30,10 @@ import { useNavigate } from 'react-router-dom';
 import { setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { ROUTE_EXPLORE } from 'src/ducks/global/routes';
+import usePermissions from 'src/hooks/usePermissions/usePermissions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
 import { dataCollectionMessage } from '../QA/utils';
-import usePermissions from 'src/hooks/usePermissions/usePermissions';
 
 const GroupManagement = () => {
     const dispatch = useAppDispatch();
