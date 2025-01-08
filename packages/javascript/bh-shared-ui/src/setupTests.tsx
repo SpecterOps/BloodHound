@@ -18,9 +18,7 @@
 import matchers from '@testing-library/jest-dom/matchers';
 import { expect } from 'vitest';
 //@ts-ignore
-import React from 'react';
 //@ts-ignore
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import 'whatwg-fetch';
 
 // jest-dom extensions

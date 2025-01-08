@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
 import { Link, Typography } from '@mui/material';
-import { EdgeInfoProps } from '../index';
+import { FC } from 'react';
 import CodeController from '../CodeController/CodeController';
+import { EdgeInfoProps } from '../index';
 
 const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = ({
     sourceName,

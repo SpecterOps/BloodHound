@@ -16,7 +16,7 @@
 
 import { render, screen } from '../../test-utils';
 import { EntityField } from '../../utils';
-import { exclusionList, Field, ObjectInfoFields } from './fragments';
+import { Field, ObjectInfoFields, exclusionList } from './fragments';
 
 describe('Field', () => {
     it('should render a Field when the provided value is false', () => {

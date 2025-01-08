@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Menu } from '@mui/material';
-import GraphButton from '../GraphButton';
 import { Children, FC, ReactNode, useState } from 'react';
+import GraphButton from '../GraphButton';
 
 const GraphMenu: FC<{ label: ReactNode; children: ReactNode }> = ({ children, label }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);

@@ -17,18 +17,18 @@
 import { Switch } from '@bloodhoundenterprise/doodleui';
 import {
     Alert,
-    Grid,
-    Typography,
     FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
     FormControlLabel,
+    Grid,
+    InputLabel,
+    MenuItem,
+    Select,
+    Typography,
     useTheme,
 } from '@mui/material';
+import { Role, UpsertOIDCProviderRequest, UpsertSAMLProviderFormInputs } from 'js-client-library';
 import { FC } from 'react';
 import { Control, Controller, FieldErrors, UseFormResetField, UseFormWatch } from 'react-hook-form';
-import { Role, UpsertOIDCProviderRequest, UpsertSAMLProviderFormInputs } from 'js-client-library';
 
 export const backfillSSOProviderConfig = (readOnlyRoleId?: number) => ({
     auto_provision: { enabled: false, default_role: readOnlyRoleId, role_provision: false },

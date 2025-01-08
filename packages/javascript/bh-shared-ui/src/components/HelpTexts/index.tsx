@@ -14,6 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import ADCSESC1 from './ADCSESC1/ADCSESC1';
+import ADCSESC10a from './ADCSESC10a/ADCSESC10a';
+import ADCSESC10b from './ADCSESC10b/ADCSESC10b';
+import ADCSESC13 from './ADCSESC13/ADCSESC13';
+import ADCSESC3 from './ADCSESC3/ADCSESC3';
+import ADCSESC4 from './ADCSESC4/ADCSESC4';
+import ADCSESC6a from './ADCSESC6a/ADCSESC6a';
+import ADCSESC6b from './ADCSESC6b/ADCSESC6b';
+import ADCSESC9a from './ADCSESC9a/ADCSESC9a';
+import ADCSESC9b from './ADCSESC9b/ADCSESC9b';
 import AZAKSContributor from './AZAKSContributor/AZAKSContributor';
 import AZAddMembers from './AZAddMembers/AZAddMembers';
 import AZAddOwner from './AZAddOwner/AZAddOwner';
@@ -68,8 +78,8 @@ import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
 import CoerceToTGT from './CoerceToTGT/CoerceToTGT';
 import Contains from './Contains/Contains';
-import DCSync from './DCSync/DCSync';
 import DCFor from './DCFor/DCFor';
+import DCSync from './DCSync/DCSync';
 import DelegatedEnrollmentAgent from './DelegatedEnrollmentAgent/DelegatedEnrollmentAgent';
 import DumpSMSAPassword from './DumpSMSAPassword/DumpSMSAPassword';
 import Enroll from './Enroll/Enroll';
@@ -99,28 +109,18 @@ import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
 import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
 import RootCAFor from './RootCAFor/RootCAFor';
 import SQLAdmin from './SQLAdmin/SQLAdmin';
+import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
 import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
-import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import TrustedBy from './TrustedBy/TrustedBy';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
-import WriteGPLink from './WriteGPLink/WriteGPLink';
 import WriteDacl from './WriteDacl/WriteDacl';
+import WriteGPLink from './WriteGPLink/WriteGPLink';
 import WriteOwner from './WriteOwner/WriteOwner';
 import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
 import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WriteSPN from './WriteSPN/WriteSPN';
-import ADCSESC1 from './ADCSESC1/ADCSESC1';
-import ADCSESC3 from './ADCSESC3/ADCSESC3';
-import ADCSESC4 from './ADCSESC4/ADCSESC4';
-import ADCSESC6a from './ADCSESC6a/ADCSESC6a';
-import ADCSESC6b from './ADCSESC6b/ADCSESC6b';
-import ADCSESC9a from './ADCSESC9a/ADCSESC9a';
-import ADCSESC9b from './ADCSESC9b/ADCSESC9b';
-import ADCSESC10a from './ADCSESC10a/ADCSESC10a';
-import ADCSESC10b from './ADCSESC10b/ADCSESC10b';
-import ADCSESC13 from './ADCSESC13/ADCSESC13';
 
 export type EdgeInfoProps = {
     edgeName?: string;
