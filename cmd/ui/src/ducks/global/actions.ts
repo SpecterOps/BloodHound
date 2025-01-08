@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { OptionsObject, SnackbarKey } from 'notistack';
 import * as types from './types';
+import { Domain } from 'js-client-library';
 
 export const removeSnackbar = (key: SnackbarKey): types.GlobalViewActionTypes => {
     return {
@@ -63,7 +64,7 @@ export const setExpanded = (expanded: { [key: string]: symbol[] }): types.Global
     };
 };
 
-export const setDomain = (domain: types.Domain | null): types.GlobalOptionsActionTypes => {
+export const setDomain = (domain: Domain | null): types.GlobalOptionsActionTypes => {
     return {
         type: types.GLOBAL_SET_DOMAIN,
         domain,
