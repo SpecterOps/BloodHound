@@ -142,6 +142,7 @@ func ContextMiddleware(next http.Handler) http.Handler {
 				},
 				RequestedURL: model.AuditableURL(request.URL.String()),
 				RequestIP:    parseUserIP(request),
+				RemoteAddr:   request.RemoteAddr,
 			})
 
 			// Route the request with the embedded context

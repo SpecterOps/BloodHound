@@ -119,7 +119,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
-				logAttrs       = []slog.Attr{}
+				logAttrs       []slog.Attr
 				requestContext = ctx.FromRequest(request)
 				deadline       time.Time
 
@@ -146,7 +146,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 
 			// Defer the log statement and then serve the request
 			defer func() {
-				slog.LogAttrs(nil, slog.LevelInfo, fmt.Sprintf("%s %s", request.Method, request.URL.RequestURI()), logAttrs...)
+				slog.LogAttrs(request.Context(), slog.LevelInfo, fmt.Sprintf("%s %s", request.Method, request.URL.RequestURI()), logAttrs...)
 
 				if !deadline.IsZero() && time.Now().After(deadline) {
 					log.Warnf(
@@ -158,23 +158,14 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 
 			next.ServeHTTP(loggedResponse, request)
 
-			// Perform auth introspection to log the client/user identity for each call
-			if requestContext.AuthCtx.Authenticated() {
-				if identity, err := idResolver.GetIdentity(requestContext.AuthCtx); err == nil {
-					logAttrs = append(logAttrs, slog.String(identity.Key, identity.ID.String()))
-				}
-			}
-
 			// Log the token ID and request date if the request contains either header
 			setSignedRequestFields(request, logAttrs)
 
 			// Add the fields that we care about before exiting
 			logAttrs = append(logAttrs,
-				slog.String("remote_addr", request.RemoteAddr),
 				slog.String("proto", request.Proto),
 				slog.String("referer", request.Referer()),
 				slog.String("user_agent", request.UserAgent()),
-				slog.String("request_id", ctx.RequestID(request)),
 				slog.Int64("request_bytes", loggedRequestBody.bytesRead),
 				slog.Int64("response_bytes", loggedResponse.bytesWritten),
 				slog.Int("status", loggedResponse.statusCode),

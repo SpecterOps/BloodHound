@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/log/handlers"
+	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
@@ -59,7 +60,7 @@ func main() {
 		printVersion()
 	}
 
-	logger := slog.New(&handlers.ContextHandler{Handler: slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{ReplaceAttr: handlers.ReplaceAttr})})
+	logger := slog.New(&handlers.ContextHandler{IdResolver: auth.NewIdentityResolver(), Handler: slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{ReplaceAttr: handlers.ReplaceAttr})})
 	slog.SetDefault(logger)
 
 	// Initialize basic logging facilities while we start up
