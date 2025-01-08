@@ -18,6 +18,7 @@ package log
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"sync/atomic"
@@ -248,6 +249,32 @@ func LogAndMeasure(level Level, format string, args ...any) func() {
 	return func() {
 		if elapsed := time.Since(then); elapsed >= measureThreshold {
 			WithLevel(level).Duration(FieldElapsed, elapsed).Uint64(FieldMeasurementID, pairID).Msg(message)
+		}
+	}
+}
+
+func SlogMeasure(level slog.Level, format string, args ...any) func() {
+	then := time.Now()
+
+	return func() {
+		if elapsed := time.Since(then); elapsed >= measureThreshold {
+			slog.Log(nil, level, fmt.Sprintf(format, args...), FieldElapsed, elapsed)
+		}
+	}
+}
+
+func SlogLogAndMeasure(level slog.Level, format string, args ...any) func() {
+	var (
+		pairID  = logMeasurePairCounter.Add(1)
+		message = fmt.Sprintf(format, args...)
+		then    = time.Now()
+	)
+
+	slog.Log(nil, level, message, FieldMeasurementID, pairID)
+
+	return func() {
+		if elapsed := time.Since(then); elapsed >= measureThreshold {
+			slog.Log(nil, level, message, FieldMeasurementID, pairID, FieldElapsed, elapsed)
 		}
 	}
 }

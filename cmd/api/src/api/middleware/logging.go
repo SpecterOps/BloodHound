@@ -17,7 +17,9 @@
 package middleware
 
 import (
+	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"runtime/debug"
 	"time"
@@ -95,17 +97,17 @@ func getSignedRequestDate(request *http.Request) (string, bool) {
 	return requestDateHeader, requestDateHeader != ""
 }
 
-func setSignedRequestFields(request *http.Request, logEvent log.Event) {
+func setSignedRequestFields(request *http.Request, logAttrs []slog.Attr) {
 	// Log the token ID and request date if the request contains either header
 	if requestDateHeader, hasHeader := getSignedRequestDate(request); hasHeader {
-		logEvent.Str("signed_request_date", requestDateHeader)
+		logAttrs = append(logAttrs, slog.String("signed_request_date", requestDateHeader))
 	}
 
 	if authScheme, schemeParameter, err := parseAuthorizationHeader(request); err == nil {
 		switch authScheme {
 		case api.AuthorizationSchemeBHESignature:
 			if _, err := uuid.FromString(schemeParameter); err == nil {
-				logEvent.Str("token_id", schemeParameter)
+				logAttrs = append(logAttrs, slog.String("token_id", schemeParameter))
 			}
 		}
 	}
@@ -117,7 +119,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
-				logEvent       = log.WithLevel(log.LevelInfo)
+				logAttrs       = []slog.Attr{}
 				requestContext = ctx.FromRequest(request)
 				deadline       time.Time
 
@@ -144,7 +146,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 
 			// Defer the log statement and then serve the request
 			defer func() {
-				logEvent.Msgf("%s %s", request.Method, request.URL.RequestURI())
+				slog.LogAttrs(nil, slog.LevelInfo, fmt.Sprintf("%s %s", request.Method, request.URL.RequestURI()), logAttrs...)
 
 				if !deadline.IsZero() && time.Now().After(deadline) {
 					log.Warnf(
@@ -159,23 +161,25 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 			// Perform auth introspection to log the client/user identity for each call
 			if requestContext.AuthCtx.Authenticated() {
 				if identity, err := idResolver.GetIdentity(requestContext.AuthCtx); err == nil {
-					logEvent.Str(identity.Key, identity.ID.String())
+					logAttrs = append(logAttrs, slog.String(identity.Key, identity.ID.String()))
 				}
 			}
 
 			// Log the token ID and request date if the request contains either header
-			setSignedRequestFields(request, logEvent)
+			setSignedRequestFields(request, logAttrs)
 
 			// Add the fields that we care about before exiting
-			logEvent.Str("remote_addr", request.RemoteAddr)
-			logEvent.Str("proto", request.Proto)
-			logEvent.Str("referer", request.Referer())
-			logEvent.Str("user_agent", request.UserAgent())
-			logEvent.Str("request_id", ctx.RequestID(request))
-			logEvent.Int64("request_bytes", loggedRequestBody.bytesRead)
-			logEvent.Int64("response_bytes", loggedResponse.bytesWritten)
-			logEvent.Int("status", loggedResponse.statusCode)
-			logEvent.Duration("elapsed", time.Since(requestContext.StartTime.UTC()))
+			logAttrs = append(logAttrs,
+				slog.String("remote_addr", request.RemoteAddr),
+				slog.String("proto", request.Proto),
+				slog.String("referer", request.Referer()),
+				slog.String("user_agent", request.UserAgent()),
+				slog.String("request_id", ctx.RequestID(request)),
+				slog.Int64("request_bytes", loggedRequestBody.bytesRead),
+				slog.Int64("response_bytes", loggedResponse.bytesWritten),
+				slog.Int("status", loggedResponse.statusCode),
+				slog.Duration("elapsed", time.Since(requestContext.StartTime.UTC())),
+			)
 		})
 	}
 }
