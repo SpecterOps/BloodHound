@@ -108,15 +108,15 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
      s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s0,
                  node n1
-            where n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and ((s0.n0).properties -> 'selected')::bool
-               or (s0.n0).properties -> 'tid' = n1.properties -> 'tid' and (n1.properties -> 'enabled')::bool)
+            where n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and ((s0.n0).properties ->> 'selected')::bool
+               or (s0.n0).properties -> 'tid' = n1.properties -> 'tid' and (n1.properties ->> 'enabled')::bool)
 select s1.n0 as s, s1.n1 as e
 from s1;
 
 -- case: match (s) where s.value + 2 / 3 > 10 return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
-            where (n0.properties -> 'value')::int8 + 2 / 3 > 10)
+            where (n0.properties ->> 'value')::int8 + 2 / 3 > 10)
 select s0.n0 as s
 from s0;
 
@@ -172,7 +172,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
      s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s0,
                  node n1
-            where (n1.properties -> 'other')::int8 = 1234)
+            where (n1.properties ->> 'other')::int8 = 1234)
 select s1.n0 as s
 from s1;
 
@@ -182,7 +182,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
             from s0,
                  node n1
             where (s0.n0).properties ->> 'name' = '1234'
-               or (n1.properties -> 'other')::int8 = 1234)
+               or (n1.properties ->> 'other')::int8 = 1234)
 select s1.n0 as s
 from s1;
 
@@ -281,12 +281,12 @@ from s0;
 
 -- case: match (s) return s.value + 1
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0)
-select ((s0.n0).properties -> 'value')::int8 + 1
+select ((s0.n0).properties ->> 'value')::int8 + 1
 from s0;
 
 -- case: match (s) return (s.value + 1) / 3
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0)
-select (((s0.n0).properties -> 'value')::int8 + 1) / 3
+select (((s0.n0).properties ->> 'value')::int8 + 1) / 3
 from s0;
 
 -- case: match (s) where id(s) in [1, 2, 3, 4] return s
@@ -503,7 +503,7 @@ from s0;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and (n0.properties -> 'functionallevel')::text = any
+              and n0.properties ->> 'functionallevel' = any
                   (array ['2008 R2', '2012', '2008', '2003', '2003 Interim', '2000 Mixed/Native']::text[]))
 select s0.n0 as n
 from s0;
@@ -512,7 +512,7 @@ from s0;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and (n0.properties -> 'value')::int8 = any (array [1, 2, 3, 4]::int8[]))
+              and (n0.properties ->> 'value')::int8 = any (array [1, 2, 3, 4]::int8[]))
 select s0.n0 as n
 from s0;
 
@@ -520,9 +520,9 @@ from s0;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and (n0.properties -> 'pwdlastset')::numeric <
+              and (n0.properties ->> 'pwdlastset')::numeric <
                   (extract(epoch from now()::timestamp with time zone)::numeric - (365 * 86400))
-              and not (n0.properties -> 'pwdlastset')::float8 = any (array [- 1, 0]::float8[]))
+              and not (n0.properties ->> 'pwdlastset')::float8 = any (array [- 1, 0]::float8[]))
 select s0.n0 as u
 from s0
 limit 100;
@@ -531,9 +531,9 @@ limit 100;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and (n0.properties -> 'pwdlastset')::numeric <
+              and (n0.properties ->> 'pwdlastset')::numeric <
                   (extract(epoch from now()::timestamp with time zone)::numeric * 1000 - (365 * 86400000))
-              and not (n0.properties -> 'pwdlastset')::float8 = any (array [- 1, 0]::float8[]))
+              and not (n0.properties ->> 'pwdlastset')::float8 = any (array [- 1, 0]::float8[]))
 select s0.n0 as u
 from s0
 limit 100;
@@ -574,7 +574,7 @@ from s0;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and coalesce((n0.properties -> 'a')::int8, (n0.properties -> 'b')::int8, 1)::int8 = 1)
+              and coalesce((n0.properties ->> 'a')::int8, (n0.properties ->> 'b')::int8, 1)::int8 = 1)
 select s0.n0 as n
 from s0;
 
@@ -582,7 +582,7 @@ from s0;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and coalesce(n0.properties -> 'a', n0.properties -> 'b')::int8 = 1)
+              and coalesce(n0.properties ->> 'a', n0.properties ->> 'b')::int8 = 1)
 select s0.n0 as n
 from s0;
 
@@ -590,6 +590,47 @@ from s0;
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
             from node n0
             where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
-              and 1 = coalesce(n0.properties -> 'a', n0.properties -> 'b')::int8)
+              and 1 = coalesce(n0.properties ->> 'a', n0.properties ->> 'b')::int8)
 select s0.n0 as n
 from s0;
+
+-- case: match (u:NodeKind1) where u.hasspn = true and u.enabled = true and not '-502' ends with u.objectid and not coalesce(u.gmsa, false) = true and not coalesce(u.msa, false) = true return u limit 10
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and (n0.properties ->> 'hasspn')::bool = true
+              and (n0.properties ->> 'enabled')::bool = true
+              and not '-502' like coalesce(n0.properties ->> 'objectid', '')::text
+              and not coalesce((n0.properties ->> 'gmsa')::bool, false)::bool = true
+              and not coalesce((n0.properties ->> 'msa')::bool, false)::bool = true)
+select s0.n0 as u
+from s0
+limit 10;
+
+-- case: match (n:NodeKind1) where coalesce(n.name, '') = coalesce(n.migrated_name, '') return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and coalesce(n0.properties ->> 'name', '')::text = coalesce(n0.properties ->> 'migrated_name', '')::text)
+select s0.n0 as n
+from s0;
+
+-- case: match (n:NodeKind1) where '1' in n.array_prop + ['1', '2'] return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and '1' = any (jsonb_to_text_array(n0.properties -> 'array_prop')::text[] || array ['1', '2']::text[]))
+select s0.n0 as n
+from s0;
+
+-- case: match p=(:NodeKind1)-[r]->(:NodeKind1) where r.isacl return p limit 100
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite                        as n0,
+                   (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0,
+                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite                        as n1
+            from edge e0
+                   join node n0 on n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n0.id = e0.start_id
+                   join node n1 on n1.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n1.id = e0.end_id
+            where (e0.properties ->> 'isacl')::bool)
+select edges_to_path(variadic array [(s0.e0).id]::int8[])::pathcomposite as p
+from s0
+limit 100;

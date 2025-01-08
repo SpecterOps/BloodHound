@@ -221,9 +221,11 @@ func ShallowFetchNodesByID(tx graph.Transaction, cache Cache, ids []graph.ID) ([
 	cachedNodes, missingNodeIDs := cache.GetNodes(ids)
 
 	if len(missingNodeIDs) > 0 {
+		newNodes := make([]*graph.Node, 0, len(missingNodeIDs))
+
 		if err := fetchNodesByIDQuery(tx, missingNodeIDs).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
 			for next := range cursor.Chan() {
-				cachedNodes = append(cachedNodes, graph.NewNode(next.ID, nil, next.Kinds...))
+				newNodes = append(newNodes, graph.NewNode(next.ID, nil, next.Kinds...))
 			}
 
 			return cursor.Error()
@@ -231,7 +233,11 @@ func ShallowFetchNodesByID(tx graph.Transaction, cache Cache, ids []graph.ID) ([
 			return nil, err
 		}
 
-		cache.PutNodes(cachedNodes[len(cachedNodes)-len(missingNodeIDs):])
+		// Put the fetched nodes into cache
+		cache.PutNodes(newNodes)
+
+		// Append them to the end of the nodes being returned
+		cachedNodes = append(cachedNodes, newNodes...)
 	}
 
 	return cachedNodes, nil
