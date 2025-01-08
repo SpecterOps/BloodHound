@@ -14,7 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import DataSelector from './DataSelector';
-import * as utils from './types';
-
-export { DataSelector, utils };
+export { default as DataSelector } from './DataSelector';
+export * from './types';
