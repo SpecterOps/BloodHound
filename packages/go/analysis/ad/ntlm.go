@@ -33,6 +33,7 @@ import (
 
 // PostNTLM is the initial function used to execute our NTLM analysis
 func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
 
 	var (
 		adcsComputerCache       = make(map[string]cardinality.Duplex[uint64])
@@ -42,6 +43,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 
 	// TODO: after adding all of our new NTLM edges, benchmark performance between submitting multiple readers per computer or single reader per computer
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+
 		// Fetch all nodes where the node is a Group and is an Authenticated User
 		if innerAuthenticatedUsersCache, err := FetchAuthUsersMappedToDomains(tx); err != nil {
 			return err
