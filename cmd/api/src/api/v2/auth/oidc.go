@@ -208,7 +208,10 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		// SSO misconfiguration scenario
 		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if len(code) == 0 {
-		log.Errorf("[OIDC] auth code is missing %+v", queryParams)
+		// Don't want to log state but do want to know if state was present
+		hasState := queryParams.Has(api.QueryParameterState)
+		queryParams.Del(api.QueryParameterState)
+		log.Errorf("[OIDC] auth code is missing, has state %t %+v", hasState, queryParams)
 		// Missing authorization code implies a credentials or form issue
 		// Not explicitly covered, treat as technical issue
 		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
@@ -306,7 +309,7 @@ func exchangeCodeForToken(reqCtx context.Context, ssoProvider model.SSOProvider,
 			}
 
 			if token.AccessToken == "" {
-				return nil, errors.New("server response missing access_token")
+				return nil, fmt.Errorf("server response missing access_token %v %v %v", token.Extra("error"), token.Extra("error_description"), token.Extra("error_uri"))
 			}
 
 			return token, nil
