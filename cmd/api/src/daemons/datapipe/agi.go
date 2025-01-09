@@ -19,7 +19,10 @@ package datapipe
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
+
+	"github.com/specterops/bloodhound/log/measure"
 
 	commonanalysis "github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
@@ -38,7 +41,7 @@ import (
 )
 
 func updateAssetGroupIsolationTags(ctx context.Context, db agi.AgiData, graphDB graph.Database) error {
-	defer log.Measure(log.LevelInfo, "Updated asset group isolation tags")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Updated asset group isolation tags")()
 
 	if err := commonanalysis.ClearSystemTags(ctx, graphDB); err != nil {
 		return err
@@ -48,7 +51,7 @@ func updateAssetGroupIsolationTags(ctx context.Context, db agi.AgiData, graphDB 
 }
 
 func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
-	defer log.Measure(log.LevelInfo, "Finished tagging Azure Tier Zero")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging Azure Tier Zero")()
 
 	var tenants graph.NodeSet
 
@@ -157,7 +160,7 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 }
 
 func TagActiveDirectoryTierZero(ctx context.Context, featureFlagProvider appcfg.GetFlagByKeyer, graphDB graph.Database) error {
-	defer log.Measure(log.LevelInfo, "Finished tagging Active Directory Tier Zero")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging Active Directory Tier Zero")()
 
 	if autoTagT0ParentObjectsFlag, err := featureFlagProvider.GetFlagByKey(ctx, appcfg.FeatureAutoTagT0ParentObjects); err != nil {
 		return err
@@ -184,7 +187,7 @@ func TagActiveDirectoryTierZero(ctx context.Context, featureFlagProvider appcfg.
 }
 
 func RunAssetGroupIsolationCollections(ctx context.Context, db database.Database, graphDB graph.Database, kindGetter func(*graph.Node) string) error {
-	defer log.Measure(log.LevelInfo, "Asset Group Isolation Collections")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err

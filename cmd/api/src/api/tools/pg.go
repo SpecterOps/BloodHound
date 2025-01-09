@@ -19,7 +19,6 @@ package tools
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/log/measure"
 	"log/slog"
 	"net/http"
 	"sync"
@@ -31,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/log/measure"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/config"
 )

@@ -19,6 +19,7 @@ package ad
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -29,10 +30,11 @@ import (
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/log/measure"
 )
 
 func ResolveAllGroupMemberships(ctx context.Context, db graph.Database, additionalCriteria ...graph.Criteria) (impact.PathAggregator, error) {
-	defer log.Measure(log.LevelInfo, "ResolveAllGroupMemberships")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "ResolveAllGroupMemberships")()
 
 	var (
 		adGroupIDs []graph.ID

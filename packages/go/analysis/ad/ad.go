@@ -19,9 +19,12 @@ package ad
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/specterops/bloodhound/log/measure"
 
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -74,7 +77,7 @@ func TierZeroWellKnownSIDSuffixes() []string {
 }
 
 func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, domainSID string) (graph.NodeSet, error) {
-	defer log.Measure(log.LevelInfo, "FetchWellKnownTierZeroEntities")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchWellKnownTierZeroEntities")()
 
 	nodes := graph.NewNodeSet()
 
@@ -119,7 +122,7 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 }
 
 func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
-	defer log.Measure(log.LevelInfo, "Fix well known node types")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Fix well known node types")()
 
 	groupSuffixes := []string{EnterpriseKeyAdminsGroupSIDSuffix,
 		KeyAdminsGroupSIDSuffix,
@@ -158,7 +161,7 @@ func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 }
 
 func RunDomainAssociations(ctx context.Context, db graph.Database) error {
-	defer log.Measure(log.LevelInfo, "Domain Associations")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Domain Associations")()
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		if domainNamesByObjectID, err := grabDomainInformation(tx); err != nil {
@@ -217,7 +220,7 @@ func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
 }
 
 func LinkWellKnownGroups(ctx context.Context, db graph.Database) error {
-	defer log.Measure(log.LevelInfo, "Link well known groups")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Link well known groups")()
 
 	var (
 		errors        = util.NewErrorCollector()

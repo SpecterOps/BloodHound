@@ -20,13 +20,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/log/measure"
 	"log/slog"
 	"time"
 
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/log/measure"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
@@ -182,7 +182,7 @@ func (s *Daemon) deleteData() {
 		_ = s.db.DeleteAnalysisRequest(s.ctx)
 		_ = s.db.RequestAnalysis(s.ctx, "datapie")
 	}()
-	defer log.Measure(log.LevelInfo, "Purge Graph Data Completed")()
+	defer measure.Measure(slog.LevelInfo, "Purge Graph Data Completed")()
 
 	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusPurging, false); err != nil {
 		log.Errorf(fmt.Sprintf("Error setting datapipe status: %v", err))

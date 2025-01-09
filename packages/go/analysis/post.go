@@ -19,6 +19,7 @@ package analysis
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sort"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -27,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/log/measure"
 )
 
 func statsSortedKeys(value map[graph.Kind]int) []graph.Kind {
@@ -122,7 +124,7 @@ type DeleteRelationshipJob struct {
 }
 
 func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships ...graph.Kind) (*AtomicPostProcessingStats, error) {
-	defer log.Measure(log.LevelInfo, "Finished deleting transit edges")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished deleting transit edges")()
 
 	var (
 		relationshipIDs []graph.ID
@@ -172,7 +174,7 @@ func NodesWithoutRelationshipsFilter() graph.Criteria {
 }
 
 func ClearOrphanedNodes(ctx context.Context, db graph.Database) error {
-	defer log.Measure(log.LevelInfo, "Finished deleting orphaned nodes")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished deleting orphaned nodes")()
 
 	var operation = ops.StartNewOperation[graph.ID](ops.OperationContext{
 		Parent:     ctx,

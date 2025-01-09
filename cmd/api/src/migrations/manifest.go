@@ -20,13 +20,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/log/measure"
 	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/analysis"
-
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -34,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/log/measure"
 	"github.com/specterops/bloodhound/src/version"
 )
 
@@ -150,7 +149,7 @@ func Version_513_Migration(db graph.Database) error {
 }
 
 func Version_508_Migration(db graph.Database) error {
-	defer log.Measure(log.LevelInfo, "Migrating Azure Owns to Owner")()
+	defer measure.Measure(slog.LevelInfo, "Migrating Azure Owns to Owner")()
 
 	return db.BatchOperation(context.Background(), func(batch graph.Batch) error {
 		return batch.Relationships().Filterf(func() graph.Criteria {
@@ -183,7 +182,7 @@ func Version_508_Migration(db graph.Database) error {
 }
 
 func Version_277_Migration(db graph.Database) error {
-	defer log.Measure(log.LevelInfo, "Migrating node property casing")()
+	defer measure.Measure(slog.LevelInfo, "Migrating node property casing")()
 
 	return db.BatchOperation(context.Background(), func(batch graph.Batch) error {
 		if err := batch.Nodes().Filterf(func() graph.Criteria {
@@ -259,7 +258,7 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 2, Minor: 3, Patch: 0},
 		Execute: func(db graph.Database) error {
-			defer log.Measure(log.LevelInfo, "Deleting all existing role nodes")()
+			defer measure.Measure(slog.LevelInfo, "Deleting all existing role nodes")()
 
 			return db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
 				return tx.Nodes().Filterf(func() graph.Criteria {
@@ -271,7 +270,7 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 2, Minor: 6, Patch: 3},
 		Execute: func(db graph.Database) error {
-			defer log.Measure(log.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
+			defer measure.Measure(slog.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
 
 			return db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
 				//Remove ADLocalGroup label from all nodes that also have the group label

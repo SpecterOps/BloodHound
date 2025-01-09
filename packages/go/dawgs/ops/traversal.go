@@ -19,11 +19,12 @@ package ops
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/log/measure"
 )
 
 type LimitSkipTracker struct {
@@ -143,7 +144,7 @@ type TraversalContext struct {
 }
 
 func Traversal(tx graph.Transaction, plan TraversalPlan, pathVisitor PathVisitor) error {
-	defer log.Measure(log.LevelInfo, "Node %d Traversal", plan.Root.ID)()
+	defer measure.Measure(slog.LevelInfo, "Node %d Traversal", plan.Root.ID)()
 
 	var (
 		requireTraversalOrder = plan.Limit > 0 || plan.Skip > 0

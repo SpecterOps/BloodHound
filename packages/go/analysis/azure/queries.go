@@ -19,7 +19,6 @@ package azure
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/log/measure"
 	"log/slog"
 	"strings"
 
@@ -31,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/log/measure"
 )
 
 func FetchCollectedTenants(tx graph.Transaction) (graph.NodeSet, error) {

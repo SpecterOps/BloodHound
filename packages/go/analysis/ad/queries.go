@@ -19,7 +19,6 @@ package ad
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/log/measure"
 	"log/slog"
 	"strings"
 	"time"
@@ -35,10 +34,11 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/log/measure"
 )
 
 func FetchGraphDBTierZeroTaggedAssets(ctx context.Context, db graph.Database, domainSID string) (graph.NodeSet, error) {
-	defer log.Measure(log.LevelInfo, "FetchGraphDBTierZeroTaggedAssets")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets")()
 
 	var (
 		nodes graph.NodeSet
@@ -60,7 +60,7 @@ func FetchGraphDBTierZeroTaggedAssets(ctx context.Context, db graph.Database, do
 }
 
 func FetchAllEnforcedGPOs(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer log.Measure(log.LevelInfo, "FetchAllEnforcedGPOs")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchAllEnforcedGPOs")()
 
 	enforcedGPOs := graph.NewNodeSet()
 
@@ -78,7 +78,7 @@ func FetchAllEnforcedGPOs(ctx context.Context, db graph.Database, targets graph.
 }
 
 func FetchOUContainers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer log.Measure(log.LevelInfo, "FetchOUContainers")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchOUContainers")()
 
 	oUs := graph.NewNodeSet()
 
@@ -1514,7 +1514,7 @@ func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (f
 }
 
 func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer log.Measure(log.LevelInfo, "FetchAllGroupMembers")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchAllGroupMembers")()
 
 	log.Infof(fmt.Sprintf("Fetching group members for %d AD nodes", len(targets)))
 

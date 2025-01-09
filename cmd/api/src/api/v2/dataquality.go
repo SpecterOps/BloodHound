@@ -18,13 +18,14 @@ package v2
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/log/measure"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
@@ -37,7 +38,7 @@ const (
 )
 
 func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request *http.Request) {
-	defer log.Measure(log.LevelDebug, "Get Current Database Completeness")()
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Get Current Database Completeness")()
 
 	result := make(map[string]float64)
 

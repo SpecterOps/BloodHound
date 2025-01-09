@@ -20,9 +20,11 @@ package dataquality
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/log/measure"
 	"github.com/specterops/bloodhound/src/analysis/ad"
 	"github.com/specterops/bloodhound/src/analysis/azure"
 	"github.com/specterops/bloodhound/src/model"
@@ -37,7 +39,7 @@ type DataQualityData interface {
 
 func SaveDataQuality(ctx context.Context, db DataQualityData, graphDB graph.Database) error {
 	log.Infof(fmt.Sprintf("Started Data Quality Stats Collection"))
-	defer log.Measure(log.LevelInfo, "Successfully Completed Data Quality Stats Collection")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Successfully Completed Data Quality Stats Collection")()
 
 	if stats, aggregation, err := ad.GraphStats(ctx, graphDB); err != nil {
 		return fmt.Errorf("could not get active directory data quality stats: %w", err)

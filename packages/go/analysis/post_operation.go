@@ -19,6 +19,7 @@ package analysis
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -27,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/log/measure"
 )
 
 type StatTrackedOperation[T any] struct {
@@ -38,7 +40,7 @@ func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operat
 	operation := StatTrackedOperation[CreatePostRelationshipJob]{}
 	operation.NewOperation(ctx, db)
 	operation.Operation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan CreatePostRelationshipJob) error {
-		defer log.Measure(log.LevelInfo, operationName)()
+		defer measure.ContextMeasure(ctx, slog.LevelInfo, operationName)()
 
 		var (
 			relProp = NewPropertiesWithLastSeen()

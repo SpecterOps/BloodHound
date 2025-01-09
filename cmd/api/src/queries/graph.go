@@ -23,6 +23,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"sort"
@@ -31,28 +32,26 @@ import (
 	"sync"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/util"
-
-	"github.com/specterops/bloodhound/cypher/models/cypher/format"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/services/agi"
-
-	bhCtx "github.com/specterops/bloodhound/src/ctx"
-
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/cypher/analyzer"
 	"github.com/specterops/bloodhound/cypher/frontend"
+	"github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/log/measure"
 	"github.com/specterops/bloodhound/src/api/bloodhoundgraph"
+	"github.com/specterops/bloodhound/src/config"
+	bhCtx "github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/utils"
 )
 
@@ -239,7 +238,7 @@ func (s *GraphQuery) GetAssetGroupNodes(ctx context.Context, assetGroupTag strin
 }
 
 func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
-	defer log.Measure(log.LevelInfo, "GetAllShortestPaths")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "GetAllShortestPaths")()
 
 	var paths graph.PathSet
 

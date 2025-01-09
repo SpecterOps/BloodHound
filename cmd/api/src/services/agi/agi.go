@@ -20,8 +20,11 @@ package agi
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"slices"
 	"strings"
+
+	"github.com/specterops/bloodhound/log/measure"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -72,7 +75,7 @@ func FetchAssetGroupNodes(tx graph.Transaction, assetGroupTag string, isSystemGr
 }
 
 func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB graph.Database) error {
-	defer log.Measure(log.LevelInfo, "Asset Group Isolation Collections")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err

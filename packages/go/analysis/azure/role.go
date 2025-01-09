@@ -19,7 +19,6 @@ package azure
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/log/measure"
 	"log/slog"
 	"slices"
 
@@ -28,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/log/measure"
 )
 
 func NewRoleEntityDetails(node *graph.Node) RoleDetails {

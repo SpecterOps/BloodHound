@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"sync/atomic"
 
@@ -32,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util/atomics"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/log/measure"
 )
 
 // Driver is a function that drives sending queries to the graph and retrieving vertexes and edges. Traversal
@@ -285,7 +287,7 @@ func New(db graph.Database, numParallelWorkers int) Traversal {
 }
 
 func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
-	defer log.Measure(log.LevelDebug, "BreadthFirst - %d workers", s.numWorkers)()
+	defer measure.ContextMeasure(ctx, slog.LevelDebug, "BreadthFirst - %d workers", s.numWorkers)()
 
 	var (
 		// workerWG keeps count of background workers launched in goroutines
