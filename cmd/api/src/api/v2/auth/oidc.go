@@ -208,16 +208,20 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		// SSO misconfiguration scenario
 		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if len(code) == 0 {
+		log.Errorf("[OIDC] auth code is missing %+v", queryParams)
 		// Missing authorization code implies a credentials or form issue
 		// Not explicitly covered, treat as technical issue
 		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if pkceVerifier, err := request.Cookie(api.AuthPKCECookieName); err != nil {
+		log.Errorf("[OIDC] pkce cookie is missing")
 		// Missing PKCE verifier - likely a technical or config issue
 		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if len(state) == 0 {
+		log.Errorf("[OIDC] state parameter is missing")
 		// Missing state parameter - treat as technical issue
 		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if stateCookie, err := request.Cookie(api.AuthStateCookieName); err != nil || stateCookie.Value != state[0] {
+		log.Errorf("[OIDC] state cookie does not match %v", err)
 		// Invalid state - treat as technical issue or misconfiguration
 		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
