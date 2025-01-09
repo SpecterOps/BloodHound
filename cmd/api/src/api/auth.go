@@ -362,7 +362,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 
 	// Generate commit ID for audit logging
 	if commitID, err = uuid.NewV4(); err != nil {
-		log.Errorf("Error generating commit ID for login: %s", err)
+		log.Warnf("Error generating commit ID for login: %s", err)
 		WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusInternalServerError, "audit log creation failure", request), response)
 		return
 	}
