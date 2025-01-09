@@ -638,7 +638,7 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 			if result, err := runEntityQuery(ctx, s.Graph, delegate, node, 0, 0); errors.Is(err, graph.ErrContextTimedOut) {
 				log.Warnf(fmt.Sprintf("Running entity query for key %s: %v", delegateKey, err))
 			} else if err != nil {
-				log.Errorf(fmt.Sprintf("Error running entity query for key %s: %v", delegateKey, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Error running entity query for key %s: %v", delegateKey, err))
 				data.Store(delegateKey, 0)
 			} else {
 				data.Store(delegateKey, result.Len())
@@ -786,7 +786,7 @@ func (s *GraphQuery) cacheQueryResult(queryStart time.Time, cacheKey string, res
 		// Using GuardedSet here even though it isn't necessary because it allows us to collect information on how often
 		// we run these queries in parallel
 		if set, sizeInBytes, err := s.Cache.GuardedSet(cacheKey, result); err != nil {
-			log.Errorf(fmt.Sprintf("[Entity Results Cache] Failed to write results to cache for key: %s", cacheKey))
+			slog.Error(fmt.Sprintf("[Entity Results Cache] Failed to write results to cache for key: %s", cacheKey))
 		} else if !set {
 			log.Warnf(fmt.Sprintf("[Entity Results Cache] Cache entry for query %s not set because it already exists", cacheKey))
 		} else {
@@ -937,14 +937,14 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 		)
 
 		if objectId, err := props.Get(common.ObjectID.String()).String(); err != nil {
-			log.Errorf(fmt.Sprintf("Error getting objectid for %d: %v", node.ID, err))
+			slog.Error(fmt.Sprintf("Error getting objectid for %d: %v", node.ID, err))
 			nodeEntry.ObjectID = ""
 		} else {
 			nodeEntry.ObjectID = objectId
 		}
 
 		if name, err := props.Get(common.Name.String()).String(); err != nil {
-			log.Errorf(fmt.Sprintf("Error getting name for %d: %v", node.ID, err))
+			slog.Error(fmt.Sprintf("Error getting name for %d: %v", node.ID, err))
 			nodeEntry.Name = ""
 		} else {
 			nodeEntry.Name = name

@@ -19,6 +19,7 @@ package ad
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -291,16 +292,16 @@ func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship
 			query.KindIn(query.End(), ad.EnterpriseCA),
 			query.KindIn(query.Relationship(), ad.HostsCAService),
 		))); err != nil {
-			log.Errorf(fmt.Sprintf("Error getting hostscaservice edge to enterprise ca for computer %d : %v", startNode.ID, err))
+			slog.Error(fmt.Sprintf("Error getting hostscaservice edge to enterprise ca for computer %d : %v", startNode.ID, err))
 		} else {
 			for _, ecaPath := range ecaPaths {
 				eca := ecaPath.Terminal()
 				if chainToRootCAPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
-					log.Errorf(fmt.Sprintf("Error getting eca %d path to domain %d: %v", eca.ID, targetDomainNode.ID, err))
+					slog.Error(fmt.Sprintf("Error getting eca %d path to domain %d: %v", eca.ID, targetDomainNode.ID, err))
 				} else if chainToRootCAPaths.Len() == 0 {
 					continue
 				} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
-					log.Errorf(fmt.Sprintf("Error getting eca %d path to domain %d via trusted for auth: %v", eca.ID, targetDomainNode.ID, err))
+					slog.Error(fmt.Sprintf("Error getting eca %d path to domain %d via trusted for auth: %v", eca.ID, targetDomainNode.ID, err))
 				} else if trustedForAuthPaths.Len() == 0 {
 					continue
 				} else {

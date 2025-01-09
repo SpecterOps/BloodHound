@@ -18,6 +18,7 @@ package ein
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 
@@ -195,10 +196,10 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 		}
 
 		if rightKind, err := analysis.ParseKind(ace.RightName); err != nil {
-			log.Errorf(fmt.Sprintf("Error during ParseACEData: %v", err))
+			slog.Error(fmt.Sprintf("Error during ParseACEData: %v", err))
 			continue
 		} else if !ad.IsACLKind(rightKind) {
-			log.Errorf(fmt.Sprintf("Non-ace edge type given to process aces: %s", ace.RightName))
+			slog.Error(fmt.Sprintf("Non-ace edge type given to process aces: %s", ace.RightName))
 			continue
 		} else {
 			converted = append(converted, NewIngestibleRelationship(
@@ -226,7 +227,7 @@ func convertSPNData(spns []SPNTarget, sourceID string) []IngestibleRelationship 
 
 	for _, s := range spns {
 		if kind, err := analysis.ParseKind(s.Service); err != nil {
-			log.Errorf(fmt.Sprintf("Error during processSPNTargets: %v", err))
+			slog.Error(fmt.Sprintf("Error during processSPNTargets: %v", err))
 		} else {
 			converted = append(converted, NewIngestibleRelationship(
 				IngestibleSource{
@@ -368,7 +369,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		switch converted := trust.TrustAttributes.(type) {
 		case string:
 			if i, err := strconv.Atoi(converted); err != nil {
-				log.Errorf(fmt.Sprintf("Error converting trust attributes %s to int", converted))
+				slog.Error(fmt.Sprintf("Error converting trust attributes %s to int", converted))
 				finalTrustAttributes = 0
 			} else {
 				finalTrustAttributes = i
@@ -376,7 +377,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		case int:
 			finalTrustAttributes = converted
 		default:
-			log.Errorf(fmt.Sprintf("Error converting trust attributes %s to int", converted))
+			slog.Error(fmt.Sprintf("Error converting trust attributes %s to int", converted))
 			finalTrustAttributes = 0
 		}
 

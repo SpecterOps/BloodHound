@@ -39,7 +39,7 @@ func main() {
 	}
 
 	if lvl, err := log.ParseLevel(rawLvl); err != nil {
-		log.Errorf(fmt.Sprintf("Could not parse log level from %s: %v", environment.LogLevelVarName, err))
+		slog.Error(fmt.Sprintf("Could not parse log level from %s: %v", environment.LogLevelVarName, err))
 	} else {
 		log.SetGlobalLevel(lvl)
 	}

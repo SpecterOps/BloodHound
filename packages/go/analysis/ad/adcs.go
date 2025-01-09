@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -117,7 +118,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 		if err := PostGoldenCert(ctx, tx, outC, domain, enterpriseCA); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Post processing for %s: %v", ad.GoldenCert.String(), err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Failed post processing for %s: %v", ad.GoldenCert.String(), err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.GoldenCert.String(), err))
 		}
 		return nil
 	})
@@ -126,7 +127,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 		if err := PostADCSESC1(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC1.String(), err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC1.String(), err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC1.String(), err))
 		}
 		return nil
 	})
@@ -135,7 +136,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 		if err := PostADCSESC3(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC3.String(), err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC3.String(), err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC3.String(), err))
 		}
 		return nil
 	})
@@ -144,7 +145,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 		if err := PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC4.String(), err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC4.String(), err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC4.String(), err))
 		}
 		return nil
 	})
@@ -153,7 +154,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 		if err := PostADCSESC6a(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC6a.String(), err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC6a.String(), err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC6a.String(), err))
 		}
 		return nil
 	})
@@ -162,7 +163,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 		if err := PostADCSESC6b(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC6b.String(), err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC6b.String(), err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC6b.String(), err))
 		}
 		return nil
 	})
@@ -171,7 +172,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 		if err := PostADCSESC9a(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC9a.String(), err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC9a.String(), err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC9a.String(), err))
 		}
 		return nil
 	})
@@ -180,7 +181,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 		if err := PostADCSESC9b(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC9b.String(), err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC9b.String(), err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC9b.String(), err))
 		}
 		return nil
 	})
@@ -189,7 +190,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 		if err := PostADCSESC10a(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC10a.String(), err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC10a.String(), err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC10a.String(), err))
 		}
 		return nil
 	})
@@ -198,7 +199,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 		if err := PostADCSESC10b(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC10b.String(), err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC10b.String(), err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC10b.String(), err))
 		}
 		return nil
 	})
@@ -207,7 +208,7 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA, domain *graph.N
 		if err := PostADCSESC13(ctx, tx, outC, groupExpansions, enterpriseCA, domain, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC13.String(), err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC13.String(), err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC13.String(), err))
 		}
 		return nil
 	})

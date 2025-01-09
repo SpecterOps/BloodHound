@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -46,11 +47,11 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			if isValid, err := isCertTemplateValidForESC13(template); errors.Is(err, graph.ErrPropertyNotFound) {
 				log.Warnf(fmt.Sprintf("Checking esc13 cert template PostADCSESC13: %v", err))
 			} else if err != nil {
-				log.Errorf(fmt.Sprintf("Error checking esc13 cert template PostADCSESC13: %v", err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Error checking esc13 cert template PostADCSESC13: %v", err))
 			} else if !isValid {
 				continue
 			} else if groupNodes, err := getCertTemplateGroupLinks(template, tx); err != nil {
-				log.Errorf(fmt.Sprintf("Error getting cert template group links: %v", err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Error getting cert template group links: %v", err))
 			} else if len(groupNodes) == 0 {
 				continue
 			} else {

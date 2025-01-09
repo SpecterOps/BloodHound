@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/bloodhoundad/azurehound/v2/enums"
@@ -150,7 +151,7 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 func convertAzureApp(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.App
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf("Error deserializing azure application: %v", err))
+		slog.Error(fmt.Sprintf("Error deserializing azure application: %v", err))
 	} else {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertAZAppToNode(data))
 		converted.RelProps = append(converted.RelProps, ein.ConvertAZAppRelationships(data)...)
@@ -160,7 +161,7 @@ func convertAzureApp(raw json.RawMessage, converted *ConvertedAzureData) {
 func convertAzureVMScaleSet(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.VMScaleSet
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure virtual machine scale set", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure virtual machine scale set", err))
 	} else {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertAZVMScaleSetToNode(data))
 		converted.RelProps = append(converted.RelProps, ein.ConvertAZVMScaleSetRelationships(data)...)
@@ -171,7 +172,7 @@ func convertAzureVMScaleSetRoleAssignment(raw json.RawMessage, converted *Conver
 	var data models.AzureRoleAssignments
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure virtual machine scale set role assignments", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure virtual machine scale set role assignments", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVMScaleSetRoleAssignment(data)...)
 	}
@@ -183,18 +184,18 @@ func convertAzureAppOwner(raw json.RawMessage, converted *ConvertedAzureData) {
 	)
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "app owner", err))
+		slog.Error(fmt.Sprintf(SerialError, "app owner", err))
 	} else {
 		for _, raw := range data.Owners {
 			var (
 				owner azureModels.DirectoryObject
 			)
 			if err := json.Unmarshal(raw.Owner, &owner); err != nil {
-				log.Errorf(fmt.Sprintf(SerialError, "app owner", err))
+				slog.Error(fmt.Sprintf(SerialError, "app owner", err))
 			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); errors.Is(err, ein.ErrInvalidType) {
 				log.Warnf(fmt.Sprintf(ExtractError, err))
 			} else if err != nil {
-				log.Errorf(fmt.Sprintf(ExtractError, err))
+				slog.Error(fmt.Sprintf(ExtractError, err))
 			} else {
 				converted.RelProps = append(converted.RelProps, ein.ConvertAzureOwnerToRel(owner, ownerType, azure.App, data.AppId))
 			}
@@ -206,7 +207,7 @@ func convertAzureAppRoleAssignment(raw json.RawMessage, converted *ConvertedAzur
 	var data models.AppRoleAssignment
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "app role assignment", err))
+		slog.Error(fmt.Sprintf(SerialError, "app role assignment", err))
 	} else if data.AppId == azure.MSGraphAppUniversalID && data.PrincipalType == PrincipalTypeServicePrincipal {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureAppRoleAssignmentToNodes(data)...)
 		if rel := ein.ConvertAzureAppRoleAssignmentToRel(data); rel.IsValid() {
@@ -218,7 +219,7 @@ func convertAzureAppRoleAssignment(raw json.RawMessage, converted *ConvertedAzur
 func convertAzureDevice(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.Device
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure device", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure device", err))
 	} else {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertAZDeviceToNode(data))
 		converted.RelProps = append(converted.RelProps, ein.ConvertAZDeviceRelationships(data)...)
@@ -230,18 +231,18 @@ func convertAzureDeviceOwner(raw json.RawMessage, converted *ConvertedAzureData)
 		data models.DeviceOwners
 	)
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "device owners", err))
+		slog.Error(fmt.Sprintf(SerialError, "device owners", err))
 	} else {
 		for _, raw := range data.Owners {
 			var (
 				owner azureModels.DirectoryObject
 			)
 			if err := json.Unmarshal(raw.Owner, &owner); err != nil {
-				log.Errorf(fmt.Sprintf(SerialError, "device owner", err))
+				slog.Error(fmt.Sprintf(SerialError, "device owner", err))
 			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); errors.Is(err, ein.ErrInvalidType) {
 				log.Warnf(fmt.Sprintf(ExtractError, err))
 			} else if err != nil {
-				log.Errorf(fmt.Sprintf(ExtractError, err))
+				slog.Error(fmt.Sprintf(ExtractError, err))
 			} else {
 				converted.RelProps = append(converted.RelProps, ein.ConvertAzureOwnerToRel(owner, ownerType, azure.Device, data.DeviceId))
 			}
@@ -252,7 +253,7 @@ func convertAzureDeviceOwner(raw json.RawMessage, converted *ConvertedAzureData)
 func convertAzureFunctionApp(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.FunctionApp
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure function app", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure function app", err))
 	} else {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureFunctionAppToNode(data))
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureFunctionAppToRels(data)...)
@@ -263,7 +264,7 @@ func convertAzureFunctionAppRoleAssignment(raw json.RawMessage, converted *Conve
 	var data models.AzureRoleAssignments
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure function app role assignments", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure function app role assignments", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureFunctionAppRoleAssignmentToRels(data)...)
 	}
@@ -272,7 +273,7 @@ func convertAzureFunctionAppRoleAssignment(raw json.RawMessage, converted *Conve
 func convertAzureGroup(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.Group
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure group", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure group", err))
 	} else {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureGroupToNode(data))
 		if onPremNode := ein.ConvertAzureGroupToOnPremisesNode(data); onPremNode.IsValid() {
@@ -288,7 +289,7 @@ func convertAzureGroupMember(raw json.RawMessage, converted *ConvertedAzureData)
 	)
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure group members", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure group members", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroupMembersToRels(data)...)
 	}
@@ -299,7 +300,7 @@ func convertAzureGroupOwner(raw json.RawMessage, converted *ConvertedAzureData) 
 		data models.GroupOwners
 	)
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure group owners", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure group owners", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroupOwnerToRels(data)...)
 	}
@@ -308,7 +309,7 @@ func convertAzureGroupOwner(raw json.RawMessage, converted *ConvertedAzureData) 
 func convertAzureKeyVault(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.KeyVault
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure keyvault", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure keyvault", err))
 	} else {
 		node, rel := ein.ConvertAzureKeyVault(data)
 		converted.NodeProps = append(converted.NodeProps, node)
@@ -322,7 +323,7 @@ func convertAzureKeyVaultAccessPolicy(raw json.RawMessage, converted *ConvertedA
 	)
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure key vault access policy", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure key vault access policy", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureKeyVaultAccessPolicy(data)...)
 	}
@@ -334,7 +335,7 @@ func convertAzureKeyVaultContributor(raw json.RawMessage, converted *ConvertedAz
 	)
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure keyvault contributor", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure keyvault contributor", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureKeyVaultContributor(data)...)
 	}
@@ -346,7 +347,7 @@ func convertAzureKeyVaultKVContributor(raw json.RawMessage, converted *Converted
 	)
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure keyvault kvcontributor", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure keyvault kvcontributor", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureKeyVaultKVContributor(data)...)
 	}
@@ -358,7 +359,7 @@ func convertAzureKeyVaultOwner(raw json.RawMessage, converted *ConvertedAzureDat
 	)
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure keyvault owner", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure keyvault owner", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureKeyVaultOwnerToRels(data)...)
 	}
@@ -367,7 +368,7 @@ func convertAzureKeyVaultOwner(raw json.RawMessage, converted *ConvertedAzureDat
 func convertAzureKeyVaultUserAccessAdmin(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.KeyVaultUserAccessAdmins
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure keyvault user access admin", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure keyvault user access admin", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureKeyVaultUserAccessAdminToRels(data)...)
 	}
@@ -376,7 +377,7 @@ func convertAzureKeyVaultUserAccessAdmin(raw json.RawMessage, converted *Convert
 func convertAzureManagementGroupDescendant(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data azureModels.DescendantInfo
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure management group descendant list", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure management group descendant list", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureManagementGroupDescendantToRel(data))
 	}
@@ -385,7 +386,7 @@ func convertAzureManagementGroupDescendant(raw json.RawMessage, converted *Conve
 func convertAzureManagementGroupOwner(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.ManagementGroupOwners
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure management group owner", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure management group owner", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureManagementGroupOwnerToRels(data)...)
 	}
@@ -394,7 +395,7 @@ func convertAzureManagementGroupOwner(raw json.RawMessage, converted *ConvertedA
 func convertAzureManagementGroupUserAccessAdmin(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.ManagementGroupUserAccessAdmins
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure management group user access admin", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure management group user access admin", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureManagementGroupUserAccessAdminToRels(data)...)
 	}
@@ -403,7 +404,7 @@ func convertAzureManagementGroupUserAccessAdmin(raw json.RawMessage, converted *
 func convertAzureManagementGroup(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.ManagementGroup
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure management group", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure management group", err))
 	} else {
 		node, rel := ein.ConvertAzureManagementGroup(data)
 		converted.RelProps = append(converted.RelProps, rel)
@@ -414,7 +415,7 @@ func convertAzureManagementGroup(raw json.RawMessage, converted *ConvertedAzureD
 func convertAzureResourceGroup(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.ResourceGroup
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure resource group", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure resource group", err))
 	} else {
 		node, rel := ein.ConvertAzureResourceGroup(data)
 		converted.RelProps = append(converted.RelProps, rel)
@@ -425,7 +426,7 @@ func convertAzureResourceGroup(raw json.RawMessage, converted *ConvertedAzureDat
 func convertAzureResourceGroupOwner(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.ResourceGroupOwners
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure keyvault", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure keyvault", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureResourceGroupOwnerToRels(data)...)
 	}
@@ -434,7 +435,7 @@ func convertAzureResourceGroupOwner(raw json.RawMessage, converted *ConvertedAzu
 func convertAzureResourceGroupUserAccessAdmin(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.ResourceGroupUserAccessAdmins
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure resource group user access admin", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure resource group user access admin", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureResourceGroupUserAccessAdminToRels(data)...)
 	}
@@ -443,7 +444,7 @@ func convertAzureResourceGroupUserAccessAdmin(raw json.RawMessage, converted *Co
 func convertAzureRole(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.Role
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure role", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure role", err))
 	} else {
 		node, rel := ein.ConvertAzureRole(data)
 		converted.NodeProps = append(converted.NodeProps, node)
@@ -454,7 +455,7 @@ func convertAzureRole(raw json.RawMessage, converted *ConvertedAzureData) {
 func convertAzureRoleAssignment(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.RoleAssignments
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure role assignment", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure role assignment", err))
 	} else {
 		for _, raw := range data.RoleAssignments {
 			var (
@@ -469,7 +470,7 @@ func convertAzureRoleAssignment(raw json.RawMessage, converted *ConvertedAzureDa
 func convertAzureServicePrincipal(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.ServicePrincipal
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure service principal owner", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure service principal owner", err))
 	} else {
 		nodes, rels := ein.ConvertAzureServicePrincipal(data)
 		converted.NodeProps = append(converted.NodeProps, nodes...)
@@ -482,7 +483,7 @@ func convertAzureServicePrincipalOwner(raw json.RawMessage, converted *Converted
 		data models.ServicePrincipalOwners
 	)
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure service principal owners", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure service principal owners", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureServicePrincipalOwnerToRels(data)...)
 	}
@@ -491,7 +492,7 @@ func convertAzureServicePrincipalOwner(raw json.RawMessage, converted *Converted
 func convertAzureSubscription(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data azureModels.Subscription
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure subscription", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure subscription", err))
 	} else {
 		node, rel := ein.ConvertAzureSubscription(data)
 		converted.NodeProps = append(converted.NodeProps, node)
@@ -502,7 +503,7 @@ func convertAzureSubscription(raw json.RawMessage, converted *ConvertedAzureData
 func convertAzureSubscriptionOwner(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.SubscriptionOwners
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure subscription owner", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure subscription owner", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureSubscriptionOwnerToRels(data)...)
 	}
@@ -511,7 +512,7 @@ func convertAzureSubscriptionOwner(raw json.RawMessage, converted *ConvertedAzur
 func convertAzureSubscriptionUserAccessAdmin(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.SubscriptionUserAccessAdmins
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure subscription user access admin", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure subscription user access admin", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureSubscriptionUserAccessAdminToRels(data)...)
 	}
@@ -520,7 +521,7 @@ func convertAzureSubscriptionUserAccessAdmin(raw json.RawMessage, converted *Con
 func convertAzureTenant(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.Tenant
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure tenant", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure tenant", err))
 	} else {
 		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureTenantToNode(data))
 	}
@@ -529,7 +530,7 @@ func convertAzureTenant(raw json.RawMessage, converted *ConvertedAzureData) {
 func convertAzureUser(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.User
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure user", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure user", err))
 	} else {
 		node, onPremNode, rel := ein.ConvertAzureUser(data)
 		converted.NodeProps = append(converted.NodeProps, node)
@@ -543,7 +544,7 @@ func convertAzureUser(raw json.RawMessage, converted *ConvertedAzureData) {
 func convertAzureVirtualMachine(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.VirtualMachine
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure virtual machine", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure virtual machine", err))
 	} else {
 		node, rels := ein.ConvertAzureVirtualMachine(data)
 		converted.NodeProps = append(converted.NodeProps, node)
@@ -554,7 +555,7 @@ func convertAzureVirtualMachine(raw json.RawMessage, converted *ConvertedAzureDa
 func convertAzureVirtualMachineAdminLogin(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.VirtualMachineAdminLogins
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure virtual machine admin login", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure virtual machine admin login", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVirtualMachineAdminLoginToRels(data)...)
 	}
@@ -563,7 +564,7 @@ func convertAzureVirtualMachineAdminLogin(raw json.RawMessage, converted *Conver
 func convertAzureVirtualMachineAvereContributor(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.VirtualMachineAvereContributors
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure virtual machine avere contributor", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure virtual machine avere contributor", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVirtualMachineAvereContributorToRels(data)...)
 	}
@@ -572,7 +573,7 @@ func convertAzureVirtualMachineAvereContributor(raw json.RawMessage, converted *
 func convertAzureVirtualMachineContributor(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.VirtualMachineContributors
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure virtual machine contributor", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure virtual machine contributor", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVirtualMachineContributorToRels(data)...)
 	}
@@ -581,7 +582,7 @@ func convertAzureVirtualMachineContributor(raw json.RawMessage, converted *Conve
 func convertAzureVirtualMachineVMContributor(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.VirtualMachineVMContributors
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure virtual machine contributor", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure virtual machine contributor", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVirtualMachineVMContributorToRels(data)...)
 	}
@@ -590,7 +591,7 @@ func convertAzureVirtualMachineVMContributor(raw json.RawMessage, converted *Con
 func convertAzureVirtualMachineOwner(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.VirtualMachineOwners
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure virtual machine owner", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure virtual machine owner", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVirtualMachineOwnerToRels(data)...)
 	}
@@ -599,7 +600,7 @@ func convertAzureVirtualMachineOwner(raw json.RawMessage, converted *ConvertedAz
 func convertAzureVirtualMachineUserAccessAdmin(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.VirtualMachineUserAccessAdmins
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure virtual machine user access admin", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure virtual machine user access admin", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVirtualMachineUserAccessAdminToRels(data)...)
 	}
@@ -608,7 +609,7 @@ func convertAzureVirtualMachineUserAccessAdmin(raw json.RawMessage, converted *C
 func convertAzureManagedCluster(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.ManagedCluster
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure managed cluster", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure managed cluster", err))
 	} else {
 		NodeResourceGroupID := fmt.Sprintf("/subscriptions/%s/resourcegroups/%s", data.SubscriptionId, data.Properties.NodeResourceGroup)
 
@@ -622,7 +623,7 @@ func convertAzureManagedClusterRoleAssignment(raw json.RawMessage, converted *Co
 	var data models.AzureRoleAssignments
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure managed cluster role assignments", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure managed cluster role assignments", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureManagedClusterRoleAssignmentToRels(data)...)
 	}
@@ -631,7 +632,7 @@ func convertAzureManagedClusterRoleAssignment(raw json.RawMessage, converted *Co
 func convertAzureContainerRegistry(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.ContainerRegistry
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure container registry", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure container registry", err))
 	} else {
 		node, rels := ein.ConvertAzureContainerRegistry(data)
 		converted.NodeProps = append(converted.NodeProps, node)
@@ -642,7 +643,7 @@ func convertAzureContainerRegistry(raw json.RawMessage, converted *ConvertedAzur
 func convertAzureWebApp(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.WebApp
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure web app", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure web app", err))
 	} else {
 		node, relationships := ein.ConvertAzureWebApp(data)
 		converted.NodeProps = append(converted.NodeProps, node)
@@ -654,7 +655,7 @@ func convertAzureContainerRegistryRoleAssignment(raw json.RawMessage, converted 
 	var data models.AzureRoleAssignments
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure container registry role assignments", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure container registry role assignments", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureContainerRegistryRoleAssignment(data)...)
 	}
@@ -664,7 +665,7 @@ func convertAzureWebAppRoleAssignment(raw json.RawMessage, converted *ConvertedA
 	var data models.AzureRoleAssignments
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure web app role assignments", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure web app role assignments", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureWebAppRoleAssignment(data)...)
 	}
@@ -673,7 +674,7 @@ func convertAzureWebAppRoleAssignment(raw json.RawMessage, converted *ConvertedA
 func convertAzureLogicApp(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.LogicApp
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure logic app", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure logic app", err))
 	} else {
 		node, relationships := ein.ConvertAzureLogicApp(data)
 		converted.NodeProps = append(converted.NodeProps, node)
@@ -685,7 +686,7 @@ func convertAzureLogicAppRoleAssignment(raw json.RawMessage, converted *Converte
 	var data models.AzureRoleAssignments
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure logic app role assignments", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure logic app role assignments", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureLogicAppRoleAssignment(data)...)
 	}
@@ -694,7 +695,7 @@ func convertAzureLogicAppRoleAssignment(raw json.RawMessage, converted *Converte
 func convertAzureAutomationAccount(raw json.RawMessage, converted *ConvertedAzureData) {
 	var data models.AutomationAccount
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure automation account", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure automation account", err))
 	} else {
 		node, relationships := ein.ConvertAzureAutomationAccount(data)
 		converted.NodeProps = append(converted.NodeProps, node)
@@ -706,7 +707,7 @@ func convertAzureAutomationAccountRoleAssignment(raw json.RawMessage, converted 
 	var data models.AzureRoleAssignments
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		log.Errorf(fmt.Sprintf(SerialError, "azure automation account role assignments", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure automation account role assignments", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureAutomationAccountRoleAssignment(data)...)
 	}

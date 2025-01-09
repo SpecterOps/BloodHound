@@ -71,7 +71,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 		for _, ct := range certTemplates {
 			// cert template enrollers
 			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.GenericAll, ad.AllExtendedRights); err != nil {
-				log.Errorf(fmt.Sprintf("Error fetching enrollers for cert template %d: %v", ct.ID, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching enrollers for cert template %d: %v", ct.ID, err))
 			} else {
 				s.certTemplateEnrollers[ct.ID] = firstDegreePrincipals.Slice()
 
@@ -79,7 +79,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				if domainsid, err := ct.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 					log.Warnf(fmt.Sprintf("Error getting domain SID for certtemplate %d: %v", ct.ID, err))
 				} else if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, firstDegreePrincipals.Slice(), domainsid); err != nil {
-					log.Errorf(fmt.Sprintf("Error fetching if auth. users or everyone has enroll on certtemplate %d: %v", ct.ID, err))
+					slog.ErrorContext(ctx, fmt.Sprintf("Error fetching if auth. users or everyone has enroll on certtemplate %d: %v", ct.ID, err))
 				} else {
 					s.certTemplateHasSpecialEnrollers[ct.ID] = authUsersOrEveryoneHasEnroll
 				}
@@ -87,7 +87,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 			// cert template controllers
 			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Owns, ad.GenericAll, ad.WriteDACL, ad.WriteOwner); err != nil {
-				log.Errorf(fmt.Sprintf("Error fetching controllers for cert template %d: %v", ct.ID, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching controllers for cert template %d: %v", ct.ID, err))
 			} else {
 				s.certTemplateControllers[ct.ID] = firstDegreePrincipals.Slice()
 			}
@@ -96,7 +96,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 		for _, eca := range enterpriseCAs {
 			if firstDegreeEnrollers, err := fetchFirstDegreeNodes(tx, eca, ad.Enroll); err != nil {
-				log.Errorf(fmt.Sprintf("Error fetching enrollers for enterprise ca %d: %v", eca.ID, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching enrollers for enterprise ca %d: %v", eca.ID, err))
 			} else {
 				s.enterpriseCAEnrollers[eca.ID] = firstDegreeEnrollers.Slice()
 
@@ -104,14 +104,14 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				if domainsid, err := eca.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 					log.Warnf(fmt.Sprintf("Error getting domain SID for eca %d: %v", eca.ID, err))
 				} else if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, firstDegreeEnrollers.Slice(), domainsid); err != nil {
-					log.Errorf(fmt.Sprintf("Error fetching if auth. users or everyone has enroll on enterprise ca %d: %v", eca.ID, err))
+					slog.ErrorContext(ctx, fmt.Sprintf("Error fetching if auth. users or everyone has enroll on enterprise ca %d: %v", eca.ID, err))
 				} else {
 					s.enterpriseCAHasSpecialEnrollers[eca.ID] = authUsersOrEveryoneHasEnroll
 				}
 			}
 
 			if publishedTemplates, err := FetchCertTemplatesPublishedToCA(tx, eca); err != nil {
-				log.Errorf(fmt.Sprintf("Error fetching published cert templates for enterprise ca %d: %v", eca.ID, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching published cert templates for enterprise ca %d: %v", eca.ID, err))
 			} else {
 				s.publishedTemplateCache[eca.ID] = publishedTemplates.Slice()
 			}
@@ -119,9 +119,9 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 		for _, domain := range domains {
 			if rootCaForNodes, err := FetchEnterpriseCAsRootCAForPathToDomain(tx, domain); err != nil {
-				log.Errorf(fmt.Sprintf("Error getting cas via rootcafor for domain %d: %v", domain.ID, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Error getting cas via rootcafor for domain %d: %v", domain.ID, err))
 			} else if authStoreForNodes, err := FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, domain); err != nil {
-				log.Errorf(fmt.Sprintf("Error getting cas via authstorefor for domain %d: %v", domain.ID, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Error getting cas via authstorefor for domain %d: %v", domain.ID, err))
 			} else {
 				s.authStoreForChainValid[domain.ID] = graph.NodeSetToDuplex(authStoreForNodes)
 				s.rootCAForChainValid[domain.ID] = graph.NodeSetToDuplex(rootCaForNodes)
@@ -145,7 +145,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 		return nil
 	})
 	if err != nil {
-		log.Errorf(fmt.Sprintf("Error building adcs cache %v", err))
+		slog.ErrorContext(ctx, fmt.Sprintf("Error building adcs cache %v", err))
 	}
 
 	slog.InfoContext(ctx, "Finished building adcs cache")

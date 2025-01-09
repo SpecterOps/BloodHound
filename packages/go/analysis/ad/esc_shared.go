@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"strings"
 
@@ -178,7 +179,7 @@ func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.Create
 
 func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, domain, enterpriseCA *graph.Node) error {
 	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, enterpriseCA); err != nil {
-		log.Errorf(fmt.Sprintf("Error fetching host ca computer for enterprise ca %d: %v", enterpriseCA.ID, err))
+		slog.ErrorContext(ctx, fmt.Sprintf("Error fetching host ca computer for enterprise ca %d: %v", enterpriseCA.ID, err))
 	} else {
 		for _, computer := range hostCAServiceComputers {
 			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{

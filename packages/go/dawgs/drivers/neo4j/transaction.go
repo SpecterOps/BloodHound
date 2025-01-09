@@ -25,8 +25,6 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/dawgs/drivers"
-	"github.com/specterops/bloodhound/log"
-
 	"github.com/specterops/bloodhound/dawgs/query/neo4j"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 
@@ -331,7 +329,7 @@ func (s *neo4jTransaction) Raw(stmt string, params map[string]any) graph.Result 
 			prettyParameters.WriteString(":")
 
 			if marshalledValue, err := json.Marshal(value); err != nil {
-				log.Errorf(fmt.Sprintf("Unable to marshal query parameter %s", key))
+				slog.Error(fmt.Sprintf("Unable to marshal query parameter %s", key))
 			} else {
 				prettyParameters.Write(marshalledValue)
 			}

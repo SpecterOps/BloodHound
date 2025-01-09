@@ -33,7 +33,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
@@ -77,7 +76,7 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 		// log missing tenant IDs for easier debugging
 		for _, tenant := range tenants {
 			if _, err = tenant.Properties.Get(azure.TenantID.String()).String(); err != nil {
-				log.Errorf(fmt.Sprintf("Error getting tenant id for tenant %d: %v", tenant.ID, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Error getting tenant id for tenant %d: %v", tenant.ID, err))
 			}
 		}
 
@@ -117,7 +116,7 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 
 				return nil
 			}); err != nil {
-				log.Errorf(fmt.Sprintf("Failed tagging update: %v", err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Failed tagging update: %v", err))
 			}
 		}()
 
@@ -130,7 +129,7 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 				if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 					for tenant := range tenantC {
 						if roots, err := azureAnalysis.FetchAzureAttackPathRoots(tx, tenant); err != nil {
-							log.Errorf(fmt.Sprintf("Failed fetching roots for tenant %d: %v", tenant.ID, err))
+							slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching roots for tenant %d: %v", tenant.ID, err))
 						} else {
 							for _, root := range roots {
 								rootsC <- root.ID
@@ -140,7 +139,7 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 
 					return nil
 				}); err != nil {
-					log.Errorf(fmt.Sprintf("Error reading attack path roots for tenants: %v", err))
+					slog.ErrorContext(ctx, fmt.Sprintf("Error reading attack path roots for tenants: %v", err))
 				}
 			}(workerID)
 		}
@@ -217,7 +216,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db database.Database
 
 					for idx, node := range assetGroupNodes {
 						if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-							log.Errorf(fmt.Sprintf("Node %d that does not have valid %s property", node.ID, common.ObjectID))
+							slog.ErrorContext(ctx, fmt.Sprintf("Node %d that does not have valid %s property", node.ID, common.ObjectID))
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,

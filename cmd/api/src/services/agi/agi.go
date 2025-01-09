@@ -33,7 +33,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -95,7 +94,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB 
 					idx := 0
 					for _, node := range assetGroupNodes {
 						if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-							log.Errorf(fmt.Sprintf("Node %d that does not have valid %s property", node.ID, common.ObjectID))
+							slog.ErrorContext(ctx, fmt.Sprintf("Node %d that does not have valid %s property", node.ID, common.ObjectID))
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,

@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -94,7 +95,7 @@ func WriteErrorResponse(ctx context.Context, untypedError any, response http.Res
 
 func WriteBasicResponse(ctx context.Context, inputData any, statusCode int, response http.ResponseWriter) {
 	if data, err := ToJSONRawMessage(inputData); err != nil {
-		log.Errorf(fmt.Sprintf("Failed marshaling data for basic response: %v", err))
+		slog.ErrorContext(ctx, fmt.Sprintf("Failed marshaling data for basic response: %v", err))
 		response.WriteHeader(http.StatusInternalServerError)
 	} else {
 		WriteJSONResponse(ctx, BasicResponse{
@@ -158,35 +159,35 @@ func WriteResponseWrapperWithTimeWindowAndPagination(ctx context.Context, data a
 	WriteJSONResponse(ctx, wrapper, statusCode, response)
 }
 
-func WriteJSONResponse(_ context.Context, message any, statusCode int, response http.ResponseWriter) {
+func WriteJSONResponse(ctx context.Context, message any, statusCode int, response http.ResponseWriter) {
 	response.Header().Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 	if content, err := json.Marshal(message); err != nil {
-		log.Errorf(fmt.Sprintf("Failed to marshal value into JSON for request: %v: for message: %+v", err, message))
+		slog.ErrorContext(ctx, fmt.Sprintf("Failed to marshal value into JSON for request: %v: for message: %+v", err, message))
 		response.WriteHeader(http.StatusInternalServerError)
 	} else {
 		response.WriteHeader(statusCode)
 		if written, err := response.Write(content); err != nil {
-			log.Errorf(fmt.Sprintf("Writing API Error. Failed to write JSON response with %d bytes written and error: %v", written, err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Writing API Error. Failed to write JSON response with %d bytes written and error: %v", written, err))
 		}
 	}
 }
 
-func WriteCSVResponse(_ context.Context, message model.CSVWriter, statusCode int, response http.ResponseWriter) {
+func WriteCSVResponse(ctx context.Context, message model.CSVWriter, statusCode int, response http.ResponseWriter) {
 	response.Header().Set(headers.ContentType.String(), mediatypes.TextCsv.String())
 	response.WriteHeader(statusCode)
 
 	if err := message.WriteCSV(response); err != nil {
-		log.Errorf(fmt.Sprintf("Writing API Error. Failed to write CSV for request: %v", err))
+		slog.ErrorContext(ctx, fmt.Sprintf("Writing API Error. Failed to write CSV for request: %v", err))
 	}
 }
 
-func WriteBinaryResponse(_ context.Context, data []byte, filename string, statusCode int, response http.ResponseWriter) {
+func WriteBinaryResponse(ctx context.Context, data []byte, filename string, statusCode int, response http.ResponseWriter) {
 	response.Header().Set(headers.ContentType.String(), mediatypes.ApplicationOctetStream.String())
 	response.Header().Set(headers.ContentDisposition.String(), fmt.Sprintf(utils.ContentDispositionAttachmentTemplate, filename))
 	response.WriteHeader(statusCode)
 
 	if written, err := response.Write(data); err != nil {
-		log.Errorf(fmt.Sprintf("Writing API Error. Failed to write binary response with %d bytes written and error: %v", written, err))
+		slog.ErrorContext(ctx, fmt.Sprintf("Writing API Error. Failed to write binary response with %d bytes written and error: %v", written, err))
 	}
 }
 

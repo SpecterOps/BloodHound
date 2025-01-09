@@ -38,7 +38,7 @@ func PanicHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		defer func() {
 			if recovery := recover(); recovery != nil {
-				log.Errorf(fmt.Sprintf("[panic recovery] %s - [stack trace] %s", recovery, debug.Stack()))
+				slog.ErrorContext(request.Context(), fmt.Sprintf("[panic recovery] %s - [stack trace] %s", recovery, debug.Stack()))
 			}
 		}()
 
@@ -136,7 +136,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 			// assign a deadline, but only if a valid timeout has been supplied via the prefer header
 			timeout, err := RequestWaitDuration(request)
 			if err != nil {
-				log.Errorf(fmt.Sprintf("Error parsing prefer header for timeout: %v", err))
+				slog.ErrorContext(request.Context(), fmt.Sprintf("Error parsing prefer header for timeout: %v", err))
 			} else if err == nil && timeout > 0 {
 				deadline = time.Now().Add(timeout * time.Second)
 			}

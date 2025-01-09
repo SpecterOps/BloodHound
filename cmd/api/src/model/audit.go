@@ -18,11 +18,11 @@ package model
 
 import (
 	"fmt"
+	"log/slog"
 	"reflect"
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database/types"
 )
 
@@ -228,7 +228,7 @@ func (s AuditEntry) String() string {
 
 func NewAuditEntry(action AuditLogAction, status AuditLogEntryStatus, data AuditData) (AuditEntry, error) {
 	if commitId, err := uuid.NewV4(); err != nil {
-		log.Errorf(fmt.Sprintf("Error generating commit ID for audit entry: %s", err.Error()))
+		slog.Error(fmt.Sprintf("Error generating commit ID for audit entry: %s", err.Error()))
 		return AuditEntry{}, err
 	} else {
 		return AuditEntry{Action: action, Model: data, Status: status, CommitID: commitId}, nil

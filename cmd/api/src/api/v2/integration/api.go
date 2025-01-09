@@ -19,11 +19,11 @@ package integration
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
@@ -95,7 +95,7 @@ func (s *Context) EnableAPI() {
 			}
 
 			if err := initializer.Launch(s.ctx, false); err != nil {
-				log.Errorf(fmt.Sprintf("Failed launching API server: %v", err))
+				slog.Error(fmt.Sprintf("Failed launching API server: %v", err))
 			}
 		}()
 	}

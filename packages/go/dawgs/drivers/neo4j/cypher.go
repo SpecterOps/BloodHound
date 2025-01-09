@@ -19,13 +19,13 @@ package neo4j
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 	"sort"
 	"strings"
 
 	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 )
 
 func newUpdateKey(identityKind graph.Kind, identityProperties []string, updateKinds graph.Kinds) string {
@@ -309,9 +309,9 @@ func stripCypherQuery(rawQuery string) string {
 	)
 
 	if queryModel, err := frontend.ParseCypher(frontend.DefaultCypherContext(), rawQuery); err != nil {
-		log.Errorf(fmt.Sprintf("Error occurred parsing cypher query during sanitization: %v", err))
+		slog.Error(fmt.Sprintf("Error occurred parsing cypher query during sanitization: %v", err))
 	} else if err = strippedEmitter.Write(queryModel, buffer); err != nil {
-		log.Errorf(fmt.Sprintf("Error occurred sanitizing cypher query: %v", err))
+		slog.Error(fmt.Sprintf("Error occurred sanitizing cypher query: %v", err))
 	}
 
 	return buffer.String()

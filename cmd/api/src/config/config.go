@@ -253,7 +253,7 @@ func SetValuesFromEnv(varPrefix string, target any, env []string) error {
 				}
 			}
 		} else {
-			log.Errorf(fmt.Sprintf("Invalid key/value pair: %+v", kvParts))
+			slog.Error(fmt.Sprintf("Invalid key/value pair: %+v", kvParts))
 		}
 	}
 
@@ -293,13 +293,13 @@ func (s Configuration) SaveCollectorManifests() (CollectorManifests, error) {
 	manifests := CollectorManifests{}
 
 	if azureHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), azureHoundCollector)); err != nil {
-		log.Errorf(fmt.Sprintf("Error generating AzureHound manifest file: %s", err))
+		slog.Error(fmt.Sprintf("Error generating AzureHound manifest file: %s", err))
 	} else {
 		manifests[azureHoundCollector] = azureHoundManifest
 	}
 
 	if sharpHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), sharpHoundCollector)); err != nil {
-		log.Errorf(fmt.Sprintf("Error generating SharpHound manifest file: %s", err))
+		slog.Error(fmt.Sprintf("Error generating SharpHound manifest file: %s", err))
 	} else {
 		manifests[sharpHoundCollector] = sharpHoundManifest
 	}

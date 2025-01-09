@@ -141,7 +141,7 @@ func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRe
 	auditLogFields := types.JSONUntypedObject{"username": loginRequest.Username, "auth_type": auth.ProviderTypeSecret}
 
 	if commitID, err := uuid.NewV4(); err != nil {
-		log.Errorf(fmt.Sprintf("Error generating commit ID for login: %s", err))
+		slog.ErrorContext(ctx, fmt.Sprintf("Error generating commit ID for login: %s", err))
 		return LoginDetails{}, err
 	} else {
 		s.auditLogin(ctx, commitID, model.AuditLogStatusIntent, model.User{}, auditLogFields)
@@ -282,7 +282,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 			authToken.LastAccess = time.Now().UTC()
 
 			if err := s.db.UpdateAuthToken(request.Context(), authToken); err != nil {
-				log.Errorf(fmt.Sprintf("Error updating last access on AuthToken: %v", err))
+				slog.ErrorContext(request.Context(), fmt.Sprintf("Error updating last access on AuthToken: %v", err))
 			}
 
 			if sdtf, ok := readCloser.(*SelfDestructingTempFile); ok {
@@ -363,7 +363,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 
 	// Generate commit ID for audit logging
 	if commitID, err = uuid.NewV4(); err != nil {
-		log.Errorf(fmt.Sprintf("Error generating commit ID for login: %s", err))
+		slog.ErrorContext(request.Context(), fmt.Sprintf("Error generating commit ID for login: %s", err))
 		WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusInternalServerError, "audit log creation failure", request), response)
 		return
 	}

@@ -85,7 +85,7 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 	log.Debugf(fmt.Sprintf("OrphanFileSweeper expected names %v", expectedFileNames))
 
 	if dirEntries, err := s.fileOps.ReadDir(s.tempDirectoryRootPath); err != nil {
-		log.Errorf(fmt.Sprintf("Failed reading work directory %s: %v", s.tempDirectoryRootPath, err))
+		slog.ErrorContext(ctx, fmt.Sprintf("Failed reading work directory %s: %v", s.tempDirectoryRootPath, err))
 	} else {
 		numDeleted := 0
 
@@ -117,7 +117,7 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 			fullPath := filepath.Join(s.tempDirectoryRootPath, orphanedDirEntry.Name())
 
 			if err := s.fileOps.RemoveAll(fullPath); err != nil {
-				log.Errorf(fmt.Sprintf("Failed removing orphaned file %s: %v", fullPath, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Failed removing orphaned file %s: %v", fullPath, err))
 			}
 
 			numDeleted += 1

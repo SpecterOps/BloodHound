@@ -19,6 +19,7 @@ package v2
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -183,7 +184,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 func (s Resources) deleteHighValueSelectors(ctx context.Context, auditEntry *model.AuditEntry, assetGroupIDs []int) (failure bool) {
 
 	if err := s.DB.DeleteAssetGroupSelectorsForAssetGroups(ctx, assetGroupIDs); err != nil {
-		log.Errorf(fmt.Sprintf("%s: %s", "there was an error deleting asset group selectors ", err.Error()))
+		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "there was an error deleting asset group selectors ", err.Error()))
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "high value selectors")
 		return true
 	} else {
@@ -195,7 +196,7 @@ func (s Resources) deleteHighValueSelectors(ctx context.Context, auditEntry *mod
 
 func (s Resources) deleteFileIngestHistory(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
 	if err := s.DB.DeleteAllFileUploads(ctx); err != nil {
-		log.Errorf(fmt.Sprintf("%s: %s", "there was an error deleting file ingest history", err.Error()))
+		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "there was an error deleting file ingest history", err.Error()))
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "file ingest history")
 		return true
 	} else {
@@ -206,7 +207,7 @@ func (s Resources) deleteFileIngestHistory(ctx context.Context, auditEntry *mode
 
 func (s Resources) deleteDataQualityHistory(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
 	if err := s.DB.DeleteAllDataQuality(ctx); err != nil {
-		log.Errorf(fmt.Sprintf("%s: %s", "there was an error deleting data quality history", err.Error()))
+		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "there was an error deleting data quality history", err.Error()))
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "data quality history")
 		return true
 	} else {
@@ -229,6 +230,6 @@ func (s Resources) handleAuditLogForDatabaseWipe(ctx context.Context, auditEntry
 	}
 
 	if err := s.DB.AppendAuditLog(ctx, *auditEntry); err != nil {
-		log.Errorf(fmt.Sprintf("%s: %s", "error writing to audit log", err.Error()))
+		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "error writing to audit log", err.Error()))
 	}
 }

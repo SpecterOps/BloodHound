@@ -87,12 +87,12 @@ type stackFrame struct {
 func GetSlogCallStack() slog.Attr {
 	var outputFrames []stackFrame
 
-	pc := make([]uintptr, 25)
+	pc := make([]uintptr, 25) // Arbitrarily only go to a call depth of 25
 	n := runtime.Callers(1, pc)
 	if n == 0 {
 		return slog.Attr{}
 	}
-	pc = pc[:n] // pass only valid pcs to runtime.CallersFrames
+	pc = pc[:n]
 	frames := runtime.CallersFrames(pc)
 
 	for {

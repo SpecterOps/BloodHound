@@ -22,8 +22,6 @@ import (
 	"log/slog"
 	"sync"
 	"time"
-
-	"github.com/specterops/bloodhound/log"
 )
 
 type Daemon interface {
@@ -68,7 +66,7 @@ func (s *Manager) Stop() {
 		slog.Info(fmt.Sprintf("Shutting down daemon %s", daemon.Name()))
 
 		if err := daemon.Stop(shutdownCtx); err != nil {
-			log.Errorf(fmt.Sprintf("Failure caught while shutting down daemon %s: %v", daemon.Name(), err))
+			slog.Error(fmt.Sprintf("Failure caught while shutting down daemon %s: %v", daemon.Name(), err))
 		}
 	}
 }

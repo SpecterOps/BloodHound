@@ -23,7 +23,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -54,7 +53,7 @@ func (s *BloodhoundDB) HasAnalysisRequest(ctx context.Context) bool {
 
 	tx := s.db.WithContext(ctx).Raw(`select exists(select * from analysis_request_switch where request_type = ? limit 1);`, model.AnalysisRequestAnalysis).Scan(&exists)
 	if tx.Error != nil {
-		log.Errorf(fmt.Sprintf("Error determining if there's an analysis request: %v", tx.Error))
+		slog.ErrorContext(ctx, fmt.Sprintf("Error determining if there's an analysis request: %v", tx.Error))
 	}
 	return exists
 }
@@ -64,7 +63,7 @@ func (s *BloodhoundDB) HasCollectedGraphDataDeletionRequest(ctx context.Context)
 
 	tx := s.db.WithContext(ctx).Raw(`select exists(select * from analysis_request_switch where request_type = ? limit 1);`, model.AnalysisRequestDeletion).Scan(&exists)
 	if tx.Error != nil {
-		log.Errorf(fmt.Sprintf("Error determining if there's a deletion request: %v", tx.Error))
+		slog.ErrorContext(ctx, fmt.Sprintf("Error determining if there's a deletion request: %v", tx.Error))
 	}
 	return exists
 }

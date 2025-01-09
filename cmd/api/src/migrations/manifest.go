@@ -31,7 +31,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/log/measure"
 	"github.com/specterops/bloodhound/src/version"
 )
@@ -194,7 +193,7 @@ func Version_277_Migration(db graph.Database) error {
 				var dirty = false
 
 				if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-					log.Errorf(fmt.Sprintf("Error getting objectid for node %d: %v", node.ID, err))
+					slog.Error(fmt.Sprintf("Error getting objectid for node %d: %v", node.ID, err))
 					continue
 				} else if objectId != strings.ToUpper(objectId) {
 					dirty = true
@@ -225,7 +224,7 @@ func Version_277_Migration(db graph.Database) error {
 					} else if node.Kinds.ContainsOneOf(azure.Entity) {
 						identityKind = azure.Entity
 					} else {
-						log.Errorf(fmt.Sprintf("Unable to figure out base kind of node %d", node.ID))
+						slog.Error(fmt.Sprintf("Unable to figure out base kind of node %d", node.ID))
 					}
 
 					if identityKind != nil {
@@ -234,7 +233,7 @@ func Version_277_Migration(db graph.Database) error {
 							IdentityKind:       identityKind,
 							IdentityProperties: []string{common.ObjectID.String()},
 						}); err != nil {
-							log.Errorf(fmt.Sprintf("Error updating node %d: %v", node.ID, err))
+							slog.Error(fmt.Sprintf("Error updating node %d: %v", node.ID, err))
 						}
 					}
 				}

@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"sync"
 
@@ -68,7 +69,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 				)
 			})); err != nil {
 				if !graph.IsErrNotFound(err) {
-					log.Errorf(fmt.Sprintf("Error getting target nodes for esc3 for node %d: %v", certTemplateTwo.ID, err))
+					slog.ErrorContext(ctx, fmt.Sprintf("Error getting target nodes for esc3 for node %d: %v", certTemplateTwo.ID, err))
 				}
 			} else {
 				for _, certTemplateOne := range inboundTemplates {
@@ -83,12 +84,12 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 					)
 
 					if publishedECAs, err := FetchCertTemplateCAs(tx, certTemplateOne); err != nil {
-						log.Errorf(fmt.Sprintf("Error getting cas for cert template %d: %v", certTemplateOne.ID, err))
+						slog.ErrorContext(ctx, fmt.Sprintf("Error getting cas for cert template %d: %v", certTemplateOne.ID, err))
 					} else if publishedECAs.Len() == 0 {
 						continue
 					} else if eARestrictions {
 						if delegatedAgents, err := fetchFirstDegreeNodes(tx, certTemplateTwo, ad.DelegatedEnrollmentAgent); err != nil {
-							log.Errorf(fmt.Sprintf("Error getting delegated agents for cert template %d: %v", certTemplateTwo.ID, err))
+							slog.ErrorContext(ctx, fmt.Sprintf("Error getting delegated agents for cert template %d: %v", certTemplateTwo.ID, err))
 						} else {
 							for _, eca1 := range publishedECAs {
 								tempResults := CalculateCrossProductNodeSets(tx,
@@ -102,7 +103,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 
 								// Add principals to result set unless it's a user and DNS is required
 								if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
-									log.Errorf(fmt.Sprintf("Error filtering user dns results: %v", err))
+									slog.ErrorContext(ctx, fmt.Sprintf("Error filtering user dns results: %v", err))
 								} else {
 									results.Or(filteredResults)
 								}
@@ -119,7 +120,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 								ecaEnrollersTwo)
 
 							if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
-								log.Errorf(fmt.Sprintf("Error filtering user dns results: %v", err))
+								slog.ErrorContext(ctx, fmt.Sprintf("Error filtering user dns results: %v", err))
 							} else {
 								results.Or(filteredResults)
 							}
@@ -149,7 +150,7 @@ func PostEnrollOnBehalfOf(domains, enterpriseCertAuthorities, certTemplates []*g
 		if version, err := node.Properties.Get(ad.SchemaVersion.String()).Float64(); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Did not get schema version for cert template %d: %v", node.ID, err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Error getting schema version for cert template %d: %v", node.ID, err))
+			slog.Error(fmt.Sprintf("Error getting schema version for cert template %d: %v", node.ID, err))
 		} else if version == 1 {
 			versionOneTemplates = append(versionOneTemplates, node)
 		} else if version >= 2 {
@@ -210,13 +211,13 @@ func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, p
 		if hasBadEku, err := certTemplateHasEku(certTemplateOne, EkuAnyPurpose); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Did not get EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Error getting EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err))
+			slog.Error(fmt.Sprintf("Error getting EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err))
 		} else if hasBadEku {
 			continue
 		} else if hasEku, err := certTemplateHasEku(certTemplateOne, EkuCertRequestAgent); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Did not get EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Error getting EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err))
+			slog.Error(fmt.Sprintf("Error getting EffectiveEKUs for cert template %d: %v", certTemplateOne.ID, err))
 		} else if !hasEku {
 			continue
 		} else {
@@ -224,15 +225,15 @@ func EnrollOnBehalfOfVersionTwo(tx graph.Transaction, versionTwoCertTemplates, p
 				if certTemplateOne.ID == certTemplateTwo.ID {
 					continue
 				} else if authorizedSignatures, err := certTemplateTwo.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-					log.Errorf(fmt.Sprintf("Error getting authorized signatures for cert template %d: %v", certTemplateTwo.ID, err))
+					slog.Error(fmt.Sprintf("Error getting authorized signatures for cert template %d: %v", certTemplateTwo.ID, err))
 				} else if authorizedSignatures < 1 {
 					continue
 				} else if applicationPolicies, err := certTemplateTwo.Properties.Get(ad.ApplicationPolicies.String()).StringSlice(); err != nil {
-					log.Errorf(fmt.Sprintf("Error getting application policies for cert template %d: %v", certTemplateTwo.ID, err))
+					slog.Error(fmt.Sprintf("Error getting application policies for cert template %d: %v", certTemplateTwo.ID, err))
 				} else if !slices.Contains(applicationPolicies, EkuCertRequestAgent) {
 					continue
 				} else if isLinked, err := DoesCertTemplateLinkToDomain(tx, certTemplateTwo, domainNode); err != nil {
-					log.Errorf(fmt.Sprintf("Error fetch paths from cert template %d to domain: %v", certTemplateTwo.ID, err))
+					slog.Error(fmt.Sprintf("Error fetch paths from cert template %d to domain: %v", certTemplateTwo.ID, err))
 				} else if !isLinked {
 					continue
 				} else {
@@ -273,13 +274,13 @@ func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []
 		if hasEku, err := certTemplateHasEkuOrAll(certTemplateOne, EkuCertRequestAgent, EkuAnyPurpose); errors.Is(err, graph.ErrPropertyNotFound) {
 			log.Warnf(fmt.Sprintf("Error checking ekus for certtemplate %d: %v", certTemplateOne.ID, err))
 		} else if err != nil {
-			log.Errorf(fmt.Sprintf("Error checking ekus for certtemplate %d: %v", certTemplateOne.ID, err))
+			slog.Error(fmt.Sprintf("Error checking ekus for certtemplate %d: %v", certTemplateOne.ID, err))
 		} else if !hasEku {
 			continue
 		} else {
 			for _, certTemplateTwo := range versionOneCertTemplates {
 				if hasPath, err := DoesCertTemplateLinkToDomain(tx, certTemplateTwo, domainNode); err != nil {
-					log.Errorf(fmt.Sprintf("Error getting domain node for certtemplate %d: %v", certTemplateTwo.ID, err))
+					slog.Error(fmt.Sprintf("Error getting domain node for certtemplate %d: %v", certTemplateTwo.ID, err))
 				} else if !hasPath {
 					continue
 				} else {
@@ -298,16 +299,16 @@ func EnrollOnBehalfOfVersionOne(tx graph.Transaction, versionOneCertTemplates []
 
 func isStartCertTemplateValidESC3(template *graph.Node) bool {
 	if reqManagerApproval, err := template.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
-		log.Errorf(fmt.Sprintf("Error getting reqmanagerapproval for certtemplate %d: %v", template.ID, err))
+		slog.Error(fmt.Sprintf("Error getting reqmanagerapproval for certtemplate %d: %v", template.ID, err))
 	} else if reqManagerApproval {
 		return false
 	} else if schemaVersion, err := template.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		log.Errorf(fmt.Sprintf("Error getting schemaversion for certtemplate %d: %v", template.ID, err))
+		slog.Error(fmt.Sprintf("Error getting schemaversion for certtemplate %d: %v", template.ID, err))
 	} else if schemaVersion == 1 {
 		return true
 	} else if schemaVersion > 1 {
 		if authorizedSignatures, err := template.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-			log.Errorf(fmt.Sprintf("Error getting authorizedsignatures for certtemplate %d: %v", template.ID, err))
+			slog.Error(fmt.Sprintf("Error getting authorizedsignatures for certtemplate %d: %v", template.ID, err))
 		} else if authorizedSignatures > 0 {
 			return false
 		} else {
@@ -323,7 +324,7 @@ func isEndCertTemplateValidESC3(template *graph.Node) bool {
 		log.Warnf(fmt.Sprintf("Did not getting authenabled for cert template %d: %v", template.ID, err))
 		return false
 	} else if err != nil {
-		log.Errorf(fmt.Sprintf("Error getting authenabled for cert template %d: %v", template.ID, err))
+		slog.Error(fmt.Sprintf("Error getting authenabled for cert template %d: %v", template.ID, err))
 		return false
 	} else if !authEnabled {
 		return false
@@ -331,7 +332,7 @@ func isEndCertTemplateValidESC3(template *graph.Node) bool {
 		log.Warnf(fmt.Sprintf("Did not getting reqManagerApproval for cert template %d: %v", template.ID, err))
 		return false
 	} else if err != nil {
-		log.Errorf(fmt.Sprintf("Error getting reqManagerApproval for cert template %d: %v", template.ID, err))
+		slog.Error(fmt.Sprintf("Error getting reqManagerApproval for cert template %d: %v", template.ID, err))
 		return false
 	} else if reqManagerApproval {
 		return false
@@ -618,10 +619,10 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				}
 
 				if collected, err := eca2.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
-					log.Errorf(fmt.Sprintf("Error getting enrollmentagentcollected for eca2 %d: %v", eca2.ID, err))
+					slog.ErrorContext(ctx, fmt.Sprintf("Error getting enrollmentagentcollected for eca2 %d: %v", eca2.ID, err))
 				} else if collected {
 					if hasRestrictions, err := eca2.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
-						log.Errorf(fmt.Sprintf("Error getting hasenrollmentagentrestrictions for ca %d: %v", eca2.ID, err))
+						slog.ErrorContext(ctx, fmt.Sprintf("Error getting hasenrollmentagentrestrictions for ca %d: %v", eca2.ID, err))
 					} else if hasRestrictions {
 
 						// Verify p8 path exist

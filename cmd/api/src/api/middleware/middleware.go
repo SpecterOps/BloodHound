@@ -19,6 +19,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
@@ -103,7 +104,7 @@ func ContextMiddleware(next http.Handler) http.Handler {
 		)
 
 		if newUUID, err := uuid.NewV4(); err != nil {
-			log.Errorf(fmt.Sprintf("Failed generating a new request UUID: %v", err))
+			slog.ErrorContext(request.Context(), fmt.Sprintf("Failed generating a new request UUID: %v", err))
 			requestID = "ERROR"
 		} else {
 			requestID = newUUID.String()
