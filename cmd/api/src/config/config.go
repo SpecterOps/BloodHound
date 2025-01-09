@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -263,11 +264,11 @@ func getConfiguration(path string, defaultConfigFunc func() (Configuration, erro
 	if hasCfgFile, err := HasConfigurationFile(path); err != nil {
 		return Configuration{}, err
 	} else if hasCfgFile {
-		log.Infof(fmt.Sprintf("Reading configuration found at %s", path))
+		slog.Info(fmt.Sprintf("Reading configuration found at %s", path))
 
 		return ReadConfigurationFile(path)
 	} else {
-		log.Infof(fmt.Sprintf("No configuration file found at %s. Returning defaults.", path))
+		slog.Info(fmt.Sprintf("No configuration file found at %s. Returning defaults.", path))
 
 		return defaultConfigFunc()
 	}

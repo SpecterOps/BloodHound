@@ -19,6 +19,7 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"strings"
@@ -26,7 +27,6 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
@@ -115,11 +115,11 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 			paddingString := strings.Repeat(" ", len(passwordMsg)-2)
 			borderString := strings.Repeat("#", len(passwordMsg))
 
-			log.Infof(fmt.Sprintf("%s", borderString))
-			log.Infof(fmt.Sprintf("#%s#", paddingString))
-			log.Infof(fmt.Sprintf("%s", passwordMsg))
-			log.Infof(fmt.Sprintf("#%s#", paddingString))
-			log.Infof(fmt.Sprintf("%s", borderString))
+			slog.Info(fmt.Sprintf("%s", borderString))
+			slog.Info(fmt.Sprintf("#%s#", paddingString))
+			slog.Info(fmt.Sprintf("%s", passwordMsg))
+			slog.Info(fmt.Sprintf("#%s#", paddingString))
+			slog.Info(fmt.Sprintf("%s", borderString))
 		}
 	}
 

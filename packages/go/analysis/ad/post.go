@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"
@@ -252,7 +253,7 @@ func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansion
 			computerID := graph.ID(computer)
 
 			if idx > 0 && idx%10000 == 0 {
-				log.Infof(fmt.Sprintf("Post processed %d active directory computers", idx))
+				slog.InfoContext(ctx, fmt.Sprintf("Post processed %d active directory computers", idx))
 			}
 
 			if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -344,7 +345,7 @@ func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansion
 			}
 		}
 
-		log.Infof(fmt.Sprintf("Finished post-processing %d active directory computers", computers.GetCardinality()))
+		slog.InfoContext(ctx, fmt.Sprintf("Finished post-processing %d active directory computers", computers.GetCardinality()))
 		return &operation.Stats, operation.Done()
 	}
 }
@@ -483,7 +484,7 @@ func FetchLocalGroupBitmapForComputer(tx graph.Transaction, computer graph.ID, s
 }
 
 func ExpandAllRDPLocalGroups(ctx context.Context, db graph.Database) (impact.PathAggregator, error) {
-	log.Infof(fmt.Sprintf("Expanding all AD group and local group memberships"))
+	slog.InfoContext(ctx, fmt.Sprintf("Expanding all AD group and local group memberships"))
 
 	return ResolveAllGroupMemberships(ctx, db, query.Not(
 		query.Or(

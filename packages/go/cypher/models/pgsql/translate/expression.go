@@ -18,8 +18,7 @@ package translate
 
 import (
 	"fmt"
-
-	"github.com/specterops/bloodhound/log"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/cypher/models/walk"
@@ -256,7 +255,7 @@ func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 		return InferExpressionType(typedExpression.Expression)
 
 	default:
-		log.Infof(fmt.Sprintf("unable to infer type hint for expression type: %T", expression))
+		slog.Info(fmt.Sprintf("unable to infer type hint for expression type: %T", expression))
 		return pgsql.UnknownDataType, nil
 	}
 }

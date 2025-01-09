@@ -19,6 +19,7 @@ package daemons
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -49,7 +50,7 @@ func (s *Manager) Start(ctx context.Context, daemons ...Daemon) {
 	defer s.daemonsLock.Unlock()
 
 	for _, daemon := range daemons {
-		log.Infof(fmt.Sprintf("Starting daemon %s", daemon.Name()))
+		slog.InfoContext(ctx, fmt.Sprintf("Starting daemon %s", daemon.Name()))
 		go daemon.Start(ctx)
 
 		s.daemons = append(s.daemons, daemon)
@@ -64,7 +65,7 @@ func (s *Manager) Stop() {
 	defer cancel()
 
 	for _, daemon := range s.daemons {
-		log.Infof(fmt.Sprintf("Shutting down daemon %s", daemon.Name()))
+		slog.Info(fmt.Sprintf("Shutting down daemon %s", daemon.Name()))
 
 		if err := daemon.Stop(shutdownCtx); err != nil {
 			log.Errorf(fmt.Sprintf("Failure caught while shutting down daemon %s: %v", daemon.Name(), err))

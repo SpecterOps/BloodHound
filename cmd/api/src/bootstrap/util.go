@@ -19,6 +19,7 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/specterops/bloodhound/dawgs"
@@ -80,11 +81,11 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 	} else {
 		switch driverName {
 		case neo4j.DriverName:
-			log.Infof(fmt.Sprintf("Connecting to graph using Neo4j"))
+			slog.InfoContext(ctx, "Connecting to graph using Neo4j")
 			connectionString = cfg.Neo4J.Neo4jConnectionString()
 
 		case pg.DriverName:
-			log.Infof(fmt.Sprintf("Connecting to graph using PostgreSQL"))
+			slog.InfoContext(ctx, "Connecting to graph using PostgreSQL")
 			connectionString = cfg.Database.PostgreSQLConnectionString()
 
 		default:
@@ -118,6 +119,6 @@ func InitializeLogging(cfg config.Configuration) error {
 
 	log.Configure(log.DefaultConfiguration().WithLevel(logLevel))
 
-	log.Infof(fmt.Sprintf("Logging configured"))
+	slog.Info("Logging configured")
 	return nil
 }

@@ -119,7 +119,7 @@ func resetCache(cacher cache.Cache, _ bool) {
 	if err := cacher.Reset(); err != nil {
 		log.Errorf(fmt.Sprintf("Error while resetting the cache: %v", err))
 	} else {
-		log.Infof(fmt.Sprintf("Cache successfully reset by datapipe daemon"))
+		slog.Info("Cache successfully reset by datapipe daemon")
 	}
 }
 
@@ -189,7 +189,7 @@ func (s *Daemon) deleteData() {
 		return
 	}
 
-	log.Infof(fmt.Sprintf("Begin Purge Graph Data"))
+	slog.Info("Begin Purge Graph Data")
 
 	if err := s.db.CancelAllFileUploads(s.ctx); err != nil {
 		log.Errorf(fmt.Sprintf("Error cancelling jobs during data deletion: %v", err))

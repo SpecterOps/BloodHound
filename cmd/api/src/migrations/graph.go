@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -144,13 +145,13 @@ func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion v
 
 	for _, nextMigration := range Manifest {
 		if nextMigration.Version.GreaterThan(mostRecentVersion) {
-			log.Infof(fmt.Sprintf("Graph migration version %s is greater than current version %s", nextMigration.Version, mostRecentVersion))
+			slog.InfoContext(ctx, fmt.Sprintf("Graph migration version %s is greater than current version %s", nextMigration.Version, mostRecentVersion))
 
 			if err := nextMigration.Execute(s.db); err != nil {
 				return fmt.Errorf("migration version %s failed: %w", nextMigration.Version.String(), err)
 			}
 
-			log.Infof(fmt.Sprintf("Graph migration version %s executed successfully", nextMigration.Version))
+			slog.InfoContext(ctx, fmt.Sprintf("Graph migration version %s executed successfully", nextMigration.Version))
 			mostRecentVersion = nextMigration.Version
 		}
 	}
@@ -167,7 +168,7 @@ func (s *GraphMigrator) executeStepwiseMigrations(ctx context.Context) error {
 		if errors.Is(err, ErrNoMigrationData) {
 			currentVersion := version.GetVersion()
 
-			log.Infof(fmt.Sprintf("This is a new graph database. Creating a migration entry for GraphDB version %s", currentVersion))
+			slog.InfoContext(ctx, fmt.Sprintf("This is a new graph database. Creating a migration entry for GraphDB version %s", currentVersion))
 			return CreateMigrationData(ctx, s.db, currentMigration)
 		} else {
 			return fmt.Errorf("unable to get graph db migration data: %w", err)

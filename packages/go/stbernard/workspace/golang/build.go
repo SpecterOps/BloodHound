@@ -19,6 +19,7 @@ package golang
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -50,7 +51,7 @@ func BuildMainPackages(workRoot string, modPaths []string, env environment.Envir
 		version = *parsedVersion
 	}
 
-	log.Infof(fmt.Sprintf("Building for version %s", version.Original()))
+	slog.Info(fmt.Sprintf("Building for version %s", version.Original()))
 
 	for _, modPath := range modPaths {
 		wg.Add(1)
@@ -104,7 +105,7 @@ func buildModuleMainPackages(buildDir string, modPath string, version semver.Ver
 						mu.Unlock()
 					}
 
-					log.Infof(fmt.Sprintf("Built package %s", p.Import))
+					slog.Info(fmt.Sprintf("Built package %s", p.Import))
 				}(pkg)
 			}
 		}

@@ -246,7 +246,7 @@ func (s *PGMigrator) SwitchPostgreSQL(response http.ResponseWriter, request *htt
 		s.graphDBSwitch.Switch(pgDB)
 		response.WriteHeader(http.StatusOK)
 
-		log.Infof(fmt.Sprintf("Updated default graph driver to PostgreSQL"))
+		slog.InfoContext(request.Context(), "Updated default graph driver to PostgreSQL")
 	}
 }
 
@@ -266,7 +266,7 @@ func (s *PGMigrator) SwitchNeo4j(response http.ResponseWriter, request *http.Req
 		s.graphDBSwitch.Switch(neo4jDB)
 		response.WriteHeader(http.StatusOK)
 
-		log.Infof(fmt.Sprintf("Updated default graph driver to Neo4j"))
+		slog.InfoContext(request.Context(), "Updated default graph driver to Neo4j")
 	}
 }
 
@@ -284,7 +284,7 @@ func (s *PGMigrator) startMigration() error {
 	}); err != nil {
 		return fmt.Errorf("failed connecting to PostgreSQL: %w", err)
 	} else {
-		log.Infof(fmt.Sprintf("Dispatching live migration from Neo4j to PostgreSQL"))
+		slog.Info("Dispatching live migration from Neo4j to PostgreSQL")
 
 		migrationCtx, migrationCancelFunc := context.WithCancel(s.serverCtx)
 		s.migrationCancelFunc = migrationCancelFunc
@@ -292,7 +292,7 @@ func (s *PGMigrator) startMigration() error {
 		go func(ctx context.Context) {
 			defer migrationCancelFunc()
 
-			log.Infof(fmt.Sprintf("Starting live migration from Neo4j to PostgreSQL"))
+			slog.InfoContext(ctx, fmt.Sprintf("Starting live migration from Neo4j to PostgreSQL"))
 
 			if err := pgDB.AssertSchema(ctx, s.graphSchema); err != nil {
 				log.Errorf(fmt.Sprintf("Unable to assert graph schema in PostgreSQL: %v", err))
@@ -303,7 +303,7 @@ func (s *PGMigrator) startMigration() error {
 			} else if err := migrateEdges(ctx, neo4jDB, pgDB, nodeIDMappings); err != nil {
 				log.Errorf(fmt.Sprintf("Failed importing edges into PostgreSQL: %v", err))
 			} else {
-				log.Infof(fmt.Sprintf("Migration to PostgreSQL completed successfully"))
+				slog.InfoContext(ctx, fmt.Sprintf("Migration to PostgreSQL completed successfully"))
 			}
 
 			if err := s.advanceState(stateIdle, stateMigrating, stateCanceling); err != nil {

@@ -21,6 +21,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command"
@@ -53,6 +54,6 @@ func main() {
 	} else if err := cmd.Run(); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to run command `%s`: %v", cmd.Name(), err))
 	} else {
-		log.Infof(fmt.Sprintf("Command `%s` completed successfully", cmd.Name()))
+		slog.Info(fmt.Sprintf("Command `%s` completed successfully", cmd.Name()))
 	}
 }

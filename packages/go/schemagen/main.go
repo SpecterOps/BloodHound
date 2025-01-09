@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -76,7 +77,7 @@ func main() {
 	if projectRoot, err := generator.FindGolangWorkspaceRoot(); err != nil {
 		log.Fatalf(fmt.Sprintf("Error finding project root: %v", err))
 	} else {
-		log.Infof(fmt.Sprintf("Project root is %s", projectRoot))
+		slog.Info(fmt.Sprintf("Project root is %s", projectRoot))
 
 		if err := cfgBuilder.OverlayPath(filepath.Join(projectRoot, "packages/cue")); err != nil {
 			log.Fatalf(fmt.Sprintf("Error: %v", err))

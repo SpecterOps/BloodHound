@@ -17,12 +17,11 @@
 package pg
 
 import (
-	"fmt"
+	"log/slog"
 	"regexp"
 	"sync"
 
 	"github.com/specterops/bloodhound/dawgs/drivers"
-	"github.com/specterops/bloodhound/log"
 )
 
 type IterationOptions interface {
@@ -54,7 +53,7 @@ type queryHook struct {
 func (s *queryHook) Execute(query string, arguments ...any) {
 	switch s.action {
 	case actionTrace:
-		log.Infof(fmt.Sprintf("Here"))
+		slog.Info("Here")
 	}
 }
 

@@ -19,6 +19,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"path"
 
@@ -154,7 +155,7 @@ func (s SAMLProvider) GetSAMLUserPrincipalNameFromAssertion(assertion *saml.Asse
 	for _, attrStmt := range assertion.AttributeStatements {
 		for _, attr := range attrStmt.Attributes {
 			for _, value := range attr.Values {
-				log.Infof(fmt.Sprintf("[SAML] Assertion contains attribute: %s - %s=%v", attr.NameFormat, attr.Name, value))
+				slog.Info(fmt.Sprintf("[SAML] Assertion contains attribute: %s - %s=%v", attr.NameFormat, attr.Name, value))
 			}
 		}
 	}

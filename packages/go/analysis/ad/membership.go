@@ -29,7 +29,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/log/measure"
 )
 
@@ -64,7 +63,7 @@ func ResolveAllGroupMemberships(ctx context.Context, db graph.Database, addition
 		return memberships, err
 	}
 
-	log.Infof(fmt.Sprintf("Collected %d groups to resolve", len(adGroupIDs)))
+	slog.InfoContext(ctx, fmt.Sprintf("Collected %d groups to resolve", len(adGroupIDs)))
 
 	for _, adGroupID := range adGroupIDs {
 		if traversalMap.Contains(adGroupID.Uint64()) {

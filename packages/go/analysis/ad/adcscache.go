@@ -19,6 +19,7 @@ package ad
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -147,7 +148,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 		log.Errorf(fmt.Sprintf("Error building adcs cache %v", err))
 	}
 
-	log.Infof(fmt.Sprintf("Finished building adcs cache"))
+	slog.InfoContext(ctx, "Finished building adcs cache")
 }
 
 func (s *ADCSCache) DoesCAChainProperlyToDomain(enterpriseCA, domain *graph.Node) bool {

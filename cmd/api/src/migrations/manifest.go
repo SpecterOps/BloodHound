@@ -139,7 +139,7 @@ func Version_513_Migration(db graph.Database) error {
 			}
 		}
 
-		log.Infof(fmt.Sprintf("Migration removed all non-entity kinds from %d incorrectly labeled nodes", nodes.Len()))
+		slog.Info(fmt.Sprintf("Migration removed all non-entity kinds from %d incorrectly labeled nodes", nodes.Len()))
 		return nil
 	}); err != nil {
 		return err
@@ -240,11 +240,11 @@ func Version_277_Migration(db graph.Database) error {
 				}
 
 				if count++; count%10000 == 0 {
-					log.Infof(fmt.Sprintf("Completed %d nodes in migration", count))
+					slog.Info(fmt.Sprintf("Completed %d nodes in migration", count))
 				}
 			}
 
-			log.Infof(fmt.Sprintf("Completed %d nodes in migration", count))
+			slog.Info(fmt.Sprintf("Completed %d nodes in migration", count))
 			return cursor.Error()
 		}); err != nil {
 			return err

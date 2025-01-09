@@ -630,7 +630,7 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 	for delegateKey, delegate := range delegates {
 		waitGroup.Add(1)
 
-		log.Infof(fmt.Sprintf("Running entity query %s", delegateKey))
+		slog.InfoContext(ctx, fmt.Sprintf("Running entity query %s", delegateKey))
 
 		go func(delegateKey string, delegate any) {
 			defer waitGroup.Done()
@@ -790,7 +790,7 @@ func (s *GraphQuery) cacheQueryResult(queryStart time.Time, cacheKey string, res
 		} else if !set {
 			log.Warnf(fmt.Sprintf("[Entity Results Cache] Cache entry for query %s not set because it already exists", cacheKey))
 		} else {
-			log.Infof(fmt.Sprintf("[Entity Results Cache] Cached slow query %s (%d bytes) because it took %dms", cacheKey, sizeInBytes, queryTime))
+			slog.Info(fmt.Sprintf("[Entity Results Cache] Cached slow query %s (%d bytes) because it took %dms", cacheKey, sizeInBytes, queryTime))
 		}
 	}
 }

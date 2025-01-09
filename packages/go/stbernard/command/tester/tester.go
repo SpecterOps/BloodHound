@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -106,7 +107,7 @@ func (s *command) runTests(cwd string, coverPath string, modPaths []string) erro
 	}
 
 	if !s.yarnOnly {
-		log.Infof(fmt.Sprintf("Checking coverage directory"))
+		slog.Info(fmt.Sprintf("Checking coverage directory"))
 		if err := os.MkdirAll(coverPath, os.ModeDir+fs.ModePerm); err != nil {
 			return fmt.Errorf("making coverage directory: %w", err)
 		} else if dirList, err := os.ReadDir(coverPath); err != nil {

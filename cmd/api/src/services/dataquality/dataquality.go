@@ -23,7 +23,6 @@ import (
 	"log/slog"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/log/measure"
 	"github.com/specterops/bloodhound/src/analysis/ad"
 	"github.com/specterops/bloodhound/src/analysis/azure"
@@ -38,7 +37,7 @@ type DataQualityData interface {
 }
 
 func SaveDataQuality(ctx context.Context, db DataQualityData, graphDB graph.Database) error {
-	log.Infof(fmt.Sprintf("Started Data Quality Stats Collection"))
+	slog.InfoContext(ctx, fmt.Sprintf("Started Data Quality Stats Collection"))
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Successfully Completed Data Quality Stats Collection")()
 
 	if stats, aggregation, err := ad.GraphStats(ctx, graphDB); err != nil {

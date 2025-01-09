@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"sort"
 	"strings"
 
@@ -336,7 +337,7 @@ func (s *neo4jTransaction) Raw(stmt string, params map[string]any) graph.Result 
 			}
 		}
 
-		log.Info().Str("dawgs_db_driver", DriverName).Msgf("%s - %s", stmt, prettyParameters.String())
+		slog.Info(fmt.Sprintf("%s - %s", stmt, prettyParameters.String()), "dawgs_db_driver", DriverName)
 	}
 
 	driverResult, err := s.currentTx().Run(stmt, params)

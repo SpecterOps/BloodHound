@@ -27,6 +27,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -417,7 +418,7 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 		return "", ErrUserDisabled
 	}
 
-	log.Infof(fmt.Sprintf("Creating session for user: %s(%s)", user.ID, user.PrincipalName))
+	slog.InfoContext(ctx, fmt.Sprintf("Creating session for user: %s(%s)", user.ID, user.PrincipalName))
 
 	userSession := model.UserSession{
 		User:      user,
@@ -475,16 +476,16 @@ func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString strin
 
 		return auth.Context{}, err
 	} else if !token.Valid {
-		log.Infof(fmt.Sprintf("Token invalid"))
+		slog.InfoContext(ctx, fmt.Sprintf("Token invalid"))
 		return auth.Context{}, ErrInvalidAuth
 	} else if sessionID, err := claims.SessionID(); err != nil {
-		log.Infof(fmt.Sprintf("Session ID %s invalid: %v", claims.Id, err))
+		slog.InfoContext(ctx, fmt.Sprintf("Session ID %s invalid: %v", claims.Id, err))
 		return auth.Context{}, ErrInvalidAuth
 	} else if session, err := s.db.GetUserSession(ctx, sessionID); err != nil {
-		log.Infof(fmt.Sprintf("Unable to find session %d", sessionID))
+		slog.InfoContext(ctx, fmt.Sprintf("Unable to find session %d", sessionID))
 		return auth.Context{}, ErrInvalidAuth
 	} else if session.Expired() {
-		log.Infof(fmt.Sprintf("Session %d is expired", sessionID))
+		slog.InfoContext(ctx, fmt.Sprintf("Session %d is expired", sessionID))
 		return auth.Context{}, ErrInvalidAuth
 	} else {
 		authContext := auth.Context{
@@ -493,7 +494,7 @@ func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString strin
 		}
 
 		if session.AuthProviderType == model.SessionAuthProviderSecret && session.User.AuthSecret == nil {
-			log.Infof(fmt.Sprintf("No auth secret found for user ID %s", session.UserID.String()))
+			slog.InfoContext(ctx, fmt.Sprintf("No auth secret found for user ID %s", session.UserID.String()))
 			return auth.Context{}, ErrNoUserSecret
 		} else if session.AuthProviderType == model.SessionAuthProviderSecret && session.User.AuthSecret.Expired() {
 			var (

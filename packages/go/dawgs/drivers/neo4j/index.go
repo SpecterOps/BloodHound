@@ -19,10 +19,10 @@ package neo4j
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 )
 
 const (
@@ -122,7 +122,7 @@ func indexTypeProvider(indexType graph.IndexType) string {
 func assertIndexes(ctx context.Context, db graph.Database, indexesToRemove []string, indexesToAdd map[string]neo4jIndex) error {
 	if err := db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		for _, indexToRemove := range indexesToRemove {
-			log.Infof(fmt.Sprintf("Removing index %s", indexToRemove))
+			slog.InfoContext(ctx, fmt.Sprintf("Removing index %s", indexToRemove))
 
 			result := tx.Raw(strings.Replace(dropPropertyIndexStatement, "$name", indexToRemove, 1), nil)
 			result.Close()
@@ -139,7 +139,7 @@ func assertIndexes(ctx context.Context, db graph.Database, indexesToRemove []str
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		for indexName, indexToAdd := range indexesToAdd {
-			log.Infof(fmt.Sprintf("Adding index %s to labels %s on properties %s using %s", indexName, indexToAdd.kind.String(), indexToAdd.Field, indexTypeProvider(indexToAdd.Type)))
+			slog.InfoContext(ctx, fmt.Sprintf("Adding index %s to labels %s on properties %s using %s", indexName, indexToAdd.kind.String(), indexToAdd.Field, indexTypeProvider(indexToAdd.Type)))
 
 			if err := db.Run(ctx, createPropertyIndexStatement, map[string]interface{}{
 				"name":       indexName,

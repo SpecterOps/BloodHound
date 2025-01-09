@@ -33,7 +33,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/log/measure"
 )
 
@@ -1516,7 +1515,7 @@ func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (f
 func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchAllGroupMembers")()
 
-	log.Infof(fmt.Sprintf("Fetching group members for %d AD nodes", len(targets)))
+	slog.InfoContext(ctx, fmt.Sprintf("Fetching group members for %d AD nodes", len(targets)))
 
 	allGroupMembers := graph.NewNodeSet()
 
@@ -1530,7 +1529,7 @@ func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.
 		}
 	}
 
-	log.Infof(fmt.Sprintf("Collected %d group members", len(allGroupMembers)))
+	slog.InfoContext(ctx, fmt.Sprintf("Collected %d group members", len(allGroupMembers)))
 	return allGroupMembers, nil
 }
 

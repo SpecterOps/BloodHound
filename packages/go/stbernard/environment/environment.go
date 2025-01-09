@@ -18,10 +18,9 @@ package environment
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
-
-	"github.com/specterops/bloodhound/log"
 )
 
 const (
@@ -56,7 +55,7 @@ func (s Environment) SetIfEmpty(key string, value string) {
 
 // Overrides an environment variable with a new value
 func (s Environment) Override(key string, value string) {
-	log.Infof(fmt.Sprintf("Overriding environment variable %s with %s", key, value))
+	slog.Info(fmt.Sprintf("Overriding environment variable %s with %s", key, value))
 	s[key] = value
 }
 

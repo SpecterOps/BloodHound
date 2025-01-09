@@ -22,13 +22,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
 )
@@ -114,7 +114,7 @@ func (s Client) ZipRequest(method, path string, params url.Values, body []byte) 
 					return nil, fmt.Errorf("waited %f seconds while retrying - Request failure cause: %w", maxSleep.Seconds(), err)
 				}
 
-				log.Infof(fmt.Sprintf("Request to %s failed with error: %v. Attempting a retry.", endpoint.String(), err))
+				slog.Info(fmt.Sprintf("Request to %s failed with error: %v. Attempting a retry.", endpoint.String(), err))
 				time.Sleep(sleepInterval)
 			} else {
 				return response, nil
@@ -170,7 +170,7 @@ func (s Client) Request(method, path string, params url.Values, body any, header
 					return nil, fmt.Errorf("waited %f seconds while retrying - Request failure cause: %w", maxSleep.Seconds(), err)
 				}
 
-				log.Infof(fmt.Sprintf("Request to %s failed with error: %v. Attempting a retry.", endpoint.String(), err))
+				slog.Info(fmt.Sprintf("Request to %s failed with error: %v. Attempting a retry.", endpoint.String(), err))
 				time.Sleep(sleepInterval)
 			} else {
 				return response, nil

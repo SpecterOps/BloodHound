@@ -18,13 +18,10 @@ package log
 
 import (
 	"fmt"
-	"os"
-	"strings"
-	"sync/atomic"
-	"time"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"os"
+	"strings"
 )
 
 // Level is a type alias that represents a log verbosity level.
@@ -212,42 +209,4 @@ func Trace() Event {
 // log verbosity level.
 func Tracef(format string, args ...any) {
 	Trace().Msgf(format, args...)
-}
-
-// Measure is a convenience function that returns a deferrable function that will add a runtime duration to the log
-// event. The time measurement begins on instantiation of the returned deferrable function and ends upon call of said
-// function.
-func Measure(level Level, format string, args ...any) func() {
-	then := time.Now()
-
-	return func() {
-		if elapsed := time.Since(then); elapsed >= measureThreshold {
-			WithLevel(level).Duration(FieldElapsed, elapsed).Msgf(format, args...)
-		}
-	}
-}
-
-var (
-	logMeasurePairCounter = atomic.Uint64{}
-	measureThreshold      = time.Second
-)
-
-func SetMeasureThreshold(newMeasureThreshold time.Duration) {
-	measureThreshold = newMeasureThreshold
-}
-
-func LogAndMeasure(level Level, format string, args ...any) func() {
-	var (
-		pairID  = logMeasurePairCounter.Add(1)
-		message = fmt.Sprintf(format, args...)
-		then    = time.Now()
-	)
-
-	WithLevel(level).Uint64(FieldMeasurementID, pairID).Msg(message)
-
-	return func() {
-		if elapsed := time.Since(then); elapsed >= measureThreshold {
-			WithLevel(level).Duration(FieldElapsed, elapsed).Uint64(FieldMeasurementID, pairID).Msg(message)
-		}
-	}
 }

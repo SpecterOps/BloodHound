@@ -20,6 +20,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"runtime"
 
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -75,4 +76,34 @@ func SetGlobalLevel(level slog.Level) {
 
 func GlobalLevel() slog.Level {
 	return lvl.Level()
+}
+
+type stackFrame struct {
+	File string `json:"file"`
+	Line int    `json:"line"`
+	Func string `json:"func"`
+}
+
+func GetSlogCallStack() slog.Attr {
+	var outputFrames []stackFrame
+
+	pc := make([]uintptr, 25)
+	n := runtime.Callers(1, pc)
+	if n == 0 {
+		return slog.Attr{}
+	}
+	pc = pc[:n] // pass only valid pcs to runtime.CallersFrames
+	frames := runtime.CallersFrames(pc)
+
+	for {
+		frame, more := frames.Next()
+
+		outputFrames = append(outputFrames, stackFrame{File: frame.File, Line: frame.Line, Func: frame.Function})
+
+		if !more {
+			break
+		}
+	}
+
+	return slog.Any("stack", outputFrames)
 }

@@ -21,6 +21,7 @@ package datapipe
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -80,7 +81,7 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 	// Release the lock once finished
 	defer s.lock.Unlock()
 
-	log.Infof(fmt.Sprintf("Running OrphanFileSweeper for path %s", s.tempDirectoryRootPath))
+	slog.InfoContext(ctx, fmt.Sprintf("Running OrphanFileSweeper for path %s", s.tempDirectoryRootPath))
 	log.Debugf(fmt.Sprintf("OrphanFileSweeper expected names %v", expectedFileNames))
 
 	if dirEntries, err := s.fileOps.ReadDir(s.tempDirectoryRootPath); err != nil {
@@ -112,7 +113,7 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 				break
 			}
 
-			log.Infof(fmt.Sprintf("Removing orphaned file %s", orphanedDirEntry.Name()))
+			slog.InfoContext(ctx, fmt.Sprintf("Removing orphaned file %s", orphanedDirEntry.Name()))
 			fullPath := filepath.Join(s.tempDirectoryRootPath, orphanedDirEntry.Name())
 
 			if err := s.fileOps.RemoveAll(fullPath); err != nil {
@@ -123,7 +124,7 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 		}
 
 		if numDeleted > 0 {
-			log.Infof(fmt.Sprintf("Finished removing %d orphaned ingest files", numDeleted))
+			slog.InfoContext(ctx, fmt.Sprintf("Finished removing %d orphaned ingest files", numDeleted))
 		}
 	}
 }
