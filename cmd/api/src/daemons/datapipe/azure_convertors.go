@@ -28,7 +28,6 @@ import (
 	azureModels "github.com/bloodhoundad/azurehound/v2/models/azure"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/log"
 )
 
 const (
@@ -193,7 +192,7 @@ func convertAzureAppOwner(raw json.RawMessage, converted *ConvertedAzureData) {
 			if err := json.Unmarshal(raw.Owner, &owner); err != nil {
 				slog.Error(fmt.Sprintf(SerialError, "app owner", err))
 			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); errors.Is(err, ein.ErrInvalidType) {
-				log.Warnf(fmt.Sprintf(ExtractError, err))
+				slog.Warn(fmt.Sprintf(ExtractError, err))
 			} else if err != nil {
 				slog.Error(fmt.Sprintf(ExtractError, err))
 			} else {
@@ -240,7 +239,7 @@ func convertAzureDeviceOwner(raw json.RawMessage, converted *ConvertedAzureData)
 			if err := json.Unmarshal(raw.Owner, &owner); err != nil {
 				slog.Error(fmt.Sprintf(SerialError, "device owner", err))
 			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); errors.Is(err, ein.ErrInvalidType) {
-				log.Warnf(fmt.Sprintf(ExtractError, err))
+				slog.Warn(fmt.Sprintf(ExtractError, err))
 			} else if err != nil {
 				slog.Error(fmt.Sprintf(ExtractError, err))
 			} else {

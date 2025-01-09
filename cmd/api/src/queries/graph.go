@@ -493,7 +493,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 			timeoutLog.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
 			timeoutLog.Msg("Neo4j timed out while executing cypher query")
 		} else {
-			log.Warnf(fmt.Sprintf("RawCypherQuery failed: %v", err))
+			slog.WarnContext(ctx, fmt.Sprintf("RawCypherQuery failed: %v", err))
 		}
 		return graphResponse, err
 	}
@@ -636,7 +636,7 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 			defer waitGroup.Done()
 
 			if result, err := runEntityQuery(ctx, s.Graph, delegate, node, 0, 0); errors.Is(err, graph.ErrContextTimedOut) {
-				log.Warnf(fmt.Sprintf("Running entity query for key %s: %v", delegateKey, err))
+				slog.WarnContext(ctx, fmt.Sprintf("Running entity query for key %s: %v", delegateKey, err))
 			} else if err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Error running entity query for key %s: %v", delegateKey, err))
 				data.Store(delegateKey, 0)
@@ -788,7 +788,7 @@ func (s *GraphQuery) cacheQueryResult(queryStart time.Time, cacheKey string, res
 		if set, sizeInBytes, err := s.Cache.GuardedSet(cacheKey, result); err != nil {
 			slog.Error(fmt.Sprintf("[Entity Results Cache] Failed to write results to cache for key: %s", cacheKey))
 		} else if !set {
-			log.Warnf(fmt.Sprintf("[Entity Results Cache] Cache entry for query %s not set because it already exists", cacheKey))
+			slog.Warn(fmt.Sprintf("[Entity Results Cache] Cache entry for query %s not set because it already exists", cacheKey))
 		} else {
 			slog.Info(fmt.Sprintf("[Entity Results Cache] Cached slow query %s (%d bytes) because it took %dms", cacheKey, sizeInBytes, queryTime))
 		}

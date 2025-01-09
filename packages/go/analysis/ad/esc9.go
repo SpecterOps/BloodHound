@@ -19,6 +19,7 @@ package ad
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -45,7 +46,7 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	} else {
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC9(template, false); err != nil {
-				log.Warnf(fmt.Sprintf("Error validating cert template %d: %v", template.ID, err))
+				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", template.ID, err))
 				continue
 			} else if !valid {
 				continue
@@ -56,10 +57,10 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(eca.ID))
 
 				if filteredVictims, err := filterUserDNSResults(tx, victimBitmap, template); err != nil {
-					log.Warnf(fmt.Sprintf("Error filtering users from victims for esc9a: %v", err))
+					slog.WarnContext(ctx, fmt.Sprintf("Error filtering users from victims for esc9a: %v", err))
 					continue
 				} else if attackers, err := FetchAttackersForEscalations9and10(tx, filteredVictims, false); err != nil {
-					log.Warnf(fmt.Sprintf("Error getting start nodes for esc9a attacker nodes: %v", err))
+					slog.WarnContext(ctx, fmt.Sprintf("Error getting start nodes for esc9a attacker nodes: %v", err))
 					continue
 				} else {
 					results.Or(graph.NodeIDsToDuplex(attackers))
@@ -91,7 +92,7 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	} else {
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC9(template, true); err != nil {
-				log.Warnf(fmt.Sprintf("Error validating cert template %d: %v", template.ID, err))
+				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", template.ID, err))
 				continue
 			} else if !valid {
 				continue
@@ -102,7 +103,7 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(eca.ID))
 
 				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
-					log.Warnf(fmt.Sprintf("Error getting start nodes for esc9a attacker nodes: %v", err))
+					slog.WarnContext(ctx, fmt.Sprintf("Error getting start nodes for esc9a attacker nodes: %v", err))
 					continue
 				} else {
 					results.Or(graph.NodeIDsToDuplex(attackers))

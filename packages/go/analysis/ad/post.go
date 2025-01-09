@@ -32,7 +32,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 )
 
 func PostProcessedRelationships() []graph.Kind {
@@ -186,7 +185,7 @@ func getLAPSSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions im
 	)
 
 	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		log.Warnf(fmt.Sprintf("Error getting domain SID for domain %d: %v", domain.ID, err))
+		slog.Warn(fmt.Sprintf("Error getting domain SID for domain %d: %v", domain.ID, err))
 		return nil, err
 	} else if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
 		return nil, err
@@ -206,7 +205,7 @@ func getDCSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions impa
 	)
 
 	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		log.Warnf(fmt.Sprintf("Error getting domain SID for domain %d: %v", domain.ID, err))
+		slog.Warn(fmt.Sprintf("Error getting domain SID for domain %d: %v", domain.ID, err))
 		return nil, err
 	} else if getChangesNodes, err := ops.FetchStartNodes(getChangesQuery); err != nil {
 		return nil, err

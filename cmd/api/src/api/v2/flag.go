@@ -18,11 +18,11 @@ package v2
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -64,7 +64,7 @@ func (s Resources) ToggleFlag(response http.ResponseWriter, request *http.Reques
 			if featureFlag.Key == appcfg.FeatureAdcs && !featureFlag.Enabled {
 				var userId string
 				if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-					log.Warnf(fmt.Sprintf("encountered request analysis for unknown user, this shouldn't happen"))
+					slog.WarnContext(request.Context(), fmt.Sprintf("encountered request analysis for unknown user, this shouldn't happen"))
 					userId = "unknown-user-toggle-flag"
 				} else {
 					userId = user.ID.String()

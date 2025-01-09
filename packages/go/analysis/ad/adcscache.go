@@ -26,7 +26,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/log"
 )
 
 type ADCSCache struct {
@@ -77,7 +76,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 				// Check if Auth. Users or Everyone has enroll
 				if domainsid, err := ct.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-					log.Warnf(fmt.Sprintf("Error getting domain SID for certtemplate %d: %v", ct.ID, err))
+					slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for certtemplate %d: %v", ct.ID, err))
 				} else if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, firstDegreePrincipals.Slice(), domainsid); err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf("Error fetching if auth. users or everyone has enroll on certtemplate %d: %v", ct.ID, err))
 				} else {
@@ -102,7 +101,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 				// Check if Auth. Users or Everyone has enroll
 				if domainsid, err := eca.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-					log.Warnf(fmt.Sprintf("Error getting domain SID for eca %d: %v", eca.ID, err))
+					slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for eca %d: %v", eca.ID, err))
 				} else if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, firstDegreeEnrollers.Slice(), domainsid); err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf("Error fetching if auth. users or everyone has enroll on enterprise ca %d: %v", eca.ID, err))
 				} else {
@@ -129,13 +128,13 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 			// Check for weak cert config on DCs
 			if upnMapping, err := hasUPNCertMappingInForest(tx, domain); err != nil {
-				log.Warnf(fmt.Sprintf("Error checking hasUPNCertMappingInForest for domain %d: %v", domain.ID, err))
+				slog.WarnContext(ctx, fmt.Sprintf("Error checking hasUPNCertMappingInForest for domain %d: %v", domain.ID, err))
 				return nil
 			} else if upnMapping {
 				s.hasUPNCertMappingInForest.Add(domain.ID.Uint64())
 			}
 			if weakCertBinding, err := hasWeakCertBindingInForest(tx, domain); err != nil {
-				log.Warnf(fmt.Sprintf("Error checking hasWeakCertBindingInForest for domain %d: %v", domain.ID, err))
+				slog.WarnContext(ctx, fmt.Sprintf("Error checking hasWeakCertBindingInForest for domain %d: %v", domain.ID, err))
 				return nil
 			} else if weakCertBinding {
 				s.hasWeakCertBindingInForest.Add(domain.ID.Uint64())
@@ -250,7 +249,7 @@ func hasUPNCertMappingInForest(tx graph.Transaction, domain *graph.Node) (bool, 
 	} else {
 		for _, trustedByDomain := range trustedByNodes {
 			if dcForNodes, err := FetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
-				log.Warnf(fmt.Sprintf("unable to fetch DCFor nodes in hasUPNCertMappingInForest: %v", err))
+				slog.Warn(fmt.Sprintf("unable to fetch DCFor nodes in hasUPNCertMappingInForest: %v", err))
 				continue
 			} else {
 				for _, dcForNode := range dcForNodes {
@@ -275,7 +274,7 @@ func hasWeakCertBindingInForest(tx graph.Transaction, domain *graph.Node) (bool,
 	} else {
 		for _, trustedByDomain := range trustedByNodes {
 			if dcForNodes, err := FetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
-				log.Warnf(fmt.Sprintf("unable to fetch DCFor nodes in hasWeakCertBindingInForest: %v", err))
+				slog.Warn(fmt.Sprintf("unable to fetch DCFor nodes in hasWeakCertBindingInForest: %v", err))
 				continue
 			} else {
 				for _, dcForNode := range dcForNodes {

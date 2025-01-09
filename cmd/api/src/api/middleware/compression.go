@@ -27,7 +27,6 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 )
 
@@ -66,7 +65,7 @@ func CompressionMiddleware(next http.Handler) http.Handler {
 				request.Body, err = wrapBody(encoding, request.Body)
 				if err != nil {
 					errMsg := fmt.Sprintf("failed to create reader for %s encoding: %v", encoding, err)
-					log.Warnf(fmt.Sprintf(errMsg))
+					slog.WarnContext(request.Context(), fmt.Sprintf(errMsg))
 					if errors.Is(err, errUnsupportedEncoding) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType, fmt.Sprintf("Error trying to read request: %s", errMsg), request), responseWriter)
 					} else {

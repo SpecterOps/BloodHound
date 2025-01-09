@@ -25,7 +25,6 @@ import (
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	schema "github.com/specterops/bloodhound/graphschema"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/registration"
 	"github.com/specterops/bloodhound/src/api/router"
@@ -113,7 +112,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		// Trigger analysis on first start
 		if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
-			log.Warnf(fmt.Sprintf("failed to request init analysis: %v", err))
+			slog.WarnContext(ctx, fmt.Sprintf("failed to request init analysis: %v", err))
 		}
 
 		return []daemons.Daemon{

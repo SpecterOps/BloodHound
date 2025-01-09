@@ -125,12 +125,12 @@ func (s *pattern) Do(delegate PatternMatchDelegate) Driver {
 func (s *pattern) OutboundWithDepth(min, max int, criteria ...graph.Criteria) PatternContinuation {
 	if min < 0 {
 		min = 1
-		log.Warnf(fmt.Sprintf("Negative mindepth not allowed. Setting min depth for expansion to 1"))
+		slog.Warn("Negative mindepth not allowed. Setting min depth for expansion to 1")
 	}
 
 	if max < 0 {
 		max = 0
-		log.Warnf(fmt.Sprintf("Negative maxdepth not allowed. Setting max depth for expansion to 0"))
+		slog.Warn("Negative maxdepth not allowed. Setting max depth for expansion to 0")
 	}
 
 	s.expansions = append(s.expansions, expansion{
@@ -153,12 +153,12 @@ func (s *pattern) Outbound(criteria ...graph.Criteria) PatternContinuation {
 func (s *pattern) InboundWithDepth(min, max int, criteria ...graph.Criteria) PatternContinuation {
 	if min < 0 {
 		min = 1
-		log.Warnf(fmt.Sprintf("Negative mindepth not allowed. Setting min depth for expansion to 1"))
+		slog.Warn("Negative mindepth not allowed. Setting min depth for expansion to 1")
 	}
 
 	if max < 0 {
 		max = 0
-		log.Warnf(fmt.Sprintf("Negative maxdepth not allowed. Setting max depth for expansion to 0"))
+		slog.Warn("Negative maxdepth not allowed. Setting max depth for expansion to 0")
 	}
 
 	s.expansions = append(s.expansions, expansion{

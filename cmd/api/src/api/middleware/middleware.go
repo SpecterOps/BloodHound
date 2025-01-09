@@ -157,7 +157,7 @@ func parseUserIP(r *http.Request) string {
 
 	// The point of this code is to strip the port, so we don't need to save it.
 	if host, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
-		log.Warnf(fmt.Sprintf("Error parsing remoteAddress '%s': %s", r.RemoteAddr, err))
+		slog.WarnContext(r.Context(), fmt.Sprintf("Error parsing remoteAddress '%s': %s", r.RemoteAddr, err))
 		remoteIp = r.RemoteAddr
 	} else {
 		remoteIp = host

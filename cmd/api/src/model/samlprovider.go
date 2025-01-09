@@ -24,7 +24,6 @@ import (
 	"path"
 
 	"github.com/crewjam/saml"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/serde"
 )
@@ -141,7 +140,7 @@ func assertionFindString(assertion *saml.Assertion, names ...string) (string, er
 							return value.Value, nil
 						}
 					}
-					log.Warnf(fmt.Sprintf("[SAML] Found attribute values for attribute %s however none of the values have an XML type of %s. Choosing the first value.", ObjectIDAttributeNameFormat, XMLTypeString))
+					slog.Warn(fmt.Sprintf("[SAML] Found attribute values for attribute %s however none of the values have an XML type of %s. Choosing the first value.", ObjectIDAttributeNameFormat, XMLTypeString))
 					return attribute.Values[0].Value, nil
 				}
 			}

@@ -95,7 +95,7 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 			if expectedDir != "" {
 				expectedDir = strings.TrimSuffix(expectedDir, string(filepath.Separator))
 				if expectedDir != s.tempDirectoryRootPath {
-					log.Warnf(fmt.Sprintf("directory '%s' for expectedFileName '%s' does not match tempDirectoryRootPath '%s': skipping", expectedDir, expectedFileName, s.tempDirectoryRootPath))
+					slog.WarnContext(ctx, fmt.Sprintf("directory '%s' for expectedFileName '%s' does not match tempDirectoryRootPath '%s': skipping", expectedDir, expectedFileName, s.tempDirectoryRootPath))
 					continue
 				}
 			}

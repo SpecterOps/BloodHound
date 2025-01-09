@@ -31,7 +31,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/log"
 )
 
 func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
@@ -42,12 +41,12 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 		ecaEnrollers := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
 		for _, certTemplate := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForEsc1(certTemplate); err != nil {
-				log.Warnf(fmt.Sprintf("Error validating cert template %d: %v", certTemplate.ID, err))
+				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", certTemplate.ID, err))
 				continue
 			} else if !valid {
 				continue
 			} else if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				log.Warnf(fmt.Sprintf("Error validating cert template %d: %v", certTemplate.ID, err))
+				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", certTemplate.ID, err))
 				continue
 			} else {
 				results.Or(CalculateCrossProductNodeSets(tx, domainsid, expandedGroups, cache.GetCertTemplateEnrollers(certTemplate.ID), ecaEnrollers))
@@ -203,7 +202,7 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 	// Add startnode, Auth. Users, and Everyone to start nodes
 	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		log.Warnf(fmt.Sprintf("Error getting domain SID for domain %d: %v", endNode.ID, err))
+		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", endNode.ID, err))
 		return nil, err
 	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {

@@ -18,10 +18,10 @@ package validation
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
 	iso8601 "github.com/channelmeter/iso8601duration"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/utils"
 )
 
@@ -42,7 +42,7 @@ func NewDurationValidator(params map[string]string) Validator {
 	if minD, ok := params["min"]; ok {
 		validator.min = params["min"]
 		if duration, err := iso8601.FromString(minD); err != nil {
-			log.Warnf(fmt.Sprintf("NewDurationValidator invalid min limit provided %s", minD))
+			slog.Warn(fmt.Sprintf("NewDurationValidator invalid min limit provided %s", minD))
 		} else {
 			validator.minD = duration.ToDuration()
 		}
@@ -51,7 +51,7 @@ func NewDurationValidator(params map[string]string) Validator {
 	if maxD, ok := params["max"]; ok {
 		validator.max = params["max"]
 		if duration, err := iso8601.FromString(maxD); err != nil {
-			log.Warnf(fmt.Sprintf("NewDurationValidator invalid max limit provided %s", maxD))
+			slog.Warn(fmt.Sprintf("NewDurationValidator invalid max limit provided %s", maxD))
 		} else {
 			validator.maxD = duration.ToDuration()
 		}

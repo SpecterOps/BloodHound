@@ -37,7 +37,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/specterops/bloodhound/crypto"
 	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -113,7 +112,7 @@ func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.
 
 	err := s.db.CreateAuditLog(requestContext, auditLog)
 	if err != nil {
-		log.Warnf(fmt.Sprintf("failed to write login audit log %+v", err))
+		slog.WarnContext(requestContext, fmt.Sprintf("failed to write login audit log %+v", err))
 	}
 }
 

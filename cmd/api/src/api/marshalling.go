@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api/stream"
 	"github.com/specterops/bloodhound/src/model"
@@ -77,15 +76,15 @@ type ResponseWrapper struct {
 func WriteErrorResponse(ctx context.Context, untypedError any, response http.ResponseWriter) {
 	switch typedError := untypedError.(type) {
 	case *ErrorResponse: // V1 error handling
-		log.Warnf(fmt.Sprintf("Writing API Error. Status: %v. Message: %v", typedError.HTTPStatus, typedError.Error))
+		slog.WarnContext(ctx, fmt.Sprintf("Writing API Error. Status: %v. Message: %v", typedError.HTTPStatus, typedError.Error))
 		WriteJSONResponse(context.Background(), typedError.Error, typedError.HTTPStatus, response)
 
 	case *ErrorWrapper: // V2 error handling
-		log.Warnf(fmt.Sprintf("Writing API Error. Status: %v. Message: %v", typedError.HTTPStatus, typedError.Errors))
+		slog.WarnContext(ctx, fmt.Sprintf("Writing API Error. Status: %v. Message: %v", typedError.HTTPStatus, typedError.Errors))
 		WriteJSONResponse(ctx, typedError, typedError.HTTPStatus, response)
 
 	default:
-		log.Warnf(fmt.Sprintf("Failure Writing API Error. Status: %v. Message: %v", http.StatusInternalServerError, "Invalid error format returned"))
+		slog.WarnContext(ctx, fmt.Sprintf("Failure Writing API Error. Status: %v. Message: %v", http.StatusInternalServerError, "Invalid error format returned"))
 		WriteJSONResponse(ctx, "An internal error has occurred that is preventing the service from servicing this request.", http.StatusInternalServerError, response)
 	}
 }

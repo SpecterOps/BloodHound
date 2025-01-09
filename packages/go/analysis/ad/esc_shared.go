@@ -32,7 +32,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/slicesext"
 )
 
@@ -46,7 +45,7 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation anal
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 				if thumbprints, err := innerNode.Properties.Get(ad.CertThumbprints.String()).StringSlice(); err != nil {
 					if strings.Contains(err.Error(), graph.ErrPropertyNotFound.Error()) {
-						log.Warnf(fmt.Sprintf("Unable to post-process TrustedForNTAuth edge for NTAuthStore node %d due to missing adcs data: %v", innerNode.ID, err))
+						slog.WarnContext(ctx, fmt.Sprintf("Unable to post-process TrustedForNTAuth edge for NTAuthStore node %d due to missing adcs data: %v", innerNode.ID, err))
 						return nil
 					}
 					return err

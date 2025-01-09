@@ -21,12 +21,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"reflect"
 	"time"
 
 	iso8601 "github.com/channelmeter/iso8601duration"
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
@@ -170,10 +170,10 @@ func GetPasswordExpiration(ctx context.Context, service ParameterService) time.D
 	var expiration PasswordExpiration
 
 	if cfg, err := service.GetConfigurationParameter(ctx, PasswordExpirationWindow); err != nil {
-		log.Warnf(fmt.Sprintf("Failed to fetch password expiratio configuration; returning default values"))
+		slog.WarnContext(ctx, fmt.Sprintf("Failed to fetch password expiratio configuration; returning default values"))
 		return DefaultPasswordExpirationWindow
 	} else if err := cfg.Map(&expiration); err != nil {
-		log.Warnf(fmt.Sprintf("Invalid password expiration configuration supplied; returning default values"))
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid password expiration configuration supplied; returning default values"))
 		return DefaultPasswordExpirationWindow
 	}
 
@@ -194,9 +194,9 @@ func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jPara
 	}
 
 	if neo4jParametersCfg, err := service.GetConfigurationParameter(ctx, Neo4jConfigs); err != nil {
-		log.Warnf(fmt.Sprintf("Failed to fetch neo4j configuration; returning default values"))
+		slog.WarnContext(ctx, fmt.Sprintf("Failed to fetch neo4j configuration; returning default values"))
 	} else if err = neo4jParametersCfg.Map(&result); err != nil {
-		log.Warnf(fmt.Sprintf("Invalid neo4j configuration supplied; returning default values"))
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid neo4j configuration supplied; returning default values"))
 	}
 
 	return result
@@ -212,9 +212,9 @@ func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 	var result CitrixRDPSupport
 
 	if cfg, err := service.GetConfigurationParameter(ctx, CitrixRDPSupportKey); err != nil {
-		log.Warnf(fmt.Sprintf("Failed to fetch CitrixRDPSupport configuration; returning default values"))
+		slog.WarnContext(ctx, fmt.Sprintf("Failed to fetch CitrixRDPSupport configuration; returning default values"))
 	} else if err := cfg.Map(&result); err != nil {
-		log.Warnf(fmt.Sprintf("Invalid CitrixRDPSupport configuration supplied, %v. returning default values.", err))
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid CitrixRDPSupport configuration supplied, %v. returning default values.", err))
 	}
 
 	return result.Enabled
@@ -260,9 +260,9 @@ func GetPruneTTLParameters(ctx context.Context, service ParameterService) PruneT
 	}
 
 	if pruneTTLParametersCfg, err := service.GetConfigurationParameter(ctx, PruneTTL); err != nil {
-		log.Warnf(fmt.Sprintf("Failed to fetch prune TTL configuration; returning default values"))
+		slog.WarnContext(ctx, fmt.Sprintf("Failed to fetch prune TTL configuration; returning default values"))
 	} else if err = pruneTTLParametersCfg.Map(&result); err != nil {
-		log.Warnf(fmt.Sprintf("Invalid prune TTL configuration supplied; returning default values %+v", err))
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid prune TTL configuration supplied; returning default values %+v", err))
 	}
 
 	return result
@@ -278,9 +278,9 @@ func GetReconciliationParameter(ctx context.Context, service ParameterService) b
 	result := ReconciliationParameter{Enabled: true}
 
 	if cfg, err := service.GetConfigurationParameter(ctx, ReconciliationKey); err != nil {
-		log.Warnf(fmt.Sprintf("Failed to fetch reconciliation configuration; returning default values"))
+		slog.WarnContext(ctx, fmt.Sprintf("Failed to fetch reconciliation configuration; returning default values"))
 	} else if err := cfg.Map(&result); err != nil {
-		log.Warnf(fmt.Sprintf("Invalid reconciliation configuration supplied, %v. returning default values.", err))
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid reconciliation configuration supplied, %v. returning default values.", err))
 	}
 
 	return result.Enabled

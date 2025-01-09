@@ -871,7 +871,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 			if isRoleAssignable, err := innerGroup.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil {
 				if graph.IsErrPropertyNotFound(err) {
-					log.Warnf(fmt.Sprintf("Node %d is missing property %s", innerGroup.ID, azure.IsAssignableToRole))
+					slog.WarnContext(ctx, fmt.Sprintf("Node %d is missing property %s", innerGroup.ID, azure.IsAssignableToRole))
 				} else {
 					return err
 				}

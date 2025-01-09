@@ -29,7 +29,6 @@ import (
 	"github.com/specterops/bloodhound/bomenc"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
@@ -222,7 +221,7 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 				if err := file.Close(); err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf("Error closing ingest file %s: %v", filePath, err))
 				} else if err := os.Remove(filePath); errors.Is(err, fs.ErrNotExist) {
-					log.Warnf(fmt.Sprintf("Removing ingest file %s: %v", filePath, err))
+					slog.WarnContext(ctx, fmt.Sprintf("Removing ingest file %s: %v", filePath, err))
 				} else if err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf("Error removing ingest file %s: %v", filePath, err))
 				}
@@ -249,13 +248,13 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 		}
 
 		if s.cfg.DisableIngest {
-			log.Warnf(fmt.Sprintf("Skipped processing of ingestTasks due to config flag."))
+			slog.WarnContext(ctx, fmt.Sprintf("Skipped processing of ingestTasks due to config flag."))
 			return
 		}
 
 		total, failed, err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType)
 		if errors.Is(err, fs.ErrNotExist) {
-			log.Warnf(fmt.Sprintf("Did not process ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err))
+			slog.WarnContext(ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err))
 		} else if err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err))
 		} else if job, err := s.db.GetFileUploadJob(ctx, ingestTask.TaskID.ValueOrZero()); err != nil {

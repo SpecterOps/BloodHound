@@ -34,7 +34,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 )
 
 const (
@@ -456,7 +455,7 @@ func ConvertAzureGroupMembersToRels(data models.GroupMembers) []IngestibleRelati
 		if err := json.Unmarshal(raw.Member, &member); err != nil {
 			slog.Error(fmt.Sprintf(SerialError, "azure group member", err))
 		} else if memberType, err := ExtractTypeFromDirectoryObject(member); errors.Is(err, ErrInvalidType) {
-			log.Warnf(fmt.Sprintf(ExtractError, err))
+			slog.Warn(fmt.Sprintf(ExtractError, err))
 		} else if err != nil {
 			slog.Error(fmt.Sprintf(ExtractError, err))
 		} else {
@@ -490,7 +489,7 @@ func ConvertAzureGroupOwnerToRels(data models.GroupOwners) []IngestibleRelations
 		if err := json.Unmarshal(raw.Owner, &owner); err != nil {
 			slog.Error(fmt.Sprintf(SerialError, "azure group owner", err))
 		} else if ownerType, err := ExtractTypeFromDirectoryObject(owner); errors.Is(err, ErrInvalidType) {
-			log.Warnf(fmt.Sprintf(ExtractError, err))
+			slog.Warn(fmt.Sprintf(ExtractError, err))
 		} else if err != nil {
 			slog.Error(fmt.Sprintf(ExtractError, err))
 		} else {
@@ -1076,7 +1075,7 @@ func ConvertAzureServicePrincipalOwnerToRels(data models.ServicePrincipalOwners)
 		if err := json.Unmarshal(raw.Owner, &owner); err != nil {
 			slog.Error(fmt.Sprintf(SerialError, "azure service principal owner", err))
 		} else if ownerType, err := ExtractTypeFromDirectoryObject(owner); errors.Is(err, ErrInvalidType) {
-			log.Warnf(fmt.Sprintf(ExtractError, err))
+			slog.Warn(fmt.Sprintf(ExtractError, err))
 		} else if err != nil {
 			slog.Error(fmt.Sprintf(ExtractError, err))
 		} else {

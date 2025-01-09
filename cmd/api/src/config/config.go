@@ -29,7 +29,6 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/crypto"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/serde"
 )
 
@@ -247,7 +246,7 @@ func SetValuesFromEnv(varPrefix string, target any, env []string) error {
 				cfgKeyPath := strings.TrimPrefix(key, formattedPrefix)
 
 				if err := SetValue(target, cfgKeyPath, valueStr); errors.Is(err, ErrInvalidConfigurationPath) {
-					log.Warnf(fmt.Sprintf("%s", err))
+					slog.Warn(fmt.Sprintf("%s", err))
 				} else if err != nil {
 					return err
 				}

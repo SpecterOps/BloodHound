@@ -29,7 +29,6 @@ import (
 
 	"github.com/specterops/bloodhound/bomenc"
 	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/ingest"
@@ -68,7 +67,7 @@ func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
 	} else {
 		for _, job := range jobs {
 			if job.LastIngest.Before(threshold) {
-				log.Warnf(fmt.Sprintf("Ingest timeout: No ingest activity observed for Job ID %d in %f minutes (last ingest was %s)). Upload incomplete",
+				slog.WarnContext(ctx, fmt.Sprintf("Ingest timeout: No ingest activity observed for Job ID %d in %f minutes (last ingest was %s)). Upload incomplete",
 					job.ID,
 					now.Sub(threshold).Minutes(),
 					job.LastIngest.Format(time.RFC3339)))

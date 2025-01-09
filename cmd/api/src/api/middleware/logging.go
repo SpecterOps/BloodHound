@@ -26,7 +26,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -149,9 +148,9 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 				slog.LogAttrs(request.Context(), slog.LevelInfo, fmt.Sprintf("%s %s", request.Method, request.URL.RequestURI()), logAttrs...)
 
 				if !deadline.IsZero() && time.Now().After(deadline) {
-					log.Warnf(
-						"%s %s took longer than the configured timeout of %d seconds",
-						request.Method, request.URL.RequestURI(), timeout.Seconds(),
+					slog.WarnContext(
+						request.Context(),
+						fmt.Sprintf("%s %s took longer than the configured timeout of %d seconds", request.Method, request.URL.RequestURI(), timeout.Seconds()),
 					)
 				}
 			}()

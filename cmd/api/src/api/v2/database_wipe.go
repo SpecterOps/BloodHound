@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -113,7 +112,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		} else {
 			var userId string
 			if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-				log.Warnf(fmt.Sprintf("encountered request analysis for unknown user, this shouldn't happen"))
+				slog.WarnContext(request.Context(), fmt.Sprintf("encountered request analysis for unknown user, this shouldn't happen"))
 				userId = "unknown-user-database-wipe"
 			} else {
 				userId = user.ID.String()
@@ -141,7 +140,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	if kickoffAnalysis {
 		var userId string
 		if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-			log.Warnf(fmt.Sprintf("encountered request analysis for unknown user, this shouldn't happen"))
+			slog.WarnContext(request.Context(), fmt.Sprintf("encountered request analysis for unknown user, this shouldn't happen"))
 			userId = "unknown-user-database-wipe"
 		} else {
 			userId = user.ID.String()

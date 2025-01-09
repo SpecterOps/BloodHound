@@ -24,7 +24,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 )
 
 func NewServicePrincipalEntityDetails(node *graph.Node) ServicePrincipalDetails {
@@ -60,7 +59,7 @@ func getServicePrincipalAppID(tx graph.Transaction, node *graph.Node) (string, e
 		return appID, err
 	} else if servicePrincipalApps.Len() == 0 {
 		// Don't want this to break the function, but we'll want to know about it
-		log.Warnf(fmt.Sprintf("Service principal node %d has no applications attached", node.ID))
+		slog.Warn(fmt.Sprintf("Service principal node %d has no applications attached", node.ID))
 	} else {
 		app := servicePrincipalApps.Pick()
 

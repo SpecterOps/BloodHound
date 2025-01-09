@@ -23,7 +23,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/log/measure"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
@@ -46,7 +45,7 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 
 	var userId string
 	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-		log.Warnf(fmt.Sprintf("encountered request analysis for unknown user, this shouldn't happen"))
+		slog.WarnContext(request.Context(), fmt.Sprintf("encountered request analysis for unknown user, this shouldn't happen"))
 		userId = "unknown-user"
 	} else {
 		userId = user.ID.String()

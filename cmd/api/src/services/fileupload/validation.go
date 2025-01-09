@@ -19,10 +19,9 @@ package fileupload
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
+	"log/slog"
 
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/model/ingest"
 )
 
@@ -73,7 +72,7 @@ func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) 
 			case string:
 				if !metaTagFound && depth == 1 && typed == "meta" {
 					if err := decoder.Decode(&meta); err != nil {
-						log.Warnf(fmt.Sprintf("Found invalid metatag, skipping"))
+						slog.Warn("Found invalid metatag, skipping")
 					} else if meta.Type.IsValid() {
 						metaTagFound = true
 					}
