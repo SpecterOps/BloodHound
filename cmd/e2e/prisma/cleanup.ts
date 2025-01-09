@@ -18,14 +18,19 @@ import prisma from './client.js';
 import { qaEmailDomain } from './seed.js';
 
 export class DbOPS {
-    // delete test data in dev environment only
+    qaEmail: string;
+
+    constructor(qaEmail: string) {
+      this.qaEmail = qaEmail;
+    }
+    // Delete test data in dev environment only
     async deleteUsers() {
         const baseURL = `${process.env.BASE_URL}`.toLowerCase();
         if (`${process.env.ENV}` === 'dev' && (baseURL?.includes('localhost') || baseURL?.includes('127.0.0.1'))) {
             const fetchAllTestUsers = await prisma.users.findMany({
                 where: {
                     email_address: {
-                        contains: qaEmailDomain,
+                        contains: this.qaEmail,
                     },
                 },
             });

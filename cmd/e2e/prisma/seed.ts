@@ -22,7 +22,7 @@ import { users } from '@prisma/client';
 
 let uniquePassword: string;
 
-// const is exported to ensure deletion of the test data.
+// Const is exported to ensure deletion of the test data.
 export const qaEmailDomain = '@test.com';
 
 export interface IUserResult extends users {
@@ -31,7 +31,7 @@ export interface IUserResult extends users {
     principal_name: string;
 }
 
-// create a unique user for each scenario
+// Create a unique user for each scenario
 export class User {
     firstName: string;
     lastName: string;
@@ -45,7 +45,7 @@ export class User {
     totpSecret: string;
     totpActivated: boolean;
 
-    // initialize user properties as optional parameters
+    // Initialize user properties as optional parameters
     constructor(
         firstName = faker.person.firstName(),
         lastName = faker.person.lastName(),
@@ -72,19 +72,19 @@ export class User {
         this.totpActivated = totpActivated;
     }
     async create() {
-        // sanity check when running against non dev environment
-        // production tagged tests should not include any test data.
+        // Sanity check when running against non dev environment
+        // Production tagged tests should not include any test data.
         const dataBaseURL = process.env.DATABASE_URL;
 
-        // prisma client will throw an error if database connetction url string is null
+        // Prisma client will throw an error if database connetction url string is null
         const dbHost = dataBaseURL?.split('@')[1]?.split(':')[0];
-        // comparison is a must (true|true) return false if one of the condition is false
+        // Comparison is a must (true|true) return false if one of the condition is false
         if (dbHost !== 'localhost' && dbHost !== '127.0.0.1') {
-            // throwing an _uncaught_ error exception to allow the process to be terminated accordingly
+            // Throwing an _uncaught_ error exception to allow the process to be terminated accordingly
             throw new Error('Error: no seeding data in non dev environment');
         }
 
-        // option to set the password in table driven tests
+        // Option to set the password in table driven tests
         if (this.password === '') {
             uniquePassword = faker.lorem.word({ length: { min: 5, max: 10 } });
         } else {
@@ -93,7 +93,7 @@ export class User {
 
         const now = new Date();
 
-        // find the matching role
+        // Find the matching role
         const role = await prisma.roles.findFirst({
             where: { name: this.role },
         });

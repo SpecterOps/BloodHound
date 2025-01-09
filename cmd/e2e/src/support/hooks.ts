@@ -19,26 +19,27 @@ import FixtureManager from './FixtureManager.js';
 import PlaywrightWorld from '../tests/worlds/playwrightWorld.js';
 import { loadEnvs } from '../helpers/env/env.js';
 import { DbOPS } from '../../prisma/cleanup.js';
+import { qaEmailDomain } from '../../prisma/seed.js';
 
 let fx: FixtureManager;
 
-BeforeAll(async function () {
-    // load environment variables
+BeforeAll(async function testSetup() {
+    // Load environment variables
     loadEnvs();
 
     fx = new FixtureManager();
     await fx.openBrowser();
 });
 
-Before(async function (this: PlaywrightWorld) {
-    // create new instance of fixture for each scenario
+Before(async function eachScenario(this: PlaywrightWorld) {
+    // Create new instance of fixture for each scenario
     await fx.openContext();
     await fx.newPage();
     this.fixture = fx.fixture;
 });
 
-After(async function ({ result, pickle }) {
-    // capture screenshot for failed step
+After(async function eachScenario({ result, pickle }) {
+    // Capture screenshot for failed step
     if (result?.status === Status.FAILED) {
         const img = await this.fixture.page.screenshot({
             path: `./test-results/screenshots/+${pickle.name}`,
@@ -47,11 +48,11 @@ After(async function ({ result, pickle }) {
         await this.attach(img, 'image/png');
     }
 
-    // delete test users in dev environment
-    const db = new DbOPS();
+    // Delete test users in dev environment
+    const db = new DbOPS(qaEmailDomain);
     db.deleteUsers();
 });
 
-AfterAll(async function () {
+AfterAll(async function testTeardown () {
     await fx.closeBrowser();
 });
