@@ -23,7 +23,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/specterops/bloodhound/log/measure"
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"

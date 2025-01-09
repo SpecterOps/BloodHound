@@ -24,11 +24,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/specterops/bloodhound/bhlog"
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/log/measure"
 )
 
 type StatTrackedOperation[T any] struct {
@@ -132,7 +132,7 @@ func (s *AtomicPostProcessingStats) Merge(other *AtomicPostProcessingStats) {
 
 func (s *AtomicPostProcessingStats) LogStats() {
 	// Only output stats during debug runs
-	if log.GlobalLevel() > log.LevelDebug {
+	if bhlog.GlobalLevel() > bhlog.LevelDebug {
 		return
 	}
 

@@ -25,7 +25,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	log "github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/bhlog"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -53,10 +53,10 @@ func (m *MockEvent) EXPECT() *MockEventMockRecorder {
 }
 
 // Any mocks base method.
-func (m *MockEvent) Any(arg0 string, arg1 interface{}) log.Event {
+func (m *MockEvent) Any(arg0 string, arg1 interface{}) bhlog.Event {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Any", arg0, arg1)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -67,14 +67,14 @@ func (mr *MockEventMockRecorder) Any(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // Bool mocks base method.
-func (m *MockEvent) Bool(arg0 string, arg1 ...bool) log.Event {
+func (m *MockEvent) Bool(arg0 string, arg1 ...bool) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Bool", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -86,10 +86,10 @@ func (mr *MockEventMockRecorder) Bool(arg0 interface{}, arg1 ...interface{}) *go
 }
 
 // Bytes mocks base method.
-func (m *MockEvent) Bytes(arg0 string, arg1 []byte) log.Event {
+func (m *MockEvent) Bytes(arg0 string, arg1 []byte) bhlog.Event {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Bytes", arg0, arg1)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -100,14 +100,14 @@ func (mr *MockEventMockRecorder) Bytes(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // Caller mocks base method.
-func (m *MockEvent) Caller(arg0 ...int) log.Event {
+func (m *MockEvent) Caller(arg0 ...int) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{}
 	for _, a := range arg0 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Caller", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -118,10 +118,10 @@ func (mr *MockEventMockRecorder) Caller(arg0 ...interface{}) *gomock.Call {
 }
 
 // Discard mocks base method.
-func (m *MockEvent) Discard() log.Event {
+func (m *MockEvent) Discard() bhlog.Event {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Discard")
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -132,14 +132,14 @@ func (mr *MockEventMockRecorder) Discard() *gomock.Call {
 }
 
 // Duration mocks base method.
-func (m *MockEvent) Duration(arg0 string, arg1 ...time.Duration) log.Event {
+func (m *MockEvent) Duration(arg0 string, arg1 ...time.Duration) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Duration", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -165,14 +165,14 @@ func (mr *MockEventMockRecorder) Enabled() *gomock.Call {
 }
 
 // Fault mocks base method.
-func (m *MockEvent) Fault(arg0 ...error) log.Event {
+func (m *MockEvent) Fault(arg0 ...error) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{}
 	for _, a := range arg0 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Fault", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -183,14 +183,14 @@ func (mr *MockEventMockRecorder) Fault(arg0 ...interface{}) *gomock.Call {
 }
 
 // Float32 mocks base method.
-func (m *MockEvent) Float32(arg0 string, arg1 ...float32) log.Event {
+func (m *MockEvent) Float32(arg0 string, arg1 ...float32) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Float32", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -202,14 +202,14 @@ func (mr *MockEventMockRecorder) Float32(arg0 interface{}, arg1 ...interface{}) 
 }
 
 // Float64 mocks base method.
-func (m *MockEvent) Float64(arg0 string, arg1 ...float64) log.Event {
+func (m *MockEvent) Float64(arg0 string, arg1 ...float64) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Float64", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -221,10 +221,10 @@ func (mr *MockEventMockRecorder) Float64(arg0 interface{}, arg1 ...interface{}) 
 }
 
 // Hex mocks base method.
-func (m *MockEvent) Hex(arg0 string, arg1 []byte) log.Event {
+func (m *MockEvent) Hex(arg0 string, arg1 []byte) bhlog.Event {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Hex", arg0, arg1)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -235,10 +235,10 @@ func (mr *MockEventMockRecorder) Hex(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // IPAddr mocks base method.
-func (m *MockEvent) IPAddr(arg0 string, arg1 net.IP) log.Event {
+func (m *MockEvent) IPAddr(arg0 string, arg1 net.IP) bhlog.Event {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IPAddr", arg0, arg1)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -249,10 +249,10 @@ func (mr *MockEventMockRecorder) IPAddr(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // IPPrefix mocks base method.
-func (m *MockEvent) IPPrefix(arg0 string, arg1 net.IPNet) log.Event {
+func (m *MockEvent) IPPrefix(arg0 string, arg1 net.IPNet) bhlog.Event {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IPPrefix", arg0, arg1)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -263,14 +263,14 @@ func (mr *MockEventMockRecorder) IPPrefix(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // Int mocks base method.
-func (m *MockEvent) Int(arg0 string, arg1 ...int) log.Event {
+func (m *MockEvent) Int(arg0 string, arg1 ...int) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Int", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -282,14 +282,14 @@ func (mr *MockEventMockRecorder) Int(arg0 interface{}, arg1 ...interface{}) *gom
 }
 
 // Int16 mocks base method.
-func (m *MockEvent) Int16(arg0 string, arg1 ...int16) log.Event {
+func (m *MockEvent) Int16(arg0 string, arg1 ...int16) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Int16", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -301,14 +301,14 @@ func (mr *MockEventMockRecorder) Int16(arg0 interface{}, arg1 ...interface{}) *g
 }
 
 // Int32 mocks base method.
-func (m *MockEvent) Int32(arg0 string, arg1 ...int32) log.Event {
+func (m *MockEvent) Int32(arg0 string, arg1 ...int32) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Int32", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -320,14 +320,14 @@ func (mr *MockEventMockRecorder) Int32(arg0 interface{}, arg1 ...interface{}) *g
 }
 
 // Int64 mocks base method.
-func (m *MockEvent) Int64(arg0 string, arg1 ...int64) log.Event {
+func (m *MockEvent) Int64(arg0 string, arg1 ...int64) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Int64", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -339,14 +339,14 @@ func (mr *MockEventMockRecorder) Int64(arg0 interface{}, arg1 ...interface{}) *g
 }
 
 // Int8 mocks base method.
-func (m *MockEvent) Int8(arg0 string, arg1 ...int8) log.Event {
+func (m *MockEvent) Int8(arg0 string, arg1 ...int8) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Int8", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -358,10 +358,10 @@ func (mr *MockEventMockRecorder) Int8(arg0 interface{}, arg1 ...interface{}) *go
 }
 
 // MACAddr mocks base method.
-func (m *MockEvent) MACAddr(arg0 string, arg1 net.HardwareAddr) log.Event {
+func (m *MockEvent) MACAddr(arg0 string, arg1 net.HardwareAddr) bhlog.Event {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MACAddr", arg0, arg1)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -413,10 +413,10 @@ func (mr *MockEventMockRecorder) Send() *gomock.Call {
 }
 
 // Stack mocks base method.
-func (m *MockEvent) Stack() log.Event {
+func (m *MockEvent) Stack() bhlog.Event {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Stack")
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -427,14 +427,14 @@ func (mr *MockEventMockRecorder) Stack() *gomock.Call {
 }
 
 // Str mocks base method.
-func (m *MockEvent) Str(arg0 string, arg1 ...string) log.Event {
+func (m *MockEvent) Str(arg0 string, arg1 ...string) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Str", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -446,14 +446,14 @@ func (mr *MockEventMockRecorder) Str(arg0 interface{}, arg1 ...interface{}) *gom
 }
 
 // Time mocks base method.
-func (m *MockEvent) Time(arg0 string, arg1 ...time.Time) log.Event {
+func (m *MockEvent) Time(arg0 string, arg1 ...time.Time) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Time", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -465,10 +465,10 @@ func (mr *MockEventMockRecorder) Time(arg0 interface{}, arg1 ...interface{}) *go
 }
 
 // TimeDiff mocks base method.
-func (m *MockEvent) TimeDiff(arg0 string, arg1, arg2 time.Time) log.Event {
+func (m *MockEvent) TimeDiff(arg0 string, arg1, arg2 time.Time) bhlog.Event {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TimeDiff", arg0, arg1, arg2)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -479,10 +479,10 @@ func (mr *MockEventMockRecorder) TimeDiff(arg0, arg1, arg2 interface{}) *gomock.
 }
 
 // Timestamp mocks base method.
-func (m *MockEvent) Timestamp() log.Event {
+func (m *MockEvent) Timestamp() bhlog.Event {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Timestamp")
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -493,14 +493,14 @@ func (mr *MockEventMockRecorder) Timestamp() *gomock.Call {
 }
 
 // Uint mocks base method.
-func (m *MockEvent) Uint(arg0 string, arg1 ...uint) log.Event {
+func (m *MockEvent) Uint(arg0 string, arg1 ...uint) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Uint", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -512,14 +512,14 @@ func (mr *MockEventMockRecorder) Uint(arg0 interface{}, arg1 ...interface{}) *go
 }
 
 // Uint16 mocks base method.
-func (m *MockEvent) Uint16(arg0 string, arg1 ...uint16) log.Event {
+func (m *MockEvent) Uint16(arg0 string, arg1 ...uint16) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Uint16", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -531,14 +531,14 @@ func (mr *MockEventMockRecorder) Uint16(arg0 interface{}, arg1 ...interface{}) *
 }
 
 // Uint32 mocks base method.
-func (m *MockEvent) Uint32(arg0 string, arg1 ...uint32) log.Event {
+func (m *MockEvent) Uint32(arg0 string, arg1 ...uint32) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Uint32", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -550,14 +550,14 @@ func (mr *MockEventMockRecorder) Uint32(arg0 interface{}, arg1 ...interface{}) *
 }
 
 // Uint64 mocks base method.
-func (m *MockEvent) Uint64(arg0 string, arg1 ...uint64) log.Event {
+func (m *MockEvent) Uint64(arg0 string, arg1 ...uint64) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Uint64", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 
@@ -569,14 +569,14 @@ func (mr *MockEventMockRecorder) Uint64(arg0 interface{}, arg1 ...interface{}) *
 }
 
 // Uint8 mocks base method.
-func (m *MockEvent) Uint8(arg0 string, arg1 ...byte) log.Event {
+func (m *MockEvent) Uint8(arg0 string, arg1 ...byte) bhlog.Event {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Uint8", varargs...)
-	ret0, _ := ret[0].(log.Event)
+	ret0, _ := ret[0].(bhlog.Event)
 	return ret0
 }
 

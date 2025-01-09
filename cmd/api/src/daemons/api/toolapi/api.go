@@ -26,8 +26,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/tools"
 	"github.com/specterops/bloodhound/src/bootstrap"
@@ -101,7 +101,7 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 		server: &http.Server{
 			Addr:     cfg.MetricsPort,
 			Handler:  router,
-			ErrorLog: log.Adapter(log.LevelError, "ToolAPI", 0),
+			ErrorLog: bhlog.Adapter(bhlog.LevelError, "ToolAPI", 0),
 		},
 	}
 }

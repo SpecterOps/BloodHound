@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-module github.com/specterops/bloodhound/log
+module github.com/specterops/bloodhound/bhlog
 
 go 1.23
 

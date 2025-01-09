@@ -24,9 +24,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/specterops/bloodhound/log/measure"
-
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"

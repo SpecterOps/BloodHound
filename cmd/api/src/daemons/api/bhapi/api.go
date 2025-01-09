@@ -23,7 +23,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/src/config"
 )
 
@@ -40,7 +40,7 @@ func NewDaemon(cfg config.Configuration, handler http.Handler) Daemon {
 		server: &http.Server{
 			Addr:     cfg.BindAddress,
 			Handler:  handler,
-			ErrorLog: log.Adapter(log.LevelError, "BHAPI", 0),
+			ErrorLog: bhlog.Adapter(bhlog.LevelError, "BHAPI", 0),
 		},
 	}
 }

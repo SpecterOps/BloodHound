@@ -22,12 +22,12 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/size"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api/tools"
 	"github.com/specterops/bloodhound/src/config"
 )
@@ -107,17 +107,17 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 
 // InitializeLogging sets up output file logging, and returns errors if any
 func InitializeLogging(cfg config.Configuration) error {
-	var logLevel = log.LevelInfo
+	var logLevel = bhlog.LevelInfo
 
 	if cfg.LogLevel != "" {
-		if parsedLevel, err := log.ParseLevel(cfg.LogLevel); err != nil {
+		if parsedLevel, err := bhlog.ParseLevel(cfg.LogLevel); err != nil {
 			return err
 		} else {
 			logLevel = parsedLevel
 		}
 	}
 
-	log.Configure(log.DefaultConfiguration().WithLevel(logLevel))
+	bhlog.Configure(bhlog.DefaultConfiguration().WithLevel(logLevel))
 
 	slog.Info("Logging configured")
 	return nil

@@ -17,27 +17,28 @@
 package database_test
 
 import (
+	"bytes"
+	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/log/mocks"
 	"github.com/specterops/bloodhound/src/database"
-	"go.uber.org/mock/gomock"
 )
 
 func TestGormLogAdapter_Info(t *testing.T) {
 	var (
-		mockCtrl       = gomock.NewController(t)
-		mockEvent      = mocks.NewMockEvent(mockCtrl)
 		gormLogAdapter = database.GormLogAdapter{
 			SlowQueryWarnThreshold:  time.Minute,
 			SlowQueryErrorThreshold: time.Minute,
 		}
 	)
 
-	log.ConfigureDefaults()
+	var buf bytes.Buffer
+	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{})))
 
-	mockEvent.EXPECT().Msgf("message %d %s %f", 1, "arg", 2.0).Times(1)
-	gormLogAdapter.Log(mockEvent, "message %d %s %f", 1, "arg", 2.0)
+	gormLogAdapter.Info(nil, "message", "data", 1, "data2", "arg", "data3", 2.0)
+	if !strings.Contains(buf.String(), `message=message data=1 data2="arg" data3=2.0`) {
+		t.Error("failed to properly log through gorm adapter")
+	}
 }

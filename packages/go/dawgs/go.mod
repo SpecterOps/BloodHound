@@ -26,7 +26,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.9.0
 	github.com/specterops/bloodhound/cypher v0.0.0-00010101000000-000000000000
-	github.com/specterops/bloodhound/log v0.0.0-00010101000000-000000000000
+	github.com/specterops/bloodhound/bhlog v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/mock v0.2.0
 )
@@ -57,5 +57,5 @@ require (
 
 replace (
 	github.com/specterops/bloodhound/cypher => ../cypher
-	github.com/specterops/bloodhound/log => ../log
+	github.com/specterops/bloodhound/bhlog => ../bhlog
 )

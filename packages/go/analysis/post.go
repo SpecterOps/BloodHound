@@ -22,13 +22,13 @@ import (
 	"log/slog"
 	"sort"
 
+	"github.com/specterops/bloodhound/bhlog"
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/log/measure"
 )
 
 func statsSortedKeys(value map[graph.Kind]int) []graph.Kind {
@@ -91,7 +91,7 @@ func (s PostProcessingStats) Merge(other PostProcessingStats) {
 
 func (s PostProcessingStats) LogStats() {
 	// Only output stats during debug runs
-	if log.GlobalLevel() > log.LevelDebug {
+	if bhlog.GlobalLevel() > bhlog.LevelDebug {
 		return
 	}
 

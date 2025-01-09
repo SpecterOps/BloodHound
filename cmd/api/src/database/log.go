@@ -20,11 +20,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/log/handlers"
 	"log/slog"
 	"time"
 
-	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/bhlog"
+	"github.com/specterops/bloodhound/bhlog/handlers"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -52,7 +52,7 @@ func (s *GormLogAdapter) Error(ctx context.Context, msg string, data ...any) {
 }
 
 func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
-	if log.GlobalLevel() > log.LevelDebug {
+	if bhlog.GlobalLevel() > bhlog.LevelDebug {
 		return
 	}
 
@@ -78,7 +78,7 @@ func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (
 		} else if elapsed >= s.SlowQueryWarnThreshold {
 			sql, rows := fc()
 
-			if log.GlobalAccepts(log.LevelDebug) {
+			if bhlog.GlobalAccepts(bhlog.LevelDebug) {
 				slog.WarnContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "nums_rows", rows, "sql", sql, handlers.GetSlogCallStack())
 			} else {
 				slog.WarnContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "num_rows", rows)

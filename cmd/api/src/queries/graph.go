@@ -34,6 +34,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/bhlog"
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/cypher/analyzer"
 	"github.com/specterops/bloodhound/cypher/frontend"
@@ -45,8 +47,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
-	"github.com/specterops/bloodhound/log/measure"
 	"github.com/specterops/bloodhound/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/src/config"
 	bhCtx "github.com/specterops/bloodhound/src/ctx"
@@ -398,7 +398,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		return graphQuery, err
 	} else if !s.DisableCypherComplexityLimit && complexityMeasure.Weight > MaxQueryComplexityWeightAllowed {
 		// log query details if it is rejected due to high complexity
-		highComplexityLog := log.WithLevel(log.LevelError)
+		highComplexityLog := bhlog.WithLevel(bhlog.LevelError)
 		highComplexityLog.Str("query", strippedQueryBuffer.String())
 		highComplexityLog.Msg(fmt.Sprintf("Query rejected. Query weight: %d. Maximum allowed weight: %d", complexityMeasure.Weight, MaxQueryComplexityWeightAllowed))
 
@@ -457,7 +457,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 				var reductionFactor int64
 				availableRuntime, reductionFactor = applyTimeoutReduction(pQuery.complexity.Weight, availableRuntime)
 
-				logEvent := log.WithLevel(log.LevelInfo)
+				logEvent := bhlog.WithLevel(bhlog.LevelInfo)
 				logEvent.Str("query", pQuery.StrippedQuery)
 				logEvent.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
 				logEvent.Str("reduction factor", strconv.FormatInt(reductionFactor, 10))
@@ -480,7 +480,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 
 	runtime := time.Since(start)
 
-	logEvent := log.WithLevel(log.LevelInfo)
+	logEvent := bhlog.WithLevel(bhlog.LevelInfo)
 	logEvent.Str("query", pQuery.StrippedQuery)
 	logEvent.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
 	logEvent.Msg(fmt.Sprintf("Executed user cypher query with cost %d in %.2f seconds", pQuery.complexity.Weight, runtime.Seconds()))
@@ -488,7 +488,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 	if err != nil {
 		// Log query details if neo4j times out
 		if util.IsNeoTimeoutError(err) {
-			timeoutLog := log.WithLevel(log.LevelError)
+			timeoutLog := bhlog.WithLevel(bhlog.LevelError)
 			timeoutLog.Str("query", pQuery.StrippedQuery)
 			timeoutLog.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
 			timeoutLog.Msg("Neo4j timed out while executing cypher query")

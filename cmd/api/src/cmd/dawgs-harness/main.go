@@ -33,9 +33,9 @@ import (
 	schema "github.com/specterops/bloodhound/graphschema"
 
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/cmd/dawgs-harness/tests"
 )
 
@@ -126,7 +126,7 @@ func main() {
 	flag.StringVar(&pgConnectionStr, "pg", "user=bhe dbname=bhe password=bhe4eva host=localhost", "PostgreSQL connection string.")
 	flag.Parse()
 
-	log.ConfigureDefaults()
+	bhlog.ConfigureDefaults()
 
 	switch testType {
 	case "both":
