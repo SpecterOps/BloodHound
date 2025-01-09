@@ -19,6 +19,8 @@ package tools
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/log/measure"
+	"log/slog"
 	"net/http"
 	"sync"
 
@@ -42,7 +44,7 @@ const (
 )
 
 func migrateTypes(ctx context.Context, neoDB, pgDB graph.Database) error {
-	defer log.LogAndMeasure(log.LevelInfo, "Migrating kinds from Neo4j to PostgreSQL")()
+	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Migrating kinds from Neo4j to PostgreSQL")()
 
 	var (
 		neoNodeKinds graph.Kinds
@@ -110,7 +112,7 @@ func convertNeo4jProperties(properties *graph.Properties) error {
 }
 
 func migrateNodes(ctx context.Context, neoDB, pgDB graph.Database) (map[graph.ID]graph.ID, error) {
-	defer log.LogAndMeasure(log.LevelInfo, "Migrating nodes from Neo4j to PostgreSQL")()
+	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Migrating nodes from Neo4j to PostgreSQL")()
 
 	var (
 		// Start at 2 and assume that the first node of the graph is the graph schema migration information
@@ -149,7 +151,7 @@ func migrateNodes(ctx context.Context, neoDB, pgDB graph.Database) (map[graph.ID
 }
 
 func migrateEdges(ctx context.Context, neoDB, pgDB graph.Database, nodeIDMappings map[graph.ID]graph.ID) error {
-	defer log.LogAndMeasure(log.LevelInfo, "Migrating edges from Neo4j to PostgreSQL")()
+	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Migrating edges from Neo4j to PostgreSQL")()
 
 	return neoDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Relationships().Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {

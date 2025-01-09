@@ -20,6 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/log/measure"
+	"log/slog"
 	"time"
 
 	"github.com/specterops/bloodhound/cache"
@@ -80,7 +82,7 @@ func (s *Daemon) analyze() {
 		return
 	}
 
-	defer log.LogAndMeasure(log.LevelInfo, "Graph Analysis")()
+	defer measure.LogAndMeasure(slog.LevelInfo, "Graph Analysis")()
 
 	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
 		if errors.Is(err, ErrAnalysisFailed) {

@@ -20,6 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/log/measure"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -50,7 +52,7 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 // Version_620_Migration is intended to rename the RemoteInteractiveLogonPrivilege edge to RemoteInteractiveLogonRight
 // See: https://specterops.atlassian.net/browse/BED-4428
 func Version_620_Migration(db graph.Database) error {
-	defer log.LogAndMeasure(log.LevelInfo, "Migration to rename RemoteInteractiveLogonPrivilege edges")()
+	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to rename RemoteInteractiveLogonPrivilege edges")()
 
 	// MATCH p=(n:Base)-[:RemoteInteractiveLogonPrivilege]->(m:Base) RETURN p
 	targetCriteria := query.And(
@@ -91,7 +93,7 @@ func Version_620_Migration(db graph.Database) error {
 // node.Kinds = Kinds{ad.Entity, ad.User, ad.Computer} must be reset to:
 // node.Kinds = Kinds{ad.Entity}
 func Version_513_Migration(db graph.Database) error {
-	defer log.LogAndMeasure(log.LevelInfo, "Migration to remove incorrectly ingested labels")()
+	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove incorrectly ingested labels")()
 
 	// Cypher for the below filter is: size(labels(n)) > 2 and not (n:Group and n:ADLocalGroup) or size(labels(n)) > 3 and (n:Group and n:ADLocalGroup)
 	targetCriteria := query.Or(

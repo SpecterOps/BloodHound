@@ -19,6 +19,8 @@ package azure
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/log/measure"
+	"log/slog"
 	"strings"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
@@ -55,7 +57,7 @@ func GetCollectedTenants(ctx context.Context, db graph.Database) (graph.NodeSet,
 }
 
 func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
-	defer log.LogAndMeasure(log.LevelInfo, "Tenant %d FetchGraphDBTierZeroTaggedAssets", tenant.ID)()
+	defer measure.LogAndMeasure(slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets", "tenant_id", tenant.ID)()
 
 	if tenantObjectID, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
 		log.Errorf(fmt.Sprintf("Tenant node %d does not have a valid %s property: %v", tenant.ID, common.ObjectID, err))
@@ -76,7 +78,7 @@ func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) 
 }
 
 func FetchAzureAttackPathRoots(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
-	defer log.LogAndMeasure(log.LevelDebug, "Tenant %d FetchAzureAttackPathRoots", tenant.ID)()
+	defer measure.LogAndMeasure(slog.LevelDebug, "FetchAzureAttackPathRoots", "tenant_id", tenant.ID)()
 
 	attackPathRoots := graph.NewNodeKindSet()
 
