@@ -282,45 +282,40 @@ class BHEAPIClient {
     };
 
     getPostureFindingTrends = (
-        environmentId: string,
+        environmentIdList: string[],
         start?: Date,
         end?: Date,
-        sort_by?: string,
         options?: types.RequestOptions
     ) => {
+        const params = new URLSearchParams();
+        if (start) params.set('start', start.toISOString());
+        if (end) params.set('end', end.toISOString());
+        for (const id of environmentIdList) {
+            if (id) params.append('environments', id);
+        }
+
         return this.baseClient.get<PostureFindingTrendsResponse>(
-            `/api/v2/domains/${environmentId}/finding-trends`,
-            Object.assign(
-                {
-                    params: {
-                        start: start?.toISOString(),
-                        end: end?.toISOString(),
-                        sort_by,
-                    },
-                },
-                options
-            )
+            `/api/v2/attack-paths/finding-trends`,
+            Object.assign({ params }, options)
         );
     };
 
     getPostureHistory = (
-        environmentId: string,
+        environmentIdList: string[],
         dataType: string,
         start?: Date,
         end?: Date,
         options?: types.RequestOptions
     ) => {
+        const params = new URLSearchParams();
+        if (start) params.set('start', start.toISOString());
+        if (end) params.set('end', end.toISOString());
+        for (const id of environmentIdList) {
+            if (id) params.append('environments', id);
+        }
         return this.baseClient.get<PostureHistoryResponse>(
-            `/api/v2/domains/${environmentId}/posture-history/${dataType}`,
-            Object.assign(
-                {
-                    params: {
-                        start: start?.toISOString(),
-                        end: end?.toISOString(),
-                    },
-                },
-                options
-            )
+            `/api/v2/attack-paths/posture-history/${dataType}`,
+            Object.assign({ params }, options)
         );
     };
 
