@@ -107,8 +107,6 @@ func init() {
 			return nil, fmt.Errorf("expected string for configuration type but got %T", cfg)
 		} else if graphDB, err := newDatabase(connectionString); err != nil {
 			return nil, err
-		} else if err := graphDB.AssertSchema(ctx, graph.Schema{}); err != nil {
-			return nil, err
 		} else {
 			return graphDB, nil
 		}
