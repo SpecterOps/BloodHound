@@ -362,7 +362,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 
 	// Generate commit ID for audit logging
 	if commitID, err = uuid.NewV4(); err != nil {
-		log.Warnf("Error generating commit ID for login: %s", err)
+		log.Warnf("[SSO] Error generating commit ID for login: %s", err)
 		RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 		return
 	}
@@ -378,7 +378,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 	if user, err = s.db.LookupUser(requestCtx, principalNameOrEmail); err != nil {
 		auditLogFields["error"] = err
 		if !errors.Is(err, database.ErrNotFound) {
-			log.Errorf("[SSO] Error looking up user: %v", err)
+			log.Warnf("[SSO] Error looking up user: %v", err)
 			RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 		} else {
 			RedirectToLoginURL(response, request, "Your user is not allowed, please contact your Administrator")
@@ -396,7 +396,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 				response.Header().Add(headers.Location.String(), locationURL.String())
 				response.WriteHeader(http.StatusFound)
 			} else {
-				log.Errorf("[SSO] session creation failure %v", err)
+				log.Warnf("[SSO] session creation failure %v", err)
 				RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 			}
 		} else {
