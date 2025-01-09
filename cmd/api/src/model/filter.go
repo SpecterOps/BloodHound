@@ -355,3 +355,23 @@ func NewQueryParameterFilterParser() QueryParameterFilterParser {
 		re: regexp.MustCompile(`([~\w]+):([\w\--_ ]+)`),
 	}
 }
+
+type Filter struct {
+	Operator FilterOperator
+	Value    string
+}
+type Filters map[string][]Filter
+type ValidFilters map[string][]FilterOperator
+type SortDirection int
+
+const (
+	InvalidSortDirection SortDirection = iota
+	AscendingSortDirection
+	DescendingSortDirection
+)
+
+type SortItem struct {
+	Direction SortDirection
+	Column    string
+}
+type Sort []SortItem
