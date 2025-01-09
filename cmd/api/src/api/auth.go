@@ -363,7 +363,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 	// Generate commit ID for audit logging
 	if commitID, err = uuid.NewV4(); err != nil {
 		log.Warnf("Error generating commit ID for login: %s", err)
-		WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusInternalServerError, "audit log creation failure", request), response)
+		RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 		return
 	}
 
@@ -378,14 +378,15 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 	if user, err = s.db.LookupUser(requestCtx, principalNameOrEmail); err != nil {
 		auditLogFields["error"] = err
 		if !errors.Is(err, database.ErrNotFound) {
-			HandleDatabaseError(request, response, err)
+			log.Errorf("[SSO] Error looking up user: %v", err)
+			RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 		} else {
-			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
+			RedirectToLoginURL(response, request, "Your user is not allowed, please contact your Administrator")
 		}
 	} else {
 		if !user.SSOProviderID.Valid || ssoProvider.ID != user.SSOProviderID.Int32 {
 			auditLogFields["error"] = ErrUserNotAuthorizedForProvider
-			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
+			RedirectToLoginURL(response, request, "Your user is not allowed, please contact your Administrator")
 			return
 		}
 
@@ -395,7 +396,8 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 				response.Header().Add(headers.Location.String(), locationURL.String())
 				response.WriteHeader(http.StatusFound)
 			} else {
-				WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusInternalServerError, "session creation failure", request), response)
+				log.Errorf("[SSO] session creation failure %v", err)
+				RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 			}
 		} else {
 			auditLogOutcome = model.AuditLogStatusSuccess
