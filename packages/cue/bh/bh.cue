@@ -28,6 +28,8 @@ import (
 	Properties: [...types.#StringEnum]
 	NodeKinds: [...types.#Kind]
 	RelationshipKinds: [...types.#Kind]
+	InboundRelationshipKinds: [...types.#Kind]
+	OutboundRelationshipKinds: [...types.#Kind]
 }
 
 #Azure: {
@@ -47,6 +49,8 @@ import (
 	RelationshipKinds: [...types.#Kind]
 	ACLRelationships: [...types.#Kind]
 	PathfindingRelationships: [...types.#Kind]
+	InboundRelationshipKinds: [...types.#Kind]
+	OutboundRelationshipKinds: [...types.#Kind]
 	EdgeCompositionRelationships: [...types.#Kind]
 }
 
@@ -55,6 +59,8 @@ Common: #Common & {
 	Properties:        common.Properties
 	NodeKinds:         common.NodeKinds
 	RelationshipKinds: common.RelationshipKinds
+	InboundRelationshipKinds: common.InboundRelationshipKinds
+	OutboundRelationshipKinds: common.OutboundRelationshipKinds
 }
 
 Azure: #Azure & {
@@ -74,6 +80,7 @@ ActiveDirectory: #ActiveDirectory & {
 	RelationshipKinds:        		ad.RelationshipKinds
 	ACLRelationships:         		ad.ACLRelationships
 	PathfindingRelationships: 		ad.PathfindingRelationships
+	InboundRelationshipKinds:		ad.InboundRelationshipKinds
+	OutboundRelationshipKinds:		ad.OutboundRelationshipKinds
 	EdgeCompositionRelationships: 	ad.EdgeCompositionRelationships
-
 }

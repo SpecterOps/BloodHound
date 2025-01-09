@@ -16,12 +16,19 @@
 
 package common
 
-import "pkg.specterops.io/schemas/bh/types:types"
+import (
+	"pkg.specterops.io/schemas/bh/types:types"
+	"pkg.specterops.io/schemas/bh/ad:ad"
+	"pkg.specterops.io/schemas/bh/azure:azure"
+	"list"
+)
 
 // Exported requirements
 Properties: [...types.#StringEnum]
 NodeKinds: [...types.#Kind]
 RelationshipKinds: [...types.#Kind]
+InboundRelationshipKinds: [...types.#Kind]
+OutboundRelationshipKinds: [...types.#Kind]
 
 // Property name enumerations
 ObjectID: types.#StringEnum & {
@@ -168,3 +175,6 @@ NodeKinds: [
 
 RelationshipKinds: [
 ]
+
+InboundRelationshipKinds: list.Concat([ad.InboundRelationshipKinds, azure.PathfindingRelationships])
+OutboundRelationshipKinds: list.Concat([ad.OutboundRelationshipKinds, azure.PathfindingRelationships])
