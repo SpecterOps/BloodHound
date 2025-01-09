@@ -24,7 +24,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
@@ -115,7 +114,7 @@ func (s *command) runTests(cwd string, coverPath string, modPaths []string) erro
 		} else {
 			for _, entry := range dirList {
 				if filepath.Ext(entry.Name()) == golang.CoverageExt {
-					log.Debugf(fmt.Sprintf("Removing %s", filepath.Join(coverPath, entry.Name())))
+					slog.Debug(fmt.Sprintf("Removing %s", filepath.Join(coverPath, entry.Name())))
 					if err := os.Remove(filepath.Join(coverPath, entry.Name())); err != nil {
 						return fmt.Errorf("removing %s: %w", filepath.Join(coverPath, entry.Name()), err)
 					}

@@ -60,9 +60,9 @@ func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (
 		sql, _ := fc()
 
 		if slog.Default().Enabled(ctx, slog.LevelDebug) {
-			slog.ErrorContext(ctx, "Database error", "query", sql, "err", err, handlers.GetSlogCallStack())
+			slog.ErrorContext(ctx, "Database error", "query", sql, "error", err, handlers.GetSlogCallStack())
 		} else {
-			slog.ErrorContext(ctx, "Database error", "query", sql, "err", err)
+			slog.ErrorContext(ctx, "Database error", "query", sql, "error", err)
 		}
 	} else {
 		elapsed := time.Since(begin)

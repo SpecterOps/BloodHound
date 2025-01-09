@@ -32,7 +32,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/dawgs/util/atomics"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/log/measure"
 )
 
@@ -529,21 +528,21 @@ func FilteredSkipLimit(filter SkipLimitFilter, visitorFilter SegmentVisitor, ski
 			if skip == 0 || shouldCollect() {
 				// If we should collect this result, check to see if we're already at a limit for the number of results
 				if limit > 0 && atLimit() {
-					log.Debugf(fmt.Sprintf("At collection limit, rejecting path: %s", graph.FormatPathSegment(next)))
+					slog.Debug(fmt.Sprintf("At collection limit, rejecting path: %s", graph.FormatPathSegment(next)))
 					return false
 				}
 
-				log.Debugf(fmt.Sprintf("Collected path: %s", graph.FormatPathSegment(next)))
+				slog.Debug(fmt.Sprintf("Collected path: %s", graph.FormatPathSegment(next)))
 				visitorFilter(next)
 			} else {
-				log.Debugf(fmt.Sprintf("Skipping path visit: %s", graph.FormatPathSegment(next)))
+				slog.Debug(fmt.Sprintf("Skipping path visit: %s", graph.FormatPathSegment(next)))
 			}
 		}
 
 		if shouldDescend {
-			log.Debugf(fmt.Sprintf("Descending into path: %s", graph.FormatPathSegment(next)))
+			slog.Debug(fmt.Sprintf("Descending into path: %s", graph.FormatPathSegment(next)))
 		} else {
-			log.Debugf(fmt.Sprintf("Rejecting further descent into path: %s", graph.FormatPathSegment(next)))
+			slog.Debug(fmt.Sprintf("Rejecting further descent into path: %s", graph.FormatPathSegment(next)))
 		}
 
 		return shouldDescend

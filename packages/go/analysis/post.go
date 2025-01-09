@@ -95,19 +95,19 @@ func (s PostProcessingStats) LogStats() {
 		return
 	}
 
-	log.Debugf(fmt.Sprintf("Relationships deleted before post-processing:"))
+	slog.Debug(fmt.Sprintf("Relationships deleted before post-processing:"))
 
 	for _, relationship := range statsSortedKeys(s.RelationshipsDeleted) {
 		if numDeleted := s.RelationshipsDeleted[relationship]; numDeleted > 0 {
-			log.Debugf(fmt.Sprintf("    %s %d", relationship.String(), numDeleted))
+			slog.Debug(fmt.Sprintf("    %s %d", relationship.String(), numDeleted))
 		}
 	}
 
-	log.Debugf(fmt.Sprintf("Relationships created after post-processing:"))
+	slog.Debug(fmt.Sprintf("Relationships created after post-processing:"))
 
 	for _, relationship := range statsSortedKeys(s.RelationshipsCreated) {
 		if numDeleted := s.RelationshipsCreated[relationship]; numDeleted > 0 {
-			log.Debugf(fmt.Sprintf("    %s %d", relationship.String(), s.RelationshipsCreated[relationship]))
+			slog.Debug(fmt.Sprintf("    %s %d", relationship.String(), s.RelationshipsCreated[relationship]))
 		}
 	}
 }

@@ -32,7 +32,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/log"
 )
 
 func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
@@ -117,7 +116,7 @@ func groupIsContainedOrTrusted(tx graph.Transaction, group, domain *graph.Node) 
 	)
 
 	if err := ops.Traversal(tx, traversalPlan, pathVisitor); err != nil {
-		log.Debugf(fmt.Sprintf("groupIsContainedOrTrusted traversal error: %v", err))
+		slog.Debug(fmt.Sprintf("groupIsContainedOrTrusted traversal error: %v", err))
 	}
 
 	return matchFound

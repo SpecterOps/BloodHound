@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command"
@@ -45,14 +46,17 @@ func main() {
 	}
 
 	if cmd, err := command.ParseCLI(env); errors.Is(err, command.ErrNoCmd) {
-		log.Fatalf(fmt.Sprintf("No valid command specified"))
+		slog.Error(fmt.Sprintf("No valid command specified"))
+		os.Exit(1)
 	} else if errors.Is(err, command.ErrHelpRequested) {
 		// No need to exit 1 if help was requested
 		return
 	} else if err != nil {
-		log.Fatalf(fmt.Sprintf("Error while parsing command: %v", err))
+		slog.Error(fmt.Sprintf("Error while parsing command: %v", err))
+		os.Exit(1)
 	} else if err := cmd.Run(); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to run command `%s`: %v", cmd.Name(), err))
+		slog.Error(fmt.Sprintf("Failed to run command `%s`: %v", cmd.Name(), err))
+		os.Exit(1)
 	} else {
 		slog.Info(fmt.Sprintf("Command `%s` completed successfully", cmd.Name()))
 	}

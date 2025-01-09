@@ -26,8 +26,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-
-	"github.com/specterops/bloodhound/log"
 )
 
 // FileOperations is an interface for describing filesystem actions. This implementation exists due to deficiencies in
@@ -82,7 +80,7 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 	defer s.lock.Unlock()
 
 	slog.InfoContext(ctx, fmt.Sprintf("Running OrphanFileSweeper for path %s", s.tempDirectoryRootPath))
-	log.Debugf(fmt.Sprintf("OrphanFileSweeper expected names %v", expectedFileNames))
+	slog.DebugContext(ctx, fmt.Sprintf("OrphanFileSweeper expected names %v", expectedFileNames))
 
 	if dirEntries, err := s.fileOps.ReadDir(s.tempDirectoryRootPath); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Failed reading work directory %s: %v", s.tempDirectoryRootPath, err))
@@ -101,7 +99,7 @@ func (s *OrphanFileSweeper) Clear(ctx context.Context, expectedFileNames []strin
 			}
 			for idx, dirEntry := range dirEntries {
 				if expectedFN == dirEntry.Name() {
-					log.Debugf(fmt.Sprintf("skipping expected file %s", expectedFN))
+					slog.DebugContext(ctx, fmt.Sprintf("skipping expected file %s", expectedFN))
 					dirEntries = append(dirEntries[:idx], dirEntries[idx+1:]...)
 				}
 			}

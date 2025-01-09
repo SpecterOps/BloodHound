@@ -24,7 +24,6 @@ import (
 	"os"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/log/handlers"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
@@ -62,11 +61,9 @@ func main() {
 	logger := handlers.NewDefaultLogger()
 	slog.SetDefault(logger)
 
-	// Initialize basic logging facilities while we start up
-	log.ConfigureDefaults()
-
 	if cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration); err != nil {
-		log.Fatalf(fmt.Sprintf("Unable to read configuration %s: %v", configFilePath, err))
+		slog.Error(fmt.Sprintf("Unable to read configuration %s: %v", configFilePath, err))
+		os.Exit(1)
 	} else {
 		initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
 			Configuration:       cfg,
@@ -76,7 +73,8 @@ func main() {
 		}
 
 		if err := initializer.Launch(context.Background(), true); err != nil {
-			log.Fatalf(fmt.Sprintf("Failed starting the server: %v", err))
+			slog.Error(fmt.Sprintf("Failed starting the server: %v", err))
+			os.Exit(1)
 		}
 	}
 }

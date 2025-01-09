@@ -30,7 +30,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 )
 
 func AddMemberAllGroupsTargetRoles() []string {
@@ -661,7 +660,7 @@ func addSecret(operation analysis.StatTrackedOperation[analysis.CreatePostRelati
 		} else {
 			for _, role := range addSecretRoles {
 				for _, target := range tenantAppsAndSPs {
-					log.Debugf(fmt.Sprintf("Adding AZAddSecret edge from role %s to %s %d", role.ID.String(), target.Kinds.Strings(), target.ID))
+					slog.DebugContext(ctx, fmt.Sprintf("Adding AZAddSecret edge from role %s to %s %d", role.ID.String(), target.Kinds.Strings(), target.ID))
 					nextJob := analysis.CreatePostRelationshipJob{
 						FromID: role.ID,
 						ToID:   target.ID,

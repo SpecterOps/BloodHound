@@ -18,10 +18,10 @@ package log
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"os"
-	"strings"
 )
 
 // Level is a type alias that represents a log verbosity level.
@@ -136,77 +136,4 @@ func WithLevel(level Level) Event {
 	return &event{
 		event: log.WithLevel(level),
 	}
-}
-
-// Panic returns a logging event with the LevelPanic log verbosity level.
-func Panic() Event {
-	return WithLevel(LevelPanic)
-}
-
-// Panicf is a convenience function for writing a log event with the given format and arguments with the LevelPanic
-// log verbosity level.
-func Panicf(format string, args ...any) {
-	Panic().Msgf(format, args...)
-}
-
-// Fatalf is a convenience function for writing a log event with the given format and arguments with the LevelFatal
-// log verbosity level.
-func Fatalf(format string, args ...any) {
-	WithLevel(LevelFatal).Msgf(format, args...)
-	os.Exit(1)
-}
-
-// Error returns a logging event with the LevelError log verbosity level.
-func Error() Event {
-	return WithLevel(LevelError)
-}
-
-// Errorf is a convenience function for writing a log event with the given format and arguments with the LevelError
-// log verbosity level.
-func Errorf(format string, args ...any) {
-	Error().Msgf(format, args...)
-}
-
-// Warn returns a logging event with the LevelWarn log verbosity level.
-func Warn() Event {
-	return WithLevel(LevelWarn)
-}
-
-// Warnf is a convenience function for writing a log event with the given format and arguments with the LevelWarn
-// log verbosity level.
-func Warnf(format string, args ...any) {
-	Warn().Msgf(format, args...)
-}
-
-// Info returns a logging event with the LevelInfo log verbosity level.
-func Info() Event {
-	return WithLevel(LevelInfo)
-}
-
-// Infof is a convenience function for writing a log event with the given format and arguments with the LevelInfo
-// log verbosity level.
-func Infof(format string, args ...any) {
-	Info().Msgf(format, args...)
-}
-
-// Debug returns a logging event with the LevelDebug log verbosity level.
-func Debug() Event {
-	return WithLevel(LevelDebug)
-}
-
-// Debugf is a convenience function for writing a log event with the given format and arguments with the LevelDebug
-// log verbosity level.
-func Debugf(format string, args ...any) {
-	Debug().Msgf(format, args...)
-}
-
-// Trace returns a logging event with the LevelTrace log verbosity level.
-func Trace() Event {
-	return WithLevel(LevelTrace)
-}
-
-// Tracef is a convenience function for writing a log event with the given format and arguments with the LevelTrace
-// log verbosity level.
-func Tracef(format string, args ...any) {
-	Trace().Msgf(format, args...)
 }

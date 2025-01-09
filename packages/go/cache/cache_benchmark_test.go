@@ -18,7 +18,7 @@ package cache_test
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"math"
 	"testing"
 
@@ -44,7 +44,7 @@ func getObjectIDs(num int) []string {
 
 func setupLRUCache() cache.Cache {
 	if c, err := cache.NewCache(cache.Config{MaxSize: numSimulatedOUs}); err != nil {
-		log.Fatalf(fmt.Sprintf("Error creating cache: %v", err))
+		slog.Error(fmt.Sprintf("Error creating cache: %v", err))
 	} else {
 		return c
 	}

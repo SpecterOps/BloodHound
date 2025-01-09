@@ -25,7 +25,6 @@ import (
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/slicesext"
 )
 
@@ -79,7 +78,7 @@ func stringToBool(itemProps map[string]any, keyName string) {
 		case bool:
 		//pass
 		default:
-			log.Debugf(fmt.Sprintf("Removing %s with type %T", converted))
+			slog.Debug(fmt.Sprintf("Removing %s with type %T", converted))
 			delete(itemProps, keyName)
 		}
 	}
@@ -97,7 +96,7 @@ func stringToInt(itemProps map[string]any, keyName string) {
 		case int:
 		//pass
 		default:
-			log.Debugf(fmt.Sprintf("Removing %s with type %T", keyName, converted))
+			slog.Debug(fmt.Sprintf("Removing %s with type %T", keyName, converted))
 			delete(itemProps, keyName)
 		}
 	}

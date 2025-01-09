@@ -31,7 +31,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -164,7 +163,7 @@ func parseUserIP(r *http.Request) string {
 	}
 
 	if result := r.Header.Get("X-Forwarded-For"); result == "" {
-		log.Debugf(fmt.Sprintf("No data found in X-Forwarded-For header"))
+		slog.DebugContext(r.Context(), fmt.Sprintf("No data found in X-Forwarded-For header"))
 		return remoteIp
 	} else {
 		result += "," + remoteIp
