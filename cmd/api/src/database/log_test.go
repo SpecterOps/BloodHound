@@ -18,6 +18,8 @@ package database_test
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/specterops/bloodhound/bhlog/handlers"
 	"log/slog"
 	"strings"
 	"testing"
@@ -35,10 +37,11 @@ func TestGormLogAdapter_Info(t *testing.T) {
 	)
 
 	var buf bytes.Buffer
-	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{})))
+	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{ReplaceAttr: handlers.ReplaceAttr})))
 
-	gormLogAdapter.Info(nil, "message", "data", 1, "data2", "arg", "data3", 2.0)
-	if !strings.Contains(buf.String(), `message=message data=1 data2="arg" data3=2.0`) {
-		t.Error("failed to properly log through gorm adapter")
+	expected := fmt.Sprintf(`message="message %d %s %f"`, 1, "arg", 2.0)
+	gormLogAdapter.Info(nil, "message %d %s %f", 1, "arg", 2.0)
+	if !strings.Contains(buf.String(), expected) {
+		t.Errorf("gormLogAdapter output does not contain expected\nOutput:%sExpected:%s", buf.String(), expected)
 	}
 }
