@@ -97,7 +97,6 @@ const Users = () => {
             const user = listUsersQuery.data?.find((user: User) => {
                 return user.id === userId;
             });
-
             if (!user) {
                 return;
             }

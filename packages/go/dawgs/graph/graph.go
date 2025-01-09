@@ -317,10 +317,10 @@ type Batch interface {
 	// TODO: Existing batch logic expects this to perform an upsert on conficts with (start_id, end_id, kind). This is incorrect and should be refactored
 	CreateRelationship(relationship *Relationship) error
 
+	// Deprecated: Use CreateRelationship Instead
+	//
 	// CreateRelationshipByIDs creates a new Relationship from the start Node to the end Node with the given Kind and
 	// Properties and returns the creation as a RelationshipResult.
-	//
-	// Deprecated: Use CreateRelationship
 	CreateRelationshipByIDs(startNodeID, endNodeID ID, kind Kind, properties *Properties) error
 
 	// DeleteRelationship deletes a relationship by the given ID.

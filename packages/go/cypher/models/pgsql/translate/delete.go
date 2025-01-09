@@ -49,9 +49,7 @@ func (s *Translator) translateDelete(scope *Scope, cypherDelete *cypher.Delete) 
 									if rewrittenProjections, err := buildProjection(typedExpression, identifierDeletion.UpdateBinding, scope); err != nil {
 										return err
 									} else {
-										for _, rewrittenProjection := range rewrittenProjections {
-											identifierDeletion.Projection = append(identifierDeletion.Projection, rewrittenProjection)
-										}
+										identifierDeletion.Projection = append(identifierDeletion.Projection, rewrittenProjections...)
 									}
 								} else {
 									// Reflects this scope binding to the next query part

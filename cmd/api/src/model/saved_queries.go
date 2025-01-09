@@ -75,7 +75,7 @@ func (s SavedQueries) GetFilterableColumns() []string {
 
 func (s SavedQueries) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
-		return []string{}, errors.New(ErrorResponseDetailsColumnNotFilterable)
+		return []string{}, errors.New(ErrResponseDetailsColumnNotFilterable)
 	} else {
 		var stringPredicates = make([]string, 0)
 		for _, predicate := range predicates {

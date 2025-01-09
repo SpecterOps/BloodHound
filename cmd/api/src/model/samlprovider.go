@@ -30,8 +30,16 @@ import (
 const (
 	ObjectIDAttributeNameFormat = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
 	ObjectIDEmail               = "urn:oid:0.9.2342.19200300.100.1.3"
-	XMLTypeString               = "xs:string"
-	XMLSOAPClaimsEmailAddress   = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+	ObjectIDGivenName           = "urn:oid:2.5.4.42"
+	ObjectIDName                = "urn:oid:2.5.4.41"
+	ObjectIDSurname             = "urn:oid:2.5.4.4"
+
+	XMLTypeString             = "xs:string"
+	XMLSOAPClaimsEmailAddress = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+	XMLSOAPClaimsGivenName    = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"
+	XMLSOAPClaimsName         = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+	XMLSOAPClaimsSurname      = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"
+	MicrosoftClaimsRole       = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
 )
 
 var (
@@ -106,6 +114,20 @@ func (s SAMLProvider) emailAttributeNames() []string {
 	return []string{ObjectIDEmail, XMLSOAPClaimsEmailAddress}
 }
 
+func (s SAMLProvider) givenNameAttributeNames() []string {
+	// Added the ObjectIDName and XMLSOAPClaimsName as a fallback
+	return []string{ObjectIDGivenName, XMLSOAPClaimsGivenName, ObjectIDName, XMLSOAPClaimsName}
+}
+
+func (s SAMLProvider) roleAttributeNames() []string {
+	// Added the MicrosoftClaimsRole as a fallback
+	return []string{MicrosoftClaimsRole}
+}
+
+func (s SAMLProvider) surnameAttributeNames() []string {
+	return []string{ObjectIDSurname, XMLSOAPClaimsSurname}
+}
+
 func assertionFindString(assertion *saml.Assertion, names ...string) (string, error) {
 	for _, attributeStatement := range assertion.AttributeStatements {
 		for _, attribute := range attributeStatement.Attributes {
@@ -143,6 +165,31 @@ func (s SAMLProvider) GetSAMLUserPrincipalNameFromAssertion(assertion *saml.Asse
 	} else {
 		return principalName, nil
 	}
+}
+
+func (s SAMLProvider) GetSAMLUserGivenNameFromAssertion(assertion *saml.Assertion) (string, error) {
+	return assertionFindString(assertion, s.givenNameAttributeNames()...)
+}
+
+// GetSAMLUserRolesFromAssertion May be empty if not present
+func (s SAMLProvider) GetSAMLUserRolesFromAssertion(assertion *saml.Assertion) (roles []string) {
+	for _, attributeStatement := range assertion.AttributeStatements {
+		for _, attribute := range attributeStatement.Attributes {
+			for _, validName := range s.roleAttributeNames() {
+				if attribute.Name == validName && len(attribute.Values) > 0 {
+					for _, value := range attribute.Values {
+						roles = append(roles, value.Value)
+					}
+				}
+			}
+		}
+	}
+
+	return roles
+}
+
+func (s SAMLProvider) GetSAMLUserSurnameFromAssertion(assertion *saml.Assertion) (string, error) {
+	return assertionFindString(assertion, s.surnameAttributeNames()...)
 }
 
 func (s *SAMLProvider) FormatSAMLProviderURLs(hostUrl url.URL) {

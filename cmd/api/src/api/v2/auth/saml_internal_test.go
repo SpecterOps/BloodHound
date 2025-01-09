@@ -131,7 +131,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 			require.Equal(t, username, log.Fields["username"])
 			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
 			if log.Status == model.AuditLogStatusFailure {
-				require.Equal(t, api.ErrorUserNotAuthorizedForProvider, log.Fields["error"])
+				require.Equal(t, api.ErrUserNotAuthorizedForProvider, log.Fields["error"])
 			}
 		})
 
@@ -153,7 +153,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 			require.Equal(t, username, log.Fields["username"])
 			require.Equal(t, auth.ProviderTypeSAML, log.Fields["auth_type"])
 			if log.Status == model.AuditLogStatusFailure {
-				require.Equal(t, api.ErrorUserNotAuthorizedForProvider.Error(), log.Fields["error"].(error).Error())
+				require.Equal(t, api.ErrUserNotAuthorizedForProvider.Error(), log.Fields["error"].(error).Error())
 			}
 		})
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(model.User{

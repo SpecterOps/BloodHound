@@ -52,7 +52,7 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 func RegisterFossRoutes(
 	routerInst *router.Router,
 	cfg config.Configuration,
-	rdms *database.BloodhoundDB,
+	rdms database.Database,
 	graphDB *graph.DatabaseSwitch,
 	graphQuery queries.Graph,
 	apiCache cache.Cache,

@@ -27,9 +27,8 @@ import {
     PageWithTitle,
     SSOProviderInfoPanel,
     SSOProviderTable,
-    UpsertSAMLProviderDialog,
 } from '../../components';
-import UpsertOIDCProviderDialog from '../../components/UpsertOIDCProviderDialog';
+import { UpsertOIDCProviderDialog, UpsertSAMLProviderDialog } from '../../components/UpsertSSOProviders';
 import { useFeatureFlag } from '../../hooks';
 import { useNotifications } from '../../providers';
 import { SortOrder, apiClient } from '../../utils';
@@ -46,6 +45,10 @@ const SSOConfiguration: FC = () => {
     const [nameFilter, setNameFilter] = useState<string>('');
     const [upsertProviderError, setUpsertProviderError] = useState<any>();
     const [typeSortOrder, setTypeSortOrder] = useState<SortOrder>();
+
+    const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
+        apiClient.getRoles({ signal }).then((res) => res.data.data.roles)
+    );
 
     const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
         apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
@@ -173,12 +176,20 @@ const SSOConfiguration: FC = () => {
     const upsertSAMLProvider = async (samlProvider: UpsertSAMLProviderFormInputs) => {
         setUpsertProviderError(null);
         try {
-            const payload = { name: samlProvider.name, metadata: samlProvider.metadata && samlProvider.metadata[0] };
+            const payload = {
+                name: samlProvider.name,
+                metadata: samlProvider.metadata && samlProvider.metadata[0],
+                config: samlProvider.config,
+            };
             if (ssoProviderIdToDeleteOrUpdate) {
                 await apiClient.updateSAMLProviderFromFile(ssoProviderIdToDeleteOrUpdate, payload);
             } else {
-                if (payload.name && payload.metadata) {
-                    await apiClient.createSAMLProviderFromFile({ name: payload.name, metadata: payload.metadata });
+                if (payload.name && payload.metadata && payload.config) {
+                    await apiClient.createSAMLProviderFromFile({
+                        name: payload.name,
+                        metadata: payload.metadata,
+                        config: payload.config,
+                    });
                 }
             }
             listSSOProvidersQuery.refetch();
@@ -195,11 +206,12 @@ const SSOConfiguration: FC = () => {
             if (ssoProviderIdToDeleteOrUpdate) {
                 await apiClient.updateOIDCProvider(ssoProviderIdToDeleteOrUpdate, oidcProvider);
             } else {
-                if (oidcProvider.name && oidcProvider.client_id && oidcProvider.issuer) {
+                if (oidcProvider.name && oidcProvider.client_id && oidcProvider.issuer && oidcProvider.config) {
                     await apiClient.createOIDCProvider({
                         name: oidcProvider.name,
                         client_id: oidcProvider.client_id,
                         issuer: oidcProvider.issuer,
+                        config: oidcProvider.config,
                     });
                 }
             }
@@ -279,7 +291,7 @@ const SSOConfiguration: FC = () => {
                     </Grid>
                     {selectedSSOProvider && (
                         <Grid item xs={6}>
-                            <SSOProviderInfoPanel ssoProvider={selectedSSOProvider} />
+                            <SSOProviderInfoPanel ssoProvider={selectedSSOProvider} roles={getRolesQuery.data} />
                         </Grid>
                     )}
                 </Grid>
@@ -290,6 +302,7 @@ const SSOConfiguration: FC = () => {
                 error={upsertProviderError}
                 onClose={closeDialog}
                 onSubmit={upsertSAMLProvider}
+                roles={getRolesQuery.data}
             />
             <UpsertOIDCProviderDialog
                 open={dialogOpen === 'OIDC'}
@@ -297,6 +310,7 @@ const SSOConfiguration: FC = () => {
                 error={upsertProviderError}
                 onClose={closeDialog}
                 onSubmit={upsertOIDCProvider}
+                roles={getRolesQuery.data}
             />
             <ConfirmationDialog
                 open={dialogOpen === 'DELETE'}

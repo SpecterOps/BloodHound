@@ -95,11 +95,11 @@ func (s AssetGroupMembers) Filter(filterMap model.QueryParameterFilterMap) (Asse
 	result := s
 	for column, filters := range filterMap {
 		if validPredicates, err := s.GetValidFilterPredicatesAsStrings(column); err != nil {
-			return AssetGroupMembers{}, fmt.Errorf("%s: %s", model.ErrorResponseDetailsColumnNotFilterable, column)
+			return AssetGroupMembers{}, fmt.Errorf("%s: %s", model.ErrResponseDetailsColumnNotFilterable, column)
 		} else {
 			for _, filter := range filters {
 				if !slices.Contains(validPredicates, string(filter.Operator)) {
-					return AssetGroupMembers{}, fmt.Errorf("%s: %s, %s", model.ErrorResponseDetailsFilterPredicateNotSupported, column, string(filter.Operator))
+					return AssetGroupMembers{}, fmt.Errorf("%s: %s, %s", model.ErrResponseDetailsFilterPredicateNotSupported, column, string(filter.Operator))
 				} else if conditional, err := s.BuildFilteringConditional(column, filter.Operator, filter.Value); err != nil {
 					return AssetGroupMembers{}, err
 				} else {

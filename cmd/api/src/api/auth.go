@@ -24,6 +24,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -34,7 +35,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/specterops/bloodhound/crypto"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
@@ -45,12 +45,12 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-const (
-	ErrInvalidAuth                    = errors.Error("invalid authentication")
-	ErrNoUserSecret                   = errors.Error("user does not have a secret auth provider registered")
-	ErrUserDisabled                   = errors.Error("user disabled")
-	ErrorUserNotAuthorizedForProvider = errors.Error("user not authorized for this provider")
-	ErrorInvalidAuthProvider          = errors.Error("invalid auth provider")
+var (
+	ErrInvalidAuth                  = errors.New("invalid authentication")
+	ErrNoUserSecret                 = errors.New("user does not have a secret auth provider registered")
+	ErrUserDisabled                 = errors.New("user disabled")
+	ErrUserNotAuthorizedForProvider = errors.New("user not authorized for this provider")
+	ErrInvalidAuthProvider          = errors.New("invalid auth provider")
 )
 
 func parseRequestDate(rawDate string) (time.Time, error) {
@@ -239,7 +239,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 	} else if authContext, err := s.ctxInitializer.InitContextFromToken(request.Context(), authToken); err != nil {
 		return handleAuthDBError(err)
 	} else if user, isUser := auth.GetUserFromAuthCtx(authContext); isUser && user.IsDisabled {
-		return authContext, http.StatusForbidden, errors.Error("user disabled")
+		return authContext, http.StatusForbidden, ErrUserDisabled
 	} else if err := validateRequestTime(serverTime, requestDate); err != nil {
 		return auth.Context{}, http.StatusUnauthorized, err
 	} else {
@@ -384,7 +384,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 		}
 	} else {
 		if !user.SSOProviderID.Valid || ssoProvider.ID != user.SSOProviderID.Int32 {
-			auditLogFields["error"] = ErrorUserNotAuthorizedForProvider
+			auditLogFields["error"] = ErrUserNotAuthorizedForProvider
 			WriteErrorResponse(requestCtx, BuildErrorResponse(http.StatusForbidden, "user is not allowed", request), response)
 			return
 		}
@@ -436,7 +436,7 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 		userSession.AuthProviderType = model.SessionAuthProviderOIDC
 		userSession.AuthProviderID = typedAuthProvider.ID
 	default:
-		return "", ErrorInvalidAuthProvider
+		return "", ErrInvalidAuthProvider
 	}
 
 	if newSession, err := s.db.CreateUserSession(ctx, userSession); err != nil {

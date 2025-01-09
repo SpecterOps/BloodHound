@@ -43,9 +43,7 @@ func (s *Translator) translateUpdates(scope *Scope) error {
 							if rewrittenProjections, err := buildProjection(identifierMutation.TargetBinding.Identifier, identifierMutation.UpdateBinding, scope); err != nil {
 								return err
 							} else {
-								for _, rewrittenProjection := range rewrittenProjections {
-									identifierMutation.Projection = append(identifierMutation.Projection, rewrittenProjection)
-								}
+								identifierMutation.Projection = append(identifierMutation.Projection, rewrittenProjections...)
 							}
 
 							continue
@@ -145,9 +143,15 @@ func (s *Translator) buildUpdates(scope *Scope) error {
 			}
 
 			for _, propertyAssignment := range identifierMutation.PropertyAssignments.Values() {
+				if propertyLookup, isPropertyLookup := asPropertyLookup(propertyAssignment.ValueExpression); isPropertyLookup {
+					// Ensure that property lookups in JSONB build functions use the JSONB field type
+					propertyLookup.Operator = pgsql.OperatorJSONField
+				}
+
 				jsonObjectFunction.Parameters = append(jsonObjectFunction.Parameters,
 					pgsql.NewLiteral(propertyAssignment.Field, pgsql.Text),
-					propertyAssignment.ValueExpression)
+					propertyAssignment.ValueExpression,
+				)
 			}
 
 			propertyAssignments = models.ValueOptional(jsonObjectFunction.AsExpression())

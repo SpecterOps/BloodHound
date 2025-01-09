@@ -23,7 +23,7 @@ import (
 const (
 	ErrorParseParams        = "unable to parse request parameters"
 	ErrorDecodeParams       = "unable to decode request parameters"
-	ErrorNoDomainId         = "no domain id specified in url"
+	ErrNoDomainId           = "no domain id specified in url"
 	ErrorNoFindingType      = "no finding type specified"
 	ErrorInvalidFindingType = "invalid finding type specified: %v"
 	ErrorInvalidRFC3339     = "invalid RFC-3339 datetime format: %v"

@@ -17,10 +17,10 @@
 package v2
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/specterops/bloodhound/dawgs/util"
-	"github.com/specterops/bloodhound/errors"
 	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
@@ -29,8 +29,8 @@ import (
 	"github.com/specterops/bloodhound/src/queries"
 )
 
-const (
-	errUnauthorizedGraphMutation = errors.Error("unauthorized graph mutation")
+var (
+	errUnauthorizedGraphMutation = errors.New("unauthorized graph mutation")
 )
 
 type CypherQueryPayload struct {
