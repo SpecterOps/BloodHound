@@ -36,9 +36,9 @@ import (
 type MigratorState string
 
 const (
-	stateIdle      MigratorState = "idle"
-	stateMigrating MigratorState = "migrating"
-	stateCanceling MigratorState = "canceling"
+	StateIdle      MigratorState = "idle"
+	StateMigrating MigratorState = "migrating"
+	StateCanceling MigratorState = "canceling"
 )
 
 func migrateTypes(ctx context.Context, neoDB, pgDB graph.Database) error {
@@ -187,21 +187,21 @@ func migrateEdges(ctx context.Context, neoDB, pgDB graph.Database, nodeIDMapping
 type PGMigrator struct {
 	graphSchema         graph.Schema
 	graphDBSwitch       *graph.DatabaseSwitch
-	serverCtx           context.Context
+	ServerCtx           context.Context
 	migrationCancelFunc func()
-	state               MigratorState
+	State               MigratorState
 	lock                *sync.Mutex
-	cfg                 config.Configuration
+	Cfg                 config.Configuration
 }
 
 func NewPGMigrator(serverCtx context.Context, cfg config.Configuration, graphSchema graph.Schema, graphDBSwitch *graph.DatabaseSwitch) *PGMigrator {
 	return &PGMigrator{
 		graphSchema:   graphSchema,
 		graphDBSwitch: graphDBSwitch,
-		serverCtx:     serverCtx,
-		state:         stateIdle,
+		ServerCtx:     serverCtx,
+		State:         StateIdle,
 		lock:          &sync.Mutex{},
-		cfg:           cfg,
+		Cfg:           cfg,
 	}
 }
 
@@ -212,31 +212,28 @@ func (s *PGMigrator) advanceState(next MigratorState, validTransitions ...Migrat
 	isValid := false
 
 	for _, validTransition := range validTransitions {
-		if s.state == validTransition {
+		if s.State == validTransition {
 			isValid = true
 			break
 		}
 	}
 
 	if !isValid {
-		return fmt.Errorf("migrator state is %s but expected one of: %v", s.state, validTransitions)
+		return fmt.Errorf("migrator state is %s but expected one of: %v", s.State, validTransitions)
 	}
 
-	s.state = next
+	s.State = next
 	return nil
 }
 
 func (s *PGMigrator) SwitchPostgreSQL(response http.ResponseWriter, request *http.Request) {
-	if pgDB, err := dawgs.Open(s.serverCtx, pg.DriverName, dawgs.Config{
-		GraphQueryMemoryLimit: size.Gibibyte,
-		DriverCfg:             s.cfg.Database.PostgreSQLConnectionString(),
-	}); err != nil {
+	if pgDB, err := s.OpenPostgresGraphConnection(); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed connecting to PostgreSQL: %w", err),
 		}, http.StatusInternalServerError, response)
 	} else if err := pgDB.AssertSchema(request.Context(), s.graphSchema); err != nil {
 		log.Errorf("Unable to assert graph schema in PostgreSQL: %v", err)
-	} else if err := SetGraphDriver(request.Context(), s.cfg, pg.DriverName); err != nil {
+	} else if err := SetGraphDriver(request.Context(), s.Cfg, pg.DriverName); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed updating graph database driver preferences: %w", err),
 		}, http.StatusInternalServerError, response)
@@ -249,14 +246,11 @@ func (s *PGMigrator) SwitchPostgreSQL(response http.ResponseWriter, request *htt
 }
 
 func (s *PGMigrator) SwitchNeo4j(response http.ResponseWriter, request *http.Request) {
-	if neo4jDB, err := dawgs.Open(s.serverCtx, neo4j.DriverName, dawgs.Config{
-		GraphQueryMemoryLimit: size.Gibibyte,
-		DriverCfg:             s.cfg.Neo4J.Neo4jConnectionString(),
-	}); err != nil {
+	if neo4jDB, err := s.OpenNeo4jGraphConnection(); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed connecting to Neo4j: %w", err),
 		}, http.StatusInternalServerError, response)
-	} else if err := SetGraphDriver(request.Context(), s.cfg, neo4j.DriverName); err != nil {
+	} else if err := SetGraphDriver(request.Context(), s.Cfg, neo4j.DriverName); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed updating graph database driver preferences: %w", err),
 		}, http.StatusInternalServerError, response)
@@ -268,23 +262,17 @@ func (s *PGMigrator) SwitchNeo4j(response http.ResponseWriter, request *http.Req
 	}
 }
 
-func (s *PGMigrator) startMigration() error {
-	if err := s.advanceState(stateMigrating, stateIdle); err != nil {
+func (s *PGMigrator) StartMigration() error {
+	if err := s.advanceState(StateMigrating, StateIdle); err != nil {
 		return fmt.Errorf("database migration state error: %w", err)
-	} else if neo4jDB, err := dawgs.Open(s.serverCtx, neo4j.DriverName, dawgs.Config{
-		GraphQueryMemoryLimit: size.Gibibyte,
-		DriverCfg:             s.cfg.Neo4J.Neo4jConnectionString(),
-	}); err != nil {
+	} else if neo4jDB, err := s.OpenNeo4jGraphConnection(); err != nil {
 		return fmt.Errorf("failed connecting to Neo4j: %w", err)
-	} else if pgDB, err := dawgs.Open(s.serverCtx, pg.DriverName, dawgs.Config{
-		GraphQueryMemoryLimit: size.Gibibyte,
-		DriverCfg:             s.cfg.Database.PostgreSQLConnectionString(),
-	}); err != nil {
+	} else if pgDB, err := s.OpenPostgresGraphConnection(); err != nil {
 		return fmt.Errorf("failed connecting to PostgreSQL: %w", err)
 	} else {
 		log.Infof("Dispatching live migration from Neo4j to PostgreSQL")
 
-		migrationCtx, migrationCancelFunc := context.WithCancel(s.serverCtx)
+		migrationCtx, migrationCancelFunc := context.WithCancel(s.ServerCtx)
 		s.migrationCancelFunc = migrationCancelFunc
 
 		go func(ctx context.Context) {
@@ -304,7 +292,7 @@ func (s *PGMigrator) startMigration() error {
 				log.Infof("Migration to PostgreSQL completed successfully")
 			}
 
-			if err := s.advanceState(stateIdle, stateMigrating, stateCanceling); err != nil {
+			if err := s.advanceState(StateIdle, StateMigrating, StateCanceling); err != nil {
 				log.Errorf("Database migration state management error: %v", err)
 			}
 		}(migrationCtx)
@@ -314,7 +302,7 @@ func (s *PGMigrator) startMigration() error {
 }
 
 func (s *PGMigrator) MigrationStart(response http.ResponseWriter, request *http.Request) {
-	if err := s.startMigration(); err != nil {
+	if err := s.StartMigration(); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": err.Error(),
 		}, http.StatusInternalServerError, response)
@@ -323,8 +311,8 @@ func (s *PGMigrator) MigrationStart(response http.ResponseWriter, request *http.
 	}
 }
 
-func (s *PGMigrator) cancelMigration() error {
-	if err := s.advanceState(stateCanceling, stateMigrating); err != nil {
+func (s *PGMigrator) CancelMigration() error {
+	if err := s.advanceState(StateCanceling, StateMigrating); err != nil {
 		return err
 	}
 
@@ -334,7 +322,7 @@ func (s *PGMigrator) cancelMigration() error {
 }
 
 func (s *PGMigrator) MigrationCancel(response http.ResponseWriter, request *http.Request) {
-	if err := s.cancelMigration(); err != nil {
+	if err := s.CancelMigration(); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": err.Error(),
 		}, http.StatusInternalServerError, response)
@@ -345,6 +333,20 @@ func (s *PGMigrator) MigrationCancel(response http.ResponseWriter, request *http
 
 func (s *PGMigrator) MigrationStatus(response http.ResponseWriter, request *http.Request) {
 	api.WriteJSONResponse(request.Context(), map[string]any{
-		"state": s.state,
+		"state": s.State,
 	}, http.StatusOK, response)
+}
+
+func (s *PGMigrator) OpenPostgresGraphConnection() (graph.Database, error) {
+	return dawgs.Open(s.ServerCtx, pg.DriverName, dawgs.Config{
+		GraphQueryMemoryLimit: size.Gibibyte,
+		DriverCfg:             s.Cfg.Database.PostgreSQLConnectionString(),
+	})
+}
+
+func (s *PGMigrator) OpenNeo4jGraphConnection() (graph.Database, error) {
+	return dawgs.Open(s.ServerCtx, neo4j.DriverName, dawgs.Config{
+		GraphQueryMemoryLimit: size.Gibibyte,
+		DriverCfg:             s.Cfg.Neo4J.Neo4jConnectionString(),
+	})
 }
