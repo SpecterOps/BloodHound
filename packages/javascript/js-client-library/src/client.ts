@@ -303,7 +303,7 @@ class BHEAPIClient {
 
     getPostureHistory = (
         environmentId: string,
-        dataType: string,
+        dataType: types.PostureHistoryType,
         start?: Date,
         end?: Date,
         options?: types.RequestOptions

@@ -382,3 +382,11 @@ export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'
 }
 
 export type UpdateConfigurationRequest = ConfigurationPayload;
+
+export type PostureHistoryType =
+    | 'findings'
+    | 'exposure'
+    | 'assets'
+    | 'session-completeness'
+    | 'group-completeness'
+    | 'attack-paths';
