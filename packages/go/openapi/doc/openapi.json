@@ -12572,6 +12572,14 @@
                                   },
                                   "finding_count_decrease": {
                                     "type": "integer"
+                                  },
+                                  "finding_impact_count": {
+                                    "type": "integer",
+                                    "nullable": true
+                                  },
+                                  "finding_exposure_count": {
+                                    "type": "integer",
+                                    "nullable": true
                                   }
                                 }
                               }
@@ -16587,8 +16595,9 @@
           "findings",
           "exposure",
           "assets",
-          "session_completeness",
-          "group_completeness"
+          "session-completeness",
+          "group-completeness",
+          "attack-paths"
         ]
       }
     },
