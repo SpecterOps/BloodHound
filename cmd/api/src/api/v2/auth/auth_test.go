@@ -1226,7 +1226,7 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 		goodUserMap,
 	}
 
-	bhlog.ConfigureDefault()
+	bhlog.ConfigureDefault(true)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	payload, err := json.Marshal(input.Body)

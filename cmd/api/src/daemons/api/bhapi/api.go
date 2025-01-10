@@ -20,10 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 
-	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/src/config"
 )
 
@@ -40,7 +40,7 @@ func NewDaemon(cfg config.Configuration, handler http.Handler) Daemon {
 		server: &http.Server{
 			Addr:     cfg.BindAddress,
 			Handler:  handler,
-			ErrorLog: bhlog.NewLogLogger("BHAPI"),
+			ErrorLog: log.Default(),
 		},
 	}
 }

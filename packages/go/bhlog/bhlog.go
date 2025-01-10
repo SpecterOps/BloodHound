@@ -18,7 +18,7 @@ package bhlog
 
 import (
 	"fmt"
-	"log"
+	"io"
 	"log/slog"
 	"os"
 	"runtime"
@@ -29,23 +29,33 @@ import (
 	"github.com/specterops/bloodhound/src/auth"
 )
 
-func ConfigureDefault() {
-	logger := NewDefaultLogger()
-	slog.SetDefault(logger)
+func BaseHandler(pipe io.Writer, options *slog.HandlerOptions) slog.Handler {
+	return slog.NewJSONHandler(pipe, options)
 }
 
-func NewDefaultLogger() *slog.Logger {
-	return slog.New(&handlers.ContextHandler{
+func TextHandler(pipe io.Writer, options *slog.HandlerOptions) slog.Handler {
+	return slog.NewTextHandler(pipe, options)
+}
+
+func ConfigureDefault(text bool) {
+	var (
+		handler        slog.Handler
+		pipe           = os.Stderr
+		handlerOptions = &slog.HandlerOptions{Level: level.GetLevelVar(), ReplaceAttr: handlers.ReplaceMessageKey}
+	)
+
+	if text {
+		handler = TextHandler(pipe, handlerOptions)
+	} else {
+		handler = BaseHandler(pipe, handlerOptions)
+	}
+
+	logger := slog.New(&handlers.ContextHandler{
 		IDResolver: auth.NewIdentityResolver(),
-		Handler:    slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level.GetLevelVar(), ReplaceAttr: handlers.ReplaceMessageKey}),
+		Handler:    handler,
 	})
-}
 
-func NewLogLogger(origin string) *log.Logger {
-	return slog.NewLogLogger(&handlers.OriginHandler{
-		Origin:  origin,
-		Handler: slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level.GetLevelVar()}),
-	}, slog.LevelError)
+	slog.SetDefault(logger)
 }
 
 type stackFrame struct {

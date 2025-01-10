@@ -118,7 +118,7 @@ func InitializeLogging(cfg config.Configuration) error {
 		}
 	}
 
-	bhlog.ConfigureDefault()
+	bhlog.ConfigureDefault(cfg.EnableTextLogger)
 	level.SetGlobalLevel(logLevel)
 
 	slog.Info("Logging configured")

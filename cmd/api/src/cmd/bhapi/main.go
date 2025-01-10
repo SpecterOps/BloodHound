@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strconv"
 
 	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -58,7 +59,14 @@ func main() {
 		printVersion()
 	}
 
-	bhlog.ConfigureDefault()
+	enableTextLogger := os.Getenv(config.BHAPIEnvironmentVariablePrefix + "_enable_text_logger")
+
+	if enabled, err := strconv.ParseBool(enableTextLogger); err != nil {
+		// Default to json because we're not sure what the user wanted
+		bhlog.ConfigureDefault(false)
+	} else {
+		bhlog.ConfigureDefault(enabled)
+	}
 
 	if cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration); err != nil {
 		slog.Error(fmt.Sprintf("Unable to read configuration %s: %v", configFilePath, err))

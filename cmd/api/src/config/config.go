@@ -36,7 +36,7 @@ const (
 	CurrentConfigurationVersion = 2
 	DefaultLogFilePath          = "/var/log/bhapi.log"
 
-	bhAPIEnvironmentVariablePrefix       = "bhe"
+	BHAPIEnvironmentVariablePrefix       = "bhe"
 	environmentVariablePathSeparator     = "_"
 	environmentVariableKeyValueSeparator = "="
 )
@@ -164,6 +164,7 @@ type Configuration struct {
 	GraphQueryMemoryLimit        uint16                    `json:"graph_query_memory_limit"`
 	AuthSessionTTLHours          int                       `json:"auth_session_ttl_hours"`
 	FedRAMPEULAText              string                    `json:"fedramp_eula_text"` // Enterprise only
+	EnableTextLogger             bool                      `json:"enable_text_logger"`
 }
 
 func (s Configuration) AuthSessionTTL() time.Duration {
@@ -276,7 +277,7 @@ func getConfiguration(path string, defaultConfigFunc func() (Configuration, erro
 func GetConfiguration(path string, defaultConfigFunc func() (Configuration, error)) (Configuration, error) {
 	if cfg, err := getConfiguration(path, defaultConfigFunc); err != nil {
 		return cfg, err
-	} else if err := SetValuesFromEnv(bhAPIEnvironmentVariablePrefix, &cfg, os.Environ()); err != nil {
+	} else if err := SetValuesFromEnv(BHAPIEnvironmentVariablePrefix, &cfg, os.Environ()); err != nil {
 		return cfg, err
 	} else {
 		return cfg, nil

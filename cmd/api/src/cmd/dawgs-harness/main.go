@@ -125,7 +125,7 @@ func main() {
 	flag.StringVar(&pgConnectionStr, "pg", "user=bhe dbname=bhe password=bhe4eva host=localhost", "PostgreSQL connection string.")
 	flag.Parse()
 
-	bhlog.ConfigureDefault()
+	bhlog.ConfigureDefault(true)
 
 	switch testType {
 	case "both":
