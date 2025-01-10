@@ -20,5 +20,5 @@ enum:
   - findings
   - exposure
   - assets
-  - session_completeness
-  - group_completeness
+  - session-completeness
+  - group-completeness
