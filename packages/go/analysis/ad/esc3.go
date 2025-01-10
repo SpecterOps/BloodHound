@@ -155,7 +155,7 @@ func PostEnrollOnBehalfOf(domains, enterpriseCertAuthorities, certTemplates []*g
 		} else if version >= 2 {
 			versionTwoTemplates = append(versionTwoTemplates, node)
 		} else {
-			slog.Warn(fmt.Sprintf("Got cert template %d with an invalid version %d", node.ID, version))
+			slog.Warn(fmt.Sprintf("Got cert template %d with an invalid version %0.f", node.ID, version))
 		}
 	}
 

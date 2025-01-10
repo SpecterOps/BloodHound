@@ -22,6 +22,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -1226,7 +1227,8 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 		goodUserMap,
 	}
 
-	bhlog.ConfigureDefaults()
+	logger := bhlog.NewDefaultLogger()
+	slog.SetDefault(logger)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	payload, err := json.Marshal(input.Body)

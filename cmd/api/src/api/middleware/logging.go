@@ -150,7 +150,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 				if !deadline.IsZero() && time.Now().After(deadline) {
 					slog.WarnContext(
 						request.Context(),
-						fmt.Sprintf("%s %s took longer than the configured timeout of %d seconds", request.Method, request.URL.RequestURI(), timeout.Seconds()),
+						fmt.Sprintf("%s %s took longer than the configured timeout of %0.f seconds", request.Method, request.URL.RequestURI(), timeout.Seconds()),
 					)
 				}
 			}()

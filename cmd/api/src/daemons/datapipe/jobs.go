@@ -263,7 +263,7 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 			job.TotalFiles = total
 			job.FailedFiles += failed
 			if err = s.db.UpdateFileUploadJob(ctx, job); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed to update number of failed files for file upload job ID %s: %v", job.ID, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Failed to update number of failed files for file upload job ID %d: %v", job.ID, err))
 			}
 		}
 

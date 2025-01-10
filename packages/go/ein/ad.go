@@ -78,7 +78,7 @@ func stringToBool(itemProps map[string]any, keyName string) {
 		case bool:
 		//pass
 		default:
-			slog.Debug(fmt.Sprintf("Removing %s with type %T", converted))
+			slog.Debug(fmt.Sprintf("Removing %s with type %T", converted, converted))
 			delete(itemProps, keyName)
 		}
 	}

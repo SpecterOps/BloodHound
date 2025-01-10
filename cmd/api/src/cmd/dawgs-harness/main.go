@@ -20,6 +20,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
@@ -27,15 +28,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg"
-	"github.com/specterops/bloodhound/dawgs/util/size"
-	schema "github.com/specterops/bloodhound/graphschema"
-
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/dawgs"
+	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/util/size"
+	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/src/cmd/dawgs-harness/tests"
 )
 
@@ -126,7 +126,8 @@ func main() {
 	flag.StringVar(&pgConnectionStr, "pg", "user=bhe dbname=bhe password=bhe4eva host=localhost", "PostgreSQL connection string.")
 	flag.Parse()
 
-	bhlog.ConfigureDefaults()
+	logger := bhlog.NewDefaultLogger()
+	slog.SetDefault(logger)
 
 	switch testType {
 	case "both":

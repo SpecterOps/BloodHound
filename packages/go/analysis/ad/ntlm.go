@@ -19,6 +19,7 @@ package ad
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -54,7 +55,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					} else if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 						return PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID)
 					}); err != nil {
-						slog.WarnContext(ctx, "Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToSMB, err)
+						slog.WarnContext(ctx, fmt.Sprintf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToSMB, err))
 						// Additional analysis may occur if one of our analysis errors
 						continue
 					}

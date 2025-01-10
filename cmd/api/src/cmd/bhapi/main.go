@@ -23,7 +23,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/specterops/bloodhound/bhlog/handlers"
+	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
@@ -58,7 +58,7 @@ func main() {
 		printVersion()
 	}
 
-	logger := handlers.NewDefaultLogger()
+	logger := bhlog.NewDefaultLogger()
 	slog.SetDefault(logger)
 
 	if cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration); err != nil {

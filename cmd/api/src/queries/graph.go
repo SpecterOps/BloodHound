@@ -444,13 +444,13 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 		)
 
 		if bhCtxInst.Timeout > maxTimeout {
-			slog.DebugContext(ctx, fmt.Sprintf("Custom timeout is too large, using the maximum allowable timeout of %d minutes instead", maxTimeout.Minutes()))
+			slog.DebugContext(ctx, fmt.Sprintf("Custom timeout is too large, using the maximum allowable timeout of %0.f minutes instead", maxTimeout.Minutes()))
 			bhCtxInst.Timeout = maxTimeout
 		}
 
 		availableRuntime := bhCtxInst.Timeout
 		if availableRuntime > 0 {
-			slog.DebugContext(ctx, fmt.Sprintf("Available timeout for query is set to: %d seconds", availableRuntime.Seconds()))
+			slog.DebugContext(ctx, fmt.Sprintf("Available timeout for query is set to: %0.f seconds", availableRuntime.Seconds()))
 		} else {
 			availableRuntime = defaultTimeout
 			if !s.DisableCypherComplexityLimit {

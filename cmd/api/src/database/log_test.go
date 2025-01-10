@@ -19,12 +19,12 @@ package database_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/specterops/bloodhound/bhlog/handlers"
 	"log/slog"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/bhlog/handlers"
 	"github.com/specterops/bloodhound/src/database"
 )
 
@@ -37,7 +37,7 @@ func TestGormLogAdapter_Info(t *testing.T) {
 	)
 
 	var buf bytes.Buffer
-	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{ReplaceAttr: handlers.ReplaceAttr})))
+	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{ReplaceAttr: handlers.ReplaceMessageKey})))
 
 	expected := fmt.Sprintf(`message="message %d %s %f"`, 1, "arg", 2.0)
 	gormLogAdapter.Info(nil, "message %d %s %f", 1, "arg", 2.0)
