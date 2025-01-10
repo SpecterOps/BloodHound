@@ -101,7 +101,7 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 		server: &http.Server{
 			Addr:     cfg.MetricsPort,
 			Handler:  router,
-			ErrorLog: bhlog.Adapter(bhlog.LevelError, "ToolAPI", 0),
+			ErrorLog: bhlog.NewLogLogger("ToolAPI"),
 		},
 	}
 }

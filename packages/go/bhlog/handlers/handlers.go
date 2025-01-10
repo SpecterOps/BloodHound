@@ -19,14 +19,10 @@ package handlers
 import (
 	"context"
 	"log/slog"
-	"os"
-	"runtime"
 
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 )
-
-var lvl = new(slog.LevelVar)
 
 type ContextHandler struct {
 	IDResolver auth.IdentityResolver
@@ -58,52 +54,21 @@ func (h ContextHandler) Handle(c context.Context, r slog.Record) error {
 	return h.Handler.Handle(c, r)
 }
 
-func ReplaceAttr(_ []string, a slog.Attr) slog.Attr {
+type OriginHandler struct {
+	Origin string
+	slog.Handler
+}
+
+func (h OriginHandler) Handle(c context.Context, r slog.Record) error {
+	r.Add("origin", h.Origin)
+
+	return h.Handler.Handle(c, r)
+}
+
+func ReplaceMessageKey(_ []string, a slog.Attr) slog.Attr {
 	if a.Key == slog.MessageKey {
 		a.Key = "message"
 	}
 
 	return a
-}
-
-func NewDefaultLogger() *slog.Logger {
-	return slog.New(&ContextHandler{IDResolver: auth.NewIdentityResolver(), Handler: slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: lvl, ReplaceAttr: ReplaceAttr})})
-}
-
-func SetGlobalLevel(level slog.Level) {
-	lvl.Set(level)
-}
-
-func GlobalLevel() slog.Level {
-	return lvl.Level()
-}
-
-type stackFrame struct {
-	File string `json:"file"`
-	Line int    `json:"line"`
-	Func string `json:"func"`
-}
-
-func GetSlogCallStack() slog.Attr {
-	var outputFrames []stackFrame
-
-	pc := make([]uintptr, 25) // Arbitrarily only go to a call depth of 25
-	n := runtime.Callers(1, pc)
-	if n == 0 {
-		return slog.Attr{}
-	}
-	pc = pc[:n]
-	frames := runtime.CallersFrames(pc)
-
-	for {
-		frame, more := frames.Next()
-
-		outputFrames = append(outputFrames, stackFrame{File: frame.File, Line: frame.Line, Func: frame.Function})
-
-		if !more {
-			break
-		}
-	}
-
-	return slog.Any("stack", outputFrames)
 }

@@ -22,7 +22,7 @@ import (
 	"log/slog"
 	"sort"
 
-	"github.com/specterops/bloodhound/bhlog"
+	"github.com/specterops/bloodhound/bhlog/level"
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -91,7 +91,7 @@ func (s PostProcessingStats) Merge(other PostProcessingStats) {
 
 func (s PostProcessingStats) LogStats() {
 	// Only output stats during debug runs
-	if bhlog.GlobalLevel() > bhlog.LevelDebug {
+	if level.GlobalAccepts(slog.LevelDebug) {
 		return
 	}
 

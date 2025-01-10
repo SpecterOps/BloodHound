@@ -19,12 +19,12 @@ package cmdrunner
 import (
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/bhlog"
 	"log/slog"
 	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/specterops/bloodhound/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
@@ -43,7 +43,7 @@ func Run(command string, args []string, path string, env environment.Environment
 
 		cmdstr       = command + " " + args[0]
 		cmd          = exec.Command(command, args...)
-		debugEnabled = bhlog.GlobalAccepts(bhlog.LevelDebug)
+		debugEnabled = level.GlobalAccepts(slog.LevelDebug)
 	)
 
 	cmd.Env = env.Slice()

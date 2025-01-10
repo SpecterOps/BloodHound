@@ -1,0 +1,80 @@
+package bhlog
+
+import (
+	"fmt"
+	"log"
+	"log/slog"
+	"os"
+	"runtime"
+	"strings"
+
+	"github.com/specterops/bloodhound/bhlog/handlers"
+	"github.com/specterops/bloodhound/bhlog/level"
+	"github.com/specterops/bloodhound/src/auth"
+)
+
+func NewDefaultLogger() *slog.Logger {
+	return slog.New(&handlers.ContextHandler{
+		IDResolver: auth.NewIdentityResolver(),
+		Handler:    slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level.GetLevelVar(), ReplaceAttr: handlers.ReplaceMessageKey}),
+	})
+}
+
+func NewLogLogger(origin string) *log.Logger {
+	return slog.NewLogLogger(&handlers.OriginHandler{
+		Origin:  origin,
+		Handler: slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level.GetLevelVar()}),
+	}, slog.LevelError)
+}
+
+type stackFrame struct {
+	File string `json:"file"`
+	Line int    `json:"line"`
+	Func string `json:"func"`
+}
+
+func GetCallStack() slog.Attr {
+	var outputFrames []stackFrame
+
+	pc := make([]uintptr, 25) // Arbitrarily only go to a call depth of 25
+	n := runtime.Callers(1, pc)
+	if n == 0 {
+		return slog.Attr{}
+	}
+	pc = pc[:n]
+	frames := runtime.CallersFrames(pc)
+
+	for {
+		frame, more := frames.Next()
+
+		outputFrames = append(outputFrames, stackFrame{File: frame.File, Line: frame.Line, Func: frame.Function})
+
+		if !more {
+			break
+		}
+	}
+
+	return slog.Any("stack", outputFrames)
+}
+
+var (
+	levelErrorValue = slog.LevelError.String()
+	levelWarnValue  = slog.LevelWarn.String()
+	levelInfoValue  = slog.LevelInfo.String()
+	levelDebugValue = slog.LevelDebug.String()
+)
+
+func ParseLevel(rawLevel string) (slog.Level, error) {
+	switch strings.ToUpper(rawLevel) {
+	case levelErrorValue:
+		return slog.LevelError, nil
+	case levelWarnValue:
+		return slog.LevelWarn, nil
+	case levelInfoValue:
+		return slog.LevelInfo, nil
+	case levelDebugValue:
+		return slog.LevelDebug, nil
+	default:
+		return 0, fmt.Errorf("unknown log level: %s", rawLevel)
+	}
+}

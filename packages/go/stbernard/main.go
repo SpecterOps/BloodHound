@@ -25,6 +25,7 @@ import (
 	"os"
 
 	"github.com/specterops/bloodhound/bhlog"
+	"github.com/specterops/bloodhound/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
@@ -33,7 +34,8 @@ func main() {
 	env := environment.NewEnvironment()
 	var rawLvl = env[environment.LogLevelVarName]
 
-	bhlog.ConfigureDefaults()
+	logger := bhlog.NewDefaultLogger()
+	slog.SetDefault(logger)
 
 	if rawLvl == "" {
 		rawLvl = "warn"
@@ -42,7 +44,7 @@ func main() {
 	if lvl, err := bhlog.ParseLevel(rawLvl); err != nil {
 		slog.Error(fmt.Sprintf("Could not parse log level from %s: %v", environment.LogLevelVarName, err))
 	} else {
-		bhlog.SetGlobalLevel(lvl)
+		level.GlobalAccepts(lvl)
 	}
 
 	if cmd, err := command.ParseCLI(env); errors.Is(err, command.ErrNoCmd) {

@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/specterops/bloodhound/bhlog"
+	bhLevel "github.com/specterops/bloodhound/bhlog/level"
 	"github.com/specterops/bloodhound/src/api"
 )
 
@@ -33,7 +34,7 @@ type LoggingLevel struct {
 
 func GetLoggingDetails(response http.ResponseWriter, request *http.Request) {
 	api.WriteJSONResponse(request.Context(), LoggingLevel{
-		Level: bhlog.GlobalLevel().String(),
+		Level: bhLevel.GlobalLevel().String(),
 	}, http.StatusOK, response)
 }
 
@@ -49,7 +50,7 @@ func PutLoggingDetails(response http.ResponseWriter, request *http.Request) {
 			Error: err.Error(),
 		}, http.StatusBadRequest, response)
 	} else {
-		bhlog.SetGlobalLevel(level)
+		bhLevel.SetGlobalLevel(level)
 		response.WriteHeader(http.StatusOK)
 	}
 }

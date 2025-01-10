@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/bhlog/level"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -28,7 +29,6 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
@@ -77,7 +77,7 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 	cmd.Env = env.Slice()
 	cmd.Dir = cwd
 
-	if bhlog.GlobalAccepts(bhlog.LevelDebug) {
+	if level.GlobalAccepts(slog.LevelDebug) {
 		cmd.Stderr = os.Stderr
 	}
 
@@ -168,7 +168,7 @@ func getAllVersionTags(cwd string, env environment.Environment) ([]string, error
 	cmd.Dir = cwd
 	cmd.Stdout = &output
 
-	if bhlog.GlobalAccepts(bhlog.LevelDebug) {
+	if level.GlobalAccepts(slog.LevelDebug) {
 		cmd.Stderr = os.Stderr
 	}
 

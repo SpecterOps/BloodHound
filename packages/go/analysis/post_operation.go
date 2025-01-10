@@ -24,7 +24,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/specterops/bloodhound/bhlog"
+	"github.com/specterops/bloodhound/bhlog/level"
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -132,7 +132,7 @@ func (s *AtomicPostProcessingStats) Merge(other *AtomicPostProcessingStats) {
 
 func (s *AtomicPostProcessingStats) LogStats() {
 	// Only output stats during debug runs
-	if bhlog.GlobalLevel() > bhlog.LevelDebug {
+	if level.GlobalAccepts(slog.LevelDebug) {
 		return
 	}
 

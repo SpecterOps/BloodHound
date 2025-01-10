@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/bhlog"
-	"github.com/specterops/bloodhound/bhlog/handlers"
+	"github.com/specterops/bloodhound/bhlog/level"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -52,15 +52,15 @@ func (s *GormLogAdapter) Error(ctx context.Context, msg string, data ...any) {
 }
 
 func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
-	if bhlog.GlobalLevel() > bhlog.LevelDebug {
+	if !level.GlobalAccepts(slog.LevelDebug) {
 		return
 	}
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		sql, _ := fc()
 
-		if slog.Default().Enabled(ctx, slog.LevelDebug) {
-			slog.ErrorContext(ctx, "Database error", "query", sql, "error", err, handlers.GetSlogCallStack())
+		if level.GlobalAccepts(slog.LevelDebug) {
+			slog.ErrorContext(ctx, "Database error", "query", sql, "error", err, bhlog.GetCallStack())
 		} else {
 			slog.ErrorContext(ctx, "Database error", "query", sql, "error", err)
 		}
@@ -70,16 +70,16 @@ func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (
 		if elapsed >= s.SlowQueryErrorThreshold {
 			sql, rows := fc()
 
-			if slog.Default().Enabled(ctx, slog.LevelDebug) {
-				slog.ErrorContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "nums_rows", rows, "sql", sql, handlers.GetSlogCallStack())
+			if level.GlobalAccepts(slog.LevelDebug) {
+				slog.ErrorContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "nums_rows", rows, "sql", sql, bhlog.GetCallStack())
 			} else {
 				slog.ErrorContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "num_rows", rows)
 			}
 		} else if elapsed >= s.SlowQueryWarnThreshold {
 			sql, rows := fc()
 
-			if bhlog.GlobalAccepts(bhlog.LevelDebug) {
-				slog.WarnContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "nums_rows", rows, "sql", sql, handlers.GetSlogCallStack())
+			if level.GlobalAccepts(slog.LevelDebug) {
+				slog.WarnContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "nums_rows", rows, "sql", sql, bhlog.GetCallStack())
 			} else {
 				slog.WarnContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "num_rows", rows)
 			}

@@ -40,7 +40,7 @@ func NewDaemon(cfg config.Configuration, handler http.Handler) Daemon {
 		server: &http.Server{
 			Addr:     cfg.BindAddress,
 			Handler:  handler,
-			ErrorLog: bhlog.Adapter(bhlog.LevelError, "BHAPI", 0),
+			ErrorLog: bhlog.NewLogLogger("BHAPI"),
 		},
 	}
 }
