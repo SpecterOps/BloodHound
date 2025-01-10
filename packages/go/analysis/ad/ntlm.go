@@ -19,6 +19,8 @@ package ad
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -28,7 +30,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 )
 
 // PostNTLM is the initial function used to execute our NTLM analysis
@@ -54,7 +55,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					} else if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 						return PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID)
 					}); err != nil {
-						log.Warnf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToSMB, err)
+						slog.WarnContext(ctx, fmt.Sprintf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToSMB, err))
 						// Additional analysis may occur if one of our analysis errors
 						continue
 					}

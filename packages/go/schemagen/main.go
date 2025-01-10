@@ -17,11 +17,14 @@
 package main
 
 import (
+	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
 	"cuelang.org/go/cue/errors"
-	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/bhlog"
+	"github.com/specterops/bloodhound/bhlog/level"
 	"github.com/specterops/bloodhound/schemagen/generator"
 	"github.com/specterops/bloodhound/schemagen/model"
 	"github.com/specterops/bloodhound/schemagen/tsgen"
@@ -68,36 +71,43 @@ func GenerateSharedTypeScript(projectRoot string, rootSchema Schema) error {
 }
 
 func main() {
-	log.Configure(log.DefaultConfiguration().WithLevel(log.LevelDebug))
+	bhlog.ConfigureDefault(true)
+	level.SetGlobalLevel(slog.LevelDebug)
 
 	cfgBuilder := generator.NewConfigBuilder("/schemas")
 
 	if projectRoot, err := generator.FindGolangWorkspaceRoot(); err != nil {
-		log.Fatalf("Error finding project root: %v", err)
+		slog.Error(fmt.Sprintf("Error finding project root: %v", err))
+		os.Exit(1)
 	} else {
-		log.Infof("Project root is %s", projectRoot)
+		slog.Info(fmt.Sprintf("Project root is %s", projectRoot))
 
 		if err := cfgBuilder.OverlayPath(filepath.Join(projectRoot, "packages/cue")); err != nil {
-			log.Fatalf("Error: %v", err)
+			slog.Error(fmt.Sprintf("Error: %v", err))
+			os.Exit(1)
 		}
 
 		cfg := cfgBuilder.Build()
 
 		if bhInstance, err := cfg.Value("/schemas/bh/bh.cue"); err != nil {
-			log.Fatalf("Error: %v", errors.Details(err, nil))
+			slog.Error(fmt.Sprintf("Error: %v", errors.Details(err, nil)))
+			os.Exit(1)
 		} else {
 			var bhModels Schema
 
 			if err := bhInstance.Decode(&bhModels); err != nil {
-				log.Fatalf("Error: %v", errors.Details(err, nil))
+				slog.Error(fmt.Sprintf("Error: %v", errors.Details(err, nil)))
+				os.Exit(1)
 			}
 
 			if err := GenerateGolang(projectRoot, bhModels); err != nil {
-				log.Fatalf("Error %v", err)
+				slog.Error(fmt.Sprintf("Error %v", err))
+				os.Exit(1)
 			}
 
 			if err := GenerateSharedTypeScript(projectRoot, bhModels); err != nil {
-				log.Fatalf("Error %v", err)
+				slog.Error(fmt.Sprintf("Error %v", err))
+				os.Exit(1)
 			}
 		}
 	}
