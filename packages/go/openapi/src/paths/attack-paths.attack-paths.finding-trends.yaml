@@ -69,10 +69,10 @@ get:
                         items:
                           type: object
                           properties:
-#                            environments: // TODO: to be determined if useful
-#                              type: array
-#                              items:
-#                                type: string
+                            environment_ids:
+                              type: array
+                              items:
+                                type: string
                             finding:
                               type: string
                             display_title:

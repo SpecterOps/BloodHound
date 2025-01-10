@@ -12552,6 +12552,12 @@
                               "items": {
                                 "type": "object",
                                 "properties": {
+                                  "environment_ids": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
                                   "finding": {
                                     "type": "string"
                                   },
