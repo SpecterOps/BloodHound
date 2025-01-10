@@ -281,42 +281,26 @@ class BHEAPIClient {
         );
     };
 
-    getPostureFindingTrends = (
-        environmentIdList: string[],
-        start?: Date,
-        end?: Date,
-        options?: types.RequestOptions
-    ) => {
-        const params = new URLSearchParams();
-        if (start) params.set('start', start.toISOString());
-        if (end) params.set('end', end.toISOString());
-        for (const id of environmentIdList) {
-            if (id) params.append('environments', id);
-        }
-
-        return this.baseClient.get<PostureFindingTrendsResponse>(
-            `/api/v2/attack-paths/finding-trends`,
-            Object.assign({ params }, options)
-        );
+    getPostureFindingTrends = (environments: string[], start?: Date, end?: Date, options?: types.RequestOptions) => {
+        return this.baseClient.get<PostureFindingTrendsResponse>(`/api/v2/attack-paths/finding-trends`, {
+            params: { environments, start: start?.toISOString(), end: end?.toISOString() },
+            paramsSerializer: { indexes: null },
+            ...options,
+        });
     };
 
     getPostureHistory = (
-        environmentIdList: string[],
+        environments: string[],
         dataType: string,
         start?: Date,
         end?: Date,
         options?: types.RequestOptions
     ) => {
-        const params = new URLSearchParams();
-        if (start) params.set('start', start.toISOString());
-        if (end) params.set('end', end.toISOString());
-        for (const id of environmentIdList) {
-            if (id) params.append('environments', id);
-        }
-        return this.baseClient.get<PostureHistoryResponse>(
-            `/api/v2/attack-paths/posture-history/${dataType}`,
-            Object.assign({ params }, options)
-        );
+        return this.baseClient.get<PostureHistoryResponse>(`/api/v2/attack-paths/posture-history/${dataType}`, {
+            params: { environments, start: start?.toISOString(), end: end?.toISOString() },
+            paramsSerializer: { indexes: null },
+            ...options,
+        });
     };
 
     /* ingest */
