@@ -119,7 +119,7 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 			slog.Info(fmt.Sprintf("#%s#", paddingString))
 			slog.Info(passwordMsg)
 			slog.Info(fmt.Sprintf("#%s#", paddingString))
-			slog.Info("%s", borderString)
+			slog.Info(borderString)
 		}
 	}
 
