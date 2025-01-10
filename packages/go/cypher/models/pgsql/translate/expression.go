@@ -213,7 +213,7 @@ func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 
 		// Infer type information for well known column names
 		switch typedExpression[1] {
-// TODO: Graph ID should be int2
+		// TODO: Graph ID should be int2
 		case pgsql.ColumnGraphID, pgsql.ColumnID, pgsql.ColumnStartID, pgsql.ColumnEndID:
 			return pgsql.Int8, nil
 
