@@ -71,8 +71,7 @@ func GenerateSharedTypeScript(projectRoot string, rootSchema Schema) error {
 }
 
 func main() {
-	logger := bhlog.NewDefaultLogger()
-	slog.SetDefault(logger)
+	bhlog.ConfigureDefault()
 	level.SetGlobalLevel(slog.LevelDebug)
 
 	cfgBuilder := generator.NewConfigBuilder("/schemas")

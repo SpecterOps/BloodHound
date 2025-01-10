@@ -118,8 +118,7 @@ func InitializeLogging(cfg config.Configuration) error {
 		}
 	}
 
-	logger := bhlog.NewDefaultLogger()
-	slog.SetDefault(logger)
+	bhlog.ConfigureDefault()
 	level.SetGlobalLevel(logLevel)
 
 	slog.Info("Logging configured")

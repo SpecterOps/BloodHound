@@ -29,6 +29,11 @@ import (
 	"github.com/specterops/bloodhound/src/auth"
 )
 
+func ConfigureDefault() {
+	logger := NewDefaultLogger()
+	slog.SetDefault(logger)
+}
+
 func NewDefaultLogger() *slog.Logger {
 	return slog.New(&handlers.ContextHandler{
 		IDResolver: auth.NewIdentityResolver(),

@@ -58,8 +58,7 @@ func main() {
 		printVersion()
 	}
 
-	logger := bhlog.NewDefaultLogger()
-	slog.SetDefault(logger)
+	bhlog.ConfigureDefault()
 
 	if cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration); err != nil {
 		slog.Error(fmt.Sprintf("Unable to read configuration %s: %v", configFilePath, err))

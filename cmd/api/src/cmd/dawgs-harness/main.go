@@ -20,7 +20,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log/slog"
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
@@ -126,8 +125,7 @@ func main() {
 	flag.StringVar(&pgConnectionStr, "pg", "user=bhe dbname=bhe password=bhe4eva host=localhost", "PostgreSQL connection string.")
 	flag.Parse()
 
-	logger := bhlog.NewDefaultLogger()
-	slog.SetDefault(logger)
+	bhlog.ConfigureDefault()
 
 	switch testType {
 	case "both":
