@@ -96,17 +96,17 @@ func getSignedRequestDate(request *http.Request) (string, bool) {
 	return requestDateHeader, requestDateHeader != ""
 }
 
-func setSignedRequestFields(request *http.Request, logAttrs []slog.Attr) {
+func setSignedRequestFields(request *http.Request, logAttrs *[]slog.Attr) {
 	// Log the token ID and request date if the request contains either header
 	if requestDateHeader, hasHeader := getSignedRequestDate(request); hasHeader {
-		logAttrs = append(logAttrs, slog.String("signed_request_date", requestDateHeader))
+		*logAttrs = append(*logAttrs, slog.String("signed_request_date", requestDateHeader))
 	}
 
 	if authScheme, schemeParameter, err := parseAuthorizationHeader(request); err == nil {
 		switch authScheme {
 		case api.AuthorizationSchemeBHESignature:
 			if _, err := uuid.FromString(schemeParameter); err == nil {
-				logAttrs = append(logAttrs, slog.String("token_id", schemeParameter))
+				*logAttrs = append(*logAttrs, slog.String("token_id", schemeParameter))
 			}
 		}
 	}
@@ -158,7 +158,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 			next.ServeHTTP(loggedResponse, request)
 
 			// Log the token ID and request date if the request contains either header
-			setSignedRequestFields(request, logAttrs)
+			setSignedRequestFields(request, &logAttrs)
 
 			// Add the fields that we care about before exiting
 			logAttrs = append(logAttrs,

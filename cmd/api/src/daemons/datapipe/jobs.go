@@ -248,7 +248,7 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 		}
 
 		if s.cfg.DisableIngest {
-			slog.WarnContext(ctx, fmt.Sprintf("Skipped processing of ingestTasks due to config flag."))
+			slog.WarnContext(ctx, "Skipped processing of ingestTasks due to config flag.")
 			return
 		}
 

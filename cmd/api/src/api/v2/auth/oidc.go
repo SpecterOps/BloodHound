@@ -228,7 +228,7 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		slog.ErrorContext(request.Context(), fmt.Sprintf("[OIDC] %v", err))
 		v2.RedirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 	} else if email, err := getEmailFromOIDCClaims(claims); errors.Is(err, ErrEmailMissing) { // Note email claims are not always present so we will check different claim keys for possible email
-		slog.ErrorContext(request.Context(), fmt.Sprintf("[OIDC] Claims did not contain any valid email address"))
+		slog.ErrorContext(request.Context(), "[OIDC] Claims did not contain any valid email address")
 		v2.RedirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {

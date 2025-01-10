@@ -18,6 +18,7 @@ package database_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -40,7 +41,7 @@ func TestGormLogAdapter_Info(t *testing.T) {
 	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{ReplaceAttr: handlers.ReplaceMessageKey})))
 
 	expected := fmt.Sprintf(`message="message %d %s %f"`, 1, "arg", 2.0)
-	gormLogAdapter.Info(nil, "message %d %s %f", 1, "arg", 2.0)
+	gormLogAdapter.Info(context.TODO(), "message %d %s %f", 1, "arg", 2.0)
 	if !strings.Contains(buf.String(), expected) {
 		t.Errorf("gormLogAdapter output does not contain expected\nOutput:%sExpected:%s", buf.String(), expected)
 	}

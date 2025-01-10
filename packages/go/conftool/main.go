@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
 	"log/slog"
 	"os"
 	"time"
@@ -46,7 +45,7 @@ func main() {
 		defer configfile.Close()
 
 		if !skipArgon2 {
-			log.Printf(fmt.Sprintf("Tuning Argon2 parameters to target %d milliseconds. This might take some time.", tuneMillis))
+			slog.Info(fmt.Sprintf("Tuning Argon2 parameters to target %d milliseconds. This might take some time.", tuneMillis))
 		}
 
 		if argon2Config, err := config.GenerateArgonSettings(time.Duration(tuneMillis), skipArgon2); err != nil {
@@ -59,7 +58,7 @@ func main() {
 			slog.Error(fmt.Sprintf("Could not write to config file %s: %v", path, err))
 			os.Exit(1)
 		} else {
-			log.Printf(fmt.Sprintf("Successfully wrote to config file to %s", path))
+			slog.Info(fmt.Sprintf("Successfully wrote to config file to %s", path))
 		}
 	}
 }

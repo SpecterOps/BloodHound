@@ -483,7 +483,7 @@ func FetchLocalGroupBitmapForComputer(tx graph.Transaction, computer graph.ID, s
 }
 
 func ExpandAllRDPLocalGroups(ctx context.Context, db graph.Database) (impact.PathAggregator, error) {
-	slog.InfoContext(ctx, fmt.Sprintf("Expanding all AD group and local group memberships"))
+	slog.InfoContext(ctx, "Expanding all AD group and local group memberships")
 
 	return ResolveAllGroupMemberships(ctx, db, query.Not(
 		query.Or(

@@ -170,10 +170,10 @@ func GetPasswordExpiration(ctx context.Context, service ParameterService) time.D
 	var expiration PasswordExpiration
 
 	if cfg, err := service.GetConfigurationParameter(ctx, PasswordExpirationWindow); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Failed to fetch password expiratio configuration; returning default values"))
+		slog.WarnContext(ctx, "Failed to fetch password expiratio configuration; returning default values")
 		return DefaultPasswordExpirationWindow
 	} else if err := cfg.Map(&expiration); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Invalid password expiration configuration supplied; returning default values"))
+		slog.WarnContext(ctx, "Invalid password expiration configuration supplied; returning default values")
 		return DefaultPasswordExpirationWindow
 	}
 
@@ -194,9 +194,9 @@ func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jPara
 	}
 
 	if neo4jParametersCfg, err := service.GetConfigurationParameter(ctx, Neo4jConfigs); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Failed to fetch neo4j configuration; returning default values"))
+		slog.WarnContext(ctx, "Failed to fetch neo4j configuration; returning default values")
 	} else if err = neo4jParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Invalid neo4j configuration supplied; returning default values"))
+		slog.WarnContext(ctx, "Invalid neo4j configuration supplied; returning default values")
 	}
 
 	return result
@@ -212,7 +212,7 @@ func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 	var result CitrixRDPSupport
 
 	if cfg, err := service.GetConfigurationParameter(ctx, CitrixRDPSupportKey); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Failed to fetch CitrixRDPSupport configuration; returning default values"))
+		slog.WarnContext(ctx, "Failed to fetch CitrixRDPSupport configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, fmt.Sprintf("Invalid CitrixRDPSupport configuration supplied, %v. returning default values.", err))
 	}
@@ -260,7 +260,7 @@ func GetPruneTTLParameters(ctx context.Context, service ParameterService) PruneT
 	}
 
 	if pruneTTLParametersCfg, err := service.GetConfigurationParameter(ctx, PruneTTL); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Failed to fetch prune TTL configuration; returning default values"))
+		slog.WarnContext(ctx, "Failed to fetch prune TTL configuration; returning default values")
 	} else if err = pruneTTLParametersCfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, fmt.Sprintf("Invalid prune TTL configuration supplied; returning default values %+v", err))
 	}
@@ -278,7 +278,7 @@ func GetReconciliationParameter(ctx context.Context, service ParameterService) b
 	result := ReconciliationParameter{Enabled: true}
 
 	if cfg, err := service.GetConfigurationParameter(ctx, ReconciliationKey); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Failed to fetch reconciliation configuration; returning default values"))
+		slog.WarnContext(ctx, "Failed to fetch reconciliation configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, fmt.Sprintf("Invalid reconciliation configuration supplied, %v. returning default values.", err))
 	}

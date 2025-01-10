@@ -163,7 +163,7 @@ func parseUserIP(r *http.Request) string {
 	}
 
 	if result := r.Header.Get("X-Forwarded-For"); result == "" {
-		slog.DebugContext(r.Context(), fmt.Sprintf("No data found in X-Forwarded-For header"))
+		slog.DebugContext(r.Context(), "No data found in X-Forwarded-For header")
 		return remoteIp
 	} else {
 		result += "," + remoteIp

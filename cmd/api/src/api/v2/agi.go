@@ -278,7 +278,7 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 				// When T0 asset group selectors are modified, entire analysis must be re-run
 				var userId string
 				if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-					slog.WarnContext(request.Context(), fmt.Sprintf("encountered request analysis for unknown user, this shouldn't happen"))
+					slog.WarnContext(request.Context(), "encountered request analysis for unknown user, this shouldn't happen")
 					userId = "unknown-user-update-asset-group-selectors"
 				} else {
 					userId = user.ID.String()

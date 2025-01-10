@@ -83,7 +83,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	} else if err := connections.Graph.SetDefaultGraph(ctx, schema.DefaultGraph()); err != nil {
 		return nil, fmt.Errorf("no default graph found but migrations are disabled per configuration: %w", err)
 	} else {
-		slog.InfoContext(ctx, fmt.Sprintf("Database migrations are disabled per configuration"))
+		slog.InfoContext(ctx, "Database migrations are disabled per configuration")
 	}
 
 	if apiCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {

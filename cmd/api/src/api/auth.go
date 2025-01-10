@@ -475,7 +475,7 @@ func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString strin
 
 		return auth.Context{}, err
 	} else if !token.Valid {
-		slog.InfoContext(ctx, fmt.Sprintf("Token invalid"))
+		slog.InfoContext(ctx, "Token invalid")
 		return auth.Context{}, ErrInvalidAuth
 	} else if sessionID, err := claims.SessionID(); err != nil {
 		slog.InfoContext(ctx, fmt.Sprintf("Session ID %s invalid: %v", claims.Id, err))

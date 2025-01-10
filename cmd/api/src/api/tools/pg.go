@@ -291,7 +291,7 @@ func (s *PGMigrator) startMigration() error {
 		go func(ctx context.Context) {
 			defer migrationCancelFunc()
 
-			slog.InfoContext(ctx, fmt.Sprintf("Starting live migration from Neo4j to PostgreSQL"))
+			slog.InfoContext(ctx, "Starting live migration from Neo4j to PostgreSQL")
 
 			if err := pgDB.AssertSchema(ctx, s.graphSchema); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Unable to assert graph schema in PostgreSQL: %v", err))
@@ -302,7 +302,7 @@ func (s *PGMigrator) startMigration() error {
 			} else if err := migrateEdges(ctx, neo4jDB, pgDB, nodeIDMappings); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed importing edges into PostgreSQL: %v", err))
 			} else {
-				slog.InfoContext(ctx, fmt.Sprintf("Migration to PostgreSQL completed successfully"))
+				slog.InfoContext(ctx, "Migration to PostgreSQL completed successfully")
 			}
 
 			if err := s.advanceState(stateIdle, stateMigrating, stateCanceling); err != nil {

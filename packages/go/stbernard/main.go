@@ -48,7 +48,7 @@ func main() {
 	}
 
 	if cmd, err := command.ParseCLI(env); errors.Is(err, command.ErrNoCmd) {
-		slog.Error(fmt.Sprintf("No valid command specified"))
+		slog.Error("No valid command specified")
 		os.Exit(1)
 	} else if errors.Is(err, command.ErrHelpRequested) {
 		// No need to exit 1 if help was requested

@@ -64,7 +64,7 @@ func (s Resources) ToggleFlag(response http.ResponseWriter, request *http.Reques
 			if featureFlag.Key == appcfg.FeatureAdcs && !featureFlag.Enabled {
 				var userId string
 				if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-					slog.WarnContext(request.Context(), fmt.Sprintf("encountered request analysis for unknown user, this shouldn't happen"))
+					slog.WarnContext(request.Context(), "encountered request analysis for unknown user, this shouldn't happen")
 					userId = "unknown-user-toggle-flag"
 				} else {
 					userId = user.ID.String()

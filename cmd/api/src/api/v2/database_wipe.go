@@ -140,7 +140,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	if kickoffAnalysis {
 		var userId string
 		if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-			slog.WarnContext(request.Context(), fmt.Sprintf("encountered request analysis for unknown user, this shouldn't happen"))
+			slog.WarnContext(request.Context(), "encountered request analysis for unknown user, this shouldn't happen")
 			userId = "unknown-user-database-wipe"
 		} else {
 			userId = user.ID.String()

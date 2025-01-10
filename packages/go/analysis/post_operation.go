@@ -136,7 +136,7 @@ func (s *AtomicPostProcessingStats) LogStats() {
 		return
 	}
 
-	slog.Debug(fmt.Sprintf("Relationships deleted before post-processing:"))
+	slog.Debug("Relationships deleted before post-processing:")
 
 	for _, relationship := range atomicStatsSortedKeys(s.RelationshipsDeleted) {
 		if numDeleted := int(*s.RelationshipsDeleted[relationship]); numDeleted > 0 {
@@ -144,7 +144,7 @@ func (s *AtomicPostProcessingStats) LogStats() {
 		}
 	}
 
-	slog.Debug(fmt.Sprintf("Relationships created after post-processing:"))
+	slog.Debug("Relationships created after post-processing:")
 
 	for _, relationship := range atomicStatsSortedKeys(s.RelationshipsCreated) {
 		if numCreated := int(*s.RelationshipsCreated[relationship]); numCreated > 0 {
