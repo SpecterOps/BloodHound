@@ -19,6 +19,7 @@ go 1.23
 use (
 	./cmd/api/src
 	./packages/go/analysis
+	./packages/go/bhlog
 	./packages/go/bomenc
 	./packages/go/cache
 	./packages/go/conftool
@@ -29,7 +30,6 @@ use (
 	./packages/go/graphschema
 	./packages/go/headers
 	./packages/go/lab
-	./packages/go/log
 	./packages/go/mediatypes
 	./packages/go/openapi
 	./packages/go/params

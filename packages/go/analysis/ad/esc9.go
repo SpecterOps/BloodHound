@@ -18,6 +18,8 @@ package ad
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -29,7 +31,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/log"
 )
 
 func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
@@ -44,21 +45,21 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	} else {
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC9(template, false); err != nil {
-				log.Warnf("Error validating cert template %d: %v", template.ID, err)
+				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", template.ID, err))
 				continue
 			} else if !valid {
 				continue
 			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
-				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
+				slog.DebugContext(ctx, fmt.Sprintf("Failed to retrieve enrollers for cert template %d from cache", template.ID))
 				continue
 			} else {
 				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(eca.ID))
 
 				if filteredVictims, err := filterUserDNSResults(tx, victimBitmap, template); err != nil {
-					log.Warnf("Error filtering users from victims for esc9a: %v", err)
+					slog.WarnContext(ctx, fmt.Sprintf("Error filtering users from victims for esc9a: %v", err))
 					continue
 				} else if attackers, err := FetchAttackersForEscalations9and10(tx, filteredVictims, false); err != nil {
-					log.Warnf("Error getting start nodes for esc9a attacker nodes: %v", err)
+					slog.WarnContext(ctx, fmt.Sprintf("Error getting start nodes for esc9a attacker nodes: %v", err))
 					continue
 				} else {
 					results.Or(graph.NodeIDsToDuplex(attackers))
@@ -90,18 +91,18 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 	} else {
 		for _, template := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC9(template, true); err != nil {
-				log.Warnf("Error validating cert template %d: %v", template.ID, err)
+				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", template.ID, err))
 				continue
 			} else if !valid {
 				continue
 			} else if certTemplateEnrollers := cache.GetCertTemplateEnrollers(template.ID); len(certTemplateEnrollers) == 0 {
-				log.Debugf("Failed to retrieve enrollers for cert template %d from cache", template.ID)
+				slog.DebugContext(ctx, fmt.Sprintf("Failed to retrieve enrollers for cert template %d from cache", template.ID))
 				continue
 			} else {
 				victimBitmap := getVictimBitmap(groupExpansions, certTemplateEnrollers, ecaEnrollers, cache.GetCertTemplateHasSpecialEnrollers(template.ID), cache.GetEnterpriseCAHasSpecialEnrollers(eca.ID))
 
 				if attackers, err := FetchAttackersForEscalations9and10(tx, victimBitmap, true); err != nil {
-					log.Warnf("Error getting start nodes for esc9a attacker nodes: %v", err)
+					slog.WarnContext(ctx, fmt.Sprintf("Error getting start nodes for esc9a attacker nodes: %v", err))
 					continue
 				} else {
 					results.Or(graph.NodeIDsToDuplex(attackers))

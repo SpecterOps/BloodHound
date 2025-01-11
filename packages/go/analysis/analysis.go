@@ -19,15 +19,16 @@ package analysis
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"slices"
 
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/slicesext"
 )
 
@@ -89,7 +90,7 @@ func GetNodeKind(node *graph.Node) graph.Kind {
 }
 
 func ClearSystemTags(ctx context.Context, db graph.Database) error {
-	defer log.Measure(log.LevelInfo, "ClearSystemTagsIncludeMeta")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "ClearSystemTagsIncludeMeta")()
 
 	var (
 		props = graph.NewProperties()

@@ -20,10 +20,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/slicesext"
@@ -164,7 +164,7 @@ func relWorkspaceToAbsWorkspace(cwd string, relWorkspace Workspace) Workspace {
 func getCoverage(coverFile string) (coverage, error) {
 	var cov coverage
 	if b, err := os.ReadFile(coverFile); err != nil {
-		log.Warnf("Could not find coverage for %s, skipping", coverFile)
+		slog.Warn(fmt.Sprintf("Could not find coverage for %s, skipping", coverFile))
 		return cov, nil
 	} else if err := json.Unmarshal(b, &cov); err != nil {
 		return cov, fmt.Errorf("unmarshal coverage file %s: %w", coverFile, err)
