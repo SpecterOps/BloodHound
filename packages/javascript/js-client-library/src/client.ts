@@ -296,7 +296,7 @@ class BHEAPIClient {
         end?: Date,
         options?: types.RequestOptions
     ) => {
-        return this.baseClient.get<PostureHistoryResponse>(`/api/v2/attack-paths/posture-history/${dataType}`, {
+        return this.baseClient.get<PostureHistoryResponse>(`/api/v2/posture-history/${dataType}`, {
             params: { environments, start: start?.toISOString(), end: end?.toISOString() },
             paramsSerializer: { indexes: null },
             ...options,
