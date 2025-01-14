@@ -17,19 +17,25 @@
 package bhlog
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
-	"runtime"
 	"strings"
+	"time"
 
-	"github.com/specterops/bloodhound/bhlog/handlers"
 	"github.com/specterops/bloodhound/bhlog/level"
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/src/auth"
+	bhctx "github.com/specterops/bloodhound/src/ctx"
 )
 
-func BaseHandler(pipe io.Writer, options *slog.HandlerOptions) slog.Handler {
+const (
+	bhlogMessageKey = "message"
+)
+
+func JsonHandler(pipe io.Writer, options *slog.HandlerOptions) slog.Handler {
 	return slog.NewJSONHandler(pipe, options)
 }
 
@@ -37,55 +43,87 @@ func TextHandler(pipe io.Writer, options *slog.HandlerOptions) slog.Handler {
 	return slog.NewTextHandler(pipe, options)
 }
 
-func ConfigureDefault(text bool) {
+func ConfigureDefaultText() {
 	var (
-		handler        slog.Handler
-		pipe           = os.Stderr
-		handlerOptions = &slog.HandlerOptions{Level: level.GetLevelVar(), ReplaceAttr: handlers.ReplaceMessageKey}
+		handler = TextHandler(os.Stdout, &slog.HandlerOptions{
+			Level:       level.GetLevelVar(),
+			ReplaceAttr: textReplaceAttr,
+		})
+
+		logger = slog.New(&contextHandler{
+			IDResolver: auth.NewIdentityResolver(),
+			Handler:    handler,
+		})
 	)
-
-	if text {
-		handler = TextHandler(pipe, handlerOptions)
-	} else {
-		handler = BaseHandler(pipe, handlerOptions)
-	}
-
-	logger := slog.New(&handlers.ContextHandler{
-		IDResolver: auth.NewIdentityResolver(),
-		Handler:    handler,
-	})
 
 	slog.SetDefault(logger)
 }
 
-type stackFrame struct {
-	File string `json:"file"`
-	Line int    `json:"line"`
-	Func string `json:"func"`
+func ConfigureDefaultJSON() {
+	var (
+		handler = JsonHandler(os.Stdout, &slog.HandlerOptions{
+			Level:       level.GetLevelVar(),
+			ReplaceAttr: jsonReplaceAttr,
+		})
+
+		logger = slog.New(&contextHandler{
+			IDResolver: auth.NewIdentityResolver(),
+			Handler:    handler,
+		})
+	)
+
+	slog.SetDefault(logger)
 }
 
-func GetCallStack() slog.Attr {
-	var outputFrames []stackFrame
+type contextHandler struct {
+	IDResolver auth.IdentityResolver
 
-	pc := make([]uintptr, 25) // Arbitrarily only go to a call depth of 25
-	n := runtime.Callers(1, pc)
-	if n == 0 {
-		return slog.Attr{}
-	}
-	pc = pc[:n]
-	frames := runtime.CallersFrames(pc)
+	slog.Handler
+}
 
-	for {
-		frame, more := frames.Next()
+func (s contextHandler) handle(ctx context.Context, record slog.Record) error {
+	if bhCtx, ok := ctx.Value(bhctx.ValueKey).(*bhctx.Context); ok {
+		if bhCtx.RequestID != "" {
+			record.Add(slog.String("request_id", bhCtx.RequestID))
+		}
 
-		outputFrames = append(outputFrames, stackFrame{File: frame.File, Line: frame.Line, Func: frame.Function})
+		if bhCtx.RequestIP != "" {
+			record.Add(slog.String("request_ip", bhCtx.RequestIP))
+		}
 
-		if !more {
-			break
+		if bhCtx.RemoteAddr != "" {
+			record.Add(slog.String("remote_addr", bhCtx.RemoteAddr))
+		}
+
+		if bhCtx.AuthCtx.Authenticated() {
+			if identity, err := s.IDResolver.GetIdentity(bhCtx.AuthCtx); err == nil {
+				record.Add(slog.String(identity.Key, identity.ID.String()))
+			}
 		}
 	}
 
-	return slog.Any("stack", outputFrames)
+	return s.Handler.Handle(ctx, record)
+}
+
+func textReplaceAttr(_ []string, attr slog.Attr) slog.Attr {
+	if attr.Key == slog.MessageKey {
+		attr.Key = bhlogMessageKey
+	}
+
+	return attr
+}
+
+func jsonReplaceAttr(_ []string, attr slog.Attr) slog.Attr {
+	if attr.Key == slog.MessageKey {
+		attr.Key = bhlogMessageKey
+	}
+
+	if attr.Key == measure.FieldElapsed && attr.Value.Kind() == slog.KindDuration {
+		durationMilli := float64(attr.Value.Duration()) / float64(time.Millisecond)
+		attr.Value = slog.Float64Value(durationMilli)
+	}
+
+	return attr
 }
 
 var (

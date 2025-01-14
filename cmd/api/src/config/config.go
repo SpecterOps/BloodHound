@@ -34,7 +34,6 @@ import (
 
 const (
 	CurrentConfigurationVersion = 2
-	DefaultLogFilePath          = "/var/log/bhapi.log"
 
 	BHAPIEnvironmentVariablePrefix       = "bhe"
 	environmentVariablePathSeparator     = "_"
