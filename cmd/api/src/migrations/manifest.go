@@ -49,7 +49,7 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 
 // Version_620_Migration is intended to rename the RemoteInteractiveLogonPrivilege edge to RemoteInteractiveLogonRight
 // See: https://specterops.atlassian.net/browse/BED-4428
-func Version_620_Migration(db graph.Database) error {
+func Version_620_Migration(ctx context.Context, db graph.Database) error {
 	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to rename RemoteInteractiveLogonPrivilege edges")()
 
 	// MATCH p=(n:Base)-[:RemoteInteractiveLogonPrivilege]->(m:Base) RETURN p
@@ -63,7 +63,7 @@ func Version_620_Migration(db graph.Database) error {
 	edgeProperties.Set(common.LastSeen.String(), time.Now().UTC())
 
 	//Get all RemoteInteractiveLogonPrivilege edges, use the start/end ids to insert new edges, and delete the old ones
-	return db.BatchOperation(context.Background(), func(batch graph.Batch) error {
+	return db.BatchOperation(ctx, func(batch graph.Batch) error {
 		rels, err := ops.FetchRelationships(batch.Relationships().Filter(targetCriteria))
 		if err != nil {
 			return err
@@ -90,7 +90,7 @@ func Version_620_Migration(db graph.Database) error {
 //
 // node.Kinds = Kinds{ad.Entity, ad.User, ad.Computer} must be reset to:
 // node.Kinds = Kinds{ad.Entity}
-func Version_513_Migration(db graph.Database) error {
+func Version_513_Migration(ctx context.Context, db graph.Database) error {
 	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove incorrectly ingested labels")()
 
 	// Cypher for the below filter is: size(labels(n)) > 2 and not (n:Group and n:ADLocalGroup) or size(labels(n)) > 3 and (n:Group and n:ADLocalGroup)
@@ -105,9 +105,9 @@ func Version_513_Migration(db graph.Database) error {
 		),
 	)
 
-	if nodes, err := ops.ParallelFetchNodes(context.Background(), db, targetCriteria, analysis.MaximumDatabaseParallelWorkers); err != nil {
+	if nodes, err := ops.ParallelFetchNodes(ctx, db, targetCriteria, analysis.MaximumDatabaseParallelWorkers); err != nil {
 		return err
-	} else if err := db.BatchOperation(context.Background(), func(batch graph.Batch) error {
+	} else if err := db.BatchOperation(ctx, func(batch graph.Batch) error {
 		for _, node := range nodes {
 			if node.Kinds.ContainsOneOf(ad.Entity) {
 				// Nodes are designed to track additions and deletions. By making this assignment, the update logic
@@ -147,10 +147,10 @@ func Version_513_Migration(db graph.Database) error {
 	return nil
 }
 
-func Version_508_Migration(db graph.Database) error {
+func Version_508_Migration(ctx context.Context, db graph.Database) error {
 	defer measure.Measure(slog.LevelInfo, "Migrating Azure Owns to Owner")()
 
-	return db.BatchOperation(context.Background(), func(batch graph.Batch) error {
+	return db.BatchOperation(ctx, func(batch graph.Batch) error {
 		return batch.Relationships().Filterf(func() graph.Criteria {
 			return query.And(
 				query.Kind(query.Start(), azure.Entity),
@@ -180,10 +180,10 @@ func Version_508_Migration(db graph.Database) error {
 	})
 }
 
-func Version_277_Migration(db graph.Database) error {
+func Version_277_Migration(ctx context.Context, db graph.Database) error {
 	defer measure.Measure(slog.LevelInfo, "Migrating node property casing")()
 
-	return db.BatchOperation(context.Background(), func(batch graph.Batch) error {
+	return db.BatchOperation(ctx, func(batch graph.Batch) error {
 		if err := batch.Nodes().Filterf(func() graph.Criteria {
 			return query.KindIn(query.Node(), ad.Entity, azure.Entity)
 		}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
@@ -256,10 +256,10 @@ func Version_277_Migration(db graph.Database) error {
 var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 2, Minor: 3, Patch: 0},
-		Execute: func(db graph.Database) error {
+		Execute: func(ctx context.Context, db graph.Database) error {
 			defer measure.Measure(slog.LevelInfo, "Deleting all existing role nodes")()
 
-			return db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
+			return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 				return tx.Nodes().Filterf(func() graph.Criteria {
 					return query.Kind(query.Node(), azure.Role)
 				}).Delete()
@@ -268,10 +268,22 @@ var Manifest = []Migration{
 	},
 	{
 		Version: version.Version{Major: 2, Minor: 6, Patch: 3},
-		Execute: func(db graph.Database) error {
+		Execute: func(ctx context.Context, db graph.Database) error {
 			defer measure.Measure(slog.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
 
-			return db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
+			// This kind has long since gone missing from our schemas but the assert below reintroduces it for the
+			// purposes of running this migration
+			rilpKind := graph.StringKind("RemoteInteractiveLogonPrivilege")
+
+			if err := db.AssertSchema(ctx, graph.Schema{
+				Graphs: []graph.Graph{{
+					Edges: graph.Kinds{rilpKind},
+				}},
+			}); err != nil {
+				return err
+			}
+
+			return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 				//Remove ADLocalGroup label from all nodes that also have the group label
 				if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 					return query.And(
@@ -293,7 +305,7 @@ var Manifest = []Migration{
 				if err := tx.Relationships().Filterf(func() graph.Criteria {
 					return query.And(
 						query.Or(
-							query.Kind(query.Relationship(), graph.StringKind("RemoteInteractiveLogonPrivilege")),
+							query.Kind(query.Relationship(), rilpKind),
 							query.Kind(query.Relationship(), ad.LocalToComputer),
 							query.Kind(query.Relationship(), ad.MemberOfLocalGroup),
 						),
