@@ -6425,6 +6425,48 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer7, s.CertTemplate7, ad.GenericAll)
 }
 
+// Use this to set our custom test property in the migration harness
+type Property string
+
+func (s Property) String() string {
+	return string(s)
+}
+
+type DBMigrateHarness struct {
+	Group1      *graph.Node
+	Computer1   *graph.Node
+	User1       *graph.Node
+	GenericAll1 *graph.Relationship
+	HasSession1 *graph.Relationship
+	MemberOf1   *graph.Relationship
+	TestID      Property
+}
+
+func (s *DBMigrateHarness) Setup(graphTestContext *GraphTestContext) {
+	sid := RandomDomainSID()
+	s.TestID = "testing_id"
+
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", sid)
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", sid)
+	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", sid, false)
+	s.Group1.Properties.Set(s.TestID.String(), RandomObjectID(graphTestContext.testCtx))
+	s.Computer1.Properties.Set(s.TestID.String(), RandomObjectID(graphTestContext.testCtx))
+	s.User1.Properties.Set(s.TestID.String(), RandomObjectID(graphTestContext.testCtx))
+	graphTestContext.UpdateNode(s.Group1)
+	graphTestContext.UpdateNode(s.Computer1)
+	graphTestContext.UpdateNode(s.User1)
+
+	s.GenericAll1 = graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll, graph.AsProperties(graph.PropertyMap{
+		s.TestID: RandomObjectID(graphTestContext.testCtx),
+	}))
+	s.HasSession1 = graphTestContext.NewRelationship(s.Computer1, s.User1, ad.HasSession, graph.AsProperties(graph.PropertyMap{
+		s.TestID: RandomObjectID(graphTestContext.testCtx),
+	}))
+	s.MemberOf1 = graphTestContext.NewRelationship(s.User1, s.Group1, ad.MemberOf, graph.AsProperties(graph.PropertyMap{
+		s.TestID: RandomObjectID(graphTestContext.testCtx),
+	}))
+}
+
 type ESC13Harness1 struct {
 	CertTemplate1  *graph.Node
 	CertTemplate2  *graph.Node
@@ -8585,6 +8627,7 @@ type HarnessDetails struct {
 	ESC4Template3                                   ESC4Template3
 	ESC4Template4                                   ESC4Template4
 	ESC4ECA                                         ESC4ECA
+	DBMigrateHarness                                DBMigrateHarness
 	ESC13Harness1                                   ESC13Harness1
 	ESC13Harness2                                   ESC13Harness2
 	ESC13HarnessECA                                 ESC13HarnessECA

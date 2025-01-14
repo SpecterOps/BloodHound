@@ -20,18 +20,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/analysis"
-
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/version"
 )
 
@@ -50,7 +50,7 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 // Version_620_Migration is intended to rename the RemoteInteractiveLogonPrivilege edge to RemoteInteractiveLogonRight
 // See: https://specterops.atlassian.net/browse/BED-4428
 func Version_620_Migration(db graph.Database) error {
-	defer log.LogAndMeasure(log.LevelInfo, "Migration to rename RemoteInteractiveLogonPrivilege edges")()
+	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to rename RemoteInteractiveLogonPrivilege edges")()
 
 	// MATCH p=(n:Base)-[:RemoteInteractiveLogonPrivilege]->(m:Base) RETURN p
 	targetCriteria := query.And(
@@ -91,7 +91,7 @@ func Version_620_Migration(db graph.Database) error {
 // node.Kinds = Kinds{ad.Entity, ad.User, ad.Computer} must be reset to:
 // node.Kinds = Kinds{ad.Entity}
 func Version_513_Migration(db graph.Database) error {
-	defer log.LogAndMeasure(log.LevelInfo, "Migration to remove incorrectly ingested labels")()
+	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove incorrectly ingested labels")()
 
 	// Cypher for the below filter is: size(labels(n)) > 2 and not (n:Group and n:ADLocalGroup) or size(labels(n)) > 3 and (n:Group and n:ADLocalGroup)
 	targetCriteria := query.Or(
@@ -138,7 +138,7 @@ func Version_513_Migration(db graph.Database) error {
 			}
 		}
 
-		log.Infof("Migration removed all non-entity kinds from %d incorrectly labeled nodes", nodes.Len())
+		slog.Info(fmt.Sprintf("Migration removed all non-entity kinds from %d incorrectly labeled nodes", nodes.Len()))
 		return nil
 	}); err != nil {
 		return err
@@ -148,7 +148,7 @@ func Version_513_Migration(db graph.Database) error {
 }
 
 func Version_508_Migration(db graph.Database) error {
-	defer log.Measure(log.LevelInfo, "Migrating Azure Owns to Owner")()
+	defer measure.Measure(slog.LevelInfo, "Migrating Azure Owns to Owner")()
 
 	return db.BatchOperation(context.Background(), func(batch graph.Batch) error {
 		return batch.Relationships().Filterf(func() graph.Criteria {
@@ -181,7 +181,7 @@ func Version_508_Migration(db graph.Database) error {
 }
 
 func Version_277_Migration(db graph.Database) error {
-	defer log.Measure(log.LevelInfo, "Migrating node property casing")()
+	defer measure.Measure(slog.LevelInfo, "Migrating node property casing")()
 
 	return db.BatchOperation(context.Background(), func(batch graph.Batch) error {
 		if err := batch.Nodes().Filterf(func() graph.Criteria {
@@ -193,7 +193,7 @@ func Version_277_Migration(db graph.Database) error {
 				var dirty = false
 
 				if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-					log.Errorf("Error getting objectid for node %d: %v", node.ID, err)
+					slog.Error(fmt.Sprintf("Error getting objectid for node %d: %v", node.ID, err))
 					continue
 				} else if objectId != strings.ToUpper(objectId) {
 					dirty = true
@@ -224,7 +224,7 @@ func Version_277_Migration(db graph.Database) error {
 					} else if node.Kinds.ContainsOneOf(azure.Entity) {
 						identityKind = azure.Entity
 					} else {
-						log.Errorf("Unable to figure out base kind of node %d", node.ID)
+						slog.Error(fmt.Sprintf("Unable to figure out base kind of node %d", node.ID))
 					}
 
 					if identityKind != nil {
@@ -233,17 +233,17 @@ func Version_277_Migration(db graph.Database) error {
 							IdentityKind:       identityKind,
 							IdentityProperties: []string{common.ObjectID.String()},
 						}); err != nil {
-							log.Errorf("Error updating node %d: %v", node.ID, err)
+							slog.Error(fmt.Sprintf("Error updating node %d: %v", node.ID, err))
 						}
 					}
 				}
 
 				if count++; count%10000 == 0 {
-					log.Infof("Completed %d nodes in migration", count)
+					slog.Info(fmt.Sprintf("Completed %d nodes in migration", count))
 				}
 			}
 
-			log.Infof("Completed %d nodes in migration", count)
+			slog.Info(fmt.Sprintf("Completed %d nodes in migration", count))
 			return cursor.Error()
 		}); err != nil {
 			return err
@@ -257,7 +257,7 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 2, Minor: 3, Patch: 0},
 		Execute: func(db graph.Database) error {
-			defer log.Measure(log.LevelInfo, "Deleting all existing role nodes")()
+			defer measure.Measure(slog.LevelInfo, "Deleting all existing role nodes")()
 
 			return db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
 				return tx.Nodes().Filterf(func() graph.Criteria {
@@ -269,7 +269,7 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 2, Minor: 6, Patch: 3},
 		Execute: func(db graph.Database) error {
-			defer log.Measure(log.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
+			defer measure.Measure(slog.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
 
 			return db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
 				//Remove ADLocalGroup label from all nodes that also have the group label
