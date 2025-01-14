@@ -121,6 +121,7 @@ import ADCSESC9b from './ADCSESC9b/ADCSESC9b';
 import ADCSESC10a from './ADCSESC10a/ADCSESC10a';
 import ADCSESC10b from './ADCSESC10b/ADCSESC10b';
 import ADCSESC13 from './ADCSESC13/ADCSESC13';
+import CoerceAndRelayNTLMToSMB from './CoerceAndRelayNTLMToSMB/CoerceAndRelayNTLMToSMB';
 
 export type EdgeInfoProps = {
     edgeName?: string;
@@ -240,6 +241,7 @@ const EdgeInfoComponents = {
     ExtendedByPolicy: ExtendedByPolicy,
     SyncedToADUser: SyncedToADUser,
     SyncedToEntraUser: SyncedToEntraUser,
+    CoerceAndRelayNTLMToSMB: CoerceAndRelayNTLMToSMB,
 };
 
 export default EdgeInfoComponents;
