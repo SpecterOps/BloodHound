@@ -121,6 +121,7 @@ import WriteOwner from './WriteOwner/WriteOwner';
 import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
 import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WriteSPN from './WriteSPN/WriteSPN';
+import CoerceAndRelayNTLMToSMB from './CoerceAndRelayNTLMToSMB/CoerceAndRelayNTLMToSMB';
 
 export type EdgeInfoProps = {
     edgeName?: string;
@@ -240,6 +241,7 @@ const EdgeInfoComponents = {
     ExtendedByPolicy: ExtendedByPolicy,
     SyncedToADUser: SyncedToADUser,
     SyncedToEntraUser: SyncedToEntraUser,
+    CoerceAndRelayNTLMToSMB: CoerceAndRelayNTLMToSMB,
 };
 
 export default EdgeInfoComponents;

@@ -20,10 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/analysis/ad"
 	"github.com/specterops/bloodhound/src/analysis/azure"
 	"github.com/specterops/bloodhound/src/config"
@@ -103,7 +103,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 
 	if len(collectedErrors) > 0 {
 		for _, err := range collectedErrors {
-			log.Errorf("Analysis error encountered: %v", err)
+			slog.ErrorContext(ctx, fmt.Sprintf("Analysis error encountered: %v", err))
 		}
 	}
 

@@ -18,11 +18,12 @@ package azure
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 )
 
 func NewApplicationDetails(node *graph.Node) ApplicationDetails {
@@ -60,12 +61,12 @@ func getAppServicePrincipalID(tx graph.Transaction, node *graph.Node) (string, e
 		return "", err
 	} else if appServicePrincipals.Len() == 0 {
 		// Don't want this to break the function, but we'll want to know about it
-		log.Errorf("Application node %d has no service principals attached", node.ID)
+		slog.Error(fmt.Sprintf("Application node %d has no service principals attached", node.ID))
 	} else {
 		servicePrincipal := appServicePrincipals.Pick()
 
 		if servicePrincipalID, err = servicePrincipal.Properties.Get(common.ObjectID.String()).String(); err != nil {
-			log.Errorf("Failed to marshal the object ID of node %d while fetching the service principal ID of application node %d: %v", servicePrincipal.ID, node.ID, err)
+			slog.Error(fmt.Sprintf("Failed to marshal the object ID of node %d while fetching the service principal ID of application node %d: %v", servicePrincipal.ID, node.ID, err))
 		}
 	}
 	return servicePrincipalID, nil

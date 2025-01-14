@@ -19,9 +19,10 @@ package v2
 import (
 	"database/sql"
 	"errors"
+	"log/slog"
 	"net/http"
 
-	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -39,11 +40,11 @@ func (s Resources) GetAnalysisRequest(response http.ResponseWriter, request *htt
 }
 
 func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.Request) {
-	defer log.Measure(log.LevelDebug, "Requesting analysis")()
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Requesting analysis")()
 
 	var userId string
 	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-		log.Warnf("encountered request analysis for unknown user, this shouldn't happen")
+		slog.WarnContext(request.Context(), "encountered request analysis for unknown user, this shouldn't happen")
 		userId = "unknown-user"
 	} else {
 		userId = user.ID.String()
