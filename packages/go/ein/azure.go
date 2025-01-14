@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"regexp"
 	"slices"
 	"strings"
@@ -33,7 +34,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 )
 
 const (
@@ -453,11 +453,11 @@ func ConvertAzureGroupMembersToRels(data models.GroupMembers) []IngestibleRelati
 			member azure2.DirectoryObject
 		)
 		if err := json.Unmarshal(raw.Member, &member); err != nil {
-			log.Errorf(SerialError, "azure group member", err)
+			slog.Error(fmt.Sprintf(SerialError, "azure group member", err))
 		} else if memberType, err := ExtractTypeFromDirectoryObject(member); errors.Is(err, ErrInvalidType) {
-			log.Warnf(ExtractError, err)
+			slog.Warn(fmt.Sprintf(ExtractError, err))
 		} else if err != nil {
-			log.Errorf(ExtractError, err)
+			slog.Error(fmt.Sprintf(ExtractError, err))
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleSource{
@@ -487,11 +487,11 @@ func ConvertAzureGroupOwnerToRels(data models.GroupOwners) []IngestibleRelations
 			owner azure2.DirectoryObject
 		)
 		if err := json.Unmarshal(raw.Owner, &owner); err != nil {
-			log.Errorf(SerialError, "azure group owner", err)
+			slog.Error(fmt.Sprintf(SerialError, "azure group owner", err))
 		} else if ownerType, err := ExtractTypeFromDirectoryObject(owner); errors.Is(err, ErrInvalidType) {
-			log.Warnf(ExtractError, err)
+			slog.Warn(fmt.Sprintf(ExtractError, err))
 		} else if err != nil {
-			log.Errorf(ExtractError, err)
+			slog.Error(fmt.Sprintf(ExtractError, err))
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleSource{
@@ -865,7 +865,7 @@ func ConvertAzureRoleAssignmentToRels(roleAssignment azure2.UnifiedRoleAssignmen
 
 	if CanAddSecret(roleAssignment.RoleDefinitionId) && roleAssignment.DirectoryScopeId != "/" {
 		if relType, err := GetAddSecretRoleKind(roleAssignment.RoleDefinitionId); err != nil {
-			log.Errorf("Error processing role assignment for role %s: %v", roleObjectId, err)
+			slog.Error(fmt.Sprintf("Error processing role assignment for role %s: %v", roleObjectId, err))
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleSource{
@@ -1073,11 +1073,11 @@ func ConvertAzureServicePrincipalOwnerToRels(data models.ServicePrincipalOwners)
 		)
 
 		if err := json.Unmarshal(raw.Owner, &owner); err != nil {
-			log.Errorf(SerialError, "azure service principal owner", err)
+			slog.Error(fmt.Sprintf(SerialError, "azure service principal owner", err))
 		} else if ownerType, err := ExtractTypeFromDirectoryObject(owner); errors.Is(err, ErrInvalidType) {
-			log.Warnf(ExtractError, err)
+			slog.Warn(fmt.Sprintf(ExtractError, err))
 		} else if err != nil {
-			log.Errorf(ExtractError, err)
+			slog.Error(fmt.Sprintf(ExtractError, err))
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleSource{

@@ -32,8 +32,8 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/pquerna/otp/totp"
+	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
@@ -1226,7 +1226,7 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 		goodUserMap,
 	}
 
-	log.ConfigureDefaults()
+	bhlog.ConfigureDefault(true)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	payload, err := json.Marshal(input.Body)

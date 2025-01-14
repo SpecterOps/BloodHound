@@ -19,9 +19,12 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log/slog"
 	"time"
 
-	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/bhlog"
+	"github.com/specterops/bloodhound/bhlog/level"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -36,34 +39,30 @@ func (s *GormLogAdapter) LogMode(level logger.LogLevel) logger.Interface {
 	return s
 }
 
-func (s GormLogAdapter) Log(event log.Event, msg string, data ...any) {
-	event.Msgf(msg, data...)
-}
-
 func (s *GormLogAdapter) Info(ctx context.Context, msg string, data ...any) {
-	s.Log(log.Info(), msg, data...)
+	slog.InfoContext(ctx, fmt.Sprintf(msg, data...))
 }
 
 func (s *GormLogAdapter) Warn(ctx context.Context, msg string, data ...any) {
-	s.Log(log.Warn(), msg, data...)
+	slog.WarnContext(ctx, fmt.Sprintf(msg, data...))
 }
 
 func (s *GormLogAdapter) Error(ctx context.Context, msg string, data ...any) {
-	s.Log(log.Error(), msg, data...)
+	slog.ErrorContext(ctx, fmt.Sprintf(msg, data...))
 }
 
 func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
-	if log.GlobalLevel() > log.LevelDebug {
+	if !level.GlobalAccepts(slog.LevelDebug) {
 		return
 	}
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		sql, _ := fc()
 
-		if log.GlobalAccepts(log.LevelDebug) {
-			log.Error().Fault(err).Msgf("Database error for query: %s", sql)
+		if level.GlobalAccepts(slog.LevelDebug) {
+			slog.ErrorContext(ctx, "Database error", "query", sql, "error", err, bhlog.GetCallStack())
 		} else {
-			log.Error().Fault(err).Stack().Msgf("Database error for query: %s", sql)
+			slog.ErrorContext(ctx, "Database error", "query", sql, "error", err)
 		}
 	} else {
 		elapsed := time.Since(begin)
@@ -71,18 +70,18 @@ func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (
 		if elapsed >= s.SlowQueryErrorThreshold {
 			sql, rows := fc()
 
-			if log.GlobalAccepts(log.LevelDebug) {
-				log.Errorf("Slow database query took %d ms addressing %d rows: %s", elapsed.Milliseconds(), rows, sql)
+			if level.GlobalAccepts(slog.LevelDebug) {
+				slog.ErrorContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "nums_rows", rows, "sql", sql, bhlog.GetCallStack())
 			} else {
-				log.Error().Stack().Msgf("Slow database query took %d ms addressing %d rows.", elapsed.Milliseconds(), rows)
+				slog.ErrorContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "num_rows", rows)
 			}
 		} else if elapsed >= s.SlowQueryWarnThreshold {
 			sql, rows := fc()
 
-			if log.GlobalAccepts(log.LevelDebug) {
-				log.Warnf("Slow database query took %d ms addressing %d rows: %s", elapsed.Milliseconds(), rows, sql)
+			if level.GlobalAccepts(slog.LevelDebug) {
+				slog.WarnContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "nums_rows", rows, "sql", sql, bhlog.GetCallStack())
 			} else {
-				log.Warn().Stack().Msgf("Slow database query took %d ms addressing %d rows.", elapsed.Milliseconds(), rows)
+				slog.WarnContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "num_rows", rows)
 			}
 		}
 	}

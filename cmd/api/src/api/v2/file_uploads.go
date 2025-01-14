@@ -19,6 +19,7 @@ package v2
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"mime"
 	"net/http"
 	"slices"
@@ -26,8 +27,8 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -108,7 +109,7 @@ func (s Resources) ListFileUploadJobs(response http.ResponseWriter, request *htt
 }
 
 func (s Resources) StartFileUploadJob(response http.ResponseWriter, request *http.Request) {
-	defer log.Measure(log.LevelDebug, "Starting new file upload job")()
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Starting new file upload job")()
 	reqCtx := ctx.Get(request.Context())
 
 	if user, valid := auth.GetUserFromAuthCtx(reqCtx.AuthCtx); !valid {
@@ -150,7 +151,7 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 }
 
 func (s Resources) EndFileUploadJob(response http.ResponseWriter, request *http.Request) {
-	defer log.Measure(log.LevelDebug, "Finished file upload job")()
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Finished file upload job")()
 
 	fileUploadJobIdString := mux.Vars(request)[FileUploadJobIdPathParameterName]
 

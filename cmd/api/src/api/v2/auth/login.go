@@ -20,10 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
@@ -55,7 +55,7 @@ func (s LoginResource) loginSecret(loginRequest api.LoginRequest, response http.
 		} else if errors.Is(err, api.ErrUserDisabled) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, err.Error(), request), response)
 		} else {
-			log.Errorf("Error during authentication for request ID %s: %v", ctx.RequestID(request), err)
+			slog.ErrorContext(request.Context(), fmt.Sprintf("Error during authentication for request ID %s: %v", ctx.RequestID(request), err))
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}
 	} else {

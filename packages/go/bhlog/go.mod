@@ -14,17 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-module github.com/specterops/bloodhound/log
+module github.com/specterops/bloodhound/bhlog
 
 go 1.23
-
-require (
-	github.com/rs/zerolog v1.29.1
-	go.uber.org/mock v0.2.0
-)
-
-require (
-	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-)
