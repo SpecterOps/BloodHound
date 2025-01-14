@@ -28,7 +28,7 @@ export const NoDataDialog: React.FC<NoDataDialogProps> = ({ open, children }) =>
                 document.body.style.pointerEvents = '';
             }}>
             <DialogPortal>
-                <DialogContent className='outline-none focus:outline-none top-12'>
+                <DialogContent className='outline-none focus:outline-none'>
                     <DialogTitle>No Data Available</DialogTitle>
                     <DialogDescription>{children}</DialogDescription>
                 </DialogContent>
