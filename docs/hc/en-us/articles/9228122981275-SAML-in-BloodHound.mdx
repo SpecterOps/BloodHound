@@ -1,0 +1,106 @@
+---
+title: SAML in BloodHound
+description: "BloodHound supports SAML 2.0 for Single Sign On to authenticate users to your tenant environment."
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+This integration provides authentication only, user creation and role management will still occur from within BloodHound's "Manage Users" interface.
+
+You may configure multiple SAML providers within your tenant if necessary.
+
+This page provides the overall steps to configure a SAML provider within BloodHound. We have provided walkthroughs for creating the configuration within the provider for your convenience.
+
+## Order of Operations
+
+Currently, BloodHound requires the configuration of SAML system in the following order:
+
+1.  Determine the Provider Name you will utilize for the SAML configuration.
+    * The same value must be configured in both the Identity Provider and BloodHound.
+2.  Configure Identity Provider for BloodHound.
+    * [SAML: ADFS Configuration](/hc/en-us/articles/9228780967067-SAML-ADFS-Configuration)
+    * [SAML: Auth0 Configuration](/hc/en-us/articles/9230953344283-SAML-Auth0-Configuration)
+    * [SAML: Entra ID Configuration](/hc/en-us/articles/14266827417371-SAML-Entra-ID-Configuration)
+    * [SAML: Google IDP Configuration](/hc/en-us/articles/25105807685147-SAML-Google-IDP-Configuration)
+3.  [Create the SAML Configuration in BloodHound](#h_01HCX8STC69AP9T3TSXRRPJGJW).
+4.  [Create new users or modify existing users](/hc/en-us/articles/16372343366939-Administering-users-and-roles) to utilize the newly created SAML provider.
+    * You must ensure SAML users do not share email with built-in users.
+
+## SAML Attribute Quick Reference
+
+| **Data Type  <br/>** | **Value** |
+| --- | --- |
+| **IDP Name Format** | urn:oasis:names:tc:SAML:2.0:attrname-format:uri |
+| **Required SAML Attributes** | Either of the following will map to the user's email address in BloodHound:<br/><br/>_http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress_<br/><br/>_urn:oid:0.9.2342.19200300.100.1.3_ |
+| **Tenant Callback URL** | https://&lt;DOMAIN&gt;.bloodhoundenterprise.io/api/v1/login/saml/&lt;PROVIDER-NAME&gt;/acs<br/><br/>_&lt;DOMAIN&gt;: the subdomain of your tenant URL._<br/><br/>_&lt;PROVIDER-NAME&gt;: the name chosen for the SAML provider within the BloodHound configuration  <br/>_ |
+| **SP Entity ID** | https://&lt;DOMAIN&gt;.bloodhoundenterprise.io/api/v1/login/saml/&lt;PROVIDER-NAME&gt;<br/><br/>_&lt;DOMAIN&gt;: the subdomain of your tenant URL._<br/><br/>_&lt;PROVIDER-NAME&gt;: the name chosen for the SAML provider within the BloodHound configuration_ |
+
+## BloodHound Icons
+
+If your IDP supports custom icons for configured applications, please feel free to utilize either of the two logos below:
+
+* [Dark-colored icon](/hc/article_attachments/19622280069019.png)
+* [Light-colored icon](/hc/article_attachments/19622280078363.png)
+
+## Create the SAML Configuration
+
+Ensure you have configured an Identity Provider for BloodHound as described in [Order of Operations](#h_01HCX8STC6B053TQJ72YQVDZSC) before proceeding.
+
+1.  While logged in as an Administrator, click on the gear icon in the top right, then click "Administration."
+<Frame>
+  <img src="/hc/images/image-2-17.png"/>
+</Frame>
+2.  Under the "Authentication" section, choose "SAML Configuration."
+<Frame>
+  <img src="/hc/images/image-2-18.png"/>
+</Frame>
+3.  Click “Create SAML Provider.”
+<Frame>
+  <img src="/hc/images/image-2-19.png"/>
+</Frame>
+4.  Give the SAML provider the name you used in the ACS URL (‘okta’ in this example) and upload the metadata.xml you created previously. Click "Submit."
+<Frame>
+  <img src="/hc/images/image-2-20.png"/>
+</Frame>
+5.  BloodHound will provide the URLs related to this new SAML provider integration. Please take a moment to verify that the **ACS URL** matches the **Single sign on URL** specified in the SAML application integration page during setup of the Okta SAML integration.
+
+## Configure Users for SAML Authentication
+
+By default, all users will utilize username and password via the built-in authentication service. When creating or modifying a user, you will be granted the option to change this setting. When creating a new SAML user, you must ensure the SAML user does not share email with any built-in users.
+
+1.  While logged in as an Administrator, click on the gear icon in the top right, then click "Administration."
+<Frame>
+  <img src="/hc/images/image-2-21.png"/>
+</Frame>
+2.  Under the "Authentication" section, choose "SAML Configuration."
+<Frame>
+  <img src="/hc/images/image-2-22.png"/>
+</Frame>
+3.  Locate the user you wish to configure for SAML authentication, click the hamburger menu button on the right side of the row, then "Update User."
+<Frame>
+  <img src="/hc/images/image-2-23.png"/>
+</Frame>
+4.  In the following dialog, modify the Authentication Method to "SAML" then select the appropriate SAML provider you wish the user's account to authenticate against.
+<Frame>
+  <img src="/hc/images/image-2-24.png"/>
+</Frame>
+5.  Click "Save."
+
+<CardGroup>
+  <Card
+    title="BHE Primary Stacked.png"
+    icon="paperclip"
+    href="https://support.bloodhoundenterprise.io/hc/en-us/article_attachments/11427974352283"
+    iconType="solid"
+    horizontal
+  />
+  <Card
+    title="Secondary-Brandmark-Stacked.png"
+    icon="paperclip"
+    href="https://support.bloodhoundenterprise.io/hc/en-us/article_attachments/11427976083355"
+    iconType="solid"
+    horizontal
+  />
+</CardGroup>

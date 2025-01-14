@@ -1,0 +1,86 @@
+---
+Title: "SAML: Entra ID Configuration"
+description: "This document provides instructions for creating an application within Entra ID for compatibility with BloodHound Enterprise."
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+For general instructions on adding a SAML provider to BloodHound Enterprise or for configuring users to utilize a SAML provider, see [SAML in BloodHound Enterprise](/hc/en-us/articles/9228122981275-SAML-in-BloodHound).
+
+See [SAML Order of Operations and Quick Reference](/hc/en-us/articles/9228122981275-SAML-in-BloodHound) before starting.
+
+## SAML Settings
+
+The following SAML settings are required for Entra ID to integrate with BloodHound Enterprise:
+
+
+| **SAML Setting** | **Value** |
+| --- | --- |
+| **Identifier**<br/><br/>**(Entity ID)** | https://&lt;DOMAIN&gt;.bloodhoundenterprise.io/api/v1/login/saml/&lt;PROVIDER-NAME&gt;<br/><br/>_&lt;DOMAIN&gt;: the subdomain of your tenant URL._<br/><br/>_&lt;PROVIDER-NAME&gt;: the name chosen for the SAML provider within the BloodHound Enterprise configuration_ |
+| **Reply URL**<br/><br/>**(Assertion Consumer Service URL)** | https://&lt;DOMAIN&gt;.bloodhoundenterprise.io/api/v1/login/saml/&lt;PROVIDER-NAME&gt;/acs<br/><br/>_&lt;DOMAIN&gt;: the subdomain of your tenant URL._<br/><br/>_&lt;PROVIDER-NAME&gt;: the name chosen for the SAML provider within the BloodHound Enterprise configuration_ |
+| **Sign On URL**<br/><br/>**(Optional)** | https://&lt;DOMAIN&gt;.bloodhoundenterprise.io/api/v1/login/saml/&lt;PROVIDER-NAME&gt;<br/><br/>_&lt;DOMAIN&gt;: the subdomain of your tenant URL._<br/><br/>_&lt;PROVIDER-NAME&gt;: the name chosen for the SAML provider within the BloodHound Enterprise configuration_ |
+
+## Create an Enterprise Application
+
+1.  Login to Azure at [https://portal.azure.com](https://portal.azure.com)
+2.  Navigate to the **Enterprise Applications** section of Entra ID.
+<Frame>
+  <img src="/hc/images/image-2-44.png"/>
+</Frame>
+3.  Click **New Application**.
+<Frame>
+  <img src="/hc/images/image-2-46.png"/>
+</Frame>
+4.  Click **Create your own application**.
+<Frame>
+  <img src="/hc/images/image-2-47.png"/>
+</Frame>
+5.  Provide a name for your application and click **Create**.
+<Frame>
+  <img src="/hc/images/image-2-48.png"/>
+</Frame>
+## Configure Single Sign-On Settings
+
+1.  Your browser should redirect you to your newly created application. Click on **Single sign-on**.
+<Frame>
+  <img src="/hc/images/image-2-49.png"/>
+</Frame>
+2.  Click on **SAML**.
+<Frame>
+  <img src="/hc/images/image-2-50.png"/>
+</Frame>
+3.  Click **Edit** under the Basic SAML Configuration section.
+<Frame>
+  <img src="/hc/images/image-2-51.png"/>
+</Frame>
+4.  Configure SAML. The following screenshot shows the tenant codename is "demo" and the provider name is "azure". 
+<Frame>
+  <img src="/hc/images/image-2-52.png"/>
+</Frame>
+5.  Azure will inform you the settings have saved successfully.
+<Frame>
+  <img src="/hc/images/image-2-53.png"/>
+</Frame>
+6.  Click the **X** to close the dialog.
+<Frame>
+  <img src="/hc/images/image-2-54.png"/>
+</Frame>
+7.  Scroll down to the **SAML Certificates** section and download the **Metadata XML**.
+<Frame>
+  <img src="/hc/images/image-2-55.png"/>
+</Frame>
+8.  Use the **Users and Groups** section to configure groups and users which you would like to grant access to BloodHound Enterprise.
+<Frame>
+  <img src="/hc/images/image-2-56.png"/>
+</Frame>
+9.  Use the downloaded metadata.xml file and follow the instructions at [SAML in BloodHound Enterprise](/hc/en-us/articles/9228122981275-SAML-in-BloodHound) to Create the SAML Configuration in BloodHound.
+
+## Troubleshooting
+
+Verify your attributes and claims use a proper schema in the claim name, and that you have a properly mapped claim for "user.mail" as in the example below. An indicator that this is necessary is when an authentication attempt returns the response: "_assertion does not meet requirements for user lookup_".
+
+<Frame>
+  <img src="/hc/images/image-2-57.png"/>
+</Frame>

@@ -1,0 +1,60 @@
+---
+title: AIACA
+description: "This article outlines the AIACA node in BloodHound, it describes what the node represents, the node's properties, and possible incoming/outgoing edges."
+---
+
+## Representation
+
+The AIACA node represents the Active Directory LDAP objects of the _certificationAuthority_ class located in the _AIA_ container in the Configuration Naming Context.
+
+## Node properties
+
+The node supports the properties of the table. Three types of property names will be used, depending on where the property is found:
+
+* **Entity Panel:** Name shown in the BloodHound UI.
+* **Database:** Name stored in the BloodHound database and returned by the BloodHound API. This is to be used when running Cypher queries.
+* **Directory:** Name collected from the directory the node is stored in, for example, the LDAP name for an Active Directory property.
+
+|     |     |     |     |
+| --- | --- | --- | --- |
+| **Entity Panel** | **Database** | **Directory** | **Description** |
+| Object ID | objectid | objectGUID | The object's unique identifier in the directory. |
+| ACL Inheritance Denied | isaclprotected | nTSecurityDescriptor | Whether inherited permissions (ACEs) from containers are blocked on this object. |
+| Basic Constraint Path Length | basicconstraintpathlength | caCertificate (X509Certificate) | The maximum number of non-self-issued intermediate certificates that may follow this certificate in a valid certificate chain. |
+| Certificate Chain | certchain | caCertificate (X509Certificate) | A hierarchical list of certificates starting with the certificate for this CA and ending with a self-signed root certificate. Each certificate is signed by the private key of the next CA certificate. |
+| Certificate Name | certname | caCertificate (X509Certificate) | The name of the CA's certificate. |
+| Certificate Thumbprint | certthumbprint | caCertificate (X509Certificate) | The thumbprint (unique identifier) of the CA's certificate. |
+| Created | whencreated | whenCreated | When the object was created in the directory. |
+| Distinguished Name | distinguishedname | distinguishedName | The name of the object and it's location in AD. |
+| Domain FQDN | domain | -   | The fully qualified domain name (FQDN) of the domain the object belongs to. |
+| Domain SID | domainsid | -   | The SID of the domain the object belongs to. |
+| Has Basic Constraints | hasbasicconstraints | caCertificate (X509Certificate) | Whether the CA certificate has basic constraints. |
+| Has Cross Certificate Pair | hascrosscertificatepair | crossCertificatePair | Whether the CA has trust to any external certificate. |
+| Last Collected by BloodHound | lastseen | -   | When the object was last collected and ingested in BloodHound. |
+| -   | crosscertificatepair | crossCertificatePair | List of external certificates trusted by the CA. |
+| -   | name | name + domain name | Name of the object + @ + the name of the domain. |
+
+## Edges
+
+The following edge types may be linked to/from this node. See the [edges documentation](/hc/en-us/sections/16600927744411-Edges) for more information on the edge types.
+
+### Incoming edges
+
+|     |     |
+| --- | --- |
+| **Edge type** | **Entity panel category** |
+| GenericAll | Inbound Object Control |
+| GenericWrite | Inbound Object Control |
+| Owns | Inbound Object Control |
+| WriteDacl | Inbound Object Control |
+| WriteOwner | Inbound Object Control |
+
+### Outgoing edges
+
+This node has no outgoing edges.
+
+## References
+
+* [https://techcommunity.microsoft.com/t5/ask-the-directory-services-team/designing-and-implementing-a-pki-part-i-design-and-planning/ba-p/396953](https://techcommunity.microsoft.com/t5/ask-the-directory-services-team/designing-and-implementing-a-pki-part-i-design-and-planning/ba-p/396953)
+* [https://learn.microsoft.com/en-us/windows/win32/adschema/c-certificationauthority](https://learn.microsoft.com/en-us/windows/win32/adschema/c-certificationauthority) 
+

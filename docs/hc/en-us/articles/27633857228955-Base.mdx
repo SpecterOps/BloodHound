@@ -1,0 +1,32 @@
+---
+title: Base
+description: "This article outlines the Base node in BloodHound, it describes the node's properties and possible incoming/outgoing edges."
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+## Representation
+
+The Base node is the basis for all other Active Directory nodes and is used when a node type is unknown, for example, after an object is deleted. The node is retained as it may have edges linked to/from it.
+
+## Node properties
+
+The node supports the properties of the table. Three types of property names will be used, depending on where the property is found:
+
+* **Entity Panel:** Name shown in the BloodHound UI.
+* **Database:** Name stored in the BloodHound database and returned by the BloodHound API. This is to be used when running Cypher queries.
+* **Directory:** Name collected from the directory the node is stored in, for example, the LDAP name for an Active Directory property.
+
+|     |     |     |     |
+| --- | --- | --- | --- |
+| **Entity Panel** | **Database** | **Directory** | **Description** |
+| Object ID | objectid | -   | The object's unique identifier in the directory. |
+| Last Collected by BloodHound | lastseen | -   | When the object was last collected and ingested in BloodHound. |
+| -   | name | -   | Object ID of the object. |
+
+## Edges
+
+Any edge type may be linked to/from this node. See the [edges documentation](/hc/en-us/sections/16600927744411-Edges) for more information on the edge types.
+

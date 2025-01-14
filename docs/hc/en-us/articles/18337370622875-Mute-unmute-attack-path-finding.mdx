@@ -1,0 +1,61 @@
+---
+title: Mute/unmute attack path finding
+---
+
+<Frame>
+  <img src="/hc/images/image1-8.png"/>
+</Frame>
+
+Purpose
+=======
+
+This article outlines how to mute a principal in an attack path finding so it is hidden in the principal table of the finding. It should be used by BHE users whenever a risk has been decided to be accepted or [while waiting for a change to leave its retention period](/hc/en-us/articles/18305386717723-Data-reconciliation-and-retention).
+
+Prerequisites
+=============
+
+* Logged in as a user role which is authorized to mute attack path impacted principals, see [Administering users and roles](/hc/en-us/articles/16372343366939-Administering-users-and-roles).
+
+Process
+=======
+
+Mute a principal[](#heading-1)
+------------------------------
+
+1.  Navigate to the Attack Paths page.
+2.  Expand the attack path finding and click the menu to the left of the principal's name (three vertical dots), then click \`Mute\`.
+<Frame>
+  <img src="/hc/images/image1-19.png"/>
+</Frame>
+3.  In the pop-up window \`Mute Attack Path\`, set the number of days the finding's principal should be muted and click the button \`MUTE\`.
+    * If muting permanently: set the duration for a long duration.
+    * If muting while while waiting for a change to leave it's retention period: set the duration depending on the retention scenario, for example when muting a principal from \`Logons from Tier Zero Users\` the duration should be 7 days. See [Data reconciliation and retention in BloodHound Enterprise](/hc/en-us/articles/18305386717723-Data-reconciliation-and-retention).
+<Frame>
+  <img src="/hc/images/image1-20.png"/>
+</Frame>
+
+Unmute a principal[](#heading-2)
+--------------------------------
+
+1.  Navigate to the Attack Paths page.
+2.  Expand the attack path finding and toggle the setting \`Show Muted\`.
+<Frame>
+  <img src="/hc/images/image1-21.png"/>
+</Frame>
+3.  In the menu to the left of the muted principal's name (three vertical dots), click \`Unmute\`.
+<Frame>
+  <img src="/hc/images/image1-22.png"/>
+</Frame>
+4.  In the pop-up window \`Unmute Attack Path\` click the button \`UNMUTE\`.
+<Frame>
+  <img src="/hc/images/image1-23.png"/>
+</Frame>
+
+Outcome
+=======
+
+When a principal is muted, it is hidden from the principal table in the attack path until you toggle the setting \`Show Muted\`. The principal and it's edges will still visible in the Explore and Posture page.
+
+<Frame>
+  <img src="/hc/images/image1-24.png"/>
+</Frame>

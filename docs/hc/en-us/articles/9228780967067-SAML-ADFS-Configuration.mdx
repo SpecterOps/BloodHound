@@ -1,0 +1,85 @@
+---
+title: "SAML: ADFS Configuration"
+description: "This document provides instructions for creating an application within ADFS for compatibility with BloodHound Enterprise."
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+For general instructions on adding a SAML provider to BloodHound Enterprise or for configuring users to utilize a SAML provider, see [SAML in BloodHound Enterprise](/hc/en-us/articles/9228122981275-SAML-in-BloodHound).
+
+See [SAML Order of Operations and Quick Reference](/hc/en-us/articles/9228122981275-SAML-in-BloodHound) before starting.
+
+## Create an Application
+
+1.  In the AD FS management console, right-click on Relaying Party Trust and click “Add Relaying Party Trust”.
+<Frame>
+  <img src="/hc/images/image-2-25.png"/>
+</Frame>
+2.  Choose “Claims aware” and click “Start”.
+<Frame>
+  <img src="/hc/images/image-2-26.png"/>
+</Frame>
+3.  Insert the metadata URL based on your chosen name and click “Next.”
+<Frame>
+  <img src="/hc/images/image-2-27.png"/>
+</Frame>
+4.  Enter the preferred display name and click “Next.”
+<Frame>
+  <img src="/hc/images/image-2-28.png"/>
+</Frame>
+5.  Choose the desired Access Control Policy. (Note that access and permissions are configured within BloodHound Enterprise).
+<Frame>
+  <img src="/hc/images/image-2-29.png"/>
+</Frame>
+6.  Review the information presented and click “Next”.
+<Frame>
+  <img src="/hc/images/image-2-30.png"/>
+</Frame>
+7.  Leave the “Configure claims issuance policy for this application” box checked and click “Close”.
+<Frame>
+  <img src="/hc/images/image-2-31.png"/>
+</Frame>
+
+## Complete SAML Integration Configuration
+
+1.  On the “Edit Claim Issuance Policy” dialog box, click “Add Rule…”.
+<Frame>
+  <img src="/hc/images/image-2-32.png"/>
+</Frame>
+2.  Choose “Send LDAP Attributes as Claims” and click “Next.
+<Frame>
+  <img src="/hc/images/image-2-33.png"/>
+</Frame>
+3.  Fill out the following and click “Finish”.
+
+    LDAP Attribute: E-Mail-Addresses
+    Outgoing Claim Type : E-Mail Address
+
+<Frame>
+  <img src="/hc/images/image-2-34.png"/>
+</Frame>
+4.  Click “Add Rule” to add another claim rule.
+<Frame>
+  <img src="/hc/images/image-2-35.png"/>
+</Frame>
+5.  Choose “Transform and Incoming Claim” and click “Next”.
+<Frame>
+  <img src="/hc/images/image-2-36.png"/>
+</Frame>
+6.  Fill out the following and click “Finish”.
+
+    Incoming claim type: E-Mail Address
+    Outgoing claim type: Name ID
+    Outgoing name ID format: Email
+    Choose “Pass through all claim values”
+<Frame>
+  <img src="/hc/images/image-2-37.png"/>
+</Frame>
+7.  Click “Apply”.
+<Frame>
+  <img src="/hc/images/image-2-38.png"/>
+</Frame>
+8.  Download the metadata file provided by your ADFS environment. By default, this is hosted at: https://YOURDOMAIN/federationmetadata/2007-06/federationmetadata.xml
+9.  Follow the instructions at [SAML in BloodHound Enterprise](/hc/en-us/articles/9228122981275-SAML-in-BloodHound) to create the SAML provider in BloodHound Enterprise.

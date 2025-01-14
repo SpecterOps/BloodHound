@@ -1,0 +1,64 @@
+---
+title: 2022-10-11 Release Notes
+---
+
+## Announcements
+
+## BloodHound Enterprise Documentation
+
+Our documentation portal is live! Visit to check out our documentation. This site will continue to evolve and see more content week over week. Please contact your TAM if you see anything missing and we'll get it in our backlog for inclusion! Some favorites so far include:
+
+* [Tier Zero: Members and Modification](/hc/en-us/articles/9259826072091-Tier-Zero-Members-and-Modification)
+* [SAML in BloodHound Enterprise](/hc/en-us/articles/9228122981275-SAML-in-BloodHound)
+
+### User Rights Assignment Collection Early Access
+
+The long-awaited (re-)addition to SharpHound of User Rights Assignment collection is here!
+
+Collection of User Rights Assignment will increase the accuracy of certain Attack Paths identified within BloodHound Enterprise (most notably, this will help improve the accuracy of findings in customers with Citrix and other VDI products).
+
+We previously included this functionality in early access and discovered a host of performance improvements necessary for General Availability; those have all been ironed out, and we expect a quick move to general availability ahead of the eventual end-of-life of all SharpHound 1.X services.
+
+Please contact your TAM or reply to this email if you want help or have questions.
+
+_Support for this capability will require both an upgrade to ALL SharpHound Enterprise services within your environment to v2.0.1+ **AND** enabling the Early Access Feature from the Administration dashboard._
+
+### AD Certificate Services Design Partners Needed
+
+Our research team is in the thick of evaluating and expanding upon [Will Schroeder and Lee Christensen's work on AD Certificate Services abuses](https://posts.specterops.io/certified-pre-owned-d95910965cd2) for implementation within BloodHound and BloodHound Enterprise. We are looking for several design partners to support our team in this effort over the coming months.
+
+Initially, our team needs more information on common deployment technologies within production environments. If you would be willing to have a quick conversation with our team to elaborate on how you've deployed ADCS within your environment, please contact your TAM or reply to this email.
+
+## Summary
+
+* BloodHound Enterprise
+    * New and Improved Features - [Documentation Portal]() and early access support for user rights assignment collection.
+* SharpHound Enterprise (v1.0.24 GA, v2.0.1 Early Access)
+    * New and Improved Features - support for user rights assignment collection.
+    * Bug Fixes - failure to identify the server's IP address will no longer prevent the service's starting.
+* AzureHound Enterprise (v1.2.0)
+    * New and Improved Features - Support for Key Vault Contributors.
+    * Bug fixes - Fixed collection logic for several Azure objects.
+
+### BloodHound Enterprise
+
+_See announcements for this week's changes._
+
+### SharpHound Enterprise (v1.0.24 GA, v2.01 Early Access)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.0.1_
+
+_See announcements for this week's changes._
+
+**NOTE:** Upgrading to v2.0.1 must occur concurrently on all services and requires enabling the “User Rights Assignment Collection” experimental feature at the same time. Please contact your TAM or respond to this email for assistance.
+
+### AzureHound Enterprise (v1.2.0 GA)
+
+_Minimum version of AzureHound Service to support all current functionality: v1.2.0_
+
+* New Features
+    * AzureHound now collects Key Vault Contributors for inclusion within Attack Path analysis.
+* Bug Fixes
+    * We identified and resolved a number of issues across the codebase that resulted in an incomplete collection of data on Azure-based objects. These have been resolved.
+
+

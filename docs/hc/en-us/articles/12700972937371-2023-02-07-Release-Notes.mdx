@@ -1,0 +1,62 @@
+---
+title: 2023-02-07 Release Notes
+---
+
+## Announcements
+
+### SharpHound v2 General Availability
+After several months of testing, SharpHound v2 has reached General Availability! SharpHound v2 expands on the ability of BloodHound to provide accurate reporting of Attack Paths through the collection and processing of User Rights Assignment collected from customer endpoints. 
+
+Thank you so much to all our customers who have worked with us to test and validate the capabilities offered.
+
+### SharpHound v1 End-of-Life
+
+With the release of SharpHound v2, we have marked SharpHound v1 download as deprecated within BloodHound Enterprise. We will leave the download available until the end of February; however, no more development will occur on this version. SharpHound v1 will officially be end-of-life on May 1, 2023.
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the “Enable post processing of local groups” early access feature simultaneously.
+
+Instructions to upgrade your collector may be found [here](/hc/en-us/articles/9295247077915-Install-and-Upgrade-SharpHound-Enterprise)! Our Customer Success team will begin reaching out to all customers still running SharpHound v1 and would be happy to help if you require it.
+
+## Summary
+
+* BloodHound Enterprise
+    * New and Improved Features - Improved cross-trust collection and caching for entity panels.
+    * Bug Fixes - Entity panel timeouts, Attack Path exposures >100%, ingest performance improvements, Azure Reset Password logic fixes, improved edge filtering in pathfinding, and more!
+* SharpHound Enterprise (v2.1.0)
+    * New and Improved Features - Improved cross-trust collection and associated logging.
+    * Bug Fixes - made an error message more clear.
+* AzureHound Enterprise (v1.2.3)
+    * _No release this week._
+
+### BloodHound Enterprise
+
+* Improved Functionality
+    * \[Requires SharpHound v2.1.0\] SharpHound now supports significantly more trust configurations to perform collections within your environment.
+    * We've added a caching layer to the Entity Panel. This means repeated views of the same object within the environment will see significantly improved performance between views.
+* Bug Fixes
+    * Addressed several Entity Panel bugs that resulted in data never loading in the view. We have additional work ongoing on this portion of the product to improve performance and consistency.
+    * Attack Path exposures should no longer calculate >100%.
+    * Significant improvement to data ingest speeds; this should reduce the time your environment shows in "Ingesting" during collection.
+    * Resolved a logic issue in the AzResetPassword edge that resulted in false positives.
+    * The RemoteInteractiveLogonPrivilege edge will no longer appear in pathfinding queries.
+    * Fixed specific issues which could result in data sent by SharpHound unexpectedly timing out.
+    * Tier Zero views should consistently show all members of the group.
+
+### SharpHound Enterprise (v2.1.0)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.1.0_
+
+* Improved Functionality
+    * Significant enhancements to the cross-trust collection capability.
+* Bug Fixes
+    * Improved the error message written at DEBUG level when unable to resolve local SIDs.
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the “Enable post processing of local groups” early access feature simultaneously.
+
+### AzureHound Enterprise (v1.2.3 GA)
+
+_Minimum version of AzureHound Service to support all current functionality: v1.2.3_
+
+No release this week.
+
+

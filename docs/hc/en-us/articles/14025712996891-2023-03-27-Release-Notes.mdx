@@ -1,0 +1,50 @@
+---
+title: 2023-03-27 Release Notes
+---
+## Announcements
+
+### SharpHound Upgrades Required
+
+SharpHound v2 is officially generally available. If you have not already done so, please make sure you upgrade your SharpHound collectors to v2.1+. SharpHound v1 will officially be end-of-life on May 1, 2023.
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the “Enable post processing of local groups” early access feature simultaneously.
+
+Instructions to upgrade your collector may be found [here](/hc/en-us/articles/9295247077915-Install-and-Upgrade-SharpHound-Enterprise)! Our Customer Success team will begin reaching out to all customers still running SharpHound v1 and would be happy to help if you require it.
+
+## Summary
+
+* BloodHound Enterprise
+    * New and improved functionality - Azure entity panels performance improvements
+    * Bug fixes - Entity panels properly show all object information values and fixed several bugs, resulting in inaccurate data results.
+* SharpHound Enterprise (v2.1.2)
+    * _No release this week._
+* AzureHound Enterprise (v1.2.4)
+    * _No release this week._
+
+### BloodHound Enterprise
+
+### Improved Functionality
+
+* Azure-based Entity Panels have undergone the same treatment as their AD-based counterparts. Azure entities should now load their panels significantly faster and queue up relationship-based results in the background to load when those counts become available.
+
+### Bug Fixes
+
+* Entity Panels will no longer hide keys based on their value. For example, "Enabled" should always appear, even if the value is "False".
+* Resolved an issue where Inbound and Outbound Object Control options would show inconsistent results between a controlled and controlling object.
+* Fixed an issue in Entity Panels for Groups where the Sessions tab would contain inaccurate results for Computers contained within the group.
+
+### SharpHound Enterprise (v2.1.2)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.1.2_
+
+No release this week.
+
+<Info>
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the “User Rights Assignment Collection” experimental feature at the same time. Please contact your TAM or respond to this email for assistance.
+</Info>
+### AzureHound Enterprise (v1.2.4)
+
+_Minimum version of AzureHound Service to support all current functionality: v1.2.4_
+
+No release this week.
+

@@ -1,0 +1,70 @@
+---
+title: GenericWrite
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+Generic Write access grants you the ability to write to any non-protected attribute on the target object, including “members” for a group, and “servicePrincipalNames” for a user.
+
+## Abuse Info
+
+**Users**
+
+With GenericWrite over a user, you can write to the “msds-KeyCredentialLink” attribute. Writing to this property allows an attacker to create “Shadow Credentials” on the object and authenticate as the principal using Kerberos PKINIT. See more information under the AddKeyCredentialLink edge.
+
+Alternatively, you can write to the "servicePrincipalNames" attribute and perform a targeted kerberoasting attack. See the abuse section under the WriteSPN edge for more information.
+
+**Groups**
+
+With GenericWrite over a group, add yourself or another principal you control to the group. See the abuse info under the AddMembers edge for more information.
+
+**Computers**
+
+With GenericWrite over a computer, you can write to the “msds-KeyCredentialLink” attribute. Writing to this property allows an attacker to create “Shadow Credentials” on the object and authenticate as the principal using Kerberos PKINIT. See more information under the AddKeyCredentialLink edge.
+
+Alternatively, you can perform a resource-based constrained delegation attack against the computer. See the AllowedToAct edge abuse info for more information about that attack.
+
+**GPO**
+
+With GenericWrite on a GPO, you may make modifications to that GPO which will then apply to the users and computers affected by the GPO. Select the target object you wish to push an evil policy down to, then use the gpedit GUI to modify the GPO, using an evil policy that allows item-level targeting, such as a new immediate scheduled task. Then wait for the group policy client to pick up and execute the new evil policy. See the references tab for a more detailed write up on this abuse.
+
+This edge can be a false positive in rare scenarios. If you have GenericWrite on the GPO with ‘This object only’ (no inheritance) and no other permissions in the ACL, it is not possible to add or modify settings of the GPO. The GPO’s settings are stored in SYSVOL under a folder for the given GPO. Therefore, you need write access to child objects of this folder or create child objects permission. The security descriptor of the GPO is reflected on the folder, meaning permissions to write child items on the GPO are required.
+
+**OU**
+
+You can compromise child users and computers of the OU by abusing write access to the gPLink attribute of the OU. See the [WriteGPLink](/hc/en-us/articles/29117665141915-WriteGPLink) edge documentation for details.
+
+**Domain**
+
+You can compromise users and computers of the domain by abusing write access to the gPLink attribute of the domain. See the [WriteGPLink](/hc/en-us/articles/29117665141915-WriteGPLink) edge documentation for details.
+
+**CertTemplate**
+
+With GenericWrite permission over a certificate template, you may be able to perform an ESC4 attack by modifying the template's attributes. BloodHound will in that case create an ADCSESC4 edge from the principal to the forest domain node.
+
+**EnterpriseCA**
+
+With GenericWrite permission over an enterprise CA, you can publish certificate templates to the enterprise CA by adding the CN name of the template in the enterprise CA object's certificateTemplates attribute. This action may enable you to perform an ADCS domain escalation.
+
+**RootCA**
+
+With GenericWrite permission over a root CA, you can make a rouge certificate trusted as a root CA in the AD forest by adding the certificate in the root CA object's cACertificate attribute. This action may enable you to perform an ADCS domain escalation.
+
+**NTAuthStore**
+
+With GenericWrite permission over a NTAuth store, you can make an enterprise CA certificate trusted for NT (domain) authentication the AD forest by adding the certificate in the root CA object's cACertificate attribute. This action may enable you to perform an ADCS domain escalation. This action may enable you to perform an ADCS domain escalation.
+
+**IssuancePolicy**
+
+With GenericWrite permission over an issuance policy object, you create a OID group link to a targeted group by adding the groups distinguishedName in the msDS-OIDToGroupLink attribute of the issuance policy object. This action may enable you to gain membership of the group through an ADCS ESC13 attack.
+
+## Opsec Considerations
+
+This will depend on which type of object you are targeting and the attack you perform. See the relevant edge for opsec considerations for the actual attack you perform.
+
+## References
+
+[https://www.youtube.com/watch?v=z8thoG7gPd0](https://www.youtube.com/watch?v=z8thoG7gPd0)
+
