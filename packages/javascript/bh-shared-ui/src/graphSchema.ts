@@ -993,7 +993,6 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
 export function AzurePathfindingEdges(): AzureRelationshipKind[] {
     return [
         AzureRelationshipKind.AvereContributor,
-        AzureRelationshipKind.Contains,
         AzureRelationshipKind.Contributor,
         AzureRelationshipKind.GetCertificates,
         AzureRelationshipKind.GetKeys,
@@ -1031,6 +1030,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToADUser,
+        AzureRelationshipKind.Contains,
     ];
 }
 export enum CommonNodeKind {

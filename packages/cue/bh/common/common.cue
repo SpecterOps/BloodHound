@@ -176,5 +176,5 @@ NodeKinds: [
 RelationshipKinds: [
 ]
 
-InboundRelationshipKinds: list.Concat([ad.InboundRelationshipKinds, azure.PathfindingRelationships])
-OutboundRelationshipKinds: list.Concat([ad.OutboundRelationshipKinds, azure.PathfindingRelationships])
+InboundRelationshipKinds: list.Concat([ad.InboundRelationshipKinds, azure.InboundOutboundRelationshipKinds])
+OutboundRelationshipKinds: list.Concat([ad.OutboundRelationshipKinds, azure.InboundOutboundRelationshipKinds])

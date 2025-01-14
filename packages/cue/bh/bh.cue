@@ -41,6 +41,7 @@ import (
 	ControlRelationshipKinds: [...types.#Kind]
 	ExecutionPrivilegeKinds: [...types.#Kind]
 	PathfindingRelationships: [...types.#Kind]
+	InboundOutboundRelationshipKinds: [...types.#Kind]
 }
 
 #ActiveDirectory: {
@@ -72,6 +73,7 @@ Azure: #Azure & {
 	ControlRelationshipKinds:         azure.ControlRelationshipKinds
 	ExecutionPrivilegeKinds:          azure.ExecutionPrivilegeKinds
 	PathfindingRelationships:         azure.PathfindingRelationships
+	InboundOutboundRelationshipKinds: azure.InboundOutboundRelationshipKinds
 }
 
 ActiveDirectory: #ActiveDirectory & {
