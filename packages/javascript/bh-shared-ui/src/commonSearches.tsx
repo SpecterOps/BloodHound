@@ -109,11 +109,11 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'All Kerberoastable users',
-                cypher: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT coalesce(u.gmsa, ' ') = true\nAND NOT coalesce(u.msa, ' ') = true\nRETURN u\nLIMIT 100`,
+                cypher: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT coalesce(u.gmsa, false) = true\nAND NOT coalesce(u.msa, false) = true\nRETURN u\nLIMIT 100`,
             },
             {
                 description: 'Kerberoastable users with most admin privileges',
-                cypher: `MATCH (u:User)\nWHERE u.hasspn = true\n  AND u.enabled = true\n  AND NOT u.objectid ENDS WITH '-502'\n  AND NOT coalesce(u.gmsa, ' ') = true\n  AND NOT coalesce(u.msa, ' ') = true\nMATCH (u)-[:MemberOf|AdminTo*1..]->(c:Computer)\nWITH DISTINCT u, COUNT(c) AS adminCount\nRETURN u\nORDER BY adminCount DESC\nLIMIT 100`,
+                cypher: `MATCH (u:User)\nWHERE u.hasspn = true\n  AND u.enabled = true\n  AND NOT u.objectid ENDS WITH '-502'\n  AND NOT coalesce(u.gmsa, false) = true\n  AND NOT coalesce(u.msa, false) = true\nMATCH (u)-[:MemberOf|AdminTo*1..]->(c:Computer)\nWITH DISTINCT u, COUNT(c) AS adminCount\nRETURN u\nORDER BY adminCount DESC\nLIMIT 100`,
             },
             {
                 description: 'AS-REP Roastable users (DontReqPreAuth)',
@@ -252,7 +252,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Nested groups within Tier Zero / High Value',
-                cypher: `MATCH p=(n:Group)-[:MemberOf*..]->(t:Group)\nWHERE coalesce(t.system_tags,'') CONTAINS ('tier_0')\nAND NOT n.objectid ENDS WITH '-512' // Domain Admins\nAND NOT n.objectid ENDS WITH '-519' // Enterprise Admins\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(n:Group)-[:MemberOf*..]->(t:Group)\nWHERE coalesce(t.system_tags, false) CONTAINS ('tier_0')\nAND NOT n.objectid ENDS WITH '-512' // Domain Admins\nAND NOT n.objectid ENDS WITH '-519' // Enterprise Admins\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Disabled Tier Zero / High Value principals',
