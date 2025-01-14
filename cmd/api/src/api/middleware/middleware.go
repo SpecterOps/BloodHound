@@ -19,6 +19,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
@@ -30,7 +31,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -103,7 +103,7 @@ func ContextMiddleware(next http.Handler) http.Handler {
 		)
 
 		if newUUID, err := uuid.NewV4(); err != nil {
-			log.Errorf("Failed generating a new request UUID: %v", err)
+			slog.ErrorContext(request.Context(), fmt.Sprintf("Failed generating a new request UUID: %v", err))
 			requestID = "ERROR"
 		} else {
 			requestID = newUUID.String()
@@ -142,6 +142,7 @@ func ContextMiddleware(next http.Handler) http.Handler {
 				},
 				RequestedURL: model.AuditableURL(request.URL.String()),
 				RequestIP:    parseUserIP(request),
+				RemoteAddr:   request.RemoteAddr,
 			})
 
 			// Route the request with the embedded context
@@ -155,14 +156,14 @@ func parseUserIP(r *http.Request) string {
 
 	// The point of this code is to strip the port, so we don't need to save it.
 	if host, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
-		log.Warnf("Error parsing remoteAddress '%s': %s", r.RemoteAddr, err)
+		slog.WarnContext(r.Context(), fmt.Sprintf("Error parsing remoteAddress '%s': %s", r.RemoteAddr, err))
 		remoteIp = r.RemoteAddr
 	} else {
 		remoteIp = host
 	}
 
 	if result := r.Header.Get("X-Forwarded-For"); result == "" {
-		log.Debugf("No data found in X-Forwarded-For header")
+		slog.DebugContext(r.Context(), "No data found in X-Forwarded-For header")
 		return remoteIp
 	} else {
 		result += "," + remoteIp

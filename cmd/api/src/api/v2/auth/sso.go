@@ -19,6 +19,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"path"
@@ -27,7 +28,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -278,9 +278,9 @@ func SanitizeAndGetRoles(ctx context.Context, autoProvisionConfig model.SSOProvi
 			case len(validRoles) == 1:
 				return validRoles, nil
 			case len(validRoles) > 1:
-				log.Warnf("[SSO] JIT Role Provision detected multiple valid roles - %s , falling back to default role %s", validRoles.Names(), defaultRole.Name)
+				slog.WarnContext(ctx, fmt.Sprintf("[SSO] JIT Role Provision detected multiple valid roles - %s , falling back to default role %s", validRoles.Names(), defaultRole.Name))
 			default:
-				log.Warnf("[SSO] JIT Role Provision detected no valid roles from %s , falling back to default role %s", maybeBHRoles, defaultRole.Name)
+				slog.WarnContext(ctx, fmt.Sprintf("[SSO] JIT Role Provision detected no valid roles from %s , falling back to default role %s", maybeBHRoles, defaultRole.Name))
 			}
 		}
 

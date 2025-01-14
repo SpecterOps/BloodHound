@@ -42,6 +42,7 @@ type Context struct {
 	Host         *url.URL
 	RequestedURL model.AuditableURL
 	RequestIP    string
+	RemoteAddr   string
 }
 
 func (s *Context) ConstructGoContext() context.Context {
