@@ -45,7 +45,7 @@ jobs:
       
       - name: Format with Prettier
         run: |
-          cd packages/javascript/js-client-library && yarn format && ../bh-shared-ui && yarn format && ../../../cmd/ui && yarn format
+          cd packages/javascript/js-client-library && yarn format && ../bh-shared-ui/ && yarn format && ../../../cmd/ui/ && yarn format
 
       - name: Run Build
         run: |
