@@ -118,7 +118,7 @@ export const AllEdgeTypes: Category[] = [
             {
                 name: 'NTLM Relay',
                 edgeTypes: [ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB],
-            }
+            },
         ],
     },
     {
