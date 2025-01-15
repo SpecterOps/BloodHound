@@ -182,6 +182,13 @@ run-bhce-container platform='linux/amd64' tag='custom' version='v5.0.0' *ARGS=''
   @just build-bhce-container {{platform}} {{tag}} {{version}} {{ARGS}}
   @cd examples/docker-compose && BLOODHOUND_TAG={{tag}} docker compose up
 
+# Generate Prisma Client and Update Schema 
+prisma-generate:
+  @just -f cmd/e2e/justfile prisma-generate
+
+# Run E2E tests
+run-e2e-tests: 
+  @just -f cmd/e2e/justfile run-e2e-tests
 
 # Initialize your dev environment (use "just init clean" to reset your config files)
 init wipe="":
