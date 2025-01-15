@@ -17,8 +17,12 @@
 package api
 
 import (
+	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/src/ctx"
 )
 
 func NewJoinedURL(base string, extensions ...string) (string, error) {
@@ -48,4 +52,18 @@ func URLJoinPath(target url.URL, extensions ...string) url.URL {
 	}
 
 	return target
+}
+
+func RedirectToLoginURL(response http.ResponseWriter, request *http.Request, errorMessage string) {
+	hostURL := *ctx.FromRequest(request).Host
+	redirectURL := URLJoinPath(hostURL, UserLoginPath)
+
+	// Optionally, include the error message as a query parameter or in session storage
+	query := redirectURL.Query()
+	query.Set("error", errorMessage)
+	redirectURL.RawQuery = query.Encode()
+
+	// Redirect to the login page
+	response.Header().Add(headers.Location.String(), redirectURL.String())
+	response.WriteHeader(http.StatusFound)
 }
