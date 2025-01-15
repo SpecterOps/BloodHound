@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from 'src/test-utils';
 import LeftNav from 'src/components/LeftNav';
+import { render, screen } from 'src/test-utils';
 
 describe('LeftNav', () => {
     it('should render a single section with a single navigation item', () => {

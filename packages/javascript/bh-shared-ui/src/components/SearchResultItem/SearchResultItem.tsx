@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
 import { Box, ListItem, ListItemText } from '@mui/material';
+import { FC } from 'react';
 import HighlightedText from '../HighlightedText';
 import NodeIcon from '../NodeIcon';
 

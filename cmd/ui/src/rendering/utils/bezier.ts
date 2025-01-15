@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Coordinates } from 'sigma/types';
-import { EdgeDirection } from 'src/utils';
 import { GROUP_SPREAD } from 'src/ducks/graph/utils';
+import { EdgeDirection } from 'src/utils';
 
 // Collection of helper functions for working with 2D Coordinates
 export const bezier = {

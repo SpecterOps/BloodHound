@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { RequestOptions } from 'js-client-library';
-import { entityInformationEndpoints } from '../../utils/content';
+import { useQuery } from 'react-query';
 import { apiClient } from '../../utils/api';
+import { entityInformationEndpoints } from '../../utils/content';
 import { getNodeByDatabaseIdCypher } from '../../utils/entityInfoDisplay';
 import { validateNodeType } from '../useSearch/useSearch';
-import { useQuery } from 'react-query';
 
 export type FetchEntityPropertiesParams = {
     objectId: string;

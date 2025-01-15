@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import PasswordDialog from './PasswordDialog';
-import { render, screen, waitFor } from '../../test-utils';
 import { PASSWD_REQS } from '../..';
+import { render, screen, waitFor } from '../../test-utils';
+import PasswordDialog from './PasswordDialog';
 
 const testCurrentPassword = 'aA1!aaaaaaaa';
 const testValidPassword = 'bB1!bbbbbbbb';

@@ -16,13 +16,13 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, Box, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
-import { PageWithTitle, apiClient, FeatureFlag } from 'bh-shared-ui';
+import { FeatureFlag, PageWithTitle, apiClient } from 'bh-shared-ui';
+import { ClearDatabaseRequest } from 'js-client-library';
 import { useReducer } from 'react';
-import ConfirmationDialog from './ConfirmationDialog';
 import { useMutation } from 'react-query';
 import { useSelector } from 'react-redux';
 import { selectAllAssetGroupIds, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { ClearDatabaseRequest } from 'js-client-library';
+import ConfirmationDialog from './ConfirmationDialog';
 
 const initialState: State = {
     deleteCollectedGraphData: false,

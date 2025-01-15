@@ -14,9 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import {
+    Skeleton,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TablePagination,
+    TableRow,
+} from '@mui/material';
 import React from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow } from '@mui/material';
-import { Skeleton } from '@mui/material';
 
 export interface Header {
     label: string;
