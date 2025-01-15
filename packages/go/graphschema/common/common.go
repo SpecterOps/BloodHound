@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ import (
 	"errors"
 
 	graph "github.com/specterops/bloodhound/dawgs/graph"
+	ad "github.com/specterops/bloodhound/graphschema/ad"
+	azure "github.com/specterops/bloodhound/graphschema/azure"
 )
 
 var (
@@ -37,6 +39,12 @@ func Relationships() []graph.Kind {
 }
 func NodeKinds() []graph.Kind {
 	return []graph.Kind{MigrationData}
+}
+func InboundRelationshipKinds() []graph.Kind {
+	return []graph.Kind{ad.Owns, ad.GenericAll, ad.GenericWrite, ad.WriteOwner, ad.WriteDACL, ad.MemberOf, ad.ForceChangePassword, ad.AllExtendedRights, ad.AddMember, ad.HasSession, ad.GPLink, ad.AllowedToDelegate, ad.CoerceToTGT, ad.AllowedToAct, ad.AdminTo, ad.CanPSRemote, ad.CanRDP, ad.ExecuteDCOM, ad.HasSIDHistory, ad.AddSelf, ad.DCSync, ad.ReadLAPSPassword, ad.ReadGMSAPassword, ad.DumpSMSAPassword, ad.SQLAdmin, ad.AddAllowedToAct, ad.WriteSPN, ad.AddKeyCredentialLink, ad.SyncLAPSPassword, ad.WriteAccountRestrictions, ad.WriteGPLink, ad.GoldenCert, ad.ADCSESC1, ad.ADCSESC3, ad.ADCSESC4, ad.ADCSESC6a, ad.ADCSESC6b, ad.ADCSESC9a, ad.ADCSESC9b, ad.ADCSESC10a, ad.ADCSESC10b, ad.ADCSESC13, ad.SyncedToEntraUser, ad.CoerceAndRelayNTLMToSMB, ad.Contains, azure.AvereContributor, azure.Contributor, azure.GetCertificates, azure.GetKeys, azure.GetSecrets, azure.HasRole, azure.MemberOf, azure.Owner, azure.RunsAs, azure.VMContributor, azure.AutomationContributor, azure.KeyVaultContributor, azure.VMAdminLogin, azure.AddMembers, azure.AddSecret, azure.ExecuteCommand, azure.GlobalAdmin, azure.PrivilegedAuthAdmin, azure.Grant, azure.GrantSelf, azure.PrivilegedRoleAdmin, azure.ResetPassword, azure.UserAccessAdministrator, azure.Owns, azure.CloudAppAdmin, azure.AppAdmin, azure.AddOwner, azure.ManagedIdentity, azure.AKSContributor, azure.NodeResourceGroup, azure.WebsiteContributor, azure.LogicAppContributor, azure.AZMGAddMember, azure.AZMGAddOwner, azure.AZMGAddSecret, azure.AZMGGrantAppRoles, azure.AZMGGrantRole, azure.SyncedToADUser}
+}
+func OutboundRelationshipKinds() []graph.Kind {
+	return []graph.Kind{ad.Owns, ad.GenericAll, ad.GenericWrite, ad.WriteOwner, ad.WriteDACL, ad.MemberOf, ad.ForceChangePassword, ad.AllExtendedRights, ad.AddMember, ad.HasSession, ad.GPLink, ad.AllowedToDelegate, ad.CoerceToTGT, ad.AllowedToAct, ad.AdminTo, ad.CanPSRemote, ad.CanRDP, ad.ExecuteDCOM, ad.HasSIDHistory, ad.AddSelf, ad.DCSync, ad.ReadLAPSPassword, ad.ReadGMSAPassword, ad.DumpSMSAPassword, ad.SQLAdmin, ad.AddAllowedToAct, ad.WriteSPN, ad.AddKeyCredentialLink, ad.SyncLAPSPassword, ad.WriteAccountRestrictions, ad.WriteGPLink, ad.GoldenCert, ad.ADCSESC1, ad.ADCSESC3, ad.ADCSESC4, ad.ADCSESC6a, ad.ADCSESC6b, ad.ADCSESC9a, ad.ADCSESC9b, ad.ADCSESC10a, ad.ADCSESC10b, ad.ADCSESC13, ad.SyncedToEntraUser, ad.CoerceAndRelayNTLMToSMB, ad.Contains, ad.DCFor, azure.AvereContributor, azure.Contributor, azure.GetCertificates, azure.GetKeys, azure.GetSecrets, azure.HasRole, azure.MemberOf, azure.Owner, azure.RunsAs, azure.VMContributor, azure.AutomationContributor, azure.KeyVaultContributor, azure.VMAdminLogin, azure.AddMembers, azure.AddSecret, azure.ExecuteCommand, azure.GlobalAdmin, azure.PrivilegedAuthAdmin, azure.Grant, azure.GrantSelf, azure.PrivilegedRoleAdmin, azure.ResetPassword, azure.UserAccessAdministrator, azure.Owns, azure.CloudAppAdmin, azure.AppAdmin, azure.AddOwner, azure.ManagedIdentity, azure.AKSContributor, azure.NodeResourceGroup, azure.WebsiteContributor, azure.LogicAppContributor, azure.AZMGAddMember, azure.AZMGAddOwner, azure.AZMGAddSecret, azure.AZMGGrantAppRoles, azure.AZMGGrantRole, azure.SyncedToADUser}
 }
 
 type Property string

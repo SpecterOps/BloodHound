@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
-import { useHelpTextStyles, groupSpecialFormat } from '../utils';
-import { EdgeInfoProps } from '../index';
 import { Typography } from '@mui/material';
+import { FC } from 'react';
+import { EdgeInfoProps } from '../index';
+import { groupSpecialFormat, useHelpTextStyles } from '../utils';
 
 const General: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
     const classes = useHelpTextStyles();
