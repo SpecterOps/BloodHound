@@ -15,22 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import {
-    Alert,
-    AlertTitle,
-    Checkbox,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    FormControlLabel,
-    Grid,
-    TextField,
-} from '@mui/material';
-import { PutUserAuthSecretRequest } from 'js-client-library';
+import { Alert, AlertTitle, Checkbox, Dialog, DialogTitle, FormControlLabel, Grid, TextField } from '@mui/material';
+import { DialogActions, DialogContent } from '@mui/material';
 import React, { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { PASSWD_REQS, passwordRegex } from '../../utils';
+import { PutUserAuthSecretRequest } from 'js-client-library';
 
 const passwdReqsList = PASSWD_REQS.map((req, i) => <li key={i}>{req}</li>);
 

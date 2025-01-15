@@ -17,11 +17,11 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useListFileIngestJobs } from '../../hooks';
-import DocumentationLinks from '../DocumentationLinks';
 import FileUploadDialog from '../FileUploadDialog';
+import { useListFileIngestJobs } from '../../hooks';
 import FinishedIngestLog from '../FinishedIngestLog';
 import PageWithTitle from '../PageWithTitle';
+import DocumentationLinks from '../DocumentationLinks';
 
 const FileIngest = () => {
     const [fileUploadDialogOpen, setFileUploadDialogOpen] = useState<boolean>(false);

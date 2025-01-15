@@ -29,11 +29,11 @@ import {
     Skeleton,
     TextField,
 } from '@mui/material';
-import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
+import { SSOProvider, UpdateUserRequest, Role } from 'js-client-library';
 
 export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 

@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Skeleton, Typography } from '@mui/material';
 import { FC } from 'react';
-import { useQuery } from 'react-query';
-import { EdgeInfoProps } from '..';
+import { Alert, Box, Skeleton, Typography } from '@mui/material';
 import { apiClient } from '../../../utils/api';
+import { EdgeInfoProps } from '..';
+import { useQuery } from 'react-query';
 import VirtualizedNodeList, { VirtualizedNodeListItem } from '../../VirtualizedNodeList';
 
 const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {

@@ -17,18 +17,18 @@
 package static
 
 import (
-	"fmt"
 	"io"
 	"io/fs"
-	"log/slog"
 	"mime"
 	"net/http"
 	"path/filepath"
 	"strings"
 
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/utils"
+
+	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/api"
 )
 
 type AssetConfig struct {
@@ -89,7 +89,7 @@ func serve(cfg AssetConfig, response http.ResponseWriter, request *http.Request)
 		response.Header().Set(headers.StrictTransportSecurity.String(), utils.HSTSSetting)
 
 		if _, err := io.Copy(response, fin); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Failed flushing static file content for asset %s to client: %v", assetPath, err))
+			log.Errorf("Failed flushing static file content for asset %s to client: %v", assetPath, err)
 		}
 	}
 }

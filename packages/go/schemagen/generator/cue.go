@@ -19,10 +19,11 @@ package generator
 import (
 	"fmt"
 	"io/fs"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/specterops/bloodhound/log"
 
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
@@ -95,7 +96,7 @@ func (s *ConfigBuilder) OverlayPath(rootPath string) error {
 		} else {
 			overlayPath := filepath.Join(s.overlayRootPath, strings.TrimPrefix(path, rootPath))
 
-			slog.Debug(fmt.Sprintf("Overlaying file: %s to %s", path, overlayPath))
+			log.Debugf("Overlaying file: %s to %s", path, overlayPath)
 			s.overlay[overlayPath] = load.FromBytes(content)
 		}
 

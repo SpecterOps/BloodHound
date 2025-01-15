@@ -17,9 +17,10 @@
 import { faAngleDoubleUp, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Typography } from '@mui/material';
-import { Icon, collapseAllSections, useHeaderStyles } from 'bh-shared-ui';
+import { Icon, collapseAllSections } from 'bh-shared-ui';
 import React from 'react';
 import { useAppDispatch } from 'src/store';
+import { useHeaderStyles } from 'bh-shared-ui';
 
 interface HeaderProps {
     name: string;

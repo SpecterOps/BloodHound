@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import userEvent from '@testing-library/user-event';
-import { render, screen, waitFor } from 'src/test-utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
+import userEvent from '@testing-library/user-event';
+import { screen, render, waitFor } from 'src/test-utils';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 describe('EntityInfoCollapsibleSection', () => {

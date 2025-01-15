@@ -17,14 +17,13 @@
 package bloodhoundgraph
 
 import (
-	"fmt"
-	"log/slog"
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 )
 
 // We ignore the property lookup errors here since there's no clear path for a caller to handle it. Logging is also
@@ -33,7 +32,7 @@ import (
 
 func getNodeLevel(target *graph.Node) (int, bool) {
 	if startSystemTags, err := target.Properties.Get(common.SystemTags.String()).String(); err == nil {
-		slog.Debug(fmt.Sprintf("Unable to find a %s property for node %d with kinds %v", common.SystemTags.String(), target.ID, target.Kinds))
+		log.Debugf("Unable to find a %s property for node %d with kinds %v", common.SystemTags.String(), target.ID, target.Kinds)
 	} else if strings.Contains(startSystemTags, ad.AdminTierZero) {
 		return 0, true
 	}

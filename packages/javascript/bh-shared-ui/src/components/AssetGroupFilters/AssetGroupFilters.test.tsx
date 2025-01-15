@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { AssetGroupMemberCountsResponse, AssetGroupMemberParams } from 'js-client-library';
-import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { createMockAssetGroupMemberParams, createMockMemberCounts } from '../../mocks/factories';
 import { act, render } from '../../test-utils';
 import AssetGroupFilters, { FILTERABLE_PARAMS } from './AssetGroupFilters';
+import userEvent from '@testing-library/user-event';
+import { Screen, waitFor } from '@testing-library/react';
+import { AssetGroupMemberParams, AssetGroupMemberCountsResponse } from 'js-client-library';
+import { ActiveDirectoryNodeKind } from '../../graphSchema';
 
 const filterParams = createMockAssetGroupMemberParams();
 const memberCounts = createMockMemberCounts();

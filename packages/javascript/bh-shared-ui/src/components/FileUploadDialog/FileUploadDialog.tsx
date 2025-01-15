@@ -16,8 +16,11 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Dialog, DialogActions, DialogContent, useTheme } from '@mui/material';
-import { ErrorResponse } from 'js-client-library';
 import { useEffect, useState } from 'react';
+import FileDrop from '../FileDrop';
+import FileStatusListItem from '../FileStatusListItem';
+import { FileForIngest, FileStatus, FileUploadStep } from './types';
+import { ErrorResponse } from 'js-client-library';
 import {
     useEndFileIngestJob,
     useListFileTypesForIngest,
@@ -25,9 +28,6 @@ import {
     useUploadFileToIngestJob,
 } from '../../hooks';
 import { useNotifications } from '../../providers';
-import FileDrop from '../FileDrop';
-import FileStatusListItem from '../FileStatusListItem';
-import { FileForIngest, FileStatus, FileUploadStep } from './types';
 
 const FileUploadDialog: React.FC<{
     open: boolean;

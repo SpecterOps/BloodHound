@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { apiClient } from 'bh-shared-ui';
 import find from 'lodash/find';
 import keys from 'lodash/keys';
 import { SagaIterator } from 'redux-saga';
 import { all, call, put, select, takeEvery } from 'redux-saga/effects';
+import { apiClient } from 'bh-shared-ui';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { flushSuccess } from 'src/ducks/tierzero/actions';
 import { FLUSH_START } from 'src/ducks/tierzero/types';

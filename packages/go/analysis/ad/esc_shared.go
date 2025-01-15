@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"slices"
 	"strings"
 
@@ -32,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/slicesext"
 )
 
@@ -45,7 +45,7 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation anal
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 				if thumbprints, err := innerNode.Properties.Get(ad.CertThumbprints.String()).StringSlice(); err != nil {
 					if strings.Contains(err.Error(), graph.ErrPropertyNotFound.Error()) {
-						slog.WarnContext(ctx, fmt.Sprintf("Unable to post-process TrustedForNTAuth edge for NTAuthStore node %d due to missing adcs data: %v", innerNode.ID, err))
+						log.Warnf("Unable to post-process TrustedForNTAuth edge for NTAuthStore node %d due to missing adcs data: %v", innerNode.ID, err)
 						return nil
 					}
 					return err
@@ -178,7 +178,7 @@ func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.Create
 
 func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, domain, enterpriseCA *graph.Node) error {
 	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, enterpriseCA); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error fetching host ca computer for enterprise ca %d: %v", enterpriseCA.ID, err))
+		log.Errorf("Error fetching host ca computer for enterprise ca %d: %v", enterpriseCA.ID, err)
 	} else {
 		for _, computer := range hostCAServiceComputers {
 			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{

@@ -19,10 +19,9 @@ package fixtures
 import (
 	"context"
 	"fmt"
-	"log/slog"
+	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"sync"
 	"time"
 
@@ -89,8 +88,7 @@ func NewCustomApiFixture(cfgFixture *lab.Fixture[config.Configuration]) *lab.Fix
 	})
 
 	if err := lab.SetDependency(fixture, cfgFixture); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("BHApiFixture dependency error: %v", err))
-		os.Exit(1)
+		log.Fatalf("BHApiFixture dependency error: %v", err)
 	}
 
 	return fixture

@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
 import { FC } from 'react';
-import CodeController from '../CodeController/CodeController';
+import { Typography } from '@mui/material';
 import { useHelpTextStyles } from '../utils';
+import CodeController from '../CodeController/CodeController';
 
 const LinuxAbuse: FC = () => {
     const classes = useHelpTextStyles();

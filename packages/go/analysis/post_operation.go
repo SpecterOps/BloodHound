@@ -18,17 +18,14 @@ package analysis
 
 import (
 	"context"
-	"fmt"
-	"log/slog"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/specterops/bloodhound/bhlog/level"
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 )
 
 type StatTrackedOperation[T any] struct {
@@ -40,7 +37,7 @@ func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operat
 	operation := StatTrackedOperation[CreatePostRelationshipJob]{}
 	operation.NewOperation(ctx, db)
 	operation.Operation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan CreatePostRelationshipJob) error {
-		defer measure.ContextMeasure(ctx, slog.LevelInfo, operationName)()
+		defer log.Measure(log.LevelInfo, operationName)()
 
 		var (
 			relProp = NewPropertiesWithLastSeen()
@@ -132,23 +129,23 @@ func (s *AtomicPostProcessingStats) Merge(other *AtomicPostProcessingStats) {
 
 func (s *AtomicPostProcessingStats) LogStats() {
 	// Only output stats during debug runs
-	if level.GlobalAccepts(slog.LevelDebug) {
+	if log.GlobalLevel() > log.LevelDebug {
 		return
 	}
 
-	slog.Debug("Relationships deleted before post-processing:")
+	log.Debugf("Relationships deleted before post-processing:")
 
 	for _, relationship := range atomicStatsSortedKeys(s.RelationshipsDeleted) {
 		if numDeleted := int(*s.RelationshipsDeleted[relationship]); numDeleted > 0 {
-			slog.Debug(fmt.Sprintf("    %s %d", relationship.String(), numDeleted))
+			log.Debugf("    %s %d", relationship.String(), numDeleted)
 		}
 	}
 
-	slog.Debug("Relationships created after post-processing:")
+	log.Debugf("Relationships created after post-processing:")
 
 	for _, relationship := range atomicStatsSortedKeys(s.RelationshipsCreated) {
 		if numCreated := int(*s.RelationshipsCreated[relationship]); numCreated > 0 {
-			slog.Debug(fmt.Sprintf("    %s %d", relationship.String(), numCreated))
+			log.Debugf("    %s %d", relationship.String(), numCreated)
 		}
 	}
 }

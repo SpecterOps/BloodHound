@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/model/ingest"
 )
 
@@ -72,7 +72,7 @@ func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) 
 			case string:
 				if !metaTagFound && depth == 1 && typed == "meta" {
 					if err := decoder.Decode(&meta); err != nil {
-						slog.Warn("Found invalid metatag, skipping")
+						log.Warnf("Found invalid metatag, skipping")
 					} else if meta.Type.IsValid() {
 						metaTagFound = true
 					}

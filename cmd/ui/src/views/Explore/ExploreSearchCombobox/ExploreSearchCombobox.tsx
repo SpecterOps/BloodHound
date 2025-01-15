@@ -17,9 +17,9 @@
 import { List, ListItem, ListItemText, Paper, TextField, useTheme } from '@mui/material';
 import {
     NodeIcon,
+    SearchValue,
     SearchResult,
     SearchResultItem,
-    SearchValue,
     getEmptyResultsText,
     getKeywordAndTypeValues,
     useSearch,

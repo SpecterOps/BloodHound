@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps, Typography } from '@mui/material';
-import { NoEntitySelectedHeader, NoEntitySelectedMessage, usePaneStyles } from 'bh-shared-ui';
+import { usePaneStyles, NoEntitySelectedHeader, NoEntitySelectedMessage } from 'bh-shared-ui';
 import React, { useEffect, useState } from 'react';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import usePreviousValue from 'src/hooks/usePreviousValue';

@@ -18,17 +18,14 @@ package analysis
 
 import (
 	"context"
-	"fmt"
-	"log/slog"
 	"sort"
 
-	"github.com/specterops/bloodhound/bhlog/level"
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 )
 
 func statsSortedKeys(value map[graph.Kind]int) []graph.Kind {
@@ -91,23 +88,23 @@ func (s PostProcessingStats) Merge(other PostProcessingStats) {
 
 func (s PostProcessingStats) LogStats() {
 	// Only output stats during debug runs
-	if level.GlobalAccepts(slog.LevelDebug) {
+	if log.GlobalLevel() > log.LevelDebug {
 		return
 	}
 
-	slog.Debug("Relationships deleted before post-processing:")
+	log.Debugf("Relationships deleted before post-processing:")
 
 	for _, relationship := range statsSortedKeys(s.RelationshipsDeleted) {
 		if numDeleted := s.RelationshipsDeleted[relationship]; numDeleted > 0 {
-			slog.Debug(fmt.Sprintf("    %s %d", relationship.String(), numDeleted))
+			log.Debugf("    %s %d", relationship.String(), numDeleted)
 		}
 	}
 
-	slog.Debug("Relationships created after post-processing:")
+	log.Debugf("Relationships created after post-processing:")
 
 	for _, relationship := range statsSortedKeys(s.RelationshipsCreated) {
 		if numDeleted := s.RelationshipsCreated[relationship]; numDeleted > 0 {
-			slog.Debug(fmt.Sprintf("    %s %d", relationship.String(), s.RelationshipsCreated[relationship]))
+			log.Debugf("    %s %d", relationship.String(), s.RelationshipsCreated[relationship])
 		}
 	}
 }
@@ -124,7 +121,7 @@ type DeleteRelationshipJob struct {
 }
 
 func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships ...graph.Kind) (*AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished deleting transit edges")()
+	defer log.Measure(log.LevelInfo, "Finished deleting transit edges")()
 
 	var (
 		relationshipIDs []graph.ID
@@ -174,7 +171,7 @@ func NodesWithoutRelationshipsFilter() graph.Criteria {
 }
 
 func ClearOrphanedNodes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished deleting orphaned nodes")()
+	defer log.Measure(log.LevelInfo, "Finished deleting orphaned nodes")()
 
 	var operation = ops.StartNewOperation[graph.ID](ops.OperationContext{
 		Parent:     ctx,

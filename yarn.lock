@@ -4277,7 +4277,6 @@ __metadata:
     msw: ^1.3.3
     notistack: ^2.0.5
     prettier: ^3.2.5
-    prettier-plugin-organize-imports: ^4.1.0
     prop-types: ^15.8.1
     react: ^18.2.0
     react-dom: ^18.2.0
@@ -4404,7 +4403,6 @@ __metadata:
     msw: ^1.3.3
     notistack: ^2.0.5
     prettier: ^3.2.5
-    prettier-plugin-organize-imports: ^4.1.0
     react: ^18.2.0
     react-dom: ^18.2.0
     react-error-boundary: ^3.1.4
@@ -7551,7 +7549,6 @@ __metadata:
     eslint: ^8.57.0
     eslint-config-prettier: ^9.1.0
     prettier: ^3.2.5
-    prettier-plugin-organize-imports: ^4.1.0
     rollup: ^4.13.2
     rollup-plugin-delete: ^2.0.0
     typescript: ^5.1.6
@@ -9182,20 +9179,6 @@ __metadata:
   version: 1.2.1
   resolution: "prelude-ls@npm:1.2.1"
   checksum: cd192ec0d0a8e4c6da3bb80e4f62afe336df3f76271ac6deb0e6a36187133b6073a19e9727a1ff108cd8b9982e4768850d413baa71214dd80c7979617dca827a
-  languageName: node
-  linkType: hard
-
-"prettier-plugin-organize-imports@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "prettier-plugin-organize-imports@npm:4.1.0"
-  peerDependencies:
-    prettier: ">=2.0"
-    typescript: ">=2.9"
-    vue-tsc: ^2.1.0
-  peerDependenciesMeta:
-    vue-tsc:
-      optional: true
-  checksum: 43c917959170fa3e30e41f9b3bd314a31462ae34e5568b4dba6b1c8b8da758adf900fdf4999333ab2b60b3d1af541f9521396a5e19df03ab5400a50edc9a75f6
   languageName: node
   linkType: hard
 

@@ -15,6 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import { act } from 'react-dom/test-utils';
+import { render, screen, waitFor } from 'src/test-utils';
+import ContextMenu from './ContextMenu';
 import {
     DeepPartial,
     EntityKinds,
@@ -22,12 +27,7 @@ import {
     searchbarActions as actions,
     createAuthStateWithPermissions,
 } from 'bh-shared-ui';
-import { rest } from 'msw';
-import { setupServer } from 'msw/node';
-import { act } from 'react-dom/test-utils';
 import { AppState } from 'src/store';
-import { render, screen, waitFor } from 'src/test-utils';
-import ContextMenu from './ContextMenu';
 
 describe('ContextMenu', async () => {
     const server = setupServer(

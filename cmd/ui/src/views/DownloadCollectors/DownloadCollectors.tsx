@@ -15,9 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, Box, Paper, Skeleton, Typography, useTheme } from '@mui/material';
-import { CollectorCardList, DocumentationLinks, PageWithTitle, apiClient } from 'bh-shared-ui';
 import fileDownload from 'js-file-download';
 import { useDispatch } from 'react-redux';
+import { apiClient, DocumentationLinks } from 'bh-shared-ui';
+import { CollectorCardList, PageWithTitle } from 'bh-shared-ui';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { CollectorType, useGetCollectorsByType } from 'src/hooks/useCollectors';
 

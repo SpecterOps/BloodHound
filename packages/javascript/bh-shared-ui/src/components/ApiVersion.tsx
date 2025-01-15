@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Skeleton, Typography } from '@mui/material';
+import { apiClient } from '../utils';
 import React from 'react';
 import { useQuery } from 'react-query';
-import { apiClient } from '../utils';
 
 const ApiVersion: React.FC = () => {
     const getVersionQuery = useQuery(['Version'], ({ signal }) =>

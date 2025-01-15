@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import Abuse from './Abuse';
 import General from './General';
+import Abuse from './Abuse';
 import Opsec from './Opsec';
 import References from './References';
 

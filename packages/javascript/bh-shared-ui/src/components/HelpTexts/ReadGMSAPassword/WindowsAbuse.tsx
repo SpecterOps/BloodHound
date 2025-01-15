@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List, ListItem, ListItemText, Typography } from '@mui/material';
 import { FC } from 'react';
+import { Typography, List, ListItem, ListItemText } from '@mui/material';
 
 const WindowsAbuse: FC = () => {
     return (

@@ -25,7 +25,6 @@ import (
 // TODO: Review if relying on a deny model is less secure than explicit allow
 func DefaultCypherContext() *Context {
 	return NewContext(
-		&UpdatingNotAllowedClauseFilter{},
 		&UpdatingClauseFilter{},
 		&ExplicitProcedureInvocationFilter{},
 		&ImplicitProcedureInvocationFilter{},
@@ -57,21 +56,10 @@ func (s *SpecifiedParametersFilter) EnterOC_Parameter(ctx *parser.OC_ParameterCo
 	s.ctx.AddErrors(ErrUserSpecifiedParametersNotSupported)
 }
 
-type UpdatingNotAllowedClauseFilter struct {
-	BaseVisitor
-}
-
-func (s *UpdatingNotAllowedClauseFilter) EnterOC_UpdatingClause(ctx *parser.OC_UpdatingClauseContext) {
-	s.ctx.AddErrors(ErrUpdateClauseNotSupported)
-}
-
 type UpdatingClauseFilter struct {
 	BaseVisitor
 }
 
 func (s *UpdatingClauseFilter) EnterOC_UpdatingClause(ctx *parser.OC_UpdatingClauseContext) {
-	if s.ctx.HasShortcutExpansion {
-		s.ctx.AddErrors(ErrUpdateWithExpansionNotSupported)
-	}
-	s.ctx.HasMutation = true
+	s.ctx.AddErrors(ErrUpdateClauseNotSupported)
 }

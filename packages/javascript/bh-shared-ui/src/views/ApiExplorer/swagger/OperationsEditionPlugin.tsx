@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List } from 'immutable';
-import toString from 'lodash/toString';
-import PropTypes from 'prop-types';
 import { PureComponent } from 'react';
+import PropTypes from 'prop-types';
+import { List } from 'immutable';
 import ImPropTypes from 'react-immutable-proptypes';
-import { CommunityIcon, EnterpriseIcon } from '../../../components';
+import { CommunityIcon } from '../../../components';
+import { EnterpriseIcon } from '../../../components';
+import toString from 'lodash/toString';
 
 export const OperationsEditionPlugin = function () {
     return {

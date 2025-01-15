@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import userEvent from '@testing-library/user-event';
 import { render, screen } from '../../test-utils';
 import GraphButton from './GraphButton';
+import userEvent from '@testing-library/user-event';
 
 const onClick = vi.fn();
 const displayText = 'test';

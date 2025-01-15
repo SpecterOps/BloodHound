@@ -18,9 +18,9 @@ import extend from 'lodash/extend';
 import keys from 'lodash/keys';
 import pick from 'lodash/pick';
 import pickBy from 'lodash/pickBy';
+import { Index, Items } from 'src/utils';
 import { mapToRange, toGraphLinkColor, toWidth } from 'src/ducks/graph/colors';
 import { GraphNodeTypes } from 'src/ducks/graph/types';
-import { Index, Items } from 'src/utils';
 
 const getLinks: (data: Items) => Items[] = (data) => {
     const relKeys = Object.keys(data).filter((nodeKey) => {
@@ -246,16 +246,16 @@ const setFontIcons = (data: Items): void => {
 };
 
 export {
-    ICONS,
+    withLinkImact,
+    handleLabels,
+    setFontIcons,
+    getLinks,
+    getLinksIndex,
+    getNodesIndex,
     applyRelWidths,
     findRootId,
     findRootRelsIds,
     findTierZeroNodeId,
     getCombined,
-    getLinks,
-    getLinksIndex,
-    getNodesIndex,
-    handleLabels,
-    setFontIcons,
-    withLinkImact,
+    ICONS,
 };

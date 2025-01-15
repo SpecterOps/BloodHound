@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Skeleton, Typography, useTheme } from '@mui/material';
+import { Box, Typography, Skeleton, useTheme } from '@mui/material';
 import { PageWithTitle } from '../../../components';
 import DocumentationLinks from '../../../components/DocumentationLinks';
 

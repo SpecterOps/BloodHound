@@ -19,19 +19,17 @@ package agi
 
 import (
 	"context"
-	"fmt"
-	"log/slog"
 	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -73,7 +71,7 @@ func FetchAssetGroupNodes(tx graph.Transaction, assetGroupTag string, isSystemGr
 }
 
 func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
+	defer log.Measure(log.LevelInfo, "Asset Group Isolation Collections")()
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err
@@ -93,7 +91,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db AgiData, graphDB 
 					idx := 0
 					for _, node := range assetGroupNodes {
 						if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-							slog.ErrorContext(ctx, fmt.Sprintf("Node %d that does not have valid %s property", node.ID, common.ObjectID))
+							log.Errorf("Node %d that does not have valid %s property", node.ID, common.ObjectID)
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,

@@ -17,10 +17,10 @@
 import { Box, List, ListItem, Paper, SxProps, TextField } from '@mui/material';
 import { useCombobox } from 'downshift';
 import { FC, useEffect, useRef, useState } from 'react';
-import { FixedSizeList } from 'react-window';
-import { useOnClickOutside } from '../../hooks';
 import SearchResultItem from '../SearchResultItem';
 import { FlatNode, GraphNodes } from './types';
+import { useOnClickOutside } from '../../hooks';
+import { FixedSizeList } from 'react-window';
 
 export const PLACEHOLDER_TEXT = 'Search Current Results';
 export const NO_RESULTS_TEXT = 'No result found in current results';

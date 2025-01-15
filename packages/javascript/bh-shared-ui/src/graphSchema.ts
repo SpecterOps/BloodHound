@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -139,7 +139,6 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC10b = 'ADCSESC10b',
     ADCSESC13 = 'ADCSESC13',
     SyncedToEntraUser = 'SyncedToEntraUser',
-    CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -279,8 +278,6 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC13';
         case ActiveDirectoryRelationshipKind.SyncedToEntraUser:
             return 'SyncedToEntraUser';
-        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB:
-            return 'CoerceAndRelayNTLMToSMB';
         default:
             return undefined;
     }
@@ -298,7 +295,6 @@ export const EdgeCompositionRelationships = [
     'ADCSESC10a',
     'ADCSESC10b',
     'ADCSESC13',
-    'CoerceAndRelayNTLMToSMB',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -402,8 +398,6 @@ export enum ActiveDirectoryKindProperties {
     MaxPwdAge = 'maxpwdage',
     LockoutDuration = 'lockoutduration',
     LockoutObservationWindow = 'lockoutobservationwindow',
-    SMBSigning = 'smbsigning',
-    RestrictOutboundNTLM = 'restrictoutboundntlm',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -609,10 +603,6 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Lockout Duration';
         case ActiveDirectoryKindProperties.LockoutObservationWindow:
             return 'Lockout Observation Window';
-        case ActiveDirectoryKindProperties.SMBSigning:
-            return 'SMB Signing';
-        case ActiveDirectoryKindProperties.RestrictOutboundNTLM:
-            return 'Restrict Outbound NTLM';
         default:
             return undefined;
     }
@@ -629,9 +619,11 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AllExtendedRights,
         ActiveDirectoryRelationshipKind.AddMember,
         ActiveDirectoryRelationshipKind.HasSession,
+        ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
         ActiveDirectoryRelationshipKind.CoerceToTGT,
+        ActiveDirectoryRelationshipKind.TrustedBy,
         ActiveDirectoryRelationshipKind.AllowedToAct,
         ActiveDirectoryRelationshipKind.AdminTo,
         ActiveDirectoryRelationshipKind.CanPSRemote,
@@ -661,11 +653,8 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC10a,
         ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.ADCSESC13,
-        ActiveDirectoryRelationshipKind.SyncedToEntraUser,
-        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
-        ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
-        ActiveDirectoryRelationshipKind.TrustedBy,
+        ActiveDirectoryRelationshipKind.SyncedToEntraUser,
     ];
 }
 export enum AzureNodeKind {
@@ -993,6 +982,7 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
 export function AzurePathfindingEdges(): AzureRelationshipKind[] {
     return [
         AzureRelationshipKind.AvereContributor,
+        AzureRelationshipKind.Contains,
         AzureRelationshipKind.Contributor,
         AzureRelationshipKind.GetCertificates,
         AzureRelationshipKind.GetKeys,
@@ -1030,7 +1020,6 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToADUser,
-        AzureRelationshipKind.Contains,
     ];
 }
 export enum CommonNodeKind {

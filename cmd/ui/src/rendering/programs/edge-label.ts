@@ -21,12 +21,12 @@
  * Function used by the canvas renderer to display a single edge's label.
  * @module
  */
-import { Attributes } from 'graphology-types';
 import { Settings } from 'sigma/settings';
 import { Coordinates, NodeDisplayData, PartialButFor } from 'sigma/types';
-import { EdgeDistanceProperties, calculateEdgeDistanceForLabel, getEdgeLabelTextLength } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
 import { calculateLabelOpacity } from 'src/rendering/utils/utils';
+import { getEdgeLabelTextLength, calculateEdgeDistanceForLabel, EdgeDistanceProperties } from 'src/ducks/graph/utils';
+import { Attributes } from 'graphology-types';
 import { getControlPointsFromGroupSize } from './edge.self';
 
 const PADDING_SCALAR = 5;

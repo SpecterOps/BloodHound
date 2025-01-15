@@ -18,14 +18,11 @@ package ad
 
 import (
 	"context"
-	"fmt"
-	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/graphcache"
@@ -34,10 +31,11 @@ import (
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 )
 
 func FetchGraphDBTierZeroTaggedAssets(ctx context.Context, db graph.Database, domainSID string) (graph.NodeSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets")()
+	defer log.Measure(log.LevelInfo, "FetchGraphDBTierZeroTaggedAssets")()
 
 	var (
 		nodes graph.NodeSet
@@ -59,7 +57,7 @@ func FetchGraphDBTierZeroTaggedAssets(ctx context.Context, db graph.Database, do
 }
 
 func FetchAllEnforcedGPOs(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchAllEnforcedGPOs")()
+	defer log.Measure(log.LevelInfo, "FetchAllEnforcedGPOs")()
 
 	enforcedGPOs := graph.NewNodeSet()
 
@@ -77,7 +75,7 @@ func FetchAllEnforcedGPOs(ctx context.Context, db graph.Database, targets graph.
 }
 
 func FetchOUContainers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchOUContainers")()
+	defer log.Measure(log.LevelInfo, "FetchOUContainers")()
 
 	oUs := graph.NewNodeSet()
 
@@ -112,7 +110,7 @@ func FetchAllDomains(ctx context.Context, db graph.Database) ([]*graph.Node, err
 }
 
 func FetchActiveDirectoryTierZeroRoots(ctx context.Context, db graph.Database, domain *graph.Node, autoTagT0ParentObjectsFlag bool) (graph.NodeSet, error) {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "FetchActiveDirectoryTierZeroRoots")()
+	defer log.LogAndMeasure(log.LevelInfo, "FetchActiveDirectoryTierZeroRoots")()
 
 	if domainSID, err := domain.Properties.Get(common.ObjectID.String()).String(); err != nil {
 		return nil, err
@@ -1513,9 +1511,9 @@ func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (f
 }
 
 func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchAllGroupMembers")()
+	defer log.Measure(log.LevelInfo, "FetchAllGroupMembers")()
 
-	slog.InfoContext(ctx, fmt.Sprintf("Fetching group members for %d AD nodes", len(targets)))
+	log.Infof("Fetching group members for %d AD nodes", len(targets))
 
 	allGroupMembers := graph.NewNodeSet()
 
@@ -1529,7 +1527,7 @@ func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.
 		}
 	}
 
-	slog.InfoContext(ctx, fmt.Sprintf("Collected %d group members", len(allGroupMembers)))
+	log.Infof("Collected %d group members", len(allGroupMembers))
 	return allGroupMembers, nil
 }
 

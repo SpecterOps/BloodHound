@@ -19,20 +19,20 @@ package ad
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/analysis/impact"
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
+
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 )
 
 var (
@@ -74,7 +74,7 @@ func TierZeroWellKnownSIDSuffixes() []string {
 }
 
 func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, domainSID string) (graph.NodeSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchWellKnownTierZeroEntities")()
+	defer log.Measure(log.LevelInfo, "FetchWellKnownTierZeroEntities")()
 
 	nodes := graph.NewNodeSet()
 
@@ -119,7 +119,7 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 }
 
 func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Fix well known node types")()
+	defer log.Measure(log.LevelInfo, "Fix well known node types")()
 
 	groupSuffixes := []string{EnterpriseKeyAdminsGroupSIDSuffix,
 		KeyAdminsGroupSIDSuffix,
@@ -158,7 +158,7 @@ func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 }
 
 func RunDomainAssociations(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Domain Associations")()
+	defer log.Measure(log.LevelInfo, "Domain Associations")()
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		if domainNamesByObjectID, err := grabDomainInformation(tx); err != nil {
@@ -200,9 +200,9 @@ func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
 	}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 		for node := range cursor.Chan() {
 			if domainObjectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-				slog.Error(fmt.Sprintf("Domain node %d does not have a valid object ID", node.ID))
+				log.Errorf("Domain node %d does not have a valid object ID", node.ID)
 			} else if domainName, err := node.Properties.Get(common.Name.String()).String(); err != nil {
-				slog.Error(fmt.Sprintf("Domain node %d does not have a valid name", node.ID))
+				log.Errorf("Domain node %d does not have a valid name", node.ID)
 			} else {
 				domainNamesByObjectID[domainObjectID] = domainName
 			}
@@ -217,7 +217,7 @@ func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
 }
 
 func LinkWellKnownGroups(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Link well known groups")()
+	defer log.Measure(log.LevelInfo, "Link well known groups")()
 
 	var (
 		errors        = util.NewErrorCollector()
@@ -231,9 +231,9 @@ func LinkWellKnownGroups(ctx context.Context, db graph.Database) error {
 
 		for _, domain := range domains {
 			if domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain sid for domain %d: %v", domain.ID, err))
+				log.Errorf("Error getting domain sid for domain %d: %v", domain.ID, err)
 			} else if domainName, err := domain.Properties.Get(common.Name.String()).String(); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain name for domain %d: %v", domain.ID, err))
+				log.Errorf("Error getting domain name for domain %d: %v", domain.ID, err)
 			} else {
 				var (
 					domainId         = domain.ID
@@ -262,7 +262,7 @@ func LinkWellKnownGroups(ctx context.Context, db graph.Database) error {
 						return nil
 					}
 				}); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error linking well known groups for domain %d: %v", domain.ID, err))
+					log.Errorf("Error linking well known groups for domain %d: %v", domain.ID, err)
 					errors.Add(fmt.Errorf("failed linking well known groups for domain %d: %w", domain.ID, err))
 				}
 			}
@@ -319,7 +319,7 @@ func createOrUpdateWellKnownLink(tx graph.Transaction, startNode *graph.Node, en
 // See CalculateCrossProductNodeSetsDoc.md for explaination of the specialGroups (Authenticated Users and Everyone) and why we treat them the way we do
 func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, groupExpansions impact.PathAggregator, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
 	if len(nodeSlices) < 2 {
-		slog.Error("Cross products require at least 2 nodesets")
+		log.Errorf("Cross products require at least 2 nodesets")
 		return cardinality.NewBitmap64()
 	}
 
@@ -343,7 +343,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 	specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid)
 
 	if err != nil {
-		slog.Error(fmt.Sprintf("Could not fetch groups: %s", err.Error()))
+		log.Errorf("Could not fetch groups: %s", err.Error())
 	}
 
 	//Unroll all nodesets

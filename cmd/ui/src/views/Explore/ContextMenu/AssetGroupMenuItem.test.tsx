@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import userEvent from '@testing-library/user-event';
-import { apiClient } from 'bh-shared-ui';
-import { rest } from 'msw';
-import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
+import userEvent from '@testing-library/user-event';
+import { setupServer } from 'msw/node';
+import { rest } from 'msw';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
+import { apiClient } from 'bh-shared-ui';
 
 describe('AssetGroupMenuItem', async () => {
     const tierZeroAssetGroup = { id: 1, name: 'high value' };

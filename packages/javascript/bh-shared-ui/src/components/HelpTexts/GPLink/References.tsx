@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link } from '@mui/material';
 import { FC } from 'react';
+import { Link } from '@mui/material';
 
 const References: FC = () => {
     return (

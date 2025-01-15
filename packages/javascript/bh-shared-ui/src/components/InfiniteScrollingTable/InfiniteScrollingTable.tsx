@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List, ListItem, Skeleton, Tooltip } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { List, ListItem, Tooltip, Skeleton } from '@mui/material';
 import memoize from 'memoize-one';
 import React, { memo, useState } from 'react';
-import { FixedSizeList, ListChildComponentProps, areEqual } from 'react-window';
+import { areEqual, FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
 import NodeIcon from '../NodeIcon';
+import makeStyles from '@mui/styles/makeStyles';
 
 const ITEM_SIZE = 32;
 

@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
 import { FC } from 'react';
-import { EdgeInfoProps } from '../index';
 import { typeFormat } from '../utils';
+import { EdgeInfoProps } from '../index';
+import { Typography } from '@mui/material';
 
 const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
     return (

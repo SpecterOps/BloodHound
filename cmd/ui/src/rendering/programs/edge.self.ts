@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Attributes } from 'graphology-types';
+import CurvedEdgeProgram from './edge.curved';
 import { Coordinates, NodeDisplayData } from 'sigma/types';
+import { Attributes } from 'graphology-types';
 import { floatColor } from 'sigma/utils';
 import { bezier } from 'src/rendering/utils/bezier';
-import CurvedEdgeProgram from './edge.curved';
 
 const RESOLUTION = 0.02,
     POINTS = 2 / RESOLUTION + 2,

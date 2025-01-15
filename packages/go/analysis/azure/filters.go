@@ -17,13 +17,11 @@
 package azure
 
 import (
-	"fmt"
-	"log/slog"
-
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/log"
 )
 
 func FilterEntityActiveAssignments() graph.Criteria {
@@ -96,7 +94,7 @@ func roleDescentFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bo
 			// If the group does not allow role inheritance then we do not inherit the terminal role
 			if isRoleAssignable, err := end.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil || !isRoleAssignable {
 				if graph.IsErrPropertyNotFound(err) {
-					slog.Warn(fmt.Sprintf("Node %d is missing property %s", end.ID, azure.IsAssignableToRole))
+					log.Warnf("Node %d is missing property %s", end.ID, azure.IsAssignableToRole)
 				}
 				acceptDescendent = false
 				return false

@@ -14,8 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Box,
     Paper,
@@ -31,11 +29,13 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { FC, useEffect, useState } from 'react';
+import NodeIcon from '../NodeIcon';
+import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
-import NodeIcon from '../NodeIcon';
 
 const AssetGroupMemberList: FC<{
     assetGroup: AssetGroup | null;

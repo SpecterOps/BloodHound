@@ -17,7 +17,7 @@
 import { faArrowDown, faInbox } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, useTheme } from '@mui/material';
-import { DragEvent, useRef, useState } from 'react';
+import { useState, DragEvent, useRef } from 'react';
 
 const FileDrop: React.FC<{
     onDrop: (files: any) => void;

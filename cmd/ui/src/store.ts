@@ -15,13 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { combineReducers, configureStore, PreloadedState } from '@reduxjs/toolkit';
-import { edgeinfo, searchReducer as search } from 'bh-shared-ui';
 import { enableMapSet } from 'immer';
 import Cookies from 'js-cookie';
 import throttle from 'lodash/throttle';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import createSagaMiddleware from 'redux-saga';
 import * as reducers from 'src/ducks';
+import { edgeinfo, searchReducer as search } from 'bh-shared-ui';
 import rootSaga from 'src/rootSaga';
 
 enableMapSet();

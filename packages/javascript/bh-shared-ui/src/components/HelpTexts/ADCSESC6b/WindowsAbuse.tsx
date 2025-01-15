@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Typography } from '@mui/material';
 import { FC } from 'react';
+import { Box, Typography } from '@mui/material';
 
 const WindowsAbuse: FC = () => {
     return (

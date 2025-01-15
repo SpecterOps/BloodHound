@@ -19,12 +19,11 @@ package cmdrunner
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/specterops/bloodhound/bhlog/level"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
@@ -43,7 +42,7 @@ func Run(command string, args []string, path string, env environment.Environment
 
 		cmdstr       = command + " " + args[0]
 		cmd          = exec.Command(command, args...)
-		debugEnabled = level.GlobalAccepts(slog.LevelDebug)
+		debugEnabled = log.GlobalAccepts(log.LevelDebug)
 	)
 
 	cmd.Env = env.Slice()
@@ -65,7 +64,7 @@ func Run(command string, args []string, path string, env environment.Environment
 		}
 	}
 
-	slog.Info(fmt.Sprintf("Running %s for %s", cmdstr, path))
+	log.Infof("Running %s for %s", cmdstr, path)
 
 	err := cmd.Run()
 	if _, ok := err.(*exec.ExitError); ok {
@@ -74,7 +73,7 @@ func Run(command string, args []string, path string, env environment.Environment
 		return fmt.Errorf("%s: %w", cmdstr, err)
 	}
 
-	slog.Info(fmt.Sprintf("Finished %s for %s", cmdstr, path))
+	log.Infof("Finished %s for %s", cmdstr, path)
 
 	return exitErr
 }

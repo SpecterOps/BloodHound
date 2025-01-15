@@ -19,10 +19,10 @@ package v2
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"strings"
 
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -112,7 +112,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		} else {
 			var userId string
 			if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-				slog.WarnContext(request.Context(), "encountered request analysis for unknown user, this shouldn't happen")
+				log.Warnf("encountered request analysis for unknown user, this shouldn't happen")
 				userId = "unknown-user-database-wipe"
 			} else {
 				userId = user.ID.String()
@@ -140,7 +140,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	if kickoffAnalysis {
 		var userId string
 		if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-			slog.WarnContext(request.Context(), "encountered request analysis for unknown user, this shouldn't happen")
+			log.Warnf("encountered request analysis for unknown user, this shouldn't happen")
 			userId = "unknown-user-database-wipe"
 		} else {
 			userId = user.ID.String()
@@ -183,7 +183,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 func (s Resources) deleteHighValueSelectors(ctx context.Context, auditEntry *model.AuditEntry, assetGroupIDs []int) (failure bool) {
 
 	if err := s.DB.DeleteAssetGroupSelectorsForAssetGroups(ctx, assetGroupIDs); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "there was an error deleting asset group selectors ", err.Error()))
+		log.Errorf("%s: %s", "there was an error deleting asset group selectors ", err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "high value selectors")
 		return true
 	} else {
@@ -195,7 +195,7 @@ func (s Resources) deleteHighValueSelectors(ctx context.Context, auditEntry *mod
 
 func (s Resources) deleteFileIngestHistory(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
 	if err := s.DB.DeleteAllFileUploads(ctx); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "there was an error deleting file ingest history", err.Error()))
+		log.Errorf("%s: %s", "there was an error deleting file ingest history", err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "file ingest history")
 		return true
 	} else {
@@ -206,7 +206,7 @@ func (s Resources) deleteFileIngestHistory(ctx context.Context, auditEntry *mode
 
 func (s Resources) deleteDataQualityHistory(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
 	if err := s.DB.DeleteAllDataQuality(ctx); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "there was an error deleting data quality history", err.Error()))
+		log.Errorf("%s: %s", "there was an error deleting data quality history", err.Error())
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "data quality history")
 		return true
 	} else {
@@ -229,6 +229,6 @@ func (s Resources) handleAuditLogForDatabaseWipe(ctx context.Context, auditEntry
 	}
 
 	if err := s.DB.AppendAuditLog(ctx, *auditEntry); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "error writing to audit log", err.Error()))
+		log.Errorf("%s: %s", "error writing to audit log", err.Error())
 	}
 }

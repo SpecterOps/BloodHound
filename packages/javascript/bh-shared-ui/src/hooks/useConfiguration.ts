@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ConfigurationPayload, RequestOptions } from 'js-client-library';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 
 const configurationKeys = {
     all: ['configuration'] as const,

@@ -25,13 +25,13 @@
  *
  * @module
  */
+import { Coordinates, Dimensions, NodeDisplayData } from 'sigma/types';
+import { floatColor } from 'sigma/utils';
+import { vertexShaderSource } from '../shaders/node.combined.vert';
+import { fragmentShaderSource } from '../shaders/node.combined.frag';
 import { AbstractNodeProgram } from 'sigma/rendering/webgl/programs/common/node';
 import { RenderParams } from 'sigma/rendering/webgl/programs/common/program';
 import Sigma from 'sigma/sigma';
-import { Coordinates, Dimensions, NodeDisplayData } from 'sigma/types';
-import { floatColor } from 'sigma/utils';
-import { fragmentShaderSource } from '../shaders/node.combined.frag';
-import { vertexShaderSource } from '../shaders/node.combined.vert';
 
 const POINTS = 3,
     /*

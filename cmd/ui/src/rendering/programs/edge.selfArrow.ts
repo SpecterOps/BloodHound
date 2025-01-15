@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { createEdgeCompoundProgram } from 'sigma/rendering/webgl/programs/common/edge';
-import { EdgeDisplayData } from 'sigma/types';
-import SelfEdgeProgram from './edge.self';
 import SelfEdgeArrowHeadProgram from './edge.selfArrowHead';
+import SelfEdgeProgram from './edge.self';
+import { EdgeDisplayData } from 'sigma/types';
 
 export type SelfEdgeDisplayData = EdgeDisplayData & {
     groupSize?: number;

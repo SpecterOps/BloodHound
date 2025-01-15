@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const useDebouncedValue = (value: any, delay: number) => {
     const [debouncedValue, setDebouncedValue] = useState(value);

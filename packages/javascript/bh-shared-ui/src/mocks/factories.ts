@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroup, AssetGroupMember, AssetGroupMemberCounts, AssetGroupMemberParams } from 'js-client-library';
-import { ActiveDirectoryNodeKind } from '../graphSchema';
+import { AssetGroup, AssetGroupMember, AssetGroupMemberParams, AssetGroupMemberCounts } from 'js-client-library';
 import { SearchResults } from '../hooks';
+import { ActiveDirectoryNodeKind } from '../graphSchema';
 import { PERMISSIONS, Permission } from '../utils';
 
 export const createMockAssetGroupMembers = (): { members: AssetGroupMember[] } => {

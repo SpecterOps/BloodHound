@@ -18,12 +18,12 @@ import {
     faBars,
     faCogs,
     faEdit,
-    faKey,
     faLock,
-    faTrash,
-    faUnlockAlt,
     faUserCheck,
     faUserLock,
+    faKey,
+    faTrash,
+    faUnlockAlt,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, MenuProps } from '@mui/material';

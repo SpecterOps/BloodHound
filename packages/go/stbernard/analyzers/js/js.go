@@ -21,9 +21,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"os/exec"
 
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
@@ -51,7 +51,7 @@ func Run(jsPaths []string, env environment.Environment) ([]codeclimate.Entry, er
 		result    = make([]codeclimate.Entry, 0, len(jsPaths))
 	)
 
-	slog.Info("Running eslint")
+	log.Infof("Running eslint")
 
 	for _, path := range jsPaths {
 		entries, err := runEslint(path, env)
@@ -63,7 +63,7 @@ func Run(jsPaths []string, env environment.Environment) ([]codeclimate.Entry, er
 		result = append(result, entries...)
 	}
 
-	slog.Info("Completed eslint")
+	log.Infof("Completed eslint")
 
 	return result, exitError
 }

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Dialog, DialogTitle } from '@mui/material';
-import { Role, SSOProvider, UpsertOIDCProviderRequest } from 'js-client-library';
+import { SSOProvider, UpsertOIDCProviderRequest, Role } from 'js-client-library';
 import UpsertOIDCProviderForm from './UpsertOIDCProviderForm';
 
 const UpsertOIDCProviderDialog: React.FC<{

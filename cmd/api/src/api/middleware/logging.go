@@ -17,15 +17,14 @@
 package middleware
 
 import (
-	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"runtime/debug"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -37,7 +36,7 @@ func PanicHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		defer func() {
 			if recovery := recover(); recovery != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("[panic recovery] %s - [stack trace] %s", recovery, debug.Stack()))
+				log.Errorf("[panic recovery] %s - [stack trace] %s", recovery, debug.Stack())
 			}
 		}()
 
@@ -96,17 +95,17 @@ func getSignedRequestDate(request *http.Request) (string, bool) {
 	return requestDateHeader, requestDateHeader != ""
 }
 
-func setSignedRequestFields(request *http.Request, logAttrs *[]slog.Attr) {
+func setSignedRequestFields(request *http.Request, logEvent log.Event) {
 	// Log the token ID and request date if the request contains either header
 	if requestDateHeader, hasHeader := getSignedRequestDate(request); hasHeader {
-		*logAttrs = append(*logAttrs, slog.String("signed_request_date", requestDateHeader))
+		logEvent.Str("signed_request_date", requestDateHeader)
 	}
 
 	if authScheme, schemeParameter, err := parseAuthorizationHeader(request); err == nil {
 		switch authScheme {
 		case api.AuthorizationSchemeBHESignature:
 			if _, err := uuid.FromString(schemeParameter); err == nil {
-				*logAttrs = append(*logAttrs, slog.String("token_id", schemeParameter))
+				logEvent.Str("token_id", schemeParameter)
 			}
 		}
 	}
@@ -118,7 +117,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
-				logAttrs       []slog.Attr
+				logEvent       = log.WithLevel(log.LevelInfo)
 				requestContext = ctx.FromRequest(request)
 				deadline       time.Time
 
@@ -135,7 +134,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 			// assign a deadline, but only if a valid timeout has been supplied via the prefer header
 			timeout, err := RequestWaitDuration(request)
 			if err != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("Error parsing prefer header for timeout: %v", err))
+				log.Errorf("Error parsing prefer header for timeout: %w", err)
 			} else if err == nil && timeout > 0 {
 				deadline = time.Now().Add(timeout * time.Second)
 			}
@@ -145,31 +144,38 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 
 			// Defer the log statement and then serve the request
 			defer func() {
-				slog.LogAttrs(request.Context(), slog.LevelInfo, fmt.Sprintf("%s %s", request.Method, request.URL.RequestURI()), logAttrs...)
+				logEvent.Msgf("%s %s", request.Method, request.URL.RequestURI())
 
 				if !deadline.IsZero() && time.Now().After(deadline) {
-					slog.WarnContext(
-						request.Context(),
-						fmt.Sprintf("%s %s took longer than the configured timeout of %0.f seconds", request.Method, request.URL.RequestURI(), timeout.Seconds()),
+					log.Warnf(
+						"%s %s took longer than the configured timeout of %d seconds",
+						request.Method, request.URL.RequestURI(), timeout.Seconds(),
 					)
 				}
 			}()
 
 			next.ServeHTTP(loggedResponse, request)
 
+			// Perform auth introspection to log the client/user identity for each call
+			if requestContext.AuthCtx.Authenticated() {
+				if identity, err := idResolver.GetIdentity(requestContext.AuthCtx); err == nil {
+					logEvent.Str(identity.Key, identity.ID.String())
+				}
+			}
+
 			// Log the token ID and request date if the request contains either header
-			setSignedRequestFields(request, &logAttrs)
+			setSignedRequestFields(request, logEvent)
 
 			// Add the fields that we care about before exiting
-			logAttrs = append(logAttrs,
-				slog.String("proto", request.Proto),
-				slog.String("referer", request.Referer()),
-				slog.String("user_agent", request.UserAgent()),
-				slog.Int64("request_bytes", loggedRequestBody.bytesRead),
-				slog.Int64("response_bytes", loggedResponse.bytesWritten),
-				slog.Int("status", loggedResponse.statusCode),
-				slog.Duration("elapsed", time.Since(requestContext.StartTime.UTC())),
-			)
+			logEvent.Str("remote_addr", request.RemoteAddr)
+			logEvent.Str("proto", request.Proto)
+			logEvent.Str("referer", request.Referer())
+			logEvent.Str("user_agent", request.UserAgent())
+			logEvent.Str("request_id", ctx.RequestID(request))
+			logEvent.Int64("request_bytes", loggedRequestBody.bytesRead)
+			logEvent.Int64("response_bytes", loggedResponse.bytesWritten)
+			logEvent.Int("status", loggedResponse.statusCode)
+			logEvent.Duration("elapsed", time.Since(requestContext.StartTime.UTC()))
 		})
 	}
 }

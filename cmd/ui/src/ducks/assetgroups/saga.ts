@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { takeEvery, all, call, put } from 'redux-saga/effects';
+import * as actions from './actions';
 import { apiClient } from 'bh-shared-ui';
-import { SagaIterator } from 'redux-saga';
-import { all, call, put, takeEvery } from 'redux-saga/effects';
 import {
     GetAssetGroup,
     GetAssetGroupFailure,
@@ -24,8 +24,8 @@ import {
     ListAssetGroupsFailure,
     ListAssetGroupsSuccess,
 } from './actionCreators';
-import * as actions from './actions';
 import { GetAssetGroupAction } from './types';
+import { SagaIterator } from 'redux-saga';
 
 export function* listAssetGroupsSaga(): SagaIterator {
     try {

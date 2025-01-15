@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import userEvent from '@testing-library/user-event';
 import { SelectedEdge } from 'bh-shared-ui';
+import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from 'src/test-utils';
-import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
+import userEvent from '@testing-library/user-event';
 
 const server = setupServer(
     rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {

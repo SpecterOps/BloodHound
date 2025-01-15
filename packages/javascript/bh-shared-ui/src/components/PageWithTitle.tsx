@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Container, ContainerProps, Typography } from '@mui/material';
+import { Box, Container, Typography, ContainerProps } from '@mui/material';
 import React from 'react';
 
 type PageWithTitleProps = ContainerProps<

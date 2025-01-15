@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import userEvent from '@testing-library/user-event';
-import { ActiveDirectoryNodeKind, AzureNodeKind, allSections } from 'bh-shared-ui';
-import { RequestHandler, rest } from 'msw';
-import { setupServer } from 'msw/node';
 import { render, screen } from 'src/test-utils';
+import userEvent from '@testing-library/user-event';
+import { rest, RequestHandler } from 'msw';
+import { setupServer } from 'msw/node';
+import { ActiveDirectoryNodeKind, allSections, AzureNodeKind } from 'bh-shared-ui';
 import EntityInfoDataTable from './EntityInfoDataTable';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 

@@ -17,7 +17,7 @@
 import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
-import { EdgeInfoState, EdgeSections, SubHeader, edgeSectionToggle, useCollapsibleSectionStyles } from 'bh-shared-ui';
+import { EdgeInfoState, EdgeSections, edgeSectionToggle, SubHeader, useCollapsibleSectionStyles } from 'bh-shared-ui';
 import React, { PropsWithChildren } from 'react';
 import { useAppDispatch, useAppSelector } from 'src/store';
 

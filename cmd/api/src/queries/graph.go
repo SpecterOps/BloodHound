@@ -23,7 +23,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"sort"
@@ -32,25 +31,28 @@ import (
 	"sync"
 	"time"
 
+	"github.com/specterops/bloodhound/dawgs/util"
+
+	"github.com/specterops/bloodhound/cypher/models/cypher/format"
+	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/services/agi"
+
+	bhCtx "github.com/specterops/bloodhound/src/ctx"
+
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/cypher/analyzer"
 	"github.com/specterops/bloodhound/cypher/frontend"
-	"github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api/bloodhoundgraph"
-	"github.com/specterops/bloodhound/src/config"
-	bhCtx "github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/utils"
 )
 
@@ -237,7 +239,7 @@ func (s *GraphQuery) GetAssetGroupNodes(ctx context.Context, assetGroupTag strin
 }
 
 func (s *GraphQuery) GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "GetAllShortestPaths")()
+	defer log.Measure(log.LevelInfo, "GetAllShortestPaths")()
 
 	var paths graph.PathSet
 
@@ -377,10 +379,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 	)
 
 	// If cypher mutations are disabled, we want to add the updating clause filter to properly error as unsupported query
-	// If we are mutating, make sure our expansions aren't included in any sort of update
 	if !s.EnableCypherMutations {
-		cypherFilters = append(cypherFilters, &frontend.UpdatingNotAllowedClauseFilter{})
-	} else {
 		cypherFilters = append(cypherFilters, &frontend.UpdatingClauseFilter{})
 	}
 
@@ -400,10 +399,9 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		return graphQuery, err
 	} else if !s.DisableCypherComplexityLimit && complexityMeasure.Weight > MaxQueryComplexityWeightAllowed {
 		// log query details if it is rejected due to high complexity
-		slog.Error(
-			fmt.Sprintf("Query rejected. Query weight: %d. Maximum allowed weight: %d", complexityMeasure.Weight, MaxQueryComplexityWeightAllowed),
-			"query", strippedQueryBuffer.String(),
-		)
+		highComplexityLog := log.WithLevel(log.LevelError)
+		highComplexityLog.Str("query", strippedQueryBuffer.String())
+		highComplexityLog.Msg(fmt.Sprintf("Query rejected. Query weight: %d. Maximum allowed weight: %d", complexityMeasure.Weight, MaxQueryComplexityWeightAllowed))
 
 		return graphQuery, ErrCypherQueryTooComplex
 	}
@@ -447,25 +445,24 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 		)
 
 		if bhCtxInst.Timeout > maxTimeout {
-			slog.DebugContext(ctx, fmt.Sprintf("Custom timeout is too large, using the maximum allowable timeout of %0.f minutes instead", maxTimeout.Minutes()))
+			log.Debugf("Custom timeout is too large, using the maximum allowable timeout of %d minutes instead", maxTimeout.Minutes())
 			bhCtxInst.Timeout = maxTimeout
 		}
 
 		availableRuntime := bhCtxInst.Timeout
 		if availableRuntime > 0 {
-			slog.DebugContext(ctx, fmt.Sprintf("Available timeout for query is set to: %0.f seconds", availableRuntime.Seconds()))
+			log.Debugf("Available timeout for query is set to: %d seconds", availableRuntime.Seconds())
 		} else {
 			availableRuntime = defaultTimeout
 			if !s.DisableCypherComplexityLimit {
 				var reductionFactor int64
 				availableRuntime, reductionFactor = applyTimeoutReduction(pQuery.complexity.Weight, availableRuntime)
 
-				slog.Info(
-					fmt.Sprintf("Available timeout for query is set to: %.2f seconds", availableRuntime.Seconds()),
-					"query", pQuery.StrippedQuery,
-					"query cost", fmt.Sprintf("%d", pQuery.complexity.Weight),
-					"reduction factor", strconv.FormatInt(reductionFactor, 10),
-				)
+				logEvent := log.WithLevel(log.LevelInfo)
+				logEvent.Str("query", pQuery.StrippedQuery)
+				logEvent.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
+				logEvent.Str("reduction factor", strconv.FormatInt(reductionFactor, 10))
+				logEvent.Msg(fmt.Sprintf("Available timeout for query is set to: %.2f seconds", availableRuntime.Seconds()))
 			}
 		}
 
@@ -484,21 +481,20 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 
 	runtime := time.Since(start)
 
-	slog.Info(
-		fmt.Sprintf("Executed user cypher query with cost %d in %.2f seconds", pQuery.complexity.Weight, runtime.Seconds()),
-		"query", pQuery.StrippedQuery,
-		"query cost", fmt.Sprintf("%d", pQuery.complexity.Weight),
-	)
+	logEvent := log.WithLevel(log.LevelInfo)
+	logEvent.Str("query", pQuery.StrippedQuery)
+	logEvent.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
+	logEvent.Msg(fmt.Sprintf("Executed user cypher query with cost %d in %.2f seconds", pQuery.complexity.Weight, runtime.Seconds()))
 
 	if err != nil {
 		// Log query details if neo4j times out
 		if util.IsNeoTimeoutError(err) {
-			slog.Error("Neo4j timed out while executing cypher query",
-				"query", pQuery.StrippedQuery,
-				"query cost", fmt.Sprintf("%d", pQuery.complexity.Weight),
-			)
+			timeoutLog := log.WithLevel(log.LevelError)
+			timeoutLog.Str("query", pQuery.StrippedQuery)
+			timeoutLog.Str("query cost", fmt.Sprintf("%d", pQuery.complexity.Weight))
+			timeoutLog.Msg("Neo4j timed out while executing cypher query")
 		} else {
-			slog.WarnContext(ctx, fmt.Sprintf("RawCypherQuery failed: %v", err))
+			log.Warnf("RawCypherQuery failed: %v", err)
 		}
 		return graphResponse, err
 	}
@@ -635,15 +631,15 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 	for delegateKey, delegate := range delegates {
 		waitGroup.Add(1)
 
-		slog.InfoContext(ctx, fmt.Sprintf("Running entity query %s", delegateKey))
+		log.Infof("Running entity query %s", delegateKey)
 
 		go func(delegateKey string, delegate any) {
 			defer waitGroup.Done()
 
 			if result, err := runEntityQuery(ctx, s.Graph, delegate, node, 0, 0); errors.Is(err, graph.ErrContextTimedOut) {
-				slog.WarnContext(ctx, fmt.Sprintf("Running entity query for key %s: %v", delegateKey, err))
+				log.Warnf("Running entity query for key %s: %v", delegateKey, err)
 			} else if err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error running entity query for key %s: %v", delegateKey, err))
+				log.Errorf("Error running entity query for key %s: %v", delegateKey, err)
 				data.Store(delegateKey, 0)
 			} else {
 				data.Store(delegateKey, result.Len())
@@ -791,11 +787,11 @@ func (s *GraphQuery) cacheQueryResult(queryStart time.Time, cacheKey string, res
 		// Using GuardedSet here even though it isn't necessary because it allows us to collect information on how often
 		// we run these queries in parallel
 		if set, sizeInBytes, err := s.Cache.GuardedSet(cacheKey, result); err != nil {
-			slog.Error(fmt.Sprintf("[Entity Results Cache] Failed to write results to cache for key: %s", cacheKey))
+			log.Errorf("[Entity Results Cache] Failed to write results to cache for key: %s", cacheKey)
 		} else if !set {
-			slog.Warn(fmt.Sprintf("[Entity Results Cache] Cache entry for query %s not set because it already exists", cacheKey))
+			log.Warnf("[Entity Results Cache] Cache entry for query %s not set because it already exists", cacheKey)
 		} else {
-			slog.Info(fmt.Sprintf("[Entity Results Cache] Cached slow query %s (%d bytes) because it took %dms", cacheKey, sizeInBytes, queryTime))
+			log.Infof("[Entity Results Cache] Cached slow query %s (%d bytes) because it took %dms", cacheKey, sizeInBytes, queryTime)
 		}
 	}
 }
@@ -942,14 +938,14 @@ func fromGraphNodes(nodes graph.NodeSet) []model.PagedNodeListEntry {
 		)
 
 		if objectId, err := props.Get(common.ObjectID.String()).String(); err != nil {
-			slog.Error(fmt.Sprintf("Error getting objectid for %d: %v", node.ID, err))
+			log.Errorf("Error getting objectid for %d: %v", node.ID, err)
 			nodeEntry.ObjectID = ""
 		} else {
 			nodeEntry.ObjectID = objectId
 		}
 
 		if name, err := props.Get(common.Name.String()).String(); err != nil {
-			slog.Error(fmt.Sprintf("Error getting name for %d: %v", node.ID, err))
+			log.Errorf("Error getting name for %d: %v", node.ID, err)
 			nodeEntry.Name = ""
 		} else {
 			nodeEntry.Name = name

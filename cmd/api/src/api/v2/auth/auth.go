@@ -19,7 +19,6 @@ package auth
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"slices"
 	"strconv"
@@ -31,6 +30,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/pquerna/otp/totp"
 	"github.com/specterops/bloodhound/crypto"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
@@ -317,7 +317,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 				return
 			} else if secretDigest, err := s.secretDigester.Digest(createUserRequest.Secret); err != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("Error while attempting to digest secret for user: %v", err))
+				log.Errorf("Error while attempting to digest secret for user: %v", err)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 				return
 			} else {
@@ -340,7 +340,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
 				return
 			} else if samlProvider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("Error while attempting to fetch SAML provider %s: %v", createUserRequest.SAMLProviderID, err))
+				log.Errorf("Error while attempting to fetch SAML provider %s: %v", createUserRequest.SAMLProviderID, err)
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else {
@@ -418,22 +418,17 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			} else if provider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
-			} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), provider.SSOProviderID.Int32); err != nil {
-				api.HandleDatabaseError(request, response, err)
-				return
 			} else {
 				// Ensure that the AuthSecret reference is nil and the SSO provider is set
 				user.AuthSecret = nil // Required or the below updateUser will re-add the authSecret
-				user.SSOProvider = &ssoProvider
 				user.SSOProviderID = provider.SSOProviderID
 			}
 		} else if updateUserRequest.SSOProviderID.Valid {
-			if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), updateUserRequest.SSOProviderID.Int32); err != nil {
+			if _, err := s.db.GetSSOProviderById(request.Context(), updateUserRequest.SSOProviderID.Int32); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else {
 				user.AuthSecret = nil // Required or the below updateUser will re-add the authSecret
-				user.SSOProvider = &ssoProvider
 				user.SSOProviderID = updateUserRequest.SSOProviderID
 			}
 		} else {
@@ -556,7 +551,7 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 
 		passwordExpiration := appcfg.GetPasswordExpiration(request.Context(), s.db)
 		if secretDigest, err := s.secretDigester.Digest(setUserSecretRequest.Secret); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Error while attempting to digest secret for user: %v", err))
+			log.Errorf("Error while attempting to digest secret for user: %v", err)
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		} else {
 			authSecret.UserID = targetUser.ID
@@ -754,11 +749,11 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 		if err := s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 			// We want to keep err scoped because response trumps this error
 			if errors.Is(err, database.ErrNotFound) {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+				log.Errorf("resource not found: %v", err)
 			} else if errors.Is(err, context.DeadlineExceeded) {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+				log.Errorf("context deadline exceeded: %v", err)
 			} else {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+				log.Errorf("unexpected database error: %v", err)
 			}
 		}
 	}

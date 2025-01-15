@@ -19,11 +19,9 @@ package bhapi
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log"
-	"log/slog"
 	"net/http"
 
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/config"
 )
 
@@ -40,7 +38,7 @@ func NewDaemon(cfg config.Configuration, handler http.Handler) Daemon {
 		server: &http.Server{
 			Addr:     cfg.BindAddress,
 			Handler:  handler,
-			ErrorLog: log.Default(),
+			ErrorLog: log.Adapter(log.LevelError, "BHAPI", 0),
 		},
 	}
 }
@@ -55,13 +53,13 @@ func (s Daemon) Start(ctx context.Context) {
 	if s.cfg.TLS.Enabled() {
 		if err := s.server.ListenAndServeTLS(s.cfg.TLS.CertFile, s.cfg.TLS.KeyFile); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				slog.ErrorContext(ctx, fmt.Sprintf("HTTP server listen error: %v", err))
+				log.Errorf("HTTP server listen error: %v", err)
 			}
 		}
 	} else {
 		if err := s.server.ListenAndServe(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				slog.ErrorContext(ctx, fmt.Sprintf("HTTP server listen error: %v", err))
+				log.Errorf("HTTP server listen error: %v", err)
 			}
 		}
 	}

@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import userEvent from '@testing-library/user-event';
-import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { createMockAssetGroup, createMockMemberCounts, createMockSearchResults } from '../../mocks/factories';
 import { act, render, waitFor } from '../../test-utils';
 import { AUTOCOMPLETE_PLACEHOLDER } from './AssetGroupAutocomplete';
 import AssetGroupEdit from './AssetGroupEdit';
+import { rest } from 'msw';
+import userEvent from '@testing-library/user-event';
 
 const assetGroup = createMockAssetGroup();
 const searchResults = createMockSearchResults();

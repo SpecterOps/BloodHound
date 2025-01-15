@@ -23,10 +23,10 @@
  * @module
  */
 import { createEdgeCompoundProgram } from 'sigma/rendering/webgl/programs/common/edge';
-import { Coordinates, EdgeDisplayData } from 'sigma/types';
-import { EdgeDirection } from 'src/utils';
-import CurvedEdgeProgram from './edge.curved';
 import CurvedEdgeArrowHeadProgram from './edge.curvedArrowHead';
+import CurvedEdgeProgram from './edge.curved';
+import { EdgeDisplayData, Coordinates } from 'sigma/types';
+import { EdgeDirection } from 'src/utils';
 
 export type CurvedEdgeDisplayData = EdgeDisplayData & {
     groupSize?: number;

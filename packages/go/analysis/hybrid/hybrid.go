@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/azure"
@@ -31,6 +30,7 @@ import (
 	adSchema "github.com/specterops/bloodhound/graphschema/ad"
 	azureSchema "github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 )
 
 func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
@@ -179,7 +179,7 @@ func createMissingADUser(ctx context.Context, db graph.Database, objectID string
 		newNode *graph.Node
 	)
 
-	slog.DebugContext(ctx, fmt.Sprintf("Matching AD User node with objectID %s not found, creating a new one", objectID))
+	log.Debugf("Matching AD User node with objectID %s not found, creating a new one", objectID)
 	properties := graph.AsProperties(map[string]any{
 		common.ObjectID.String(): objectID,
 	})

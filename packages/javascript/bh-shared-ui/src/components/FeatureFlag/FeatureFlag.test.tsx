@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { rest } from 'msw';
-import { setupServer } from 'msw/node';
 import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
 import FeatureFlag from './FeatureFlag';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 
 const server = setupServer(
     rest.get('/api/v2/features', async (req, res, ctx) => {

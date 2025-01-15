@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Dialog, DialogTitle } from '@mui/material';
-import { CreateUserRequest } from 'js-client-library';
 import React from 'react';
 import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
+import { CreateUserRequest } from 'js-client-library';
 
 const CreateUserDialog: React.FC<{
     open: boolean;

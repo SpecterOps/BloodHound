@@ -19,8 +19,8 @@ import makeStyles from '@mui/styles/makeStyles';
 import {
     PersonalSearchList,
     PrebuiltSearchList,
-    CommonSearches as prebuiltSearchList,
     searchbarActions,
+    CommonSearches as prebuiltSearchList,
 } from 'bh-shared-ui';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';

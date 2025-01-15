@@ -30,7 +30,7 @@ import {
     Skeleton,
     Typography,
 } from '@mui/material';
-import { Flag, PageWithTitle, useFeatureFlags, useToggleFeatureFlag } from 'bh-shared-ui';
+import { PageWithTitle, Flag, useFeatureFlags, useToggleFeatureFlag } from 'bh-shared-ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setDarkMode } from 'src/ducks/global/actions';

@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export { default as global } from './global';
+export { default as explore } from './explore';
+export { default as entityinfo } from './entityinfo';
+export { default as tierzero } from './tierzero';
 export { default as assetgroups } from './assetgroups';
 export { default as auth } from './auth/authSlice';
-export { default as entityinfo } from './entityinfo';
-export { default as explore } from './explore';
-export { default as global } from './global';
-export { default as tierzero } from './tierzero';

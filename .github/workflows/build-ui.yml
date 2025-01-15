@@ -42,10 +42,6 @@ jobs:
       - name: Install Deps
         run: |
           cd cmd/ui && yarn
-      
-      - name: Format js-client-library with Prettier
-        run: |
-          cd packages/javascript/js-client-library && yarn format && cd ../bh-shared-ui/ && yarn format && cd ../../../cmd/ui/ && yarn format
 
       - name: Run Build
         run: |

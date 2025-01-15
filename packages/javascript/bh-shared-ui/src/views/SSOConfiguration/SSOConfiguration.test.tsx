@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { ListRolesResponse, ListSSOProvidersResponse, Role, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from '../../test-utils';
 import SSOConfiguration from './SSOConfiguration';
+import { ListRolesResponse, ListSSOProvidersResponse, Role, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 
 const testRoles = [
     { id: 1, name: 'Read-Only' },
