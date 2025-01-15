@@ -16,17 +16,16 @@
 
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useNotifications } from 'bh-shared-ui';
 import { Box, Container, Paper } from '@mui/material';
 import { useAppSelector } from 'src/store';
-import { addSnackbar } from 'src/ducks/global/actions';
 
 interface LoginPageProps {
     children: React.ReactNode;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ children }) => {
-    const dispatch = useDispatch();
+    const { addNotification } = useNotifications();
     const [searchParams] = useSearchParams();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
@@ -35,9 +34,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ children }) => {
 
     useEffect(() => {
         if (errorMessage) {
-            dispatch(addSnackbar(errorMessage, 'SSOError', { variant: 'error' }));
+            addNotification(errorMessage, 'LoginError', { variant: 'error' });
         }
-    }, [dispatch, errorMessage]);
+    }, [errorMessage]);
 
     return (
         <>
