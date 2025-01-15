@@ -60,6 +60,7 @@ func main() {
 	if enableTextLogger := os.Getenv(config.BHAPIEnvironmentVariablePrefix + "_enable_text_logger"); enableTextLogger == "" {
 		bhlog.ConfigureDefaultJSON()
 	} else if enabled, err := strconv.ParseBool(enableTextLogger); err != nil {
+		bhlog.ConfigureDefaultJSON() // Ensure the following error is output properly
 		slog.Error(fmt.Sprintf("Failed to parse %s to bool: %v", config.BHAPIEnvironmentVariablePrefix+"_enable_text_logger", err))
 		os.Exit(1)
 	} else if enabled {
