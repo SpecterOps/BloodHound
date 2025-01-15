@@ -43,26 +43,35 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		if authenticatedUsersCache, err := FetchAuthUsersMappedToDomains(tx); err != nil {
 			return err
 		} else {
-			// Fetch all nodes where the type is Computer
-			return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-				for computer := range cursor.Chan() {
-					innerComputer := computer
+			if ldapSigningCache, err := FetchLDAPSigningCache(ctx, db); err != nil {
+				return err
+			} else {
+				// Fetch all nodes where the type is Computer
+				return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+					for computer := range cursor.Chan() {
+						innerComputer := computer
 
-					if domain, err := innerComputer.Properties.Get(ad.Domain.String()).String(); err != nil {
-						continue
-					} else if authenticatedUserID, ok := authenticatedUsersCache[domain]; !ok {
-						continue
-					} else if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						return PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID)
-					}); err != nil {
-						slog.WarnContext(ctx, fmt.Sprintf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToSMB, err))
-						// Additional analysis may occur if one of our analysis errors
-						continue
+						if domain, err := innerComputer.Properties.Get(ad.Domain.String()).String(); err != nil {
+							continue
+						} else if authenticatedUserID, ok := authenticatedUsersCache[domain]; !ok {
+							continue
+						} else if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+							return PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID)
+						}); err != nil {
+							slog.WarnContext(ctx, fmt.Sprintf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToSMB, err))
+							// Additional analysis may occur if one of our analysis errors
+							continue
+						} else if operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+							return PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, ldapSigningCache[domain], authenticatedUserID)
+						}); err != nil {
+							slog.WarnContext(ctx, fmt.Sprintf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToLDAP, err))
+							continue
+						}
 					}
-				}
 
-				return cursor.Error()
-			})
+					return cursor.Error()
+				})
+			}
 		}
 	})
 	if err != nil {
@@ -122,7 +131,37 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 	return nil
 }
 
-// FetchAuthUsersMappedToDomains Fetch all nodes where the node is a Group and is an Authenticated User
+// PostCoerceAndRelayNTLMToLDAP creates edges where an authenticated user group, for a given domain, is able to target the provided computer.
+func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob, computer *graph.Node, ldapSigning ad.Property, authenticatedUserID graph.ID) error {
+	if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
+		return err
+	} else if restrictOutboundNtlm {
+		return nil
+	} else if webClientRunning, err := computer.Properties.Get(ad.WebClientRunning.String()).Bool(); err != nil {
+		return err
+	} else if webClientRunning {
+		switch ldapSigning {
+		case ad.RelayableToDCLDAP:
+			outC <- analysis.CreatePostRelationshipJob{
+				FromID: authenticatedUserID,
+				ToID:   computer.ID,
+				Kind:   ad.CoerceAndRelayNTLMToLDAP,
+			}
+		case ad.RelayableToDCLDAPs:
+			outC <- analysis.CreatePostRelationshipJob{
+				FromID: authenticatedUserID,
+				ToID:   computer.ID,
+				Kind:   ad.CoerceAndRelayNTLMToLDAPs,
+			}
+		default:
+			return fmt.Errorf("unknown LDAP signing property %s", ldapSigning)
+		}
+	}
+
+	return nil
+}
+
+// FetchAuthUsersMappedToDomains fetches all nodes where the node is a Group and is an Authenticated User
 func FetchAuthUsersMappedToDomains(tx graph.Transaction) (map[string]graph.ID, error) {
 	authenticatedUsers := make(map[string]graph.ID)
 
@@ -144,4 +183,37 @@ func FetchAuthUsersMappedToDomains(tx graph.Transaction) (map[string]graph.ID, e
 	)
 
 	return authenticatedUsers, err
+}
+
+// FetchLDAPSigningCache will check all Domain Controllers (DC) for LDAP signing. If the DC has the "ldap_signing" set to true along with "ldaps_available" to true and "ldaps_epa" to false,
+// we set the DC to be a "relayable_to_dc_ldaps" type. If the DC has "ldap_signing" set to false then we simply set the DC to be a "relayable_to_dc_ldap" type
+func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]ad.Property, error) {
+	ldapSigningCache := map[string]ad.Property{}
+	if domains, err := FetchAllDomains(ctx, db); err != nil {
+		return nil, err
+	} else {
+		for _, domain := range domains {
+			if ldapSigning, err := domain.Properties.Get(ad.LDAPSigning.String()).Bool(); err != nil {
+				return nil, err
+			} else {
+				if domainSID, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+					return nil, err
+				} else {
+					if ldapSigning {
+						if ldapsAvailable, err := domain.Properties.Get(ad.LDAPsAvailable.String()).Bool(); err != nil {
+							return nil, err
+						} else if ldapsEpa, err := domain.Properties.Get(ad.LDAPsEPA.String()).Bool(); err != nil {
+							return nil, err
+						} else if ldapsAvailable && !ldapsEpa {
+							ldapSigningCache[domainSID] = ad.RelayableToDCLDAP
+						}
+					} else {
+						ldapSigningCache[domainSID] = ad.RelayableToDCLDAPs
+					}
+				}
+			}
+		}
+	}
+
+	return ldapSigningCache, nil
 }

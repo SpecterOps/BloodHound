@@ -754,6 +754,49 @@ RestrictOutboundNTLM: types.#StringEnum & {
 	representation: "restrictoutboundntlm"
 }
 
+LDAPSigning: types.#StringEnum & {
+	symbol: "LDAPSigning"
+	schema: "ad"
+	name: "LDAP Signing"
+	representation: "ldapsigning"
+}
+
+LDAPsAvailable: types.#StringEnum & {
+	symbol: "LDAPsAvailable"
+	schema: "ad"
+	name: "LDAPs Available"
+	representation: "ldasavailable"
+}
+
+LDAPsEPA: types.#StringEnum & {
+	symbol: "LDAPsEPA"
+	schema: "ad"
+	name: "LDAPs EPA"
+	representation: "ldapsepa"
+}
+
+RelayableToDCLDAP: types.#StringEnum & {
+	symbol: "RelayableToDCLDAP"
+	schema: "ad"
+	name: "Relayable To DC LDAP"
+	representation: "replayabletodcldap"
+}
+
+RelayableToDCLDAPs: types.#StringEnum & {
+	symbol: "RelayableToDCLDAPs"
+	schema: "ad"
+	name: "Relayable To DC LDAPs"
+	representation: "replayabletodcldaps"
+}
+
+WebClientRunning: types.#StringEnum & {
+	symbol: "WebClientRunning"
+	schema: "ad"
+	name: "WebClient Running"
+	representation: "webclientrunning"
+}
+
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -857,7 +900,13 @@ Properties: [
 	LockoutDuration,
 	LockoutObservationWindow,
 	SMBSigning,
-	RestrictOutboundNTLM
+	RestrictOutboundNTLM,
+	LDAPSigning,
+	LDAPsAvailable,
+	LDAPsEPA,
+	RelayableToDCLDAP,
+	RelayableToDCLDAPs,
+	WebClientRunning
 ]
 
 // Kinds
@@ -1314,6 +1363,16 @@ CoerceAndRelayNTLMToSMB: types.#Kind & {
 	schema: "active_directory"
 }
 
+CoerceAndRelayNTLMToLDAP: types.#Kind & {
+	symbol: "CoerceAndRelayNTLMToLDAP"
+	schema: "active_directory"
+}
+
+CoerceAndRelayNTLMToLDAPs: types.#Kind & {
+	symbol: "CoerceAndRelayNTLMToLDAPs"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1385,6 +1444,8 @@ RelationshipKinds: [
 	ADCSESC13,
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToLDAP,
+	CoerceAndRelayNTLMToLDAPs
 ]
 
 // ACL Relationships
@@ -1463,6 +1524,8 @@ SharedRelationshipKinds: [
 	ADCSESC13,
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToLDAP,
+	CoerceAndRelayNTLMToLDAPs
 ]
 
 // Edges that are used during inbound traversal
@@ -1486,5 +1549,8 @@ EdgeCompositionRelationships: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
-	CoerceAndRelayNTLMToSMB
+	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToLDAP,
+	CoerceAndRelayNTLMToLDAPs
+
 ]
