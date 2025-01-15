@@ -53,6 +53,6 @@ After(async function eachScenario({ result, pickle }) {
     db.deleteUsers();
 });
 
-AfterAll(async function testTeardown () {
+AfterAll(async function testTeardown() {
     await fx.closeBrowser();
 });

@@ -21,7 +21,7 @@ export class DbOPS {
     qaEmail: string;
 
     constructor(qaEmail: string) {
-      this.qaEmail = qaEmail;
+        this.qaEmail = qaEmail;
     }
     // Delete test data in dev environment only
     async deleteUsers() {

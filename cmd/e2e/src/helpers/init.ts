@@ -16,23 +16,23 @@
 
 import * as fs from 'node:fs';
 
-const createSupportFolders = function(path: string): void {
+const createSupportFolders = function (path: string): void {
     if (!fs.existsSync(path)) {
         fs.mkdirSync(path, { recursive: true });
         console.log(`${path} folder is created`);
     } else {
         console.log(`${path} folder exists`);
     }
-}
+};
 
-const createRerunFile = function(fileName: string): void {
+const createRerunFile = function (fileName: string): void {
     if (!fs.existsSync(fileName)) {
         fs.writeFileSync(fileName, '');
         console.log(`${fileName} is created`);
     } else {
         console.log(`${fileName} file exists`);
     }
-}
+};
 
 const reRunFile = '@rerun.txt';
 createRerunFile(reRunFile);
