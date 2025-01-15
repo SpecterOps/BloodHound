@@ -13,12 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { ConfigurationKey, parseCitrixConfiguration } from 'js-client-library';
 import { FC, useState } from 'react';
-import CardWithSwitch from '../CardWithSwitch';
-import ConfirmCitrixRDPDialog from './CitrixRDPConfirmDialog';
 import { useGetConfiguration, useUpdateConfiguration } from '../../hooks';
 import { useNotifications } from '../../providers';
-import { ConfigurationKey, parseCitrixConfiguration } from 'js-client-library';
+import CardWithSwitch from '../CardWithSwitch';
+import ConfirmCitrixRDPDialog from './CitrixRDPConfirmDialog';
 
 export const configurationData = {
     title: 'Citrix RDP Support',

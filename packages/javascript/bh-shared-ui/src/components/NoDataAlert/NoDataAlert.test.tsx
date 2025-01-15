@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '../../test-utils';
 import NoDataAlert from '.';
+import { render, screen } from '../../test-utils';
 
 const dataCollectionLinkText = 'data collection';
 const fileIngestLinkText = 'file ingest';

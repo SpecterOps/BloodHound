@@ -155,6 +155,10 @@ func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion v
 		}
 	}
 
+	if releaseVersion := version.GetVersion(); releaseVersion.GreaterThan(mostRecentVersion) {
+		mostRecentVersion = releaseVersion
+	}
+
 	if mostRecentVersion.GreaterThan(originalVersion) {
 		return UpdateMigrationData(ctx, s.db, mostRecentVersion)
 	}
