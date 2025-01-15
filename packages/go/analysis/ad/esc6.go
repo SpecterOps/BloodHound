@@ -18,6 +18,8 @@ package ad
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/specterops/bloodhound/ein"
@@ -31,12 +33,11 @@ import (
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/log"
 )
 
 func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
 	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
+		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", domain.ID, err))
 		return nil
 	} else if isUserSpecifiesSanEnabled, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabled.String()).Bool(); err != nil {
 		return err
@@ -52,7 +53,7 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		)
 		for _, publishedCertTemplate := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC6(publishedCertTemplate, false); err != nil {
-				log.Warnf("Error validating cert template %d: %v", publishedCertTemplate.ID, err)
+				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", publishedCertTemplate.ID, err))
 				continue
 			} else if !valid {
 				continue
@@ -80,7 +81,7 @@ func PostADCSESC6a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 
 func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
 	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
+		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", domain.ID, err))
 		return nil
 	} else if isUserSpecifiesSanEnabled, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabled.String()).Bool(); err != nil {
 		return err
@@ -98,7 +99,7 @@ func PostADCSESC6b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		)
 		for _, publishedCertTemplate := range publishedCertTemplates {
 			if valid, err := isCertTemplateValidForESC6(publishedCertTemplate, true); err != nil {
-				log.Warnf("Error validating cert template %d: %v", publishedCertTemplate.ID, err)
+				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", publishedCertTemplate.ID, err))
 				continue
 			} else if !valid {
 				continue
@@ -276,7 +277,7 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 	// Add startnode, Auth. Users, and Everyone to start nodes
 	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		log.Warnf("Error getting domain SID for domain %d: %v", endNode.ID, err)
+		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", endNode.ID, err))
 		return nil, err
 	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {

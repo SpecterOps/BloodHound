@@ -19,20 +19,21 @@ package ad
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/log"
 )
 
 func ResolveAllGroupMemberships(ctx context.Context, db graph.Database, additionalCriteria ...graph.Criteria) (impact.PathAggregator, error) {
-	defer log.Measure(log.LevelInfo, "ResolveAllGroupMemberships")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "ResolveAllGroupMemberships")()
 
 	var (
 		adGroupIDs []graph.ID
@@ -62,7 +63,7 @@ func ResolveAllGroupMemberships(ctx context.Context, db graph.Database, addition
 		return memberships, err
 	}
 
-	log.Infof("Collected %d groups to resolve", len(adGroupIDs))
+	slog.InfoContext(ctx, fmt.Sprintf("Collected %d groups to resolve", len(adGroupIDs)))
 
 	for _, adGroupID := range adGroupIDs {
 		if traversalMap.Contains(adGroupID.Uint64()) {

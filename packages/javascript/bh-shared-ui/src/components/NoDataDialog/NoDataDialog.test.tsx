@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '../../test-utils';
 import NoDataDialog from '.';
+import { render, screen } from '../../test-utils';
 
 const gettingStartedLinkText = 'Getting Started guide';
 const fileIngestLinkText = 'start by uploading your data';

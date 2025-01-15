@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,17 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-module github.com/specterops/bloodhound/log
+package level
 
-go 1.23
+import "log/slog"
 
-require (
-	github.com/rs/zerolog v1.29.1
-	go.uber.org/mock v0.2.0
-)
+var lvl = new(slog.LevelVar)
 
-require (
-	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-)
+func GetLevelVar() *slog.LevelVar {
+	return lvl
+}
+
+func SetGlobalLevel(level slog.Level) {
+	lvl.Set(level)
+}
+
+func GlobalAccepts(level slog.Level) bool {
+	return lvl.Level() <= level
+}
+
+func GlobalLevel() slog.Level {
+	return lvl.Level()
+}

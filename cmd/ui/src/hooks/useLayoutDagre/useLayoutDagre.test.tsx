@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    copySigmaNodesToGraphlibGraph,
-    applyNodePositionsFromGraphlibGraph,
-    NODE_DEFAULT_SIZE,
-} from 'src/hooks/useLayoutDagre/useLayoutDagre';
-import Graph from 'graphology';
 import dagre from 'dagrejs';
+import Graph from 'graphology';
+import {
+    NODE_DEFAULT_SIZE,
+    applyNodePositionsFromGraphlibGraph,
+    copySigmaNodesToGraphlibGraph,
+} from 'src/hooks/useLayoutDagre/useLayoutDagre';
 
 const sigmaGraph = new Graph();
 const graphlibGraph = new dagre.graphlib.Graph();

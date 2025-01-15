@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { SelectedEdge } from 'bh-shared-ui';
-import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from 'src/test-utils';
+import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 
 const server = setupServer();
 
