@@ -19,8 +19,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Tooltip } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
-import { EntityKinds } from '../..';
 import { NODE_ICON } from '../../utils/icons';
+import { EntityKinds } from '../..';
 
 interface NodeIconProps {
     nodeType: EntityKinds | string;

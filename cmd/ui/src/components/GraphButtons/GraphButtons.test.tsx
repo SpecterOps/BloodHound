@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { render, screen } from 'src/test-utils';
+import GraphButtons from 'src/components/GraphButtons';
 import { SigmaContainer } from '@react-sigma/core';
 import userEvent from '@testing-library/user-event';
-import GraphButtons from 'src/components/GraphButtons';
-import { render, screen } from 'src/test-utils';
 
 describe('GraphLayoutButtons', () => {
     const user = userEvent.setup();

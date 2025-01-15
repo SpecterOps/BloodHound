@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { produce, castDraft } from 'immer';
 import { combineReducers } from '@reduxjs/toolkit';
-import { castDraft, produce } from 'immer';
-import assign from 'lodash/assign';
 import * as types from './types';
+import assign from 'lodash/assign';
 
 const initialGlobalState: types.GlobalViewState = {
     notifications: [],

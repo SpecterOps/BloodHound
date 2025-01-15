@@ -18,20 +18,18 @@ package datapipe
 
 import (
 	"context"
-	"fmt"
-	"log/slog"
 	"sync"
 
 	commonanalysis "github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	azureAnalysis "github.com/specterops/bloodhound/analysis/azure"
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
@@ -39,7 +37,7 @@ import (
 )
 
 func updateAssetGroupIsolationTags(ctx context.Context, db agi.AgiData, graphDB graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Updated asset group isolation tags")()
+	defer log.Measure(log.LevelInfo, "Updated asset group isolation tags")()
 
 	if err := commonanalysis.ClearSystemTags(ctx, graphDB); err != nil {
 		return err
@@ -49,7 +47,7 @@ func updateAssetGroupIsolationTags(ctx context.Context, db agi.AgiData, graphDB 
 }
 
 func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging Azure Tier Zero")()
+	defer log.Measure(log.LevelInfo, "Finished tagging Azure Tier Zero")()
 
 	var tenants graph.NodeSet
 
@@ -75,7 +73,7 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 		// log missing tenant IDs for easier debugging
 		for _, tenant := range tenants {
 			if _, err = tenant.Properties.Get(azure.TenantID.String()).String(); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting tenant id for tenant %d: %v", tenant.ID, err))
+				log.Errorf("Error getting tenant id for tenant %d: %v", tenant.ID, err)
 			}
 		}
 
@@ -115,7 +113,7 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 
 				return nil
 			}); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed tagging update: %v", err))
+				log.Errorf("Failed tagging update: %v", err)
 			}
 		}()
 
@@ -128,7 +126,7 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 				if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 					for tenant := range tenantC {
 						if roots, err := azureAnalysis.FetchAzureAttackPathRoots(tx, tenant); err != nil {
-							slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching roots for tenant %d: %v", tenant.ID, err))
+							log.Errorf("Failed fetching roots for tenant %d: %v", tenant.ID, err)
 						} else {
 							for _, root := range roots {
 								rootsC <- root.ID
@@ -138,7 +136,7 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 
 					return nil
 				}); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error reading attack path roots for tenants: %v", err))
+					log.Errorf("Error reading attack path roots for tenants: %v", err)
 				}
 			}(workerID)
 		}
@@ -158,7 +156,7 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 }
 
 func TagActiveDirectoryTierZero(ctx context.Context, featureFlagProvider appcfg.GetFlagByKeyer, graphDB graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging Active Directory Tier Zero")()
+	defer log.Measure(log.LevelInfo, "Finished tagging Active Directory Tier Zero")()
 
 	if autoTagT0ParentObjectsFlag, err := featureFlagProvider.GetFlagByKey(ctx, appcfg.FeatureAutoTagT0ParentObjects); err != nil {
 		return err
@@ -185,7 +183,7 @@ func TagActiveDirectoryTierZero(ctx context.Context, featureFlagProvider appcfg.
 }
 
 func RunAssetGroupIsolationCollections(ctx context.Context, db database.Database, graphDB graph.Database, kindGetter func(*graph.Node) string) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Asset Group Isolation Collections")()
+	defer log.Measure(log.LevelInfo, "Asset Group Isolation Collections")()
 
 	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err
@@ -215,7 +213,7 @@ func RunAssetGroupIsolationCollections(ctx context.Context, db database.Database
 
 					for idx, node := range assetGroupNodes {
 						if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-							slog.ErrorContext(ctx, fmt.Sprintf("Node %d that does not have valid %s property", node.ID, common.ObjectID))
+							log.Errorf("Node %d that does not have valid %s property", node.ID, common.ObjectID)
 						} else {
 							entries[idx] = model.AssetGroupCollectionEntry{
 								ObjectID:   objectID,

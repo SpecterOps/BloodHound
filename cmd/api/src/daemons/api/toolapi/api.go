@@ -19,15 +19,13 @@ package toolapi
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log"
-	"log/slog"
 	"net/http"
 	"net/http/pprof"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/tools"
 	"github.com/specterops/bloodhound/src/bootstrap"
@@ -101,7 +99,7 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 		server: &http.Server{
 			Addr:     cfg.MetricsPort,
 			Handler:  router,
-			ErrorLog: log.Default(),
+			ErrorLog: log.Adapter(log.LevelError, "ToolAPI", 0),
 		},
 	}
 }
@@ -116,13 +114,13 @@ func (s Daemon) Start(ctx context.Context) {
 	if s.cfg.TLS.Enabled() {
 		if err := s.server.ListenAndServeTLS(s.cfg.TLS.CertFile, s.cfg.TLS.KeyFile); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				slog.ErrorContext(ctx, fmt.Sprintf("HTTP server listen error: %v", err))
+				log.Errorf("HTTP server listen error: %v", err)
 			}
 		}
 	} else {
 		if err := s.server.ListenAndServe(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				slog.ErrorContext(ctx, fmt.Sprintf("HTTP server listen error: %v", err))
+				log.Errorf("HTTP server listen error: %v", err)
 			}
 		}
 	}

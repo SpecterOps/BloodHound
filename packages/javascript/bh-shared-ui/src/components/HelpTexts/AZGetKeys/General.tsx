@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
 import { FC } from 'react';
+import { Typography } from '@mui/material';
 
 const General: FC = () => {
     return <Typography variant='body2'>The ability to read keys from key vaults</Typography>;

@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,7 +27,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/specterops/bloodhound/bhlog/level"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
@@ -77,11 +76,11 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 	cmd.Env = env.Slice()
 	cmd.Dir = cwd
 
-	if level.GlobalAccepts(slog.LevelDebug) {
+	if log.GlobalAccepts(log.LevelDebug) {
 		cmd.Stderr = os.Stderr
 	}
 
-	slog.Info(fmt.Sprintf("Checking repository clean for %s", cwd))
+	log.Infof("Checking repository clean for %s", cwd)
 
 	// We need to run git status first to ensure we don't hit a cache issue
 	if err := cmdrunner.Run("git", []string{"status"}, cwd, env, func(c *exec.Cmd) { c.Stdout = nil }); err != nil {
@@ -94,7 +93,7 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 		}
 	}
 
-	slog.Info(fmt.Sprintf("Finished checking repository clean for %s", cwd))
+	log.Infof("Finished checking repository clean for %s", cwd)
 
 	return true, nil
 }
@@ -168,17 +167,17 @@ func getAllVersionTags(cwd string, env environment.Environment) ([]string, error
 	cmd.Dir = cwd
 	cmd.Stdout = &output
 
-	if level.GlobalAccepts(slog.LevelDebug) {
+	if log.GlobalAccepts(log.LevelDebug) {
 		cmd.Stderr = os.Stderr
 	}
 
-	slog.Info(fmt.Sprintf("Listing tags for %v", cwd))
+	log.Infof("Listing tags for %v", cwd)
 
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("git tag --list v*: %w", err)
 	}
 
-	slog.Info(fmt.Sprintf("Finished listing tags for %v", cwd))
+	log.Infof("Finished listing tags for %v", cwd)
 
 	return strings.Split(output.String(), "\n"), nil
 }

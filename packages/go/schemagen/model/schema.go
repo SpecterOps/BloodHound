@@ -40,11 +40,9 @@ func (s StringEnum) GetName() string {
 }
 
 type Graph struct {
-	Properties                []StringEnum
-	NodeKinds                 []StringEnum
-	RelationshipKinds         []StringEnum
-	InboundRelationshipKinds  []StringEnum
-	OutboundRelationshipKinds []StringEnum
+	Properties        []StringEnum
+	NodeKinds         []StringEnum
+	RelationshipKinds []StringEnum
 }
 
 type Azure struct {
@@ -64,7 +62,5 @@ type ActiveDirectory struct {
 	RelationshipKinds            []StringEnum
 	ACLRelationships             []StringEnum
 	PathfindingRelationships     []StringEnum
-	InboundRelationshipKinds     []StringEnum
-	OutboundRelationshipKinds    []StringEnum
 	EdgeCompositionRelationships []StringEnum
 }

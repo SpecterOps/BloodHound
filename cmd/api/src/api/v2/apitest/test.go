@@ -17,9 +17,7 @@
 package apitest
 
 import (
-	"fmt"
-	"log/slog"
-	"os"
+	"log"
 
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/auth"
@@ -32,8 +30,7 @@ import (
 func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementResource, *mocks.MockDatabase) {
 	cfg, err := config.NewDefaultConfiguration()
 	if err != nil {
-		slog.Error(fmt.Sprintf("Failed to create default configuration: %v", err))
-		os.Exit(1)
+		log.Fatalf("Failed to create default configuration: %v", err)
 	}
 
 	cfg.Crypto.Argon2.NumIterations = 1

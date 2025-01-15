@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import ApiExplorer from './ApiExplorer';
+import { screen, render } from '../../test-utils';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen } from '../../test-utils';
-import ApiExplorer from './ApiExplorer';
 
 const server = setupServer();
 beforeAll(() => server.listen());

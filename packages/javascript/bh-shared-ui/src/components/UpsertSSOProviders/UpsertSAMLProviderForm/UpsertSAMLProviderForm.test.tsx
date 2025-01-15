@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { Role } from 'js-client-library';
 import { render, screen, waitFor } from '../../../test-utils';
 import UpsertSAMLProviderForm from './UpsertSAMLProviderForm';
+import { Role } from 'js-client-library';
 
 const testRoles = [
     { id: 1, name: 'Read-Only' },

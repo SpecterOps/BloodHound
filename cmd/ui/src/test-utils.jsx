@@ -14,11 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
+import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
 import { configureStore } from '@reduxjs/toolkit';
 import { render, renderHook } from '@testing-library/react';
-import { NotificationsProvider, darkPalette } from 'bh-shared-ui';
 import { createMemoryHistory } from 'history';
 import { SnackbarProvider } from 'notistack';
 import { QueryClient, QueryClientProvider } from 'react-query';
@@ -26,6 +25,8 @@ import { Provider } from 'react-redux';
 import { Router } from 'react-router-dom';
 import createSagaMiddleware from 'redux-saga';
 import { rootReducer } from 'src/store';
+import { NotificationsProvider } from 'bh-shared-ui';
+import { darkPalette } from 'bh-shared-ui';
 
 const theme = createTheme(darkPalette);
 const defaultTheme = {
@@ -111,4 +112,5 @@ const customRenderHook = (
 // eslint-disable-next-line react-refresh/only-export-components
 export * from '@testing-library/react';
 // override render method
-export { customRender as render, customRenderHook as renderHook };
+export { customRender as render };
+export { customRenderHook as renderHook };

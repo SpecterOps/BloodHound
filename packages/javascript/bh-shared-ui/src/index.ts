@@ -19,7 +19,6 @@ import { Theme } from '@mui/material/styles';
 declare module '@mui/styles/defaultTheme' {
     interface DefaultTheme extends Theme {}
 }
-
 declare module '@mui/material/styles' {
     interface Palette {
         neutral: { primary: string; secondary: string; tertiary: string; quaternary: string; quinary: string };

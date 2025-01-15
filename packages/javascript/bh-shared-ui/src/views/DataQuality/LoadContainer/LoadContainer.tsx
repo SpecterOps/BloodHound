@@ -14,9 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Skeleton, TableCell, TableRow } from '@mui/material';
-import withStyles from '@mui/styles/withStyles';
 import React from 'react';
+import { TableRow, TableCell, Box } from '@mui/material';
+import withStyles from '@mui/styles/withStyles';
+import { Skeleton } from '@mui/material';
 
 interface LoadContainerProps {
     icon: JSX.Element;

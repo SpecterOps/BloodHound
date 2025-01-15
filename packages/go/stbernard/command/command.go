@@ -20,11 +20,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log/slog"
 	"os"
 	"strings"
 
-	"github.com/specterops/bloodhound/bhlog/level"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/analysis"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/builder"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/cover"
@@ -140,11 +139,11 @@ func ParseCLI(env environment.Environment) (CommandRunner, error) {
 	}
 
 	if *verboseEnabled {
-		level.SetGlobalLevel(slog.LevelInfo)
+		log.SetGlobalLevel(log.LevelInfo)
 	}
 
 	if *debugEnabled {
-		level.SetGlobalLevel(slog.LevelDebug)
+		log.SetGlobalLevel(log.LevelDebug)
 	}
 
 	return currentCmd, currentCmd.Parse(cmdStartIdx)

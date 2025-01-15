@@ -16,10 +16,7 @@
 
 package ad
 
-import (
-	"list"
-	"pkg.specterops.io/schemas/bh/types:types"
-)
+import "pkg.specterops.io/schemas/bh/types:types"
 
 // Exported requirements
 Properties: [...types.#StringEnum]
@@ -27,8 +24,6 @@ NodeKinds: [...types.#Kind]
 RelationshipKinds: [...types.#Kind]
 ACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
-InboundRelationshipKinds: [...types.#Kind]
-OutboundRelationshipKinds: [...types.#Kind] 
 EdgeCompositionRelationships: [...types.#Kind]
 
 // Property name enumerations
@@ -740,20 +735,6 @@ MinPwdLength: types.#StringEnum & {
 	representation: "minpwdlength"
 }
 
-SMBSigning: types.#StringEnum & {
-	symbol: "SMBSigning"
-	schema: "ad"
-	name: "SMB Signing"
-	representation: "smbsigning"
-}
-
-RestrictOutboundNTLM: types.#StringEnum & {
-	symbol: "RestrictOutboundNTLM"
-	schema: "ad"
-	name: "Restrict Outbound NTLM"
-	representation: "restrictoutboundntlm"
-}
-
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -856,8 +837,6 @@ Properties: [
 	MaxPwdAge,
 	LockoutDuration,
 	LockoutObservationWindow,
-	SMBSigning,
-	RestrictOutboundNTLM
 ]
 
 // Kinds
@@ -1309,11 +1288,6 @@ SyncedToEntraUser: types.#Kind & {
 	schema: "active_directory"
 }
 
-CoerceAndRelayNTLMToSMB: types.#Kind & {
-	symbol: "CoerceAndRelayNTLMToSMB"
-	schema: "active_directory"
-}
-
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1384,7 +1358,6 @@ RelationshipKinds: [
 	ADCSESC10b,
 	ADCSESC13,
 	SyncedToEntraUser,
-	CoerceAndRelayNTLMToSMB,
 ]
 
 // ACL Relationships
@@ -1417,8 +1390,8 @@ ACLRelationships: [
 	WritePKINameFlag,
 ]
 
-// these edges are common to inbound/outbound/pathfinding
-SharedRelationshipKinds: [
+// Edges that are used in pathfinding
+PathfindingRelationships: [
 	Owns,
 	GenericAll,
 	GenericWrite,
@@ -1429,9 +1402,11 @@ SharedRelationshipKinds: [
 	AllExtendedRights,
 	AddMember,
 	HasSession,
+	Contains,
 	GPLink,
 	AllowedToDelegate,
 	CoerceToTGT,
+	TrustedBy,
 	AllowedToAct,
 	AdminTo,
 	CanPSRemote,
@@ -1461,18 +1436,9 @@ SharedRelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	DCFor,
 	SyncedToEntraUser,
-	CoerceAndRelayNTLMToSMB,
 ]
-
-// Edges that are used during inbound traversal
-InboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains]])
-
-// Edges that are used during outbound traversal
-OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains, DCFor]])
-
-// Edges that are used in pathfinding
-PathfindingRelationships: list.Concat([SharedRelationshipKinds,[Contains, DCFor, TrustedBy]])
 
 EdgeCompositionRelationships: [
 	GoldenCert,
@@ -1486,5 +1452,4 @@ EdgeCompositionRelationships: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
-	CoerceAndRelayNTLMToSMB
 ]

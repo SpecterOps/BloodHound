@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { apiClient } from 'bh-shared-ui';
 import { RequestOptions } from 'js-client-library';
 import { useQuery } from 'react-query';
+import { apiClient } from 'bh-shared-ui';
 
 export type CollectorType = 'sharphound' | 'azurehound';
 

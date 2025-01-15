@@ -22,13 +22,13 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 )
@@ -163,10 +163,10 @@ func (s Authorizer) AuditLogUnauthorizedAccess(request *http.Request) {
 	if request.Method != "GET" {
 		data := model.AuditData{"endpoint": request.Method + " " + request.URL.Path}
 		if auditEntry, err := model.NewAuditEntry(model.AuditLogActionUnauthorizedAccessAttempt, model.AuditLogStatusFailure, data); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Error creating audit log for unauthorized access: %s", err.Error()))
+			log.Errorf("Error creating audit log for unauthorized access: %s", err.Error())
 			return
 		} else if err = s.auditLogger.AppendAuditLog(request.Context(), auditEntry); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Error creating audit log for unauthorized access: %s", err.Error()))
+			log.Errorf("Error creating audit log for unauthorized access: %s", err.Error())
 		}
 	}
 }

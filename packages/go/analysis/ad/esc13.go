@@ -19,8 +19,6 @@ package ad
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log/slog"
 	"sync"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -32,11 +30,12 @@ import (
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/log"
 )
 
 func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
 	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", domain.ID, err))
+		log.Warnf("Error getting domain SID for domain %d: %v", domain.ID, err)
 		return nil
 	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
@@ -44,19 +43,19 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID)
 		for _, template := range publishedCertTemplates {
 			if isValid, err := isCertTemplateValidForESC13(template); errors.Is(err, graph.ErrPropertyNotFound) {
-				slog.WarnContext(ctx, fmt.Sprintf("Checking esc13 cert template PostADCSESC13: %v", err))
+				log.Warnf("Checking esc13 cert template PostADCSESC13: %v", err)
 			} else if err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error checking esc13 cert template PostADCSESC13: %v", err))
+				log.Errorf("Error checking esc13 cert template PostADCSESC13: %v", err)
 			} else if !isValid {
 				continue
 			} else if groupNodes, err := getCertTemplateGroupLinks(template, tx); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting cert template group links: %v", err))
+				log.Errorf("Error getting cert template group links: %v", err)
 			} else if len(groupNodes) == 0 {
 				continue
 			} else {
 				controlBitmap := CalculateCrossProductNodeSets(tx, domainsid, groupExpansions, ecaEnrollers, cache.GetCertTemplateEnrollers(template.ID))
 				if filtered, err := filterUserDNSResults(tx, controlBitmap, template); err != nil {
-					slog.WarnContext(ctx, fmt.Sprintf("Error filtering users from victims for esc13: %v", err))
+					log.Warnf("Error filtering users from victims for esc13: %v", err)
 					continue
 				} else {
 					for _, group := range groupNodes.Slice() {
@@ -116,7 +115,7 @@ func groupIsContainedOrTrusted(tx graph.Transaction, group, domain *graph.Node) 
 	)
 
 	if err := ops.Traversal(tx, traversalPlan, pathVisitor); err != nil {
-		slog.Debug(fmt.Sprintf("groupIsContainedOrTrusted traversal error: %v", err))
+		log.Debugf("groupIsContainedOrTrusted traversal error: %v", err)
 	}
 
 	return matchFound
@@ -224,7 +223,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 
 	// Add startnode, Auth. Users, and Everyone to start nodes
 	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", endNode.ID, err))
+		log.Warnf("Error getting domain SID for domain %d: %v", endNode.ID, err)
 		return nil, err
 	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {

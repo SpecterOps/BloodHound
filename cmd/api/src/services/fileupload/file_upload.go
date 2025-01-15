@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -30,9 +29,11 @@ import (
 	"github.com/specterops/bloodhound/bomenc"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
-	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/specterops/bloodhound/src/utils"
+
+	"github.com/specterops/bloodhound/log"
+	"github.com/specterops/bloodhound/src/model"
 )
 
 const jobActivityTimeout = time.Minute * 20
@@ -63,17 +64,17 @@ func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
 	)
 
 	if jobs, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusRunning); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error getting running jobs: %v", err))
+		log.Errorf("Error getting running jobs: %v", err)
 	} else {
 		for _, job := range jobs {
 			if job.LastIngest.Before(threshold) {
-				slog.WarnContext(ctx, fmt.Sprintf("Ingest timeout: No ingest activity observed for Job ID %d in %f minutes (last ingest was %s)). Upload incomplete",
+				log.Warnf("Ingest timeout: No ingest activity observed for Job ID %d in %f minutes (last ingest was %s). Upload incomplete",
 					job.ID,
 					now.Sub(threshold).Minutes(),
-					job.LastIngest.Format(time.RFC3339)))
+					job.LastIngest.Format(time.RFC3339))
 
 				if err := TimeOutUploadJob(ctx, db, job.ID, fmt.Sprintf("Ingest timeout: No ingest activity observed in %f minutes. Upload incomplete.", now.Sub(threshold).Minutes())); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error marking file upload job %d as timed out: %v", job.ID, err))
+					log.Errorf("Error marking file upload job %d as timed out: %v", job.ID, err)
 				}
 			}
 		}
@@ -144,14 +145,14 @@ type FileValidator func(src io.Reader, dst io.Writer) error
 func WriteAndValidateFile(fileData io.ReadCloser, tempFile *os.File, validationFunc FileValidator) error {
 	if err := validationFunc(fileData, tempFile); err != nil {
 		if err := tempFile.Close(); err != nil {
-			slog.Error(fmt.Sprintf("Error closing temp file %s with failed validation: %v", tempFile.Name(), err))
+			log.Errorf("Error closing temp file %s with failed validation: %v", tempFile.Name(), err)
 		} else if err := os.Remove(tempFile.Name()); err != nil {
-			slog.Error(fmt.Sprintf("Error deleting temp file %s: %v", tempFile.Name(), err))
+			log.Errorf("Error deleting temp file %s: %v", tempFile.Name(), err)
 		}
 		return err
 	} else {
 		if err := tempFile.Close(); err != nil {
-			slog.Error(fmt.Sprintf("Error closing temp file with successful validation %s: %v", tempFile.Name(), err))
+			log.Errorf("Error closing temp file with successful validation %s: %v", tempFile.Name(), err)
 		}
 		return nil
 	}

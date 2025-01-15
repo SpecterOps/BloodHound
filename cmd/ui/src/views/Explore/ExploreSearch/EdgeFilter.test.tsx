@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import userEvent from '@testing-library/user-event';
 import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
 import EdgeFilter from './EdgeFilter';
+import userEvent from '@testing-library/user-event';
 
 describe('EdgeFilter', () => {
     beforeEach(async () => {

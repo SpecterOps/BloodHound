@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Theme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import { Theme } from '@mui/material';
 
 const usePaneStyles = makeStyles((theme: Theme) => ({
     container: {

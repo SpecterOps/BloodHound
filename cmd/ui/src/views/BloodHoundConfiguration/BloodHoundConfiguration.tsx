@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Link, Typography } from '@mui/material';
-import { CitrixRDPConfiguration, PageWithTitle } from 'bh-shared-ui';
+import { PageWithTitle, CitrixRDPConfiguration } from 'bh-shared-ui';
 
 const BloodHoundConfiguration = () => {
     return (

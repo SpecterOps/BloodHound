@@ -14,5 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './InfoStyles';
 export * from './fragments';
+export * from './InfoStyles';

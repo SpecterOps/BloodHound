@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -29,6 +28,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/crypto"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/serde"
 )
 
@@ -36,7 +36,7 @@ const (
 	CurrentConfigurationVersion = 2
 	DefaultLogFilePath          = "/var/log/bhapi.log"
 
-	BHAPIEnvironmentVariablePrefix       = "bhe"
+	bhAPIEnvironmentVariablePrefix       = "bhe"
 	environmentVariablePathSeparator     = "_"
 	environmentVariableKeyValueSeparator = "="
 )
@@ -164,7 +164,6 @@ type Configuration struct {
 	GraphQueryMemoryLimit        uint16                    `json:"graph_query_memory_limit"`
 	AuthSessionTTLHours          int                       `json:"auth_session_ttl_hours"`
 	FedRAMPEULAText              string                    `json:"fedramp_eula_text"` // Enterprise only
-	EnableTextLogger             bool                      `json:"enable_text_logger"`
 }
 
 func (s Configuration) AuthSessionTTL() time.Duration {
@@ -247,13 +246,13 @@ func SetValuesFromEnv(varPrefix string, target any, env []string) error {
 				cfgKeyPath := strings.TrimPrefix(key, formattedPrefix)
 
 				if err := SetValue(target, cfgKeyPath, valueStr); errors.Is(err, ErrInvalidConfigurationPath) {
-					slog.Warn(fmt.Sprintf("%s", err))
+					log.Warnf("%s", err)
 				} else if err != nil {
 					return err
 				}
 			}
 		} else {
-			slog.Error(fmt.Sprintf("Invalid key/value pair: %+v", kvParts))
+			log.Errorf("Invalid key/value pair: %+v", kvParts)
 		}
 	}
 
@@ -264,11 +263,11 @@ func getConfiguration(path string, defaultConfigFunc func() (Configuration, erro
 	if hasCfgFile, err := HasConfigurationFile(path); err != nil {
 		return Configuration{}, err
 	} else if hasCfgFile {
-		slog.Info(fmt.Sprintf("Reading configuration found at %s", path))
+		log.Infof("Reading configuration found at %s", path)
 
 		return ReadConfigurationFile(path)
 	} else {
-		slog.Info(fmt.Sprintf("No configuration file found at %s. Returning defaults.", path))
+		log.Infof("No configuration file found at %s. Returning defaults.", path)
 
 		return defaultConfigFunc()
 	}
@@ -277,7 +276,7 @@ func getConfiguration(path string, defaultConfigFunc func() (Configuration, erro
 func GetConfiguration(path string, defaultConfigFunc func() (Configuration, error)) (Configuration, error) {
 	if cfg, err := getConfiguration(path, defaultConfigFunc); err != nil {
 		return cfg, err
-	} else if err := SetValuesFromEnv(BHAPIEnvironmentVariablePrefix, &cfg, os.Environ()); err != nil {
+	} else if err := SetValuesFromEnv(bhAPIEnvironmentVariablePrefix, &cfg, os.Environ()); err != nil {
 		return cfg, err
 	} else {
 		return cfg, nil
@@ -293,13 +292,13 @@ func (s Configuration) SaveCollectorManifests() (CollectorManifests, error) {
 	manifests := CollectorManifests{}
 
 	if azureHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), azureHoundCollector)); err != nil {
-		slog.Error(fmt.Sprintf("Error generating AzureHound manifest file: %s", err))
+		log.Errorf("Error generating AzureHound manifest file: %s", err)
 	} else {
 		manifests[azureHoundCollector] = azureHoundManifest
 	}
 
 	if sharpHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), sharpHoundCollector)); err != nil {
-		slog.Error(fmt.Sprintf("Error generating SharpHound manifest file: %s", err))
+		log.Errorf("Error generating SharpHound manifest file: %s", err)
 	} else {
 		manifests[sharpHoundCollector] = sharpHoundManifest
 	}

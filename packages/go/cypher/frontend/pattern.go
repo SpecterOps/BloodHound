@@ -21,8 +21,6 @@ import (
 	"strconv"
 
 	"github.com/specterops/bloodhound/cypher/models/cypher"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
 
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/specterops/bloodhound/cypher/parser"
@@ -91,43 +89,8 @@ func (s *RelationshipPatternVisitor) EnterOC_RelTypeName(ctx *parser.OC_RelTypeN
 }
 
 func (s *RelationshipPatternVisitor) ExitOC_RelTypeName(ctx *parser.OC_RelTypeNameContext) {
-	relationshipType := ctx.GetText()
-
-	// Helper function to add kinds from relationships
-	addKindsFromRelationships := func(kinds []graph.Kind) {
-		for _, kind := range kinds {
-			s.RelationshipPattern.Kinds = s.RelationshipPattern.Kinds.Add(kind)
-		}
-	}
-
-	// Handle Azure and AD attack paths
-	switch relationshipType {
-	case "ALL_ATTACK_PATHS":
-		s.ctx.HasShortcutExpansion = true
-		if s.ctx.HasMutation {
-			s.ctx.AddErrors(ErrUpdateWithExpansionNotSupported)
-		}
-		addKindsFromRelationships(azure.PathfindingRelationships())
-		addKindsFromRelationships(ad.PathfindingRelationships())
-
-	case "AZ_ATTACK_PATHS":
-		s.ctx.HasShortcutExpansion = true
-		if s.ctx.HasMutation {
-			s.ctx.AddErrors(ErrUpdateWithExpansionNotSupported)
-		}
-		addKindsFromRelationships(azure.PathfindingRelationships())
-
-	case "AD_ATTACK_PATHS":
-		s.ctx.HasShortcutExpansion = true
-		if s.ctx.HasMutation {
-			s.ctx.AddErrors(ErrUpdateWithExpansionNotSupported)
-		}
-		addKindsFromRelationships(ad.PathfindingRelationships())
-	default:
-		kind := graph.StringKind(relationshipType)
-		addKindsFromRelationships([]graph.Kind{kind})
-	}
-	s.ctx.Exit()
+	kind := graph.StringKind(s.ctx.Exit().(*SymbolicNameOrReservedWordVisitor).Name)
+	s.RelationshipPattern.Kinds = append(s.RelationshipPattern.Kinds, kind)
 }
 
 func (s *RelationshipPatternVisitor) EnterOC_Variable(ctx *parser.OC_VariableContext) {

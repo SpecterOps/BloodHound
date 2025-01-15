@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 import { act, render, screen } from '../../test-utils';
 import LoginViaSSOForm from './LoginViaSSOForm';
+import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 
 const testSSOProviders: SSOProvider[] = [
     {

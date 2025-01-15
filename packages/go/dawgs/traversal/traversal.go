@@ -20,11 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"sync"
 	"sync/atomic"
 
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/graphcache"
@@ -33,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/dawgs/util/atomics"
 	"github.com/specterops/bloodhound/dawgs/util/channels"
+	"github.com/specterops/bloodhound/log"
 )
 
 // Driver is a function that drives sending queries to the graph and retrieving vertexes and edges. Traversal
@@ -124,12 +123,12 @@ func (s *pattern) Do(delegate PatternMatchDelegate) Driver {
 func (s *pattern) OutboundWithDepth(min, max int, criteria ...graph.Criteria) PatternContinuation {
 	if min < 0 {
 		min = 1
-		slog.Warn("Negative mindepth not allowed. Setting min depth for expansion to 1")
+		log.Warnf("Negative mindepth not allowed. Setting min depth for expansion to 1")
 	}
 
 	if max < 0 {
 		max = 0
-		slog.Warn("Negative maxdepth not allowed. Setting max depth for expansion to 0")
+		log.Warnf("Negative maxdepth not allowed. Setting max depth for expansion to 0")
 	}
 
 	s.expansions = append(s.expansions, expansion{
@@ -152,12 +151,12 @@ func (s *pattern) Outbound(criteria ...graph.Criteria) PatternContinuation {
 func (s *pattern) InboundWithDepth(min, max int, criteria ...graph.Criteria) PatternContinuation {
 	if min < 0 {
 		min = 1
-		slog.Warn("Negative mindepth not allowed. Setting min depth for expansion to 1")
+		log.Warnf("Negative mindepth not allowed. Setting min depth for expansion to 1")
 	}
 
 	if max < 0 {
 		max = 0
-		slog.Warn("Negative maxdepth not allowed. Setting max depth for expansion to 0")
+		log.Warnf("Negative maxdepth not allowed. Setting max depth for expansion to 0")
 	}
 
 	s.expansions = append(s.expansions, expansion{
@@ -286,7 +285,7 @@ func New(db graph.Database, numParallelWorkers int) Traversal {
 }
 
 func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
-	defer measure.ContextMeasure(ctx, slog.LevelDebug, "BreadthFirst - %d workers", s.numWorkers)()
+	defer log.Measure(log.LevelDebug, "BreadthFirst - %d workers", s.numWorkers)()
 
 	var (
 		// workerWG keeps count of background workers launched in goroutines
@@ -528,21 +527,21 @@ func FilteredSkipLimit(filter SkipLimitFilter, visitorFilter SegmentVisitor, ski
 			if skip == 0 || shouldCollect() {
 				// If we should collect this result, check to see if we're already at a limit for the number of results
 				if limit > 0 && atLimit() {
-					slog.Debug(fmt.Sprintf("At collection limit, rejecting path: %s", graph.FormatPathSegment(next)))
+					log.Debugf("At collection limit, rejecting path: %s", graph.FormatPathSegment(next))
 					return false
 				}
 
-				slog.Debug(fmt.Sprintf("Collected path: %s", graph.FormatPathSegment(next)))
+				log.Debugf("Collected path: %s", graph.FormatPathSegment(next))
 				visitorFilter(next)
 			} else {
-				slog.Debug(fmt.Sprintf("Skipping path visit: %s", graph.FormatPathSegment(next)))
+				log.Debugf("Skipping path visit: %s", graph.FormatPathSegment(next))
 			}
 		}
 
 		if shouldDescend {
-			slog.Debug(fmt.Sprintf("Descending into path: %s", graph.FormatPathSegment(next)))
+			log.Debugf("Descending into path: %s", graph.FormatPathSegment(next))
 		} else {
-			slog.Debug(fmt.Sprintf("Rejecting further descent into path: %s", graph.FormatPathSegment(next)))
+			log.Debugf("Rejecting further descent into path: %s", graph.FormatPathSegment(next))
 		}
 
 		return shouldDescend

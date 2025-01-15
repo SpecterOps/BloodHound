@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
+import { DateTime } from 'luxon';
 import { apiClient } from 'bh-shared-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
-import { DateTime } from 'luxon';
 
 import type { AppDispatch, AppState } from 'src/store';
 import { addSnackbar } from '../global/actions';

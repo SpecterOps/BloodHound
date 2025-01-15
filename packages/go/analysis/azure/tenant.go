@@ -19,13 +19,12 @@ package azure
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/log"
 )
 
 func NewTenantEntityDetails(node *graph.Node) TenantDetails {
@@ -103,7 +102,7 @@ func FetchTenants(ctx context.Context, db graph.Database) (graph.NodeSet, error)
 
 // TenantRoles returns the NodeSet of roles for a given tenant that match one of the given role template IDs. If no role template ID is provided, then all of the tenant role nodes are returned in the NodeSet.
 func TenantRoles(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...string) (graph.NodeSet, error) {
-	defer measure.Measure(slog.LevelInfo, "TenantRoles - Tenant %d", tenant.ID)()
+	defer log.Measure(log.LevelInfo, "TenantRoles - Tenant %d", tenant.ID)()
 
 	if !IsTenantNode(tenant) {
 		return nil, fmt.Errorf("cannot fetch tenant roles - node %d must be of kind %s", tenant.ID, azure.Tenant)

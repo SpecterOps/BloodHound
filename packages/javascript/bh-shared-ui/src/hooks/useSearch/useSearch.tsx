@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery } from 'react-query';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
 import { EntityKinds, apiClient } from '../../utils';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
 
 export type SearchResult = {
     distinguishedname?: string;

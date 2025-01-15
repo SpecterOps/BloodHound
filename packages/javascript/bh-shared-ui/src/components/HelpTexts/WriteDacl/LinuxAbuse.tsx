@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
 import { FC } from 'react';
+import { Link, Typography } from '@mui/material';
 import { EdgeInfoProps } from '../index';
 
 const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = ({

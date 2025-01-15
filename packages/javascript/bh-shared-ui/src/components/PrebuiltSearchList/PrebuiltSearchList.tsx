@@ -30,8 +30,8 @@ import {
     ListItemText,
     ListSubheader,
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import { FC, useState } from 'react';
+import makeStyles from '@mui/styles/makeStyles';
 
 interface PrebuiltSearchListProps {
     listSections: ListSection[];

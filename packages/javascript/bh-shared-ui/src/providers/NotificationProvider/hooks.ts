@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { OptionsObject } from 'notistack';
 import { useContext } from 'react';
-import { NotificationsContext, NotificationsDispatchContext } from './NotificationsProvider';
+import { OptionsObject } from 'notistack';
 import { addNotification, dismissNotification, removeNotification } from './actions';
+import { NotificationsContext, NotificationsDispatchContext } from './NotificationsProvider';
 
 export const useNotifications = () => {
     const notifications = useContext(NotificationsContext);

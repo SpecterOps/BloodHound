@@ -17,18 +17,18 @@
 import { Box, Paper, useTheme } from '@mui/material';
 import {
     AssetGroup,
-    AssetGroupMemberCounts,
     AssetGroupMemberParams,
+    AssetGroupMemberCounts,
     UpdateAssetGroupSelectorRequest,
 } from 'js-client-library';
 import { FC, useEffect, useState } from 'react';
-import { useMutation, useQueryClient } from 'react-query';
-import { useNotifications } from '../../providers';
-import { apiClient } from '../../utils';
-import { SubHeader } from '../../views/Explore';
-import AssetGroupAutocomplete from './AssetGroupAutocomplete';
-import AssetGroupChangelogTable from './AssetGroupChangelogTable';
 import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from './types';
+import AssetGroupAutocomplete from './AssetGroupAutocomplete';
+import { SubHeader } from '../../views/Explore';
+import { useMutation, useQueryClient } from 'react-query';
+import { apiClient } from '../../utils';
+import AssetGroupChangelogTable from './AssetGroupChangelogTable';
+import { useNotifications } from '../../providers';
 
 const AssetGroupEdit: FC<{
     assetGroup: AssetGroup;

@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import userEvent from '@testing-library/user-event';
-import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import Users from '.';
 import { render, screen, within } from '../../test-utils';
+import Users from '.';
+import userEvent from '@testing-library/user-event';
+import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 
 const testAuthenticatedUser = {
     sso_provider_id: null,

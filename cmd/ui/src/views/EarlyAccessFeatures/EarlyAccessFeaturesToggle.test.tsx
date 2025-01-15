@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { Flag } from 'bh-shared-ui';
 import { render, screen } from 'src/test-utils';
 import { EarlyAccessFeatureToggle } from './EarlyAccessFeatures';
+import { Flag } from 'bh-shared-ui';
 
 describe('EarlyAccessFeatureToggle', () => {
     it('renders', () => {

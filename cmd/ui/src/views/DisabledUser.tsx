@@ -18,10 +18,10 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, AlertTitle, Box, Grid } from '@mui/material';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import LoginPage from 'src/components/LoginPage';
 import { logout } from 'src/ducks/auth/authSlice';
 import { ROUTE_LOGIN } from 'src/ducks/global/routes';
 import { useAppDispatch } from 'src/store';
+import LoginPage from 'src/components/LoginPage';
 
 const DisabledUser: React.FC = () => {
     const dispatch = useAppDispatch();

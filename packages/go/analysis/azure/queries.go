@@ -18,18 +18,16 @@ package azure
 
 import (
 	"context"
-	"fmt"
-	"log/slog"
 	"strings"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/log"
 )
 
 func FetchCollectedTenants(tx graph.Transaction) (graph.NodeSet, error) {
@@ -56,10 +54,10 @@ func GetCollectedTenants(ctx context.Context, db graph.Database) (graph.NodeSet,
 }
 
 func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
-	defer measure.LogAndMeasure(slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets", "tenant_id", tenant.ID)()
+	defer log.LogAndMeasure(log.LevelInfo, "Tenant %d FetchGraphDBTierZeroTaggedAssets", tenant.ID)()
 
 	if tenantObjectID, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
-		slog.Error(fmt.Sprintf("Tenant node %d does not have a valid %s property: %v", tenant.ID, common.ObjectID, err))
+		log.Errorf("Tenant node %d does not have a valid %s property: %v", tenant.ID, common.ObjectID, err)
 		return nil, err
 	} else {
 		if nodeSet, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
@@ -77,7 +75,7 @@ func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) 
 }
 
 func FetchAzureAttackPathRoots(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
-	defer measure.LogAndMeasure(slog.LevelDebug, "FetchAzureAttackPathRoots", "tenant_id", tenant.ID)()
+	defer log.LogAndMeasure(log.LevelDebug, "Tenant %d FetchAzureAttackPathRoots", tenant.ID)()
 
 	attackPathRoots := graph.NewNodeKindSet()
 

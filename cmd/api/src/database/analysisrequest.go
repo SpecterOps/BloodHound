@@ -19,10 +19,9 @@ package database
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log/slog"
 	"time"
 
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -53,7 +52,7 @@ func (s *BloodhoundDB) HasAnalysisRequest(ctx context.Context) bool {
 
 	tx := s.db.WithContext(ctx).Raw(`select exists(select * from analysis_request_switch where request_type = ? limit 1);`, model.AnalysisRequestAnalysis).Scan(&exists)
 	if tx.Error != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error determining if there's an analysis request: %v", tx.Error))
+		log.Errorf("Error determining if there's an analysis request: %v", tx.Error)
 	}
 	return exists
 }
@@ -63,7 +62,7 @@ func (s *BloodhoundDB) HasCollectedGraphDataDeletionRequest(ctx context.Context)
 
 	tx := s.db.WithContext(ctx).Raw(`select exists(select * from analysis_request_switch where request_type = ? limit 1);`, model.AnalysisRequestDeletion).Scan(&exists)
 	if tx.Error != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error determining if there's a deletion request: %v", tx.Error))
+		log.Errorf("Error determining if there's a deletion request: %v", tx.Error)
 	}
 	return exists
 }
@@ -93,12 +92,12 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, requestType model
 
 // RequestAnalysis will request an analysis be executed, as long as there isn't an existing analysis request or collected graph data deletion request, then it no-ops
 func (s *BloodhoundDB) RequestAnalysis(ctx context.Context, requestedBy string) error {
-	slog.InfoContext(ctx, fmt.Sprintf("Analysis requested by %s", requestedBy))
+	log.Infof("Analysis requested by %s", requestedBy)
 	return s.setAnalysisRequest(ctx, model.AnalysisRequestAnalysis, requestedBy)
 }
 
 // RequestCollectedGraphDataDeletion will request collected graph data be deleted, if an analysis request is present, it will overwrite that.
 func (s *BloodhoundDB) RequestCollectedGraphDataDeletion(ctx context.Context, requestedBy string) error {
-	slog.InfoContext(ctx, fmt.Sprintf("Collected graph data deletion requested by %s", requestedBy))
+	log.Infof("Collected graph data deletion requested by %s", requestedBy)
 	return s.setAnalysisRequest(ctx, model.AnalysisRequestDeletion, requestedBy)
 }

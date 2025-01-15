@@ -17,14 +17,13 @@
 package ein
 
 import (
-	"fmt"
-	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/slicesext"
 )
 
@@ -78,7 +77,7 @@ func stringToBool(itemProps map[string]any, keyName string) {
 		case bool:
 		//pass
 		default:
-			slog.Debug(fmt.Sprintf("Removing %s with type %T", converted, converted))
+			log.Debugf("Removing %s with type %T", converted)
 			delete(itemProps, keyName)
 		}
 	}
@@ -96,7 +95,7 @@ func stringToInt(itemProps map[string]any, keyName string) {
 		case int:
 		//pass
 		default:
-			slog.Debug(fmt.Sprintf("Removing %s with type %T", keyName, converted))
+			log.Debugf("Removing %s with type %T", keyName, converted)
 			delete(itemProps, keyName)
 		}
 	}
@@ -195,10 +194,10 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 		}
 
 		if rightKind, err := analysis.ParseKind(ace.RightName); err != nil {
-			slog.Error(fmt.Sprintf("Error during ParseACEData: %v", err))
+			log.Errorf("Error during ParseACEData: %v", err)
 			continue
 		} else if !ad.IsACLKind(rightKind) {
-			slog.Error(fmt.Sprintf("Non-ace edge type given to process aces: %s", ace.RightName))
+			log.Errorf("Non-ace edge type given to process aces: %s", ace.RightName)
 			continue
 		} else {
 			converted = append(converted, NewIngestibleRelationship(
@@ -226,7 +225,7 @@ func convertSPNData(spns []SPNTarget, sourceID string) []IngestibleRelationship 
 
 	for _, s := range spns {
 		if kind, err := analysis.ParseKind(s.Service); err != nil {
-			slog.Error(fmt.Sprintf("Error during processSPNTargets: %v", err))
+			log.Errorf("Error during processSPNTargets: %v", err)
 		} else {
 			converted = append(converted, NewIngestibleRelationship(
 				IngestibleSource{
@@ -368,7 +367,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		switch converted := trust.TrustAttributes.(type) {
 		case string:
 			if i, err := strconv.Atoi(converted); err != nil {
-				slog.Error(fmt.Sprintf("Error converting trust attributes %s to int", converted))
+				log.Errorf("Error converting trust attributes %s to int", converted)
 				finalTrustAttributes = 0
 			} else {
 				finalTrustAttributes = i
@@ -376,7 +375,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		case int:
 			finalTrustAttributes = converted
 		default:
-			slog.Error(fmt.Sprintf("Error converting trust attributes %s to int", converted))
+			log.Errorf("Error converting trust attributes %s to int", converted)
 			finalTrustAttributes = 0
 		}
 

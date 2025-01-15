@@ -34,7 +34,6 @@ func (s SyntaxError) Error() string {
 
 var (
 	ErrUpdateClauseNotSupported            = errors.New("updating clauses are not supported")
-	ErrUpdateWithExpansionNotSupported     = errors.New("updating clauses with expansions are not supported")
 	ErrUserSpecifiedParametersNotSupported = errors.New("user-specified parameters are not supported")
 	ErrProcedureInvocationNotSupported     = errors.New("procedure invocation is not supported")
 

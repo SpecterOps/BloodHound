@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import userEvent from '@testing-library/user-event';
-import fileDownload from 'js-file-download';
+import DownloadCollectors from './DownloadCollectors';
+import { screen, render, waitFor } from 'src/test-utils';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from 'src/test-utils';
+import userEvent from '@testing-library/user-event';
+import fileDownload from 'js-file-download';
 import { Mock } from 'vitest';
-import DownloadCollectors from './DownloadCollectors';
 
 vi.mock('js-file-download');
 

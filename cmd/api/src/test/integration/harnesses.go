@@ -6425,48 +6425,6 @@ func (s *ESC4ECA) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer7, s.CertTemplate7, ad.GenericAll)
 }
 
-// Use this to set our custom test property in the migration harness
-type Property string
-
-func (s Property) String() string {
-	return string(s)
-}
-
-type DBMigrateHarness struct {
-	Group1      *graph.Node
-	Computer1   *graph.Node
-	User1       *graph.Node
-	GenericAll1 *graph.Relationship
-	HasSession1 *graph.Relationship
-	MemberOf1   *graph.Relationship
-	TestID      Property
-}
-
-func (s *DBMigrateHarness) Setup(graphTestContext *GraphTestContext) {
-	sid := RandomDomainSID()
-	s.TestID = "testing_id"
-
-	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", sid)
-	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", sid)
-	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", sid, false)
-	s.Group1.Properties.Set(s.TestID.String(), RandomObjectID(graphTestContext.testCtx))
-	s.Computer1.Properties.Set(s.TestID.String(), RandomObjectID(graphTestContext.testCtx))
-	s.User1.Properties.Set(s.TestID.String(), RandomObjectID(graphTestContext.testCtx))
-	graphTestContext.UpdateNode(s.Group1)
-	graphTestContext.UpdateNode(s.Computer1)
-	graphTestContext.UpdateNode(s.User1)
-
-	s.GenericAll1 = graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.GenericAll, graph.AsProperties(graph.PropertyMap{
-		s.TestID: RandomObjectID(graphTestContext.testCtx),
-	}))
-	s.HasSession1 = graphTestContext.NewRelationship(s.Computer1, s.User1, ad.HasSession, graph.AsProperties(graph.PropertyMap{
-		s.TestID: RandomObjectID(graphTestContext.testCtx),
-	}))
-	s.MemberOf1 = graphTestContext.NewRelationship(s.User1, s.Group1, ad.MemberOf, graph.AsProperties(graph.PropertyMap{
-		s.TestID: RandomObjectID(graphTestContext.testCtx),
-	}))
-}
-
 type ESC13Harness1 struct {
 	CertTemplate1  *graph.Node
 	CertTemplate2  *graph.Node
@@ -8498,42 +8456,6 @@ func (s *ESC10bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.DC1)
 }
 
-type NTLMCoerceAndRelayNTLMToSMB struct {
-	AuthenticatedUsers *graph.Node
-	DomainAdminsUser   *graph.Node
-	ServerAdmins       *graph.Node
-	computer3          *graph.Node
-	computer8          *graph.Node
-}
-
-func (s *NTLMCoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
-	domainSid := RandomDomainSID()
-	s.AuthenticatedUsers = graphTestContext.NewActiveDirectoryGroup("Authenticated Users", domainSid)
-	s.AuthenticatedUsers.Properties.Set("objectid", fmt.Sprintf("authenticated-users%s", adAnalysis.AuthenticatedUsersSuffix))
-	s.AuthenticatedUsers.Properties.Set("Domain", domainSid)
-	graphTestContext.UpdateNode(s.AuthenticatedUsers)
-
-	s.DomainAdminsUser = graphTestContext.NewActiveDirectoryUser("Domain Admins User", domainSid)
-
-	s.ServerAdmins = graphTestContext.NewActiveDirectoryDomain("Server Admins", domainSid, false, true)
-	s.ServerAdmins.Properties.Set("objectid", fmt.Sprintf("server-admins%s", adAnalysis.AuthenticatedUsersSuffix))
-	s.ServerAdmins.Properties.Set("Domain", domainSid)
-	graphTestContext.UpdateNode(s.ServerAdmins)
-
-	s.DomainAdminsUser.Properties.Set("objectid", fmt.Sprintf("domainadminuser-users%s", adAnalysis.AuthenticatedUsersSuffix))
-	s.computer3 = graphTestContext.NewActiveDirectoryComputer("computer3", domainSid)
-
-	s.computer8 = graphTestContext.NewActiveDirectoryComputer("computer8", domainSid)
-	s.computer8.Properties.Set(ad.SMBSigning.String(), false)
-	s.computer8.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
-	graphTestContext.UpdateNode(s.computer8)
-
-	graphTestContext.NewRelationship(s.computer3, s.ServerAdmins, ad.MemberOf)
-	graphTestContext.NewRelationship(s.ServerAdmins, s.computer8, ad.AdminTo)
-	graphTestContext.NewRelationship(s.AuthenticatedUsers, s.computer8, ad.CoerceAndRelayNTLMToSMB)
-	graphTestContext.NewRelationship(s.computer8, s.DomainAdminsUser, ad.HasSession)
-}
-
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -8627,12 +8549,10 @@ type HarnessDetails struct {
 	ESC4Template3                                   ESC4Template3
 	ESC4Template4                                   ESC4Template4
 	ESC4ECA                                         ESC4ECA
-	DBMigrateHarness                                DBMigrateHarness
 	ESC13Harness1                                   ESC13Harness1
 	ESC13Harness2                                   ESC13Harness2
 	ESC13HarnessECA                                 ESC13HarnessECA
 	DCSyncHarness                                   DCSyncHarness
 	SyncLAPSPasswordHarness                         SyncLAPSPasswordHarness
 	HybridAttackPaths                               HybridAttackPaths
-	NTLMCoerceAndRelayNTLMToSMB                     NTLMCoerceAndRelayNTLMToSMB
 }

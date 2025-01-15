@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { faDownload } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Link, Paper, Typography } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDownload } from '@fortawesome/free-solid-svg-icons';
 
 interface CollectorCardProps {
     collectorType: 'sharphound' | 'azurehound';

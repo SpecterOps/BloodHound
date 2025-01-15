@@ -20,8 +20,8 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Menu, { MenuProps } from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import makeStyles from '@mui/styles/makeStyles';
 import withStyles from '@mui/styles/withStyles';
+import makeStyles from '@mui/styles/makeStyles';
 import React, { MouseEvent } from 'react';
 
 interface Props {

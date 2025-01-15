@@ -19,15 +19,14 @@ package azure
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"slices"
 
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/log"
 )
 
 func NewRoleEntityDetails(node *graph.Node) RoleDetails {
@@ -271,7 +270,7 @@ func roleMembers(tx graph.Transaction, tenantRoles graph.NodeSet, additionalRela
 // RoleMembersWithGrants returns the NodeSet of members for a given set of roles, including those members who may be able to grant themselves one of the given roles
 // NOTE: The current implementation also includes the role nodes in the returned set. It may be worth considering removing those nodes from the set if doing so doesn't break tier zero/high value assignment
 func RoleMembersWithGrants(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...string) (graph.NodeSet, error) {
-	defer measure.LogAndMeasure(slog.LevelInfo, "RoleMembersWithGrants", "tenant_id", tenant.ID)()
+	defer log.LogAndMeasure(log.LevelInfo, "Tenant %d RoleMembersWithGrants", tenant.ID)()
 
 	if tenantRoles, err := TenantRoles(tx, tenant, roleTemplateIDs...); err != nil {
 		return nil, err

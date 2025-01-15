@@ -18,11 +18,10 @@ package v2
 
 import (
 	"errors"
-	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/specterops/bloodhound/dawgs/util"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -108,7 +107,7 @@ func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.P
 
 	if err := s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 		// We want to keep err scoped because having info on the mutation graph response trumps this error
-		slog.ErrorContext(request.Context(), fmt.Sprintf("failure to create mutation audit log %s", err.Error()))
+		log.Errorf("failure to create mutation audit log %s", err.Error())
 	}
 
 	return graphResponse, err

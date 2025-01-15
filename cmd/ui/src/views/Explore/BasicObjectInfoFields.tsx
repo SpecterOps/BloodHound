@@ -21,9 +21,9 @@ import {
     EntityKinds,
     Field,
     NodeIcon,
-    OWNED_OBJECT_TAG,
-    TIER_ZERO_TAG,
     searchbarActions,
+    TIER_ZERO_TAG,
+    OWNED_OBJECT_TAG,
 } from 'bh-shared-ui';
 import { useAppDispatch } from 'src/store';
 

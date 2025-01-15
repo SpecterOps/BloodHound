@@ -17,12 +17,12 @@
 import { Theme } from '@mui/material';
 import { GlyphKind } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
-import { random } from 'graphology-layout';
-import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { GraphData, GraphEdges, GraphNodes } from 'js-client-library';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
 import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
+import { random } from 'graphology-layout';
+import forceAtlas2 from 'graphology-layout-forceatlas2';
 
 export const initGraph = (graph: MultiDirectedGraph, items: GraphData, theme: Theme, darkMode: boolean) => {
     const { nodes, edges } = items;

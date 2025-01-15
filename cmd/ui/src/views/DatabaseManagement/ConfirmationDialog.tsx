@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography, useTheme } from '@mui/material';
 import { FC, useState } from 'react';
+import { Button } from '@bloodhoundenterprise/doodleui';
 
 const confirmationText = 'Please delete my data';
 

@@ -16,11 +16,11 @@
 
 import React from 'react';
 
-import { PasswordResetForm } from 'bh-shared-ui';
-import { PutUserAuthSecretRequest } from 'js-client-library';
 import { Navigate } from 'react-router-dom';
-import LoginPage from 'src/components/LoginPage';
+import { PutUserAuthSecretRequest } from 'js-client-library';
+import { PasswordResetForm } from 'bh-shared-ui';
 import { authExpiredSelector, logout, updateExpiredPassword } from 'src/ducks/auth/authSlice';
+import LoginPage from 'src/components/LoginPage';
 import { ROUTE_HOME } from 'src/ducks/global/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 

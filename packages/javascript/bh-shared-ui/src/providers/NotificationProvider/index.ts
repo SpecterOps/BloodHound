@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as NotificationsProvider } from './NotificationsProvider';
 export * from './hooks';
 export * from './model';
+export { default as NotificationsProvider } from './NotificationsProvider';

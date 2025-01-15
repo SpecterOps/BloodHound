@@ -19,16 +19,14 @@ package bootstrap
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"os"
 
-	"github.com/specterops/bloodhound/bhlog"
-	"github.com/specterops/bloodhound/bhlog/level"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/size"
+	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api/tools"
 	"github.com/specterops/bloodhound/src/config"
 )
@@ -82,11 +80,11 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 	} else {
 		switch driverName {
 		case neo4j.DriverName:
-			slog.InfoContext(ctx, "Connecting to graph using Neo4j")
+			log.Infof("Connecting to graph using Neo4j")
 			connectionString = cfg.Neo4J.Neo4jConnectionString()
 
 		case pg.DriverName:
-			slog.InfoContext(ctx, "Connecting to graph using PostgreSQL")
+			log.Infof("Connecting to graph using PostgreSQL")
 			connectionString = cfg.Database.PostgreSQLConnectionString()
 
 		default:
@@ -108,19 +106,18 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 
 // InitializeLogging sets up output file logging, and returns errors if any
 func InitializeLogging(cfg config.Configuration) error {
-	var logLevel = slog.LevelInfo
+	var logLevel = log.LevelInfo
 
 	if cfg.LogLevel != "" {
-		if parsedLevel, err := bhlog.ParseLevel(cfg.LogLevel); err != nil {
+		if parsedLevel, err := log.ParseLevel(cfg.LogLevel); err != nil {
 			return err
 		} else {
 			logLevel = parsedLevel
 		}
 	}
 
-	bhlog.ConfigureDefault(cfg.EnableTextLogger)
-	level.SetGlobalLevel(logLevel)
+	log.Configure(log.DefaultConfiguration().WithLevel(logLevel))
 
-	slog.Info("Logging configured")
+	log.Infof("Logging configured")
 	return nil
 }
