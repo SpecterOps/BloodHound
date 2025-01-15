@@ -19,6 +19,7 @@ package pg
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -26,7 +27,6 @@ import (
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 )
 
 const (
@@ -59,7 +59,7 @@ func afterPooledConnectionRelease(conn *pgx.Conn) bool {
 		if _, hasType := conn.TypeMap().TypeForName(dataType.String()); !hasType {
 			// This connection should be destroyed since it does not contain information regarding the schema's
 			// composite types
-			log.Warnf("Unable to find expected data type: %s. This database connection will not be pooled.", dataType)
+			slog.Warn(fmt.Sprintf("Unable to find expected data type: %s. This database connection will not be pooled.", dataType))
 			return false
 		}
 	}

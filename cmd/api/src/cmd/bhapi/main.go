@@ -20,10 +20,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
+	"strconv"
 
+	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
@@ -57,11 +59,18 @@ func main() {
 		printVersion()
 	}
 
-	// Initialize basic logging facilities while we start up
-	log.ConfigureDefaults()
+	enableTextLogger := os.Getenv(config.BHAPIEnvironmentVariablePrefix + "_enable_text_logger")
+
+	if enabled, err := strconv.ParseBool(enableTextLogger); err != nil {
+		// Default to json because we're not sure what the user wanted
+		bhlog.ConfigureDefault(false)
+	} else {
+		bhlog.ConfigureDefault(enabled)
+	}
 
 	if cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration); err != nil {
-		log.Fatalf("Unable to read configuration %s: %v", configFilePath, err)
+		slog.Error(fmt.Sprintf("Unable to read configuration %s: %v", configFilePath, err))
+		os.Exit(1)
 	} else {
 		initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
 			Configuration:       cfg,
@@ -71,7 +80,8 @@ func main() {
 		}
 
 		if err := initializer.Launch(context.Background(), true); err != nil {
-			log.Fatalf("Failed starting the server: %v", err)
+			slog.Error(fmt.Sprintf("Failed starting the server: %v", err))
+			os.Exit(1)
 		}
 	}
 }

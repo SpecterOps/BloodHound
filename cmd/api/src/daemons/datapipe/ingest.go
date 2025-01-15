@@ -19,6 +19,7 @@ package datapipe
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -28,7 +29,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/specterops/bloodhound/src/services/fileupload"
 )
@@ -145,7 +145,7 @@ func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowU
 		if name, typeMatches := rawName.(string); typeMatches {
 			properties[common.Name.String()] = strings.ToUpper(name)
 		} else {
-			log.Errorf("Bad type found for node name property during ingest. Expected string, got %T", rawName)
+			slog.Error(fmt.Sprintf("Bad type found for node name property during ingest. Expected string, got %T", rawName))
 		}
 	}
 
@@ -153,7 +153,7 @@ func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowU
 		if os, typeMatches := rawOS.(string); typeMatches {
 			properties[common.OperatingSystem.String()] = strings.ToUpper(os)
 		} else {
-			log.Errorf("Bad type found for node operating system property during ingest. Expected string, got %T", rawOS)
+			slog.Error(fmt.Sprintf("Bad type found for node operating system property during ingest. Expected string, got %T", rawOS))
 		}
 	}
 
@@ -161,7 +161,7 @@ func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowU
 		if dn, typeMatches := rawDN.(string); typeMatches {
 			properties[ad.DistinguishedName.String()] = strings.ToUpper(dn)
 		} else {
-			log.Errorf("Bad type found for node distinguished name property during ingest. Expected string, got %T", rawDN)
+			slog.Error(fmt.Sprintf("Bad type found for node distinguished name property during ingest. Expected string, got %T", rawDN))
 		}
 	}
 
@@ -188,7 +188,7 @@ func IngestNodes(batch graph.Batch, identityKind graph.Kind, nodes []ein.Ingesti
 
 	for _, next := range nodes {
 		if err := IngestNode(batch, nowUTC, identityKind, next); err != nil {
-			log.Errorf("Error ingesting node ID %s: %v", next.ObjectID, err)
+			slog.Error(fmt.Sprintf("Error ingesting node ID %s: %v", next.ObjectID, err))
 			errs.Add(err)
 		}
 	}
@@ -231,7 +231,7 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 
 	for _, next := range relationships {
 		if err := IngestRelationship(batch, nowUTC, nodeIDKind, next); err != nil {
-			log.Errorf("Error ingesting relationship from %s to %s : %v", next.Source, next.Target, err)
+			slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source, next.Target, err))
 			errs.Add(err)
 		}
 	}
@@ -274,7 +274,7 @@ func IngestDNRelationships(batch graph.Batch, relationships []ein.IngestibleRela
 
 	for _, next := range relationships {
 		if err := ingestDNRelationship(batch, nowUTC, next); err != nil {
-			log.Errorf("Error ingesting relationship: %v", err)
+			slog.Error(fmt.Sprintf("Error ingesting relationship: %v", err))
 			errs.Add(err)
 		}
 	}
@@ -319,7 +319,7 @@ func IngestSessions(batch graph.Batch, sessions []ein.IngestibleSession) error {
 
 	for _, next := range sessions {
 		if err := ingestSession(batch, nowUTC, next); err != nil {
-			log.Errorf("Error ingesting sessions: %v", err)
+			slog.Error(fmt.Sprintf("Error ingesting sessions: %v", err))
 			errs.Add(err)
 		}
 	}

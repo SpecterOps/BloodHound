@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { createSelector } from '@reduxjs/toolkit';
 import { produce } from 'immer';
+import { AppState } from 'src/store';
 import * as actions from './actions';
 import * as types from './types';
-import { AppState } from 'src/store';
-import { createSelector } from '@reduxjs/toolkit';
 
 const INITIAL_STATE: types.AssetGroupsState = {
     assetGroups: [],
