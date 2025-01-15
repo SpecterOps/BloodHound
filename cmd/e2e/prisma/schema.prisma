@@ -279,6 +279,24 @@ model domain_collection_results {
   updated_at      DateTime? @db.Timestamptz(6)
 }
 
+/// This table is a partition table and requires additional setup for migrations. Visit https://pris.ly/d/partition-tables for more info.
+model edge {
+  id         BigInt @default(autoincrement())
+  graph_id   BigInt
+  start_id   BigInt
+  end_id     BigInt
+  kind_id    Int    @db.SmallInt
+  properties Json
+  graph      graph  @relation(fields: [graph_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([id, graph_id])
+  @@unique([graph_id, start_id, end_id, kind_id])
+  @@index([end_id], map: "edge_end_id_index")
+  @@index([graph_id], map: "edge_graph_id_index")
+  @@index([kind_id], map: "edge_kind_index")
+  @@index([start_id], map: "edge_start_id_index")
+}
+
 model feature_flags {
   id             Int       @id @default(autoincrement())
   created_at     DateTime? @db.Timestamptz(6)
@@ -312,6 +330,13 @@ model file_upload_jobs {
   @@index([updated_at], map: "idx_file_upload_jobs_updated_at")
 }
 
+model graph {
+  id   BigInt @id @default(autoincrement())
+  name String @unique @db.VarChar(256)
+  edge edge[]
+  node node[]
+}
+
 model ingest_tasks {
   file_name    String?
   request_guid String?
@@ -330,12 +355,30 @@ model installations {
   updated_at DateTime? @db.Timestamptz(6)
 }
 
+model kind {
+  id   Int    @id @default(autoincrement()) @db.SmallInt
+  name String @unique @db.VarChar(256)
+}
+
 model migrations {
   id         Int       @id @default(autoincrement())
   updated_at DateTime? @db.Timestamptz(6)
   major      Int?
   minor      Int?
   patch      Int?
+}
+
+/// This table is a partition table and requires additional setup for migrations. Visit https://pris.ly/d/partition-tables for more info.
+model node {
+  id         BigInt @default(autoincrement())
+  graph_id   BigInt
+  kind_ids   Int[]  @db.SmallInt
+  properties Json
+  graph      graph  @relation(fields: [graph_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([id, graph_id])
+  @@index([graph_id], map: "node_graph_id_index")
+  @@index([kind_ids], map: "node_kind_ids_index", type: Gin)
 }
 
 model oidc_providers {
