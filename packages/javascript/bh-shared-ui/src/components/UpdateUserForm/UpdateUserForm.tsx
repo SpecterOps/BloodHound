@@ -363,8 +363,8 @@ const UpdateUserFormInner: React.FC<{
                                         value={isNaN(field.value) ? '' : field.value.toString()}
                                         variant='standard'
                                         fullWidth
-                                        data-testid='update-user-dialog_select-role'>
-                                        hidden={hasSelectedSelf}
+                                        data-testid='update-user-dialog_select-role'
+                                        hidden={hasSelectedSelf}>
                                         {roles?.map((role: Role) => (
                                             <MenuItem key={role.id} value={role.id.toString()}>
                                                 {role.name}

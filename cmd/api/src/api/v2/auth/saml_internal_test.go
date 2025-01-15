@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -120,7 +121,10 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 
 		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSSO)
 
-		require.Equal(t, http.StatusForbidden, response.Code)
+		require.Equal(t, http.StatusFound, response.Code)
+		location, err := response.Result().Location()
+		require.Nil(t, err)
+		require.Equal(t, location.Query(), url.Values{"error": {"Your user is not allowed, please contact your Administrator"}})
 	})
 
 	t.Run("Forbidden 403 if user isn't associated with a SAML Provider", func(t *testing.T) {
@@ -142,7 +146,10 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 
 		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSSO)
 
-		require.Equal(t, http.StatusForbidden, response.Code)
+		require.Equal(t, http.StatusFound, response.Code)
+		location, err := response.Result().Location()
+		require.Nil(t, err)
+		require.Equal(t, location.Query(), url.Values{"error": {"Your user is not allowed, please contact your Administrator"}})
 	})
 
 	t.Run("Forbidden 403 if user isn't associated with specified SAML Provider", func(t *testing.T) {
@@ -172,7 +179,10 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 
 		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSSO)
 
-		require.Equal(t, http.StatusForbidden, response.Code)
+		require.Equal(t, http.StatusFound, response.Code)
+		location, err := response.Result().Location()
+		require.Nil(t, err)
+		require.Equal(t, location.Query(), url.Values{"error": {"Your user is not allowed, please contact your Administrator"}})
 	})
 
 	t.Run("Correctly fails with SAML assertion error if assertion is invalid", func(t *testing.T) {
