@@ -183,14 +183,13 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 		verifier := oauth2.GenerateVerifier()
 
 		// Store PKCE on web browser in secure cookie for retrieval in callback
-		api.SetSecureBrowserCookie(request, response, api.AuthPKCECookieName, verifier, time.Now().UTC().Add(time.Minute*7), true)
+		api.SetSecureBrowserCookie(request, response, api.AuthPKCECookieName, verifier, time.Now().UTC().Add(time.Minute*7), true, http.SameSiteNoneMode)
 
 		// Store State on web browser in secure cookie for retrieval in callback
-		api.SetSecureBrowserCookie(request, response, api.AuthStateCookieName, state, time.Now().UTC().Add(time.Minute*7), true)
+		api.SetSecureBrowserCookie(request, response, api.AuthStateCookieName, state, time.Now().UTC().Add(time.Minute*7), true, http.SameSiteNoneMode)
 
-		// Redirect user to consent page to ask for permission for the scopes specified above.
-		redirectURL := conf.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
-
+		// Redirect user to consent page to ask for permission for the scopes specified above and specify POST callback
+		redirectURL := conf.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier), oauth2.SetAuthURLParam("response_mode", "form_post"))
 		response.Header().Add(headers.Location.String(), redirectURL)
 		response.WriteHeader(http.StatusFound)
 	}
@@ -198,39 +197,37 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 
 func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	var (
-		queryParams = request.URL.Query()
-		state       = queryParams[api.QueryParameterState]
-		code        = queryParams[api.QueryParameterCode]
+		state = request.FormValue(api.FormParameterState)
+		code  = request.FormValue(api.FormParameterCode)
 	)
+
+	// No matter what happens, wipe the auth cookies
+	api.DeleteBrowserCookie(request, response, api.AuthStateCookieName)
+	api.DeleteBrowserCookie(request, response, api.AuthPKCECookieName)
 
 	if ssoProvider.OIDCProvider == nil {
 		// SSO misconfiguration scenario
 		api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
-	} else if len(code) == 0 {
-		// Don't want to log state but do want to know if state was present
-		hasState := queryParams.Has(api.QueryParameterState)
-		queryParams.Del(api.QueryParameterState)
-		log.Warnf("[OIDC] auth code is missing, has state %t %+v", hasState, queryParams)
-		// Missing authorization code implies a credentials or form issue
-		// Not explicitly covered, treat as technical issue
+	} else if code == "" {
+		log.Warnf("[OIDC] auth code is missing")
+		api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+	} else if state == "" {
+		log.Warnf("[OIDC] state parameter is missing")
+		// Missing state parameter - treat as technical issue
 		api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if pkceVerifier, err := request.Cookie(api.AuthPKCECookieName); err != nil {
 		log.Warnf("[OIDC] pkce cookie is missing")
 		// Missing PKCE verifier - likely a technical or config issue
 		api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
-	} else if len(state) == 0 {
-		log.Warnf("[OIDC] state parameter is missing")
-		// Missing state parameter - treat as technical issue
-		api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
-	} else if stateCookie, err := request.Cookie(api.AuthStateCookieName); err != nil || stateCookie.Value != state[0] {
-		log.Warnf("[OIDC] state cookie does not match %v", err)
+	} else if stateCookie, err := request.Cookie(api.AuthStateCookieName); err != nil || stateCookie.Value != state {
+		log.Warnf(fmt.Sprintf("[OIDC] state cookie does not match %v", err))
 		// Invalid state - treat as technical issue or misconfiguration
 		api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
 		log.Warnf("[OIDC] Failed to create OIDC provider: %v", err)
 		// SSO misconfiguration scenario
 		api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
-	} else if claims, err := getOIDCClaims(request.Context(), provider, ssoProvider, pkceVerifier, code[0]); err != nil {
+	} else if claims, err := getOIDCClaims(request.Context(), provider, ssoProvider, pkceVerifier, code); err != nil {
 		log.Warnf("[OIDC] %v", err)
 		api.RedirectToLoginURL(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 	} else if email, err := getEmailFromOIDCClaims(claims); errors.Is(err, ErrEmailMissing) { // Note email claims are not always present so we will check different claim keys for possible email
