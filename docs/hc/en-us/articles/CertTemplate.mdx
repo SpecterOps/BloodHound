@@ -1,0 +1,89 @@
+---
+title: CertTemplate
+---
+
+This article outlines the CertTemplate node in BloodHound, it describes what the node represents, the node's properties, and possible incoming/outgoing edges.
+
+## Representation
+
+The CertTemplate node represents the Active Directory LDAP objects of the _pKICertificateTemplate_ class located in the _Certificate Templates_ container in the Configuration Naming Context.
+
+## Node properties
+
+The node supports the properties of the table. Three types of property names will be used, depending on where the property is found:
+
+* **Entity Panel:** Name shown in the BloodHound UI.
+* **Database:** Name stored in the BloodHound database and returned by the BloodHound API. This is to be used when running Cypher queries.
+* **Directory:** Name collected from the directory the node is stored in, for example, the LDAP name for an Active Directory property.
+
+|     |     |     |     |
+| --- | --- | --- | --- |
+| **Entity Panel** | **Database** | **Directory** | **Description** |
+| Display Name | displayname | displayName | The display name of the object. |
+| Object ID | objectid | objectGUID | The object's unique identifier in the directory. |
+| ACL Inheritance Denied | isaclprotected | nTSecurityDescriptor | Whether inherited permissions (ACEs) from containers are blocked on this object. |
+| Application Policies Required | applicationpolicies | msPKI-RA-Application-Policies | The required RA application policy EKU in the counter signatures of certificate requests. |
+| Application Policy Extensions | certificateapplicationpolicy | msPKI-Certificate-Application-Policy | List of EKUs that might go into issued certificates (see Effective EKUs). |
+| Authentication Enabled | authenticationenabled | -   | Whether the certificate can be used for authentication. See this blog post for more details on how it is calculated: [https://posts.specterops.io/adcs-attack-paths-in-bloodhound-part-1-799f3d3b03cf](https://posts.specterops.io/adcs-attack-paths-in-bloodhound-part-1-799f3d3b03cf) |
+| Authorized Signatures Required | authorizedsignatures | msPKI-RA-Signature | Specifies the number of enrollment registration authority signatures that are required in an enrollment request. |
+| Certificate Name Flags | certificatenameflag | msPKI-Certificate-Name-Flag | Contains the flags related to constructing the Subject and Subject Alternative Name in an issued certificate. |
+| Created | whencreated | whenCreated | When the object was created in the directory. |
+| Distinguished Name | distinguishedname | distinguishedName | The name of the object and its location in AD. |
+| Domain FQDN | domain | -   | The fully qualified domain name (FQDN) of the domain the object belongs to. |
+| Domain SID | domainsid | -   | The SID of the domain the object belongs to. |
+| Effective EKUs | effectiveekus | -   | The list EKUs that will be in the Enhanced Key Usage (2.5.29.37) property of issued certificates. <br/><br/>It will contain the EKUs of msPKI-Certificate-Application-Policy by default. It will contain the EKUs of pKIExtendedKeyUsage instead if the schema version is 1 and pKIExtendedKeyUsage is not empty. |
+| Enhanced Key Usage | ekus | pKIExtendedKeyUsage | List of EKUs that might go into issued certificates (see Effective EKUs). |
+| Enrollee Supplies Subject | enrolleesuppliessubject | msPKI-Certificate-Name-Flag (CT\_FLAG\_ENROLLEE_SUPPLIES  <br/>_SUBJECT) | Whether the certificate template requires the enrollee to supply the Subject Alternative Name data. |
+| Enrollment Flags | enrollmentflag | msPKI-Enrollment-Flag | Contains enrollment-related flags. |
+| Issuance Policies Required | issuancepolicies | msPKI-RA-Policies | Contains the list of required policy OIDs from those who sign enrollment requests. |
+| Issuance Policy Extensions | certificatepolicy | msPKI-Certificate-Policy | List of issuance polices that are included in issued certificates. |
+| Last Collected by BloodHound | lastseen | -   | When the object was last collected and ingested in BloodHound. |
+| No Security Extension | nosecurityextension | msPKI-Certificate-Name-Flag (CT\_FLAG\_NO\_SECURITY\_  <br/>EXTENSION) | Whether issued certificates will include a certificate extension (SID of the enrollee), which may be required for authentication. |
+| OID | oid | msPKI-Cert-Template-OID | Specifies the object identifier of the certificate template. |
+| Renewal Period | renewalperiod | pKIOverlapPeriod | The period by which issued certificates should be renewed before they expire. |
+| Requires Manager Approval | requiresmanagerapproval | msPKI-Enrollment-Flag (CT\_FLAG\_PEND\_ALL\_REQUESTS) | Whether certificate requests will require manager approval. |
+| Schema Version | schemaversion | ms-PKI-Template-Schema-Version | The schema version of the certificate template. |
+| Subject Alternative Name Require DNS | subjectaltrequiredns | msPKI-Certificate-Name-Flag (CT\_FLAG\_SUBJECT\_ALT\_  <br/>REQUIRE_DNS) | Whether the certificate template requires the DNS name of the subject for the Subject Alternative Name. |
+| Subject Alternative Name Require Domain DNS | subjectaltrequiredomaindns | msPKI-Certificate-Name-Flag (CT\_FLAG\_SUBJECT\_ALT\_  <br/>REQUIRE\_DOMAIN\_DNS) | Whether the certificate template requires the domain DNS name of the subject for the Subject Alternative Name. |
+| Subject Alternative Name Require Email | subjectaltrequireemail | msPKI-Certificate-Name-Flag (CT\_FLAG\_SUBJECT\_ALT\_  <br/>REQUIRE_EMAIL) | Whether the certificate template requires the email of the subject for the Subject Alternative Name. |
+| Subject Alternative Name Require SPN | subjectaltrequirespn | msPKI-Certificate-Name-Flag (CT\_FLAG\_SUBJECT\_ALT\_  <br/>REQUIRE_SPN) | Whether the certificate template requires the UPN (yes, not the SPN) of the subject for the Subject Alternative Name. |
+| Subject Alternative Name Require UPN | subjectaltrequireupn | msPKI-Certificate-Name-Flag (CT\_FLAG\_SUBJECT\_ALT\_  <br/>REQUIRE_UPN) | Whether the certificate template requires the UPN of the subject for the Subject Alternative Name. |
+| Subject Require Email | subjectrequireemail | msPKI-Certificate-Name-Flag (CT\_FLAG\_SUBJECT_  <br/>REQUIRE_EMAIL) | Whether the certificate template requires the email of the subject. |
+| Validity Period | validityperiod | pKIExpirationPeriod | The validity period for issued certificates. |
+| -   | name | name + domain name | Name of the object + @ + the name of the domain. |
+
+## Edges
+
+The following edge types may be linked to/from this node. See the [edges documentation](/hc/en-us/sections/Edges) for more information on the edge types.
+
+### Incoming edges
+
+|     |     |
+| --- | --- |
+| **Edge type** | **Entity panel category** |
+| AllExtendedRights | Inbound Object Control |
+| DelegatedEnrollmentAgent | -   |
+| Enroll | Inbound Object Control |
+| EnrollOnBehalfOf | -   |
+| GenericAll | Inbound Object Control |
+| GenericWrite | Inbound Object Control |
+| Owns | Inbound Object Control |
+| WriteDacl | Inbound Object Control |
+| WriteOwner | Inbound Object Control |
+| WritePKIEnrollmentFlag | Inbound Object Control |
+| WritePKINameFlag | Inbound Object Control |
+
+### Outgoing edges
+
+|     |     |
+| --- | --- |
+| **Edge type** | **Entity panel category** |
+| EnrollOnBehalfOf | -   |
+| ExtendedByPolicy | -   |
+| PublishedTo | -   |
+
+## References
+
+* [https://techcommunity.microsoft.com/t5/ask-the-directory-services-team/designing-and-implementing-a-pki-part-i-design-and-planning/ba-p/396953](https://techcommunity.microsoft.com/t5/ask-the-directory-services-team/designing-and-implementing-a-pki-part-i-design-and-planning/ba-p/396953) 
+* [https://learn.microsoft.com/en-us/windows/win32/adschema/c-pkicertificatetemplate](https://learn.microsoft.com/en-us/windows/win32/adschema/c-pkicertificatetemplate) 
+

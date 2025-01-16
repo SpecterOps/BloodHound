@@ -1,0 +1,106 @@
+---
+title: 2024-12-09 Release Notes (v6.3.0)
+---
+
+## Announcements
+
+### Early Access Opportunity: Improved Analysis Algorithm
+The BloodHound Enterprise engineering team has been working on an updated analysis algorithm to power the risk-scoring capability built into BloodHound Enterprise. This functionality is now available in early access to all customers. Enabling this functionality will:
+
+* Improve risk scoring fidelity for all finding types (including a significant enhancement for scoring Large Default Group and Kerberos Abuse findings).
+* Measure risk at each individual finding, enabling users to understand more granularly which paths to focus on first.
+* Support the inclusion of hybrid paths in risk scoring (Azure assets will now contribute to measured risk in AD and vice versa) and introduce new associated finding types.
+
+Today, all customers may enable this functionality from the Administration -> Early Access configuration screen. Please contact your TAM with any questions!
+
+### BloodHound Enterprise Database Maintenance
+
+Many of you have heard about our upcoming migration to PostgreSQL under the hood of BloodHound Enterprise, and the time to migrate is finally here! After over a year's effort, we're finally ready to entirely migrate our BloodHound Enterprise customers off Neo4j and onto PostgreSQL behind the scenes. With this migration:
+
+* The actual cut-over will occur near-seamlessly behind the scenes. Most users will never notice the change, as data has been ingested into Neo4j and PostgreSQL for a couple of months to ensure data fidelity.
+* Cypher support continues. Our team will diligently track and respond to feedback on queries that no longer appear to work after the migration.
+* Additionally, we have seen significant performance improvements in all data-access activities (in many cases, we've seen >50% improvement in the time it takes to perform post-processing during the Analysis process).
+
+These migrations have already begun, and we will continue to monitor all environments throughout the process. Please contact your TAM with any questions!
+
+## Summary
+
+* **BloodHound (v6.3.0****)**
+    * New and Improved Features
+        * _\[BHE Only\]_ Completely new Posture page!
+        * _\[BHE Only\]_ Early access opportunity: Improved analysis algorithm!
+        * Hide node/edge label toggle makes a comeback (Thank you, [@palt](https://github.com/palt), for your contribution)!
+        * New CoerceToTGT edge type (with replacement for the UnconstrainedDelegation findings for BHE users)
+        * Added AdminSDHolder, Distributed COM Users group, Performance Log Users group, and DnsAdmins group to default Tier Zero / High Value members.
+        * Introducing OIDC support for Single Sign-On (SSO)
+        * Environments configured with a single SSO provider will automatically redirect when clicking the "Login via SSO" button.
+        * _\[BHE Only\]_ Updated wording on the "Accept" dialog for accuracy.
+        * Improved consistency when creating the Enterprise Domain Controllers group (_Requires SharpHound upgrade_).
+    * Bug Fixes
+        * As you scroll, long lists on entity panels will no longer shift their highlights.
+        * File uploads should no longer get stuck on "Running."
+        * Resolved an issue with the logic on the "Kerberoastable users with most privileges" pre-saved cypher query.
+* **SharpHound (v2.5.12 - BHE, v2.5.9 - CE)**
+    * New and Improved Features
+        * Improved consistency when creating the Enterprise Domain Controllers group.
+        * Improved logic to prevent errors during group membership collection from impacting the entire data collection.
+    * Bug Fixes
+        * Corrected data types of several collected properties.
+* **AzureHound (v2.2.1)**
+    * _No new release._
+
+## BloodHound (v6.3.0)
+
+### New and Improved Features
+
+* **_\[BHE Only\]_ Completely new Posture page** \- After serving us well for several years, it's time to say goodbye to the old Posture page! [The revamped view](/hc/en-us/articles/Posture-Page) is considerably improved over the previous interface in several ways. This includes:
+    * Provides visibility into resolved Attack Paths
+    * Adds visibility to additional metrics to track remediation progress over time
+    * Displays most relevant data within a single page, removing unnecessary scrolling
+        ![image3.png](/hc/article_attachments/31706404737563.png)
+* **_\[BHE Only\]_ Early access opportunity: Improved analysis algorithm** \- Highlighted in the announcements this week, this new algorithm enables BloodHound Enterprise to analyze even more data than before and generally at a significantly reduced analysis duration. Simultaneously, it provides improved visibility into the risks in your environment, enabling further prioritization of risk remediation on the Attack Paths that matter most.
+* **Hide node/edge label toggle** \- One of our top feature requests since the release of BloodHound CE, the ability to hide node and edge labels makes a triumphant return! Break out that redaction tool no longer and hide any labels you deem sensitive directly within the UI. Thank you, [@palt](https://github.com/palt), for your contribution!
+    ![image1.gif](/hc/article_attachments/31706404739355.png)
+* **New CoerceToTGT edge type** \- The [CoerceToTGT](/hc/en-us/articles/CoerceToTGT) edge indicates principals configured for unconstrained delegation where attackers can coerce privileged computer targets into sending their ticket-granting ticket (TGT) to the attacker and compromise the domain. For all users, this will make these paths appear within the regular course of pathfinding, using Cypher, etc.
+
+    For BloodHound Enterprise users, this edge will generate a single Attack Path finding type that replaces all previous "Unconstrained Delegation" findings. This change will improve the user experience by summarizing what was previously displayed as multiple findings within a single location. Its severity will be associated with the exposure of the principal configured for unconstrained delegation.
+    ![image2.png](/hc/article_attachments/31706404740891.png)
+* **New Default Tier Zero objects** \- We have added additional objects to the default members of Tier Zero / High Value. These objects all have the innate ability to control Active Directory environments.
+    * **AdminSDHolder (container):** The permissions configured on AdminSDHolder are a template that will be applied to Protected Groups and Users with SDProp by default every hour. Control over AdminSDHolder means you have control over the Protected Groups (and their members) and Users, which include Tier Zero groups such as Domain Admins. The AdminSDHolder container is, therefore, a Tier Zero object.
+
+    * **Distributed COM Users (group):** The Distributed COM Users group has local privileges on domain controllers to launch, activate, and use Distributed COM objects but no privilege to log in. The DCOM access enables members of this group to remotely compromise users logged in on DCs through a coerce + NTLM relay attack. The attack can be remediated by adding users to Protected Users or deny outbound NTLM authentication on DCs. The local privileges the group has on the DCs are also considered a security dependency for DCs. The group is, therefore, considered Tier Zero.
+
+    * **Performance Log Users (group):** The Performance Log Users group has local privileges on domain controllers to launch, activate, and use Distributed COM objects but no privilege to log in. The DCOM access enables members of this group to remotely compromise users logged in on DCs through a coerce + NTLM relay attack. The attack can be remediated by adding users to Protected Users or deny outbound NTLM authentication on DCs. The local privileges the group has on the DCs are also considered a security dependency for DCs. The group is, therefore, considered Tier Zero.
+
+    * **DnsAdmins (group):** DnsAdmins controls DNS, which enables an attacker to trick a privileged victim into authenticating against an attacker-controlled host as if it were another host. This allows a Kerberos to relay attack. Also, control over DNS enables disruption of Tier Zero since Kerberos depends on DNS by default. The group could previously use a feature in the Microsoft DNS management protocol to make the DNS service load any DLL and thereby obtain a session as SYSTEM on the DNS server. This vulnerability was patched in December 2021.
+
+* **OIDC Support** \- BloodHound now supports OIDC (as well as SAMLv2) for SSO providers! See [OIDC in BloodHound](/hc/en-us/articles/OIDC-in-BloodHound) for more details.
+* **Automatic SSO Redirection** \- Environments configured with a single SSO provider will automatically redirect to your provider when clicking the "Login via SSO" button.
+* **Enterprise Domain Controllers Group Improvement** \- Improved consistency when creating the Enterprise Domain Controllers group to remove confusion based on how complete a given collection was. (_Requires SharpHound upgrade_)
+* **_\[BHE Only\]_ Updated wording on the "Accept" dialog for accuracy.**
+
+### Bug Fixes
+
+* As you scroll, long lists on entity panels will no longer shift their highlights.
+* File uploads should no longer get stuck on "Running."
+* Resolved an issue with the logic on the "Kerberoastable users with most privileges" pre-saved cypher query.
+
+## SharpHound (v2.5.12 - BHE, v2.5.9 - CE)
+
+### New and Improved Features
+
+* Improved consistency when creating the Enterprise Domain Controllers group.
+* Improved logic to prevent errors during group membership collection from impacting the entire data collection.
+
+### Bug Fixes
+
+* Corrected data types of several collected properties.
+
+## AzureHound (v2.2.1)
+
+
+_No new release._
+
+* _Note: AzureHound v2.2.1 has demonstrated significant performance improvements over v2.1.9. We highly recommend all customers upgrade to AzureHound v2.2.1+_
+
+
