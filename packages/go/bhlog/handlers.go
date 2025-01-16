@@ -32,7 +32,7 @@ type contextHandler struct {
 	slog.Handler
 }
 
-func (s contextHandler) handle(ctx context.Context, record slog.Record) error {
+func (s contextHandler) Handle(ctx context.Context, record slog.Record) error {
 	if bhCtx, ok := ctx.Value(bhctx.ValueKey).(*bhctx.Context); ok {
 		if bhCtx.RequestID != "" {
 			record.Add(slog.String("request_id", bhCtx.RequestID))
