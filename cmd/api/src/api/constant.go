@@ -34,14 +34,16 @@ const (
 	AuthorizationSchemeBHESignature = "bhesignature"
 	AuthorizationSchemeBearer       = "bearer"
 
+	// Form parameters
+	FormParameterState = "state"
+	FormParameterCode  = "code"
+
 	// Query parameters
 	QueryParameterSortBy         = "sort_by"
 	QueryParameterHydrateCounts  = "counts"
 	QueryParameterHydrateDomains = "hydrate_domains"
 	QueryParameterHydrateOUs     = "hydrate_ous"
 	QueryParameterScope          = "scope"
-	QueryParameterState          = "state"
-	QueryParameterCode           = "code"
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"
