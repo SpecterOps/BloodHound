@@ -32,9 +32,9 @@ export const NoDataDialogWithLinks: React.FC<NoDataDialogWithLinksProps> = ({ op
         <NoDataDialog open={open}>
             To explore your environment, <Link {...fileIngestLinkProps}>start by uploading your data</Link> on the file
             ingest page.
-            <br className='mb-2' />
+            <br className='mb-4' />
             Need help? Check out the <a {...gettingStartedLinkProps}>Getting Started guide</a> for instructions.
-            <br className='mb-2' />
+            <br className='mb-4' />
             If you want to test BloodHound with sample data, you may download some from our{' '}
             <a {...sampleCollectionLinkProps}>Sample Collection</a> GitHub page.
         </NoDataDialog>
