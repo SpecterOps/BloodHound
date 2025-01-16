@@ -134,7 +134,7 @@ func (s *Resources) ListADEntityControllables(response http.ResponseWriter, requ
 }
 
 func (s *Resources) ListADEntityLinkedGPOs(response http.ResponseWriter, request *http.Request) {
-	s.handleAdRelatedEntityQuery(response, request, "ListADEntityLinkedGPOs", adAnalysis.FetchEntityLinkedGPOPaths, adAnalysis.FetchEntityLinkedGPOList)
+	s.handleAdRelatedEntityQuery(response, request, "ListADEntityLinkedGPOs", adAnalysis.FetchEnforcedGPOsPaths, adAnalysis.FetchEnforcedGPOs)
 }
 
 func (s *Resources) ListADDomainContainedUsers(response http.ResponseWriter, request *http.Request) {
