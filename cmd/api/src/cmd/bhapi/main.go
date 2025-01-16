@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"strconv"
 
 	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -57,11 +56,10 @@ func main() {
 		printVersion()
 	}
 
-	if enableTextLogger := os.Getenv(config.BHAPIEnvironmentVariablePrefix + "_enable_text_logger"); enableTextLogger == "" {
+	// Jump the bootstrap initializer so all logs are configured properly
+	if enabled, err := config.GetTextLoggerEnabled(); err != nil {
 		bhlog.ConfigureDefaultJSON()
-	} else if enabled, err := strconv.ParseBool(enableTextLogger); err != nil {
-		bhlog.ConfigureDefaultJSON() // Ensure the following error is output properly
-		slog.Error(fmt.Sprintf("Failed to parse %s to bool: %v", config.BHAPIEnvironmentVariablePrefix+"_enable_text_logger", err))
+		slog.Error(fmt.Sprintf("Failed to check text logger enabled: %v", err))
 		os.Exit(1)
 	} else if enabled {
 		bhlog.ConfigureDefaultText()
