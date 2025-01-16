@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, useMemo } from 'react';
-import { EntityInfoPanelContext } from './EntityInfoPanelContext';
+import { useMemo, useState } from 'react';
 import type { ExpandedSections } from './EntityInfoPanelContext';
+import { EntityInfoPanelContext } from './EntityInfoPanelContext';
 
 type EntityInfoPanelContextProviderProps = { children: React.ReactNode };
 

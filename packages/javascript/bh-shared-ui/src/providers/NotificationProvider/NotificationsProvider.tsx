@@ -14,14 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, Dispatch, ReactNode, useReducer } from 'react';
-import { SnackbarKey, SnackbarProvider, useSnackbar } from 'notistack';
-import { Notification } from './model';
-import { NotificationAction } from './actions';
-import { notificationsReducer } from './reducer';
-import { IconButton, SvgIcon } from '@mui/material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { IconButton, SvgIcon } from '@mui/material';
+import { SnackbarKey, SnackbarProvider, useSnackbar } from 'notistack';
+import { Dispatch, ReactNode, createContext, useReducer } from 'react';
+import { NotificationAction } from './actions';
+import { Notification } from './model';
+import { notificationsReducer } from './reducer';
 
 export const NotificationsContext = createContext<Notification[]>([]);
 export const NotificationsDispatchContext = createContext<Dispatch<NotificationAction> | null>(null);

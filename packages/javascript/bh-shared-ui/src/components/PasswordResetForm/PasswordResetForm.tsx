@@ -16,9 +16,9 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, AlertTitle, Box, Grid, TextField } from '@mui/material';
+import { PutUserAuthSecretRequest } from 'js-client-library';
 import React, { useState } from 'react';
 import { PASSWD_REQS, testPassword } from '../../utils';
-import { PutUserAuthSecretRequest } from 'js-client-library';
 
 interface PasswordResetFormProps {
     onSubmit: (payload: PutUserAuthSecretRequest) => void;

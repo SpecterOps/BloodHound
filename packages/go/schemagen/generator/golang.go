@@ -25,9 +25,11 @@ import (
 )
 
 const (
-	GraphPackageName  = "github.com/specterops/bloodhound/dawgs/graph"
-	SchemaPackageName = "github.com/specterops/bloodhound/graphschema"
-	SchemaSourceName  = "github.com/specterops/bloodhound/-/tree/main/packages/cue/schemas"
+	GraphPackageName       = "github.com/specterops/bloodhound/dawgs/graph"
+	SchemaPackageName      = "github.com/specterops/bloodhound/graphschema"
+	ADSchemaPackageName    = "github.com/specterops/bloodhound/graphschema/ad"
+	AzureSchemaPackageName = "github.com/specterops/bloodhound/graphschema/azure"
+	SchemaSourceName       = "github.com/specterops/bloodhound/-/tree/main/packages/cue/schemas"
 )
 
 func WriteGolangKindDefinitions(root *jen.File, values []model.StringEnum) {
@@ -308,6 +310,34 @@ func GenerateGolangGraphModel(pkgName, dir string, graphSchema model.Graph) (*je
 		),
 	)
 
+	root.Func().Id("InboundRelationshipKinds").Params().Index().Qual(GraphPackageName, "Kind").Block(
+		jen.Return(
+			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
+				for _, relKind := range graphSchema.InboundRelationshipKinds {
+					if relKind.Schema == "active_directory" {
+						group.Qual(ADSchemaPackageName, "").Id(relKind.Symbol)
+					} else if relKind.Schema == "azure" {
+						group.Qual(AzureSchemaPackageName, "").Id(relKind.Symbol)
+					}
+				}
+			}),
+		),
+	)
+
+	root.Func().Id("OutboundRelationshipKinds").Params().Index().Qual(GraphPackageName, "Kind").Block(
+		jen.Return(
+			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
+				for _, relKind := range graphSchema.OutboundRelationshipKinds {
+					if relKind.Schema == "active_directory" {
+						group.Qual(ADSchemaPackageName, "").Id(relKind.Symbol)
+					} else if relKind.Schema == "azure" {
+						group.Qual(AzureSchemaPackageName, "").Id(relKind.Symbol)
+					}
+				}
+			}),
+		),
+	)
+
 	return root, filepath.Join(dir, pkgName+".go")
 }
 
@@ -356,6 +386,26 @@ func GenerateGolangActiveDirectory(pkgName, dir string, adSchema model.ActiveDir
 		jen.Return(
 			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
 				for _, pathRelationship := range adSchema.PathfindingRelationships {
+					group.Id(pathRelationship.Symbol)
+				}
+			}),
+		),
+	)
+
+	root.Func().Id("InboundRelationshipKinds").Params().Index().Qual(GraphPackageName, "Kind").Block(
+		jen.Return(
+			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
+				for _, pathRelationship := range adSchema.InboundRelationshipKinds {
+					group.Id(pathRelationship.Symbol)
+				}
+			}),
+		),
+	)
+
+	root.Func().Id("OutboundRelationshipKinds").Params().Index().Qual(GraphPackageName, "Kind").Block(
+		jen.Return(
+			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
+				for _, pathRelationship := range adSchema.OutboundRelationshipKinds {
 					group.Id(pathRelationship.Symbol)
 				}
 			}),

@@ -15,20 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
-import { FC, ReactNode, useEffect, useState } from 'react';
-import DropdownSelector, { DropdownOption } from '../DropdownSelector';
-import { Box, Grid, Paper, Typography, useTheme } from '@mui/material';
-import { useQuery } from 'react-query';
-import { apiClient } from '../../utils';
 import { faExternalLink } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import AssetGroupEdit from '../AssetGroupEdit';
-import AssetGroupMemberList from '../AssetGroupMemberList';
-import { SelectedDomain } from './types';
+import { Box, Grid, Paper, Typography, useTheme } from '@mui/material';
+import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
+import { FC, ReactNode, useEffect, useState } from 'react';
+import { useQuery } from 'react-query';
+import { apiClient } from '../../utils';
 import DataSelector from '../../views/DataQuality/DataSelector';
+import AssetGroupEdit from '../AssetGroupEdit';
 import AssetGroupFilters from '../AssetGroupFilters';
 import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
+import AssetGroupMemberList from '../AssetGroupMemberList';
+import DropdownSelector, { DropdownOption } from '../DropdownSelector';
+import { SelectedDomain } from './types';
 
 // Top level layout and shared logic for the Group Management page
 const GroupManagementContent: FC<{

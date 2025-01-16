@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import FileIngest from '.';
-import { setupServer } from 'msw/node';
 import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import FileIngest from '.';
 import { fireEvent, render, waitFor } from '../../test-utils';
 
 const server = setupServer(
