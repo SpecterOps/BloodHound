@@ -1,0 +1,92 @@
+---
+title: 2023-10-16 Release notes (v5.1.0)
+---
+
+## Announcements
+
+### SpecterOps is hosting a conference!
+
+
+We're incredibly excited to re-start SO-CON, our annual security conference and training summit!
+
+* 🗓️ March 11 - 15, 2024, at Convene in Arlington, VA
+* 🏔️ Full day, multi-track summit with presentations on a variety of security topics
+* 🎓 Four days of training classes, including our first-ever Azure Security Fundamentals course!
+
+Training students will receive free entry to the summit, and classes are available for a 25% early registration discount, with summit registration coming soon! Find out more and sign up at [https://specterops.io/so-con/](https://specterops.io/so-con/)!
+
+## Summary
+
+* **BloodHound (v5.1.0****)**
+    * New and Improved Features
+        * Explore page now supports JSON export of currently displayed data.
+        * Added additional friendly names to property values in object and edge context panels.
+        * Cypher auto-complete will now suggest additional fields.
+        * Improved the accuracy of the "Groups with foreign domain group membership" saved query.
+        * _\[BHE Only\]_ Environment Posture endpoint now supports tenant filtering.
+    * Bug Fixes
+        * The BloodHound logo should no longer randomly disappear from the top left of the screen.
+        * Explore page will no longer crash when specific symbols are typed into the search bar.
+        * _\[BHE Only\]_ Attack Paths with all findings muted will no longer disappear from the Attack Paths list.
+        * _\[CE Only\]_ Environment variables are now correctly pulled to container environments.
+* **SharpHound (v2.2.1 - BHE only)**
+    * New and Improved Features
+        * Added LDAPS support and associated configuration options (this was previously available in CE).
+        * SharpHound has improved caching performance and will automatically invalidate local cache data on newer versions.
+        * Significant collection performance improvements, notably during local group and session enumeration.
+        * Added support for modern LAPS collection.
+        * Added a configurable timeout setting for port scan timeouts.
+        * Added a configurable option for thread concurrency.
+    * Bug Fixes
+        * Enterprise Domain Controller group membership will now reconcile properly.
+* **AzureHound (v2.1.3)**
+    * Bug Fixes
+        * Resolved multiple dead-lock resource-exhaustion condition edge cases during collection.
+
+### BloodHound (v5.1.0)
+
+#### New and Improved Features
+
+* **Export JSON from Explore** \- The Explore page now supports the ability to export the currently displayed data in JSON format! With this change, we've collapsed the options on the bottom of the graph pane to consolidate use of space.
+<Frame>
+  <img src="/hc/images/image-14.png" alt=""/>
+</Frame>
+* **Property quality of life improvements **\- We've extended the built-in schema to provide friendly names for additional object properties and include additional attributes in the Cypher autocomplete capability.
+<Frame>
+  <img src="/hc/images/image-15.png" alt=""/>
+</Frame>
+<Frame>
+  <img src="/hc/images/image-16.png" alt=""/>
+</Frame>
+* **Other improvements:**
+    * Improved the accuracy of the "Groups with foreign domain group membership" saved query.
+    * _\[BHE Only\]_ Environment Posture endpoint now supports tenant filtering.
+
+#### Bug Fixes
+
+* The BloodHound logo should no longer randomly disappear from the top left of the screen.
+* Explore page will no longer crash when specific symbols are typed into the search bar.
+* _\[BHE Only\]_ Attack Paths with all findings muted will no longer disappear from the Attack Paths list.
+* _\[CE Only\]_ Environment variables are now correctly pulled to container environments.
+
+### SharpHound (v2.2.1 - BHE Only)
+
+
+#### New and Improved Features
+
+* **LDAPS support** \- SharpHound Enterprise will now attempt to utilize LDAPS by default on port 636/TCP before falling back to signed and sealed LDAP. Customers may enforce LDAPS through the "ForceLDAPSSL" option in settings.json. See [SharpHound Enterprise Local Configuration](/hc/en-us/articles/SharpHound-Enterprise-Local-Configuration) for more.
+* **Caching enhancements** \- SharpHound has improved caching performance and will automatically invalidate local cache data on newer versions and every 30 days to ensure improved data accuracy while maintaining collection improvements offered by the cache.
+* **Collection speed improvements** \- Optimized LDAP queries will enable significant collection performance improvements. These improvements will be most notable during local group and session enumeration in large environments.
+* **Modern LAPS support** \- Added support for modern LAPS for the haslaps property on computer objects.
+* **Port scan timeout configuration** \- Added support for configuring the port scan timeout utilized for privileged collection on domain-joined systems (defaults to 500ms).
+* **Concurrent thread configuration** \- Added support for configuring the number of concurrent consumer threads active in SharpHound (defaults to 50). Consumer threads process data from the main LDAP queries to perform data enrichment or connect to domain-joined systems for performing privileged collections.
+
+#### Bug Fixes
+
+* Enterprise Domain Controller group membership will now reconcile properly.
+
+### AzureHound (v2.1.3)
+
+#### Bug Fixes
+
+* Resolved multiple dead-lock resource-exhaustion condition edge cases during collection.

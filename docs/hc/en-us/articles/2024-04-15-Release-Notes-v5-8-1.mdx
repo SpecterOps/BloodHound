@@ -1,0 +1,63 @@
+---
+title: 2024-04-15 Release Notes (v5.8.1)
+---
+
+## Announcements
+
+### BloodHound Update: Spring 2024
+
+Join our Director of Product Management, Stephen Hinck, on April 25, 2024, at 11:00 AM PT for a review and demonstration of changes and enhancements to BloodHound thus far in 2024 and a brief look towards the product's future.
+
+In this webinar:
+
+* ADCS Support
+* New Group management view
+* Mark as Owned
+* Improved ability to ingest and remove data
+
+Register for the webinar [here](https://specterops.zoom.us/webinar/register/WN_GUVBlehZQymkz_jLo21JXQ#/registration)!
+
+## Summary
+
+* **BloodHound (v5.8.1****)**
+    * New and Improved Features
+        * Improved status messaging for the File Ingest Log
+        * Added additional node-type statistics to Data Quality
+        * _\[BHE Only\] _Improved performance for collection schedules for extremely large environments
+    * Bug Fixes
+        * _\[BHE Only\] _DcFor edges will no longer appear in the Attack Path tree view
+        * Resolved multiple vulnerabilities identified across the product
+* **SharpHound (v2.3.10 - BHE, v2.3.3 - CE)**
+    * * Bug Fixes
+            * _\[BHE Only\]_ Resolved an issue where the SharpHound service would restart in specific scenarios.
+* **AzureHound (v2.1.8)**
+    * * _No new release_
+
+### BloodHound (v5.8.1)
+
+#### New and Improved Features
+
+* **Improved status messaging for the File Ingest Log** \- The File Ingest Log will now more clearly display the result of the ingest task. 
+    * Status will only show `Failed` if all files were rejected as non-json content or other existing errors that already elicit `Failed`
+
+    * Status will show `Partially Complete` when a warning message is collected from the zip expansion
+
+    * Status will show `Complete` when all files in the Zip upload were identified as JSON content.
+
+* Added additional node-type statistics to Data Quality
+* _\[BHE Only\] _Improved performance for collection schedules for extremely large environments
+
+#### Bug Fixes
+
+* _\[BHE Only\] _DcFor edges will no longer appear in the Attack Path tree view
+* Resolved multiple vulnerabilities identified across the product
+
+### SharpHound (v2.3.10 - BHE, v2.3.3 - CE)
+
+#### Bug Fixes
+
+* _\[BHE Only\]_ Resolved an issue where the SharpHound service would restart in specific scenarios.
+
+### AzureHound (v2.1.8)
+_No new release._
+
