@@ -13,9 +13,6 @@
     "database": {
         "connection": "user=bhe dbname=bhe host=/run/postgresql"
     },
-    "neo4j": {
-        "connection": "neo4j://neo4j:supersecretpassword@localhost:7687/"
-    },
     "collectors_base_path": "work/collectors",
     "crypto": {
         "jwt": {

@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useFetchEntityProperties, FetchEntityPropertiesParams, EntityProperties } from './useFetchEntityProperties';
-import { renderHook, waitFor } from '../../test-utils';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { QueryClient, QueryClientProvider } from 'react-query';
+import { renderHook, waitFor } from '../../test-utils';
+import { EntityProperties, FetchEntityPropertiesParams, useFetchEntityProperties } from './useFetchEntityProperties';
 
 const queryClient = new QueryClient();
 const wrapper = ({ children }: { children: React.ReactNode }) => (

@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { Flag } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { Flag } from 'bh-shared-ui';
 import { act, render, screen } from 'src/test-utils';
 import EarlyAccessFeatures from '.';
 

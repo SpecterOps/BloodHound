@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Autocomplete, AutocompleteRenderInputParams, TextField } from '@mui/material';
+import { AssetGroup } from 'js-client-library';
 import { FC, HTMLAttributes, ReactNode, SyntheticEvent, useState } from 'react';
+import { getEmptyResultsText, getKeywordAndTypeValues, useDebouncedValue, useSearch } from '../../hooks';
 import AutocompleteOption from './AutocompleteOption';
 import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from './types';
-import { AssetGroup } from 'js-client-library';
-import { getEmptyResultsText, getKeywordAndTypeValues, useDebouncedValue, useSearch } from '../../hooks';
 
 export const AUTOCOMPLETE_PLACEHOLDER = 'Add or Remove Members';
 

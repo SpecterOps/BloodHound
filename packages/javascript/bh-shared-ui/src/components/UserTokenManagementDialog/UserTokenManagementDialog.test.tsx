@@ -17,8 +17,8 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import UserTokenManagementDialog from './UserTokenManagementDialog';
 import { render, screen, waitFor, waitForElementToBeRemoved } from '../../test-utils';
+import UserTokenManagementDialog from './UserTokenManagementDialog';
 
 const testUserId = '1';
 const testTokens = [

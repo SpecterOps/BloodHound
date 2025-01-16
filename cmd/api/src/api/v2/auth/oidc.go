@@ -34,7 +34,6 @@ import (
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
@@ -161,16 +160,16 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 
 	if ssoProvider.OIDCProvider == nil {
 		// SSO misconfiguration scenario
-		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if state, err := config.GenerateRandomBase64String(77); err != nil {
-		slog.ErrorContext(request.Context(), fmt.Sprintf("[OIDC] Failed to generate state: %v", err))
+		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to generate state: %v", err))
 		// Technical issues scenario
-		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
-		slog.ErrorContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
+		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
 		// SSO misconfiguration or technical issue
 		// Treat this as a misconfiguration scenario
-		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else {
 		conf := &oauth2.Config{
 			ClientID:    ssoProvider.OIDCProvider.ClientID,
@@ -206,35 +205,42 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 
 	if ssoProvider.OIDCProvider == nil {
 		// SSO misconfiguration scenario
-		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if len(code) == 0 {
+		// Don't want to log state but do want to know if state was present
+		hasState := queryParams.Has(api.QueryParameterState)
+		queryParams.Del(api.QueryParameterState)
+		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] auth code is missing, has state %t %+v", hasState, queryParams))
 		// Missing authorization code implies a credentials or form issue
 		// Not explicitly covered, treat as technical issue
-		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if pkceVerifier, err := request.Cookie(api.AuthPKCECookieName); err != nil {
+		slog.WarnContext(request.Context(), "[OIDC] pkce cookie is missing")
 		// Missing PKCE verifier - likely a technical or config issue
-		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if len(state) == 0 {
+		slog.WarnContext(request.Context(), "[OIDC] state parameter is missing")
 		// Missing state parameter - treat as technical issue
-		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if stateCookie, err := request.Cookie(api.AuthStateCookieName); err != nil || stateCookie.Value != state[0] {
+		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] state cookie does not match %v", err))
 		// Invalid state - treat as technical issue or misconfiguration
-		v2.RedirectToLoginPage(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
-		slog.ErrorContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
+		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
 		// SSO misconfiguration scenario
-		v2.RedirectToLoginPage(response, request, "Your SSO Connection failed, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
 	} else if claims, err := getOIDCClaims(request.Context(), provider, ssoProvider, pkceVerifier, code[0]); err != nil {
-		slog.ErrorContext(request.Context(), fmt.Sprintf("[OIDC] %v", err))
-		v2.RedirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
+		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] %v", err))
+		api.RedirectToLoginURL(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 	} else if email, err := getEmailFromOIDCClaims(claims); errors.Is(err, ErrEmailMissing) { // Note email claims are not always present so we will check different claim keys for possible email
-		slog.ErrorContext(request.Context(), "[OIDC] Claims did not contain any valid email address")
-		v2.RedirectToLoginPage(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
+		slog.WarnContext(request.Context(), "[OIDC] Claims did not contain any valid email address")
+		api.RedirectToLoginURL(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
 			if err := jitOIDCUserCreation(request.Context(), ssoProvider, email, claims, s.db); err != nil {
 				// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
-				slog.ErrorContext(request.Context(), fmt.Sprintf("[OIDC] Error during JIT User Creation: %v", err))
+				slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Error during JIT User Creation: %v", err))
 			}
 		}
 
@@ -302,7 +308,7 @@ func exchangeCodeForToken(reqCtx context.Context, ssoProvider model.SSOProvider,
 			}
 
 			if token.AccessToken == "" {
-				return nil, errors.New("server response missing access_token")
+				return nil, fmt.Errorf("server response missing access_token %v %v %v", token.Extra("error"), token.Extra("error_description"), token.Extra("error_uri"))
 			}
 
 			return token, nil

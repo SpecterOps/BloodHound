@@ -27,6 +27,7 @@ const (
 
 	// UserInterfacePath is the static path to the UI landing page
 	UserInterfacePath = "/ui"
+	UserLoginPath     = "/ui/login"
 	UserDisabledPath  = "/ui/user-disabled"
 
 	// Authorization schemes

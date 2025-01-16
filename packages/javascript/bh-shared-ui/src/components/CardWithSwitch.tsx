@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC, ReactNode } from 'react';
-import { Paper, Box, Typography, useTheme } from '@mui/material';
-import { addOpacityToHex } from '../utils/colors';
 import { Switch } from '@bloodhoundenterprise/doodleui';
+import { Box, Paper, Typography, useTheme } from '@mui/material';
+import { FC, ReactNode } from 'react';
+import { addOpacityToHex } from '../utils/colors';
 
 type CardWithSwitchProps = {
     title: string;
