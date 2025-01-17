@@ -18,11 +18,11 @@ Attack Path Management is the process of identifying, analyzing, and managing th
 
 ## Choke Point
 
-A choke point is a [privilege](#h_01H6P2D9E0Z0MTX44HFH0SREKV) or user behavior (called [edges](#h_01H6P659MFJWW0B4VBZ2GVK15N)) that, like the driveway to a house, connects the rest of the environment through an [object](#h_01HVNKF5BFG2R4C79E8PE4VXPW) or collection of objects (called [nodes](#h_01H6P65FD19WCR663XC3AZ7DT1)). For example, any Edge into the collection of [Tier Zero](#h_01H6P2DWP3CN5EZEE33XE8N7DW) nodes is a Tier Zero Choke Point. This is a privilege or user behavior the adversary must abuse to compromise a Tier Zero object. Choke points are significant points of control and defense in the network security architecture. They represent the optimal location to block the largest number of [attack paths](#h_01H6P2D2FB6ZP3CNWYBYWNKXW6). BloodHound Enterprise calculates [exposure](#h_01HVNKXFSJW6H3MRYY6MPX8YVD) for all choke points.
+A choke point is a [privilege](#h_01H6P2D9E0Z0MTX44HFH0SREKV) or user behavior (called [edges](#h_01H6P659MFJWW0B4VBZ2GVK15N)) that, like the driveway to a house, connects the rest of the environment through an object or collection of objects (called [nodes](#h_01H6P65FD19WCR663XC3AZ7DT1)). For example, any Edge into the collection of [Tier Zero](#h_01H6P2DWP3CN5EZEE33XE8N7DW) nodes is a Tier Zero Choke Point. This is a privilege or user behavior the adversary must abuse to compromise a Tier Zero object. Choke points are significant points of control and defense in the network security architecture. They represent the optimal location to block the largest number of [attack paths](#h_01H6P2D2FB6ZP3CNWYBYWNKXW6). BloodHound Enterprise calculates [exposure](#h_01HVNKXFSJW6H3MRYY6MPX8YVD) for all choke points.
 
 ## Cypher
 
-Cypher is Neo4j’s [graph](#h_01HVNN90XV8DSWR2RKRZQ3782J) query language used to interact with BloodHound's database. It's similar to SQL for traditional databases. To use it, see [Searching with Cypher](/hc/en-us/articles/Searching-with-Cypher).
+[Cypher](https://opencypher.org/) is a [graph](#h_01HVNN90XV8DSWR2RKRZQ3782J) query language used to interact with BloodHound's database. It's similar to SQL for traditional databases. To use it, see [Searching with Cypher](/hc/en-us/articles/Searching-with-Cypher).
 
 ## Collector / Client
 
@@ -50,11 +50,7 @@ Stands for Free and Open Source Software. For example, "BloodHound CE is a FOSS 
 
 ## Graph
 
-The graph database used by BloodHound. It stores the relationships between [nodes](#h_01H6P65FD19WCR663XC3AZ7DT1) and [edges](#h_01H6P659MFJWW0B4VBZ2GVK15N) which can be seen in BloodHound's Explore page to visualize and understand complex [attack paths](#h_01H6P2D2FB6ZP3CNWYBYWNKXW6).
-
-## High Value
-
-High value [objects](#h_01HVNKF5BFG2R4C79E8PE4VXPW) are critical resources, data, or systems in the network that are particularly valuable to the organization. See [Tier Zero](#h_01H6P2DWP3CN5EZEE33XE8N7DW).
+The graph database used by BloodHound. It stores the relationships between [nodes](#h_01H6P65FD19WCR663XC3AZ7DT1) and [edges](#h_01H6P659MFJWW0B4VBZ2GVK15N) and feeds BloodHound functionality like visualizing and understanding complex [attack paths](#h_01H6P2D2FB6ZP3CNWYBYWNKXW6) and environment risks.
 
 ## Identity-based Attack Path
 
@@ -64,13 +60,9 @@ An attack path is based on identity/an already authenticated [principal](#h_01H6
 
 A node is part of the [graph](#h_01HVNN90XV8DSWR2RKRZQ3782J) construct and refers to an entity in the network, such as a user, computer, group, or domain. Two nodes can be connected by an [edge](#h_01H6P659MFJWW0B4VBZ2GVK15N). See [About BloodHound Nodes](/hc/en-us/articles/About-BloodHound-Nodes).
 
-## Object
-
-A broad term used to refer to various entities within the Active Directory and Entra ID directory (formerly Azure Active Directory), like users, groups, computers, organizational units (OUs), domains, and trusts. Each object represents a distinct element contributing to the network's overall structure and security posture. An object can also be called an asset.
-
 ## Principal
 
-An entity that authenticates and is assigned permissions within the network, also known as a security principal. Principals can be users, groups, or computer objects in Active Directory. They play a central role in the network access control mechanisms.
+An entity that authenticates and is assigned permissions within the network, also known as a security principal. Examples of principals include users, computers, virtual machines, or service principal objects in Active Directory. They play a central role in the network access control mechanisms.
 
 ## Privilege
 
@@ -84,9 +76,9 @@ The process of fixing or mitigating security risks identified during the analysi
 
 A BloodHound Enterprise tenant is hosted and managed by SpecterOps (SasS), while BloodHound CE is self-hosted and self-managed.
 
-## Tier Zero
+## Tier Zero/High Value
 
-Tier Zero refers to the most critical and sensitive objects in the network, typically including domain controllers and other core infrastructure components. The term stems from [tiering](#h_01H6P2SKJVS13BSG9PW03RABMX).
+Tier Zero and High Value refer to the most critical and sensitive objects in the network, typically including domain controllers and other core infrastructure components. The term stems from [tiering](#h_01H6P2SKJVS13BSG9PW03RABMX).
 
 ## Tiering/Tier Model
 
