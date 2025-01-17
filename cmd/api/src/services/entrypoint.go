@@ -88,7 +88,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 	// Audit for duplicate email addresses
 	if nonUniqueEmailMap, err := connections.RDMS.GetAllUsersWithNonUniqueEmails(ctx); err != nil {
-		slog.WarnContext(ctx, "Failed to get all non unique email addresses: %v", err)
+		slog.WarnContext(ctx, "Failed to get all non unique email addresses", "error", err)
 	} else {
 		for email, count := range nonUniqueEmailMap {
 			slog.WarnContext(ctx, "UPNTE Error: duplicate email detected", "email", email, "count", count)

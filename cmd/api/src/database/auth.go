@@ -359,7 +359,7 @@ func (s *BloodhoundDB) GetAllUsersWithNonUniqueEmails(ctx context.Context) (map[
 				count int
 			)
 			if err := result.Scan(&email, &count); err != nil {
-				slog.WarnContext(ctx, "failed to scan user email address: %v ... skipping", err)
+				slog.WarnContext(ctx, "failed to scan user email address:  ... skipping", "error", err)
 				continue
 			}
 			countByNonUniqueEmail[email] = count
