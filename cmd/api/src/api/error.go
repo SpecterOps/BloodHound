@@ -72,6 +72,7 @@ const (
 	ErrorResponseDetailsNotImplemented              = "All good things to those who wait. Not implemented."
 
 	FmtErrorResponseDetailsBadQueryParameters = "there are errors in the query parameters: %v"
+	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %s"
 )
 
 func IsErrorResponse(response *http.Response) bool {

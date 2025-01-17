@@ -142,6 +142,7 @@ type Database interface {
 	// Data Quality
 	dataquality.DataQualityData
 	GetADDataQualityStats(ctx context.Context, domainSid string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityStats, int, error)
+	GetMultiDomainADDataQualityStats(ctx context.Context, domainSids []string, start time.Time, end time.Time, order string, limit int, skip int) (model.ADDataQualityStats, int, error)
 	GetADDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityAggregations, int, error)
 	GetAzureDataQualityStats(ctx context.Context, tenantId string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityStats, int, error)
 	GetAzureDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityAggregations, int, error)

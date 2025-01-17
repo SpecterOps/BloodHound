@@ -57,6 +57,34 @@ func (s *BloodhoundDB) GetADDataQualityStats(ctx context.Context, domainSid stri
 	return adDataQualityStats, int(count), nil
 }
 
+func (s *BloodhoundDB) GetMultiDomainADDataQualityStats(ctx context.Context, domainSids []string, start time.Time, end time.Time, order string, limit int, skip int) (model.ADDataQualityStats, int, error) {
+	const (
+		defaultWhere = "domain_sid IN ? and (created_at between ? and ?)"
+	)
+
+	var (
+		adDataQualityStats model.ADDataQualityStats
+		count              int64
+		result             *gorm.DB
+	)
+
+	result = s.db.Model(model.ADDataQualityStats{}).WithContext(ctx).Where(defaultWhere, domainSids, start, end).Count(&count)
+	if CheckError(result) != nil {
+		return adDataQualityStats, 0, result.Error
+	}
+
+	if order == "" {
+		order = "created_at desc"
+	}
+
+	result = s.Scope(Paginate(skip, limit)).WithContext(ctx).Where(defaultWhere, domainSids, start, end).Order(order).Find(&adDataQualityStats)
+	if CheckError(result) != nil {
+		return adDataQualityStats, 0, result.Error
+	}
+
+	return adDataQualityStats, int(count), nil
+}
+
 func (s *BloodhoundDB) CreateADDataQualityAggregation(ctx context.Context, aggregation model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error) {
 	result := s.db.WithContext(ctx).Create(&aggregation)
 	return aggregation, CheckError(result)
