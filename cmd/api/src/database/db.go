@@ -112,6 +112,7 @@ type Database interface {
 	GetUser(ctx context.Context, id uuid.UUID) (model.User, error)
 	DeleteUser(ctx context.Context, user model.User) error
 	LookupUser(ctx context.Context, principalName string) (model.User, error)
+	GetAllUsersWithNonUniqueEmails(ctx context.Context) (map[string]int, error)
 
 	// Auth
 	CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error)

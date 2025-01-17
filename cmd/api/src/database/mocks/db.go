@@ -824,6 +824,21 @@ func (mr *MockDatabaseMockRecorder) GetAllUsers(arg0, arg1, arg2 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsers", reflect.TypeOf((*MockDatabase)(nil).GetAllUsers), arg0, arg1, arg2)
 }
 
+// GetAllUsersWithNonUniqueEmails mocks base method.
+func (m *MockDatabase) GetAllUsersWithNonUniqueEmails(arg0 context.Context) (map[string]int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllUsersWithNonUniqueEmails", arg0)
+	ret0, _ := ret[0].(map[string]int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllUsersWithNonUniqueEmails indicates an expected call of GetAllUsersWithNonUniqueEmails.
+func (mr *MockDatabaseMockRecorder) GetAllUsersWithNonUniqueEmails(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsersWithNonUniqueEmails", reflect.TypeOf((*MockDatabase)(nil).GetAllUsersWithNonUniqueEmails), arg0)
+}
+
 // GetAnalysisRequest mocks base method.
 func (m *MockDatabase) GetAnalysisRequest(arg0 context.Context) (model.AnalysisRequest, error) {
 	m.ctrl.T.Helper()

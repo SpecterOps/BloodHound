@@ -24,6 +24,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -343,6 +344,29 @@ func (s *BloodhoundDB) GetUser(ctx context.Context, id uuid.UUID) (model.User, e
 	)
 
 	return user, CheckError(result)
+}
+
+func (s *BloodhoundDB) GetAllUsersWithNonUniqueEmails(ctx context.Context) (map[string]int, error) {
+	countByNonUniqueEmail := make(map[string]int)
+
+	if result, err := s.db.WithContext(ctx).Raw("SELECT lower(email_address) AS email_address, count(lower(email_address)) AS c FROM users GROUP BY lower(email_address) HAVING count(lower(email_address)) > 1").Rows(); err != nil {
+		return countByNonUniqueEmail, err
+	} else {
+		defer result.Close()
+		for result.Next() {
+			var (
+				email string
+				count int
+			)
+			if err := result.Scan(&email, &count); err != nil {
+				slog.WarnContext(ctx, "failed to scan user email address: %v ... skipping", err)
+				continue
+			}
+			countByNonUniqueEmail[email] = count
+		}
+	}
+
+	return countByNonUniqueEmail, nil
 }
 
 // DeleteUser removes all roles for a given user, thereby revoking all permissions
