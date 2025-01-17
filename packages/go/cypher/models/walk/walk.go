@@ -54,8 +54,10 @@ func (s *cancelableErrorHandler) SetDone() {
 }
 
 func (s *cancelableErrorHandler) SetError(err error) {
-	s.errs = append(s.errs, err)
-	s.done = true
+	if err != nil {
+		s.errs = append(s.errs, err)
+		s.done = true
+	}
 }
 
 func (s *cancelableErrorHandler) SetErrorf(format string, args ...any) {

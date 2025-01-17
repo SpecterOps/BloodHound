@@ -260,6 +260,10 @@ type MultiPartQuery struct {
 	SinglePartQuery *SinglePartQuery
 }
 
+func (s *MultiPartQuery) CurrentPart() *MultiPartQueryPart {
+	return s.Parts[len(s.Parts)-1]
+}
+
 func NewMultiPartQuery() *MultiPartQuery {
 	return &MultiPartQuery{}
 }

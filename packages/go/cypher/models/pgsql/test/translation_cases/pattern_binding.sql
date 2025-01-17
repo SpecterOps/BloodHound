@@ -115,7 +115,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                        from ex0
                                                                                               join edge e0 on e0.start_id = ex0.next_id
                                                                                               join node n1 on n1.id = e0.end_id
-                                                                                       where ex0.depth < 5
+                                                                                       where ex0.depth < 10
                                                                                          and not ex0.is_cycle)
             select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
@@ -151,7 +151,7 @@ with s0 as (with recursive ex0(root_id, next_id, depth, satisfied, is_cycle, pat
                                                                                        from ex0
                                                                                               join edge e0 on e0.start_id = ex0.next_id
                                                                                               join node n1 on n1.id = e0.end_id
-                                                                                       where ex0.depth < 5
+                                                                                       where ex0.depth < 10
                                                                                          and not ex0.is_cycle)
             select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
@@ -206,7 +206,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                                                                                        from ex0
                                                                                               join edge e1 on e1.start_id = ex0.next_id
                                                                                               join node n2 on n2.id = e1.end_id
-                                                                                       where ex0.depth < 5
+                                                                                       where ex0.depth < 10
                                                                                          and not ex0.is_cycle)
             select s0.e0                                              as e0,
                    s0.n0                                              as n0,

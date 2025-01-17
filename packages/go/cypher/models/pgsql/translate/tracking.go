@@ -50,6 +50,8 @@ func (s IdentifierGenerator) NewIdentifier(dataType pgsql.DataType) (pgsql.Ident
 		return pgsql.Identifier("s" + nextIDStr), nil
 	case pgsql.ParameterIdentifier:
 		return pgsql.Identifier("pi" + nextIDStr), nil
+	case pgsql.InlineProjection:
+		return pgsql.Identifier("i" + nextIDStr), nil
 	default:
 		return "", fmt.Errorf("identifier with data type %s does not have a prefix case", dataType)
 	}
@@ -238,9 +240,31 @@ func (s *ConstraintTracker) Constrain(dependencies *pgsql.IdentifierSet, constra
 
 // Frame represents a snapshot of all identifiers defined and visible in a given scope
 type Frame struct {
+	id       int
 	Previous *Frame
 	Binding  *BoundIdentifier
 	Visible  *pgsql.IdentifierSet
+	Exported *pgsql.IdentifierSet
+}
+
+func (s *Frame) Known() *pgsql.IdentifierSet {
+	return s.Visible.Copy().MergeSet(s.Exported)
+}
+
+func (s *Frame) Unexport(identifer pgsql.Identifier) {
+	s.Exported.Remove(identifer)
+}
+
+func (s *Frame) Export(identifier pgsql.Identifier) {
+	s.Exported.Add(identifier)
+}
+
+func (s *Frame) Veil(identifier pgsql.Identifier) {
+	s.Visible.Remove(identifier)
+}
+
+func (s *Frame) Reveal(identifier pgsql.Identifier) {
+	s.Visible.Add(identifier)
 }
 
 // Scope contains all identifier definitions and their temporal resolutions in a []*Frame field.
@@ -253,6 +277,7 @@ type Frame struct {
 // all visible projections. This is required when disambiguating references that otherwise belong to
 // a frame.
 type Scope struct {
+	nextFrameID int
 	stack       []*Frame
 	generator   IdentifierGenerator
 	aliases     map[pgsql.Identifier]pgsql.Identifier
@@ -261,6 +286,7 @@ type Scope struct {
 
 func NewScope() *Scope {
 	return &Scope{
+		nextFrameID: 0,
 		generator:   NewIdentifierGenerator(),
 		aliases:     map[pgsql.Identifier]pgsql.Identifier{},
 		definitions: map[pgsql.Identifier]*BoundIdentifier{},
@@ -291,15 +317,40 @@ func (s *Scope) ReferenceFrame() *Frame {
 	return s.CurrentFrame()
 }
 
-func (s *Scope) PopFrame() *Frame {
-	frame := s.stack[len(s.stack)-1]
-	s.stack = s.stack[:len(s.stack)-1]
+func (s *Scope) PopFrame() error {
+	if len(s.stack) <= 0 {
+		return fmt.Errorf("no frame to pop")
+	}
 
-	return frame
+	s.stack = s.stack[:len(s.stack)-1]
+	return nil
+}
+
+func (s *Scope) UnwindToFrame(frame *Frame) error {
+	found := false
+
+	for idx := len(s.stack) - 1; idx >= 0; idx-- {
+		if found = s.stack[idx].id == frame.id; found {
+			s.stack = s.stack[:idx+1]
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("unable to pop frame with ID %d", frame.id)
+	}
+
+	return nil
 }
 
 func (s *Scope) PushFrame() (*Frame, error) {
-	newFrame := &Frame{}
+	newFrame := &Frame{
+		id:       s.nextFrameID,
+		Visible:  pgsql.NewIdentifierSet(),
+		Exported: pgsql.NewIdentifierSet(),
+	}
+
+	s.nextFrameID += 1
 
 	if nextScopeBinding, err := s.DefineNew(pgsql.Scope); err != nil {
 		return nil, err
@@ -312,7 +363,8 @@ func (s *Scope) PushFrame() (*Frame, error) {
 			newFrame.Previous = s.stack[len(s.stack)-1]
 		}
 
-		newFrame.Visible = currentFrame.Visible.Copy()
+		newFrame.Visible = currentFrame.Exported.Copy()
+		newFrame.Exported = currentFrame.Exported.Copy()
 	} else {
 		newFrame.Visible = pgsql.NewIdentifierSet()
 	}
@@ -329,8 +381,12 @@ func (s *Scope) CurrentFrameBinding() *BoundIdentifier {
 	return nil
 }
 
-func (s *Scope) IsVisible(identifier pgsql.Identifier) bool {
-	return s.CurrentFrame().Visible.Contains(identifier)
+func (s *Scope) IsMaterialized(identifier pgsql.Identifier) bool {
+	if binding, isBound := s.definitions[identifier]; isBound {
+		return binding.LastProjection != nil
+	}
+
+	return false
 }
 
 func (s *Scope) Visible() *pgsql.IdentifierSet {
@@ -406,11 +462,17 @@ func (s *Scope) Define(identifier pgsql.Identifier, dataType pgsql.DataType) *Bo
 // will eagerly bind anonymous identifiers for traversal steps and rebind existing identifiers and their
 // aliases to prevent naming collisions.
 type BoundIdentifier struct {
-	Identifier   pgsql.Identifier
-	Alias        models.Optional[pgsql.Identifier]
-	Parameter    models.Optional[*pgsql.Parameter]
-	Dependencies []*BoundIdentifier
-	DataType     pgsql.DataType
+	Identifier     pgsql.Identifier
+	Alias          models.Optional[pgsql.Identifier]
+	Parameter      models.Optional[*pgsql.Parameter]
+	LastProjection *Frame
+	Dependencies   []*BoundIdentifier
+	DataType       pgsql.DataType
+}
+
+func (s *BoundIdentifier) DetachFromFrame() {
+	s.LastProjection = nil
+	s.Dependencies = nil
 }
 
 func (s *BoundIdentifier) Aliased() pgsql.Identifier {

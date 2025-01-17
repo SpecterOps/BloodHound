@@ -24,6 +24,14 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 select s0.n0 as n
 from s0;
 
+-- case: match (n:NodeKind1 {name: "SOME NAME"}) return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0
+            from node n0
+            where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]
+              and n0.properties ->> 'name' = 'SOME NAME')
+select s0.n0 as n
+from s0;
+
 -- case: match (n) where n.objectid in $p return n
 -- cypher_params: {"p": ["1", "2", "3"]}
 -- pgsql_params: {"pi0": ["1", "2", "3"]}

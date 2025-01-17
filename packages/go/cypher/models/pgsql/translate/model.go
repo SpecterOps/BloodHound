@@ -69,14 +69,16 @@ type Expansion struct {
 }
 
 type PatternSegment struct {
-	Frame       *Frame
-	Direction   graph.Direction
-	Expansion   models.Optional[Expansion]
-	LeftNode    *BoundIdentifier
-	Edge        *BoundIdentifier
-	RightNode   *BoundIdentifier
-	Definitions []*BoundIdentifier
-	Projection  []pgsql.SelectItem
+	Frame          *Frame
+	Direction      graph.Direction
+	Expansion      models.Optional[Expansion]
+	LeftNode       *BoundIdentifier
+	LeftNodeBound  bool
+	Edge           *BoundIdentifier
+	RightNode      *BoundIdentifier
+	RightNodeBound bool
+	Definitions    []*BoundIdentifier
+	Projection     []pgsql.SelectItem
 }
 
 // TerminalNode will find the terminal node of this pattern segment based on the segment's direction
@@ -151,15 +153,93 @@ func (s *Pattern) CurrentPart() *PatternPart {
 }
 
 type Query struct {
+	Parts []*QueryPart
+	Scope *Scope
+}
+
+func (s *Query) HasParts() bool {
+	return len(s.Parts) > 0
+}
+
+func (s *Query) CurrentPart() *QueryPart {
+	return s.Parts[len(s.Parts)-1]
+}
+
+func (s *Query) PreparePart(allocateFrame bool) error {
+	newPart := &QueryPart{
+		Model: &pgsql.Query{
+			CommonTableExpressions: &pgsql.With{},
+		},
+	}
+
+	if allocateFrame {
+		if frame, err := s.Scope.PushFrame(); err != nil {
+			return err
+		} else {
+			newPart.frame = frame
+		}
+	}
+
+	s.Parts = append(s.Parts, newPart)
+	return nil
+}
+
+type QueryPart struct {
 	Model   *pgsql.Query
-	Scope   *Scope
 	Updates []*Mutations
 	OrderBy []pgsql.OrderBy
 	Skip    models.Optional[pgsql.Expression]
 	Limit   models.Optional[pgsql.Expression]
+
+	frame       *Frame
+	properties  map[string]pgsql.Expression
+	pattern     *Pattern
+	match       *Match
+	projections *Projections
+	mutations   *Mutations
 }
 
-func (s *Query) CurrentOrderBy() *pgsql.OrderBy {
+func (s *QueryPart) HasProjections() bool {
+	return s.projections != nil && len(s.projections.Items) > 0
+}
+
+func (s *QueryPart) PrepareProjections(distinct bool) {
+	s.projections = &Projections{
+		Distinct: distinct,
+	}
+}
+
+func (s *QueryPart) PrepareMutations() {
+	if s.mutations == nil {
+		s.mutations = NewMutations()
+	}
+}
+
+func (s *QueryPart) HasMutations() bool {
+	return s.mutations != nil && s.mutations.Assignments.Len() > 0
+}
+
+func (s *QueryPart) HasDeletions() bool {
+	return s.mutations != nil && s.mutations.Deletions.Len() > 0
+}
+
+func (s *QueryPart) PrepareProjection() {
+	s.projections.Items = append(s.projections.Items, &Projection{})
+}
+
+func (s *QueryPart) CurrentProjection() *Projection {
+	return s.projections.Current()
+}
+
+func (s *QueryPart) PrepareProperties() {
+	if s.properties != nil {
+		clear(s.properties)
+	} else {
+		s.properties = map[string]pgsql.Expression{}
+	}
+}
+
+func (s *QueryPart) CurrentOrderBy() *pgsql.OrderBy {
 	return &s.OrderBy[len(s.OrderBy)-1]
 }
 
@@ -312,21 +392,19 @@ func (s *Mutations) AddKindRemoval(scope *Scope, targetIdentifier pgsql.Identifi
 	return nil
 }
 
-type ProjectionClause struct {
-	Distinct    bool
-	Projections []*Projection
+type Projections struct {
+	Distinct bool
+	Frame    *Frame
+	Items    []*Projection
+	GroupBy  []pgsql.SelectItem
 }
 
-func NewProjectionClause() *ProjectionClause {
-	return &ProjectionClause{}
+func (s *Projections) Add(projection *Projection) {
+	s.Items = append(s.Items, projection)
 }
 
-func (s *ProjectionClause) PushProjection() {
-	s.Projections = append(s.Projections, &Projection{})
-}
-
-func (s *ProjectionClause) CurrentProjection() *Projection {
-	return s.Projections[len(s.Projections)-1]
+func (s *Projections) Current() *Projection {
+	return s.Items[len(s.Items)-1]
 }
 
 func extractIdentifierFromCypherExpression(expression cypher.Expression) (pgsql.Identifier, bool, error) {
