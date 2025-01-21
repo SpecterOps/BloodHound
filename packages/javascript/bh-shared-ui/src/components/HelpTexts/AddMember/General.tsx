@@ -16,8 +16,8 @@
 
 import { Typography } from '@mui/material';
 import { FC } from 'react';
-import { groupSpecialFormat } from '../utils';
 import { EdgeInfoProps } from '../index';
+import { groupSpecialFormat } from '../utils';
 
 const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
     return (

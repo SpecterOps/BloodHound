@@ -14,11 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { useTheme } from '@mui/material';
 import { SigmaContainer } from '@react-sigma/core';
 import '@react-sigma/core/lib/react-sigma.min.css';
 import Graph, { MultiDirectedGraph } from 'graphology';
 import { AbstractGraph, Attributes } from 'graphology-types';
 import { forwardRef } from 'react';
+import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { GraphEvents } from 'src/components/GraphEvents';
 import { MAX_CAMERA_RATIO, MIN_CAMERA_RATIO } from 'src/ducks/graph/utils';
 import drawEdgeLabel from 'src/rendering/programs/edge-label';
@@ -30,8 +32,6 @@ import drawLabel from 'src/rendering/programs/node-label';
 import getNodeCombinedProgram from 'src/rendering/programs/node.combined';
 import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
 import GraphEdgeEvents from './GraphEdgeEvents';
-import { useTheme } from '@mui/material';
-import { SigmaNodeEventPayload } from 'sigma/sigma';
 
 interface SigmaChartProps {
     graph: Graph<Attributes, Attributes, Attributes>;

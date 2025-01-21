@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
 import { Box, Link, Typography } from '@mui/material';
+import { FC } from 'react';
 import { useHelpTextStyles } from '../utils';
 
 const LinuxAbuse: FC = () => {

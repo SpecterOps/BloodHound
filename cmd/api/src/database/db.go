@@ -22,10 +22,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/database/migration"
 	"github.com/specterops/bloodhound/src/model"
@@ -170,9 +170,9 @@ type BloodhoundDB struct {
 
 func (s *BloodhoundDB) Close(ctx context.Context) {
 	if sqlDBRef, err := s.db.WithContext(ctx).DB(); err != nil {
-		log.Errorf("Failed to fetch SQL DB reference from GORM: %v", err)
+		slog.ErrorContext(ctx, fmt.Sprintf("Failed to fetch SQL DB reference from GORM: %v", err))
 	} else if err := sqlDBRef.Close(); err != nil {
-		log.Errorf("Failed closing database: %v", err)
+		slog.ErrorContext(ctx, fmt.Sprintf("Failed closing database: %v", err))
 	}
 }
 
@@ -240,7 +240,7 @@ func (s *BloodhoundDB) Wipe(ctx context.Context) error {
 func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 	// Run the migrator
 	if err := migration.NewMigrator(s.db.WithContext(ctx)).ExecuteStepwiseMigrations(); err != nil {
-		log.Errorf("Error during SQL database migration phase: %v", err)
+		slog.ErrorContext(ctx, fmt.Sprintf("Error during SQL database migration phase: %v", err))
 		return err
 	}
 
