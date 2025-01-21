@@ -19,6 +19,8 @@ package ad
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 
@@ -30,7 +32,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 )
 
 func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
@@ -38,11 +39,11 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 
 	// Get the dSHeuristics values for all domains
 	if dsHeuristicsCache, anyEnforced, err := GetDsHeuristicsCache(ctx, db); err != nil {
-		log.Errorf("failed fetching dsheuristics values for postownsandwriteowner: %w", err)
+		slog.Error(fmt.Sprintf("failed fetching dsheuristics values for postownsandwriteowner: %v", err))
 		return nil, err
 	} else if adminGroupIds, err := FetchAdminGroupIds(ctx, db, groupExpansions); err != nil {
 		// Get the admin group IDs
-		log.Errorf("failed fetching admin group ids values for postownsandwriteowner: %w", err)
+		slog.Error(fmt.Sprintf("failed fetching admin group ids values for postownsandwriteowner: %v", err))
 	} else {
 
 		// Get all source nodes of Owns ACEs (i.e., owning principals) where the target node has no ACEs granting abusable explicit permissions to OWNER RIGHTS
@@ -53,7 +54,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 					query.Kind(query.Start(), ad.Entity),
 				)
 			})); err != nil {
-				log.Errorf("failed to fetch OwnsRaw relationships for postownsandwriteowner: %w", err)
+				slog.Error(fmt.Sprintf("failed to fetch OwnsRaw relationships for postownsandwriteowner: %v", err))
 			} else {
 				for _, rel := range relationships {
 
@@ -62,12 +63,12 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 
 						// Get the target node of the OwnsRaw relationship
 						if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
-							log.Errorf("failed fetching OwnsRaw target node for postownsandwriteowner: %w", err)
+							slog.Error(fmt.Sprintf("failed fetching OwnsRaw target node for postownsandwriteowner: %v", err))
 							continue
 
 						} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
 							// Get the domain SID of the target node
-							log.Errorf("failed fetching domain SID for postownsandwriteowner: %w", err)
+							slog.Error(fmt.Sprintf("failed fetching domain SID for postownsandwriteowner: %v", err))
 							continue
 
 						} else {
@@ -123,7 +124,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 			}
 			return nil
 		}); err != nil {
-			log.Errorf("failed to process Owns relationships for postownsandwriteowner: %w", err)
+			slog.Error(fmt.Sprintf("failed to process Owns relationships for postownsandwriteowner: %v", err))
 		}
 
 		// Get all source nodes of WriteOwner ACEs where the target node has no ACEs granting explicit abusable permissions to OWNER RIGHTS
@@ -135,7 +136,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 					query.Kind(query.Start(), ad.Entity),
 				)
 			})); err != nil {
-				log.Errorf("failed to fetch WriteOwnerRaw relationships for postownsandwriteowner: %w", err)
+				slog.Error(fmt.Sprintf("failed to fetch WriteOwnerRaw relationships for postownsandwriteowner: %v", err))
 			} else {
 				for _, rel := range relationships {
 
@@ -144,12 +145,12 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 
 						// Get the target node of the WriteOwnerRaw relationship
 						if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
-							log.Errorf("failed fetching WriteOwnerRaw target node for postownsandwriteowner: %w", err)
+							slog.Error(fmt.Sprintf("failed fetching WriteOwnerRaw target node for postownsandwriteowner: %v", err))
 							continue
 
 						} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
 							// Get the domain SID of the target node
-							log.Errorf("failed fetching domain SID for postownsandwriteowner: %w", err)
+							slog.Error(fmt.Sprintf("failed fetching domain SID for postownsandwriteowner: %v", err))
 							continue
 
 						} else {
@@ -205,7 +206,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 			}
 			return nil
 		}); err != nil {
-			log.Errorf("failed to process WriteOwner relationships for postownsandwriteowner: %w", err)
+			slog.Error(fmt.Sprintf("failed to process WriteOwner relationships for postownsandwriteowner: %v", err))
 		}
 	}
 	return &operation.Stats, operation.Done()

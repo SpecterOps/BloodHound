@@ -920,7 +920,6 @@ Properties: [
 	LockoutDuration,
 	LockoutObservationWindow,
 	OwnerSid,
-	LockoutObservationWindow,
 	SMBSigning,
 	WebClientRunning,
 	RestrictOutboundNTLM,
