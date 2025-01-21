@@ -19,6 +19,7 @@ package ad
 import (
 	"context"
 	"errors"
+
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -49,173 +50,167 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 	}
 
 	// Get all source nodes of Owns ACEs (i.e., owning principals) where the target node has no ACEs granting abusable explicit permissions to OWNER RIGHTS
-	// FIXME: This function returns an error that is not being handled
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		return tx.Relationships().Filter(
-			query.And(
+	if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		relationships, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.And(
 				query.Kind(query.Relationship(), ad.OwnsRaw),
 				query.Kind(query.Start(), ad.Entity),
-			),
-		).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
-			for rel := range cursor.Chan() {
+			)
+		}))
+		if err != nil {
+			log.Errorf("failed to fetch OwnsRaw relationships: %w", err)
+		}
 
-				// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
-				if anyEnforced {
+		for _, rel := range relationships {
 
-					// Get the target node of the OwnsRaw relationship
-					// FIXME: This is dangerous - reusing the transaction while iterating through a resultset
-					//		  from the same transaction could result in undefined behavior. It would
-					//		  be better to first fetch all relationship IDs into an array or compressed
-					//		  bitmap.
-					if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
-						log.Errorf("failed fetching OwnsRaw target node postownsandwriteowner: %w", err)
-						continue
+			// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
+			if anyEnforced {
 
-					} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
-						// Get the domain SID of the target node
-						continue
-					} else {
-						enforced, ok := dsHeuristicsCache[domainSid]
-						if !ok {
-							enforced = false
-						}
+				// Get the target node of the OwnsRaw relationship
+				if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
+					log.Errorf("failed fetching OwnsRaw target node postownsandwriteowner: %w", err)
+					continue
 
-						// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the Owns edge
-						if !enforced {
-							isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-							if err != nil {
-								isInherited = false
-							}
-
-							// FIXME: Consider using the channels package like below for all channel operations
-							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-								FromID:        rel.StartID,
-								ToID:          rel.EndID,
-								Kind:          ad.Owns,
-								RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-							})
-						} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
-							// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
-							continue
-						} else if (isComputerDerived && adminGroupIds != nil && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
-							// If the target node is a computer or derived object, add the Owns edge if the owning principal is a member of DA/EA (or is either group's SID)
-							// If the target node is NOT a computer or derived object, add the Owns edge
-							isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-							if err != nil {
-								isInherited = false
-							}
-
-							// FIXME: Consider using the channels package - this is not context aware and could deadlock
-							outC <- analysis.CreatePostRelationshipJob{
-								FromID:        rel.StartID,
-								ToID:          rel.EndID,
-								Kind:          ad.Owns,
-								RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-							}
-						}
-					}
+				} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
+					// Get the domain SID of the target node
+					continue
 				} else {
-					// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1) or we can't fetch the attribute, we can skip this analysis and just add the Owns relationship
-					isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-					if err != nil {
-						isInherited = false
+					enforced, ok := dsHeuristicsCache[domainSid]
+					if !ok {
+						enforced = false
 					}
-					// FIXME: Consider using the channels package - this is not context aware and could deadlock
-					outC <- analysis.CreatePostRelationshipJob{
-						FromID:        rel.StartID,
-						ToID:          rel.EndID,
-						Kind:          ad.Owns,
-						RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
+
+					// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the Owns edge
+					if !enforced {
+						isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+						if err != nil {
+							isInherited = false
+						}
+
+						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+							FromID:        rel.StartID,
+							ToID:          rel.EndID,
+							Kind:          ad.Owns,
+							RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
+						})
+					} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
+						// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
+						continue
+					} else if (isComputerDerived && adminGroupIds != nil && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
+						// If the target node is a computer or derived object, add the Owns edge if the owning principal is a member of DA/EA (or is either group's SID)
+						// If the target node is NOT a computer or derived object, add the Owns edge
+						isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+						if err != nil {
+							isInherited = false
+						}
+						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+							FromID:        rel.StartID,
+							ToID:          rel.EndID,
+							Kind:          ad.Owns,
+							RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
+						})
 					}
 				}
+			} else {
+				// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1) or we can't fetch the attribute, we can skip this analysis and just add the Owns relationship
+				isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+				if err != nil {
+					isInherited = false
+				}
+				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+					FromID:        rel.StartID,
+					ToID:          rel.EndID,
+					Kind:          ad.Owns,
+					RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
+				})
 			}
-
-			return cursor.Error()
-		})
-	})
+		}
+		return nil
+	}); err != nil {
+		log.Errorf("failed to process Owns relationships: %w", err)
+	}
 
 	// Get all source nodes of WriteOwner ACEs where the target node has no ACEs granting explicit abusable permissions to OWNER RIGHTS
-	// FIXME: This function returns an error that is not being handled
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		return tx.Relationships().Filter(
-			query.And(
+	if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+
+		relationships, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.And(
 				query.Kind(query.Relationship(), ad.WriteOwnerRaw),
 				query.Kind(query.Start(), ad.Entity),
-			),
-		).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
-			for rel := range cursor.Chan() {
+			)
+		}))
+		if err != nil {
+			log.Errorf("failed to fetch WriteOwnerRaw relationships: %w", err)
+		}
 
-				// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
-				if anyEnforced {
+		for _, rel := range relationships {
 
-					// Get the target node of the WriteOwnerRaw relationship
-					// FIXME: This is dangerous - you are reusing the transaction while iterating through a resultset
-					//		  from the same transaction
-					if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
-						log.Errorf("failed fetching WriteOwnerRaw target node postownsandwriteowner: %w", err)
-						continue
+			// Check if ANY domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1)
+			if anyEnforced {
 
-					} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
-						// Get the domain SID of the target node
-						continue
-					} else {
-						enforced, ok := dsHeuristicsCache[domainSid]
-						if !ok {
-							enforced = false
+				// Get the target node of the WriteOwnerRaw relationship
+				if targetNode, err := ops.FetchNode(tx, rel.EndID); err != nil {
+					log.Errorf("failed fetching WriteOwnerRaw target node postownsandwriteowner: %w", err)
+					continue
+
+				} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
+					// Get the domain SID of the target node
+					continue
+				} else {
+					enforced, ok := dsHeuristicsCache[domainSid]
+					if !ok {
+						enforced = false
+					}
+
+					// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the WriteOwner edge
+					if !enforced {
+						isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+						if err != nil {
+							isInherited = false
 						}
+						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+							FromID:        rel.StartID,
+							ToID:          rel.EndID,
+							Kind:          ad.WriteOwner,
+							RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
+						})
 
-						// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the WriteOwner edge
-						if !enforced {
+					} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err == nil {
+						// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
+						if !isComputerDerived {
 							isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
 							if err != nil {
 								isInherited = false
 							}
-							// FIXME: Consider using the channels package - this is not context aware and could deadlock
-							outC <- analysis.CreatePostRelationshipJob{
+							// If the target node is NOT a computer or derived object, add the WriteOwner edge
+							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 								FromID:        rel.StartID,
 								ToID:          rel.EndID,
 								Kind:          ad.WriteOwner,
 								RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-							}
-
-						} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err == nil {
-							// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
-							if !isComputerDerived {
-								isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-								if err != nil {
-									isInherited = false
-								}
-								// If the target node is NOT a computer or derived object, add the WriteOwner edge
-								// FIXME: Consider using the channels package - this is not context aware and could deadlock
-								outC <- analysis.CreatePostRelationshipJob{
-									FromID:        rel.StartID,
-									ToID:          rel.EndID,
-									Kind:          ad.WriteOwner,
-									RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-								}
-							}
+							})
 						}
 					}
-				} else {
-					// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1) or we can't fetch the attribute, we can skip this analysis and just add the WriteOwner relationship
-					isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-					if err != nil {
-						isInherited = false
-					}
-					// FIXME: Consider using the channels package - this is not context aware and could deadlock
-					outC <- analysis.CreatePostRelationshipJob{
-						FromID:        rel.StartID,
-						ToID:          rel.EndID,
-						Kind:          ad.WriteOwner,
-						RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-					}
 				}
-
+			} else {
+				// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1) or we can't fetch the attribute, we can skip this analysis and just add the WriteOwner relationship
+				isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+				if err != nil {
+					isInherited = false
+				}
+				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+					FromID:        rel.StartID,
+					ToID:          rel.EndID,
+					Kind:          ad.WriteOwner,
+					RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
+				})
 			}
 
-			return cursor.Error()
-		})
-	})
+		}
+		return nil
+	}); err != nil {
+		log.Errorf("failed to process WriteOwner relationships: %w", err)
+	}
 
 	return &operation.Stats, operation.Done()
 }
