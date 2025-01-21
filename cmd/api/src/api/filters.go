@@ -30,7 +30,7 @@ var (
 	ErrNoFindingType               = errors.New("no finding type specified")
 	ErrColumnFormatNotSupported    = errors.New("column format does not support sorting")
 	ErrInvalidFindingType          = errors.New("invalid finding type specified")
-	ErrInvalidAcceptedFilter       = errors.New("invalid finding type specified")
+	ErrInvalidAcceptedFilter       = errors.New("invalid accepted filter")
 )
 
 type Filterable interface {
