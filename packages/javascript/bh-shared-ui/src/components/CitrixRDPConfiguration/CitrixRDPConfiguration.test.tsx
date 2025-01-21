@@ -15,12 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { ConfigurationKey } from 'js-client-library';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from '../../test-utils';
 import CitrixRDPConfiguration, { configurationData } from './CitrixRDPConfiguration';
 import { dialogTitle } from './CitrixRDPConfirmDialog';
-import { rest } from 'msw';
-import { setupServer } from 'msw/node';
-import { ConfigurationKey } from 'js-client-library';
 
 describe('CitrixRDPConfiguration', () => {
     const setInitialServerState = (savedConfigurationValue?: boolean) => {

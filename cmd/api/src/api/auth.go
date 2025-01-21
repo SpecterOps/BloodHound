@@ -27,6 +27,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -36,7 +37,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/specterops/bloodhound/crypto"
 	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -112,7 +112,7 @@ func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.
 
 	err := s.db.CreateAuditLog(requestContext, auditLog)
 	if err != nil {
-		log.Warnf("failed to write login audit log %+v", err)
+		slog.WarnContext(requestContext, fmt.Sprintf("failed to write login audit log %+v", err))
 	}
 }
 
@@ -140,7 +140,7 @@ func (s authenticator) LoginWithSecret(ctx context.Context, loginRequest LoginRe
 	auditLogFields := types.JSONUntypedObject{"username": loginRequest.Username, "auth_type": auth.ProviderTypeSecret}
 
 	if commitID, err := uuid.NewV4(); err != nil {
-		log.Errorf("Error generating commit ID for login: %s", err)
+		slog.ErrorContext(ctx, fmt.Sprintf("Error generating commit ID for login: %s", err))
 		return LoginDetails{}, err
 	} else {
 		s.auditLogin(ctx, commitID, model.AuditLogStatusIntent, model.User{}, auditLogFields)
@@ -281,7 +281,7 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 			authToken.LastAccess = time.Now().UTC()
 
 			if err := s.db.UpdateAuthToken(request.Context(), authToken); err != nil {
-				log.Errorf("Error updating last access on AuthToken: %v", err)
+				slog.ErrorContext(request.Context(), fmt.Sprintf("Error updating last access on AuthToken: %v", err))
 			}
 
 			if sdtf, ok := readCloser.(*SelfDestructingTempFile); ok {
@@ -358,7 +358,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 
 	// Generate commit ID for audit logging
 	if commitID, err = uuid.NewV4(); err != nil {
-		log.Warnf("[SSO] Error generating commit ID for login: %s", err)
+		slog.WarnContext(request.Context(), fmt.Sprintf("[SSO] Error generating commit ID for login: %s", err))
 		RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 		return
 	}
@@ -374,7 +374,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 	if user, err = s.db.LookupUser(requestCtx, principalNameOrEmail); err != nil {
 		auditLogFields["error"] = err
 		if !errors.Is(err, database.ErrNotFound) {
-			log.Warnf("[SSO] Error looking up user: %v", err)
+			slog.WarnContext(request.Context(), fmt.Sprintf("[SSO] Error looking up user: %v", err))
 			RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 		} else {
 			RedirectToLoginURL(response, request, "Your user is not allowed, please contact your Administrator")
@@ -392,7 +392,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 				response.Header().Add(headers.Location.String(), locationURL.String())
 				response.WriteHeader(http.StatusFound)
 			} else {
-				log.Warnf("[SSO] session creation failure %v", err)
+				slog.WarnContext(request.Context(), fmt.Sprintf("[SSO] session creation failure %v", err))
 				RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
 			}
 		} else {
@@ -415,7 +415,7 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 		return "", ErrUserDisabled
 	}
 
-	log.Infof("Creating session for user: %s(%s)", user.ID, user.PrincipalName)
+	slog.InfoContext(ctx, fmt.Sprintf("Creating session for user: %s(%s)", user.ID, user.PrincipalName))
 
 	userSession := model.UserSession{
 		User:      user,
@@ -473,16 +473,16 @@ func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString strin
 
 		return auth.Context{}, err
 	} else if !token.Valid {
-		log.Infof("Token invalid")
+		slog.InfoContext(ctx, "Token invalid")
 		return auth.Context{}, ErrInvalidAuth
 	} else if sessionID, err := claims.SessionID(); err != nil {
-		log.Infof("Session ID %s invalid: %v", claims.Id, err)
+		slog.InfoContext(ctx, fmt.Sprintf("Session ID %s invalid: %v", claims.Id, err))
 		return auth.Context{}, ErrInvalidAuth
 	} else if session, err := s.db.GetUserSession(ctx, sessionID); err != nil {
-		log.Infof("Unable to find session %d", sessionID)
+		slog.InfoContext(ctx, fmt.Sprintf("Unable to find session %d", sessionID))
 		return auth.Context{}, ErrInvalidAuth
 	} else if session.Expired() {
-		log.Infof("Session %d is expired", sessionID)
+		slog.InfoContext(ctx, fmt.Sprintf("Session %d is expired", sessionID))
 		return auth.Context{}, ErrInvalidAuth
 	} else {
 		authContext := auth.Context{
@@ -491,7 +491,7 @@ func (s authenticator) ValidateSession(ctx context.Context, jwtTokenString strin
 		}
 
 		if session.AuthProviderType == model.SessionAuthProviderSecret && session.User.AuthSecret == nil {
-			log.Infof("No auth secret found for user ID %s", session.UserID.String())
+			slog.InfoContext(ctx, fmt.Sprintf("No auth secret found for user ID %s", session.UserID.String()))
 			return auth.Context{}, ErrNoUserSecret
 		} else if session.AuthProviderType == model.SessionAuthProviderSecret && session.User.AuthSecret.Expired() {
 			var (

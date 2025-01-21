@@ -13,11 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { SnackbarKey } from 'notistack';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, SvgIcon } from '@mui/material';
-import { useSnackbar } from 'notistack';
+import { SnackbarKey, useSnackbar } from 'notistack';
 import React, { useCallback, useEffect } from 'react';
 import { removeSnackbar } from 'src/ducks/global/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';

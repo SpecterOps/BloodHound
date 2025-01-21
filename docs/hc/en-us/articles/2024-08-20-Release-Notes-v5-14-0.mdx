@@ -1,0 +1,50 @@
+---
+title: 2024-08-20 Release Notes (v5.14.0)
+---
+
+## Announcements
+
+### SO-CON 2025: The Shortest Path to Secure[](#h_01J56ZW255470FJKTEES17GZEQ)
+
+We're excited to announce SO-CON 2025, SpecterOps' premier cybersecurity conference focused on Attack Path Management. Join us in Arlington, VA, to explore the latest strategies and tools for identifying and mitigating attack paths.
+
+* 🗓️Conference Dates: March 31 – April 1, 2025
+* 🎓Training Dates: April 2 – April 5, 2025
+* 📍Location: Arlington, VA
+
+For a limited time we're offering **50% off registration**. You can learn more and register at [https://specterops.io/so-con/](https://specterops.io/so-con/)
+
+## Summary
+
+* **BloodHound (v5.14.0****)**
+    * New and Improved Features
+        * Added support for ADCS certificate chains crossing AIA Certificate Authorities
+        * Improved logic across all included cypher queries for improved performance
+        * Clarified the "blocksinheritance" property on OUs is specific to GPO inheritance
+        * Users without administrative privileges will no longer see Group Management actions in right-click context menus
+        * Added support for ingesting JSON files which include UTFBOM encoding
+    * Bug Fixes
+        * Improved visibility of several buttons and elements in dark mode
+        * Added abuse information for the GPLink edge
+        * Fixed the count of objects displayed in the Group Management page
+* **SharpHound (v2.4.1 - BHE, v2.4.1 - CE)**
+    * _Note: We are working on a new version of SharpHound that has improved performance and reliability when querying data via LDAP. If you would like to test that version, please get in touch with your TAM._
+* **AzureHound (v2.1.9)**
+    * _No new release._
+
+### BloodHound (v5.14.0)
+
+#### New and Improved Features
+
+* **New Attack Paths: Entra-AD User Syncing** \- Introduced to the BloodHound graph in April 2022 as a fully supported feature, Entra has remained a dissociated data set from AD. Ever since we've wanted to connect the graphs to show risk across those connection points. In this release, we're adding coverage of user synchronization - showing where Entra and AD users are synced to each other across those environments. This release will enable users to identify and validate paths across those links via pathfinding and cypher. With this work complete, we're starting a project in BloodHound Enterprise to measure the cross-platform risk from these paths!
+
+#### Bug Fixes
+
+### SharpHound (v2.4.1 - BHE, v2.4.1 - CE)
+
+
+_Note: We are working on a new version of SharpHound that has improved performance and reliability when querying data via LDAP. If you would like to test that version, please get in touch with your TAM._
+
+### AzureHound (v2.1.9)
+_No new release._
+

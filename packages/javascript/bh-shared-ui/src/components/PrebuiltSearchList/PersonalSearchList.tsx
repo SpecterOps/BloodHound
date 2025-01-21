@@ -16,9 +16,9 @@
 
 import { Box, Skeleton, Typography } from '@mui/material';
 import { FC } from 'react';
+import { useDeleteSavedQuery, useSavedQueries } from '../../hooks/useSavedQueries';
 import { useNotifications } from '../../providers';
 import PrebuiltSearchList, { LineItem } from './PrebuiltSearchList';
-import { useDeleteSavedQuery, useSavedQueries } from '../../hooks/useSavedQueries';
 
 // `PersonalSearchList` is a more specific implementation of `PrebuiltSearchList`.  It includes
 // additional fetching logic to fetch and delete queries saved by the user

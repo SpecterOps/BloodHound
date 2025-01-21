@@ -20,10 +20,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 
+	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
@@ -39,7 +40,6 @@ func printVersion() {
 func main() {
 	var (
 		configFilePath string
-		logFilePath    string
 		versionFlag    bool
 	)
 
@@ -50,18 +50,26 @@ func main() {
 
 	flag.BoolVar(&versionFlag, "version", false, "Get binary version.")
 	flag.StringVar(&configFilePath, "configfile", bootstrap.DefaultConfigFilePath(), "Configuration file to load.")
-	flag.StringVar(&logFilePath, "logfile", config.DefaultLogFilePath, "Log file to write to.")
 	flag.Parse()
 
 	if versionFlag {
 		printVersion()
 	}
 
-	// Initialize basic logging facilities while we start up
-	log.ConfigureDefaults()
+	// Jump the bootstrap initializer so all logs are configured properly
+	if enabled, err := config.GetTextLoggerEnabled(); err != nil {
+		bhlog.ConfigureDefaultJSON()
+		slog.Error(fmt.Sprintf("Failed to check text logger enabled: %v", err))
+		os.Exit(1)
+	} else if enabled {
+		bhlog.ConfigureDefaultText()
+	} else {
+		bhlog.ConfigureDefaultJSON()
+	}
 
 	if cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration); err != nil {
-		log.Fatalf("Unable to read configuration %s: %v", configFilePath, err)
+		slog.Error(fmt.Sprintf("Unable to read configuration %s: %v", configFilePath, err))
+		os.Exit(1)
 	} else {
 		initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
 			Configuration:       cfg,
@@ -71,7 +79,8 @@ func main() {
 		}
 
 		if err := initializer.Launch(context.Background(), true); err != nil {
-			log.Fatalf("Failed starting the server: %v", err)
+			slog.Error(fmt.Sprintf("Failed starting the server: %v", err))
+			os.Exit(1)
 		}
 	}
 }

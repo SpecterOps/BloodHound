@@ -30,11 +30,11 @@ import {
     SelectChangeEvent,
     TextField,
 } from '@mui/material';
+import { CreateUserRequest, SSOProvider } from 'js-client-library';
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
-import { CreateUserRequest, SSOProvider } from 'js-client-library';
 
 export type CreateUserRequestForm = Omit<CreateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 

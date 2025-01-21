@@ -1,0 +1,27 @@
+---
+title: SyncedToADUser
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+The Entra user is synchronized to the on-prem AD user.
+
+The Entra user may be able to authenticate as the on-prem AD user with its own password if password write-back is enabled. The Entra user may already have the same password as the on-prem user if password hash synchronization is enabled.
+
+Abuse Info[](#h_01HM2BCKV2PZ36VCYNETATDB50)
+-------------------------------------------
+
+An attacker may authenticate as the on-prem AD user using the Entra user’s credentials, for example by key-logging the user’s password, or by changing the Entra user’s password and waiting for the password write-back operation to complete.
+
+Opsec Considerations[](#h_01HM2BCKV33DRMF9D94AD7J1FH)
+-----------------------------------------------------
+
+The attacker may create artifacts of abusing this relationship in both on-prem AD and in Entra. A password write-back operation against the on-prem user may create a 4724 Windows event, along with a corresponding Entra activity log entry indicating the Entra user’s password was changed.
+
+References[](#h_01HM2BCKV3WNEN9J413M1AWHNP)
+-------------------------------------------
+
+[Concept SSPR WriteBack](https://learn.microsoft.com/en-us/entra/identity/authentication/concept-sspr-writeback)
+
