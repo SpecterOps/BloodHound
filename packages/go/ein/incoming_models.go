@@ -68,8 +68,8 @@ func (s ACE) Kind() graph.Kind {
 	return parseADKind(s.PrincipalType)
 }
 
-func (s ACE) GetCachedValue() WriteOwnerLimitedCache {
-	return WriteOwnerLimitedCache{
+func (s ACE) GetCachedValue() WriteOwnerLimitedPrincipal {
+	return WriteOwnerLimitedPrincipal{
 		SourceData: IngestibleSource{
 			Source:     s.PrincipalSID,
 			SourceType: s.Kind(),

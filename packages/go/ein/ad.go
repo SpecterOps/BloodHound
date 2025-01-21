@@ -201,8 +201,7 @@ func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
 	return result
 }
 
-// FIXME: Consider removing `Cache` from the name as this ended up confusing reviwers
-type WriteOwnerLimitedCache struct {
+type WriteOwnerLimitedPrincipal struct {
 	SourceData  IngestibleSource
 	IsInherited bool
 }
@@ -233,7 +232,7 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 		ownerPrincipalInfo                   IngestibleSource
 		ownerLimitedPrivs                    = make([]string, 0)
 		writeOwnerLimitedPrivs               = make([]string, 0)
-		potentialWriteOwnerLimitedPrincipals = make([]WriteOwnerLimitedCache, 0)
+		potentialWriteOwnerLimitedPrincipals = make([]WriteOwnerLimitedPrincipal, 0)
 		converted                            = make([]IngestibleRelationship, 0)
 	)
 
@@ -333,19 +332,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 			// We can tell if any non-abusable ACE is present and inherited by checking the DoesAnyInheritedAceGrantOwnerRights property
 			// If there are no inherited abusable permissions but there are inherited non-abusable permissions,
 			// the non-abusable permissions will NOT be deleted on ownership change, so WriteOwner will NOT be abusable
-
-			// FIXME: This should be rewritten as-per the pattern presented later in this function - see the following fixme
-			doesAnyInheritedAceGrantOwnerRights, exists := targetNode.PropertyMap[ad.DoesAnyInheritedAceGrantOwnerRights.String()]
-			if exists {
-				doesAnyInheritedAceGrantOwnerRights, ok := doesAnyInheritedAceGrantOwnerRights.(bool)
-				if ok {
-					if doesAnyInheritedAceGrantOwnerRights {
-						return converted
-					}
-					// If the non-abusable rights were NOT inherited, they are deleted on ownership change and WriteOwner may be abusable
-					// Post will determine if WriteOwner is abusable based on dSHeuristics:BlockOwnerImplicitRights enforcement and object type
-				}
+			if doesAnyInheritedAceGrantOwnerRights, hasValidProperty := getFromPropertyMap[bool](targetNode.PropertyMap, ad.DoesAnyInheritedAceGrantOwnerRights.String()); hasValidProperty && doesAnyInheritedAceGrantOwnerRights {
+				return converted
 			}
+			// If the non-abusable rights were NOT inherited, they are deleted on ownership change and WriteOwner may be abusable
+			// Post will determine if WriteOwner is abusable based on dSHeuristics:BlockOwnerImplicitRights enforcement and object type
+
 			// If there are abusable permissions granted to the OWNER RIGHTS SID, but they are not inherited,
 			// they will be deleted on ownership change and WriteOwner may be abusable, so create a WriteOwnerRaw
 			// edge for post-processing so we can check BlockOwnerImplicitRights enforcement and object type
@@ -367,8 +359,6 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 	} else {
 		// If no abusable permissions in the ACL are granted to the OWNER RIGHTS SID check whether any permissions were
 		// granted to the OWNER RIGHTS SID that are not abusable
-
-		// FIXME: Example of the requested above refactor
 		if doesAnyAceGrantOwnerRights, hasValidProperty := getFromPropertyMap[bool](targetNode.PropertyMap, ad.DoesAnyAceGrantOwnerRights.String()); hasValidProperty && doesAnyAceGrantOwnerRights {
 			// If the non-abusable rights were inherited, they are not deleted on ownership change and WriteOwner is not abusable
 			// Do NOT create the OwnsRaw or WriteOwnerRaw edges if the OWNER RIGHTS SID has inherited, non-abusable permissions
