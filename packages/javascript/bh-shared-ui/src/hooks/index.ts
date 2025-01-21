@@ -22,6 +22,8 @@ export { default as useDebouncedValue } from './useDebouncedValue';
 
 export { default as useToggle } from './useToggle';
 
+export { default as useApiVersion } from './useApiVersion';
+
 export * from './useConfiguration';
 
 export * from './useDataQualityStats';
