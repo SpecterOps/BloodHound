@@ -8534,6 +8534,125 @@ func (s *NTLMCoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) 
 	graphTestContext.NewRelationship(s.computer8, s.DomainAdminsUser, ad.HasSession)
 }
 
+type CoerceAndRelayNTLMToLDAP struct {
+	Computer1  *graph.Node
+	Computer10 *graph.Node
+	Computer2  *graph.Node
+	Computer3  *graph.Node
+	Computer4  *graph.Node
+	Computer5  *graph.Node
+	Computer6  *graph.Node
+	Computer7  *graph.Node
+	Computer8  *graph.Node
+	Computer9  *graph.Node
+	Domain1    *graph.Node
+	Domain2    *graph.Node
+	Domain3    *graph.Node
+	Group1     *graph.Node
+	Group2     *graph.Node
+	Group3     *graph.Node
+	Group4     *graph.Node
+	Group5     *graph.Node
+	Group6     *graph.Node
+}
+
+func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+	domain2Sid := RandomDomainSID()
+	domain3Sid := RandomDomainSID()
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer10 = graphTestContext.NewActiveDirectoryComputer("Computer10", domain1Sid)
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
+	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domain1Sid)
+	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domain1Sid)
+	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domain1Sid)
+	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domain2Sid)
+	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domain1Sid)
+	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domain3Sid)
+	s.Computer9 = graphTestContext.NewActiveDirectoryComputer("Computer9", domain3Sid)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domain1Sid, false, true)
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domain2Sid, false, true)
+	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domain3Sid, false, true)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain1Sid)
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domain1Sid)
+	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
+	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain1Sid)
+	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain1Sid)
+	graphTestContext.NewRelationship(s.Group1, s.Computer2, ad.CoerceAndRelayNTLMToLDAP)
+	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer5, s.Group4, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer6, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.Group5, s.Computer7, ad.CoerceAndRelayNTLMToLDAP)
+	graphTestContext.NewRelationship(s.Computer7, s.Group6, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer2, s.Group6, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer8, s.Domain3, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer9, s.Domain3, ad.DCFor)
+}
+
+type CoerceAndRelayNTLMToLDAPS struct {
+	Computer1  *graph.Node
+	Computer10 *graph.Node
+	Computer11 *graph.Node
+	Computer12 *graph.Node
+	Computer13 *graph.Node
+	Computer2  *graph.Node
+	Computer3  *graph.Node
+	Computer4  *graph.Node
+	Computer5  *graph.Node
+	Computer6  *graph.Node
+	Computer7  *graph.Node
+	Computer8  *graph.Node
+	Computer9  *graph.Node
+	Domain1    *graph.Node
+	Domain2    *graph.Node
+	Domain3    *graph.Node
+	Group1     *graph.Node
+	Group2     *graph.Node
+	Group3     *graph.Node
+	Group4     *graph.Node
+	Group5     *graph.Node
+	Group6     *graph.Node
+}
+
+func (s *CoerceAndRelayNTLMToLDAPS) Setup(graphTestContext *GraphTestContext) {
+	domainSid := RandomDomainSID()
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid)
+	s.Computer10 = graphTestContext.NewActiveDirectoryComputer("Computer10", domainSid)
+	s.Computer11 = graphTestContext.NewActiveDirectoryComputer("Computer11", domainSid)
+	s.Computer12 = graphTestContext.NewActiveDirectoryComputer("Computer12", domainSid)
+	s.Computer13 = graphTestContext.NewActiveDirectoryComputer("Computer13", domainSid)
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domainSid)
+	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domainSid)
+	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domainSid)
+	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domainSid)
+	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domainSid)
+	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domainSid)
+	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domainSid)
+	s.Computer9 = graphTestContext.NewActiveDirectoryComputer("Computer9", domainSid)
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domainSid, false, true)
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domainSid, false, true)
+	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domainSid, false, true)
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid)
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSid)
+	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid)
+	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid)
+	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domainSid)
+	graphTestContext.NewRelationship(s.Group1, s.Computer2, ad.CoerceAndRelayNTLMToLDAPs)
+	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer5, s.Group4, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer6, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.Group5, s.Computer7, ad.CoerceAndRelayNTLMToLDAPs)
+	graphTestContext.NewRelationship(s.Computer7, s.Group6, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer2, s.Group6, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer8, s.Domain3, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer9, s.Domain3, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer10, s.Domain3, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer11, s.Domain3, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer12, s.Domain3, ad.DCFor)
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -8635,4 +8754,6 @@ type HarnessDetails struct {
 	SyncLAPSPasswordHarness                         SyncLAPSPasswordHarness
 	HybridAttackPaths                               HybridAttackPaths
 	NTLMCoerceAndRelayNTLMToSMB                     NTLMCoerceAndRelayNTLMToSMB
+	NTLMCoerceAndRelayNTLMToLDAP                    CoerceAndRelayNTLMToLDAP
+	NTLMCoerceAndRelayNTLMToLDAPS                   CoerceAndRelayNTLMToLDAPS
 }

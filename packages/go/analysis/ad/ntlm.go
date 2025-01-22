@@ -133,11 +133,15 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 
 // PostCoerceAndRelayNTLMToLDAP creates edges where an authenticated user group, for a given domain, is able to target the provided computer.
 func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob, computer *graph.Node, ldapSigning ad.Property, authenticatedUserID graph.ID) error {
-	if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
+	if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
+		return nil
+	} else if err != nil {
 		return err
 	} else if restrictOutboundNtlm {
 		return nil
-	} else if webClientRunning, err := computer.Properties.Get(ad.WebClientRunning.String()).Bool(); err != nil {
+	} else if webClientRunning, err := computer.Properties.Get(ad.WebClientRunning.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
+		return err
+	} else if err != nil {
 		return err
 	} else if webClientRunning {
 		switch ldapSigning {
