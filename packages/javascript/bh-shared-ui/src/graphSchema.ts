@@ -141,7 +141,7 @@ export enum ActiveDirectoryRelationshipKind {
     SyncedToEntraUser = 'SyncedToEntraUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
     CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
-    CoerceAndRelayNTLMToLDAPs = 'CoerceAndRelayNTLMToLDAPs',
+    CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -285,8 +285,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CoerceAndRelayNTLMToSMB';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP:
             return 'CoerceAndRelayNTLMToLDAP';
-        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPs:
-            return 'CoerceAndRelayNTLMToLDAPs';
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS:
+            return 'CoerceAndRelayNTLMToLDAPS';
         default:
             return undefined;
     }
@@ -306,7 +306,7 @@ export const EdgeCompositionRelationships = [
     'ADCSESC13',
     'CoerceAndRelayNTLMToSMB',
     'CoerceAndRelayNTLMToLDAP',
-    'CoerceAndRelayNTLMToLDAPs',
+    'CoerceAndRelayNTLMToLDAPS',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -690,7 +690,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.SyncedToEntraUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
-        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPs,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.TrustedBy,

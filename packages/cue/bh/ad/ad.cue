@@ -1368,8 +1368,8 @@ CoerceAndRelayNTLMToLDAP: types.#Kind & {
 	schema: "active_directory"
 }
 
-CoerceAndRelayNTLMToLDAPs: types.#Kind & {
-	symbol: "CoerceAndRelayNTLMToLDAPs"
+CoerceAndRelayNTLMToLDAPS: types.#Kind & {
+	symbol: "CoerceAndRelayNTLMToLDAPS"
 	schema: "active_directory"
 }
 
@@ -1445,7 +1445,7 @@ RelationshipKinds: [
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToLDAP,
-	CoerceAndRelayNTLMToLDAPs
+	CoerceAndRelayNTLMToLDAPS
 ]
 
 // ACL Relationships
@@ -1525,7 +1525,7 @@ SharedRelationshipKinds: [
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToLDAP,
-	CoerceAndRelayNTLMToLDAPs
+	CoerceAndRelayNTLMToLDAPS
 ]
 
 // Edges that are used during inbound traversal
@@ -1551,6 +1551,6 @@ EdgeCompositionRelationships: [
 	ADCSESC13,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToLDAP,
-	CoerceAndRelayNTLMToLDAPs
+	CoerceAndRelayNTLMToLDAPS
 
 ]
