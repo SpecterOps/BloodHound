@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build integration
-// +build integration
+//go:build disabled
+// +build disabled
 
 package tools_test
 

@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Dialog, DialogTitle } from '@mui/material';
+import { UpdateUserRequest } from 'js-client-library';
 import React from 'react';
 import UpdateUserForm, { UpdateUserRequestForm } from '../UpdateUserForm';
-import { UpdateUserRequest } from 'js-client-library';
 
 const UpdateUserDialog: React.FC<{
     open: boolean;

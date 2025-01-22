@@ -25,7 +25,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/bhlog/handlers"
 	"github.com/specterops/bloodhound/src/database"
 )
 
@@ -38,9 +37,9 @@ func TestGormLogAdapter_Info(t *testing.T) {
 	)
 
 	var buf bytes.Buffer
-	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{ReplaceAttr: handlers.ReplaceMessageKey})))
+	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{})))
 
-	expected := fmt.Sprintf(`message="message %d %s %f"`, 1, "arg", 2.0)
+	expected := fmt.Sprintf(`msg="message %d %s %f"`, 1, "arg", 2.0)
 	gormLogAdapter.Info(context.TODO(), "message %d %s %f", 1, "arg", 2.0)
 	if !strings.Contains(buf.String(), expected) {
 		t.Errorf("gormLogAdapter output does not contain expected\nOutput:%sExpected:%s", buf.String(), expected)

@@ -14,23 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { setupServer } from 'msw/node';
-import { act, render, waitFor } from '../../test-utils';
-import GroupManagement from './GroupManagement';
-import { rest } from 'msw';
-import { createMockDomain } from 'src/mocks/factories';
+import userEvent from '@testing-library/user-event';
 import {
-    createAuthStateWithPermissions,
-    createMockAssetGroup,
-    createMockAssetGroupMembers,
-    createMockMemberCounts,
     DeepPartial,
     NoEntitySelectedHeader,
     NoEntitySelectedMessage,
     Permission,
+    createAuthStateWithPermissions,
+    createMockAssetGroup,
+    createMockAssetGroupMembers,
+    createMockMemberCounts,
 } from 'bh-shared-ui';
-import userEvent from '@testing-library/user-event';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import { createMockDomain } from 'src/mocks/factories';
 import { AppState } from 'src/store';
+import { act, render, waitFor } from '../../test-utils';
+import GroupManagement from './GroupManagement';
 
 const domain = createMockDomain();
 const assetGroup = createMockAssetGroup();

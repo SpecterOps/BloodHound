@@ -21,15 +21,17 @@ import (
 	"io"
 	"log/slog"
 	"os"
-	"runtime"
 	"strings"
 
-	"github.com/specterops/bloodhound/bhlog/handlers"
 	"github.com/specterops/bloodhound/bhlog/level"
 	"github.com/specterops/bloodhound/src/auth"
 )
 
-func BaseHandler(pipe io.Writer, options *slog.HandlerOptions) slog.Handler {
+const (
+	bhlogMessageKey = "message"
+)
+
+func JsonHandler(pipe io.Writer, options *slog.HandlerOptions) slog.Handler {
 	return slog.NewJSONHandler(pipe, options)
 }
 
@@ -37,55 +39,36 @@ func TextHandler(pipe io.Writer, options *slog.HandlerOptions) slog.Handler {
 	return slog.NewTextHandler(pipe, options)
 }
 
-func ConfigureDefault(text bool) {
+func ConfigureDefaultText() {
 	var (
-		handler        slog.Handler
-		pipe           = os.Stderr
-		handlerOptions = &slog.HandlerOptions{Level: level.GetLevelVar(), ReplaceAttr: handlers.ReplaceMessageKey}
+		handler = TextHandler(os.Stdout, &slog.HandlerOptions{
+			Level:       level.GetLevelVar(),
+			ReplaceAttr: textReplaceAttr,
+		})
+
+		logger = slog.New(&contextHandler{
+			IDResolver: auth.NewIdentityResolver(),
+			Handler:    handler,
+		})
 	)
-
-	if text {
-		handler = TextHandler(pipe, handlerOptions)
-	} else {
-		handler = BaseHandler(pipe, handlerOptions)
-	}
-
-	logger := slog.New(&handlers.ContextHandler{
-		IDResolver: auth.NewIdentityResolver(),
-		Handler:    handler,
-	})
 
 	slog.SetDefault(logger)
 }
 
-type stackFrame struct {
-	File string `json:"file"`
-	Line int    `json:"line"`
-	Func string `json:"func"`
-}
+func ConfigureDefaultJSON() {
+	var (
+		handler = JsonHandler(os.Stdout, &slog.HandlerOptions{
+			Level:       level.GetLevelVar(),
+			ReplaceAttr: jsonReplaceAttr,
+		})
 
-func GetCallStack() slog.Attr {
-	var outputFrames []stackFrame
+		logger = slog.New(&contextHandler{
+			IDResolver: auth.NewIdentityResolver(),
+			Handler:    handler,
+		})
+	)
 
-	pc := make([]uintptr, 25) // Arbitrarily only go to a call depth of 25
-	n := runtime.Callers(1, pc)
-	if n == 0 {
-		return slog.Attr{}
-	}
-	pc = pc[:n]
-	frames := runtime.CallersFrames(pc)
-
-	for {
-		frame, more := frames.Next()
-
-		outputFrames = append(outputFrames, stackFrame{File: frame.File, Line: frame.Line, Func: frame.Function})
-
-		if !more {
-			break
-		}
-	}
-
-	return slog.Any("stack", outputFrames)
+	slog.SetDefault(logger)
 }
 
 var (

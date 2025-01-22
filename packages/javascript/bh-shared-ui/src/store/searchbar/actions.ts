@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import * as types from './types';
 import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/edgeTypes';
+import * as types from './types';
 
 export const primarySearch = () => {
     return {

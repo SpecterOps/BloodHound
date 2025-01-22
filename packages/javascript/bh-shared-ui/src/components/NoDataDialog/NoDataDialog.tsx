@@ -15,14 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Dialog, DialogContent, DialogDescription, DialogPortal, DialogTitle } from '@bloodhoundenterprise/doodleui';
+import { PropsWithChildren } from 'react';
 
-type NoDataDialogProps = {
-    fileIngestLink: JSX.Element;
-    gettingStartedLink: JSX.Element;
-    open: boolean;
-};
+type NoDataDialogProps = PropsWithChildren<{ open: boolean }>;
 
-export const NoDataDialog: React.FC<NoDataDialogProps> = ({ fileIngestLink, gettingStartedLink, open }) => {
+export const NoDataDialog: React.FC<NoDataDialogProps> = ({ open, children }) => {
     return (
         <Dialog
             open={open}
@@ -31,12 +28,9 @@ export const NoDataDialog: React.FC<NoDataDialogProps> = ({ fileIngestLink, gett
                 document.body.style.pointerEvents = '';
             }}>
             <DialogPortal>
-                <DialogContent className='focus:outline-none' DialogOverlayProps={{ className: 'top-12' }}>
+                <DialogContent className='outline-none focus:outline-none'>
                     <DialogTitle>No Data Available</DialogTitle>
-                    <DialogDescription>
-                        To explore your environment, {fileIngestLink}, on the file ingest page. Need help? Check out the{' '}
-                        {gettingStartedLink} for instructions.
-                    </DialogDescription>
+                    <DialogDescription>{children}</DialogDescription>
                 </DialogContent>
             </DialogPortal>
         </Dialog>

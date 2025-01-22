@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { DeepPartial, apiClient } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import App, { Inner } from 'src/App';
-import { act, render, screen } from 'src/test-utils';
-import { DeepPartial, apiClient } from 'bh-shared-ui';
 import * as authSlice from 'src/ducks/auth/authSlice';
+import { act, render, screen } from 'src/test-utils';
 import { AppState } from './store';
 
 const server = setupServer(

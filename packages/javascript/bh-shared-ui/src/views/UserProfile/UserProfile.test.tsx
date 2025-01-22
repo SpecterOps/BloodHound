@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, within, waitFor } from '../../test-utils';
 import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor, within } from '../../test-utils';
 
 import UserProfile from './UserProfile';
 
