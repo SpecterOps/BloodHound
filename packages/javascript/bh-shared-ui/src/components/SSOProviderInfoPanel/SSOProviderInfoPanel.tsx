@@ -14,15 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Paper, Box, Typography, useTheme } from '@mui/material';
-import { FC, useMemo } from 'react';
-import fileDownload from 'js-file-download';
-import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider, Role } from 'js-client-library';
 import { Button, Label } from '@bloodhoundenterprise/doodleui';
-import { Field, FieldsContainer, usePaneStyles, useHeaderStyles } from '../../views/Explore';
-import LabelWithCopy from '../LabelWithCopy';
-import { apiClient } from '../../utils';
+import { Box, Paper, Typography, useTheme } from '@mui/material';
+import { OIDCProviderInfo, Role, SAMLProviderInfo, SSOProvider } from 'js-client-library';
+import fileDownload from 'js-file-download';
+import { FC, useMemo } from 'react';
 import { useNotifications } from '../../providers';
+import { apiClient } from '../../utils';
+import { Field, FieldsContainer, useHeaderStyles, usePaneStyles } from '../../views/Explore';
+import LabelWithCopy from '../LabelWithCopy';
 
 const SAMLProviderInfoPanel: FC<{
     samlProviderDetails: SAMLProviderInfo;

@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import userEvent from '@testing-library/user-event';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import { render, screen } from 'src/test-utils';
 import DatabaseManagement from '.';
-import userEvent from '@testing-library/user-event';
-import { setupServer } from 'msw/node';
-import { rest } from 'msw';
 
 describe('DatabaseManagement', () => {
     const server = setupServer(

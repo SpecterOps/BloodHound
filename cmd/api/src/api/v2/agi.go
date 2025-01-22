@@ -19,6 +19,7 @@ package v2
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -33,7 +34,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -271,14 +271,14 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			if err := s.GraphQuery.UpdateSelectorTags(request.Context(), s.DB, result); err != nil {
-				log.Warnf("Failed updating asset group tags; will be retried upon next analysis run: %v", err)
+				slog.WarnContext(request.Context(), fmt.Sprintf("Failed updating asset group tags; will be retried upon next analysis run: %v", err))
 			}
 
 			if assetGroup.Tag == model.TierZeroAssetGroupTag {
 				// When T0 asset group selectors are modified, entire analysis must be re-run
 				var userId string
 				if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-					log.Warnf("encountered request analysis for unknown user, this shouldn't happen")
+					slog.WarnContext(request.Context(), "encountered request analysis for unknown user, this shouldn't happen")
 					userId = "unknown-user-update-asset-group-selectors"
 				} else {
 					userId = user.ID.String()
@@ -484,7 +484,7 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 		// a member is custom if at least one selector exists for that object ID
 		for _, agSelector := range selectors {
 			if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-				log.Warnf("Objectid is missing for node %d", node.ID)
+				slog.Warn(fmt.Sprintf("Objectid is missing for node %d", node.ID))
 			} else if agSelector.Selector == objectId {
 				isCustomMember = true
 			}
@@ -496,14 +496,14 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 		)
 
 		if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-			log.Warnf("Objectid is missing for node %d", node.ID)
+			slog.Warn(fmt.Sprintf("Objectid is missing for node %d", node.ID))
 			memberObjectId = ""
 		} else {
 			memberObjectId = objectId
 		}
 
 		if name, err := node.Properties.Get(common.Name.String()).String(); err != nil {
-			log.Warnf("Name is missing for node %d", node.ID)
+			slog.Warn(fmt.Sprintf("Name is missing for node %d", node.ID))
 			memberName = ""
 		} else {
 			memberName = name
@@ -520,20 +520,20 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 
 		if node.Kinds.ContainsOneOf(azure.Entity) {
 			if tenantID, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
-				log.Warnf("%s is missing for node %d", azure.TenantID.String(), node.ID)
+				slog.Warn(fmt.Sprintf("%s is missing for node %d", azure.TenantID.String(), node.ID))
 			} else {
 				agMember.EnvironmentKind = azure.Tenant.String()
 				agMember.EnvironmentID = tenantID
 			}
 		} else if node.Kinds.ContainsOneOf(ad.Entity) {
 			if domainSID, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				log.Warnf("%s is missing for node %d", ad.DomainSID.String(), node.ID)
+				slog.Warn(fmt.Sprintf("%s is missing for node %d", ad.DomainSID.String(), node.ID))
 			} else {
 				agMember.EnvironmentKind = ad.Domain.String()
 				agMember.EnvironmentID = domainSID
 			}
 		} else {
-			log.Warnf("Node %d is missing valid base entity, skipping AG Membership...", node.ID)
+			slog.Warn(fmt.Sprintf("Node %d is missing valid base entity, skipping AG Membership...", node.ID))
 			continue
 		}
 

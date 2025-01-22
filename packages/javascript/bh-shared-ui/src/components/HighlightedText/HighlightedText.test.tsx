@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '../../test-utils';
 import HighlightedText from '.';
+import { render, screen } from '../../test-utils';
 
 describe('HighlightedText', () => {
     it('should render when search string is at the beginning of the text', () => {

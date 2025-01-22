@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import userEvent from '@testing-library/user-event';
 import { render, screen } from 'src/test-utils';
 import SaveQueryDialog from './SaveQueryDialog';
-import userEvent from '@testing-library/user-event';
 
 describe('SaveQueryDialog', () => {
     it('should render a SaveQueryDialog', () => {

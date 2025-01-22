@@ -1,0 +1,59 @@
+---
+title: NTAuthStore
+description: "This article outlines the NTAuthStore node in BloodHound, it describes the node's properties and possible incoming/outgoing edges."
+---
+
+## Representation
+
+The NTAuthStore node represents the Active Directory LDAP object named _NTAuthCertificates_ (of the _certificationAuthority_ class) located in the _Public Key Services_ container in the Configuration Naming Context.
+
+## Node properties
+
+The node supports the properties of the table. Three types of property names will be used, depending on where the property is found:
+
+* **Entity Panel:** Name shown in the BloodHound UI.
+* **Database:** Name stored in the BloodHound database and returned by the BloodHound API. This is to be used when running Cypher queries.
+* **Directory:** Name collected from the directory the node is stored in, for example, the LDAP name for an Active Directory property.
+
+|     |     |     |     |
+| --- | --- | --- | --- |
+| **Entity Panel** | **Database** | **Directory** | **Description** |
+| Object ID | objectid | objectGUID | The object's unique identifier in the directory. |
+| ACL Inheritance Denied | isaclprotected | nTSecurityDescriptor | Whether inherited permissions (ACEs) from containers are blocked on this object. |
+| Certificate Thumbprints | certthumbprints | caCertificate (X509Certificate) | The thumbprint (unique identifier) of the CA certificates trusted for NT authentication. |
+| Created | whencreated | whenCreated | When the object was created in the directory. |
+| Distinguished Name | distinguishedname | distinguishedName | The name of the object and its location in AD. |
+| Domain FQDN | domain | -   | The fully qualified domain name (FQDN) of the domain the object belongs to. |
+| Domain SID | domainsid | -   | The SID of the domain the object belongs to. |
+| Last Collected by BloodHound | lastseen | -   | When the object was last collected and ingested in BloodHound. |
+| -   | name | name + domain name | Name of the object + @ + the name of the domain. |
+
+## Edges
+
+The following edge types may be linked to/from this node. See the [edges documentation](/hc/en-us/sections/Edges) for more information on the edge types.
+
+### Incoming edges
+
+|     |     |
+| --- | --- |
+| **Edge type** | **Entity panel category** |
+| GenericAll | Inbound Object Control |
+| GenericWrite | Inbound Object Control |
+| Owns | Inbound Object Control |
+| TrustedForNTAuth | -   |
+| WriteDacl | Inbound Object Control |
+| WriteOwner | Inbound Object Control |
+
+### Outgoing edges
+
+|     |     |
+| --- | --- |
+| **Edge type** | **Entity panel category** |
+| NTAuthStoreFor | -   |
+
+## References
+
+* [https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wcce/f1004c63-8508-43b5-9b0b-ee7880183745](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wcce/f1004c63-8508-43b5-9b0b-ee7880183745)
+* [https://techcommunity.microsoft.com/t5/ask-the-directory-services-team/designing-and-implementing-a-pki-part-i-design-and-planning/ba-p/396953](https://techcommunity.microsoft.com/t5/ask-the-directory-services-team/designing-and-implementing-a-pki-part-i-design-and-planning/ba-p/396953) 
+* [https://learn.microsoft.com/en-us/windows/win32/adschema/c-certificationauthority](https://learn.microsoft.com/en-us/windows/win32/adschema/c-certificationauthority) 
+

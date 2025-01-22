@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { FC } from 'react';
-import { Typography, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Button } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { FC } from 'react';
 
 type CitrixRDPConfirmDialogProps = {
     open: boolean;

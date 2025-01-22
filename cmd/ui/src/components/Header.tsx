@@ -14,15 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCog, faUsersRectangle, faProjectDiagram } from '@fortawesome/free-solid-svg-icons';
+import { faCog, faProjectDiagram, faUsersRectangle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AppBar, Box, IconButton, Link, Toolbar, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import { MenuItem } from 'bh-shared-ui';
 import React from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
-import { MenuItem } from 'bh-shared-ui';
-import * as routes from 'src/ducks/global/routes';
 import SettingsMenu from 'src/components/SettingsMenu';
+import * as routes from 'src/ducks/global/routes';
 import { useAppSelector } from 'src/store';
 
 const useStyles = makeStyles((theme) => ({

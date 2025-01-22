@@ -19,11 +19,11 @@ package builder
 import (
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
 
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
@@ -128,7 +128,7 @@ func clearFiles(path string, entry os.DirEntry, err error) error {
 		return nil
 	}
 
-	log.Debugf("Removing %s", filepath.Join(path, entry.Name()))
+	slog.Debug(fmt.Sprintf("Removing %s", filepath.Join(path, entry.Name())))
 
 	if entry.IsDir() {
 		if err := os.RemoveAll(filepath.Join(path, entry.Name())); err != nil {

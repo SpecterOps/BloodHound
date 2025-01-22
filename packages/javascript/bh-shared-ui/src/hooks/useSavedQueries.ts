@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { RequestOptions, SavedQuery, CreateUserQueryRequest } from 'js-client-library';
+import { CreateUserQueryRequest, RequestOptions, SavedQuery } from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils/api';
 
