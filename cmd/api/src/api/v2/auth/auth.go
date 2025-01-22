@@ -418,17 +418,22 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			} else if provider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
+			} else if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), provider.SSOProviderID.Int32); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
 			} else {
 				// Ensure that the AuthSecret reference is nil and the SSO provider is set
 				user.AuthSecret = nil // Required or the below updateUser will re-add the authSecret
+				user.SSOProvider = &ssoProvider
 				user.SSOProviderID = provider.SSOProviderID
 			}
 		} else if updateUserRequest.SSOProviderID.Valid {
-			if _, err := s.db.GetSSOProviderById(request.Context(), updateUserRequest.SSOProviderID.Int32); err != nil {
+			if ssoProvider, err := s.db.GetSSOProviderById(request.Context(), updateUserRequest.SSOProviderID.Int32); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else {
 				user.AuthSecret = nil // Required or the below updateUser will re-add the authSecret
+				user.SSOProvider = &ssoProvider
 				user.SSOProviderID = updateUserRequest.SSOProviderID
 			}
 		} else {

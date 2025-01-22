@@ -17,13 +17,13 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import {
     Box,
-    Button as MuiButton,
     Dialog,
     DialogActions,
     DialogContent,
     DialogContentText,
     DialogTitle,
     Grid,
+    Button as MuiButton,
     TextField,
 } from '@mui/material';
 import withStyles from '@mui/styles/withStyles';

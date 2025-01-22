@@ -1,0 +1,87 @@
+---
+title: Getting started with BloodHound Enterprise
+description: "This article describes the step-by-step process of deploying and using BloodHound Enterprise, which is to be followed after being provided a [BloodHound Enterprise instance](/hc/en-us/articles/BloodHound-Enterprise-Tenant)."
+
+---
+
+<Frame>
+  <img src="/hc/article_attachments/24924875820827.png"/>
+</Frame>
+
+Don’t have an instance? [Request a demo and see why BloodHound Enterprise is awesome](https://bloodhoundenterprise.io/demo/).
+
+Information about the security of your BloodHound Enterprise instance is available in the article [BloodHound Enterprise Security Overview](/hc/en-us/articles/BloodHound-Enterprise-Security-Overview).
+
+## Granting access
+
+Your instance is pre-created with one or just a few administrative users. Granting your whole team access to BloodHound Enterprise with dedicated users and roles is recommended.
+
+BloodHound Enterprise supports two authentication methods:
+
+* Built-in authentication via username and password, supports TOTP-based multi-factor authentication.
+* SAML 2.0-based Single-Sign-On as described in [SAML in BloodHound Enterprise](/hc/en-us/articles/SAML-in-BloodHound).
+
+Your initial users will be configured with built-in authentication, thereafter you are free to configure SAML authentication, create users, and set user roles.
+
+One of four access control roles can be granted to every user as described in the article [User Roles](/hc/en-us/articles/Administering-users-and-roles).
+
+We recommend enabling multi-factor authentication for all users no matter the authentication method and user role. If using SAML authentication, your connected identity provider will be responsible for multi-factor authentication.
+
+## Deploy Data Collectors
+
+BloodHound Enterprise can analyze data collected by its two collector services, each collecting from a specific directory:
+
+* Active Directory, collected by SharpHound Enterprise
+* Entra ID and Azure, collected by AzureHound Enterprise
+
+The two services may be run from the same Windows system, however AzureHound Enterprise also supports Docker and Kubernetes.
+
+### Deploy SharpHound Enterprise (Active Directory)
+
+SharpHound Enterprise can collect [multiple data types](/hc/en-us/articles/SharpHound-Enterprise-Data-Collection-and-Permissions) from Active Directory and its domain-joined systems. It is recommended that all types be collected to identify most risks and for BloodHound Enterprise to calculate an accurate risk assessment.
+
+<Frame>
+  <img src="/hc/article_attachments/30567820642459.png"/>
+</Frame>
+
+No matter the collection type, the SharpHound Enterprise collector service must be installed on a domain-joined Windows system, and the service must run as an Active Directory account. Follow the below step-by-step:
+
+1.  [SharpHound Enterprise System Requirements](/hc/en-us/articles/SharpHound-Enterprise-System-Requirements-and-Deployment-Process)
+2.  Deploy and maintain SharpHound: [Install and Upgrade SharpHound Enterprise](/hc/en-us/articles/Install-and-Upgrade-SharpHound-Enterprise)
+    * Before deploying, we recommend reading the [SharpHound Service Hardening Guidelines](/hc/en-us/articles/SharpHound-Enterprise-Service-Hardening).
+3.  SharpHound Enterprise also supports [Cross-Trust Collection](/hc/en-us/articles/SharpHound-Enterprise-Cross-Trust-Collection).
+    * To fully secure a domain, we recommend collecting data from all other domains with a trust relationship to it (in- and outgoing trust).
+
+### Deploy AzureHound Enterprise (Entra ID and Azure)
+
+The AzureHound Enterprise collector service can be run on Windows, Docker, and Kubernetes. Follow the below step-by-step:
+
+1.  [AzureHound Enterprise System Requirements and Deployment Process](/hc/en-us/articles/AzureHound-Enterprise-System-Requirements-and-Deployment-Process)
+2.  Configure Azure: [AzureHound Enterprise Azure Configuration](/hc/en-us/articles/AzureHound-Enterprise-Azure-Configuration)
+3.  Create your AzureHound configuration: [AzureHound Enterprise Local Configuration](/hc/en-us/articles/Create-an-AzureHound-Configuration)
+4.  Deploy and maintain AzureHound: [Run and Upgrade AzureHound (Windows, Docker, or Kubernetes)](/hc/en-us/articles/Install-and-Upgrade-AzureHound-Windows-Docker-or-Kubernetes)
+
+## Verify data quality
+
+After data has been collected, click on settings <Icon icon="gear" iconType="solid"/> → **Administration**, select **Data Quality** and>
+
+1.  Verify that the collectors have collected the expected amount of data/number of principal types in each directory.
+2.  If using privileged collection, verify that the charts "Local Group Completeness Over Time" and "Session Completeness Over Time" both report higher than 0%. Bear in mind that obtaining 100% is not possible in most environments, e.g., due to workstations being offline during collection.
+
+If seeing lower-than-expected data quality you must examine data collection logs. Please reach out to your SpecterOps representative for assistance in this task.
+
+## Scoping Tier Zero
+
+BloodHound Enterprise will identify and prioritize attack paths, to get the most accurate assessment you should scope your Tier Zero objects, for this you should:
+
+* Scope Tier Zero for your environment, read [Tier Zero: Members and Modification](/hc/en-us/articles/Tier-Zero-Members-and-Modification).
+* Mark your environment's Tier Zero objects in BHE, read [Modifying Tier Zero](/hc/en-us/articles/Modifying-Tier-Zero).
+
+## Explore and remediate attack paths
+
+On the "Explore" page you can see identified attack paths, their prioritization, and recommended mitigations.
+
+For advanced usage, read the following articles:
+
+* [Working with the BloodHound Enterprise API](/hc/en-us/articles/Working-with-the-BloodHound-API)
+* [Overview of BloodHound Integrations](/hc/en-us/articles/Overview-of-BloodHound-Integrations)

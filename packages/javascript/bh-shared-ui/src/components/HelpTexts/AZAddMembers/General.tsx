@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
 import { Typography } from '@mui/material';
+import { FC } from 'react';
 
 const General: FC = () => {
     return <Typography variant='body2'>The ability to add other principals to an Azure security group</Typography>;

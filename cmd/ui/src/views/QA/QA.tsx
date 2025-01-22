@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, AlertTitle, Box, Grid, Link, Typography } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import {
     ActiveDirectoryPlatformInfo,
     AzurePlatformInfo,
@@ -25,9 +26,8 @@ import {
     TenantInfo,
 } from 'bh-shared-ui';
 import { useEffect, useState } from 'react';
-import { dataCollectionMessage } from './utils';
 import { useAppSelector } from 'src/store';
-import makeStyles from '@mui/styles/makeStyles';
+import { dataCollectionMessage } from './utils';
 
 const useStyles = makeStyles((theme) => ({
     container: {

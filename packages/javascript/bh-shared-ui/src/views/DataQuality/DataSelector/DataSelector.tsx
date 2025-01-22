@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { faGlobe, faCloud } from '@fortawesome/free-solid-svg-icons';
+import { faCloud, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert, Box, Divider, MenuItem, Popover, Skeleton, TextField, Tooltip, Typography } from '@mui/material';
 import { useAvailableDomains } from '../../../hooks';

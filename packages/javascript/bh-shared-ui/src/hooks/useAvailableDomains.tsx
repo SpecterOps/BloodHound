@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Domain } from 'js-client-library';
+import { useQuery, UseQueryOptions } from 'react-query';
 import { apiClient } from '../utils/api';
-import { UseQueryOptions, useQuery } from 'react-query';
 
 export const availableDomainKeys = {
     all: ['available-domains'],
