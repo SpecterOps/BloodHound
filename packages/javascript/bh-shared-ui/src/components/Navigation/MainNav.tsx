@@ -1,16 +1,31 @@
+// Copyright 2024 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { FC, useState, ReactNode } from 'react';
 import { useLocation, Link as RouterLink } from 'react-router-dom';
 import { useApiVersion } from '../../hooks';
-//To do: Put this whole file in bh-shared-ui and here only have the data and MainNav component imported
 
-const MainNavLogoTextImage: FC<{ MainNavLogoData: any }> = ({ MainNavLogoData }) => {
+const MainNavLogoTextImage: FC<{ mainNavLogoData: any }> = ({ mainNavLogoData }) => {
     return (
         <img
-            src={MainNavLogoData.image.imageUrl}
-            alt={MainNavLogoData.image.altText}
-            height={MainNavLogoData.image.dimensions.height}
-            width={MainNavLogoData.image.dimensions.width}
-            className={MainNavLogoData.image.classes}
+            src={mainNavLogoData.image.imageUrl}
+            alt={mainNavLogoData.image.altText}
+            height={mainNavLogoData.image.dimensions.height}
+            width={mainNavLogoData.image.dimensions.width}
+            className={mainNavLogoData.image.classes}
         />
     );
 };
@@ -93,7 +108,7 @@ const MainNavVersionNumber: FC<{ isMenuExpanded: boolean }> = ({ isMenuExpanded 
     );
 };
 
-const MainNav: FC<{ MainNavLogoData: any; MainNavListData: any }> = ({ MainNavLogoData, MainNavListData }) => {
+const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
     const [isMenuExpanded, setIsMenuExpanded] = useState(false);
 
     return (
@@ -102,17 +117,17 @@ const MainNav: FC<{ MainNavLogoData: any; MainNavListData: any }> = ({ MainNavLo
             className={`z-[1201] fixed top-0 left-0 h-full ${isMenuExpanded ? 'w-72 overflow-y-auto overflow-x-hidden' : 'w-16'} duration-300 ease-in flex flex-col items-center pt-4  bg-neutral-light-2 text-neutral-dark-0 dark:bg-neutral-dark-2 dark:text-neutral-light-1 print:hidden shadow-sm`}
             onMouseEnter={() => setIsMenuExpanded(true)}
             onMouseLeave={() => setIsMenuExpanded(false)}>
-            <MainNavItemLink route={MainNavLogoData.route} isMenuExpanded={isMenuExpanded}>
+            <MainNavItemLink route={mainNavData.logo.route} isMenuExpanded={isMenuExpanded}>
                 <MainNavItemLabel
-                    icon={MainNavLogoData.icon}
-                    label={<MainNavLogoTextImage MainNavLogoData={MainNavLogoData} />}
+                    icon={mainNavData.logo.icon}
+                    label={<MainNavLogoTextImage mainNavLogoData={mainNavData.logo} />}
                     isMenuExpanded={isMenuExpanded}
                 />
             </MainNavItemLink>
             {/* Note: min height here is to keep the version number in bottom of nav */}
             <div className='h-full min-h-[700px] w-full flex flex-col justify-between mt-6'>
                 <ul className='flex flex-col gap-6 mt-8'>
-                    {MainNavListData.primary.map((listDataItem: any) => (
+                    {mainNavData.primaryList.map((listDataItem: any) => (
                         <MainNavListItem key={listDataItem.testid} route={listDataItem.route as string}>
                             <MainNavItemLink route={listDataItem.route as string} isMenuExpanded={isMenuExpanded}>
                                 <MainNavItemLabel
@@ -125,7 +140,7 @@ const MainNav: FC<{ MainNavLogoData: any; MainNavListData: any }> = ({ MainNavLo
                     ))}
                 </ul>
                 <ul className='flex flex-col gap-6 mt-16'>
-                    {MainNavListData.secondary.map((listDataItem: any) =>
+                    {mainNavData.secondaryList.map((listDataItem: any) =>
                         listDataItem.route ? (
                             <MainNavListItem key={listDataItem.testid} route={listDataItem.route as string}>
                                 <MainNavItemLink route={listDataItem.route as string} isMenuExpanded={isMenuExpanded}>
