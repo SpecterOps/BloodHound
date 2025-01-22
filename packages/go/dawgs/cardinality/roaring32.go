@@ -143,6 +143,10 @@ func (s bitmap32) Clone() Duplex[uint32] {
 	}
 }
 
+func (s bitmap32) CloneProvider() Provider[uint32] {
+	return s.Clone()
+}
+
 func (s bitmap32) AndNot(provider Provider[uint32]) {
 	switch typedProvider := provider.(type) {
 	case bitmap32:

@@ -27,6 +27,7 @@ type Provider[T uint32 | uint64] interface {
 	Or(other Provider[T])
 	Clear()
 	Cardinality() uint64
+	CloneProvider() Provider[T]
 }
 
 func CloneProvider[T uint32 | uint64](provider Provider[T]) Provider[T] {

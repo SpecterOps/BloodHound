@@ -141,6 +141,10 @@ func (s bitmap64) Clone() Duplex[uint64] {
 	}
 }
 
+func (s bitmap64) CloneProvider() Provider[uint64] {
+	return s.Clone()
+}
+
 func (s bitmap64) AndNot(provider Provider[uint64]) {
 	switch typedProvider := provider.(type) {
 	case bitmap64:

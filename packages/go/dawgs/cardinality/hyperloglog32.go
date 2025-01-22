@@ -48,6 +48,10 @@ func (s *hyperLogLog32) Clone() Simplex[uint32] {
 	}
 }
 
+func (s *hyperLogLog32) CloneProvider() Provider[uint32] {
+	return s.Clone()
+}
+
 func (s *hyperLogLog32) Clear() {
 	s.sketch = hyperloglog.New14()
 }

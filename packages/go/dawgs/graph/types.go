@@ -23,6 +23,112 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util/size"
 )
 
+type KindCardinality struct {
+	providers   map[string]cardinality.Provider[uint64]
+	constructor cardinality.ProviderConstructor[uint64]
+}
+
+func NewKindCardinality(constructor cardinality.ProviderConstructor[uint64]) *KindCardinality {
+	return &KindCardinality{
+		providers:   make(map[string]cardinality.Provider[uint64]),
+		constructor: constructor,
+	}
+}
+
+func (s KindCardinality) Get(kinds ...Kind) cardinality.Provider[uint64] {
+	combinedProvider := s.constructor()
+
+	if len(kinds) == 0 {
+		for _, provider := range s.providers {
+			combinedProvider.Or(provider)
+		}
+	} else {
+		for _, kind := range kinds {
+			if provider, hasKind := s.providers[kind.String()]; hasKind {
+				combinedProvider.Or(provider)
+			}
+		}
+	}
+
+	return combinedProvider
+}
+
+func (s KindCardinality) Count(kinds ...Kind) uint64 {
+	return s.Get(kinds...).Cardinality()
+}
+
+func (s KindCardinality) Or(others KindCardinality) {
+	for kindStr, otherProvider := range others.providers {
+		if existingProvider, hasProvider := s.providers[kindStr]; !hasProvider {
+			newProvider := s.constructor()
+			newProvider.Or(otherProvider)
+
+			s.providers[kindStr] = newProvider
+		} else {
+			existingProvider.Or(otherProvider)
+		}
+	}
+}
+
+func (s KindCardinality) AddSets(nodeSets ...NodeSet) {
+	for _, nodeSet := range nodeSets {
+		for _, node := range nodeSet {
+			s.AddIDToKinds(node.ID, node.Kinds)
+		}
+	}
+}
+
+func (s KindCardinality) OrAll() cardinality.Provider[uint64] {
+	all := s.constructor()
+
+	for _, provider := range s.providers {
+		all.Or(provider)
+	}
+
+	return all
+}
+
+func (s KindCardinality) AddProviderToKind(other cardinality.Provider[uint64], kind Kind) {
+	kindStr := kind.String()
+
+	if provider, hasProvider := s.providers[kindStr]; !hasProvider {
+		newProvider := s.constructor()
+		newProvider.Or(other)
+
+		s.providers[kindStr] = newProvider
+	} else {
+		provider.Or(other)
+	}
+}
+
+func (s KindCardinality) AddIDToKind(id ID, kind Kind) {
+	var (
+		nodeID  = id.Uint64()
+		kindStr = kind.String()
+	)
+
+	if provider, hasProvider := s.providers[kindStr]; !hasProvider {
+		newProvider := s.constructor()
+		newProvider.Add(nodeID)
+
+		s.providers[kindStr] = newProvider
+	} else {
+		provider.Add(nodeID)
+	}
+}
+
+func (s KindCardinality) AddIDToKinds(id ID, kinds Kinds) {
+	for _, kind := range kinds {
+		s.AddIDToKind(id, kind)
+	}
+}
+
+func (s KindCardinality) AddNodes(nodes ...*Node) {
+	for _, node := range nodes {
+		s.AddIDToKinds(node.ID, node.Kinds)
+	}
+}
+
 type KindBitmaps map[string]cardinality.Duplex[uint64]
 
 func (s KindBitmaps) Get(kinds ...Kind) cardinality.Duplex[uint64] {

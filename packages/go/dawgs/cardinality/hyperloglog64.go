@@ -48,6 +48,10 @@ func (s *hyperLogLog64) Clone() Simplex[uint64] {
 	}
 }
 
+func (s *hyperLogLog64) CloneProvider() Provider[uint64] {
+	return s.Clone()
+}
+
 func (s *hyperLogLog64) Clear() {
 	s.sketch = hyperloglog.NewNoSparse()
 }

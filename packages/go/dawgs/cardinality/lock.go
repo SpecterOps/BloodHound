@@ -123,6 +123,10 @@ func (s threadSafeDuplex[T]) Clone() Duplex[T] {
 	return ThreadSafeDuplex(s.provider.Clone())
 }
 
+func (s threadSafeDuplex[T]) CloneProvider() Provider[T] {
+	return s.Clone()
+}
+
 type threadSafeSimplex[T uint32 | uint64] struct {
 	provider Simplex[T]
 	lock     *sync.Mutex
@@ -168,4 +172,8 @@ func (s threadSafeSimplex[T]) Clone() Simplex[T] {
 	defer s.lock.Unlock()
 
 	return ThreadSafeSimplex(s.provider.Clone())
+}
+
+func (s threadSafeSimplex[T]) CloneProvider() Provider[T] {
+	return s.Clone()
 }
