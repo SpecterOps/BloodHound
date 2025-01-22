@@ -12752,6 +12752,7 @@
           },
           {
             "name": "Accepted",
+            "deprecated": true,
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -12824,16 +12825,16 @@
                 },
                 "examples": {
                   "Butterfly Relationship Finding": {
-                    "value": "findingType,exposureCount,impactCount,domainSID,nonTier0Principal,nonTier0PrincipalObjectID,nonTier0PrincipalObjectType,tier0Principal,tier0PrincipalObjectID,tier0PrincipalObjectType,domain,acceptedUntil,firstObserved,lastObserved,isInherited\nTier Zero Generic Write,500,5,S-1-5-21-123-123-123,RPATTON@TITANCORP.LOCAL,S-1-5-21-123-123-123,User,RPATTON DELEGATION TEST@TITANCORP.LOCAL,S-1-5-21-124-124-124,User,TITANCORP,0001-01-01T00:00:00Z,2022-08-17T23:44:24Z,2024-12-18T15:01:00.176572729Z,Yes\n"
+                    "value": "id,finding_type,exposure_count,exposure_percentage,impact_count,impact_percentage,domain_sid,from_principal_name,from_principal,from_principal_kind,to_principal_name,to_principal,to_principal_kind,combo_graph_relation_id,domain,accepted,accepted_until,principals_hash,created_at,updated_at,is_inherited\n1,Tier Zero Generic Write,500,0.6711,1000,0.9961,5,S-1-5-21-123-123-123,RPATTON@TITANCORP.LOCAL,S-1-5-21-123-123-123,User,RPATTON DELEGATION TEST@TITANCORP.LOCAL,S-1-5-21-124-124-124,User,2,TITANCORP,true,0001-01-01T00:00:00Z,1lQiVG3hOuM=,2022-08-17T23:44:24Z,2024-12-18T15:01:00.176572729Z,Yes\n"
                   },
                   "Metatree Relationship Finding": {
-                    "value": "findingType,domainSID,nonTier0Principal,nonTier0PrincipalObjectID,tier0Principal,tier0PrincipalObjectID,acceptedUntil,firstObserved,lastObserved\nTier Zero Generic Write,S-1-5-21-123-123-123,RPATTON@TITANCORP.LOCAL,S-1-5-21-123-123-123,RPATTON DELEGATION TEST@TITANCORP.LOCAL,S-1-5-21-124-124-124,0001-01-01T00:00:00Z,2022-08-17T23:44:24Z,2024-12-18T15:01:00.176572729Z\n"
+                    "value": "id,finding_type,exposure_count,exposure_percentage,impact_count,impact_percentage,domain_sid,from_principal_name,from_principal,from_principal_kind,to_principal_name,to_principal,to_principal_kind,combo_graph_relation_id,domain,accepted,accepted_until,principals_hash,created_at,updated_at,is_inherited\n1,Tier Zero Generic Write,0,0,0,0,5,S-1-5-21-123-123-123,RPATTON@TITANCORP.LOCAL,S-1-5-21-123-123-123,User,RPATTON DELEGATION TEST@TITANCORP.LOCAL,S-1-5-21-124-124-124,User,0,TITANCORP,true,0001-01-01T00:00:00Z,1lQiVG3hOuM=,2022-08-17T23:44:24Z,2024-12-18T15:01:00.176572729Z,Yes\n"
                   },
                   "Butterfly List Finding": {
-                    "value": "findingType,exposureCount,domainSID,objectType,principal,principalObjectID,acceptedUntil,firstObserved,lastObserved\nKerberoasting,7,S-1-5-21-123-123-123,User,RPATTON@TITANCORP.LOCAL,S-1-5-21-124-124-124,0001-01-01T00:00:00Z,2022-08-17T23:44:24Z,2024-12-18T15:01:00.176572729Z\n"
+                    "value": "id,finding_type,impact_count,impact_percentage,domain,domain_sid,principal_name,principal_kind,principal,accepted,accepted_until,created_at,updated_at\n1,Kerberoasting,800,0.9961,TITANCORP,S-1-5-21-123-123-123,RPATTON@TITANCORP.LOCAL,User,S-1-5-21-124-124-124,true,0001-01-01T00:00:00Z,2022-08-17T23:44:24Z,2024-12-18T15:01:00.176572729Z\n"
                   },
                   "Metatree List Finding": {
-                    "value": "findingType,domainSID,user,userSID,acceptedUntil,firstObserved,lastObserved\nKerberoasting,S-1-5-21-123-123-123,RPATTON@TITANCORP.LOCAL,S-1-5-21-124-124-124,0001-01-01T00:00:00Z,2022-08-17T23:44:24Z,2024-12-18T15:01:00.176572729Z\n"
+                    "value": "id,finding_type,impact_count,impact_percentage,domain,domain_sid,principal_name,principal_kind,principal,accepted,accepted_until,created_at,updated_at\n1,Kerberoasting,0,0,TITANCORP,S-1-5-21-123-123-123,RPATTON@TITANCORP.LOCAL,User,S-1-5-21-124-124-124,true,0001-01-01T00:00:00Z,2022-08-17T23:44:24Z,2024-12-18T15:01:00.176572729Z\n"
                   }
                 }
               },
@@ -12919,6 +12920,7 @@
                             "time": "2024-08-28T21:21:40.845Z",
                             "valid": true
                           },
+                          "FromPrincipalName": "string",
                           "FromPrincipal": "string",
                           "ToPrincipal": "string",
                           "FromPrincipalProps": {
@@ -12927,6 +12929,7 @@
                             "additionalProp3": {}
                           },
                           "FromPrincipalKind": "string",
+                          "ToPrincipalName": "string",
                           "ToPrincipalProps": {
                             "additionalProp1": {},
                             "additionalProp2": {},
@@ -12943,6 +12946,7 @@
                             "valid": true
                           },
                           "Finding": "string",
+                          "Domain": "string",
                           "DomainSID": "string",
                           "PrincipalHash": "string",
                           "AcceptedUntil": "2024-08-28T21:21:40.845Z",
@@ -12951,7 +12955,8 @@
                           "ExposurePercentage": 0.24,
                           "ExposureCount": 4,
                           "Severity": "high",
-                          "Accepted": true
+                          "Accepted": true,
+                          "IsInherited": true
                         }
                       ]
                     }
@@ -12972,8 +12977,10 @@
                             "time": "2024-08-28T21:21:40.845Z",
                             "valid": true
                           },
+                          "FromPrincipalName": "string",
                           "FromPrincipal": "string",
                           "ToPrincipal": "string",
+                          "ToPrincipalName": "string",
                           "FromPrincipalProps": {
                             "additionalProp1": {},
                             "additionalProp2": {},
@@ -12996,6 +13003,7 @@
                             "valid": true
                           },
                           "Finding": "string",
+                          "Domain": "string",
                           "DomainSID": "string",
                           "PrincipalHash": "string",
                           "AcceptedUntil": "2024-08-28T21:21:40.845Z",
@@ -13004,7 +13012,8 @@
                           "ExposurePercentage": 0,
                           "ExposureCount": 0,
                           "Severity": "",
-                          "Accepted": true
+                          "Accepted": true,
+                          "IsInherited": true
                         }
                       ]
                     }
@@ -13027,7 +13036,9 @@
                           },
                           "Principal": "string",
                           "PrincipalKind": "string",
+                          "PrincipalName": "string",
                           "Finding": "string",
+                          "Domain": "string",
                           "DomainSID": "string",
                           "Props": {
                             "additionalProp1": {},
@@ -13061,7 +13072,9 @@
                           },
                           "Principal": "string",
                           "PrincipalKind": "string",
+                          "PrincipalName": "string",
                           "Finding": "string",
+                          "Domain": "string",
                           "DomainSID": "string",
                           "Props": {
                             "additionalProp1": {},
