@@ -1,0 +1,39 @@
+---
+title: 2023-04-25 Release Notes
+---
+
+## Summary
+
+* **BloodHound Enterprise**
+    * Improved Functionality - Exact matches will appear first when searching on the Explore page.
+    * Bug Fixes - Fixed an issue with the "accepted" filter on the /api/v2/domains/{domain_id}/details endpoint.
+* **SharpHound Enterprise (v2.1.5)**
+    * Bug Fixes - Resolved an issue where the SharpHound service would crash in specific circumstances.
+* **AzureHound Enterprise (v2.0.1)**
+    * _No release this week._
+
+### BloodHound Enterprise
+
+#### Improved Functionality
+
+* Exact match results will now appear first when searching on the Explore page. This helps organizations that use common strings with prefixes on them to find desired objects more easily.
+
+#### Bug Fixes
+
+* The "accepted" filter on the /api/v2/domains//\{domain\_id}/details endpoint now appropriately accounts for the "accepted\_until" date marked on the individual finding.
+
+### SharpHound Enterprise (v2.1.5)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.1.4_
+
+#### Bug Fixes
+
+* Resolved an issue where the SharpHound service would crash in specific circumstances.
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the “User Rights Assignment Collection” experimental feature at the same time. Please contact your TAM or respond to this email for assistance.
+
+### AzureHound Enterprise (v2.0.1)
+
+_Minimum version of AzureHound Service to support all current functionality: v2.0.1_
+
+_No release this week._

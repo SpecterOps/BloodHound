@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import userEvent from '@testing-library/user-event';
 import { render, screen } from 'src/test-utils';
 import ConfirmationDialog from './ConfirmationDialog';
-import userEvent from '@testing-library/user-event';
 
 describe('Confirmation Dialog', () => {
     const handleClose = vi.fn();

@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { SnackbarKey } from 'notistack';
 import { Notification } from 'bh-shared-ui';
+import { SnackbarKey } from 'notistack';
 
 const GLOBAL_ADD_SNACKBAR = 'app/global/ADDSNACKBAR';
 const GLOBAL_CLOSE_SNACKBAR = 'app/global/CLOSESNACKBAR';
@@ -30,14 +30,14 @@ const GLOBAL_SET_DARK_MODE = 'app/global/GLOBALSETDARKMODE';
 export {
     GLOBAL_ADD_SNACKBAR,
     GLOBAL_CLOSE_SNACKBAR,
-    GLOBAL_REMOVE_SNACKBAR,
-    GLOBAL_SET_EXPANDED,
-    GLOBAL_SET_DOMAIN,
     GLOBAL_FETCH_ASSET_GROUPS,
+    GLOBAL_REMOVE_SNACKBAR,
     GLOBAL_SET_ASSET_GROUPS,
-    GLOBAL_SET_ASSET_GROUP_INDEX,
     GLOBAL_SET_ASSET_GROUP_EDIT,
+    GLOBAL_SET_ASSET_GROUP_INDEX,
     GLOBAL_SET_DARK_MODE,
+    GLOBAL_SET_DOMAIN,
+    GLOBAL_SET_EXPANDED,
 };
 
 export interface GlobalViewState {

@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, waitFor } from '../../test-utils';
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { render, screen, waitFor } from '../../test-utils';
 
 import Enable2FADialog from './Enable2FADialog';
 

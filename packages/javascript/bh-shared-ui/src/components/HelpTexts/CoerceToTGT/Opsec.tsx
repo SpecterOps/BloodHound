@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
 import { Typography } from '@mui/material';
+import { FC } from 'react';
 
 const Opsec: FC = () => {
     return <Typography variant='body2'>There is no opsec information for this edge.</Typography>;

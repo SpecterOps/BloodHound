@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '../../test-utils';
 import NoDataDialog from '.';
+import { render, screen } from '../../test-utils';
 
 const gettingStartedLinkText = 'Getting Started guide';
 const fileIngestLinkText = 'start by uploading your data';
@@ -23,11 +23,9 @@ const fileIngestLinkText = 'start by uploading your data';
 describe('NoDataDialog', () => {
     it('should render', () => {
         render(
-            <NoDataDialog
-                gettingStartedLink={<>{gettingStartedLinkText}</>}
-                fileIngestLink={<>{fileIngestLinkText}</>}
-                open={true}
-            />
+            <NoDataDialog open={true}>
+                Getting Started: {gettingStartedLinkText} File Ingest: {fileIngestLinkText}
+            </NoDataDialog>
         );
 
         expect(screen.getByText('No Data Available')).toBeInTheDocument();
@@ -36,11 +34,9 @@ describe('NoDataDialog', () => {
     });
     it('should not render when data is present', () => {
         render(
-            <NoDataDialog
-                gettingStartedLink={<>{gettingStartedLinkText}</>}
-                fileIngestLink={<>{fileIngestLinkText}</>}
-                open={false}
-            />
+            <NoDataDialog open={false}>
+                Getting Started: {gettingStartedLinkText} File Ingest: {fileIngestLinkText}
+            </NoDataDialog>
         );
 
         expect(screen.queryByText('No Data Available')).not.toBeInTheDocument();

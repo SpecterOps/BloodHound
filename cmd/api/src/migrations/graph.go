@@ -30,7 +30,7 @@ import (
 
 type Migration struct {
 	Version version.Version
-	Execute func(db graph.Database) error
+	Execute func(ctx context.Context, db graph.Database) error
 }
 
 func UpdateMigrationData(ctx context.Context, db graph.Database, target version.Version) error {
@@ -146,13 +146,17 @@ func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion v
 		if nextMigration.Version.GreaterThan(mostRecentVersion) {
 			slog.InfoContext(ctx, fmt.Sprintf("Graph migration version %s is greater than current version %s", nextMigration.Version, mostRecentVersion))
 
-			if err := nextMigration.Execute(s.db); err != nil {
+			if err := nextMigration.Execute(ctx, s.db); err != nil {
 				return fmt.Errorf("migration version %s failed: %w", nextMigration.Version.String(), err)
 			}
 
 			slog.InfoContext(ctx, fmt.Sprintf("Graph migration version %s executed successfully", nextMigration.Version))
 			mostRecentVersion = nextMigration.Version
 		}
+	}
+
+	if releaseVersion := version.GetVersion(); releaseVersion.GreaterThan(mostRecentVersion) {
+		mostRecentVersion = releaseVersion
 	}
 
 	if mostRecentVersion.GreaterThan(originalVersion) {

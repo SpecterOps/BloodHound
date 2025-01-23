@@ -19,8 +19,8 @@ import {
     CYPHER_SEARCH,
     PATHFINDING_SEARCH,
     PRIMARY_SEARCH,
-    initialSearchState,
     searchbarActions as actions,
+    initialSearchState,
 } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
