@@ -119,9 +119,9 @@ func InitializeLogging(cfg config.Configuration) error {
 	}
 
 	if cfg.EnableTextLogger {
-		bhlog.ConfigureDefaultText()
+		bhlog.ConfigureDefaultText(os.Stdout)
 	} else {
-		bhlog.ConfigureDefaultJSON()
+		bhlog.ConfigureDefaultJSON(os.Stdout)
 	}
 	level.SetGlobalLevel(logLevel)
 
