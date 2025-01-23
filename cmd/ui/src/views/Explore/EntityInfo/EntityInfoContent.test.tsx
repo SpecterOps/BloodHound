@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import EntityInfoContent from './EntityInfoContent';
-import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
-import { render, screen, waitForElementToBeRemoved } from 'src/test-utils';
+import userEvent from '@testing-library/user-event';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { AzureNodeKind, ActiveDirectoryNodeKind } from 'bh-shared-ui';
-import userEvent from '@testing-library/user-event';
+import { render, screen, waitForElementToBeRemoved } from 'src/test-utils';
+import EntityInfoContent from './EntityInfoContent';
+import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 const server = setupServer(
     rest.get('/api/v2/azure/roles', (req, res, ctx) => {

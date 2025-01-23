@@ -19,12 +19,12 @@ package services
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	schema "github.com/specterops/bloodhound/graphschema"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/registration"
 	"github.com/specterops/bloodhound/src/api/router"
@@ -83,7 +83,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	} else if err := connections.Graph.SetDefaultGraph(ctx, schema.DefaultGraph()); err != nil {
 		return nil, fmt.Errorf("no default graph found but migrations are disabled per configuration: %w", err)
 	} else {
-		log.Infof("Database migrations are disabled per configuration")
+		slog.InfoContext(ctx, "Database migrations are disabled per configuration")
 	}
 
 	if apiCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {
@@ -112,7 +112,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		// Trigger analysis on first start
 		if err := connections.RDMS.RequestAnalysis(ctx, "init"); err != nil {
-			log.Warnf("failed to request init analysis: %v", err)
+			slog.WarnContext(ctx, fmt.Sprintf("failed to request init analysis: %v", err))
 		}
 
 		return []daemons.Daemon{

@@ -18,12 +18,13 @@ package datapipe
 
 import (
 	"errors"
+	"fmt"
 	"io"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/ein"
-	"github.com/specterops/bloodhound/log"
 )
 
 /*
@@ -49,7 +50,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 		// This variable needs to be initialized here, otherwise the marshaller will cache the map in the struct
 		var decodeTarget T
 		if err := decoder.Decode(&decodeTarget); err != nil {
-			log.Errorf("Error decoding %T object: %v", decodeTarget, err)
+			slog.Error(fmt.Sprintf("Error decoding %T object: %v", decodeTarget, err))
 			if errors.Is(err, io.EOF) {
 				break
 			}
@@ -93,10 +94,11 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 	for decoder.More() {
 		var group ein.Group
 		if err = decoder.Decode(&group); err != nil {
-			log.Errorf("Error decoding group object: %v", err)
+			slog.Error(fmt.Sprintf("Error decoding group object: %v", err))
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			return err
 		} else {
 			count++
 			convertGroupData(group, &convertedData)
@@ -134,10 +136,11 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 	for decoder.More() {
 		var session ein.Session
 		if err = decoder.Decode(&session); err != nil {
-			log.Errorf("Error decoding session object: %v", err)
+			slog.Error(fmt.Sprintf("Error decoding session object: %v", err))
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			return err
 		} else {
 			count++
 			convertSessionData(session, &convertedData)
@@ -175,10 +178,11 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 	for decoder.More() {
 		var data AzureBase
 		if err = decoder.Decode(&data); err != nil {
-			log.Errorf("Error decoding azure object: %v", err)
+			slog.Error(fmt.Sprintf("Error decoding azure object: %v", err))
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			return err
 		} else {
 			convert := getKindConverter(data.Kind)
 			convert(data.Data, &convertedData)

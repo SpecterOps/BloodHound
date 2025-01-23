@@ -1,0 +1,41 @@
+---
+title: 2023-06-20 Release Notes
+---
+
+## Summary
+
+* **BloodHound Enterprise**
+    * New and Improved Features - Performance improvements in Inbound/Outbound Object Control in entity panels.
+    * Bug Fixes - Improved accuracy in Inbound/Outbound controls, GetChangesInFilteredSet will no longer appear in Pathfinding.
+* **SharpHound Enterprise (v2.1.7)**
+    * New and Improved Features - SharpHound will utilize a 60-second timeout for data upload to API.
+* **AzureHound Enterprise (v2.0.4)**
+    * New and Improved Features - AzureHound will utilize a 60-second timeout for data upload to API.
+
+### BloodHound Enterprise
+
+#### Improved Functionality
+
+* **Improved Inbound/Outbound Object Control Performance -** The logic for entity panels' Inbound and Outbound Object Control sections has been completely rewritten for improved speed and performance.
+
+#### Bug Fixes
+
+* Alongside the performance improvements, Inbound and Outbound Object Control sections are now more accurate for which objects are included in the result sets.
+* GetChangesInFilteredSet is not an exploitable escalation path on its own and has been excluded from Pathfinding queries. This edge is automatically considered where appropriate for the DCSync edge alongside GetChanges and GetChangesAll.
+
+### SharpHound Enterprise (v2.1.7)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.1.6_
+
+#### Improved Functionality
+
+* **Extended Upload Timeout -** In specific environments, SharpHound would time out during the upload of data to BloodHound Enterprise APIs. SharpHound will now utilize an extended 60-second timeout window (previously 30 seconds) to help improve success in these environments.
+
+### AzureHound Enterprise (v2.0.4)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.0.3_
+
+#### Improved Functionality
+
+* **Extended Upload Timeout -** AzureHound would time out during the upload of data to BloodHound Enterprise APIs in specific environments. AzureHound will now utilize an extended 60-second timeout window (previously 30 seconds) to help improve success in these environments.
+

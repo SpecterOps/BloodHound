@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
-import useCollapsibleSectionStyles from './InfoStyles/CollapsibleSection';
 import React, { PropsWithChildren } from 'react';
 import { EntityField, format } from '../../utils';
+import useCollapsibleSectionStyles from './InfoStyles/CollapsibleSection';
 
 export const exclusionList = [
     'gid',

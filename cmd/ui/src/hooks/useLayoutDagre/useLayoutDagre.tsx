@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import AbstractGraph, { Attributes } from 'graphology-types';
 import dagre from 'dagrejs';
+import AbstractGraph, { Attributes } from 'graphology-types';
 import { getEdgeDataFromKey } from 'src/ducks/graph/utils';
 
 export const NODE_DEFAULT_SIZE = 10;

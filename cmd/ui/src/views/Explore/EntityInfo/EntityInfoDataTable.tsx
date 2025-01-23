@@ -17,9 +17,9 @@
 import {
     EntityInfoDataTableProps,
     InfiniteScrollingTable,
+    NODE_GRAPH_RENDER_LIMIT,
     abortEntitySectionRequest,
     searchbarActions,
-    NODE_GRAPH_RENDER_LIMIT,
 } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
 import { useDispatch } from 'react-redux';

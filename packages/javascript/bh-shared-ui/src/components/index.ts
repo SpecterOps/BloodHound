@@ -124,8 +124,6 @@ export { default as LoginForm } from './LoginForm';
 export * from './MenuItem';
 export { default as MenuItem } from './MenuItem';
 
-export { default as NoDataAlert } from './NoDataAlert';
-
 export { default as NoDataDialog } from './NoDataDialog';
 
 export * from './NodeIcon';

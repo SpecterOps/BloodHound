@@ -17,9 +17,12 @@
 package impact
 
 import (
+	"fmt"
+	"log/slog"
+
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 )
 
 // Aggregator is a cardinality aggregator for paths and shortcut paths.
@@ -158,8 +161,8 @@ func (s Aggregator) resolve(targetID uint64) cardinality.Provider[uint64] {
 }
 
 func (s Aggregator) Cardinality(targets ...uint64) cardinality.Provider[uint64] {
-	log.Debugf("Calculating pathMembers cardinality for %d targets", len(targets))
-	defer log.Measure(log.LevelDebug, "Calculated pathMembers cardinality for %d targets", len(targets))()
+	slog.Debug(fmt.Sprintf("Calculating pathMembers cardinality for %d targets", len(targets)))
+	defer measure.Measure(slog.LevelDebug, "Calculated pathMembers cardinality", "num_targets", len(targets))()
 
 	impact := s.newCardinalityProvider()
 

@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Box, Link } from '@mui/material';
 import { FC } from 'react';
-import { Link, Box } from '@mui/material';
 
 const References: FC = () => {
     return (
@@ -30,9 +30,25 @@ const References: FC = () => {
             <Link target='_blank' rel='noopener' href='https://adsecurity.org/?p=3164'>
                 https://adsecurity.org/?p=3164
             </Link>
-            <Link target='_blank' rel='noopener' href='https://www.thehacker.recipes/ad/movement/dacl/readlapspassword'>
-                https://www.thehacker.recipes/ad/movement/dacl/readlapspassword
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword'>
+                https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword
             </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
+                https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt
+            </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://github.com/CravateRouge/bloodyAD'>
+                https://github.com/CravateRouge/bloodyAD
+            </Link>
+            <br />
         </Box>
     );
 };
