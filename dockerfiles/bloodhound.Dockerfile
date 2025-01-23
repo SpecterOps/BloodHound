@@ -100,7 +100,7 @@ RUN sha256sum azurehound-$AZUREHOUND_VERSION.zip > azurehound-$AZUREHOUND_VERSIO
 ########
 # Package Bloodhound
 ################
-FROM gcr.io/distroless/static-debian11 as bloodhound
+FROM gcr.io/distroless/static-debian11
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 
