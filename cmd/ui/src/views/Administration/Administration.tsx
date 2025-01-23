@@ -15,11 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, CircularProgress, Container } from '@mui/material';
-import { GenericErrorBoundaryFallback, Permission } from 'bh-shared-ui';
+import { GenericErrorBoundaryFallback, Permission, SubNav } from 'bh-shared-ui';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import LeftNav from 'src/components/LeftNav';
 import {
     ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
     ROUTE_ADMINISTRATION_DATA_QUALITY,
@@ -133,7 +132,7 @@ const Administration: React.FC = () => {
 
     return (
         <Box display='flex' minHeight='100%'>
-            <LeftNav sections={adminFilteredSections} />
+            <SubNav sections={adminFilteredSections} />
             <Box flexGrow={1} position='relative' minWidth={0}>
                 <main>
                     <Container maxWidth='xl'>

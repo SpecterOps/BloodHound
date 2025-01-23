@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => {
             dedupe: [
                 'react',
                 'react-hook-form',
+                'react-router-dom',
                 '@mui/material',
                 '@mui/styles',
                 '@mui/lab',

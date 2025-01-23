@@ -22,6 +22,7 @@ export default {
         './index.html',
         './src/**/*.{js,ts,jsx,tsx}',
         './node_modules/@bloodhoundenterprise/doodleui/dist/doodleui.js',
+        './node_modules/bh-shared-ui/src/**/*.{js,ts,jsx,tsx}',
     ],
     darkMode: ['class'],
     plugins: [DoodleUIPlugin],
