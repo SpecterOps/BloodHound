@@ -155,7 +155,7 @@ func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob
 			outC <- analysis.CreatePostRelationshipJob{
 				FromID: authenticatedUserID,
 				ToID:   computer.ID,
-				Kind:   ad.CoerceAndRelayNTLMToLDAPS,
+				Kind:   ad.CoerceAndRelayNTLMToLDAPs,
 			}
 		default:
 			return fmt.Errorf("unknown LDAP signing property %s", ldapSigning)
