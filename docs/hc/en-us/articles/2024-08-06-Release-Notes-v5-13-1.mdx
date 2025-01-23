@@ -1,0 +1,32 @@
+---
+title: 2024-08-06 Release Notes (v5.13.1)
+---
+
+## Summary
+
+
+* **BloodHound (v5.13.1****)**
+    * Bug Fixes
+        * Resolved an issue where hybrid paths were not created when the AD object did not have a known object type during path creation.
+        * The 2FA login screen will no longer return to the username/password screen if the browser window is unselected before completing the login flow.
+        * _\[BHE Only\]_ Resolved a race condition during analysis in highly-available deployments
+* **SharpHound (v2.4.1 - BHE, v2.4.1 - CE)**
+    * _Note: We have reverted the available SharpHound build to v2.4.1 while we address issues identified in v2.5.4._
+* **AzureHound (v2.1.9)**
+    * _No new release._
+
+### BloodHound (v5.13.0)
+
+#### Bug Fixes
+
+* Resolved an issue where hybrid paths were not created when the AD object did not have a known object type during path creation.
+* The 2FA login screen will no longer return to the username/password screen if the browser window is unselected before completing the login flow.
+* _\[BHE Only\]_ Resolved a race condition during analysis in highly-available deployments
+
+### SharpHound (v2.4.1 - BHE, v2.4.1 - CE)
+
+_Note: We have reverted the available SharpHound build to v2.4.1 while we address issues identified in v2.5.4._
+
+### AzureHound (v2.1.9)
+_No new release._
+

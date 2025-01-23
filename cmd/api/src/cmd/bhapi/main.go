@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"strconv"
 
 	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -41,7 +40,6 @@ func printVersion() {
 func main() {
 	var (
 		configFilePath string
-		logFilePath    string
 		versionFlag    bool
 	)
 
@@ -52,20 +50,21 @@ func main() {
 
 	flag.BoolVar(&versionFlag, "version", false, "Get binary version.")
 	flag.StringVar(&configFilePath, "configfile", bootstrap.DefaultConfigFilePath(), "Configuration file to load.")
-	flag.StringVar(&logFilePath, "logfile", config.DefaultLogFilePath, "Log file to write to.")
 	flag.Parse()
 
 	if versionFlag {
 		printVersion()
 	}
 
-	enableTextLogger := os.Getenv(config.BHAPIEnvironmentVariablePrefix + "_enable_text_logger")
-
-	if enabled, err := strconv.ParseBool(enableTextLogger); err != nil {
-		// Default to json because we're not sure what the user wanted
-		bhlog.ConfigureDefault(false)
+	// Jump the bootstrap initializer so all logs are configured properly
+	if enabled, err := config.GetTextLoggerEnabled(); err != nil {
+		bhlog.ConfigureDefaultJSON()
+		slog.Error(fmt.Sprintf("Failed to check text logger enabled: %v", err))
+		os.Exit(1)
+	} else if enabled {
+		bhlog.ConfigureDefaultText()
 	} else {
-		bhlog.ConfigureDefault(enabled)
+		bhlog.ConfigureDefaultJSON()
 	}
 
 	if cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration); err != nil {

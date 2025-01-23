@@ -1,0 +1,81 @@
+---
+title: 2024-11-14 Release Notes (v6.2.0)
+---
+
+## Announcements
+
+
+### SO-CON 2025 CFP final call!
+
+
+SpecterOps is hosting the next iteration of our in-person conference, SO-CON, in Arlington, VA, from March 31 to April 5, 2025! Our public Call for Presenters (CFP) is closing soon, and we’d love to see some sessions from our customers on all things Attack Paths!
+
+* ✉️ Submit a talk at: [https://sessionize.com/socon-2025/](https://sessionize.com/socon-2025/)
+* 📍Check out the event website: [https://specterops.io/so-con/](https://specterops.io/so-con/)
+* 🕚 CFP closes on November 15th
+* 📺 View the 2024 talks for inspiration: [https://specterops.io/so-con/#talks](https://specterops.io/so-con/#talks)
+
+### Upcoming Webinar: Defining the Undefined: What is Tier Zero, Part 4
+
+Join SpecterOps team members Jonas Bülow Knudsen, Martin Sohn Christensen, and Lee Chagolla-Christensen on November 14, 2024, as they continue our series on defining Tier Zero. This time, the team will cover:
+
+* Insights from isolating Tier Zero with BloodHound Enterprise customers
+* Microsoft Exchange on-premises
+* Active Directory Certificate Services
+
+During the webinar, our experts discuss, dissect, and debate what exactly Tier Zero and Privileged Access are so we can all better secure our environments.
+
+Register now: [https://specterops.zoom.us/webinar/register/WN_RFwGUrvkReuCRMAhz1bUVA#/registration](https://specterops.zoom.us/webinar/register/WN_RFwGUrvkReuCRMAhz1bUVA#/registration)
+
+## Summary
+
+* **BloodHound (v6.2.0****)**
+    * New and Improved Features
+        * Added multiple pre-saved Cypher queries regarding objects marked "Owned."
+        * Added the "Map OU structure" pre-saved query, previously available in BloodHound Legacy.
+        * Updated the "Kerberoastable Users" pre-saved cypher query to properly filter out disabled objects, MSAs, GMSAs, and the KRBTGT object.
+        * Updated all pre-saved Cypher queries to use consistent quotation marks for easier use in API integrations.
+        * Clicking the "Login via SSO" button will automatically redirect if only a single SSO provider is configured.
+        * Updated the permissions for the "Upload only" role to align more accurately with what the name implies. This role will no longer be able to modify asset group membership or trigger analysis runs.
+        * Renamed the "RemoteInteractiveLoginPrivilege" edge to "RemoveInteractiveLogonRight" to match the Microsoft naming schema.
+        * Improved performance of EntraID post-processing.
+    * Bug Fixes
+        * Logins via SAML will now correctly appear in the Audit log.
+        * Corrected several property type errors in data coming from SharpHound.
+        * _\[CE Only\]_ Docker Compose health check will now work with a modified Neo4J web port set (Thank you, [@yannis-srl](https://github.com/yannis-srl), for your contribution!).
+        * _\[BHE Only__\]_ SyncedToEntraUser, SyncedToADUser, ADCSESC9b, and ExtendedByPolicy edges will now reconcile properly.
+* **SharpHound (v2.5.11 - BHE, v2.5.8 - CE)**
+    * _No new release._
+* **AzureHound (v2.2.1)**
+    * _No new release._
+
+### BloodHound (v6.2.0)
+#### New and Improved Features
+
+* Added multiple pre-saved Cypher queries regarding objects marked "Owned."
+* Added the "Map OU structure" pre-saved query, previously available in BloodHound Legacy.
+* Updated the "Kerberoastable Users" pre-saved cypher query to properly filter out disabled objects, MSAs, GMSAs, and the KRBTGT object.
+* Updated all pre-saved Cypher queries to use consistent quotation marks for easier use in API integrations.
+* Clicking the "Login via SSO" button will automatically redirect if only a single SSO provider is configured.
+* Updated the permissions for the "Upload only" role to align more accurately with what the name implies. This role will no longer be able to modify asset group membership or trigger analysis runs.
+* Renamed the "RemoteInteractiveLoginPrivilege" edge to "RemoveInteractiveLogonRight" to match the Microsoft naming schema.
+* Improved performance of EntraID post-processing.
+
+#### Bug Fixes
+
+* Logins via SAML will now correctly appear in the Audit log.
+* Corrected several property type errors in data coming from SharpHound.
+* _\[CE Only\]_ Docker Compose health check will now work with a modified Neo4J web port set (Thank you, [@yannis-srl](https://github.com/yannis-srl), for your contribution!).
+* _\[BHE Only__\]_ SyncedToEntraUser, SyncedToADUser, ADCSESC9b, and ExtendedByPolicy edges will now reconcile properly.
+
+### SharpHound (v2.5.11 - BHE, v2.5.8 - CE)
+
+
+_No new release._
+
+### AzureHound (v2.2.1)
+
+
+_No new release._
+
+* _Note: AzureHound v2.2.1 has demonstrated significant performance improvements over v2.1.9. We highly recommend all customers upgrade to AzureHound v2.2.1+_

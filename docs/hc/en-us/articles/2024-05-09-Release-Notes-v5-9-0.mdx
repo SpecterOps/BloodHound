@@ -1,0 +1,85 @@
+---
+title: 2024-05-09 Release Notes (v5.9.0)
+---
+
+## Announcements
+
+### BloodHound Enterprise Splunk App
+
+We've updated our Splunk app, and more are on the way! The BloodHound Enterprise Splunk app will pull data from your BHE environment into Splunk and includes some example queries and alerts. Reach out to your TAM if you have any questions!
+
+You can get the app on SplunkBase here: https://splunkbase.splunk.com/app/6609
+
+## Summary
+
+
+* **BloodHound (v5.9.0****)**
+    * New and Improved Features
+        * Support for ADCS ESC 13 (Requires SharpHound v2.4.1+)
+        * Added support for GenericWrite edges to ADCS node types
+        * Improved performance of AZAddSecret paths
+    * Bug Fixes
+        * DCSync edges will no longer be filtered out from Tier Zero / High-Value principals
+        * ADCS ESC 1 edges will now generate properly across multiple domains regardless of domain collection status
+        * Several fixes to Edge Composition responses
+        * _\[BHE Only\]_ Collection schedules should now consistently display their scheduled start time
+        * _\[BHE Only\]_ Finished Jobs Log pagination controls no longer scroll
+        * _\[BHE Only\]_ Improved fallback logic for the Attack Paths page in the event of an unexpected failure
+        * _\[CE Only__\] _Modifying the default_admin fields will now properly reflect in a newly created environment
+* **SharpHound (v2.4.1 - BHE, v2.4.1 - CE)**
+    * * New and Improved Features
+            * Collection support for Issuance Policy Nodes
+            * Improved identification logic for Contains edges
+            * Added support for specific obsolete Trust type values
+        * Bug Fixes
+            * Resolved several issues related to cross-trust collections
+* **AzureHound (v2.1.9)**
+    * * New and Improved Features
+            * Added backoff/retry logic to several calls for improved stability and resiliency
+        * Bug Fixes
+            * AZAppAdmin and AZCloudAppAdmin edges will now properly link to the AzApps they target
+
+### BloodHound (v5.9.0)
+#### New and Improved Features
+
+* **Support for ADCS ESC 13** \- (Requires SharpHound v2.4.1+) Identified and described in [this blog](https://posts.specterops.io/adcs-esc13-abuse-technique-fda4272fbd53) by Jonas Bülow Knudsen, ESC13 represents another path to full control of target environments utilizing AD Certificate Services. 
+* **Improved performance of AZAddSecret paths -** Before today's update, AZAddSecret edges were generated between principals based on their assigned roles; each path was created from a principal holding a role that granted it the ability to add secrets to another principal. This resulted in an explosion of the number of edges created in the database. Starting with this release, AZAddSecret edges will be created between a role and a principal for which it can add secrets
+
+    With these changes, paths crossing the AZAddSecret edge will look something like this:
+
+    (n:AZUser)-\[:AZHasRole\]->(r:AZRole)-\[:AZAddSecret\]->(t:AZBase)
+
+    With n as the attacking principal, r as a role with add secret capabilities, and t as the target of the attack.
+* Added support for GenericWrite edges to ADCS node types
+
+#### Bug Fixes
+
+* DCSync edges will no longer be filtered out from Tier Zero / High-Value principals
+* ADCS ESC 1 edges will now generate properly across multiple domains regardless of domain collection status
+* Several fixes to Edge Composition responses
+* _\[BHE Only\]_ Collection schedules should now consistently display their scheduled start time
+* _\[BHE Only\]_ Finished Jobs Log pagination controls no longer scroll
+* _\[BHE Only\]_ Improved fallback logic for the Attack Paths page in the event of an unexpected failure
+* _\[CE Only__\] _Modifying the default_admin fields will now properly reflect in a newly created environment
+
+### SharpHound (v2.4.1 - BHE, v2.4.1 - CE)
+
+#### New and Improved Features
+
+* Collection support for Issuance Policy Nodes
+* Improved identification logic for Contains edges
+* Added support for specific obsolete Trust type values
+
+#### Bug Fixes
+
+* Resolved several issues related to cross-trust collections
+
+### AzureHound (v2.1.9)
+
+#### New and Improved Features
+
+* Added backoff/retry logic to several calls for improved stability and resiliency
+
+#### Bug Fixes
+
+* AZAppAdmin and AZCloudAppAdmin edges will now properly link to the AzApps they target

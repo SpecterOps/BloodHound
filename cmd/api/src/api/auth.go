@@ -296,24 +296,23 @@ func (s authenticator) ValidateRequestSignature(tokenID uuid.UUID, request *http
 }
 
 func DeleteBrowserCookie(request *http.Request, response http.ResponseWriter, name string) {
-	SetSecureBrowserCookie(request, response, name, "", time.Now().UTC(), false)
+	SetSecureBrowserCookie(request, response, name, "", time.Now().UTC(), false, 0)
 }
 
-func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter, name, value string, expires time.Time, httpOnly bool) {
+func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter, name, value string, expires time.Time, httpOnly bool, sameSite http.SameSite) {
 	var (
-		hostURL       = *ctx.FromRequest(request).Host
-		sameSiteValue = http.SameSiteDefaultMode
-		domainValue   string
+		hostURL = *ctx.FromRequest(request).Host
+		isHttps = hostURL.Scheme == "https"
 	)
 
-	if hostURL.Scheme == "https" {
-		sameSiteValue = http.SameSiteStrictMode
+	// If sameSite is not explicitly set, we want to rely on the host scheme
+	if sameSite == 0 && isHttps {
+		sameSite = http.SameSiteStrictMode
 	}
 
-	// NOTE: Set-Cookie should generally have the Domain field blank to ensure the cookie is only included with requests against the host, excluding subdomains; however,
-	// most browsers will ignore Set-Cookie headers from localhost responses if the Domain field is not set explicitly.
-	if strings.Contains(hostURL.Hostname(), "localhost") {
-		domainValue = hostURL.Hostname()
+	// NOTE: Browsers will not set localhost cookies with sameSite set to None. This is a local network SSO workaround
+	if strings.Contains(hostURL.Hostname(), "localhost") && sameSite == http.SameSiteNoneMode {
+		sameSite = http.SameSiteDefaultMode
 	}
 
 	// Set the token cookie
@@ -321,11 +320,10 @@ func SetSecureBrowserCookie(request *http.Request, response http.ResponseWriter,
 		Name:     name,
 		Value:    value,
 		Expires:  expires,
-		Secure:   hostURL.Scheme == "https",
+		Secure:   isHttps,
 		HttpOnly: httpOnly,
-		SameSite: sameSiteValue,
+		SameSite: sameSite,
 		Path:     "/",
-		Domain:   domainValue,
 	})
 }
 
@@ -356,8 +354,6 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 			auditLogFields["oidc_provider_id"] = ssoProvider.OIDCProvider.ID
 			authProvider = *ssoProvider.OIDCProvider
 		}
-		DeleteBrowserCookie(request, response, AuthStateCookieName)
-		DeleteBrowserCookie(request, response, AuthPKCECookieName)
 	}
 
 	// Generate commit ID for audit logging
@@ -404,8 +400,8 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 
 			locationURL := URLJoinPath(hostURL, UserInterfacePath)
 
-			// Set the token cookie
-			SetSecureBrowserCookie(request, response, AuthTokenCookieName, sessionJWT, time.Now().UTC().Add(s.cfg.AuthSessionTTL()), false)
+			// Set the token cookie, httpOnly must be false for the UI to pick up and store token
+			SetSecureBrowserCookie(request, response, AuthTokenCookieName, sessionJWT, time.Now().UTC().Add(s.cfg.AuthSessionTTL()), false, 0)
 
 			// Redirect back to the UI landing page
 			response.Header().Add(headers.Location.String(), locationURL.String())

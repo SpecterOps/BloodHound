@@ -1,0 +1,55 @@
+---
+title: 2022-10-24 Release Notes
+---
+
+## Announcements
+
+### SharpHound Early Access Notice
+
+**All customers participating in the User Rights Assignment Early Access Program must update SharpHound to v2.0.3.**
+
+BloodHound Enterprise will no longer ingest data from SharpHound v2.0.0, v2.0.1, and v2.0.2 due to issues identified in those versions. Customer Success will follow up with affected customers directly to confirm upgrades.
+
+### AD Certificate Services Design Partners Needed
+
+Our research team is in the thick of evaluating and expanding upon [Will Schroeder and Lee Christensen's work on AD Certificate Services abuses](https://posts.specterops.io/certified-pre-owned-d95910965cd2) for implementation within BloodHound and BloodHound Enterprise. We are looking for several design partners to support our team in this effort over the coming months.
+
+Initially, our team needs more information on common deployment technologies within production environments. If you would be willing to have a quick conversation with our team to elaborate on how you've deployed ADCS within your environment, please contact your TAM or reply to this email.
+
+## Summary
+
+* BloodHound Enterprise
+    * The Data Quality page will no longer report completeness over 100% and will direct you to the Manage Clients page if no data is currently collected.
+* SharpHound Enterprise (v1.0.24 GA, v2.0.3 Early Access)
+    * Fixed an issue resulting in the creation of excessive Attack Paths.
+* AzureHound Enterprise (v1.2.0)
+    * No release this week.
+
+### BloodHound Enterprise
+
+* Improved Functionality
+    * The Data Quality page will now direct users to the Manage Clients page if no data is currently collected.
+* Bug Fixes
+    * Session completeness can no longer exceed 100% and previous measurements showing such have been returned to 100%.
+    * Resolved an issue where objects weren't properly being removed after not being seen for 30 days.
+
+### SharpHound Enterprise (v1.0.24 GA, v2.0.3 Early Access)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.0.3_
+
+**All customers participating in the User Rights Assignment Early Access Program must update SharpHound to v2.0.3.**
+
+* Improved Functionality
+    * Adjusted log level of local group processing logs to reduce the volume of logs written at the "Information" level.
+* Bug Fixes
+    * Resolved an issue with the local SharpHound cache resulting in inaccurate edges showing within BloodHound Enterprise
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the “User Rights Assignment Collection” experimental feature at the same time. Please contact your TAM or respond to this email for assistance.
+
+### AzureHound Enterprise (v1.2.0 GA)
+
+_Minimum version of AzureHound Service to support all current functionality: v1.2.0_
+
+* _No updates in this release._
+
+

@@ -25,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -34,7 +35,6 @@ import (
 
 const (
 	CurrentConfigurationVersion = 2
-	DefaultLogFilePath          = "/var/log/bhapi.log"
 
 	BHAPIEnvironmentVariablePrefix       = "bhe"
 	environmentVariablePathSeparator     = "_"
@@ -282,6 +282,18 @@ func GetConfiguration(path string, defaultConfigFunc func() (Configuration, erro
 	} else {
 		return cfg, nil
 	}
+}
+
+func GetTextLoggerEnabled() (bool, error) {
+	if enableTextLogger := os.Getenv(BHAPIEnvironmentVariablePrefix + "_enable_text_logger"); enableTextLogger == "" {
+		return false, nil
+	} else if enabled, err := strconv.ParseBool(enableTextLogger); err != nil {
+		return false, fmt.Errorf("failed to parse %s to bool: %v", BHAPIEnvironmentVariablePrefix+"_enable_text_logger", err)
+	} else if enabled {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 const (
