@@ -91,7 +91,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		slog.WarnContext(ctx, "Failed to get all non unique email addresses", "error", err)
 	} else {
 		for email, count := range nonUniqueEmailMap {
-			slog.WarnContext(ctx, "UPNTE Error: duplicate email detected", "email", email, "count", count)
+			slog.WarnContext(ctx, "Duplicate email detected, unique user emails are required and will be enforced by the database in the following release.", "email", email, "count", count)
 		}
 	}
 
