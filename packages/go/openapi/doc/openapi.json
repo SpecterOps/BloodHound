@@ -12567,6 +12567,10 @@
                                   "display_type": {
                                     "type": "string"
                                   },
+                                  "composite_risk": {
+                                    "type": "number",
+                                    "format": "double"
+                                  },
                                   "finding_count_start": {
                                     "type": "integer"
                                   },
