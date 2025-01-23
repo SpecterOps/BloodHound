@@ -181,4 +181,3 @@ export * from './WebGLDisabledAlert';
 export { default as WebGLDisabledAlert } from './WebGLDisabledAlert';
 
 export * from './Navigation';
-export { default as MainNav } from './Navigation';

@@ -14,28 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as useAvailableDomains } from './useAvailableDomains';
+import { useLocation } from 'react-router-dom';
 
-export { default as useOnClickOutside } from './useOnClickOutside';
-
-export { default as useDebouncedValue } from './useDebouncedValue';
-
-export { default as useToggle } from './useToggle';
-
-export { default as useApiVersion } from './useApiVersion';
-
-export * from './useConfiguration';
-
-export * from './useDataQualityStats';
-
-export * from './useFeatureFlags';
-
-export * from './useFetchEntityProperties';
-
-export * from './useFileIngest';
-
-export * from './useSavedQueries';
-
-export * from './useSearch';
-
-export * from './useShowNavBar';
+export const useShowNavBar = (routes: any) => {
+    const location = useLocation();
+    return routes.find((routeItem: any) => {
+        const getPathName = (pathUrl: string) => pathUrl.split('/')[1];
+        const matchedPath = getPathName(location.pathname) === getPathName(routeItem.path);
+        if (!matchedPath) return;
+        return matchedPath && routeItem.navigation;
+    });
+};

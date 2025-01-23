@@ -14,4 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default } from './MainNav';
+import MainNav from './MainNav';
+import SubNav from './SubNav';
+
+export { MainNav, SubNav };
