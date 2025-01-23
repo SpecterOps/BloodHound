@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { SearchResult } from '../../hooks/useSearch';
 import { EntityKinds } from '../../utils/content';
 import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/edgeTypes';
-import { SearchResult } from '../../hooks/useSearch';
 
 const SEARCH_RESET = 'app/search/RESET';
 const CYPHER_QUERY_EDITED = 'app/search/CYPHER_QUERY_EDITED';
@@ -41,16 +41,16 @@ const SEARCH_TYPE_FUZZY = 'fuzzy';
 const SEARCH_TYPE_EXACT = 'exact';
 
 export {
-    PRIMARY_SEARCH,
-    PATHFINDING_SEARCH,
+    CYPHER_QUERY_EDITED,
     CYPHER_SEARCH,
-    TIER_ZERO_SEARCH,
+    PATHFINDING_SEARCH,
+    PATH_FILTERS_SAVED,
+    PRIMARY_SEARCH,
     SEARCH_ENDPOINT,
+    SEARCH_RESET,
     SEARCH_TYPE_EXACT,
     SEARCH_TYPE_FUZZY,
-    SEARCH_RESET,
-    CYPHER_QUERY_EDITED,
-    PATH_FILTERS_SAVED,
+    TIER_ZERO_SEARCH,
 };
 
 //The search value usually aligns with the results from hitting the search endpoint but when

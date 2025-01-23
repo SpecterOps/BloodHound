@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FileUploadJob, FileUploadJobStatusToString } from './types';
-import { LuxonFormat, calculateJobDuration } from '../../utils/datetime';
-import { DateTime } from 'luxon';
-import DataTable from '../DataTable';
 import { Paper } from '@mui/material';
+import { DateTime } from 'luxon';
+import { LuxonFormat, calculateJobDuration } from '../../utils/datetime';
+import DataTable from '../DataTable';
+import { FileUploadJob, FileUploadJobStatusToString } from './types';
 
 const ZERO_VALUE_API_DATE = '0001-01-01T00:00:00Z';
 

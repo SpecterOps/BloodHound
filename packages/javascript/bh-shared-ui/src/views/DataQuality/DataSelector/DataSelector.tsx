@@ -15,16 +15,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { faGlobe, faCloud } from '@fortawesome/free-solid-svg-icons';
+import { faCloud, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert, Box, Divider, MenuItem, Popover, Skeleton, TextField, Tooltip, Typography } from '@mui/material';
-import { useAvailableDomains, Domain } from '../../../hooks';
+import { useAvailableDomains } from '../../../hooks';
 import React, { ReactNode, useState } from 'react';
+import { Domain } from 'js-client-library';
+import { DataSelectorValueTypes } from './types';
 
 const DataSelector: React.FC<{
-    value: { type: string | null; id: string | null };
+    value: { type: DataSelectorValueTypes | null; id: string | null };
     errorMessage: ReactNode;
-    onChange?: (newValue: { type: string; id: string | null }) => void;
+    onChange?: (newValue: { type: DataSelectorValueTypes; id: string | null }) => void;
     fullWidth?: boolean;
 }> = ({ value, errorMessage, onChange = () => {}, fullWidth = false }) => {
     const [anchorEl, setAnchorEl] = useState(null);
@@ -43,7 +45,7 @@ const DataSelector: React.FC<{
     };
     const open = Boolean(anchorEl);
 
-    const filteredDomains = data.filter((domain: Domain) =>
+    const filteredDomains = data?.filter((domain: Domain) =>
         domain.name.toLowerCase().includes(searchInput.toLowerCase())
     );
 

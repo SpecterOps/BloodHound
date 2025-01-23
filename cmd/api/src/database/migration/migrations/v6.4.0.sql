@@ -14,6 +14,9 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- Delete the `updated_posture_page` feature flag
+DELETE FROM feature_flags WHERE key = 'updated_posture_page';
+
 -- Add new config column in sso_providers table
 ALTER TABLE IF EXISTS sso_providers ADD COLUMN IF NOT EXISTS config jsonb;
 

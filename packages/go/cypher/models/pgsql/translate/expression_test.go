@@ -111,6 +111,7 @@ func TestInferExpressionType(t *testing.T) {
 			),
 		),
 	}, {
+		Exclusive:    true,
 		ExpectedType: pgsql.Int4,
 		Expression: pgsql.NewBinaryExpression(
 			pgsql.NewPropertyLookup(
@@ -239,7 +240,7 @@ func TestExpressionTreeTranslator(t *testing.T) {
 	treeTranslator.PopPushOperator(scope, pgsql.OperatorAnd)
 
 	// Assign remaining operands as constraints
-	treeTranslator.ConstrainRemainingOperands()
+	treeTranslator.PopRemainingExpressionsAsConstraints()
 
 	// Pull out the 'a' constraint
 	aIdentifier := pgsql.AsIdentifierSet("a")

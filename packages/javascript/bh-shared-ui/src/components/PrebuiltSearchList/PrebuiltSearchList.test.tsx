@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import PrebuiltSearchList from '../PrebuiltSearchList';
-import { screen, render } from '../../test-utils';
 import userEvent from '@testing-library/user-event';
+import { render, screen } from '../../test-utils';
+import PrebuiltSearchList from '../PrebuiltSearchList';
 
 describe('PrebuiltSearchList', () => {
     it('renders a list of pre-built searches', () => {

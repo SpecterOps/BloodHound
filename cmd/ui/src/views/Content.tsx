@@ -16,16 +16,16 @@
 
 import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import { GenericErrorBoundaryFallback, apiClient } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
-import { GenericErrorBoundaryFallback, apiClient } from 'bh-shared-ui';
+import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups, setDomain } from 'src/ducks/global/actions';
 import * as routes from 'src/ducks/global/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 
 const Login = React.lazy(() => import('src/views/Login'));
 const DisabledUser = React.lazy(() => import('src/views/DisabledUser'));
@@ -61,7 +61,6 @@ const Content: React.FC = () => {
         }
     }, [authState, isFullyAuthenticated, dispatch]);
 
-    // set inital domain/tenant once user is authenticated
     useEffect(() => {
         if (isFullyAuthenticated) {
             const ctrl = new AbortController();

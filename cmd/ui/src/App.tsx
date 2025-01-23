@@ -21,12 +21,12 @@ import {
     AppNotifications,
     GenericErrorBoundaryFallback,
     NotificationsProvider,
-    lightPalette,
-    darkPalette,
-    typography,
     components,
-    useFeatureFlags,
+    darkPalette,
+    lightPalette,
     setRootClass,
+    typography,
+    useFeatureFlags,
 } from 'bh-shared-ui';
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';

@@ -14,17 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useQuery } from 'react-query';
 import { DateTime } from 'luxon';
+import { useQuery } from 'react-query';
 import { apiClient } from '../utils/api';
-
-export type Domain = {
-    type: string;
-    impactValue: number;
-    name: string;
-    id: string;
-    collected: boolean;
-};
 
 const now = DateTime.now();
 

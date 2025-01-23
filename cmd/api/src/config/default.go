@@ -19,7 +19,8 @@ package config
 import (
 	"fmt"
 
-	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg"
+
 	"github.com/specterops/bloodhound/src/serde"
 )
 
@@ -42,7 +43,6 @@ func NewDefaultConfiguration() (Configuration, error) {
 			RootURL:                      serde.MustParseURL("http://localhost"),
 			WorkDir:                      "/opt/bhe/work",
 			LogLevel:                     "INFO",
-			LogPath:                      DefaultLogFilePath,
 			CollectorsBasePath:           "/etc/bloodhound/collectors",
 			DatapipeInterval:             60,
 			EnableStartupWaitPeriod:      true,
@@ -52,12 +52,13 @@ func NewDefaultConfiguration() (Configuration, error) {
 			DisableIngest:                false,
 			DisableMigrations:            false,
 			EnableCypherMutations:        false,
-			AuthSessionTTLHours:          8,  // Default to a logged in auth session time to live of 8 hours
-			GraphQueryMemoryLimit:        2,  // 2 GiB by default
-			FedRAMPEULAText:              "", // Enterprise only
+			AuthSessionTTLHours:          8,     // Default to a logged in auth session time to live of 8 hours
+			GraphQueryMemoryLimit:        2,     // 2 GiB by default
+			FedRAMPEULAText:              "",    // Enterprise only
+			EnableTextLogger:             false, // Default to JSON logging
 			TLS:                          TLSConfiguration{},
 			SAML:                         SAMLConfiguration{},
-			GraphDriver:                  neo4j.DriverName, // Default to Neo4j as the graph driver
+			GraphDriver:                  pg.DriverName, // Default to PG as the graph driver
 			Database: DatabaseConfiguration{
 				MaxConcurrentSessions: 10,
 			},

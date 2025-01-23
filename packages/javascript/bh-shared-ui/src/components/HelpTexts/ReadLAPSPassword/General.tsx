@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
-import { groupSpecialFormat } from '../utils';
-import { EdgeInfoProps } from '../index';
 import { Typography } from '@mui/material';
+import { FC } from 'react';
+import { EdgeInfoProps } from '../index';
+import { groupSpecialFormat } from '../utils';
 
 const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
     return (
@@ -27,8 +27,28 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
                 Password Solution (LAPS) on the computer {targetName}.
             </Typography>
             <Typography variant='body2'>
-                The local administrator password for a computer managed by LAPS is stored in the confidential LDAP
-                attribute, "ms-mcs-AdmPwd".
+                For systems using legacy LAPS, the following AD computer object properties are relevant:
+                <br />
+                <b>- ms-Mcs-AdmPwd</b>: The plaintext LAPS password
+                <br />
+                <b>- ms-Mcs-AdmPwdExpirationTime</b>: The LAPS password expiration time
+                <br />
+            </Typography>
+            <Typography variant='body2'>
+                For systems using Windows LAPS (2023 edition), the following AD computer object properties are relevant:
+                <br />
+                <b>- msLAPS-Password</b>: The plaintext LAPS password
+                <br />
+                <b>- msLAPS-PasswordExpirationTime</b>: The LAPS password expiration time
+                <br />
+                <b>- msLAPS-EncryptedPassword</b>: The encrypted LAPS password
+                <br />
+                <b>- msLAPS-EncryptedPasswordHistory</b>: The encrypted LAPS password history
+                <br />
+                <b>- msLAPS-EncryptedDSRMPassword</b>: The encrypted Directory Services Restore Mode (DSRM) password
+                <br />
+                <b>- msLAPS-EncryptedDSRMPasswordHistory</b>: The encrypted DSRM password history
+                <br />
             </Typography>
         </>
     );

@@ -14,36 +14,35 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Link, Typography } from '@mui/material';
 import { FC } from 'react';
-import { Typography } from '@mui/material';
 import { EdgeInfoProps } from '../index';
 
-const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
+const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
+            <Typography variant='body2'>Read the LAPS password attributes listed in the General section.</Typography>
             <Typography variant='body2'>
-                To abuse this permission with PowerView's Get-DomainObject, first import PowerView into your agent
-                session or into a PowerShell instance at the console. You may need to authenticate to the Domain
-                Controller as{' '}
-                {sourceType === 'User'
-                    ? `${sourceName} if you are not running a process as that user`
-                    : `a member of ${sourceName} if you are not running a process as a member`}
-                . To do this in conjunction with Get-DomainObject, first create a PSCredential object (these examples
-                comes from the PowerView help documentation):
+                Plaintext attributes can be read using a simple LDAP client. For example, with PowerView:
             </Typography>
-
             <Typography component={'pre'}>
-                {"$SecPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force\n" +
-                    "$Cred = New-Object System.Management.Automation.PSCredential('TESTLAB\\dfm.a', $SecPassword)"}
+                {'Get-DomainComputer "MachineName" -Properties "cn","ms-mcs-admpwd","ms-mcs-admpwdexpirationtime"'}
             </Typography>
 
             <Typography variant='body2'>
-                Then, use Get-DomainObject, optionally specifying $Cred if you are not already running a process as{' '}
-                {sourceName}:
+                Encrypted attributes can be decrypted using Microsoft's LAPS PowerShell module. For example:
             </Typography>
+            <Typography component={'pre'}>{'Get-LapsADPassword "WIN10" -AsPlainText'}</Typography>
 
-            <Typography component={'pre'}>
-                {'Get-DomainObject windows1 -Credential $Cred -Properties "ms-mcs-AdmPwd",name'}
+            <Typography variant='body2'>
+                The encrypted attributes can also be retrieved and decrypted using{' '}
+                <Link
+                    target='_blank'
+                    rel='noopener'
+                    href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
+                    lapsv2decrypt
+                </Link>{' '}
+                (dotnet or BOF).
             </Typography>
         </>
     );

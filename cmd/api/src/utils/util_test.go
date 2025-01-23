@@ -242,3 +242,13 @@ func TestHeaderMatches(t *testing.T) {
 		t.Fatalf("Expected content type %s to match %s", mediatypes.ApplicationJson.String(), mediatypes.ApplicationJson.String())
 	}
 }
+
+func TestIsValidEmail(t *testing.T) {
+	t.Run("is valid email", func(t *testing.T) {
+		require.True(t, utils.IsValidEmail("odoylerules@specterops.io"))
+	})
+
+	t.Run("is not valid email", func(t *testing.T) {
+		require.False(t, utils.IsValidEmail("odoyle"))
+	})
+}

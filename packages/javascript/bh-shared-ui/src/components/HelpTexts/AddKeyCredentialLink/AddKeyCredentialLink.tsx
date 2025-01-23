@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import General from './General';
-import WindowsAbuse from './WindowsAbuse';
 import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
+import WindowsAbuse from './WindowsAbuse';
 
 const AddKeyCredentialLink = {
     general: General,

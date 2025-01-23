@@ -14,10 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Domain } from 'js-client-library';
+import { useQuery, UseQueryOptions } from 'react-query';
 import { apiClient } from '../utils/api';
-import { useQuery } from 'react-query';
 
-const useAvailableDomains = () =>
-    useQuery('available-domains', () => apiClient.getAvailableDomains().then((response) => response.data.data));
+export const availableDomainKeys = {
+    all: ['available-domains'],
+} as const;
+
+type QueryOptions = Omit<
+    UseQueryOptions<unknown, unknown, Domain[], readonly ['available-domains']>,
+    'queryKey' | 'queryFn'
+>;
+const useAvailableDomains = (options?: QueryOptions) =>
+    useQuery(
+        availableDomainKeys.all,
+        ({ signal }) => apiClient.getAvailableDomains({ signal }).then((response) => response.data.data),
+        options
+    );
 
 export default useAvailableDomains;

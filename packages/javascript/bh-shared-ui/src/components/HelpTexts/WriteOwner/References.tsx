@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Box, Link } from '@mui/material';
 import { FC } from 'react';
-import { Link, Box } from '@mui/material';
 
 const References: FC = () => {
     return (
@@ -98,6 +98,24 @@ const References: FC = () => {
                 rel='noopener'
                 href='https://posts.specterops.io/adcs-esc13-abuse-technique-fda4272fbd53'>
                 https://posts.specterops.io/adcs-esc13-abuse-technique-fda4272fbd53
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword'>
+                https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
+                https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt
+            </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://github.com/CravateRouge/bloodyAD'>
+                https://github.com/CravateRouge/bloodyAD
             </Link>
         </Box>
     );

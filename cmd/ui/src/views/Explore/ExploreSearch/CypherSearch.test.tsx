@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import userEvent from '@testing-library/user-event';
 import { act, render, screen } from 'src/test-utils';
 import CypherSearch from './CypherSearch';
-import userEvent from '@testing-library/user-event';
 
 describe('CypherSearch', () => {
     beforeEach(async () => {

@@ -14,16 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from 'src/test-utils';
 import userEvent from '@testing-library/user-event';
-import { rest, RequestHandler } from 'msw';
+import { ActiveDirectoryNodeKind, AzureNodeKind, allSections } from 'bh-shared-ui';
+import { RequestHandler, rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { ActiveDirectoryNodeKind, allSections } from 'bh-shared-ui';
+import { render, screen } from 'src/test-utils';
 import EntityInfoDataTable from './EntityInfoDataTable';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 const objectId = 'fake-object-id';
-const sections = allSections[ActiveDirectoryNodeKind.GPO]!(objectId);
+const adGpoSections = allSections[ActiveDirectoryNodeKind.GPO]!(objectId);
+const azKeyVaultSections = allSections[AzureNodeKind.KeyVault]!(objectId);
 
 const queryCount = {
     controllers: {
@@ -58,25 +59,70 @@ const queryCount = {
     },
 } as const;
 
+const keyVaultTest = {
+    KeyReaders: {
+        count: 0,
+        limit: 128,
+        skip: 0,
+        data: [],
+    },
+    CertificateReaders: {
+        count: 8,
+        limit: 128,
+        skip: 0,
+        data: [],
+    },
+    SecretReaders: {
+        count: 3003,
+        limit: 128,
+        skip: 0,
+        data: [],
+    },
+    AllReaders: {
+        count: 1998,
+        limit: 128,
+        skip: 0,
+        data: [],
+    },
+} as const;
+
 const handlers: Array<RequestHandler> = [
     rest.get(`api/v2/gpos/${objectId}/:asset`, (req, res, ctx) => {
         const asset = req.params.asset as keyof typeof queryCount;
         return res(ctx.json(queryCount[asset]));
     }),
+
+    rest.get(`api/v2/azure/key-vaults*`, (req, res, ctx) => {
+        if (req.url.searchParams.get('related_entity_type') === 'all-readers') {
+            return res(ctx.json(keyVaultTest.AllReaders));
+        }
+
+        if (req.url.searchParams.get('related_entity_type') === 'key-readers') {
+            return res(ctx.json(keyVaultTest.KeyReaders));
+        }
+
+        if (req.url.searchParams.get('related_entity_type') === 'secret-readers') {
+            return res(ctx.json(keyVaultTest.SecretReaders));
+        }
+
+        if (req.url.searchParams.get('related_entity_type') === 'certificate-readers') {
+            return res(ctx.json(keyVaultTest.CertificateReaders));
+        }
+    }),
 ];
 
 const server = setupServer(...handlers);
 
-describe('EntityInfoDataTable', () => {
-    describe('Node count', () => {
-        beforeAll(() => server.listen());
-        afterEach(() => server.resetHandlers());
-        afterAll(() => server.close());
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
+describe('EntityInfoDataTable', () => {
+    describe('Node count for nested table that counts all sections', () => {
         it('sums nested section node counts', async () => {
             render(
                 <EntityInfoPanelContextProvider>
-                    <EntityInfoDataTable {...sections[0]} />
+                    <EntityInfoDataTable {...adGpoSections[0]} />
                 </EntityInfoPanelContextProvider>
             );
             const sum = await screen.findByText('5,064');
@@ -93,7 +139,7 @@ describe('EntityInfoDataTable', () => {
 
             render(
                 <EntityInfoPanelContextProvider>
-                    <EntityInfoDataTable {...sections[0]} />
+                    <EntityInfoDataTable {...adGpoSections[0]} />
                 </EntityInfoPanelContextProvider>
             );
 
@@ -113,7 +159,7 @@ describe('EntityInfoDataTable', () => {
             const user = userEvent.setup();
             render(
                 <EntityInfoPanelContextProvider>
-                    <EntityInfoDataTable {...sections[0]} />
+                    <EntityInfoDataTable {...adGpoSections[0]} />
                 </EntityInfoPanelContextProvider>
             );
 
@@ -125,6 +171,51 @@ describe('EntityInfoDataTable', () => {
 
             const zero = await screen.findByText('0');
             expect(zero.textContent).toBe('0');
+        });
+    });
+
+    describe('Node count for Vault Readers nested table', () => {
+        it('Verify Vault Reader count is the count returned by All Readers', async () => {
+            const user = userEvent.setup();
+
+            render(
+                <EntityInfoPanelContextProvider>
+                    <EntityInfoDataTable {...azKeyVaultSections[0]} />
+                </EntityInfoPanelContextProvider>
+            );
+
+            // wait for the total count to be available - this holds off all following tests until the counts have been returned
+            const sum = await screen.findByText('1,998');
+            expect(sum).not.toBeNull();
+
+            // verify the vault reader count is as expected
+            const vaultReadersHeader = await screen.findByText('Vault Readers');
+            const vaultReadersCount = vaultReadersHeader.nextElementSibling;
+            expect(vaultReadersCount).toHaveTextContent('1,998');
+
+            // expand the Vault Readers accordian
+            const button = await screen.findByRole('button');
+            await user.click(button);
+
+            // verify the key readers count is as expected
+            const keyReadersHeader = await screen.findByText('Key Readers');
+            const keyReadersCount = keyReadersHeader.nextElementSibling;
+            expect(keyReadersCount).toHaveTextContent('0');
+
+            // verify the certificate readers count is as expected
+            const certReadersHeader = await screen.findByText('Certificate Readers');
+            const certReadersCount = certReadersHeader.nextElementSibling;
+            expect(certReadersCount).toHaveTextContent('8');
+
+            // verify the secret readers count is as expected
+            const secretReadersHeader = await screen.findByText('Secret Readers');
+            const secretReadersCount = secretReadersHeader.nextElementSibling;
+            expect(secretReadersCount).toHaveTextContent('3,003');
+
+            // verify the all readers count is as expected
+            const allReadersHeader = await screen.findByText('All Readers');
+            const allReadersCount = allReadersHeader.nextElementSibling;
+            expect(allReadersCount).toHaveTextContent('1,998');
         });
     });
 });

@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import CurvedEdgeArrowHeadProgram from './edge.curvedArrowHead';
+import { Attributes } from 'graphology-types';
 import { NodeDisplayData } from 'sigma/types';
 import { floatColor } from 'sigma/utils';
-import { Attributes } from 'graphology-types';
 import { bezier } from 'src/rendering/utils/bezier';
 import { getNodeRadius } from 'src/rendering/utils/utils';
+import CurvedEdgeArrowHeadProgram from './edge.curvedArrowHead';
 import { getControlPointsFromGroupSize } from './edge.self';
 
 const POINTS = 3,

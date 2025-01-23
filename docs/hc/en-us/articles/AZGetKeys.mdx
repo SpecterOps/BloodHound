@@ -1,0 +1,27 @@
+---
+title: AZGetKeys
+description: "The ability to read keys from key vaults."
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+
+## Abuse Info
+
+Use PowerShell or PowerZure to fetch the certificate from the key vault.
+
+Via PowerZure:
+
+* Get-AzureKeyVaultContent
+* Export-AzureKeyVaultcontent
+
+## Opsec Considerations
+
+Azure will create a new log event for the key vault whenever a secret is accessed.
+
+## References
+
+* [https://blog.netspi.com/azure-automation-accounts-key-stores/](https://blog.netspi.com/azure-automation-accounts-key-stores/)
+* [https://powerzure.readthedocs.io/en/latest/Functions/operational.html#get-azurekeyvaultcontent](https://powerzure.readthedocs.io/en/latest/Functions/operational.html#get-azurekeyvaultcontent)

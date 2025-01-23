@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { RequestOptions } from 'js-client-library';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 import { apiClient } from './api';
-import { RequestOptions } from 'js-client-library';
 
 type EntitySectionEndpointParams = {
     counts?: boolean;
@@ -29,6 +29,7 @@ export interface EntityInfoDataTableProps {
     id: string;
     label: string;
     endpoint?: ({ counts, skip, limit, type }: EntitySectionEndpointParams) => Promise<any>;
+    countLabel?: string;
     sections?: EntityInfoDataTableProps[];
 }
 
@@ -286,6 +287,7 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
         {
             id,
             label: 'Vault Readers',
+            countLabel: 'All Readers',
             sections: [
                 {
                     id,
@@ -295,7 +297,10 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                             .getAZEntityInfoV2('key-vaults', id, 'key-readers', counts, skip, limit, type, {
                                 signal: controller.signal,
                             })
-                            .then((res) => res.data),
+                            .then((res) => {
+                                if (type !== 'graph') res.data.countLabel = 'Key Readers';
+                                return res.data;
+                            }),
                 },
                 {
                     id,
@@ -305,7 +310,10 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                             .getAZEntityInfoV2('key-vaults', id, 'certificate-readers', counts, skip, limit, type, {
                                 signal: controller.signal,
                             })
-                            .then((res) => res.data),
+                            .then((res) => {
+                                if (type !== 'graph') res.data.countLabel = 'Certificate Readers';
+                                return res.data;
+                            }),
                 },
                 {
                     id,
@@ -315,7 +323,10 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                             .getAZEntityInfoV2('key-vaults', id, 'secret-readers', counts, skip, limit, type, {
                                 signal: controller.signal,
                             })
-                            .then((res) => res.data),
+                            .then((res) => {
+                                if (type !== 'graph') res.data.countLabel = 'Secret Readers';
+                                return res.data;
+                            }),
                 },
                 {
                     id,
@@ -325,7 +336,10 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                             .getAZEntityInfoV2('key-vaults', id, 'all-readers', counts, skip, limit, type, {
                                 signal: controller.signal,
                             })
-                            .then((res) => res.data),
+                            .then((res) => {
+                                if (type !== 'graph') res.data.countLabel = 'All Readers';
+                                return res.data;
+                            }),
                 },
             ],
         },
