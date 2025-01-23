@@ -68,6 +68,7 @@ const (
 	ErrorResponseAGDuplicateTag                     = "asset group tag must be unique"
 	ErrorResponseSSOProviderDuplicateName           = "sso provider name must be unique"
 	ErrorResponseUserDuplicatePrincipal             = "principal name must be unique"
+	ErrorResponseUserDuplicateEmail                 = "email must be unique"
 	ErrorResponseDetailsUniqueViolation             = "unique constraint was violated"
 	ErrorResponseDetailsNotImplemented              = "All good things to those who wait. Not implemented."
 

@@ -1394,6 +1394,20 @@ func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1, arg2 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSecretAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSecretAuth), arg0, arg1, arg2)
 }
 
+// IsNewEmail mocks base method.
+func (m *MockDatabase) IsNewEmail(arg0 context.Context, arg1 string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsNewEmail", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsNewEmail indicates an expected call of IsNewEmail.
+func (mr *MockDatabaseMockRecorder) IsNewEmail(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsNewEmail", reflect.TypeOf((*MockDatabase)(nil).IsNewEmail), arg0, arg1)
+}
+
 // IsSavedQueryPublic mocks base method.
 func (m *MockDatabase) IsSavedQueryPublic(arg0 context.Context, arg1 int64) (bool, error) {
 	m.ctrl.T.Helper()
