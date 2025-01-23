@@ -18,6 +18,7 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 
 	"github.com/specterops/bloodhound/src/serde"

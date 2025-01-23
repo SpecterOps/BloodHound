@@ -78,20 +78,18 @@
       "pages": ["home"]
     },
     {
+      "group": "Get Started with BloodHound",
+          "pages": [
+            "hc/en-us/get-started/introduction-to-bloodhound",
+            "hc/en-us/get-started/bloodhound-enterprise-quickstart",
+            "hc/en-us/get-started/bloodhound-community-edition-quickstart",
+            "hc/en-us/get-started/bloodhound-glossary"
+          ]
+    },
+    {
       "group": "General",
       "pages": [
         "hc/en-us/categories/General",
-        {
-          "group": "BloodHound Introduction",
-          "pages": [
-            "hc/en-us/sections/BloodHound-Introduction",
-            "hc/en-us/articles/Welcome-to-BloodHound",
-            "hc/en-us/articles/Getting-started-with-BloodHound-Community-Edition",
-            "hc/en-us/articles/Getting-started-with-BloodHound-Enterprise",
-            "hc/en-us/articles/BloodHound-Enterprise-vs-BloodHound-CE",
-            "hc/en-us/articles/Glossary-of-BloodHound-terminology"
-          ]
-        },
         {
           "group": "BloodHound and Security Boundaries",
           "pages": [
@@ -166,7 +164,6 @@
           "group": "Deploying BloodHound Enterprise",
           "pages": [
             "hc/en-us/sections/Deploying-BloodHound-Enterprise",
-            "hc/en-us/articles/BloodHound-Enterprise-Tenant",
             "hc/en-us/articles/BloodHound-Enterprise-Security-Overview"
           ]
         },

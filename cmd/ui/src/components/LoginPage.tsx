@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
 import { Box, Container, Paper } from '@mui/material';
-import { useAppSelector } from 'src/store';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 import { addSnackbar } from 'src/ducks/global/actions';
+import { useAppSelector } from 'src/store';
 
 interface LoginPageProps {
     children: React.ReactNode;
