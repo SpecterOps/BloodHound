@@ -12,7 +12,6 @@ created: 2025-01-14
 ---
 
 # BloodHound Branching & Release Strategy
-
 ```mermaid
 ---
 config:
