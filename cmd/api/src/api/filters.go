@@ -19,7 +19,6 @@ package api
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
 )
@@ -55,60 +54,4 @@ func GetValidFilterPredicatesAsStrings(f Filterable, column string) ([]string, e
 		}
 		return stringPredicates, nil
 	}
-}
-
-func BuildSQLFilter(filters model.Filters) (model.SQLFilter, error) {
-	var (
-		result      strings.Builder
-		firstFilter = true
-		predicate   string
-		params      []any
-	)
-	for name, filterOperations := range filters {
-		for _, filter := range filterOperations {
-			if !firstFilter {
-				result.WriteString(" AND ")
-			}
-			switch filter.Operator {
-			case model.GreaterThan:
-				predicate = model.GreaterThanSymbol
-			case model.GreaterThanOrEquals:
-				predicate = model.GreaterThanOrEqualsSymbol
-			case model.LessThan:
-				predicate = model.LessThanSymbol
-			case model.LessThanOrEquals:
-				predicate = model.LessThanOrEqualsSymbol
-			case model.Equals:
-				predicate = model.EqualsSymbol
-			case model.NotEquals:
-				predicate = model.NotEqualsSymbol
-			case model.ApproximatelyEquals:
-				predicate = model.ApproximatelyEqualSymbol
-				filter.Value = fmt.Sprintf("%%%s%%", filter.Value)
-			default:
-				return model.SQLFilter{}, fmt.Errorf("invalid filter predicate specified")
-			}
-			result.WriteString(name)
-			result.WriteString(" ")
-			result.WriteString(predicate)
-			result.WriteString(" ?")
-			params = append(params, filter.Value)
-			firstFilter = false
-		}
-	}
-	return model.SQLFilter{SQLString: result.String(), Params: params}, nil
-}
-
-func BuildSQLSort(sort model.Sort) []string {
-	var sqlSort = make([]string, 0, len(sort))
-	for _, sortItem := range sort {
-		var column string
-		if sortItem.Direction == model.DescendingSortDirection {
-			column = sortItem.Column + " desc"
-		} else {
-			column = sortItem.Column
-		}
-		sqlSort = append(sqlSort, column)
-	}
-	return sqlSort
 }
