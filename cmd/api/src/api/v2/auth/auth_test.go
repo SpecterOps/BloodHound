@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -1237,7 +1238,7 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 		goodUserMap,
 	}
 
-	bhlog.ConfigureDefaultText()
+	bhlog.ConfigureDefaultText(os.Stdout)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	payload, err := json.Marshal(input.Body)
