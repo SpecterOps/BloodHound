@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import './styles/index.css';
 import '@fontsource/roboto-mono';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
@@ -27,6 +26,7 @@ import { ReactQueryDevtools } from 'react-query/devtools';
 import { Provider } from 'react-redux';
 import App from './App';
 import { store } from './store';
+import './styles/index.css';
 import './styles/index.scss';
 
 declare module '@mui/material/styles' {
