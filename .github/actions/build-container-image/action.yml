@@ -1,0 +1,190 @@
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+---
+name: Build and Publish Container Image
+
+description: |-
+  This composite action builds a container image based on the specified Dockerfile and metadata.
+  It can optionally push the built image to a container registry.
+  Ensure you have the necessary Docker and QEMU setup steps in your workflow for cross-platform builds.
+
+inputs:
+  dockerhub_account:
+    required: true
+    description: |-
+      The DockerHub username or account name used for authentication.
+      This account must have permissions to push images to the specified repositories.
+
+      Example: 'organization_name' or 'username'
+  dockerhub_token:
+    required: true
+    description: |-
+      The authentication token or password for the DockerHub account.
+      Use a personal access token or deploy token for enhanced security.
+      This token must have appropriate permissions for pulling and pushing images.
+  ghcr_account:
+    required: true
+    description: |-
+      The GitHub Container Registry (GHCR) username or account name.
+      Usually this is your GitHub username or organization name.
+      Must have permissions to push containers to the specified GHCR repositories.
+
+      Example: 'github_username' or 'organization_name'
+  ghcr_token:
+    required: true
+    description: |-
+      The GitHub personal access token (PAT) for authenticating with GitHub Container Registry.
+      Token must have the necessary permissions:
+      - read:packages
+      - write:packages
+      - delete:packages (if image overwriting is needed)
+  build_platforms:
+    required: true
+    default: "linux/amd64,linux/arm64"
+    description: |-
+      Comma-separated list of target platforms for the container build.
+      Specifies the CPU architectures and operating systems for which
+      the container image should be built.
+
+      Examples:
+      - "linux/amd64" for x86_64 Linux only
+      - "linux/amd64,linux/arm64" for both x86_64 and ARM64 Linux
+      - "linux/amd64,linux/arm64,linux/arm/v7" for additional ARM support
+  image_labels:
+    required: true
+    default: "false"
+    description: |-
+      A JSON object containing image labels and metadata.
+      These labels help describe the image and can include information like
+      version, author, and licenses.
+  image_tags:
+    required: true
+    default: "false"
+    description: |-
+      A comma-separated list of tags to assign to the built image.
+      These tags help identify different versions or variants of the image.
+  image_provenance:
+    required: true
+    default: "false"
+    description: |-
+      Whether to include image provenance information in the image metadata.
+      Provenance information provides details about how the image was built and can be useful for auditing.
+  image_sbom:
+    required: true
+    default: "false"
+    description: |-
+      Whether to include a Software Bill of Materials (SBOM) in the image metadata.
+      An SBOM lists all the software components used in the image, enhancing transparency and security.
+  dockerfile:
+    default: Dockerfile
+    description: |-
+      The name of the Dockerfile used for building the container image.
+      If not specified, it defaults to 'Dockerfile' in the repository root.
+
+      Example: 'Dockerfile.prod' for a production-specific Dockerfile.
+  build_context:
+    default: "{{defaultContext}}"
+    description: |-
+      Build's context is the set of files located in the specified PATH or URL (default Git context)
+  build_target:
+    description: |-
+      The build stage target for multi-stage Docker builds, if applicable.
+      Specify this if your Dockerfile has multiple stages, and you want to build a specific one.
+
+      Example: 'production' for a multi-stage Dockerfile with a 'production' stage.
+  build_args:
+    description: |-
+      Additional build arguments to pass to the Docker build process.
+      These arguments can be used to customize the build based on your requirements.
+
+      Example: 'MY_VARIABLE=value' to set an environment variable during the build.
+  build_contexts:
+    description: |-
+      Additional build contexts to pass to Docker build process.
+
+      Define additional build context with specified contents. In Dockerfile the
+      context can be accessed when FROM name or --from=name is used. When
+      Dockerfile defines a stage with the same name it is overwritten.
+
+      Example: 'name=path'
+  build_outputs:
+    required: true
+    description: |-
+      Set build outputs.
+  cache_from:
+    description: |-
+      The source image repository from which to cache layers during the build.
+      This can help improve build speed by reusing layers from a previously built image.
+
+      Default: type=gha
+
+      Example: 'docker.io/my-app:cache' to cache from a specific image.
+    default: |-
+      type=gha
+  cache_to:
+    description: |-
+      The destination image cache settings to optimize the caching strategy during the build.
+      This input specifies where to store cached layers and how they are scoped.
+
+      Default: type=gha,mode=max
+
+      Example: "type=gha,mode=max,scope=\$\{\{ github.workflow \}\}"
+    default: |-
+      type=gha,mode=max
+
+runs:
+  using: composite
+  steps:
+    - uses: docker/login-action@v3
+      name: Authenticate with DockerHub Registry
+      with:
+        registry: docker.io
+        username: ${{ inputs.dockerhub_account }}
+        password: ${{ inputs.dockerhub_token }}
+
+    - uses: docker/login-action@v3
+      name: Authenticate with GitHub Container Registry
+      with:
+        registry: ghcr.io
+        username: ${{ inputs.ghcr_account }}
+        password: ${{ inputs.ghcr_token }}
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: ${{ inputs.build_platforms }}
+
+    - name: Set up buildx
+      id: buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        platforms: ${{ inputs.build_platforms }}
+
+    - name: Build
+      uses: docker/build-push-action@v6
+      with:
+        build-args: ${{ inputs.build_args }}
+        build-contexts: ${{ inputs.build_contexts }}
+        cache-from: ${{ inputs.cache_from }}
+        cache-to: ${{ inputs.cache_to }}
+        context: ${{ inputs.build_context }}
+        file: ${{ inputs.dockerfile }}
+        labels: ${{ inputs.image_labels }}
+        outputs: ${{ inputs.build_outputs }}
+        provenance: ${{ inputs.image_provenance }}
+        sbom: ${{ inputs.image_sbom }}
+        tags: ${{ inputs.image_tags }}
+        target: ${{ inputs.build_target }}

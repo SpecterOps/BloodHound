@@ -1,0 +1,139 @@
+---
+title: SharpHound Enterprise Service Hardening
+description: "The BloodHound team recommends the hardening actions described on this page to protect the SharpHound service account. The hardening recommendations are focused on the remediation of the attack techniques targeting service accounts."
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1-1.jpg"/>
+</Frame>
+Many of the attacks involve privileged collection, in which the SharpHound service account gathers data from domain-joined Windows computers. During privileged collection, an attacker with administrative access to a computer in the domain could attempt to compromise the SharpHound service account, as the account will log in on the computer during the collection.
+
+This page will describe the attacks we want to prevent and the remediations that can be applied. All attacks can be remediated in more than one method. The first section will highlight the remediations that we recommend without going into detail about the different attack techniques and alternative remediations.
+
+## Recommended hardening
+
+### gMSA
+
+We recommend using a [Group Managed Service Account](https://learn.microsoft.com/en-us/windows-server/security/group-managed-service-accounts/group-managed-service-accounts-overview) (gMSA) for the SharpHound service account rather than a regular AD user.
+
+Follow the article: [Create a GMSA for use with SharpHound Enterprise](/hc/en-us/articles/Create-a-gMSA-for-use-with-SharpHound-Enterprise).
+
+A gMSA is a type of service account where the password is managed by Active Directory, eliminating the need for manual password management. This will ensure the service account password is:
+
+* A 240-byte randomly generated complex password
+* Not known to any individuals nor stored in any notes, password vault, etc.
+* Rotated regularly
+
+Using a gMSA will reduce the risk of having the SharpHound service account compromised by password spray (guessing) and password hash cracking and prevent the attacker from obtaining the password from elsewhere.
+
+Furthermore, using a gMSA makes it possible to have the SharpHound service account in the Protected Users group, which is covered in the following recommendation.
+
+### Protected User group
+
+We recommend adding the SharpHound service account as a member of the [Protected Users](https://learn.microsoft.com/en-us/windows-server/security/credentials-protection-and-management/protected-users-security-group) group.
+
+Protected Users is an AD security group designed to reduce credential exposure. Members of this group automatically have non-configurable protections applied to their accounts. Protected Users members cannot be delegated with Kerberos and cannot authenticate using NTLM, effectively remediating Kerberos delegation attacks, NTLM relay attacks, and NTLM cracking. However, Microsoft advises against adding service accounts to the group as authentication for the service account may fail.
+
+Our testing has shown that adding the SharpHound service account to Protected Users works if the SharpHound service account is a gMSA, but the SharpHound service crashes after four hours if it is a regular AD user.
+
+### Tiering SharpHound
+
+We recommend tiering the SharpHound service account to follow the principle of “[elevated user accounts should not be used to log on to lower Tier assets](https://techcommunity.microsoft.com/t5/core-infrastructure-and-security/protecting-domain-administrative-credentials/ba-p/259210)”.
+
+Follow the article: [Deploying a tiered SharpHound Enterprise collector strategy](/hc/en-us/articles/Deploying-a-tiered-SharpHound-Enterprise-collector-strategy).
+
+This recommendation is especially for organizations seeking to implement the [Active Directory Tier Model](https://learn.microsoft.com/en-us/microsoft-identity-manager/pam/tier-model-for-partitioning-administrative-privileges) or [Enterprise Access Model](https://learn.microsoft.com/en-us/security/privileged-access-workstations/privileged-access-access-model)
+
+## Attacks and remediations
+
+This section explores the types of attacks that SharpHound Enterprise may be at risk of, all of which are mitigated with the recommended hardening.
+
+### Attack 1: Finding/guessing service account password
+
+When a service account is created as a regular AD user, the person creating the account must set a password for the service account and must store this password somewhere. Attackers will attempt to obtain the password by guessing/spraying with common passwords and passwords of other accounts in the environment. They will also look for service account passwords in file shares, key vaults, etc.
+
+#### Preferred remediation: gMSA
+
+When the service account is created as a gMSA, the password will be managed completely by AD. That means the password of the account cannot be a weak/guessable password, and it will not be stored anywhere the attacker can gain read access.
+
+#### Alternative remediation: Strong password stored securely
+
+When the password is strong, it decreases the risk of an attacker guessing the password. The SharpHound service account password can be copy-pasted when installing SharpHound Enterprise. Setting the password to a random string of 100 characters will therefore not cause inconvenience. The password should be stored securely in a password vault where only the right personnel have access.
+
+### Attack 2: Kerberos delegation attacks
+
+When collecting data, the SharpHound service account will only perform a network logon (type 3) on remote computers. This logon type will not save the service account credentials in the remote computer’s memory. However, Kerberos delegation breaks this rule if the remote computer is configured with Kerberos unconstrained delegation. In that case, the remote computer will receive a copy of the service account’s Kerberos session ticket (TGT), which an attacker can extract from memory and utilize to authenticate as the service account. If the computer is configured with unconstrained delegation, the service account does not need to log on to the computer – the attacker can obtain service tickets as any user for services it is allowed to delegate to.
+
+#### Preferred remediation: Protected Users group (gMSA only)
+
+Members of the Protected Users group cannot be delegated, as described by Microsoft [here](https://learn.microsoft.com/en-us/windows-server/security/credentials-protection-and-management/protected-users-security-group#domain-controller-protections-for-protected-users). This means the SharpHound service account will not be vulnerable to the Kerberos delegation attacks. This remediation will break the SharpHound service if a regular AD user is used instead of a gMSA.
+
+#### Alternative remediation: Mark the account as sensitive
+
+It is possible to prevent an AD principal from using Kerberos delegation services by enabling the account option “Account is sensitive and cannot be delegated”:
+
+<Frame>
+  <img src="/hc/images/image-2-69.png"/>
+</Frame>
+On a Group Manages Service Account (gMSA), this account option is not visible in the GUI, but you can set the account option through PowerShell:
+
+<Frame>
+  <img src="/hc/images/image-2-70.png"/>
+</Frame>
+The value should be _True_ for the account to be protected.
+
+### Attack 3: Authentication relaying
+
+The data collection performed by the SharpHound service account happens over the SMB protocol and is authenticated on the remote computer using Kerberos by default. However, an attacker with administrative rights on the remote computer can downgrade the authentication to NTLM. This allows the attacker to perform an NTLM relay attack, where the ongoing NTLM authentication is relayed to a target computer, giving the attacker a session on the target as the SharpHound service account.
+
+It is possible to relay Kerberos authentication under specific circumstances, but we have not found it to be possible with the SharpHound service account.
+
+#### Preferred remediation: Protected Users group (gMSA only)
+
+Members of the Protected Users group cannot authenticate with NTLM, as described by Microsoft [here](https://learn.microsoft.com/en-us/windows-server/security/credentials-protection-and-management/protected-users-security-group#domain-controller-protections-for-protected-users). This means the SharpHound service account will not be vulnerable to NTLM attacks. This remediation will break the SharpHound service if a regular AD is used instead of a gMSA. 
+
+#### Alternative remediation: Block outgoing NTLM
+
+Outgoing NTLM can be denied entirely from the SharpHound server by configuring the security option [Network security: Restrict NTLM: Outgoing NTLM traffic to remote servers](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-security-restrict-ntlm-outgoing-ntlm-traffic-to-remote-servers) to _Deny All:_
+
+<Frame>
+  <img src="/hc/images/image-2-71.png"/>
+</Frame>
+
+This prevents the attacker from downgrading the Kerberos authentication to NTLM and remediates NTLM attacks.
+
+### Attack 4: NTLM cracking
+
+As mentioned in the previous attack (Authentication relaying), an attacker with administrative rights on the remote computer can downgrade the Kerberos authentication of the SharpHound service account to NTLM. If NTLMv2 is not enforced, the attacker can even downgrade to NTLMv1. When the attacker has downgraded the authentication to NTLM, it becomes possible for the attacker to capture the Net-NTLMv1/v2 hash in the authentication. This hash can then be cracked offline to obtain the password of the SharpHound service account. While NTLMv1 is significantly faster to crack as it is based on DES encryption, both NTLMv1 and NTLMv2 can be cracked.
+
+#### Remediation
+
+_See the remediation of the previous attack (Authentication relaying)._
+
+### Attack 5: Reusable credentials in LSASS
+
+When an account logs in on a Windows computer, the account’s credentials will be cached in LSASS memory in a reusable format, such that Windows can reauthenticate the user without the user having to type in their password again and again. This is known as Single Sign-On (SSO).
+
+An attacker with administrative access to the computer can read the cached credentials out of LSASS and thereby compromise the account.
+
+#### Remediation - No remediation is required
+
+The SharpHound service account performs only a network logon (type 3) when it collects data, and this logon type does not leave credentials in LSASS memory, as explained by Microsoft [here](https://learn.microsoft.com/en-us/windows-server/identity/securing-privileged-access/reference-tools-logon-types) (unless Kerberos delegation is enabled, which we have covered separately).
+
+### Attack 6: Cached Domain Credentials Cracking
+
+Normally, when a domain user logs in on a domain-joined Windows computer, the authentication will involve a Domain Controller telling the computer if the account’s credentials are valid. But if the computer cannot reach a Domain Controller (due to network issues etc.), this authentication process does not work. Windows will, by default, cache the account’s credentials in the security registry hive in a non-reusable format (MS-Cache v2 hash), such that the computer can verify the credential even if it cannot reach any Domain Controller.
+
+An attacker with administrative access to the computer can read the cached credentials out of the registry hive, crack the password hash, and thereby compromise the account.
+
+#### Remediation - No remediation is required
+
+The SharpHound service account performs only a Network logon (type 3) when it collects data. This logon type will not generate the cached domain credentials.
+
+### Attack 7: Kerberoasting
+
+Any AD user can request and receive a Kerberos service ticket of any user (service account) with a Service Principal Name (SPN) attribute set. This service ticket is encrypted with a Kerberos key derived from the service account’s password. An attacker can obtain the password of the service account by cracking the service ticket (guessing the password that decrypts the ticket). This attack is known as Kerberoasting.
+
+#### Remediation - No remediation required
+
+The SharpHound service account will not have an SPN set.

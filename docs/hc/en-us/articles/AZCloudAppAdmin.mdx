@@ -1,0 +1,20 @@
+---
+title: AZCloudAppAdmin
+description: "Principals with the Cloud App Admin role can control tenant-resident apps."
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+## Abuse Info
+
+Create a new credential for the app, then authenticate to the tenant as the app’s service principal, then abuse whatever privilege it is that the service principal has.
+
+## Opsec Considerations
+
+The Azure portal will create a log even whenever a new credential is created for a service principal.
+
+## References
+
+* [https://dirkjanm.io/azure-ad-privilege-escalation-application-admin/](https://dirkjanm.io/azure-ad-privilege-escalation-application-admin/)

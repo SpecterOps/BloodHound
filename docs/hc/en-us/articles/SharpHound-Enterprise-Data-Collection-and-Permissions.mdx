@@ -1,0 +1,119 @@
+---
+title: SharpHound Enterprise Data Collection and Permissions
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+SharpHound Enterprise data collection utilizes the open-source [SharpHound Common](https://github.com/BloodHoundAD/SharpHoundCommon) library, maintained by the BloodHound Enterprise Engineering team.
+
+In BloodHound Enterprise you can start scans for different data types via a [collection schedule](/hc/en-us/articles/Create-a-data-collection-schedule) or an [on-demand scan](/hc/en-us/articles/Run-an-On-Demand-Scan), the data types are:
+
+* [Active Directory Structure Data](/hc/en-us/articles/SharpHound-Enterprise-Data-Collection-and-Permissions#ad-structure-data)
+* _Local Groups_, collecting:
+    * [Local Group Membership](/hc/en-us/articles/SharpHound-Enterprise-Data-Collection-and-Permissions#local-group-membership)
+    * [User Rights Assignments](/hc/en-us/articles/SharpHound-Enterprise-Data-Collection-and-Permissions#user-rights-assignments)
+* [Sessions](/hc/en-us/articles/SharpHound-Enterprise-Data-Collection-and-Permissions#sessions)
+* [Certificate Services](/hc/en-us/articles/SharpHound-Enterprise-Data-Collection-and-Permissions#certificate-services)
+* [DC Registry](/hc/en-us/articles/SharpHound-Enterprise-Data-Collection-and-Permissions#dc-registry)
+* [CA Registry](/hc/en-us/articles/SharpHound-Enterprise-Data-Collection-and-Permissions#ca-registry)
+
+Local Groups and Sessions can only be collected from domain-joined Windows systems, and require privileged collection to be configured, see [Why perform privileged collection in SharpHound](/hc/en-us/articles/Why-perform-privileged-collection-in-SharpHound). This collection helps understand Attack Paths to individual systems based on non-centralized configurations.
+
+## AD Structure Data
+
+Information about the objects and relationships within your Active Directory environment makes up the basic information necessary to identify attack paths within your environment. This information includes:
+
+* Domain trusts.
+* Object properties of users, groups, computers, GPOs, OUs containers, and Domain objects.
+* ACLs related to users, groups, computers, GPOs, OUs, containers, and Domain objects.
+* Enumerated objects contained in every OU, container, and Domain.
+* Enumerated memberships of all Groups.
+
+Reference: [Current Object Properties collected by SharpHound](https://github.com/BloodHoundAD/SharpHoundCommon/blob/v3/src/CommonLib/LDAPQueries/CommonProperties.cs).
+
+### Collection and Permissions
+
+SharpHound collects this information utilizing signed LDAP queries against a domain controller in the domain. By default, all Authenticated Users can enumerate almost all AD Structure Data utilized by BloodHound Enterprise.
+
+### [Granting Access to the Deleted Objects Container (Optional)
+
+To improve reconciliation performance in tracking deleted objects, it is recommended to grant the SharpHound service account [access to the "Deleted Objects" container](https://learn.microsoft.com/en-us/troubleshoot/windows-server/identity/non-administrators-view-deleted-object-container). 
+
+## Local Group Membership
+
+Members of the following groups are enumerated:
+
+* Administrators
+* Remote Desktop Users
+* Distributed COM Users
+* Remote Management Users
+
+### Collection and Permissions
+
+SharpHound collects this information utilizing [Remote SAM Enumeration](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-access-restrict-clients-allowed-to-make-remote-sam-calls).
+
+By default, computers beginning with Windows 10 version 1607 and Windows Server 2016 require Administrator access to perform RemoteSAM operations. Although this setting may be overridden with Group Policy, this is the only permission required by SharpHound for which Microsoft supports modification.
+
+## User Rights Assignments
+
+Prior to SharpHound Common v3, BloodHound made assumptions about group membership and Attack Paths. For example, BloodHound would assume that membership in the Remote Desktop Users group on its own gives users the ability to utilize Remote Desktop to access a system. The reality of necessary permissions is more complex, and understanding that access requires analysis of User Rights Assignments within Windows.
+
+### Collection and Permissions
+
+SharpHound collects this information utilizing the [LsaOpenPolicy](https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-lsaopenpolicy) function.
+
+Collecting information about User Rights Assignments requires analyzing LSA Policy on each domain-joined system utilizing the LsaOpenPolicy function. Only Local Administrators may call the LsaOpenPolicy function.
+
+## Sessions
+
+SharpHound collects active session information to identify abusable sessions on domain-joined systems. These sessions are vulnerable to [OS Credential Dumping](https://attack.mitre.org/techniques/T1003/001/) from tools such as [Mimikatz](https://github.com/ParrotSec/mimikatz).
+
+### Collection and Permissions
+
+SharpHound collects this information utilizing the [NetWkstaUserEnum](https://learn.microsoft.com/en-us/windows/win32/api/lmwksta/nf-lmwksta-netwkstauserenum) function.
+
+Only members of the local Administrators group may call this function.
+
+## Certificate Services
+
+Information about the Active Directory Certificate Service hierarchy within your Active Directory environment makes up the basic information necessary to identify ADCS attack paths within your environment. This information includes:
+
+* Certificate Templates
+* Root CAs
+* Enterprise CAs
+
+### Collection and Permissions
+
+SharpHound collects this information utilizing signed LDAP queries against a domain controller in the domain.
+
+By default, all Authenticated Users can enumerate almost all Certificate Services data utilized by BloodHound Enterprise.
+
+Two additional types of data can enhance the findings - [DC Registry](/hc/en-us/articles/SharpHound-Enterprise-Data-Collection-and-Permissions#dc-registry) and [CA Registry](/hc/en-us/articles/SharpHound-Enterprise-Data-Collection-and-Permissions#ca-registry).
+
+## DC Registry
+
+SharpHound collects the registry key values Kdc\\StrongCertificateBindingEnforcement and Schannel\\CertificateMappingMethods (described [here](https://support.microsoft.com/en-us/topic/kb5014754-certificate-based-authentication-changes-on-windows-domain-controllers-ad2c23b0-15d8-4340-a468-4d4f3b188f16)) to determine the allowed certificate mapping methods by the DCs. The BloodHound ADCS edges ESC6, ESC9, and ESC10 require this data to be collected.
+
+### Collection and Permissions
+
+Collecting these registry key values requires membership of Administrators on the DCs by default.
+
+## CA Registry
+
+SharpHound collects the following registry key values on enterprise CAs stored under SYSTEM\\CurrentControlSet\\Services\\CertSvc\\Configuration\\&lt;CA Name&gt;: 
+
+* **EnrollmentAgentRights
+    **Contains restrictions for enrollment agents. BloodHound will take the restrictions into account when calculating ADCS ESC3 edges, and assume no restrictions if not collected, as no restrictions are configured by default. 
+* **Security
+    **Contains the security descriptor for the enterprise CA i.e. the permissions for Enroll, ManageCA, and ManageCertificates edges against the enterprise CA. This security descriptor is also stored in the AD object of the enterprise CA. SharpHound collects both. The CA registry security descriptor holds the effective permissions. Changes in the CA registry security descriptor are replicated to the AD copy, however, not the other way. Therefore, collecting the CA registry security descriptor may reveal permissions of the enterprise CA that are not present if only collecting the AD object. 
+* **PolicyModules\\CertificateAuthority_MicrosoftDefault.Policy\\EditFlags
+    **SharpHound checks if the EDITF_ATTRIBUTESUBJECTALTNAME2 flag is present, required to calculate ADCS ESC6 edges.
+
+The registry key values are described in detail in the [Certified Pre-Owned whitepaper](https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf).
+
+### Collection and Permissions
+
+Collecting these registry key values requires membership of Administrators on the enterprise CAs by default.
+

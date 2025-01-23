@@ -105,15 +105,15 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Kerberoastable members of Tier Zero / High Value groups',
-                cypher: `MATCH p=shortestPath((n:User)-[:MemberOf]->(g:Group))\nWHERE 'admin_tier_0' IN split(g.system_tags, ' ') AND n.hasspn=true\nAND n.enabled = true\nAND NOT n.objectid ENDS WITH '-502'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT coalesce(u.gmsa, false) = true\nAND NOT coalesce(u.msa, false) = true\nAND coalesce(u.system_tags, '') = 'admin_tier_0'\nRETURN u\nLIMIT 100`,
             },
             {
                 description: 'All Kerberoastable users',
-                cypher: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT coalesce(u.gmsa, ' ') = true\nAND NOT coalesce(u.msa, ' ') = true\nRETURN u\nLIMIT 100`,
+                cypher: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT coalesce(u.gmsa, false) = true\nAND NOT coalesce(u.msa, false) = true\nRETURN u\nLIMIT 100`,
             },
             {
                 description: 'Kerberoastable users with most admin privileges',
-                cypher: `MATCH (u:User)\nWHERE u.hasspn = true\n  AND u.enabled = true\n  AND NOT u.objectid ENDS WITH '-502'\n  AND NOT coalesce(u.gmsa, ' ') = true\n  AND NOT coalesce(u.msa, ' ') = true\nMATCH (u)-[:MemberOf|AdminTo*1..]->(c:Computer)\nWITH DISTINCT u, COUNT(c) AS adminCount\nRETURN u\nORDER BY adminCount DESC\nLIMIT 100`,
+                cypher: `MATCH (u:User)\nWHERE u.hasspn = true\n  AND u.enabled = true\n  AND NOT u.objectid ENDS WITH '-502'\n  AND NOT coalesce(u.gmsa, false) = true\n  AND NOT coalesce(u.msa, false) = true\nMATCH (u)-[:MemberOf|AdminTo*1..]->(c:Computer)\nWITH DISTINCT u, COUNT(c) AS adminCount\nRETURN u\nORDER BY adminCount DESC\nLIMIT 100`,
             },
             {
                 description: 'AS-REP Roastable users (DontReqPreAuth)',
@@ -131,7 +131,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Shortest paths to Domain Admins from Kerberoastable users',
-                cypher: `MATCH p=shortestPath((n:User)-[:${adTransitEdgeTypes}*1..]->(m:Group))\nWHERE n.hasspn = true AND m.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((u:User)-[:${adTransitEdgeTypes}*1..]->(m:Group))\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT coalesce(u.gmsa, false) = true\nAND NOT coalesce(u.msa, false) = true\nAND m.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths to Tier Zero / High Value targets',
@@ -252,7 +252,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Nested groups within Tier Zero / High Value',
-                cypher: `MATCH p=(n:Group)-[:MemberOf*..]->(t:Group)\nWHERE coalesce(t.system_tags,'') CONTAINS ('tier_0')\nAND NOT n.objectid ENDS WITH '-512' // Domain Admins\nAND NOT n.objectid ENDS WITH '-519' // Enterprise Admins\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(n:Group)-[:MemberOf*..]->(t:Group)\nWHERE coalesce(t.system_tags, '') CONTAINS ('tier_0')\nAND NOT n.objectid ENDS WITH '-512' // Domain Admins\nAND NOT n.objectid ENDS WITH '-519' // Enterprise Admins\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Disabled Tier Zero / High Value principals',

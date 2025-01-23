@@ -41,6 +41,8 @@ COPY cmd/ui/vite.config.ts ./
 COPY cmd/ui/tsconfig.node.json ./
 COPY cmd/ui/tsconfig.json ./
 COPY cmd/ui/public ./public
+COPY cmd/ui/postcss.config.js ./
+COPY cmd/ui/tailwind.config.js ./
 COPY cmd/ui/index.html ./
 
 WORKDIR /bloodhound/cmd/ui

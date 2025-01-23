@@ -1,0 +1,52 @@
+---
+title: Install BloodHound Community Edition with Docker Compose
+---
+
+<Frame>
+  <img src="/hc/article_attachments/18246479746331.png"/>
+</Frame>
+
+## Purpose
+
+This article outlines the configuration files of BloodHound Community Edition (BHCE) installed with Docker Compose and how to configure them.
+
+For a more advanced walkthrough of the deployment process, read our deployment [README.MD](https://github.com/SpecterOps/BloodHound#readme) in GitHub.
+
+**NOTE: Do not follow this guide if you intend to expose the databases outside of Docker. Use the instructions in README.MD to make sure you change the default database passwords accordingly.**
+
+## Prerequisites
+
+Running the example Docker Compose project requires the following:
+
+* A Docker-compatible container runtime, for example, [Docker Desktop](https://www.docker.com/) or [Podman (with Docker compatibility enabled)](https://www.redhat.com/sysadmin/podman-docker-compose)
+* [Docker Compose](https://docs.docker.com/compose/install/) (automatically included with Docker Desktop)
+
+The simplest way to get started is to install [Docker Desktop](https://www.docker.com/products/docker-desktop/), as it will provide both prerequisites and require no additional configuration.
+
+## Process
+
+**Optional:** One-line command for Steps 1 & 2
+```json
+curl -L https://ghst.ly/getbhce | docker compose -f - up
+```
+_On Windows, execute the command in CMD, or use "curl.exe" instead of "curl" in PowerShell._
+
+1.  Download the [Docker Compose YAML file](https://github.com/SpecterOps/BloodHound/blob/main/examples/docker-compose/docker-compose.yml) and save it to a directory where you'd like to run BHCE.
+    * On Linux/Mac: `curl -L https://ghst.ly/getbhce > .\docker-compose.yml`
+    * On Windows, from CMD: `curl -L https://ghst.ly/getbhce > .\docker-compose.yml`
+    * On Windows, from PowerShell: `Invoke-WebRequest -Uri https://ghst.ly/getbhce -OutFile .\docker-compose.yaml`
+2.  Navigate to the folder with the saved `docker-compose.yaml` file and run `docker compose pull && docker compose up`.
+    * To run BHCE without the need to maintain the terminal interface, use `docker compose up -d`, and then `docker compose logs` to see the most recent logs from the environment.
+3.  Locate the randomly generated password in the terminal output of Docker Compose.
+<Frame>
+  <img src="/hc/images/image-188.png" alt=""/>
+</Frame>
+    * The password cannot be regenerated. If you lost the password, simply run `docker compose down -v` and then `docker compose up` to reset your databases.
+4.  In a browser, navigate to [http://localhost:8080/ui/login](http://localhost:8080/ui/login). Login with the username `admin` and the randomly generated password from the logs.
+
+Note: The default `docker-compose.yml` example binds only to localhost (127.0.0.1). If you want to access BHCE outside of localhost, you'll need to follow the instructions in examples/docker-compose/README.md to configure the host binding for the container.
+
+## Outcome
+
+At the completion of this process, users will be logged into a locally hosted BHCE tenant running with Docker Compose.
+

@@ -1,0 +1,56 @@
+---
+title: Run an On Demand Scan
+---
+
+<Frame>
+  <img src="/hc/article_attachments/18246479746331.png"/>
+</Frame>
+
+## Purpose
+
+This article outlines how to run an On Demand Scan to perform a one-time immediate data collection with a collector client. BHE administrators may use it during collector client deployment, one-time collections, or troubleshooting.
+
+## Prerequisites
+
+* Creation of one SharpHound Enterprise client, see [Create a SharpHound Enterprise collector client](/hc/en-us/articles/Create-a-BloodHound-Enterprise-collector-client)
+* Logged in as a user role which is authorized to run an On Demand Scan, see [User Role Definitions](/hc/en-us/articles/Administering-users-and-roles#h_01H6P9MK1XME9F91NR95XJXR3Z)
+
+## Process
+
+1.  In the top right, click settings ⚙️ → **Administration**
+<Frame>
+  <img src="/hc/images/image-63.png" alt=""/>
+</Frame>
+2.  In the top left side, click **Manage Clients**
+<Frame>
+  <img src="/hc/images/image-64.png" alt=""/>
+</Frame>
+3.  On the client, click the burger menu and select **On Demand Scan** 
+    * Tip: Verify the client is online by validating **Status** is **Ready**
+<Frame>
+  <img src="/hc/images/image-65.png" alt=""/>
+</Frame>
+4.  In the _On Demand Scan_ window, configure the scan:
+    1.  **Data**: The type of data the schedule collects, see [SharpHound Enterprise Data Collection and Permissions](/hc/en-us/articles/SharpHound-Enterprise-Data-Collection-and-Permissions)
+    2.  **Advanced Options**: See the [Scanning section in the article SharpHound Enterprise Tenant Configuration](/hc/en-us/articles/SharpHound-Enterprise-Tenant-Configuration#h_01GECVA74SF7JN7XRYPFBXASYW)
+<Frame>
+  <img src="/hc/images/image-66.png" alt=""/>
+</Frame>
+5.  Start the scan by clicking **Run**
+
+## Outcome
+
+The client will start the On Demand Scan after the next client check-in, usually within one minute.
+
+Once started, the client's **Status** will show **Running a Job**:
+
+<Frame>
+  <img src="/hc/images/image-67.png" alt=""/>
+</Frame>
+
+After completion, see the job's status in the _Finished Jobs Log_ by clicking ⚙️ → **Administration**, and in the top left side, click **Finished Jobs** **Log**_. _The columns **Status** and **Status Message** report on the job's completion.
+
+<Frame>
+  <img src="/hc/images/image-68.png" alt=""/>
+</Frame>
+
