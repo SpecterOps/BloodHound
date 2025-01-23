@@ -99,7 +99,7 @@ const Content: React.FC = () => {
                                 element={
                                     <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                                         <AuthenticatedRoute>
-                                            <div className={`h-full ${route.navigation && 'pl-16'} `}>
+                                            <div className={`h-full ${route.navigation && 'pl-[56px]'} `}>
                                                 <route.component />
                                             </div>
                                         </AuthenticatedRoute>
