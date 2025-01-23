@@ -43,7 +43,6 @@ func NewDefaultConfiguration() (Configuration, error) {
 			RootURL:                      serde.MustParseURL("http://localhost"),
 			WorkDir:                      "/opt/bhe/work",
 			LogLevel:                     "INFO",
-			LogPath:                      DefaultLogFilePath,
 			CollectorsBasePath:           "/etc/bloodhound/collectors",
 			DatapipeInterval:             60,
 			EnableStartupWaitPeriod:      true,

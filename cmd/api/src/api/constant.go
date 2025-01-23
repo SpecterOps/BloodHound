@@ -27,11 +27,16 @@ const (
 
 	// UserInterfacePath is the static path to the UI landing page
 	UserInterfacePath = "/ui"
+	UserLoginPath     = "/ui/login"
 	UserDisabledPath  = "/ui/user-disabled"
 
 	// Authorization schemes
 	AuthorizationSchemeBHESignature = "bhesignature"
 	AuthorizationSchemeBearer       = "bearer"
+
+	// Form parameters
+	FormParameterState = "state"
+	FormParameterCode  = "code"
 
 	// Query parameters
 	QueryParameterSortBy         = "sort_by"
@@ -39,8 +44,6 @@ const (
 	QueryParameterHydrateDomains = "hydrate_domains"
 	QueryParameterHydrateOUs     = "hydrate_ous"
 	QueryParameterScope          = "scope"
-	QueryParameterState          = "state"
-	QueryParameterCode           = "code"
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"

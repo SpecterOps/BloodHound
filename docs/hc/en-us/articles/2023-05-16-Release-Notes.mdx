@@ -1,0 +1,65 @@
+---
+title: 2023-05-16 Release Notes
+---
+
+## Announcements
+
+### SharpHound v1 End of Life
+
+SharpHound v1 has officially retired as of today's release. Any remaining SharpHound v1 collectors will no longer have the ability to check in or deliver data to the API endpoints. Additionally, installers have been removed from the Download Clients window to prevent confusion.
+
+Thank you to everyone who helped migrate to SharpHound v2!
+
+### New Attack Path Primitive: DumpSMSAPassword
+
+Today's release includes support for a new Attack Path primitive, DumpSMSAPassword. [Standalone Managed Service Accounts (sMSAs)](https://learn.microsoft.com/en-us/azure/active-directory/fundamentals/service-accounts-standalone-managed) are a feature of Active Directory that helps offload some of the risks associated with traditional user-object service accounts.
+
+When a Standalone Managed Service Account (sMSA) is installed on a computer, the computer will store the password of the sMSA in the computer’s LSA secrets, which are stored in the registry. With local administrative access on the computer, one can retrieve the content of LSA secrets, including the plaintext password of an installed sMSA.
+
+_Collecting and analyzing this primitive requires SharpHound v2.1.6+._
+
+## Summary
+
+* **BloodHound Enterprise**
+    * New and Improved Features - DumpSMSAPassword Attack Path primitive, expanded password character support.
+    * Bug Fixes - Improved path-finding logic in specific scenarios.
+* **SharpHound Enterprise (v2.1.6)**
+    * New and Improved Features - DumpSMSAPassword support, LDAP queries are now split by type, improved OU structure generation logic for reduced impact on LDAP servers and improved collection times.
+    * Bug Fixes - Enhanced exception handling logic to prevent service crashes.
+* **AzureHound Enterprise (v2.0.3)**
+    * Bug Fixes - AzureHound will now properly back off and retry when hitting session timeouts.
+
+### BloodHound Enterprise
+
+#### Improved Functionality
+
+* **\[Requires SharpHound v2.1.6+\] DumpSMSAPassword Attack Path -** See the announcement above for more details, but this release includes a brand new Attack Path primitive.
+* **Expanded character support in passwords - **BloodHound Enterprise now supports all Unicode values for the purposes of providing a "special character" within passwords.
+
+#### Bug Fixes
+
+* Pathfinding logic has been improved to more accurately present the shortest paths between objects. Previously, in specific scenarios, a "Path not found" error would be displayed instead.
+
+### SharpHound Enterprise (v2.1.6)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.1.6_
+
+#### Improved Functionality
+
+* **\[Requires SharpHound v2.1.6+\] DumpSMSAPassword Attack Path -** See the announcement above for more details, but this release includes a brand new Attack Path primitive.
+* **Improved LDAP query logic - **SharpHound now performs multiple queries against LDAP servers, split by object type. This has many benefits, including a significant reduction in resource impact upon the in-use LDAP server, and should result in improved collection times as well.
+
+#### Bug Fixes
+
+* Improved exception handling to prevent service crashes during collection job cleanup.
+
+### AzureHound Enterprise (v2.0.3)
+
+_Minimum version of AzureHound Service to support all current functionality: v2.0.1_
+
+#### Bug Fixes
+
+* AzureHound will not correctly enter the back-off/retry logic when receiving an HTTP/504 Timeout response from BloodHound Enterprise APIs.
+
+
+

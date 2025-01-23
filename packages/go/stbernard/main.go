@@ -34,7 +34,7 @@ func main() {
 	env := environment.NewEnvironment()
 	var rawLvl = env[environment.LogLevelVarName]
 
-	bhlog.ConfigureDefault(true)
+	bhlog.ConfigureDefaultText(os.Stderr)
 
 	if rawLvl == "" {
 		rawLvl = "warn"

@@ -1,0 +1,50 @@
+---
+title: 2024-05-28 Release Notes (v5.10.0)
+---
+## Announcements
+
+### Building Our Nemesis: Webinar[](#01HMSJXKQJNF1QXGXEV9CEGK4W)
+
+Nemesis v1.0 is now live! Join Will Schroeder, Lee Chagolla-Christensen, and Max Harley on May 30, 2024 at 11:00 AM PT to learn about Nemesis, our offensive-focused data enrichment pipeline years in the making. Nemesis aims to unify all post-exploitation data from offensive engagements in order to improve operator workflows, provide tradecraft assistance, and uncover new data-driven research opportunities.
+
+Register here today: https://specterops.zoom.us/webinar/register/WN\_4HAj\_qwkQpy4mbduJPEYxA#/registration
+
+## Summary
+
+* **BloodHound (v5.10.0****)**
+    * New and Improved Features
+        * Improved Cypher quality controls to prevent failure and errors
+        * Example Active Directory data now available
+        * _\[BHE Only\]_ Updated reference links for all Attack Path findings
+        * _\[CE Only__\]_ Enable graph mutation via Cypher
+    * Bug Fixes
+        * Entity panels will now appear regardless of the object type selected
+        * _\[CE Only\]_ Added missing package caches for offline builds
+* **SharpHound (v2.4.1 - BHE, v2.4.1 - CE)**
+    * _No new release._
+* **AzureHound (v2.1.9)**
+    * _No new release._
+
+### BloodHound (v5.10.0)[](#h_01H93N41YNHMSBBACC28P2T428)
+
+
+#### New and Improved Features
+
+* **Improved Cypher quality controls** \- The BloodHound API performs several checks during Cypher queries to prevent failures due to resource exhaustion, etc. We've improved these processes to improve our customers' experience.
+* **Example Active Directory data** \- Looking for sample data to try out BloodHound? We've got some hosted on [GitHub](https://github.com/SpecterOps/BloodHound/tree/main/examples/sample-data)!
+* _\[BHE Only\]_ Updated reference links for all Attack Path findings - Attack Path references have all been updated to point toward our new documentation location!
+* _\[CE Only__\]_ Enable graph mutation via Cypher - CE users may enable graph mutation via the \`bhe\_enable\_cypher_mutations\` environment variable! See line 35 [here](https://github.com/SpecterOps/BloodHound/blob/main/examples/docker-compose/.env.example#L35).
+
+#### Bug Fixes
+
+* Entity panels will now appear regardless of the object type selected
+* _\[CE Only\]_ Added missing package caches for offline builds
+
+### SharpHound (v2.4.1 - BHE, v2.4.1 - CE)[](#h_01H93N41YN3D3XZWS5G9VWYAV9)
+
+_No new release._
+
+### AzureHound (v2.1.9)[](#h_01H93N41YNJ0DZ2735TV8XQKV6)
+
+_No new release._
+
