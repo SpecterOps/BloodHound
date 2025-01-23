@@ -42,6 +42,10 @@ func NewHyperLogLog32() Simplex[uint32] {
 	}
 }
 
+func NewHyperLogLog32Provider() Provider[uint32] {
+	return NewHyperLogLog32()
+}
+
 func (s *hyperLogLog32) Clone() Simplex[uint32] {
 	return &hyperLogLog32{
 		sketch: s.sketch.Clone(),
