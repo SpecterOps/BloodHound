@@ -182,7 +182,6 @@ get:
                       time: "2024-08-28T21:21:40.845Z",
                       valid: true
                     },
-                    FromPrincipalName: string,
                     FromPrincipal: string,
                     ToPrincipal: string,
                     FromPrincipalProps: {
@@ -191,7 +190,6 @@ get:
                       additionalProp3: {}
                     },
                     FromPrincipalKind: string,
-                    ToPrincipalName: string,
                     ToPrincipalProps: {
                       additionalProp1: {},
                       additionalProp2: {},
@@ -208,7 +206,6 @@ get:
                       valid: true
                     },
                     Finding: string,
-                    Domain: string,
                     DomainSID: string,
                     PrincipalHash: string,
                     AcceptedUntil: "2024-08-28T21:21:40.845Z",
@@ -217,8 +214,6 @@ get:
                     ExposurePercentage: 0.24,
                     ExposureCount: 4,
                     Severity: 'high',
-                    Accepted: true,
-                    IsInherited: true,
                   }
                 ]
             Metatree Relationship Finding:
@@ -237,10 +232,8 @@ get:
                       time: "2024-08-28T21:21:40.845Z",
                       valid: true
                     },
-                    FromPrincipalName: string,
                     FromPrincipal: string,
                     ToPrincipal: string,
-                    ToPrincipalName: string,
                     FromPrincipalProps: {
                       additionalProp1: {},
                       additionalProp2: {},
@@ -263,7 +256,6 @@ get:
                       valid: true
                     },
                     Finding: string,
-                    Domain: string,
                     DomainSID: string,
                     PrincipalHash: string,
                     AcceptedUntil: "2024-08-28T21:21:40.845Z",
@@ -272,8 +264,6 @@ get:
                     ExposurePercentage: 0,
                     ExposureCount: 0,
                     Severity: '',
-                    Accepted: true,
-                    IsInherited: true,
                   }
                 ]
             Butterfly List Finding:
@@ -294,9 +284,7 @@ get:
                     },
                     Principal: string,
                     PrincipalKind: string,
-                    PrincipalName: string,
                     Finding: string,
-                    Domain: string,
                     DomainSID: string,
                     Props: {
                       additionalProp1: {},
@@ -307,7 +295,6 @@ get:
                     ImpactPercentage: 0.12,
                     ImpactCount: 2,
                     Severity: 'high',
-                    Accepted: true
                   }
                 ]
             Metatree List Finding:
@@ -328,9 +315,7 @@ get:
                     },
                     Principal: string,
                     PrincipalKind: string,
-                    PrincipalName: string,
                     Finding: string,
-                    Domain: string,
                     DomainSID: string,
                     Props: {
                       additionalProp1: {},
@@ -341,7 +326,6 @@ get:
                     ImpactPercentage: 0,
                     ImpactCount: 0,
                     Severity: '',
-                    Accepted: true
                   }
                 ]
     400:

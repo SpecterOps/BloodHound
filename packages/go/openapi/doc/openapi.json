@@ -12920,7 +12920,6 @@
                             "time": "2024-08-28T21:21:40.845Z",
                             "valid": true
                           },
-                          "FromPrincipalName": "string",
                           "FromPrincipal": "string",
                           "ToPrincipal": "string",
                           "FromPrincipalProps": {
@@ -12929,7 +12928,6 @@
                             "additionalProp3": {}
                           },
                           "FromPrincipalKind": "string",
-                          "ToPrincipalName": "string",
                           "ToPrincipalProps": {
                             "additionalProp1": {},
                             "additionalProp2": {},
@@ -12946,7 +12944,6 @@
                             "valid": true
                           },
                           "Finding": "string",
-                          "Domain": "string",
                           "DomainSID": "string",
                           "PrincipalHash": "string",
                           "AcceptedUntil": "2024-08-28T21:21:40.845Z",
@@ -12954,9 +12951,7 @@
                           "ImpactCount": 2,
                           "ExposurePercentage": 0.24,
                           "ExposureCount": 4,
-                          "Severity": "high",
-                          "Accepted": true,
-                          "IsInherited": true
+                          "Severity": "high"
                         }
                       ]
                     }
@@ -12977,10 +12972,8 @@
                             "time": "2024-08-28T21:21:40.845Z",
                             "valid": true
                           },
-                          "FromPrincipalName": "string",
                           "FromPrincipal": "string",
                           "ToPrincipal": "string",
-                          "ToPrincipalName": "string",
                           "FromPrincipalProps": {
                             "additionalProp1": {},
                             "additionalProp2": {},
@@ -13003,7 +12996,6 @@
                             "valid": true
                           },
                           "Finding": "string",
-                          "Domain": "string",
                           "DomainSID": "string",
                           "PrincipalHash": "string",
                           "AcceptedUntil": "2024-08-28T21:21:40.845Z",
@@ -13011,9 +13003,7 @@
                           "ImpactCount": 0,
                           "ExposurePercentage": 0,
                           "ExposureCount": 0,
-                          "Severity": "",
-                          "Accepted": true,
-                          "IsInherited": true
+                          "Severity": ""
                         }
                       ]
                     }
@@ -13036,9 +13026,7 @@
                           },
                           "Principal": "string",
                           "PrincipalKind": "string",
-                          "PrincipalName": "string",
                           "Finding": "string",
-                          "Domain": "string",
                           "DomainSID": "string",
                           "Props": {
                             "additionalProp1": {},
@@ -13048,8 +13036,7 @@
                           "accepted_until": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0.12,
                           "ImpactCount": 2,
-                          "Severity": "high",
-                          "Accepted": true
+                          "Severity": "high"
                         }
                       ]
                     }
@@ -13072,9 +13059,7 @@
                           },
                           "Principal": "string",
                           "PrincipalKind": "string",
-                          "PrincipalName": "string",
                           "Finding": "string",
-                          "Domain": "string",
                           "DomainSID": "string",
                           "Props": {
                             "additionalProp1": {},
@@ -13084,8 +13069,7 @@
                           "accepted_until": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0,
                           "ImpactCount": 0,
-                          "Severity": "",
-                          "Accepted": true
+                          "Severity": ""
                         }
                       ]
                     }
