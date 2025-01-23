@@ -24,3 +24,8 @@ export type DeepPartial<T> = T extends object
 export type SortOrder = 'asc' | 'desc' | undefined;
 
 export type ValueOf<T> = T[keyof T];
+
+// [key in <string literal>] forces all options in string literal type to be in this map and nothing else
+export type MappedStringLiteral<T extends string | number, V = ''> = {
+    [key in T]: V;
+};
