@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
 import { NoDataDialog } from 'bh-shared-ui';
-import { ROUTE_ADMINISTRATION_FILE_INGEST } from 'src/ducks/global/routes';
+import { Link } from 'react-router-dom';
+import { ROUTE_ADMINISTRATION_FILE_INGEST } from 'src/routes/constants';
 
 type NoDataDialogWithLinksProps = {
     open: boolean;

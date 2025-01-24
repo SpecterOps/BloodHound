@@ -19,6 +19,7 @@ import { GenericErrorBoundaryFallback, Permission, SubNav } from 'bh-shared-ui';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Navigate, Route, Routes } from 'react-router-dom';
+import usePermissions from 'src/hooks/usePermissions/usePermissions';
 import {
     ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
     ROUTE_ADMINISTRATION_DATA_QUALITY,
@@ -27,8 +28,7 @@ import {
     ROUTE_ADMINISTRATION_FILE_INGEST,
     ROUTE_ADMINISTRATION_MANAGE_USERS,
     ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
-} from 'src/ducks/global/routes';
-import usePermissions from 'src/hooks/usePermissions/usePermissions';
+} from 'src/routes/constants';
 
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const QA = React.lazy(() => import('src/views/QA'));

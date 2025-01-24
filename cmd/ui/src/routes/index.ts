@@ -1,17 +1,17 @@
 import React from 'react';
-import * as routes from 'src/ducks/global/routes';
+import * as routes from 'src/routes/constants';
 
 const Login = React.lazy(() => import('src/views/Login'));
 const DisabledUser = React.lazy(() => import('src/views/DisabledUser'));
 const ExpiredPassword = React.lazy(() => import('src/views/ExpiredPassword'));
 const Home = React.lazy(() => import('src/views/Home/Home'));
 const NotFound = React.lazy(() => import('src/views/NotFound'));
-const ExploreGraphView = React.lazy(() => import('./views/Explore/GraphView'));
+const ExploreGraphView = React.lazy(() => import('src/views/Explore/GraphView'));
 const UserProfile = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.UserProfile })));
-const DownloadCollectors = React.lazy(() => import('./views/DownloadCollectors'));
-const Administration = React.lazy(() => import('./views/Administration'));
+const DownloadCollectors = React.lazy(() => import('src/views/DownloadCollectors'));
+const Administration = React.lazy(() => import('src/views/Administration'));
 const ApiExplorer = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.ApiExplorer })));
-const GroupManagement = React.lazy(() => import('./views/GroupManagement/GroupManagement'));
+const GroupManagement = React.lazy(() => import('src/views/GroupManagement/GroupManagement'));
 
 export const ROUTES = [
     {

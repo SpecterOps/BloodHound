@@ -3,7 +3,7 @@ import { AppIcon } from 'bh-shared-ui';
 import { ReactNode } from 'react';
 import { logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
-import * as routes from 'src/ducks/global/routes';
+import * as routes from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 export const useMainNavLogoData = () => {

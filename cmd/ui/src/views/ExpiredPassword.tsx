@@ -21,7 +21,7 @@ import { PutUserAuthSecretRequest } from 'js-client-library';
 import { Navigate } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 import { authExpiredSelector, logout, updateExpiredPassword } from 'src/ducks/auth/authSlice';
-import { ROUTE_HOME } from 'src/ducks/global/routes';
+import { ROUTE_HOME } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const PasswordReset: React.FC = () => {
