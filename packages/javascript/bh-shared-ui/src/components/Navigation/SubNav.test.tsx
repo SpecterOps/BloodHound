@@ -38,7 +38,7 @@ describe('SubNav', () => {
         expect(screen.getByRole('link', { name: testNavItem.label })).toHaveAttribute('href', testNavItem.path);
     });
 
-    it('should render many sections with a many navigation items', () => {
+    it('should render many sections with many navigation items', () => {
         const testSections = [
             {
                 title: 'testSection1',
