@@ -77,6 +77,7 @@ import AllowedToDelegate from './AllowedToDelegate/AllowedToDelegate';
 import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
 import CoerceAndRelayNTLMToSMB from './CoerceAndRelayNTLMToSMB/CoerceAndRelayNTLMToSMB';
+import CoerceAndRelayNTLMToLDAP from './CoerceAndRelayNTLMToLDAP/CoerceAndRelayNTLMToLDAP';
 import CoerceToTGT from './CoerceToTGT/CoerceToTGT';
 import Contains from './Contains/Contains';
 import DCFor from './DCFor/DCFor';
@@ -242,6 +243,7 @@ const EdgeInfoComponents = {
     SyncedToADUser: SyncedToADUser,
     SyncedToEntraUser: SyncedToEntraUser,
     CoerceAndRelayNTLMToSMB: CoerceAndRelayNTLMToSMB,
+    CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
 };
 
 export default EdgeInfoComponents;
