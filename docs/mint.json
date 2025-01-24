@@ -81,9 +81,9 @@
       "group": "Get Started with BloodHound",
           "pages": [
             "hc/en-us/get-started/introduction-to-bloodhound",
-            "hc/en-us/get-started/bloodHound-enterprise-quickstart",
-            "hc/en-us/get-started/bloodHound-community-edition-quickstart",
-            "hc/en-us/get-started/bloodHound-glossary"
+            "hc/en-us/get-started/bloodhound-enterprise-quickstart",
+            "hc/en-us/get-started/bloodhound-community-edition-quickstart",
+            "hc/en-us/get-started/bloodhound-glossary"
           ]
     },
     {
@@ -164,7 +164,6 @@
           "group": "Deploying BloodHound Enterprise",
           "pages": [
             "hc/en-us/sections/Deploying-BloodHound-Enterprise",
-            "hc/en-us/articles/BloodHound-Enterprise-Tenant",
             "hc/en-us/articles/BloodHound-Enterprise-Security-Overview"
           ]
         },

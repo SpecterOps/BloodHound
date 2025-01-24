@@ -41,6 +41,14 @@ type TimestampFields = {
     };
 };
 
+export type Domain = {
+    type: 'active-directory' | 'azure';
+    impactValue: number;
+    name: string;
+    id: string;
+    collected: boolean;
+};
+
 export type ActiveDirectoryQualityStat = TimestampFields & {
     users: number;
     computers: number;
