@@ -18,9 +18,9 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { faCloud, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert, Box, Divider, MenuItem, Popover, Skeleton, TextField, Tooltip, Typography } from '@mui/material';
-import { useAvailableDomains } from '../../../hooks';
-import React, { ReactNode, useState } from 'react';
 import { Domain } from 'js-client-library';
+import React, { ReactNode, useState } from 'react';
+import { useAvailableDomains } from '../../../hooks';
 import { DataSelectorValueTypes } from './types';
 
 const DataSelector: React.FC<{

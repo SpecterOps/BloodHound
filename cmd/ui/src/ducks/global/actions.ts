@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { Domain } from 'js-client-library';
 import { OptionsObject, SnackbarKey } from 'notistack';
 import * as types from './types';
-import { Domain } from 'js-client-library';
 
 export const removeSnackbar = (key: SnackbarKey): types.GlobalViewActionTypes => {
     return {
