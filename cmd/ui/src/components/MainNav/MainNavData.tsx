@@ -16,7 +16,7 @@ export const useMainNavLogoData = () => {
         image: {
             imageUrl: `${import.meta.env.BASE_URL}${darkMode ? imageUrlDarkMode : imageUrlLightMode}`,
             dimensions: { height: '40px', width: '165px' },
-            classes: 'ml-4',
+            classes: 'ml-4 mt-2',
             altText: 'BHCE Text Logo',
         },
     };
