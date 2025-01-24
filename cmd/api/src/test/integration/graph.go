@@ -139,6 +139,11 @@ func (s *GraphTestContext) ReadTransactionTestWithSetup(setup func(harness *Harn
 	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
 		return setup(&s.Harness)
 	})
+
+	s.Graph.ReadTransaction(s.testCtx, func(tx graph.Transaction) error {
+		txDelegate(s.Harness, tx)
+		return nil
+	})
 }
 
 func (s *GraphTestContext) DatabaseTransactionTestWithSetup(setup func(harness *HarnessDetails) error, dbDelegate func(harness HarnessDetails, db graph.Database, tx graph.Transaction)) {

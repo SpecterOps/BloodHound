@@ -58,6 +58,68 @@ func TestFetchEnforcedGPOs(t *testing.T) {
 	})
 }
 
+func TestFetchEnforcedGPOsPaths(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.GPOEnforcement.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		// OU A blocks inheritance, but is contained by the domain GPLinked by both GPOs. We should see both GPOs in this path.
+		path, err := adAnalysis.FetchEnforcedGPOsPaths(context.Background(), db, harness.GPOEnforcement.OrganizationalUnitA)
+		test.RequireNilErr(t, err)
+		nodes := path.AllNodes().IDs()
+		require.Equal(t, 4, len(nodes))
+		require.Contains(t, nodes, harness.GPOEnforcement.OrganizationalUnitA.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.Domain.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.GPOEnforced.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.GPOUnenforced.ID)
+
+		// OU C is contained by OU A which blocks inheritance - so we should only see the enforced GPO in this path.
+		path, err = adAnalysis.FetchEnforcedGPOsPaths(context.Background(), db, harness.GPOEnforcement.OrganizationalUnitC)
+		test.RequireNilErr(t, err)
+		nodes = path.AllNodes().IDs()
+		require.Equal(t, 4, len(nodes))
+		require.Contains(t, nodes, harness.GPOEnforcement.OrganizationalUnitC.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.OrganizationalUnitA.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.Domain.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.GPOEnforced.ID)
+
+		// OU D is contained by OU B which does not block inheritance - so we should see both GPOs in this path.
+		path, err = adAnalysis.FetchEnforcedGPOsPaths(context.Background(), db, harness.GPOEnforcement.OrganizationalUnitD)
+		test.RequireNilErr(t, err)
+		nodes = path.AllNodes().IDs()
+		require.Equal(t, 5, len(nodes))
+		require.Contains(t, nodes, harness.GPOEnforcement.OrganizationalUnitD.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.OrganizationalUnitB.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.Domain.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.GPOEnforced.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.GPOUnenforced.ID)
+
+		// User C is contained by OU C which is contained by OU A - OU A blocks inheritance it should only be affected by the enforced GPO.
+		path, err = adAnalysis.FetchEnforcedGPOsPaths(context.Background(), db, harness.GPOEnforcement.UserC)
+		test.RequireNilErr(t, err)
+		nodes = path.AllNodes().IDs()
+		require.Equal(t, 5, len(nodes))
+		require.Contains(t, nodes, harness.GPOEnforcement.UserC.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.OrganizationalUnitC.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.OrganizationalUnitA.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.Domain.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.GPOEnforced.ID)
+
+		// User D is contained by OU D which is contained by OU B - none of them block inheritance so it should be affected by both GPOs.
+		path, err = adAnalysis.FetchEnforcedGPOsPaths(context.Background(), db, harness.GPOEnforcement.UserD)
+		test.RequireNilErr(t, err)
+		nodes = path.AllNodes().IDs()
+		require.Equal(t, 6, len(nodes))
+		require.Contains(t, nodes, harness.GPOEnforcement.UserD.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.OrganizationalUnitD.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.OrganizationalUnitB.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.Domain.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.GPOEnforced.ID)
+		require.Contains(t, nodes, harness.GPOEnforcement.GPOUnenforced.ID)
+	})
+}
+
 func TestFetchGPOAffectedContainerPaths(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
