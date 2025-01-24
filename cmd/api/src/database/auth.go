@@ -379,7 +379,7 @@ func (s *BloodhoundDB) GetAllUsersWithNonUniqueEmails(ctx context.Context) (map[
 func (s *BloodhoundDB) IsNewEmail(ctx context.Context, email string) bool {
 	var foundEmail string
 
-	if err := s.db.WithContext(ctx).Raw(`SELECT email_address FROM users WHERE email_address = lower(?);`, email).First(&foundEmail).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := s.db.WithContext(ctx).Raw(`SELECT email_address FROM users WHERE lower(email_address) = lower(?);`, email).First(&foundEmail).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return true
 	}
 	return false
