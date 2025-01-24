@@ -17,7 +17,7 @@ export const useMainNavLogoData = () => {
             imageUrl: `${import.meta.env.BASE_URL}${darkMode ? imageUrlDarkMode : imageUrlLightMode}`,
             dimensions: { height: '40px', width: '165px' },
             classes: 'ml-4',
-            altText: 'BHE Text Logo',
+            altText: 'BHCE Text Logo',
         },
     };
 };
@@ -27,7 +27,6 @@ export type NavListDataItem = {
     icon: ReactNode;
     route?: string;
     functionHandler?: () => void;
-    testid: string;
 };
 
 export const MainNavPrimaryListData: NavListDataItem[] = [
@@ -35,13 +34,11 @@ export const MainNavPrimaryListData: NavListDataItem[] = [
         label: 'Explore',
         icon: <AppIcon.LineChart size={24} />,
         route: routes.ROUTE_EXPLORE,
-        testid: 'global_header_nav-explore',
     },
     {
         label: 'Tier Management',
         icon: <AppIcon.Diamond size={24} />,
         route: routes.ROUTE_GROUP_MANAGEMENT,
-        testid: 'global_header_nav-group-management',
     },
 ];
 
@@ -66,25 +63,21 @@ export const useMainNavSecondaryListData = (): NavListDataItem[] => {
             label: 'Profile',
             icon: <AppIcon.User size={24} />,
             route: routes.ROUTE_MY_PROFILE,
-            testid: 'global_header_nav-profile',
         },
         {
             label: 'Docs and Support',
             icon: <AppIcon.FileMagnifyingGlass size={24} />,
             functionHandler: handleGoToSupport,
-            testid: 'global_header_nav-support',
         },
         {
             label: 'Administration',
             icon: <AppIcon.UserCog size={24} />,
             route: routes.ROUTE_ADMINISTRATION_ROOT,
-            testid: 'global_header_nav-administration',
         },
         {
             label: 'API Explorer',
             icon: <AppIcon.Compass size={24} />,
             route: routes.ROUTE_API_EXPLORER,
-            testid: 'global_header_nav-api-explorer',
         },
         {
             label: (
@@ -95,13 +88,11 @@ export const useMainNavSecondaryListData = (): NavListDataItem[] => {
             ),
             icon: <AppIcon.EclipseCircle size={24} />,
             functionHandler: handleToggleDarkMode,
-            testid: 'global_header_nav-dark-mode',
         },
         {
             label: 'Log Out',
             icon: <AppIcon.Logout size={24} />,
             functionHandler: handleLogout,
-            testid: 'global_header_nav-logout',
         },
     ];
 };
