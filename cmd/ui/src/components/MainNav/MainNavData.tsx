@@ -8,8 +8,8 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 
 export const useMainNavLogoData = () => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const imageUrlDarkMode = '/img/logo-secondary-transparent-banner.svg';
-    const imageUrlLightMode = '/img/logo-transparent-banner.svg';
+    const imageUrlDarkMode = '/img/banner-ce-dark-mode.png';
+    const imageUrlLightMode = '/img/banner-ce-light-mode.png';
     return {
         route: routes.ROUTE_HOME,
         icon: <AppIcon.BHCELogo size={24} className='scale-150 text-[#e61616]' />, // Note: size 24 icon looked too small in comparison so had to scale it up a bit because upping the size misaligns it

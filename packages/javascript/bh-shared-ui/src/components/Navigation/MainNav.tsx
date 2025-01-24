@@ -123,7 +123,7 @@ const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
             className={`z-[1201] fixed top-0 left-0 h-full ${isMenuExpanded ? 'w-[281px] overflow-y-auto overflow-x-hidden' : 'w-[56px]'} duration-300 ease-in flex flex-col items-center pt-4  bg-neutral-light-2 text-neutral-dark-0 dark:bg-neutral-dark-2 dark:text-neutral-light-1 print:hidden shadow-sm`}
             onMouseEnter={() => setIsMenuExpanded(true)}
             onMouseLeave={() => setIsMenuExpanded(false)}>
-            <MainNavItemLink route={mainNavData.logo.route} isMenuExpanded={isMenuExpanded} data-testId='main-nav-logo'>
+            <MainNavItemLink route={mainNavData.logo.route} isMenuExpanded={isMenuExpanded} data-testid='main-nav-logo'>
                 <MainNavItemLabel
                     icon={mainNavData.logo.icon}
                     label={<MainNavLogoTextImage mainNavLogoData={mainNavData.logo} />}
