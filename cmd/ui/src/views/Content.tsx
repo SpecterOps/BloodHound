@@ -97,6 +97,8 @@ const Content: React.FC = () => {
                             <Route
                                 path={route.path}
                                 element={
+                                    // To do: Tokenize the gutter value, because its the amount the admin menu needs to move left so something like pl-nav
+                                    // Note: We add a left padding value to account for pages that have nav bar, h-full is because when adding the div it collapsed the views
                                     <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                                         <AuthenticatedRoute>
                                             <div className={`h-full ${route.navigation && 'pl-[56px]'} `}>
