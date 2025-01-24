@@ -179,8 +179,6 @@ export const Inner: React.FC = () => {
         return null;
     }
 
-    // const showHeader = !['', '/', ROUTE_LOGIN, ROUTE_EXPIRED_PASSWORD, ROUTE_USER_DISABLED].includes(location.pathname);
-
     return (
         <Box className={`${classes.applicationContainer}`} id='app-root'>
             {showNavBar && <MainNav mainNavData={mainNavData} />}
