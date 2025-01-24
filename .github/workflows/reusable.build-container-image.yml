@@ -16,7 +16,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: Container Image Builder Pipeline
-run-name: Building Container Image for ${{ inputs.image_repository }} by @${{ github.actor }} on ${{ github.ref_name }}
 
 on:
   workflow_call:
@@ -148,10 +147,6 @@ on:
           to be used as an artifact upload location with the `actions/upload-artifact@v4` GitHub Action.
           This tar archive can then be retrieved from the workflow artifacts for further use or distribution.
         default: "/tmp"
-      timeout_minutes:
-        description: Job timeout configuration in minutes
-        type: number
-        default: 30
       push_image:
         type: boolean
         default: false
@@ -181,7 +176,6 @@ jobs:
   build-container-image:
     name: Build and Package ${{ inputs.image_repository }} Container
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.timeout_minutes }}
     outputs:
       image_reference: ${{ steps.container-image-metadata.outputs.image_reference }}
       image_name: ${{ steps.container-image-metadata.outputs.image_name }}
@@ -189,6 +183,9 @@ jobs:
       - name: Checkout Source Code Repository
         uses: actions/checkout@v4
 
+      # TODO: don't pull actions but instead reference them from the source repo
+      # May need to adjust repo actions permissions to allow access from other org repos
+      # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#allowing-access-to-components-in-a-private-repository
       - if: ${{ github.repository != 'SpecterOps/BloodHound' }}
         name: Checkout Reusable Workflows and Composite Actions
         uses: actions/checkout@v4
@@ -198,17 +195,17 @@ jobs:
           ref: main
           token: ${{ secrets.gh_access_token }}
           sparse-checkout-cone-mode: false
-          sparse-checkout: |-
-            .github/actions
+          sparse-checkout: .github/actions
 
-      - uses: ./.github/actions/container-image-metadata
-        id: container-image-metadata
+      - id: container-image-metadata
+        uses: ./.github/actions/container-image-metadata
         with:
           container_image_repository_name: ${{ inputs.container_image_repository_name }}
           image_flavor: ${{ inputs.image_flavor }}
 
-      - uses: ./.github/actions/build-container-image
-        id: build-container-image
+      - id: build-container-image
+        uses: ./.github/actions/build-container-image
+        # TODO: verify if this breaks anything
         # env:
         #   DOCKER_CONTENT_TRUST: 1
         with:
@@ -216,7 +213,7 @@ jobs:
           dockerhub_token: ${{ secrets.dockerhub_token }}
           ghcr_account: ${{ secrets.ghcr_account }}
           ghcr_token: ${{ secrets.ghcr_token }}
-          build_args: |-
+          build_args: |
             BUILDTIME=${{ fromJSON(steps.container-image-metadata.outputs.json).labels['org.opencontainers.image.created'] }}
             VERSION=${{ steps.container-image-metadata.outputs.version }}
             REVISION=${{ steps.container-image-metadata.outputs.revision }}
@@ -228,7 +225,7 @@ jobs:
           cache_from: ${{ inputs.image_cache_from }}
           cache_to: ${{ inputs.image_cache_to }}
           dockerfile: ${{ inputs.dockerfile }}
-          image_labels: |-
+          image_labels: |
             org.opencontainers.image.authors=https://github.com/orgs/SpecterOps/teams/bloodhound-engineering
             org.opencontainers.image.licenses=Apache License, Version 2.0
             org.opencontainers.image.vendor=SpecterOps

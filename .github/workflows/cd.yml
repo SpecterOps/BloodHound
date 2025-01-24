@@ -20,7 +20,6 @@ on:
   push:
     branches:
       - main
-      - develop
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
       - 'v[0-9]+.[0-9]+.[0-9]+rc[0-9]+'
@@ -31,17 +30,13 @@ jobs:
     uses: ./.github/workflows/reusable.build-container-image.yml
     with:
       container_image_repository_name: docker.io/specterops/bloodhound
+      build_target: bloodhound
       image_sbom: true
       image_provenance: mode=max
-      build_target: bloodhound
       build_outputs: type=image,push=true
       dockerfile: dockerfiles/bloodhound.Dockerfile
-      image_cache_from: |-
-        type=registry,ref=docker.io/specterops/bloodhound:buildcache
-        type=registry,ref=ghcr.io/specterops/bloodhound:buildcache
-      image_cache_to: |-
-        type=registry,ref=docker.io/specterops/bloodhound:buildcache,mode=max
-        type=registry,ref=ghcr.io/specterops/bloodhound:buildcache,mode=max
+      image_cache_from: type=registry,ref=ghcr.io/specterops/bloodhound:buildcache
+      image_cache_to: type=registry,ref=ghcr.io/specterops/bloodhound:buildcache,mode=max
     secrets:
       dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
       dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
