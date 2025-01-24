@@ -61,12 +61,14 @@ const MainNavItemLink: FC<{ route: string; children: ReactNode; isMenuExpanded: 
     route,
     children,
     isMenuExpanded,
+    ...rest
 }) => {
     return (
         // Note: The w-full terniary is to avoid the hover area to overflow out of the nav when its collapsed
         <RouterLink
             to={route as string}
-            className={`h-10 ${isMenuExpanded ? 'w-full' : 'w-auto'} absolute left-4 flex items-center gap-x-2`}>
+            className={`h-10 ${isMenuExpanded ? 'w-full' : 'w-auto'} absolute left-4 flex items-center gap-x-2`}
+            {...rest}>
             {children}
         </RouterLink>
     );
@@ -80,8 +82,11 @@ const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string; isMenuE
     return (
         // Note: The min-h here is to keep spacing between the logo and the list below.
         <>
-            <span className='flex'>{icon}</span>
+            <span data-testid='main-nav-item-label-icon' className='flex'>
+                {icon}
+            </span>
             <span
+                data-testid='main-nav-item-label-text'
                 className={`whitespace-nowrap flex min-h-10 items-center gap-x-5 font-medium text-xl ${isMenuExpanded ? 'opacity-100 block' : 'opacity-0 hidden'} duration-200 ease-in`}>
                 {label}
             </span>
@@ -95,7 +100,7 @@ const MainNavVersionNumber: FC<{ isMenuExpanded: boolean }> = ({ isMenuExpanded 
 
     return (
         // Note: The min-h allows for the version number to keep its position when the nav is scrollable
-        <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden'>
+        <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='main-nav-version-number'>
             <div
                 className={`w-full flex absolute bottom-3 ${isMenuExpanded ? 'left-16' : 'left-3'} duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1`}>
                 <span
@@ -118,7 +123,7 @@ const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
             className={`z-[1201] fixed top-0 left-0 h-full ${isMenuExpanded ? 'w-[281px] overflow-y-auto overflow-x-hidden' : 'w-[56px]'} duration-300 ease-in flex flex-col items-center pt-4  bg-neutral-light-2 text-neutral-dark-0 dark:bg-neutral-dark-2 dark:text-neutral-light-1 print:hidden shadow-sm`}
             onMouseEnter={() => setIsMenuExpanded(true)}
             onMouseLeave={() => setIsMenuExpanded(false)}>
-            <MainNavItemLink route={mainNavData.logo.route} isMenuExpanded={isMenuExpanded}>
+            <MainNavItemLink route={mainNavData.logo.route} isMenuExpanded={isMenuExpanded} data-testId='main-nav-logo'>
                 <MainNavItemLabel
                     icon={mainNavData.logo.icon}
                     label={<MainNavLogoTextImage mainNavLogoData={mainNavData.logo} />}
@@ -127,9 +132,9 @@ const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
             </MainNavItemLink>
             {/* Note: min height here is to keep the version number in bottom of nav */}
             <div className='h-full min-h-[700px] w-full flex flex-col justify-between mt-6'>
-                <ul className='flex flex-col gap-6 mt-8'>
+                <ul className='flex flex-col gap-6 mt-8' data-testid='main-nav-primary-list'>
                     {mainNavData.primaryList.map((listDataItem: any) => (
-                        <MainNavListItem key={listDataItem.testid} route={listDataItem.route as string}>
+                        <MainNavListItem key={listDataItem.label} route={listDataItem.route as string}>
                             <MainNavItemLink route={listDataItem.route as string} isMenuExpanded={isMenuExpanded}>
                                 <MainNavItemLabel
                                     icon={listDataItem.icon}
@@ -140,10 +145,10 @@ const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
                         </MainNavListItem>
                     ))}
                 </ul>
-                <ul className='flex flex-col gap-4 mt-16'>
+                <ul className='flex flex-col gap-4 mt-16' data-testid='main-nav-secondary-list'>
                     {mainNavData.secondaryList.map((listDataItem: any) =>
                         listDataItem.route ? (
-                            <MainNavListItem key={listDataItem.testid} route={listDataItem.route as string}>
+                            <MainNavListItem key={listDataItem.label} route={listDataItem.route as string}>
                                 <MainNavItemLink route={listDataItem.route as string} isMenuExpanded={isMenuExpanded}>
                                     <MainNavItemLabel
                                         icon={listDataItem.icon}
@@ -153,7 +158,7 @@ const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
                                 </MainNavItemLink>
                             </MainNavListItem>
                         ) : (
-                            <MainNavListItem key={listDataItem.testid}>
+                            <MainNavListItem key={listDataItem.label}>
                                 <MainNavItemAction
                                     onClick={(() => listDataItem.functionHandler as () => void)()}
                                     isMenuExpanded={isMenuExpanded}>
