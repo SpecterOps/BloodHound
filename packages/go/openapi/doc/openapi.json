@@ -12836,6 +12836,19 @@
         ],
         "parameters": [
           {
+            "name": "Accept",
+            "in": "./../parameters/header.prefer.yaml",
+            "description": "Media type to determine the response format (application/json or text/csv).",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string",
+              "enum": [
+                "application/json",
+                "text/csv"
+              ]
+            }
+          },
+          {
             "name": "finding",
             "in": "query",
             "required": true,
@@ -12890,6 +12903,7 @@
           },
           {
             "name": "Accepted",
+            "deprecated": true,
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -12947,10 +12961,34 @@
             "$ref": "#/components/parameters/query.limit"
           }
         ],
+        "produces": [
+          "application/json",
+          "text/csv"
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "examples": {
+                  "Butterfly Relationship Finding": {
+                    "value": "id,finding_type,exposure_count,exposure_percentage,impact_count,impact_percentage,domain_sid,from_principal_name,from_principal,from_principal_kind,to_principal_name,to_principal,to_principal_kind,combo_graph_relation_id,domain,accepted,accepted_until,principals_hash,created_at,updated_at,is_inherited\n1,Tier Zero Generic Write,500,0.6711,1000,0.9961,5,S-1-5-21-123-123-123,RPATTON@TITANCORP.LOCAL,S-1-5-21-123-123-123,User,RPATTON DELEGATION TEST@TITANCORP.LOCAL,S-1-5-21-124-124-124,User,2,TITANCORP,true,0001-01-01T00:00:00Z,1lQiVG3hOuM=,2022-08-17T23:44:24Z,2024-12-18T15:01:00.176572729Z,Yes\n"
+                  },
+                  "Metatree Relationship Finding": {
+                    "value": "id,finding_type,exposure_count,exposure_percentage,impact_count,impact_percentage,domain_sid,from_principal_name,from_principal,from_principal_kind,to_principal_name,to_principal,to_principal_kind,combo_graph_relation_id,domain,accepted,accepted_until,principals_hash,created_at,updated_at,is_inherited\n1,Tier Zero Generic Write,0,0,0,0,5,S-1-5-21-123-123-123,RPATTON@TITANCORP.LOCAL,S-1-5-21-123-123-123,User,RPATTON DELEGATION TEST@TITANCORP.LOCAL,S-1-5-21-124-124-124,User,0,TITANCORP,true,0001-01-01T00:00:00Z,1lQiVG3hOuM=,2022-08-17T23:44:24Z,2024-12-18T15:01:00.176572729Z,Yes\n"
+                  },
+                  "Butterfly List Finding": {
+                    "value": "id,finding_type,impact_count,impact_percentage,domain,domain_sid,principal_name,principal_kind,principal,accepted,accepted_until,created_at,updated_at\n1,Kerberoasting,800,0.9961,TITANCORP,S-1-5-21-123-123-123,RPATTON@TITANCORP.LOCAL,User,S-1-5-21-124-124-124,true,0001-01-01T00:00:00Z,2022-08-17T23:44:24Z,2024-12-18T15:01:00.176572729Z\n"
+                  },
+                  "Metatree List Finding": {
+                    "value": "id,finding_type,impact_count,impact_percentage,domain,domain_sid,principal_name,principal_kind,principal,accepted,accepted_until,created_at,updated_at\n1,Kerberoasting,0,0,TITANCORP,S-1-5-21-123-123-123,RPATTON@TITANCORP.LOCAL,User,S-1-5-21-124-124-124,true,0001-01-01T00:00:00Z,2022-08-17T23:44:24Z,2024-12-18T15:01:00.176572729Z\n"
+                  }
+                }
+              },
               "application/json": {
                 "schema": {
                   "oneOf": [
@@ -13064,8 +13102,7 @@
                           "ImpactCount": 2,
                           "ExposurePercentage": 0.24,
                           "ExposureCount": 4,
-                          "Severity": "high",
-                          "Accepted": true
+                          "Severity": "high"
                         }
                       ]
                     }
@@ -13117,8 +13154,7 @@
                           "ImpactCount": 0,
                           "ExposurePercentage": 0,
                           "ExposureCount": 0,
-                          "Severity": "",
-                          "Accepted": true
+                          "Severity": ""
                         }
                       ]
                     }
@@ -13151,8 +13187,7 @@
                           "accepted_until": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0.12,
                           "ImpactCount": 2,
-                          "Severity": "high",
-                          "Accepted": true
+                          "Severity": "high"
                         }
                       ]
                     }
@@ -13185,8 +13220,7 @@
                           "accepted_until": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0,
                           "ImpactCount": 0,
-                          "Severity": "",
-                          "Accepted": true
+                          "Severity": ""
                         }
                       ]
                     }
@@ -16497,7 +16531,7 @@
                   "type": "object"
                 }
               },
-              "accepted_until": {
+              "AcceptedUntil": {
                 "type": "string",
                 "format": "date-time"
               },
