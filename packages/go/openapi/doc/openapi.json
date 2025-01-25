@@ -16257,7 +16257,7 @@
                   "type": "object"
                 }
               },
-              "accepted_until": {
+              "AcceptedUntil": {
                 "type": "string",
                 "format": "date-time"
               },
