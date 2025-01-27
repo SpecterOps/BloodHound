@@ -173,11 +173,14 @@ func WriteJSONResponse(ctx context.Context, message any, statusCode int, respons
 
 func WriteCSVResponse(ctx context.Context, message model.CSVWriter, statusCode int, response http.ResponseWriter) {
 	response.Header().Set(headers.ContentType.String(), mediatypes.TextCsv.String())
-	response.WriteHeader(statusCode)
 
 	if err := message.WriteCSV(response); err != nil {
+		response.WriteHeader(http.StatusInternalServerError)
 		slog.ErrorContext(ctx, fmt.Sprintf("Writing API Error. Failed to write CSV for request: %v", err))
+		return
 	}
+
+	response.WriteHeader(statusCode)
 }
 
 func WriteBinaryResponse(ctx context.Context, data []byte, filename string, statusCode int, response http.ResponseWriter) {
