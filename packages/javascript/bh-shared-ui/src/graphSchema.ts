@@ -140,6 +140,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC13 = 'ADCSESC13',
     SyncedToEntraUser = 'SyncedToEntraUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
+    CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -281,6 +282,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'SyncedToEntraUser';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB:
             return 'CoerceAndRelayNTLMToSMB';
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS:
+            return 'CoerceAndRelayNTLMToADCS';
         default:
             return undefined;
     }
@@ -299,6 +302,7 @@ export const EdgeCompositionRelationships = [
     'ADCSESC10b',
     'ADCSESC13',
     'CoerceAndRelayNTLMToSMB',
+    'CoerceAndRelayNTLMToADCS',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -403,7 +407,11 @@ export enum ActiveDirectoryKindProperties {
     LockoutDuration = 'lockoutduration',
     LockoutObservationWindow = 'lockoutobservationwindow',
     SMBSigning = 'smbsigning',
+    WebClientRunning = 'webclientrunning',
     RestrictOutboundNTLM = 'restrictoutboundntlm',
+    ADCSWebEnrollmentHTTP = 'adcswebenrollmenthttp',
+    ADCSWebEnrollmentHTTPS = 'adcswebenrollmenthttps',
+    ADCSWebEnrollmentHTTPSEPA = 'adcswebenrollmenthttpsepa',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -611,8 +619,16 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Lockout Observation Window';
         case ActiveDirectoryKindProperties.SMBSigning:
             return 'SMB Signing';
+        case ActiveDirectoryKindProperties.WebClientRunning:
+            return 'WebClient Running';
         case ActiveDirectoryKindProperties.RestrictOutboundNTLM:
             return 'Restrict Outbound NTLM';
+        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTP:
+            return 'ADCS Web Enrollment HTTP';
+        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPS:
+            return 'ADCS Web Enrollment HTTPS';
+        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPSEPA:
+            return 'ADCS Web Enrollment HTTPS EPA';
         default:
             return undefined;
     }
@@ -663,6 +679,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC13,
         ActiveDirectoryRelationshipKind.SyncedToEntraUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.TrustedBy,
