@@ -52,7 +52,9 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; isMenuEx
 }) => {
     return (
         // Note: The w-full terniary is to avoid the hover area to overflow out of the nav when its collapsed
+        // Note: had to wrap in div to avoid error of button nesting in a button with the switch
         <div
+            role='button'
             onClick={onClick}
             className={`h-10 ${isMenuExpanded ? 'w-full' : 'w-auto'} absolute left-4 flex items-center gap-x-2`}>
             {children}
@@ -119,12 +121,12 @@ const MainNavVersionNumber: FC<{ isMenuExpanded: boolean }> = ({ isMenuExpanded 
 const MainNavPoweredBy: FC<{ isMenuExpanded: boolean; children: ReactNode }> = ({ isMenuExpanded, children }) => {
     return (
         // Note: The min-h allows for the version number to keep its position when the nav is scrollable
-        <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='main-nav-version-number'>
+        <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='main-nav-powered-by'>
             <div
                 className={`w-full flex absolute bottom-3 ${isMenuExpanded ? 'left-12' : 'left-3'} duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1`}>
                 <span
                     className={`flex items-center gap-1 ${isMenuExpanded ? 'opacity-100 flex' : 'opacity-0 hidden'} duration-300 ease-in-out`}>
-                    Powered By&nbsp;
+                    powered by&nbsp;
                     {children}
                 </span>
             </div>
