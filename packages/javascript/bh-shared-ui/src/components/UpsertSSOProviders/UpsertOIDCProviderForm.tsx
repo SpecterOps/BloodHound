@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { Alert, DialogContent, DialogActions, Grid, TextField } from '@mui/material';
-import { useEffect, FC } from 'react';
+import { Alert, DialogActions, DialogContent, Grid, TextField } from '@mui/material';
+import { OIDCProviderInfo, Role, SSOProvider, UpsertOIDCProviderRequest } from 'js-client-library';
+import { FC, useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { OIDCProviderInfo, SSOProvider, UpsertOIDCProviderRequest, Role } from 'js-client-library';
 import SSOProviderConfigForm, { backfillSSOProviderConfig } from './SSOProviderConfigForm';
 
 const UpsertOIDCProviderForm: FC<{

@@ -15,6 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Container, Paper } from '@mui/material';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
+import { addSnackbar } from 'src/ducks/global/actions';
 import { useAppSelector } from 'src/store';
 
 interface LoginPageProps {
@@ -22,8 +26,18 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ children }) => {
+    const dispatch = useDispatch();
+    const [searchParams] = useSearchParams();
+
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const imageUrl = darkMode ? '/img/logo-secondary-transparent-full.svg' : '/img/logo-transparent-full.svg';
+    const errorMessage = searchParams.get('error');
+
+    useEffect(() => {
+        if (errorMessage) {
+            dispatch(addSnackbar(errorMessage, 'SSOError', { variant: 'error' }));
+        }
+    }, [dispatch, errorMessage]);
 
     return (
         <>

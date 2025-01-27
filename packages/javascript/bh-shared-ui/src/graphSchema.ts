@@ -140,7 +140,6 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC13 = 'ADCSESC13',
     SyncedToEntraUser = 'SyncedToEntraUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
-    CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -282,8 +281,6 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'SyncedToEntraUser';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB:
             return 'CoerceAndRelayNTLMToSMB';
-        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS:
-            return 'CoerceAndRelayNTLMToADCS';
         default:
             return undefined;
     }
@@ -302,7 +299,6 @@ export const EdgeCompositionRelationships = [
     'ADCSESC10b',
     'ADCSESC13',
     'CoerceAndRelayNTLMToSMB',
-    'CoerceAndRelayNTLMToADCS',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -407,11 +403,7 @@ export enum ActiveDirectoryKindProperties {
     LockoutDuration = 'lockoutduration',
     LockoutObservationWindow = 'lockoutobservationwindow',
     SMBSigning = 'smbsigning',
-    WebClientRunning = 'webclientrunning',
     RestrictOutboundNTLM = 'restrictoutboundntlm',
-    ADCSWebEnrollmentHTTP = 'adcswebenrollmenthttp',
-    ADCSWebEnrollmentHTTPS = 'adcswebenrollmenthttps',
-    ADCSWebEnrollmentHTTPSEPA = 'adcswebenrollmenthttpsepa',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -619,16 +611,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Lockout Observation Window';
         case ActiveDirectoryKindProperties.SMBSigning:
             return 'SMB Signing';
-        case ActiveDirectoryKindProperties.WebClientRunning:
-            return 'WebClient Running';
         case ActiveDirectoryKindProperties.RestrictOutboundNTLM:
             return 'Restrict Outbound NTLM';
-        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTP:
-            return 'ADCS Web Enrollment HTTP';
-        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPS:
-            return 'ADCS Web Enrollment HTTPS';
-        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPSEPA:
-            return 'ADCS Web Enrollment HTTPS EPA';
         default:
             return undefined;
     }
@@ -645,11 +629,9 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AllExtendedRights,
         ActiveDirectoryRelationshipKind.AddMember,
         ActiveDirectoryRelationshipKind.HasSession,
-        ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
         ActiveDirectoryRelationshipKind.CoerceToTGT,
-        ActiveDirectoryRelationshipKind.TrustedBy,
         ActiveDirectoryRelationshipKind.AllowedToAct,
         ActiveDirectoryRelationshipKind.AdminTo,
         ActiveDirectoryRelationshipKind.CanPSRemote,
@@ -679,10 +661,11 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC10a,
         ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.ADCSESC13,
-        ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SyncedToEntraUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
-        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+        ActiveDirectoryRelationshipKind.Contains,
+        ActiveDirectoryRelationshipKind.DCFor,
+        ActiveDirectoryRelationshipKind.TrustedBy,
     ];
 }
 export enum AzureNodeKind {
@@ -1010,7 +993,6 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
 export function AzurePathfindingEdges(): AzureRelationshipKind[] {
     return [
         AzureRelationshipKind.AvereContributor,
-        AzureRelationshipKind.Contains,
         AzureRelationshipKind.Contributor,
         AzureRelationshipKind.GetCertificates,
         AzureRelationshipKind.GetKeys,
@@ -1048,6 +1030,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToADUser,
+        AzureRelationshipKind.Contains,
     ];
 }
 export enum CommonNodeKind {

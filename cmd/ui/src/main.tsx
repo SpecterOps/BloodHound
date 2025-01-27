@@ -14,25 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import '@bloodhoundenterprise/doodleui/dist/styles.css';
 import '@fontsource/roboto-mono';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { StyledEngineProvider } from '@mui/material';
-import { Theme } from '@mui/material/styles';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
 import { Provider } from 'react-redux';
 import App from './App';
 import { store } from './store';
+import './styles/index.css';
 import './styles/index.scss';
-
-declare module '@mui/styles/defaultTheme' {
-    interface DefaultTheme extends Theme {}
-}
 
 declare module '@mui/material/styles' {
     interface Palette {

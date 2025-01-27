@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Container } from '@mui/material';
-import { Alert, AlertTitle } from '@mui/material';
+import { Alert, AlertTitle, Box, Container } from '@mui/material';
 
 const GenericErrorBoundaryFallback = () => {
     return (

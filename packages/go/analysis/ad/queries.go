@@ -18,11 +18,14 @@ package ad
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/graphcache"
@@ -31,11 +34,10 @@ import (
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/log"
 )
 
 func FetchGraphDBTierZeroTaggedAssets(ctx context.Context, db graph.Database, domainSID string) (graph.NodeSet, error) {
-	defer log.Measure(log.LevelInfo, "FetchGraphDBTierZeroTaggedAssets")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets")()
 
 	var (
 		nodes graph.NodeSet
@@ -57,7 +59,7 @@ func FetchGraphDBTierZeroTaggedAssets(ctx context.Context, db graph.Database, do
 }
 
 func FetchAllEnforcedGPOs(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer log.Measure(log.LevelInfo, "FetchAllEnforcedGPOs")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchAllEnforcedGPOs")()
 
 	enforcedGPOs := graph.NewNodeSet()
 
@@ -75,7 +77,7 @@ func FetchAllEnforcedGPOs(ctx context.Context, db graph.Database, targets graph.
 }
 
 func FetchOUContainers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer log.Measure(log.LevelInfo, "FetchOUContainers")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchOUContainers")()
 
 	oUs := graph.NewNodeSet()
 
@@ -110,7 +112,7 @@ func FetchAllDomains(ctx context.Context, db graph.Database) ([]*graph.Node, err
 }
 
 func FetchActiveDirectoryTierZeroRoots(ctx context.Context, db graph.Database, domain *graph.Node, autoTagT0ParentObjectsFlag bool) (graph.NodeSet, error) {
-	defer log.LogAndMeasure(log.LevelInfo, "FetchActiveDirectoryTierZeroRoots")()
+	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "FetchActiveDirectoryTierZeroRoots")()
 
 	if domainSID, err := domain.Properties.Get(common.ObjectID.String()).String(); err != nil {
 		return nil, err
@@ -487,6 +489,79 @@ func FetchEnforcedGPOs(tx graph.Transaction, target *graph.Node, skip, limit int
 	} else {
 		return enforcedGPOs, nil
 	}
+}
+
+func FetchEnforcedGPOsPaths(ctx context.Context, db graph.Database, target *graph.Node) (graph.PathSet, error) {
+	var (
+		pathSet      = graph.NewPathSet()
+		enforcedGPOs = graph.NewNodeSet()
+	)
+
+	return pathSet, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		return ops.Traversal(tx, ops.TraversalPlan{
+			Root:      target,
+			Direction: graph.DirectionInbound,
+			BranchQuery: func() graph.Criteria {
+				return query.And(
+					query.KindIn(query.Start(), ad.Domain, ad.OU, ad.GPO),
+					query.KindIn(query.Relationship(), ad.Contains, ad.GPLink),
+				)
+			},
+		}, func(ctx *ops.TraversalContext, segment *graph.PathSegment) error {
+			// Does this path terminate at a GPO that we haven't seen as a previously enforced GPO?
+			if segment.Node.Kinds.ContainsOneOf(ad.GPO) && !enforcedGPOs.Contains(segment.Node) {
+				gpLinkRelationship := segment.Edge
+
+				// Check if the GPLink relationship is enforced
+				if gpLinkEnforced, _ := gpLinkRelationship.Properties.GetOrDefault(ad.Enforced.String(), false).Bool(); gpLinkEnforced {
+					if ctx.LimitSkipTracker.ShouldCollect() {
+						// Add this GPO right away as enforced and exit
+						enforcedGPOs.Add(segment.Node)
+						pathSet.AddPath(segment.Path())
+					}
+				} else {
+					// Assume that the GPO is enforced at the start
+					isGPOEnforced := true
+					lastNodeBlocks := false
+
+					// Walk the GPO path to see if any of the nodes between the GPO and the enforcement target block GPO
+					// inheritance. This walk starts at the GPO and moves down, with end being the GPO to start
+					segment.Path().WalkReverse(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+						if !start.Kinds.ContainsOneOf(ad.OU, ad.Domain) {
+							// If we run into anything that isn't an OU or a Domain node then we're done checking for
+							// inheritance blocking
+							return false
+						} else if lastNodeBlocks && start.Kinds.ContainsOneOf(ad.OU) {
+							//If the previous node blocks inheritance, and we've hit an OU, then the GPO is not enforced on this path, and we don't need to check any further
+							isGPOEnforced = false
+							return false
+						}
+
+						// Check to see if this node in the Domain and OU contains path blocks GPO inheritance
+						if blocksInheritance, _ := start.Properties.GetOrDefault(ad.BlocksInheritance.String(), false).Bool(); blocksInheritance {
+							// If this Domain or OU node blocks inheritance then we're done walking this GPO enforcement
+							// path
+							lastNodeBlocks = true
+							return true
+						}
+
+						// Continue walking the path otherwise
+						return true
+					})
+
+					// If the GPO is still marked as enforced, meaning that the Domain node nor any of the OU nodes blocked
+					// inheritance of it
+					if isGPOEnforced {
+						// Add this GPO as enforced
+						enforcedGPOs.Add(segment.Node)
+						pathSet.AddPath(segment.Path())
+					}
+				}
+			}
+
+			return nil
+		})
+	})
 }
 
 func FetchOUContainersOfNode(tx graph.Transaction, target *graph.Node) (graph.NodeSet, error) {
@@ -1511,9 +1586,9 @@ func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (f
 }
 
 func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.NodeSet) (graph.NodeSet, error) {
-	defer log.Measure(log.LevelInfo, "FetchAllGroupMembers")()
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "FetchAllGroupMembers")()
 
-	log.Infof("Fetching group members for %d AD nodes", len(targets))
+	slog.InfoContext(ctx, fmt.Sprintf("Fetching group members for %d AD nodes", len(targets)))
 
 	allGroupMembers := graph.NewNodeSet()
 
@@ -1527,7 +1602,7 @@ func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.
 		}
 	}
 
-	log.Infof("Collected %d group members", len(allGroupMembers))
+	slog.InfoContext(ctx, fmt.Sprintf("Collected %d group members", len(allGroupMembers)))
 	return allGroupMembers, nil
 }
 

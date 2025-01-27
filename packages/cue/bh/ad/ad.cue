@@ -16,7 +16,10 @@
 
 package ad
 
-import "pkg.specterops.io/schemas/bh/types:types"
+import (
+	"list"
+	"pkg.specterops.io/schemas/bh/types:types"
+)
 
 // Exported requirements
 Properties: [...types.#StringEnum]
@@ -24,6 +27,8 @@ NodeKinds: [...types.#Kind]
 RelationshipKinds: [...types.#Kind]
 ACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
+InboundRelationshipKinds: [...types.#Kind]
+OutboundRelationshipKinds: [...types.#Kind] 
 EdgeCompositionRelationships: [...types.#Kind]
 
 // Property name enumerations
@@ -1450,8 +1455,8 @@ ACLRelationships: [
 	WritePKINameFlag,
 ]
 
-// Edges that are used in pathfinding
-PathfindingRelationships: [
+// these edges are common to inbound/outbound/pathfinding
+SharedRelationshipKinds: [
 	Owns,
 	GenericAll,
 	GenericWrite,
@@ -1462,11 +1467,9 @@ PathfindingRelationships: [
 	AllExtendedRights,
 	AddMember,
 	HasSession,
-	Contains,
 	GPLink,
 	AllowedToDelegate,
 	CoerceToTGT,
-	TrustedBy,
 	AllowedToAct,
 	AdminTo,
 	CanPSRemote,
@@ -1496,11 +1499,19 @@ PathfindingRelationships: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
-	DCFor,
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
 ]
+
+// Edges that are used during inbound traversal
+InboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains]])
+
+// Edges that are used during outbound traversal
+OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains, DCFor]])
+
+// Edges that are used in pathfinding
+PathfindingRelationships: list.Concat([SharedRelationshipKinds,[Contains, DCFor, TrustedBy]])
 
 EdgeCompositionRelationships: [
 	GoldenCert,

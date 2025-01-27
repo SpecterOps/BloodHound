@@ -19,9 +19,9 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/log"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/daemons"
 	"github.com/specterops/bloodhound/src/database"
@@ -86,11 +86,10 @@ func (s Initializer[DBType, GraphType]) Launch(parentCtx context.Context, handle
 	}
 
 	// Log successful start and wait for a signal to exit
-	log.Infof("Server started successfully")
+	slog.InfoContext(ctx, "Server started successfully")
 	<-ctx.Done()
 
-	log.Infof("Shutting down")
-
+	slog.InfoContext(ctx, "Shutting down")
 	// TODO: Refactor this pattern in favor of context handling
 	daemonManager.Stop()
 

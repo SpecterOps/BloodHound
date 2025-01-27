@@ -1,0 +1,77 @@
+---
+title: 2023-04-13 Release Notes
+---
+
+## Announcements
+
+### Huge Azure Update and Webinar!
+Today's release includes a significant update for Azure and expands our coverage for Attack Paths within Azure Resource Manager (RM) and Microsoft Graph. With this release, BloodHound Enterprise now covers an additional seven object types and analyzes seventeen Attack Path primitives!
+
+See the full release notes for additional details and associated AzureHound version requirements.
+
+Additionally, Andy Robbins, co-creator of BloodHound and Principal Product Architect will be hosting a webinar on Tuesday, April 18th to go into more details. Sign up here: [https://ghst.ly/40N2a9C](https://ghst.ly/40N2a9C)
+
+### SharpHound Upgrades Required
+
+SharpHound v2 is officially generally available. If you have not already done so, please make sure you upgrade your SharpHound collectors to v2.1+. SharpHound v1 will officially be end-of-life on May 1, 2023.
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the “Enable post processing of local groups” early access feature simultaneously.
+
+Instructions to upgrade your collector may be found [here](/hc/en-us/articles/Install-and-Upgrade-SharpHound-Enterprise)!
+
+## Summary
+
+* **BloodHound Enterprise**
+    * New and Improved Features - Massive Azure update, pathfinding logic and performance enhancements, Finished Jobs Log will include counts of successful domain collections, API Explorer search is no longer case sensitive.
+    * Bug Fixes - Objects should no longer have multiple AzAddSecret edges between them, manually tagged Azure Tier Zero objects now consistently show findings in Attack Paths, and improved error handling in the GUI. 
+* **SharpHound Enterprise (v2.1.4)**
+    * New and Improved Features - run logs and compstatus outputs will update live instead of waiting for the completion of a collection.
+    * Bug Fixes - Ingest data will only post once, DC settings changes will be picked up on every collection job, and improved logging outputs.
+* **AzureHound Enterprise (v2.0.1)**
+    * Add Collection of AZWebApp, AZContainerRegistry, AZManagedCluster, and AZVMScaleSet objects and associated Attack Path Primitives.
+
+### BloodHound Enterprise
+
+#### Improved Functionality
+
+* **Azure coverage enhancements** \- BloodHound Enterprise now supports significantly more objects and Attack Paths.
+    * New Object Types
+        * Supported in AzureHound v1.2.4: AZAutomationAccount, AZLogicApp, AZFunctionApp.
+        * Requires AzureHound v2.0.1: AZWebApp, AZContainerRegistry, AZManagedCluster, AZVMScaleSet.
+    * New Attack Path primitives
+        * Supported in AzureHound v1.2.4: AZWebsiteContributor, AZLogicAppContributor, AZAutomationContributor, AZMGApplication\_ReadWrite\_All, AZMGAppRoleAssignment\_ReadWrite\_All, AZMGDirectory\_ReadWrite\_All, AZMGGroup\_ReadWrite\_All, AZMGGroupMember\_ReadWrite\_All, AZMGServicePrincipalEndpoint\_ReadWrite\_All, AZMGAddSecret, AZMGAddOwner, AZMGAddMember, AZMGGrantAppRoles, AZMGGrantRole.
+        * Requires AzureHound v2.0.1: AZNodeResourceGroup, AZWebsiteContributor, AZAKSContributor.
+* **Pathfinding improvements** \- Pathfinding logic has undergone a significant update resulting in significant performance enhancements. Results will return much faster, and users should see significantly fewer resource constraint errors going forward.
+* **Finished Jobs Log improved messaging** -When performing cross-trust collections, it's common that SharpHound cannot collect from every visible domain. The Finished Jobs Log will now provide counts of successful (and total possible) domains to help identify whether collection coverage was completed as expected.
+* **API Explorer no longer case sensitive** \- API Explorer search is no longer case sensitive, making finding the endpoint you're attempting to utilize easier.
+
+#### Bug Fixes
+
+* Objects should no longer have multiple AzAddSecret edges between them.
+* Resolved a logic issue with the AzResetPassword edge.
+* Manually tagged Azure Tier Zero objects now consistently show findings in Attack Paths.
+* Improved error handling in the GUI. 
+
+### SharpHound Enterprise (v2.1.4)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.1.4_
+
+#### Improved Functionality
+
+* **Just-in-time logging** \- Run logs and compstatus.csv outputs will update live instead of waiting for the completion of a collection. This will help improve the timeliness of troubleshooting.
+
+#### Bug Fixes
+
+* Ingest data will only post once; a bug in versions 2.1.0, 2.1.1, and 2.1.2 would result in every set of ingest data getting sent to the API twice.
+* DC settings changes will be picked up on every collection job, rather than only on service restart.
+* Improved logging outputs where logs previously showed variable names instead of the values held in the variables.
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the “User Rights Assignment Collection” experimental feature at the same time. Please contact your TAM or respond to this email for assistance.
+
+### AzureHound Enterprise (v2.0.1)
+
+_Minimum version of AzureHound Service to support all current functionality: v2.0.1_
+
+### Improved Functionality
+
+* **New object and Attack Path collection** \- Add Collection of AZWebApp, AZContainerRegistry, AZManagedCluster, and AZVMScaleSet objects and associated Attack Path Primitives.

@@ -16,27 +16,27 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Paper, Typography } from '@mui/material';
+import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest, User } from 'js-client-library';
+import find from 'lodash/find';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import {
     ConfirmationDialog,
+    CreateUserDialog,
     DataTable,
+    Disable2FADialog,
     DocumentationLinks,
     Header,
-    PasswordDialog,
-    UserTokenManagementDialog,
-    Disable2FADialog,
     PageWithTitle,
+    PasswordDialog,
     UpdateUserDialog,
-    CreateUserDialog,
+    UserTokenManagementDialog,
 } from '../../components';
-import { apiClient, LuxonFormat } from '../../utils';
-import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest, User } from 'js-client-library';
-import find from 'lodash/find';
-import { useToggle } from '../../hooks';
 import UserActionsMenu from '../../components/UserActionsMenu';
+import { useToggle } from '../../hooks';
 import { useNotifications } from '../../providers';
+import { LuxonFormat, apiClient } from '../../utils';
 
 const Users = () => {
     const { addNotification } = useNotifications();

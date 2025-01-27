@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
 import { faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
 import { FC, useState } from 'react';
 import { copyToClipboard } from '../utils';
 

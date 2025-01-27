@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { RequestOptions } from 'js-client-library';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 import { apiClient } from './api';
-import { RequestOptions } from 'js-client-library';
 
 type EntitySectionEndpointParams = {
     counts?: boolean;

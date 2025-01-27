@@ -1,0 +1,16 @@
+---
+title: AZRunAs
+description: "The Azure App runs as the Service Principal when it needs to authenticate to the tenant."
+---
+
+<Frame>
+  <img src="/hc/images/image-2-1.png"/>
+</Frame>
+
+## Abuse Info
+
+This edge should be taken into consideration when abusing control of an app. Apps authenticate with service principals to the tenant, so if you have control of an app, what you are abusing is that control plus the fact that the app runs as a privileged service principal.
+
+## Opsec Considerations
+
+This will depend on which particular abuse you perform, but in general Azure will create a log event for each abuse.

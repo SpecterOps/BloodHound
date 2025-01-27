@@ -141,7 +141,7 @@ func (s *Resources) GetDomainEntityInfo(response http.ResponseWriter, request *h
 			"inboundTrusts":         adAnalysis.CreateDomainTrustListDelegate(graph.DirectionInbound),
 			"outboundTrusts":        adAnalysis.CreateDomainTrustListDelegate(graph.DirectionOutbound),
 			"controllers":           adAnalysis.FetchInboundADEntityControllers,
-			"linkedgpos":            adAnalysis.FetchEntityLinkedGPOList,
+			"linkedgpos":            adAnalysis.FetchEnforcedGPOs,
 			"dcsyncers":             adAnalysis.FetchDCSyncers,
 		}
 	)
@@ -213,7 +213,7 @@ func (s *Resources) GetCertTemplateEntityInfo(response http.ResponseWriter, requ
 func (s *Resources) GetOUEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
 		countQueries = map[string]any{
-			"gpos":      adAnalysis.FetchEntityLinkedGPOList,
+			"gpos":      adAnalysis.FetchEnforcedGPOs,
 			"users":     adAnalysis.CreateOUContainedListDelegate(ad.User),
 			"groups":    adAnalysis.CreateOUContainedListDelegate(ad.Group),
 			"computers": adAnalysis.CreateOUContainedListDelegate(ad.Computer),

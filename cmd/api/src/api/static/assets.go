@@ -11,7 +11,7 @@ const (
 	indexAssetPath = "index.html"
 )
 
-//go:embed assets
+//go:embed all:assets
 var assets embed.FS
 
 var AssetHandler = MakeAssetHandler(AssetConfig{
