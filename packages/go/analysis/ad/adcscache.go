@@ -163,6 +163,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database) error {
 	}
 
 	slog.InfoContext(ctx, "Finished building adcs cache")
+	return err
 }
 
 func (s *ADCSCache) DoesCAChainProperlyToDomain(enterpriseCA, domain *graph.Node) bool {
