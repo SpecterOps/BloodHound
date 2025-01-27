@@ -120,8 +120,8 @@ const MainNavPoweredBy: FC<{ isMenuExpanded: boolean; children: ReactNode }> = (
             <div
                 className={`w-full flex absolute bottom-3 ${isMenuExpanded ? 'left-12' : 'left-3'} duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1`}>
                 <span
-                    className={`${isMenuExpanded ? 'opacity-100 flex' : 'opacity-0 hidden'} duration-300 ease-in-out`}>
-                    Powered By:&nbsp;
+                    className={`flex items-center gap-1 ${isMenuExpanded ? 'opacity-100 flex' : 'opacity-0 hidden'} duration-300 ease-in-out`}>
+                    Powered By&nbsp;
                     {children}
                 </span>
             </div>
