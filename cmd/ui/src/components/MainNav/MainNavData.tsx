@@ -8,16 +8,27 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 
 export const useMainNavLogoData = () => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const imageUrlDarkMode = '/img/banner-ce-dark-mode.png';
-    const imageUrlLightMode = '/img/banner-ce-light-mode.png';
+    const bhceImageUrlDarkMode = '/img/banner-ce-dark-mode.png';
+    const bhceImageUrlLightMode = '/img/banner-ce-light-mode.png';
+    const soImageUrlDarkMode = '/img/banner-so-dark-mode.png';
+    const soImageUrlLightMode = '/img/banner-so-light-mode.png';
     return {
-        route: routes.ROUTE_HOME,
-        icon: <AppIcon.BHCELogo size={24} className='scale-150 text-[#e61616]' />, // Note: size 24 icon looked too small in comparison so had to scale it up a bit because upping the size misaligns it
-        image: {
-            imageUrl: `${import.meta.env.BASE_URL}${darkMode ? imageUrlDarkMode : imageUrlLightMode}`,
-            dimensions: { height: '40px', width: '165px' },
-            classes: 'ml-4 mt-2',
-            altText: 'BHCE Text Logo',
+        project: {
+            route: routes.ROUTE_HOME,
+            icon: <AppIcon.BHCELogo size={24} className='scale-150 text-[#e61616]' />, // Note: size 24 icon looked too small in comparison so had to scale it up a bit because upping the size misaligns it
+            image: {
+                imageUrl: `${import.meta.env.BASE_URL}${darkMode ? bhceImageUrlDarkMode : bhceImageUrlLightMode}`,
+                dimensions: { height: '40px', width: '165px' },
+                classes: 'ml-4 mt-2',
+                altText: 'BHCE Text Logo',
+            },
+        },
+        specterOps: {
+            image: {
+                imageUrl: `${import.meta.env.BASE_URL}${darkMode ? soImageUrlDarkMode : soImageUrlLightMode}`,
+                dimensions: { height: '25px', width: '110px' },
+                altText: 'SpecterOps Text Logo',
+            },
         },
     };
 };

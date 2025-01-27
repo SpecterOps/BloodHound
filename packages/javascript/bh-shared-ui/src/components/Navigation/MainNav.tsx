@@ -113,6 +113,22 @@ const MainNavVersionNumber: FC<{ isMenuExpanded: boolean }> = ({ isMenuExpanded 
     );
 };
 
+const MainNavPoweredBy: FC<{ isMenuExpanded: boolean; children: ReactNode }> = ({ isMenuExpanded, children }) => {
+    return (
+        // Note: The min-h allows for the version number to keep its position when the nav is scrollable
+        <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='main-nav-version-number'>
+            <div
+                className={`w-full flex absolute bottom-3 ${isMenuExpanded ? 'left-12' : 'left-3'} duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1`}>
+                <span
+                    className={`${isMenuExpanded ? 'opacity-100 flex' : 'opacity-0 hidden'} duration-300 ease-in-out`}>
+                    Powered By:&nbsp;
+                    {children}
+                </span>
+            </div>
+        </div>
+    );
+};
+
 const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
     const [isMenuExpanded, setIsMenuExpanded] = useState(false);
 
@@ -125,8 +141,8 @@ const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
             onMouseLeave={() => setIsMenuExpanded(false)}>
             <MainNavItemLink route={mainNavData.logo.route} isMenuExpanded={isMenuExpanded} data-testid='main-nav-logo'>
                 <MainNavItemLabel
-                    icon={mainNavData.logo.icon}
-                    label={<MainNavLogoTextImage mainNavLogoData={mainNavData.logo} />}
+                    icon={mainNavData.logo.project.icon}
+                    label={<MainNavLogoTextImage mainNavLogoData={mainNavData.logo.project} />}
                     isMenuExpanded={isMenuExpanded}
                 />
             </MainNavItemLink>
@@ -174,6 +190,9 @@ const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
                 </ul>
             </div>
             <MainNavVersionNumber isMenuExpanded={isMenuExpanded} />
+            <MainNavPoweredBy isMenuExpanded={isMenuExpanded}>
+                <MainNavLogoTextImage mainNavLogoData={mainNavData.logo.specterOps} />
+            </MainNavPoweredBy>
         </nav>
     );
 };
