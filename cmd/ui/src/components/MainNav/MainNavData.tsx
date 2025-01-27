@@ -1,6 +1,5 @@
 import { Switch } from '@bloodhoundenterprise/doodleui';
 import { AppIcon } from 'bh-shared-ui';
-import { ReactNode } from 'react';
 import { logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
@@ -33,14 +32,7 @@ export const useMainNavLogoData = () => {
     };
 };
 
-export type NavListDataItem = {
-    label: string | ReactNode;
-    icon: ReactNode;
-    route?: string;
-    functionHandler?: () => void;
-};
-
-export const MainNavPrimaryListData: NavListDataItem[] = [
+export const MainNavPrimaryListData = [
     {
         label: 'Explore',
         icon: <AppIcon.LineChart size={24} />,
@@ -53,7 +45,7 @@ export const MainNavPrimaryListData: NavListDataItem[] = [
     },
 ];
 
-export const useMainNavSecondaryListData = (): NavListDataItem[] => {
+export const useMainNavSecondaryListData = () => {
     const dispatch = useAppDispatch();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 

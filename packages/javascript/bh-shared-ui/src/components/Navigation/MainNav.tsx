@@ -17,8 +17,11 @@
 import { FC, ReactNode, useState } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useApiVersion } from '../../hooks';
+import { MainNavDataItem, MainNavLogoDataObject } from './types';
 
-const MainNavLogoTextImage: FC<{ mainNavLogoData: any }> = ({ mainNavLogoData }) => {
+const MainNavLogoTextImage: FC<{
+    mainNavLogoData: MainNavLogoDataObject['project'] & MainNavLogoDataObject['specterOps'];
+}> = ({ mainNavLogoData }) => {
     return (
         <img
             src={mainNavLogoData.image.imageUrl}
@@ -149,8 +152,8 @@ const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
             {/* Note: min height here is to keep the version number in bottom of nav */}
             <div className='h-full min-h-[700px] w-full flex flex-col justify-between mt-6'>
                 <ul className='flex flex-col gap-6 mt-8' data-testid='main-nav-primary-list'>
-                    {mainNavData.primaryList.map((listDataItem: any) => (
-                        <MainNavListItem key={listDataItem.label} route={listDataItem.route as string}>
+                    {mainNavData.primaryList.map((listDataItem: MainNavDataItem, itemIndex: number) => (
+                        <MainNavListItem key={itemIndex} route={listDataItem.route as string}>
                             <MainNavItemLink route={listDataItem.route as string} isMenuExpanded={isMenuExpanded}>
                                 <MainNavItemLabel
                                     icon={listDataItem.icon}
@@ -162,9 +165,9 @@ const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
                     ))}
                 </ul>
                 <ul className='flex flex-col gap-4 mt-16' data-testid='main-nav-secondary-list'>
-                    {mainNavData.secondaryList.map((listDataItem: any) =>
+                    {mainNavData.secondaryList.map((listDataItem: MainNavDataItem, itemIndex: number) =>
                         listDataItem.route ? (
-                            <MainNavListItem key={listDataItem.label} route={listDataItem.route as string}>
+                            <MainNavListItem key={itemIndex} route={listDataItem.route as string}>
                                 <MainNavItemLink route={listDataItem.route as string} isMenuExpanded={isMenuExpanded}>
                                     <MainNavItemLabel
                                         icon={listDataItem.icon}
@@ -174,7 +177,7 @@ const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
                                 </MainNavItemLink>
                             </MainNavListItem>
                         ) : (
-                            <MainNavListItem key={listDataItem.label}>
+                            <MainNavListItem key={itemIndex}>
                                 <MainNavItemAction
                                     onClick={(() => listDataItem.functionHandler as () => void)()}
                                     isMenuExpanded={isMenuExpanded}>
