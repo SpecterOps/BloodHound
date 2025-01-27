@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@
 import { FC, ReactNode, useState } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useApiVersion } from '../../hooks';
-import { MainNavDataItem, MainNavLogoDataObject } from './types';
+import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
 
 const MainNavLogoTextImage: FC<{
-    mainNavLogoData: MainNavLogoDataObject['project'] & MainNavLogoDataObject['specterOps'];
+    mainNavLogoData: MainNavLogoDataObject['project'] | MainNavLogoDataObject['specterOps'];
 }> = ({ mainNavLogoData }) => {
     return (
         <img
@@ -132,7 +132,7 @@ const MainNavPoweredBy: FC<{ isMenuExpanded: boolean; children: ReactNode }> = (
     );
 };
 
-const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
+const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const [isMenuExpanded, setIsMenuExpanded] = useState(false);
 
     return (
@@ -142,7 +142,10 @@ const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
             className={`z-[1201] fixed top-0 left-0 h-full ${isMenuExpanded ? 'w-[281px] overflow-y-auto overflow-x-hidden' : 'w-[56px]'} duration-300 ease-in flex flex-col items-center pt-4  bg-neutral-light-2 text-neutral-dark-0 dark:bg-neutral-dark-2 dark:text-neutral-light-1 print:hidden shadow-sm`}
             onMouseEnter={() => setIsMenuExpanded(true)}
             onMouseLeave={() => setIsMenuExpanded(false)}>
-            <MainNavItemLink route={mainNavData.logo.route} isMenuExpanded={isMenuExpanded} data-testid='main-nav-logo'>
+            <MainNavItemLink
+                route={mainNavData.logo.project.route}
+                isMenuExpanded={isMenuExpanded}
+                data-testid='main-nav-logo'>
                 <MainNavItemLabel
                     icon={mainNavData.logo.project.icon}
                     label={<MainNavLogoTextImage mainNavLogoData={mainNavData.logo.project} />}
@@ -152,7 +155,7 @@ const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
             {/* Note: min height here is to keep the version number in bottom of nav */}
             <div className='h-full min-h-[700px] w-full flex flex-col justify-between mt-6'>
                 <ul className='flex flex-col gap-6 mt-8' data-testid='main-nav-primary-list'>
-                    {mainNavData.primaryList.map((listDataItem: MainNavDataItem, itemIndex: number) => (
+                    {mainNavData.primaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) => (
                         <MainNavListItem key={itemIndex} route={listDataItem.route as string}>
                             <MainNavItemLink route={listDataItem.route as string} isMenuExpanded={isMenuExpanded}>
                                 <MainNavItemLabel
@@ -165,7 +168,7 @@ const MainNav: FC<{ mainNavData: any }> = ({ mainNavData }) => {
                     ))}
                 </ul>
                 <ul className='flex flex-col gap-4 mt-16' data-testid='main-nav-secondary-list'>
-                    {mainNavData.secondaryList.map((listDataItem: MainNavDataItem, itemIndex: number) =>
+                    {mainNavData.secondaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) =>
                         listDataItem.route ? (
                             <MainNavListItem key={itemIndex} route={listDataItem.route as string}>
                                 <MainNavItemLink route={listDataItem.route as string} isMenuExpanded={isMenuExpanded}>
