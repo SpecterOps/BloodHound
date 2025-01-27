@@ -31,7 +31,7 @@ allOf:
         type: object
         additionalProperties:
           type: object
-      accepted_until:
+      AcceptedUntil:
         type: string
         format: date-time
       ImpactPercentage: 

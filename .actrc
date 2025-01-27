@@ -1,9 +1,0 @@
---rm
---reuse
---container-options=--privileged
---pull=false
---platform=ubuntu-latest=catthehacker/ubuntu:custom-20.04
---container-architecture=linux/amd64
---workflows=./.github/workflows
---secret-file=./.act.secrets
---eventpath=./.act.event.json

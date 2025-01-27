@@ -42,6 +42,10 @@ func NewBitmap64() Duplex[uint64] {
 	}
 }
 
+func NewBitmap64Provider() Provider[uint64] {
+	return NewBitmap64()
+}
+
 func NewBitmap64With(values ...uint64) Duplex[uint64] {
 	duplex := NewBitmap64()
 	duplex.Add(values...)

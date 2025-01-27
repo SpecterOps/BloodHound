@@ -58,13 +58,13 @@ func main() {
 
 	// Jump the bootstrap initializer so all logs are configured properly
 	if enabled, err := config.GetTextLoggerEnabled(); err != nil {
-		bhlog.ConfigureDefaultJSON()
+		bhlog.ConfigureDefaultJSON(os.Stdout)
 		slog.Error(fmt.Sprintf("Failed to check text logger enabled: %v", err))
 		os.Exit(1)
 	} else if enabled {
-		bhlog.ConfigureDefaultText()
+		bhlog.ConfigureDefaultText(os.Stdout)
 	} else {
-		bhlog.ConfigureDefaultJSON()
+		bhlog.ConfigureDefaultJSON(os.Stdout)
 	}
 
 	if cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration); err != nil {

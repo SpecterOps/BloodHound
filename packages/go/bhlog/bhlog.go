@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
 	"strings"
 
 	"github.com/specterops/bloodhound/bhlog/level"
@@ -39,9 +38,9 @@ func TextHandler(pipe io.Writer, options *slog.HandlerOptions) slog.Handler {
 	return slog.NewTextHandler(pipe, options)
 }
 
-func ConfigureDefaultText() {
+func ConfigureDefaultText(pipe io.Writer) {
 	var (
-		handler = TextHandler(os.Stdout, &slog.HandlerOptions{
+		handler = TextHandler(pipe, &slog.HandlerOptions{
 			Level:       level.GetLevelVar(),
 			ReplaceAttr: textReplaceAttr,
 		})
@@ -55,9 +54,9 @@ func ConfigureDefaultText() {
 	slog.SetDefault(logger)
 }
 
-func ConfigureDefaultJSON() {
+func ConfigureDefaultJSON(pipe io.Writer) {
 	var (
-		handler = JsonHandler(os.Stdout, &slog.HandlerOptions{
+		handler = JsonHandler(pipe, &slog.HandlerOptions{
 			Level:       level.GetLevelVar(),
 			ReplaceAttr: jsonReplaceAttr,
 		})
