@@ -74,6 +74,8 @@ func ParseLimitQueryParameter(params url.Values, defaultValue int) (int, error) 
 		return defaultValue, nil
 	} else if limit, err := strconv.Atoi(param); err != nil {
 		return 0, fmt.Errorf("error converting limit value %v to int: %v", param, err)
+	} else if limit < -1 {
+		return 0, fmt.Errorf(utils.ErrorInvalidLimit, limit)
 	} else {
 		return limit, nil
 	}
