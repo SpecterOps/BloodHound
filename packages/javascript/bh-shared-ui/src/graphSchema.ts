@@ -140,6 +140,8 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC13 = 'ADCSESC13',
     SyncedToEntraUser = 'SyncedToEntraUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
+    CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
+    CoerceAndRelayNTLMToLDAPs = 'CoerceAndRelayNTLMToLDAPs',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -281,6 +283,9 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'SyncedToEntraUser';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB:
             return 'CoerceAndRelayNTLMToSMB';
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPs:
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP:
+            return 'CoerceAndRelayNTLMToLDAP';
         default:
             return undefined;
     }
@@ -299,6 +304,7 @@ export const EdgeCompositionRelationships = [
     'ADCSESC10b',
     'ADCSESC13',
     'CoerceAndRelayNTLMToSMB',
+    'CoerceAndRelayNTLMToLDAP',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -404,6 +410,13 @@ export enum ActiveDirectoryKindProperties {
     LockoutObservationWindow = 'lockoutobservationwindow',
     SMBSigning = 'smbsigning',
     RestrictOutboundNTLM = 'restrictoutboundntlm',
+    WebClientRunning = 'webclientrunning',
+    LDAPSigning = 'ldapsigning',
+    LDAPs = 'ldaps',
+    LDAPsEPA = 'ldapsepa',
+    LDAPsAvailable = 'ldapavailable',
+
+
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -613,6 +626,16 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'SMB Signing';
         case ActiveDirectoryKindProperties.RestrictOutboundNTLM:
             return 'Restrict Outbound NTLM';
+        case ActiveDirectoryKindProperties.WebClientRunning:
+            return 'Web Client Running';
+        case ActiveDirectoryKindProperties.LDAPSigning:
+            return 'LDAP Signing';
+        case ActiveDirectoryKindProperties.LDAPs:
+            return 'LDAPs';
+        case ActiveDirectoryKindProperties.LDAPsEPA:
+            return 'LDAPs EPA';
+        case ActiveDirectoryKindProperties.LDAPsAvailable:
+            return 'LDAPs Available';
         default:
             return undefined;
     }
@@ -663,6 +686,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC13,
         ActiveDirectoryRelationshipKind.SyncedToEntraUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.TrustedBy,
