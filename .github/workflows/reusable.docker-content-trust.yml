@@ -52,7 +52,6 @@ jobs:
     name: Sign Image
     runs-on: ubuntu-latest
     env:
-      DOCKER_CONTENT_TRUST: 1
       DOCKER_CONTENT_TRUST_SERVER: ${{ inputs.docker_content_trust_server }}
     steps:
       - uses: docker/login-action@v3
@@ -64,6 +63,7 @@ jobs:
 
       - name: Prepare Docker Content Trust Credentials
         env:
+          DOCKER_CONTENT_TRUST: 1
           DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE: ${{ secrets.docker_content_trust_repository_passphrase }}
         shell: bash
         run: |
@@ -83,6 +83,7 @@ jobs:
 
       - name: Signing Image
         env:
+          DOCKER_CONTENT_TRUST: 1
           DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE: ${{ secrets.docker_content_trust_repository_passphrase }}
         shell: bash
         run: docker trust sign --local ${{ inputs.dockerhub_image_reference }}
