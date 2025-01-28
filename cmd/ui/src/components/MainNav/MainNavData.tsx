@@ -55,7 +55,7 @@ export const MainNavPrimaryListData = [
         route: routes.ROUTE_EXPLORE,
     },
     {
-        label: 'Tier Management',
+        label: 'Group Management',
         icon: <AppIcon.Diamond size={24} />,
         route: routes.ROUTE_GROUP_MANAGEMENT,
     },
