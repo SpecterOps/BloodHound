@@ -531,18 +531,17 @@ class BHEAPIClient {
     getRiskDetails = (
         domainId: string,
         finding: string,
-        skip?: number,
-        limit?: number,
+        skip: number,
+        limit: number,
         filterAccepted?: boolean,
         sortBy?: string | string[],
         options?: types.RequestOptions,
-        acceptHeader?: string
     ) => { 
         const params = new URLSearchParams();
         params.append('finding', finding);
 
-        if (skip)params.append('skip', skip.toString());
-        if (limit)params.append('limit', limit.toString());
+        params.append('skip', skip.toString());
+        params.append('limit', limit.toString());
         if (sortBy) {
             if (typeof sortBy === 'string') {
                 params.append('sort_by', sortBy);
@@ -558,7 +557,7 @@ class BHEAPIClient {
             Object.assign(
                 {
                     params: params,
-                    headers: { 'Accept': acceptHeader || 'application/json'},
+                    headers: options?.headers
                 },
                 options
             )
