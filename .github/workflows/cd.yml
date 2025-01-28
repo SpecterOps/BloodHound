@@ -44,8 +44,8 @@ jobs:
         type=semver,pattern={{major}}.{{minor}},enable=${{ ! contains(github.ref_name, '-rc') }}
         type=semver,pattern={{major}},enable=${{ ! contains(github.ref_name, '-rc') }}
       build_args: |
-        version=${{ github.ref_name }}
         checkout_hash=${{ github.sha }}
+        ${{ github.ref_name != 'main' && format('version={0}', github.ref_name) }}
     secrets:
       dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
       dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
