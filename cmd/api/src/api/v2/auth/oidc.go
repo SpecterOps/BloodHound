@@ -160,7 +160,7 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 
 	if ssoProvider.OIDCProvider == nil {
 		// SSO misconfiguration scenario
-		api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else if state, err := config.GenerateRandomBase64String(77); err != nil {
 		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to generate state: %v", err))
 		// Technical issues scenario
@@ -169,7 +169,7 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
 		// SSO misconfiguration or technical issue
 		// Treat this as a misconfiguration scenario
-		api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else {
 		conf := &oauth2.Config{
 			ClientID:    ssoProvider.OIDCProvider.ClientID,
@@ -207,33 +207,37 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 
 	if ssoProvider.OIDCProvider == nil {
 		// SSO misconfiguration scenario
-		api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else if code == "" {
-		slog.WarnContext(request.Context(), "[OIDC] auth code is missing")
-		api.RedirectToLoginURL(response, request, "We're having trouble connecting. Please check your internet and try again.")
 		// Missing authorization code implies a credentials or form issue
+		slog.WarnContext(request.Context(), "[OIDC] auth code is missing")
+		api.RedirectToLoginURL(response, request, "Invalid SSO Provider response: `code` parameter is missing")
 	} else if state == "" {
-		slog.WarnContext(request.Context(), "[OIDC] state parameter is missing")
 		// Missing state parameter - treat as technical issue
-		api.RedirectToLoginURL(response, request, "We're having trouble connecting. Please check your internet and try again.")
+		slog.WarnContext(request.Context(), "[OIDC] state parameter is missing")
+		api.RedirectToLoginURL(response, request, "Invalid SSO Provider response: `state` parameter is missing")
 	} else if pkceVerifier, err := request.Cookie(api.AuthPKCECookieName); err != nil {
-		slog.WarnContext(request.Context(), "[OIDC] pkce cookie is missing")
 		// Missing PKCE verifier - likely a technical or config issue
-		api.RedirectToLoginURL(response, request, "We're having trouble connecting. Please check your internet and try again.")
-	} else if stateCookie, err := request.Cookie(api.AuthStateCookieName); err != nil || stateCookie.Value != state {
-		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] state cookie does not match %v", err))
-		// Invalid state - treat as technical issue or misconfiguration
-		api.RedirectToLoginURL(response, request, "We're having trouble connecting. Please check your internet and try again.")
+		slog.WarnContext(request.Context(), "[OIDC] pkce cookie is missing")
+		api.RedirectToLoginURL(response, request, "Invalid request: `pkce` is missing")
+	} else if stateCookie, err := request.Cookie(api.AuthStateCookieName); err != nil {
+		// Missing state - likely a technical or config issue
+		slog.WarnContext(request.Context(), "[OIDC] state cookie is missing")
+		api.RedirectToLoginURL(response, request, "Invalid request: `state` is missing")
+	} else if stateCookie.Value != state {
+		// State mismatch
+		slog.WarnContext(request.Context(), "[OIDC] state does not match")
+		api.RedirectToLoginURL(response, request, "Invalid: `state` do not match")
 	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
-		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
 		// SSO misconfiguration scenario
-		api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
+		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
+		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else if claims, err := getOIDCClaims(request.Context(), provider, ssoProvider, pkceVerifier, code); err != nil {
 		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] %v", err))
-		api.RedirectToLoginURL(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, fmt.Sprintf("Exchange failed: %s", err.Error()))
 	} else if email, err := getEmailFromOIDCClaims(claims); errors.Is(err, ErrEmailMissing) { // Note email claims are not always present so we will check different claim keys for possible email
 		slog.WarnContext(request.Context(), "[OIDC] Claims did not contain any valid email address")
-		api.RedirectToLoginURL(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, "Claims invalid: no valid email address found")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
 			if err := jitOIDCUserCreation(request.Context(), ssoProvider, email, claims, s.db); err != nil {
