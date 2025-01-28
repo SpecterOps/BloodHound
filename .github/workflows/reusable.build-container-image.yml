@@ -119,10 +119,15 @@ on:
             - Meet compliance requirements for software transparency
             - Support automated vulnerability scanning
             - Enable dependency analysis and lifecycle management
+
       image_flavor:
-        type: string
         description: |-
-          Additional image flavor information or tags.
+          See: https://github.com/docker/metadata-action#flavor-input
+
+      image_tags:
+        description: |-
+          See: https://github.com/docker/metadata-action#tags-input
+
       image_cache_from:
         type: string
         description: |-
@@ -202,6 +207,7 @@ jobs:
         with:
           container_image_repository_name: ${{ inputs.container_image_repository_name }}
           image_flavor: ${{ inputs.image_flavor }}
+          image_tags: ${{ inputs.image_tags }}
 
       - id: build-container-image
         uses: ./.github/actions/build-container-image

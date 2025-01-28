@@ -51,6 +51,9 @@ jobs:
       dockerfile: dockerfiles/bloodhound.Dockerfile
       image_cache_from: type=registry,ref=ghcr.io/specterops/bloodhound:buildcache
       image_cache_to: type=registry,ref=ghcr.io/specterops/bloodhound:buildcache,mode=max
+      build_args: |
+        checkout_hash=${{ github.sha }}
+
     secrets:
       dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
       dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}

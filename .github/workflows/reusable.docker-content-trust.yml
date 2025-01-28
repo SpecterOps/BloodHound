@@ -63,6 +63,7 @@ jobs:
           password: ${{ secrets.dockerhub_token }}
 
       - name: Prepare Docker Content Trust Credentials
+        env:
           DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE: ${{ secrets.docker_content_trust_repository_passphrase }}
         shell: bash
         run: |
