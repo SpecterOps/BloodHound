@@ -133,7 +133,7 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 
 // PostCoerceAndRelayNTLMToLDAP creates edges where an authenticated user group, for a given domain, is able to target the provided computer.
 // This will create either a CoerceAndRelayNTLMToLDAP or CoerceAndRelayNTLMToLDAPs edges, depending on the ldapSigning property of the domain
-func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob, computer *graph.Node, ldapSigning ad.Property, authenticatedUserID graph.ID) error {
+func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob, computer *graph.Node, authenticatedUserID graph.ID, ldapSigningCache map[string]LdapSigningCache) error {
 	if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
 		return nil
 	} else if err != nil {
@@ -145,21 +145,24 @@ func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob
 	} else if err != nil {
 		return err
 	} else if webClientRunning {
-		switch ldapSigning {
-		case ad.RelayableToDCLDAP:
-			outC <- analysis.CreatePostRelationshipJob{
-				FromID: authenticatedUserID,
-				ToID:   computer.ID,
-				Kind:   ad.CoerceAndRelayNTLMToLDAP,
+		if domainSid, err := computer.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+			if errors.Is(err, graph.ErrPropertyNotFound) {
+				return nil
+			} else {
+				return err
 			}
-		case ad.RelayableToDCLDAPs:
-			outC <- analysis.CreatePostRelationshipJob{
-				FromID: authenticatedUserID,
-				ToID:   computer.ID,
-				Kind:   ad.CoerceAndRelayNTLMToLDAPs,
+		} else {
+			if signingCache, ok := ldapSigningCache[domainSid]; !ok {
+				return nil
+			} else {
+				if len(signingCache.relayableToDcLdap) > 0 {
+					//TODO: Make edges
+				}
+
+				if len(signingCache.relayableToDcLdaps) > 0 {
+					//TODO: Make edges
+				}
 			}
-		default:
-			return fmt.Errorf("unknown LDAP signing property %s", ldapSigning)
 		}
 	}
 
@@ -190,39 +193,72 @@ func FetchAuthUsersMappedToDomains(tx graph.Transaction) (map[string]graph.ID, e
 	return authenticatedUsers, err
 }
 
+type LdapSigningCache struct {
+	relayableToDcLdap  []graph.ID
+	relayableToDcLdaps []graph.ID
+}
+
 // FetchLDAPSigningCache will check all Domain Controllers (DC) for LDAP signing. If the DC has the "ldap_signing" set to true along with "ldaps_available" to true and "ldaps_epa" to false,
 // we set the DC to be a "relayable_to_dc_ldaps" type. If the DC has "ldap_signing" set to false then we simply set the DC to be a "relayable_to_dc_ldap" type
-func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]ad.Property, error) {
-	ldapSigningCache := map[string]ad.Property{}
+func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]LdapSigningCache, error) {
 	if domains, err := FetchAllDomains(ctx, db); err != nil {
 		return nil, err
 	} else {
+		cache := make(map[string]LdapSigningCache)
 		for _, domain := range domains {
-			if ldapSigning, err := domain.Properties.Get(ad.LDAPSigning.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
-				return nil, nil
-			} else if err != nil {
-				return nil, err
-			} else if domainSID, err := domain.Properties.Get(ad.DomainSID.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
-				return nil, nil
-			} else if err != nil {
-				return nil, err
-			} else if ldapSigning {
-				if ldapsAvailable, err := domain.Properties.Get(ad.LDAPsAvailable.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
-					return nil, nil
-				} else if err != nil {
+			if domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+				if errors.Is(err, graph.ErrPropertyNotFound) {
+					continue
+				} else {
 					return nil, err
-				} else if ldapsEPA, err := domain.Properties.Get(ad.LDAPsEPA.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
-					return nil, nil
-				} else if err != nil {
-					return nil, err
-				} else if ldapsAvailable && !ldapsEPA {
-					ldapSigningCache[domainSID] = ad.RelayableToDCLDAP
 				}
-			} else {
-				ldapSigningCache[domainSID] = ad.RelayableToDCLDAPs
+			} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+				if relayableToDcLdap, err := ops.FetchNodeIDs(tx.Nodes().Filter(
+					query.And(
+						query.Equals(
+							query.NodeProperty(ad.DomainSID.String()), domainSid,
+						),
+						query.Equals(
+							query.NodeProperty(ad.IsDC.String()), domainSid,
+						),
+						query.Equals(
+							query.NodeProperty(ad.LDAPSigning.String()), false,
+						),
+					),
+				)); err != nil {
+					return err
+				} else if relayableToDcLdaps, err := ops.FetchNodeIDs(tx.Nodes().Filter(
+					query.And(
+						query.Equals(
+							query.NodeProperty(ad.DomainSID.String()), domainSid,
+						),
+						query.Equals(
+							query.NodeProperty(ad.IsDC.String()), domainSid,
+						),
+						query.Equals(
+							query.NodeProperty(ad.LDAPSigning.String()), true,
+						),
+						query.Equals(
+							query.NodeProperty(ad.LDAPsAvailable.String()), true,
+						),
+						query.Equals(
+							query.NodeProperty(ad.LDAPsEPA.String()), false,
+						),
+					),
+				)); err != nil {
+					return err
+				} else {
+					cache[domainSid] = LdapSigningCache{
+						relayableToDcLdap:  relayableToDcLdap,
+						relayableToDcLdaps: relayableToDcLdaps,
+					}
+					return nil
+				}
+			}); err != nil {
+				return nil, err
 			}
 		}
-	}
 
-	return ldapSigningCache, nil
+		return cache, nil
+	}
 }
