@@ -131,8 +131,7 @@ const Administration: React.FC = () => {
         .filter((section) => section.items.length !== 0);
 
     return (
-        // To do: change pl-[225px] to to something like pl-subnav
-        <Box className='flex h-full pl-[225px]'>
+        <Box className='flex h-full pl-subnav-width'>
             <SubNav sections={adminFilteredSections} />
             <Box flexGrow={1} position='relative' minWidth={0}>
                 <main>

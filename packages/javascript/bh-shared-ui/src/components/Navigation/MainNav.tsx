@@ -138,10 +138,8 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const [isMenuExpanded, setIsMenuExpanded] = useState(false);
 
     return (
-        // To do: change w-[56px], w-[281px], z-[1201] to something like w-nav, w-nav-expanded, z-nav ( and then have subnav be z-nav - 1 or something)
-        // Note: z-index needs to be higher than sub-nav
         <nav
-            className={`z-[1201] fixed top-0 left-0 h-full ${isMenuExpanded ? 'w-[281px] overflow-y-auto overflow-x-hidden' : 'w-[56px]'} duration-300 ease-in flex flex-col items-center pt-4  bg-neutral-light-2 text-neutral-dark-0 dark:bg-neutral-dark-2 dark:text-neutral-light-1 print:hidden shadow-sm`}
+            className={`z-nav fixed top-0 left-0 h-full ${isMenuExpanded ? 'w-nav-width-expanded overflow-y-auto overflow-x-hidden' : 'w-nav-width'} duration-300 ease-in flex flex-col items-center pt-4  bg-neutral-light-2 text-neutral-dark-0 dark:bg-neutral-dark-2 dark:text-neutral-light-1 print:hidden shadow-sm`}
             onMouseEnter={() => setIsMenuExpanded(true)}
             onMouseLeave={() => setIsMenuExpanded(false)}>
             <MainNavItemLink
