@@ -303,6 +303,8 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsNumRoles, request), response)
 	} else if roles, err := s.db.GetRoles(request.Context(), createUserRequest.Roles); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if isNewEmail := s.db.IsNewEmail(request.Context(), createUserRequest.EmailAddress); !isNewEmail {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicateEmail, request), response)
 	} else {
 		userTemplate.Roles = roles
 		userTemplate.FirstName = null.StringFrom(createUserRequest.FirstName)
@@ -386,6 +388,8 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "a user can only have one role", request), response)
 	} else if roles, err := s.db.GetRoles(request.Context(), updateUserRequest.Roles); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if isNewEmail := s.db.IsNewEmail(request.Context(), updateUserRequest.EmailAddress); !isNewEmail {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicateEmail, request), response)
 	} else {
 		user.Roles = roles
 		user.FirstName = null.StringFrom(updateUserRequest.FirstName)
