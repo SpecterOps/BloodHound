@@ -189,6 +189,8 @@ jobs:
     steps:
       - name: Checkout Source Code Repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       # TODO: don't pull actions but instead reference them from the source repo
       # May need to adjust repo actions permissions to allow access from other org repos
