@@ -39,7 +39,7 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children
 
     return (
         <li
-            className={`h-10 px-2 mx-2 flex items-center ${isActiveRoute ? 'text-primary bg-neutral-light-4' : 'hover:text-secondary hover:underline'} cursor-pointer rounded`}>
+            className={`h-10 px-2 mx-2 flex items-center ${isActiveRoute ? 'text-primary bg-neutral-light-4' : 'hover:text-secondary dark:hover:text-secondary-variant-2'}  cursor-pointer rounded`}>
             {children}
         </li>
     );
@@ -56,7 +56,7 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; isMenuEx
         <div
             role='button'
             onClick={onClick}
-            className={`h-10 ${isMenuExpanded ? 'w-full' : 'w-auto'} absolute left-4 flex items-center gap-x-2`}>
+            className={`h-10 ${isMenuExpanded ? 'w-full' : 'w-auto'} absolute left-4 flex items-center gap-x-2 hover:underline`}>
             {children}
         </div>
     );
@@ -72,7 +72,7 @@ const MainNavItemLink: FC<{ route: string; children: ReactNode; isMenuExpanded: 
         // Note: The w-full terniary is to avoid the hover area to overflow out of the nav when its collapsed
         <RouterLink
             to={route as string}
-            className={`h-10 ${isMenuExpanded ? 'w-full' : 'w-auto'} absolute left-4 flex items-center gap-x-2`}
+            className={`h-10 ${isMenuExpanded ? 'w-full' : 'w-auto'} absolute left-4 flex items-center gap-x-2 hover:underline`}
             {...rest}>
             {children}
         </RouterLink>
