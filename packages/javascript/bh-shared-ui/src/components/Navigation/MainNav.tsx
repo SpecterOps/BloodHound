@@ -39,7 +39,7 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children
 
     return (
         <li
-            className={`h-10 px-2 mx-2 flex items-center ${isActiveRoute ? 'text-primary bg-neutral-light-4' : 'hover:text-secondary dark:hover:text-secondary-variant-2'}  cursor-pointer rounded`}>
+            className={`h-10 px-2 mx-2 flex items-center ${isActiveRoute && 'text-primary bg-neutral-light-4'}  cursor-pointer rounded`}>
             {children}
         </li>
     );
@@ -56,7 +56,7 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; isMenuEx
         <div
             role='button'
             onClick={onClick}
-            className={`h-10 ${isMenuExpanded ? 'w-full' : 'w-auto'} absolute left-4 flex items-center gap-x-2 hover:underline`}>
+            className={`h-10 ${isMenuExpanded ? 'w-full' : 'w-auto'} absolute left-4 flex items-center gap-x-2 text-neutral-dark-0 dark:text-neutral-light-1 hover:text-secondary dark:hover:text-secondary-variant-2 hover:underline `}>
             {children}
         </div>
     );
@@ -72,7 +72,7 @@ const MainNavItemLink: FC<{ route: string; children: ReactNode; isMenuExpanded: 
         // Note: The w-full terniary is to avoid the hover area to overflow out of the nav when its collapsed
         <RouterLink
             to={route as string}
-            className={`h-10 ${isMenuExpanded ? 'w-full' : 'w-auto'} absolute left-4 flex items-center gap-x-2 hover:underline`}
+            className={`h-10 ${isMenuExpanded ? 'w-full' : 'w-auto'} absolute left-4 flex items-center gap-x-2 text-neutral-dark-0 dark:text-neutral-light-1 hover:text-secondary dark:hover:text-secondary-variant-2 hover:underline`}
             {...rest}>
             {children}
         </RouterLink>
@@ -92,7 +92,7 @@ const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string; isMenuE
             </span>
             <span
                 data-testid='main-nav-item-label-text'
-                className={`whitespace-nowrap flex min-h-10 items-center gap-x-5 font-medium text-xl ${isMenuExpanded ? 'opacity-100 block' : 'opacity-0 hidden'} duration-200 ease-in`}>
+                className={`whitespace-nowrap flex min-h-10 items-center gap-x-5 font-medium text-xl ${isMenuExpanded ? 'opacity-100 block' : 'opacity-0 hidden'} transition-opacity duration-200 ease-in`}>
                 {label}
             </span>
         </>
@@ -139,7 +139,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
 
     return (
         <nav
-            className={`z-nav fixed top-0 left-0 h-full ${isMenuExpanded ? 'w-nav-width-expanded overflow-y-auto overflow-x-hidden' : 'w-nav-width'} duration-300 ease-in flex flex-col items-center pt-4  bg-neutral-light-2 text-neutral-dark-0 dark:bg-neutral-dark-2 dark:text-neutral-light-1 print:hidden shadow-sm`}
+            className={`z-nav fixed top-0 left-0 h-full ${isMenuExpanded ? 'w-nav-width-expanded overflow-y-auto overflow-x-hidden' : 'w-nav-width'} duration-300 ease-in flex flex-col items-center pt-4 bg-neutral-light-2 shadow-sm print:hidden`}
             onMouseEnter={() => setIsMenuExpanded(true)}
             onMouseLeave={() => setIsMenuExpanded(false)}>
             <MainNavItemLink
