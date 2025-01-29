@@ -48,7 +48,7 @@ const SubNav: React.FC<{
     }[];
 }> = ({ sections }) => {
     return (
-        <nav className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 text-neutral-dark-0 pt-6 border-x border-solid border-neutral-light-5 dark:dark:bg-neutral-dark-2 dark:text-neutral-light-1'>
+        <nav className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 text-neutral-dark-0 pt-6 border-x border-solid border-neutral-light-5 dark:bg-neutral-dark-2 dark:text-neutral-light-1'>
             {sections.map((section, sectionIndex) => (
                 <ul key={sectionIndex}>
                     <SubNavListItem>
