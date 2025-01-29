@@ -90,13 +90,6 @@ WITH aggregated_quality_stats AS (
         MAX(ntauthstores) AS max_ntauthstores,
         MAX(certtemplates) AS max_certtemplates,
         MAX(issuancepolicies) AS max_issuancepolicies,
-<<<<<<< HEAD
-=======
-        -- these fields appear to be a mistake
-        -- MAX(o_us) AS max_o_us,
-        -- MAX(ac_ls) AS max_ac_ls,
-        -- MAX(gp_os) AS max_gp_os,
->>>>>>> b32ec4e0 (feat: BED-5132 - aggregate posture and risk stats)
         MAX(session_completeness) AS max_session_completeness,
         MAX(local_group_completeness) AS max_local_group_completeness
     FROM ad_data_quality_stats
@@ -121,10 +114,6 @@ SELECT
     SUM(max_ntauthstores) AS ntauthstores,
     SUM(max_certtemplates) AS certtemplates,
     SUM(max_issuancepolicies) AS issuancepolicies,
-    -- these fields appear to be a mistake
-    -- SUM(max_o_us) AS o_us,
-    -- SUM(max_ac_ls) AS ac_ls,
-    -- SUM(max_gp_os) AS gp_os,
     MAX(max_session_completeness) AS session_completeness,
     MAX(max_local_group_completeness) AS local_group_completeness
 FROM aggregated_quality_stats
