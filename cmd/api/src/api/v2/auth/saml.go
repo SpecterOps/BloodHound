@@ -379,11 +379,11 @@ func (s ManagementResource) ServeSigningCertificate(response http.ResponseWriter
 func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	if ssoProvider.SAMLProvider == nil {
 		// SAML misconfiguration scenario
-		api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Service provider creation failed: %v", err))
 		// Technical issues scenario
-		api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else {
 		var (
 			binding         = saml.HTTPRedirectBinding
@@ -399,14 +399,14 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 			slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed creating SAML authentication request: %v", err))
 			// SAML misconfiguration or technical issue
 			// Since this likely indicates a configuration problem, we treat it as a misconfiguration scenario
-			api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
+			api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 		} else {
 			switch binding {
 			case saml.HTTPRedirectBinding:
 				if redirectURL, err := authReq.Redirect("", &serviceProvider); err != nil {
 					slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to format a redirect for SAML provider %s: %v", serviceProvider.EntityID, err))
 					// Likely a technical or configuration issue
-					api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
+					api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 				} else {
 					response.Header().Add(headers.Location.String(), redirectURL.String())
 					response.WriteHeader(http.StatusFound)
@@ -420,13 +420,13 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 				if _, err := response.Write([]byte(fmt.Sprintf(authInitiationContentBodyFormat, authReq.Post("")))); err != nil {
 					slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to write response with HTTP POST binding: %v", err))
 					// Technical issues scenario
-					api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+					api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 				}
 
 			default:
 				slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Unhandled binding type %s", binding))
 				// Treating unknown binding as a misconfiguration
-				api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
+				api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 			}
 		}
 	}
@@ -436,15 +436,14 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, request *http.Request, ssoProvider model.SSOProvider) {
 	if ssoProvider.SAMLProvider == nil {
 		// SAML misconfiguration
-		api.RedirectToLoginURL(response, request, "Your SSO Connection failed, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Service provider creation failed: %v", err))
-		api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else if err := request.ParseForm(); err != nil {
 		slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to parse form POST: %v", err))
 		// Technical issues or invalid form data
-		// This is not covered by acceptance criteria directly; treat as technical issue
-		api.RedirectToLoginURL(response, request, "We’re having trouble connecting. Please check your internet and try again.")
+		api.RedirectToLoginURL(response, request, fmt.Sprintf("Invalid SSO response %s", err.Error()))
 	} else if assertion, err := serviceProvider.ParseResponse(request, nil); err != nil {
 		var typedErr *saml.InvalidResponseError
 		switch {
@@ -454,11 +453,11 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 			slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to parse ACS response for provider %s: %v", ssoProvider.SAMLProvider.IssuerURI, err))
 		}
 		// SAML credentials issue scenario (authentication failed)
-		api.RedirectToLoginURL(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, fmt.Sprintf("Invalid SSO response: Failed to parse ACS response %s", err.Error()))
 	} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
 		slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to lookup user for SAML provider %s: %v", ssoProvider.Name, err))
 		// SAML credentials issue scenario again
-		api.RedirectToLoginURL(response, request, "Your SSO was unable to authenticate your user, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, "Invalid assertion: no valid email address found")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
 			if err := jitSAMLUserCreation(request.Context(), ssoProvider, principalName, assertion, s.db); err != nil {
