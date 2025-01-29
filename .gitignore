@@ -450,3 +450,8 @@ local-harnesses/*
 
 # folder used by antlr4 VSCode extension
 .antlr
+
+# act related files
+.act*
+
+!.actrc
