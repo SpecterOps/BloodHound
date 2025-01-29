@@ -193,7 +193,6 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 		mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{}, nil)
 		mockDB.EXPECT().GetSAMLProvider(gomock.Any(), ssoProvider.SAMLProvider.ID).Return(*ssoProvider.SAMLProvider, nil)
 		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), ssoProvider.ID).Return(ssoProvider, nil)
-		mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
 		test.Request(t).
@@ -215,7 +214,6 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 		mockDB.EXPECT().GetSAMLProvider(gomock.Any(), ssoProvider.SAMLProvider.ID).Return(*ssoProvider.SAMLProvider, nil)
 		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), ssoProvider.ID).Return(ssoProvider, nil)
 		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
-		mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 
 		test.Request(t).
 			WithContext(bhCtx).
@@ -233,7 +231,6 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 	t.Run("Successful user update with sso provider-saml", func(t *testing.T) {
 		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Eq(goodRoles)).Return(model.Roles{}, nil)
 		mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{}, nil)
-		mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), ssoProvider.ID).Return(ssoProvider, nil)
 		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
@@ -1511,12 +1508,12 @@ func TestManagementResource_UpdateUser_DuplicateEmailError(t *testing.T) {
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, nil)
-	mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(false)
+	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{EmailAddress: null.StringFrom("")}, nil)
+	mockDB.EXPECT().IsNewEmail(gomock.Any(), "different").Return(false)
 
 	reqCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 
-	payload, err := json.Marshal(v2.UpdateUserRequest{})
+	payload, err := json.Marshal(v2.UpdateUserRequest{EmailAddress: "different"})
 	require.Nil(t, err)
 
 	endpoint := fmt.Sprintf("/api/v2/bloodhound-users/%v", goodUserID)
@@ -1635,7 +1632,6 @@ func TestManagementResource_UpdateUser_UserSelfModify(t *testing.T) {
 		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{adminRole}, nil)
 		mockDB.EXPECT().GetUser(gomock.Any(), adminUser.ID).Return(adminUser, nil)
 		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(model.SSOProvider{}, nil)
-		mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 
 		test.Request(t).
 			WithContext(bhCtx).
@@ -1653,7 +1649,6 @@ func TestManagementResource_UpdateUser_UserSelfModify(t *testing.T) {
 	t.Run("Prevent users from changing their own roles", func(t *testing.T) {
 		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{badRole}, nil)
 		mockDB.EXPECT().GetUser(gomock.Any(), adminUser.ID).Return(adminUser, nil)
-		mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 
 		test.Request(t).
 			WithContext(bhCtx).
