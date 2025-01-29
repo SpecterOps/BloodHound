@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC, ReactNode, useState } from 'react';
+import { FC, ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useApiVersion } from '../../hooks';
 import { cn } from '../../utils';
@@ -51,49 +51,32 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children
     );
 };
 
-const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; isMenuExpanded: boolean }> = ({
-    onClick,
-    children,
-    isMenuExpanded,
-}) => {
+const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode }> = ({ onClick, children }) => {
     return (
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed which created a flickering effect just outside the nav
         // Note: had to wrap in div to avoid error of button nesting in a button with the switch
         <div
             role='button'
             onClick={onClick}
-            className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline', {
-                'w-full': isMenuExpanded,
-            })}>
+            className={'h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline group-hover:w-full'}>
             {children}
         </div>
     );
 };
 
-const MainNavItemLink: FC<{ route: string; children: ReactNode; isMenuExpanded: boolean }> = ({
-    route,
-    children,
-    isMenuExpanded,
-    ...rest
-}) => {
+const MainNavItemLink: FC<{ route: string; children: ReactNode }> = ({ route, children, ...rest }) => {
     return (
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed
         <RouterLink
             to={route as string}
-            className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline', {
-                'w-full': isMenuExpanded,
-            })}
+            className={'h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline group-hover:w-full'}
             {...rest}>
             {children}
         </RouterLink>
     );
 };
 
-const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string; isMenuExpanded: boolean }> = ({
-    icon,
-    label,
-    isMenuExpanded,
-}) => {
+const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string }> = ({ icon, label }) => {
     return (
         // Note: The min-h here is to keep spacing between the logo and the list below.
         <>
@@ -102,17 +85,16 @@ const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string; isMenuE
             </span>
             <span
                 data-testid='main-nav-item-label-text'
-                className={cn(
-                    'whitespace-nowrap min-h-10 font-medium text-xl opacity-0 hidden transition-opacity duration-200 ease-in',
-                    { 'opacity-100 flex items-center gap-x-5': isMenuExpanded }
-                )}>
+                className={
+                    'whitespace-nowrap min-h-10 font-medium text-xl opacity-0 hidden transition-opacity duration-200 ease-in group-hover:opacity-100 group-hover:flex group-hover:items-center group-hover:gap-x-5'
+                }>
                 {label}
             </span>
         </>
     );
 };
 
-const MainNavVersionNumber: FC<{ isMenuExpanded: boolean }> = ({ isMenuExpanded }) => {
+const MainNavVersionNumber: FC = () => {
     const { data: apiVersionResponse, isSuccess } = useApiVersion();
     const apiVersion = isSuccess && apiVersionResponse?.server_version;
 
@@ -120,40 +102,30 @@ const MainNavVersionNumber: FC<{ isMenuExpanded: boolean }> = ({ isMenuExpanded 
         // Note: The min-h allows for the version number to keep its position when the nav is scrollable
         <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='main-nav-version-number'>
             <div
-                className={cn(
-                    'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1',
-                    { 'left-16': isMenuExpanded }
-                )}>
-                <span
-                    className={cn('opacity-0 hidden duration-300 ease-in-out', {
-                        'opacity-100 block': isMenuExpanded,
-                    })}>
+                className={
+                    'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1 group-hover:left-16'
+                }>
+                <span className={'opacity-0 hidden duration-300 ease-in-out group-hover:opacity-100 group-hover:block'}>
                     BloodHound:&nbsp;
                 </span>
-                <span
-                    className={cn('', {
-                        'max-w-9 overflow-x-hidden': !isMenuExpanded,
-                    })}>
-                    {apiVersion}
-                </span>
+                <span className={cn('group-[:not(:hover)]:max-w-9 overflow-x-hidden')}>{apiVersion}</span>
             </div>
         </div>
     );
 };
 
-const MainNavPoweredBy: FC<{ isMenuExpanded: boolean; children: ReactNode }> = ({ isMenuExpanded, children }) => {
+const MainNavPoweredBy: FC<{ children: ReactNode }> = ({ children }) => {
     return (
         // Note: The min-h allows for the version number to keep its position when the nav is scrollable
         <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='main-nav-powered-by'>
             <div
-                className={cn(
-                    'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1',
-                    { 'left-12': isMenuExpanded }
-                )}>
+                className={
+                    'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1 group-hover:left-12'
+                }>
                 <span
-                    className={cn('opacity-0 hidden duration-300 ease-in-out', {
-                        'opacity-100 flex items-center gap-1': isMenuExpanded,
-                    })}>
+                    className={
+                        'opacity-0 hidden duration-300 ease-in-out group-hover:opacity-100 group-hover:flex group-hover:items-center group-hover:gap-1'
+                    }>
                     powered by&nbsp;
                     {children}
                 </span>
@@ -163,24 +135,15 @@ const MainNavPoweredBy: FC<{ isMenuExpanded: boolean; children: ReactNode }> = (
 };
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
-    const [isMenuExpanded, setIsMenuExpanded] = useState(false);
-
     return (
         <nav
-            className={cn(
-                'z-nav fixed top-0 left-0 h-full w-nav-width duration-300 ease-in flex flex-col items-center pt-4 shadow-sm bg-neutral-light-2 dark:bg-neutral-dark-2 print:hidden',
-                { 'w-nav-width-expanded overflow-y-auto overflow-x-hidden': isMenuExpanded }
-            )}
-            onMouseEnter={() => setIsMenuExpanded(true)}
-            onMouseLeave={() => setIsMenuExpanded(false)}>
-            <MainNavItemLink
-                route={mainNavData.logo.project.route}
-                isMenuExpanded={isMenuExpanded}
-                data-testid='main-nav-logo'>
+            className={
+                'z-nav fixed top-0 left-0 h-full w-nav-width duration-300 ease-in flex flex-col items-center pt-4 shadow-sm bg-neutral-light-2 dark:bg-neutral-dark-2 print:hidden hover:w-nav-width-expanded hover:overflow-y-auto hover:overflow-x-hidden group'
+            }>
+            <MainNavItemLink route={mainNavData.logo.project.route} data-testid='main-nav-logo'>
                 <MainNavItemLabel
                     icon={mainNavData.logo.project.icon}
                     label={<MainNavLogoTextImage mainNavLogoData={mainNavData.logo.project} />}
-                    isMenuExpanded={isMenuExpanded}
                 />
             </MainNavItemLink>
             {/* Note: min height here is to keep the version number in bottom of nav */}
@@ -188,12 +151,8 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 <ul className='flex flex-col gap-6 mt-8' data-testid='main-nav-primary-list'>
                     {mainNavData.primaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) => (
                         <MainNavListItem key={itemIndex} route={listDataItem.route as string}>
-                            <MainNavItemLink route={listDataItem.route as string} isMenuExpanded={isMenuExpanded}>
-                                <MainNavItemLabel
-                                    icon={listDataItem.icon}
-                                    label={listDataItem.label}
-                                    isMenuExpanded={isMenuExpanded}
-                                />
+                            <MainNavItemLink route={listDataItem.route as string}>
+                                <MainNavItemLabel icon={listDataItem.icon} label={listDataItem.label} />
                             </MainNavItemLink>
                         </MainNavListItem>
                     ))}
@@ -202,32 +161,22 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                     {mainNavData.secondaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) =>
                         listDataItem.route ? (
                             <MainNavListItem key={itemIndex} route={listDataItem.route as string}>
-                                <MainNavItemLink route={listDataItem.route as string} isMenuExpanded={isMenuExpanded}>
-                                    <MainNavItemLabel
-                                        icon={listDataItem.icon}
-                                        label={listDataItem.label}
-                                        isMenuExpanded={isMenuExpanded}
-                                    />
+                                <MainNavItemLink route={listDataItem.route as string}>
+                                    <MainNavItemLabel icon={listDataItem.icon} label={listDataItem.label} />
                                 </MainNavItemLink>
                             </MainNavListItem>
                         ) : (
                             <MainNavListItem key={itemIndex}>
-                                <MainNavItemAction
-                                    onClick={(() => listDataItem.functionHandler as () => void)()}
-                                    isMenuExpanded={isMenuExpanded}>
-                                    <MainNavItemLabel
-                                        icon={listDataItem.icon}
-                                        label={listDataItem.label}
-                                        isMenuExpanded={isMenuExpanded}
-                                    />
+                                <MainNavItemAction onClick={(() => listDataItem.functionHandler as () => void)()}>
+                                    <MainNavItemLabel icon={listDataItem.icon} label={listDataItem.label} />
                                 </MainNavItemAction>
                             </MainNavListItem>
                         )
                     )}
                 </ul>
             </div>
-            <MainNavVersionNumber isMenuExpanded={isMenuExpanded} />
-            <MainNavPoweredBy isMenuExpanded={isMenuExpanded}>
+            <MainNavVersionNumber />
+            <MainNavPoweredBy>
                 <MainNavLogoTextImage mainNavLogoData={mainNavData.logo.specterOps} />
             </MainNavPoweredBy>
         </nav>
