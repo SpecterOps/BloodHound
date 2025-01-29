@@ -388,9 +388,13 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "a user can only have one role", request), response)
 	} else if roles, err := s.db.GetRoles(request.Context(), updateUserRequest.Roles); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if isNewEmail := s.db.IsNewEmail(request.Context(), updateUserRequest.EmailAddress); !isNewEmail {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicateEmail, request), response)
 	} else {
+		// Prevent duplicate emails, this can be removed once the db constraint is added
+		if !strings.EqualFold(user.EmailAddress.String, updateUserRequest.EmailAddress) && !s.db.IsNewEmail(request.Context(), updateUserRequest.EmailAddress) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicateEmail, request), response)
+			return
+		}
+
 		user.Roles = roles
 		user.FirstName = null.StringFrom(updateUserRequest.FirstName)
 		user.LastName = null.StringFrom(updateUserRequest.LastName)
