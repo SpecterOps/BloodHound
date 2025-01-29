@@ -36,7 +36,7 @@ export const ROUTES = [
         path: routes.ROUTE_HOME,
         component: Home,
         authenticationRequired: true,
-        navigation: true,
+        navigation: false,
     },
     {
         path: routes.ROUTE_EXPLORE,
