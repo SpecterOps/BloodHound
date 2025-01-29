@@ -74,7 +74,7 @@ export const useMainNavSecondaryListData = () => {
     };
 
     const handleGoToSupport = () => {
-        window.open('https://support.bloodhoundenterprise.io/hc/en-us', '_blank');
+        window.open('https://support.bloodhoundenterprise.io/hc', '_blank');
     };
 
     return [
