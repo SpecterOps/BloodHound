@@ -23,7 +23,7 @@
         },
         "types": ["vitest/globals", "@testing-library/jest-dom", "bh-shared-ui"]
     },
-    "include": ["src", "../../packages/javascript/bh-shared-ui/src/components/AppIcon"],
+    "include": ["src"],
     "references": [
         {
             "path": "./tsconfig.node.json"
