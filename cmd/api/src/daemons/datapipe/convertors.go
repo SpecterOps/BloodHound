@@ -17,6 +17,9 @@
 package datapipe
 
 import (
+	"log/slog"
+	"strings"
+
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
 )
@@ -35,7 +38,12 @@ func convertComputerData(computer ein.Computer, converted *ConvertedData) {
 	converted.RelProps = append(converted.RelProps, ein.ParseComputerMiscData(computer)...)
 	for _, localGroup := range computer.LocalGroups {
 		if !localGroup.Collected || len(localGroup.Results) == 0 {
-			continue
+			if strings.HasPrefix(strings.ToLower(localGroup.Name), "direct access users") {
+				slog.Info("Saving Direct Access Users group", "localGroup.Name", localGroup.Name)
+
+			} else {
+				continue
+			}
 		}
 
 		parsedLocalGroupData := ein.ConvertLocalGroup(localGroup, computer)
