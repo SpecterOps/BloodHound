@@ -152,7 +152,7 @@ describe('MainNav', () => {
         await user.hover(MainNavBar);
 
         expect(versionNumberDigits).toBeInTheDocument();
-        expect(versionNumberLabel).toHaveClass('flex');
+        expect(versionNumberLabel).toHaveClass('block');
     });
     it('should only render an icon in list item when collapsed and an icon and label when expanded', async () => {
         const testLinkItem = MainNavPrimaryListData[0];
@@ -168,7 +168,7 @@ describe('MainNav', () => {
         await user.hover(MainNavBar);
 
         expect(linkItemIcon).toBeInTheDocument();
-        expect(linkItemText).toHaveClass('block');
+        expect(linkItemText).toHaveClass('flex');
     });
     it('should render a powered by when expanded and image', async () => {
         const MainNavBar = screen.getByRole('navigation');
