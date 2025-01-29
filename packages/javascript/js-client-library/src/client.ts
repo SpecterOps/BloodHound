@@ -535,8 +535,8 @@ class BHEAPIClient {
         limit: number,
         filterAccepted?: boolean,
         sortBy?: string | string[],
-        options?: types.RequestOptions,
-    ) => { 
+        options?: types.RequestOptions
+    ) => {
         const params = new URLSearchParams();
         params.append('finding', finding);
 
@@ -557,7 +557,7 @@ class BHEAPIClient {
             Object.assign(
                 {
                     params: params,
-                    headers: options?.headers
+                    headers: options?.headers,
                 },
                 options
             )
