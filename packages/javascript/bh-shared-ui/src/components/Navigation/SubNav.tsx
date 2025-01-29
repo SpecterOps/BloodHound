@@ -15,13 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 import { FC, ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { cn } from '../../utils';
 
 const SubNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children, route }) => {
     const location = useLocation();
     const isActiveRoute = route ? location.pathname.includes(route.replace(/\*/g, '')) : false;
 
     return (
-        <li className={`w-full mx-2 mb-1 px-2 py-1 ${isActiveRoute && 'text-primary bg-neutral-light-4'} rounded`}>
+        <li
+            className={cn('w-full mx-2 mb-1 px-2 py-1 rounded', {
+                'text-primary bg-neutral-light-4': isActiveRoute,
+            })}>
             {children}
         </li>
     );
