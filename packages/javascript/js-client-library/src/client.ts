@@ -539,6 +539,7 @@ class BHEAPIClient {
     ) => {
         const params = new URLSearchParams();
         params.append('finding', finding);
+
         params.append('skip', skip.toString());
         params.append('limit', limit.toString());
         if (sortBy) {
@@ -556,6 +557,7 @@ class BHEAPIClient {
             Object.assign(
                 {
                     params: params,
+                    headers: options?.headers,
                 },
                 options
             )
