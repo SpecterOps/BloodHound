@@ -294,7 +294,7 @@ const GraphView: FC = () => {
             </Grid>
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphState.loading} />
-            <NoDataDialogWithLinks open={!data.length} />
+            <NoDataDialogWithLinks open={!data?.length} />
         </Box>
     );
 };

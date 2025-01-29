@@ -139,6 +139,7 @@ type Graph interface {
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
 	GetFilteredAndSortedNodes(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria) (graph.NodeSet, error)
 	FetchNodesByObjectIDs(ctx context.Context, objectIDs ...string) (graph.NodeSet, error)
+	FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)
 	ValidateOUs(ctx context.Context, ous []string) ([]string, error)
 	BatchNodeUpdate(ctx context.Context, nodeUpdate graph.NodeUpdate) error
 	RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
@@ -714,6 +715,26 @@ func (s *GraphQuery) FetchNodesByObjectIDs(ctx context.Context, objectIDs ...str
 			func() graph.Criteria {
 				return query.And(
 					query.KindIn(query.Node(), ad.Entity, azure.Entity),
+					query.In(query.NodeProperty(common.ObjectID.String()), objectIDs),
+				)
+			}),
+		); err != nil {
+			return err
+		} else {
+			nodes = fetchedNodes
+			return nil
+		}
+	})
+}
+
+func (s *GraphQuery) FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error) {
+	var nodes graph.NodeSet
+
+	return nodes, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if fetchedNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(
+			func() graph.Criteria {
+				return query.And(
+					query.KindIn(query.Node(), kinds...),
 					query.In(query.NodeProperty(common.ObjectID.String()), objectIDs),
 				)
 			}),

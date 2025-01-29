@@ -24,6 +24,7 @@ import {
     BasicResponse,
     CreateAuthTokenResponse,
     DatapipeStatusResponse,
+    Domain,
     EndFileIngestResponse,
     GetConfigurationResponse,
     ListAuthTokensResponse,
@@ -106,7 +107,8 @@ class BHEAPIClient {
         return this.baseClient.post('/api/v2/clear-database', payload, options);
     };
 
-    getAvailableDomains = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/available-domains', options);
+    getAvailableDomains = (options?: types.RequestOptions) =>
+        this.baseClient.get<BasicResponse<Domain[]>>('/api/v2/available-domains', options);
 
     /* audit */
     getAuditLogs = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/audit', options);
@@ -279,47 +281,26 @@ class BHEAPIClient {
         );
     };
 
-    getPostureFindingTrends = (
-        environmentId: string,
-        start?: Date,
-        end?: Date,
-        sort_by?: string,
-        options?: types.RequestOptions
-    ) => {
-        return this.baseClient.get<PostureFindingTrendsResponse>(
-            `/api/v2/domains/${environmentId}/finding-trends`,
-            Object.assign(
-                {
-                    params: {
-                        start: start?.toISOString(),
-                        end: end?.toISOString(),
-                        sort_by,
-                    },
-                },
-                options
-            )
-        );
+    getPostureFindingTrends = (environments: string[], start?: Date, end?: Date, options?: types.RequestOptions) => {
+        return this.baseClient.get<PostureFindingTrendsResponse>(`/api/v2/attack-paths/finding-trends`, {
+            params: { environments, start: start?.toISOString(), end: end?.toISOString() },
+            paramsSerializer: { indexes: null },
+            ...options,
+        });
     };
 
     getPostureHistory = (
-        environmentId: string,
+        environments: string[],
         dataType: string,
         start?: Date,
         end?: Date,
         options?: types.RequestOptions
     ) => {
-        return this.baseClient.get<PostureHistoryResponse>(
-            `/api/v2/domains/${environmentId}/posture-history/${dataType}`,
-            Object.assign(
-                {
-                    params: {
-                        start: start?.toISOString(),
-                        end: end?.toISOString(),
-                    },
-                },
-                options
-            )
-        );
+        return this.baseClient.get<PostureHistoryResponse>(`/api/v2/posture-history/${dataType}`, {
+            params: { environments, start: start?.toISOString(), end: end?.toISOString() },
+            paramsSerializer: { indexes: null },
+            ...options,
+        });
     };
 
     /* ingest */
