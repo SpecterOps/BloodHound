@@ -21,8 +21,7 @@ const SubNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children,
     const isActiveRoute = route ? location.pathname.includes(route.replace(/\*/g, '')) : false;
 
     return (
-        <li
-            className={`w-full mx-2 mb-1 px-2 py-1 ${isActiveRoute && 'text-primary bg-neutral-light-4'} hover:text-secondary hover:underline rounded`}>
+        <li className={`w-full mx-2 mb-1 px-2 py-1 ${isActiveRoute && 'text-primary bg-neutral-light-4'} rounded`}>
             {children}
         </li>
     );
@@ -32,7 +31,7 @@ const SubNavListItemLink: FC<{ route: string; children: ReactNode }> = ({ route,
     return (
         <RouterLink
             to={route as string}
-            className={`h-8 min-h-8 w-full flex items-center gap-x-2 text-sm cursor-pointer whitespace-nowrap`}>
+            className={`h-8 min-h-8 w-full flex items-center gap-x-2 text-sm cursor-pointer whitespace-nowrap hover:text-secondary hover:underline dark:hover:text-secondary-variant-2`}>
             {children}
         </RouterLink>
     );
@@ -52,7 +51,7 @@ const SubNav: React.FC<{
             {sections.map((section, sectionIndex) => (
                 <ul key={sectionIndex}>
                     <SubNavListItem>
-                        <span className='font-medium'>{section.title}</span>
+                        <span className='font-medium decoration-none'>{section.title}</span>
                     </SubNavListItem>
                     {section.items.map((item, itemIndex) => (
                         <SubNavListItemLink key={itemIndex} route={item.path}>
