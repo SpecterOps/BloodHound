@@ -216,6 +216,10 @@ export interface User {
     email_address: string | null;
     principal_name: string;
     last_login: string;
+    created_at: string;
+    updated_at: string;
+    is_disabled: boolean;
+    eula_accepted: boolean;
 }
 
 interface Permission {
