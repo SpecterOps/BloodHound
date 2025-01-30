@@ -747,11 +747,39 @@ SMBSigning: types.#StringEnum & {
 	representation: "smbsigning"
 }
 
+WebClientRunning: types.#StringEnum & {
+	symbol: "WebClientRunning"
+	schema: "ad"
+	name: "WebClient Running"
+	representation: "webclientrunning"
+}
+
 RestrictOutboundNTLM: types.#StringEnum & {
 	symbol: "RestrictOutboundNTLM"
 	schema: "ad"
 	name: "Restrict Outbound NTLM"
 	representation: "restrictoutboundntlm"
+}
+
+ADCSWebEnrollmentHTTP: types.#StringEnum & {
+	symbol: "ADCSWebEnrollmentHTTP"
+	schema: "ad"
+	name: "ADCS Web Enrollment HTTP"
+	representation: "adcswebenrollmenthttp"
+}
+
+ADCSWebEnrollmentHTTPS: types.#StringEnum & {
+	symbol: "ADCSWebEnrollmentHTTPS"
+	schema: "ad"
+	name: "ADCS Web Enrollment HTTPS"
+	representation: "adcswebenrollmenthttps"
+}
+
+ADCSWebEnrollmentHTTPSEPA: types.#StringEnum & {
+	symbol: "ADCSWebEnrollmentHTTPSEPA"
+	schema: "ad"
+	name: "ADCS Web Enrollment HTTPS EPA"
+	representation: "adcswebenrollmenthttpsepa"
 }
 
 Properties: [
@@ -857,7 +885,11 @@ Properties: [
 	LockoutDuration,
 	LockoutObservationWindow,
 	SMBSigning,
-	RestrictOutboundNTLM
+	WebClientRunning,
+	RestrictOutboundNTLM,
+	ADCSWebEnrollmentHTTP,
+	ADCSWebEnrollmentHTTPS,
+	ADCSWebEnrollmentHTTPSEPA,
 ]
 
 // Kinds
@@ -1314,6 +1346,11 @@ CoerceAndRelayNTLMToSMB: types.#Kind & {
 	schema: "active_directory"
 }
 
+CoerceAndRelayNTLMToADCS: types.#Kind & {
+	symbol: "CoerceAndRelayNTLMToADCS"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1385,6 +1422,7 @@ RelationshipKinds: [
 	ADCSESC13,
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToADCS,
 ]
 
 // ACL Relationships
@@ -1463,6 +1501,7 @@ SharedRelationshipKinds: [
 	ADCSESC13,
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToADCS,
 ]
 
 // Edges that are used during inbound traversal
@@ -1486,5 +1525,6 @@ EdgeCompositionRelationships: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
-	CoerceAndRelayNTLMToSMB
+	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToADCS,
 ]

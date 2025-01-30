@@ -13,7 +13,7 @@
     "outside-position": "auto",
     "node-icon-image": "",
     "node-background-image": "",
-    "icon-position": "outside",
+    "icon-position": "inside",
     "icon-size": 64,
     "caption-position": "inside",
     "caption-max-width": 200,
@@ -56,58 +56,69 @@
     {
       "id": "n0",
       "position": {
-        "x": 0,
-        "y": 0
+        "x": 75,
+        "y": 431.3359396237863
       },
       "caption": "computer3",
-      "style": {},
       "labels": [],
-      "properties": {}
+      "properties": {},
+      "style": {}
     },
     {
       "id": "n1",
       "position": {
-        "x": 284.5,
-        "y": 0
+        "x": 359.5,
+        "y": 431.3359396237863
       },
-      "caption": "Server Admins",
-      "style": {},
+      "caption": "Server Admins Group",
       "labels": [],
-      "properties": {}
+      "properties": {},
+      "style": {}
     },
     {
       "id": "n2",
       "position": {
-        "x": 485.67187924757275,
-        "y": -201.17187924757275
+        "x": 560.6718792475727,
+        "y": 230.16406037621357
       },
       "caption": "computer8",
-      "style": {},
       "labels": [],
       "properties": {
         "smb_signing": "false"
-      }
+      },
+      "style": {}
     },
     {
       "id": "n3",
       "position": {
-        "x": 0,
-        "y": -201.17187924757275
+        "x": 75,
+        "y": 230.16406037621357
       },
-      "caption": "Authenticated Users",
-      "style": {},
+      "caption": "Authenticated Users Group",
       "labels": [],
       "properties": {
         "objectid": "authenticatedusers-S-1-5-11"
-      }
+      },
+      "style": {}
     },
     {
       "id": "n4",
       "position": {
-        "x": 665.8359396237863,
-        "y": -381.3359396237863
+        "x": 740.8359396237863,
+        "y": 50
       },
-      "caption": "Domain Admins User",
+      "caption": "Domain Admin User",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 644,
+        "y": 431.3359396237863
+      },
+      "caption": "Domain",
       "style": {},
       "labels": [],
       "properties": {}
@@ -116,35 +127,35 @@
   "relationships": [
     {
       "id": "n0",
-      "type": "MemberOf",
-      "style": {},
-      "properties": {},
       "fromId": "n0",
-      "toId": "n1"
+      "toId": "n1",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {}
     },
     {
       "id": "n1",
-      "type": "AdminTo",
-      "style": {},
-      "properties": {},
       "fromId": "n1",
-      "toId": "n2"
+      "toId": "n2",
+      "type": "AdminTo",
+      "properties": {},
+      "style": {}
     },
     {
       "id": "n2",
-      "type": "CoerceAndRelayNTLMToSMB",
-      "style": {},
-      "properties": {},
       "fromId": "n3",
-      "toId": "n2"
+      "toId": "n2",
+      "type": "CoerceAndRelayNTLMToSMB",
+      "properties": {},
+      "style": {}
     },
     {
       "id": "n3",
-      "type": "HasSession",
-      "style": {},
-      "properties": {},
       "fromId": "n2",
-      "toId": "n4"
+      "toId": "n4",
+      "type": "HasSession",
+      "properties": {},
+      "style": {}
     }
   ]
 }

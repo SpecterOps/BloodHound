@@ -34,21 +34,27 @@ import (
 
 // PostNTLM is the initial function used to execute our NTLM analysis
 func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
+	var (
+		adcsComputerCache       = make(map[string]cardinality.Duplex[uint64])
+		operation               = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
+		authenticatedUsersCache = make(map[string]graph.ID)
+	)
 
 	// TODO: after adding all of our new NTLM edges, benchmark performance between submitting multiple readers per computer or single reader per computer
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-
 		// Fetch all nodes where the node is a Group and is an Authenticated User
-		if authenticatedUsersCache, err := FetchAuthUsersMappedToDomains(tx); err != nil {
+		if innerAuthenticatedUsersCache, err := FetchAuthUsersMappedToDomains(tx); err != nil {
 			return err
 		} else {
+			authenticatedUsersCache = innerAuthenticatedUsersCache
 			// Fetch all nodes where the type is Computer
 			return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 				for computer := range cursor.Chan() {
 					innerComputer := computer
 
-					if domain, err := innerComputer.Properties.Get(ad.Domain.String()).String(); err != nil {
+					domain, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
+
+					if err != nil {
 						continue
 					} else if authenticatedUserID, ok := authenticatedUsersCache[domain]; !ok {
 						continue
@@ -58,6 +64,14 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 						slog.WarnContext(ctx, fmt.Sprintf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToSMB, err))
 						// Additional analysis may occur if one of our analysis errors
 						continue
+					}
+
+					if webclientRunning, err := innerComputer.Properties.Get(ad.WebClientRunning.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
+						slog.WarnContext(ctx, fmt.Sprintf("Error getting webclientrunningproperty from computer %d", innerComputer.ID))
+					} else if restrictOutboundNtlm, err := innerComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
+						slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", innerComputer.ID))
+					} else if webclientRunning && !restrictOutboundNtlm {
+						adcsComputerCache[domain].Add(innerComputer.ID.Uint64())
 					}
 				}
 
@@ -70,10 +84,126 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		return nil, err
 	}
 
+	if err := PostCoerceAndRelayNTLMToADCS(ctx, db, operation, authenticatedUsersCache, adcsComputerCache); err != nil {
+		return nil, err
+	}
+
 	return &operation.Stats, operation.Done()
 }
 
-// PostCoerceAndRelayNTLMToSMB creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
+func PostCoerceAndRelayNTLMToADCS(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], authUsersCache map[string]graph.ID, adcsComputerCache map[string]cardinality.Duplex[uint64]) error {
+	adcsCache := NewADCSCache()
+	if err := adcsCache.BuildCache(ctx, db); err != nil {
+		return err
+	}
+	for _, outerDomain := range adcsCache.domains {
+		for _, outerEnterpriseCA := range adcsCache.GetEnterpriseCertAuthorities() {
+			domain := outerDomain
+			enterpriseCA := outerEnterpriseCA
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if publishedCertTemplates := adcsCache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
+					//If this enterprise CA has no published templates, then there's no reason to check further
+					return nil
+				} else if !adcsCache.DoesCAChainProperlyToDomain(enterpriseCA, domain) {
+					//If the CA doesn't chain up to the domain properly then its invalid
+					return nil
+				} else if ecaValid, err := isEnterpriseCAValidForADCS(enterpriseCA); err != nil {
+					slog.ErrorContext(ctx, fmt.Sprintf("Error validating EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err))
+					return nil
+				} else if !ecaValid {
+					//Check some prereqs on the enterprise CA. If the enterprise CA is invalid, we can fast skip it
+					return nil
+				} else if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+					slog.WarnContext(ctx, fmt.Sprintf("Error getting domainsid for domain %d: %v", domain.ID, err))
+					return nil
+				} else if authUsersGroup, ok := authUsersCache[domainsid]; !ok {
+					//If we cant find an auth users group for this domain then we're not going to be able to make an edge regardless
+					slog.WarnContext(ctx, fmt.Sprintf("Unable to find auth users group for domain %s", domainsid))
+					return nil
+				} else {
+					//If auth users doesn't have enroll rights here than it's not valid either. Unroll enrollers into a slice and check if auth users is in it
+					ecaEnrollers := adcsCache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
+					authUsersHasEnrollmentRights := false
+					for _, l := range ecaEnrollers {
+						if l.ID == authUsersGroup {
+							authUsersHasEnrollmentRights = true
+							break
+						}
+					}
+
+					if !authUsersHasEnrollmentRights {
+						return nil
+					}
+
+					for _, certTemplate := range publishedCertTemplates {
+						if valid, err := isCertTemplateValidForADCSRelay(certTemplate); err != nil {
+							slog.ErrorContext(ctx, fmt.Sprintf("Error validating cert template %d for NTLM ADCS relay: %v", certTemplate.ID, err))
+							continue
+						} else if !valid {
+							continue
+						} else if computers, ok := adcsComputerCache[domainsid]; !ok {
+							continue
+						} else {
+							computers.Each(func(value uint64) bool {
+								outC <- analysis.CreatePostRelationshipJob{
+									FromID: authUsersGroup,
+									ToID:   graph.ID(value),
+									Kind:   ad.CoerceAndRelayNTLMToADCS,
+								}
+								return true
+							})
+						}
+					}
+
+					return nil
+				}
+			})
+		}
+	}
+
+	return nil
+}
+
+func isEnterpriseCAValidForADCS(eca *graph.Node) (bool, error) {
+	if httpEnrollment, err := eca.Properties.Get(ad.ADCSWebEnrollmentHTTP.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
+		return false, err
+	} else if httpEnrollment {
+		return true, nil
+	} else if httpsEnrollment, err := eca.Properties.Get(ad.ADCSWebEnrollmentHTTPS.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
+		return false, err
+	} else if !httpsEnrollment {
+		return false, nil
+	} else if httpsEnrollmentEpa, err := eca.Properties.Get(ad.ADCSWebEnrollmentHTTPSEPA.String()).Bool(); err != nil {
+		if errors.Is(err, graph.ErrPropertyNotFound) {
+			return false, nil
+		}
+		return false, err
+	} else {
+		return !httpsEnrollmentEpa, nil
+	}
+}
+
+func isCertTemplateValidForADCSRelay(ct *graph.Node) (bool, error) {
+	if reqManagerApproval, err := ct.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
+		return false, err
+	} else if reqManagerApproval {
+		return false, nil
+	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
+		return false, err
+	} else if !authenticationEnabled {
+		return false, nil
+	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
+		return false, err
+	} else if schemaVersion <= 1 {
+		return true, nil
+	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
+		return false, err
+	} else {
+		return authorizedSignatures == 0, nil
+	}
+}
+
+// PostCoerceAndRelayNtlmToSmb creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
 // Comprised solely of adminTo and memberOf edges
 func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, computer *graph.Node, authenticatedUserID graph.ID) error {
 	if smbSigningEnabled, err := computer.Properties.Get(ad.SMBSigning.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
@@ -85,7 +215,6 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 	} else if err != nil {
 		return err
 	} else if !smbSigningEnabled && !restrictOutboundNtlm {
-
 		// Fetch the admins with edges to the provided computer
 		if firstDegreeAdmins, err := fetchFirstDegreeNodes(tx, computer, ad.AdminTo); err != nil {
 			return err
@@ -98,7 +227,7 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 		} else {
 			allAdminGroups := cardinality.NewBitmap64()
 			for group := range firstDegreeAdmins.ContainingNodeKinds(ad.Group) {
-				allAdminGroups.And(expandedGroups.Cardinality(group.Uint64()))
+				allAdminGroups.Or(expandedGroups.Cardinality(group.Uint64()))
 			}
 
 			// Fetch nodes where the node id is in our allAdminGroups bitmap and are of type Computer
@@ -132,7 +261,7 @@ func FetchAuthUsersMappedToDomains(tx graph.Transaction) (map[string]graph.ID, e
 			query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), AuthenticatedUsersSuffix)),
 	).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 		for authenticatedUser := range cursor.Chan() {
-			if domain, err := authenticatedUser.Properties.Get(ad.Domain.String()).String(); err != nil {
+			if domain, err := authenticatedUser.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 				continue
 			} else {
 				authenticatedUsers[domain] = authenticatedUser.ID
