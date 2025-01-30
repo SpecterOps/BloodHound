@@ -171,10 +171,15 @@ func isEnterpriseCAValidForADCS(eca *graph.Node) (bool, error) {
 		return true, nil
 	} else if httpsEnrollment, err := eca.Properties.Get(ad.ADCSWebEnrollmentHTTPS.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
 		return false, err
-	} else if httpsEnrollmentEpa, err := eca.Properties.Get(ad.ADCSWebEnrollmentHTTPSEPA.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
+	} else if !httpsEnrollment {
+		return false, nil
+	} else if httpsEnrollmentEpa, err := eca.Properties.Get(ad.ADCSWebEnrollmentHTTPSEPA.String()).Bool(); err != nil {
+		if errors.Is(err, graph.ErrPropertyNotFound) {
+			return false, nil
+		}
 		return false, err
 	} else {
-		return httpsEnrollment && !httpsEnrollmentEpa, nil
+		return !httpsEnrollmentEpa, nil
 	}
 }
 
