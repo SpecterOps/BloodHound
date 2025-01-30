@@ -66,6 +66,7 @@ export default {
         'react-immutable-proptypes',
         'lodash/toString',
         'lodash/cloneDeep',
+        'react-router-dom',
         'lodash/isEmpty',
         'lodash/startCase',
         'lodash/find',

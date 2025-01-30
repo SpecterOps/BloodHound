@@ -36,7 +36,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
-import * as routes from 'src/ducks/global/routes';
+import * as routes from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 interface Props {

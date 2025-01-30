@@ -1,11 +1,7 @@
 {
     "compilerOptions": {
         "target": "ESNext",
-        "lib": [
-            "DOM",
-            "DOM.Iterable",
-            "ESNext"
-        ],
+        "lib": ["DOM", "DOM.Iterable", "ESNext"],
         "module": "ESNext",
         "skipLibCheck": true,
         "allowJs": true,
@@ -23,19 +19,11 @@
         "noFallthroughCasesInSwitch": true,
         "baseUrl": ".",
         "paths": {
-            "src/*": [
-                "./src/*"
-            ]
+            "src/*": ["./src/*"]
         },
-        "types": [
-            "vitest/globals",
-            "@testing-library/jest-dom",
-            "bh-shared-ui"
-        ]
+        "types": ["vitest/globals", "@testing-library/jest-dom", "bh-shared-ui"]
     },
-    "include": [
-        "src"
-    ],
+    "include": ["src"],
     "references": [
         {
             "path": "./tsconfig.node.json"

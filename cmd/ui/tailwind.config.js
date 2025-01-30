@@ -18,10 +18,23 @@ import { DoodleUIPlugin, DoodleUIPreset } from '@bloodhoundenterprise/doodleui';
 
 /** @type {import('tailwindcss').Config} */
 export default {
+    theme: {
+        extend: {
+            spacing: {
+                'nav-width': '3.5rem',
+                'subnav-width': '14rem',
+                'nav-width-expanded': '17.5rem',
+            },
+            zIndex: {
+                nav: '1200',
+            },
+        },
+    },
     content: [
         './index.html',
         './src/**/*.{js,ts,jsx,tsx}',
         './node_modules/@bloodhoundenterprise/doodleui/dist/doodleui.js',
+        './node_modules/bh-shared-ui/src/**/*.{js,ts,jsx,tsx}',
     ],
     darkMode: ['class'],
     plugins: [DoodleUIPlugin],
