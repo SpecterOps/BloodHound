@@ -38,6 +38,7 @@ import (
 )
 
 func TestPostNTLMRelayADCS(t *testing.T) {
+	//TODO: Add some negative tests here
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
@@ -82,6 +83,7 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 }
 
 func TestPostNTLMRelaySMB(t *testing.T) {
+	//TODO: Add some negative tests here
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
