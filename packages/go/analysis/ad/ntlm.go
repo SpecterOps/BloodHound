@@ -106,7 +106,7 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, db graph.Database, operat
 					//If this enterprise CA has no published templates, then there's no reason to check further
 					return nil
 				} else if !adcsCache.DoesCAChainProperlyToDomain(enterpriseCA, domain) {
-					//If the CA doesn't chain up to the domain properly than its invalid
+					//If the CA doesn't chain up to the domain properly then its invalid
 					return nil
 				} else if ecaValid, err := isEnterpriseCAValidForADCS(enterpriseCA); err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf("Error validating EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err))
