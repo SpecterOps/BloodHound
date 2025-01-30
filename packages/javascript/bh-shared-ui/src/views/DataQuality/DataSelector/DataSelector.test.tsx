@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, within } from '../../../test-utils';
-import DataSelector from './';
+import { DataSelector } from './';
 
 const server = setupServer(
     rest.get(`/api/v2/available-domains`, (req, res, ctx) => {
@@ -264,7 +264,7 @@ describe('Context Selector', () => {
     it('should render with a full list of multiple tenants and domains', async () => {
         const user = userEvent.setup();
         const testOnChange = vi.fn();
-        const testValue = { type: 'active-directory', id: '6b55e74d-f24e-418a-bfd1-4769e93517c7' };
+        const testValue = { type: 'active-directory', id: '6b55e74d-f24e-418a-bfd1-4769e93517c7' } as const;
         render(<DataSelector value={testValue} onChange={testOnChange} errorMessage={errorMessage} />);
 
         const contextSelector = await screen.findByTestId('data-quality_context-selector');
@@ -289,7 +289,7 @@ describe('Context Selector', () => {
     it('should initiate data loading when an item is selected', async () => {
         const user = userEvent.setup();
         const testOnChange = vi.fn();
-        const testValue = { type: 'active-directory', id: '6b55e74d-f24e-418a-bfd1-4769e93517c7' };
+        const testValue = { type: 'active-directory', id: '6b55e74d-f24e-418a-bfd1-4769e93517c7' } as const;
         render(<DataSelector value={testValue} onChange={testOnChange} errorMessage={errorMessage} />);
 
         const contextSelector = await screen.findByTestId('data-quality_context-selector');
@@ -338,7 +338,7 @@ describe('Context Selector', () => {
     it('should not render list items for domains that are not collected', async () => {
         const user = userEvent.setup();
         const testOnChange = vi.fn();
-        const testValue = { type: 'azure', id: 'd1993a1b-55c1-4668-9393-ddfffb6ab639' };
+        const testValue = { type: 'azure', id: 'd1993a1b-55c1-4668-9393-ddfffb6ab639' } as const;
         render(<DataSelector value={testValue} onChange={testOnChange} errorMessage={errorMessage} />);
 
         const contextSelector = await screen.findByTestId('data-quality_context-selector');
@@ -369,7 +369,7 @@ describe('Context Selector Error', () => {
     it('should display an error message if data does not return from the API', async () => {
         const testOnChange = vi.fn();
         const testErrorMessage = 'test error message';
-        const testValue = { type: 'active-directory', id: '6b55e74d-f24e-418a-bfd1-4769e93517c7' };
+        const testValue = { type: 'active-directory', id: '6b55e74d-f24e-418a-bfd1-4769e93517c7' } as const;
         render(<DataSelector value={testValue} onChange={testOnChange} errorMessage={<>{testErrorMessage}</>} />);
 
         expect(await screen.findByText(testErrorMessage)).toBeInTheDocument();

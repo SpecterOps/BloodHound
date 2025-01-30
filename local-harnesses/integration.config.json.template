@@ -12,6 +12,7 @@
     "database": {
         "connection": "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=65432"
     },
+    "graph_driver": "pg",
     "default_admin": {
         "principal_name": "admin",
         "password": "admin",
