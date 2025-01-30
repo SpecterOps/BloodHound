@@ -15,3 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './AppIcon';
+import MainNav from './MainNav';
+import SubNav from './SubNav';
+
+export { MainNav, SubNav };

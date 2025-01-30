@@ -13,10 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { NoDataDialog } from 'bh-shared-ui';
 import { Link } from 'react-router-dom';
-import { ROUTE_ADMINISTRATION_FILE_INGEST } from 'src/ducks/global/routes';
+import { ROUTE_ADMINISTRATION_FILE_INGEST } from 'src/routes/constants';
 
 type NoDataDialogWithLinksProps = {
     open: boolean;
