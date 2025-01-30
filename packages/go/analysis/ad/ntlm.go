@@ -189,12 +189,12 @@ func isCertTemplateValidForADCSRelay(ct *graph.Node) (bool, error) {
 		return false, nil
 	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
 		return false, err
+	} else if schemaVersion <= 1 {
+		return true, nil
 	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
 		return false, err
-	} else if schemaVersion > 1 && authorizedSignatures > 0 {
-		return false, nil
 	} else {
-		return true, nil
+		return authorizedSignatures == 0, nil
 	}
 }
 
