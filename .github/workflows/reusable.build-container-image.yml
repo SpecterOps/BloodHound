@@ -195,27 +195,26 @@ jobs:
       # TODO: don't pull actions but instead reference them from the source repo
       # May need to adjust repo actions permissions to allow access from other org repos
       # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#allowing-access-to-components-in-a-private-repository
-      - if: ${{ github.repository != 'SpecterOps/BloodHound' }}
-        name: Checkout Reusable Workflows and Composite Actions
+      - name: Checkout Reusable Workflows and Composite Actions
         uses: actions/checkout@v4
         with:
           clean: false
           repository: SpecterOps/BloodHound
-          ref: main
+          ref: ${{ github.repository == 'SpecterOps/BloodHound' && github.ref || 'main' }}
           token: ${{ secrets.gh_access_token }}
           sparse-checkout-cone-mode: false
           sparse-checkout: .github/actions
-          path: ./.github/actions
+          path: ./.reusable
 
       - id: container-image-metadata
-        uses: ./.github/actions/container-image-metadata
+        uses: ./.reusable/.github/actions/container-image-metadata
         with:
           container_image_repository_name: ${{ inputs.container_image_repository_name }}
           image_flavor: ${{ inputs.image_flavor }}
           image_tags: ${{ inputs.image_tags }}
 
       - id: build-container-image
-        uses: ./.github/actions/build-container-image
+        uses: ./.reusable/.github/actions/build-container-image
         # TODO: verify if this breaks anything
         # env:
         #   DOCKER_CONTENT_TRUST: 1
