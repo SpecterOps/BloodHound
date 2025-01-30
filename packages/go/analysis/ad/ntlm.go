@@ -68,9 +68,9 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					}
 
 					if webclientRunning, err := innerComputer.Properties.Get(ad.WebClientRunning.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
-						slog.Warn("Error getting webclientrunningproperty from computer %d", innerComputer.ID)
+						slog.WarnContext(ctx, fmt.Sprintf("Error getting webclientrunningproperty from computer %d", innerComputer.ID))
 					} else if restrictOutboundNtlm, err := innerComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
-						slog.Warn("Error getting restrictoutboundntlm from computer %d", innerComputer.ID)
+						slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", innerComputer.ID))
 					} else if webclientRunning && !restrictOutboundNtlm {
 						adcsComputerCache[domain].Add(innerComputer.ID.Uint64())
 					}
@@ -109,17 +109,17 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, db graph.Database, operat
 					//If the CA doesn't chain up to the domain properly than its invalid
 					return nil
 				} else if ecaValid, err := isEnterpriseCAValidForADCS(enterpriseCA); err != nil {
-					slog.Error("Error validating EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err)
+					slog.ErrorContext(ctx, fmt.Sprintf("Error validating EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err))
 					return nil
 				} else if !ecaValid {
 					//Check some prereqs on the enterprise CA. If the enterprise CA is invalid, we can fast skip it
 					return nil
 				} else if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-					slog.Warn("Error getting domainsid for domain %d: %v", domain.ID, err)
+					slog.WarnContext(ctx, fmt.Sprintf("Error getting domainsid for domain %d: %v", domain.ID, err))
 					return nil
 				} else if authUsersGroup, ok := authUsersCache[domainsid]; !ok {
 					//If we cant find an auth users group for this domain then we're not going to be able to make an edge regardless
-					slog.Warn("Unable to find auth users group for domain %s", domainsid)
+					slog.WarnContext(ctx, fmt.Sprintf("Unable to find auth users group for domain %s", domainsid))
 					return nil
 				} else {
 					//If auth users doesn't have enroll rights here than it's not valid either. Unroll enrollers into a slice and check if auth users is in it
@@ -138,7 +138,7 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, db graph.Database, operat
 
 					for _, certTemplate := range publishedCertTemplates {
 						if valid, err := isCertTemplateValidForADCSRelay(certTemplate); err != nil {
-							slog.Error("Error validating cert template %d for NTLM ADCS relay: %v", certTemplate.ID, err)
+							slog.ErrorContext(ctx, fmt.Sprintf("Error validating cert template %d for NTLM ADCS relay: %v", certTemplate.ID, err))
 							continue
 						} else if !valid {
 							continue
