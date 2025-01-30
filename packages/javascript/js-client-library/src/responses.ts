@@ -113,6 +113,8 @@ type PostureFindingTrend = {
     finding: string;
     finding_count_start: number;
     finding_count_end: number;
+    finding_count_increase: number;
+    finding_count_decrease: number;
     composite_risk: number;
     display_title: string;
     display_type: string;
