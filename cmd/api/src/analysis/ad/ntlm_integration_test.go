@@ -21,8 +21,9 @@ package ad_test
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"testing"
+
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 
 	"github.com/specterops/bloodhound/analysis"
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
