@@ -53,7 +53,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 				for computer := range cursor.Chan() {
 					innerComputer := computer
 
-					domain, err := innerComputer.Properties.Get(ad.Domain.String()).String()
+					domain, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
 
 					if err != nil {
 						continue
@@ -68,9 +68,9 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					}
 
 					if webclientRunning, err := innerComputer.Properties.Get(ad.WebClientRunning.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
-						log.Warnf("Error getting webclientrunningproperty from computer %d", innerComputer.ID)
+						slog.Warn("Error getting webclientrunningproperty from computer %d", innerComputer.ID)
 					} else if restrictOutboundNtlm, err := innerComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
-						log.Warnf("Error getting restrictoutboundntlm from computer %d", innerComputer.ID)
+						slog.Warn("Error getting restrictoutboundntlm from computer %d", innerComputer.ID)
 					} else if webclientRunning && !restrictOutboundNtlm {
 						adcsComputerCache[domain].Add(innerComputer.ID.Uint64())
 					}
@@ -109,17 +109,17 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, db graph.Database, operat
 					//If the CA doesn't chain up to the domain properly than its invalid
 					return nil
 				} else if ecaValid, err := isEnterpriseCAValidForADCS(enterpriseCA); err != nil {
-					log.Errorf("Error validating EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err)
+					slog.Error("Error validating EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err)
 					return nil
 				} else if !ecaValid {
 					//Check some prereqs on the enterprise CA. If the enterprise CA is invalid, we can fast skip it
 					return nil
 				} else if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-					log.Warnf("Error getting domainsid for domain %d: %v", domain.ID, err)
+					slog.Warn("Error getting domainsid for domain %d: %v", domain.ID, err)
 					return nil
 				} else if authUsersGroup, ok := authUsersCache[domainsid]; !ok {
 					//If we cant find an auth users group for this domain then we're not going to be able to make an edge regardless
-					log.Warnf("Unable to find auth users group for domain %s", domainsid)
+					slog.Warn("Unable to find auth users group for domain %s", domainsid)
 					return nil
 				} else {
 					//If auth users doesn't have enroll rights here than it's not valid either. Unroll enrollers into a slice and check if auth users is in it
@@ -138,7 +138,7 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, db graph.Database, operat
 
 					for _, certTemplate := range publishedCertTemplates {
 						if valid, err := isCertTemplateValidForADCSRelay(certTemplate); err != nil {
-							log.Errorf("Error validating cert template %d for NTLM ADCS relay: %v", certTemplate.ID, err)
+							slog.Error("Error validating cert template %d for NTLM ADCS relay: %v", certTemplate.ID, err)
 							continue
 						} else if !valid {
 							continue
@@ -211,7 +211,6 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 	} else if err != nil {
 		return err
 	} else if !smbSigningEnabled && !restrictOutboundNtlm {
-
 		// Fetch the admins with edges to the provided computer
 		if firstDegreeAdmins, err := fetchFirstDegreeNodes(tx, computer, ad.AdminTo); err != nil {
 			return err
@@ -224,7 +223,7 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 		} else {
 			allAdminGroups := cardinality.NewBitmap64()
 			for group := range firstDegreeAdmins.ContainingNodeKinds(ad.Group) {
-				allAdminGroups.And(expandedGroups.Cardinality(group.Uint64()))
+				allAdminGroups.Or(expandedGroups.Cardinality(group.Uint64()))
 			}
 
 			// Fetch nodes where the node id is in our allAdminGroups bitmap and are of type Computer
@@ -258,7 +257,7 @@ func FetchAuthUsersMappedToDomains(tx graph.Transaction) (map[string]graph.ID, e
 			query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), AuthenticatedUsersSuffix)),
 	).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 		for authenticatedUser := range cursor.Chan() {
-			if domain, err := authenticatedUser.Properties.Get(ad.Domain.String()).String(); err != nil {
+			if domain, err := authenticatedUser.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 				continue
 			} else {
 				authenticatedUsers[domain] = authenticatedUser.ID
