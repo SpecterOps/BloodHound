@@ -145,41 +145,61 @@ describe('MainNav', () => {
     });
     it('should render a label and version number when expanded', async () => {
         const MainNavBar = await screen.findByRole('navigation');
-        const versionNumberContainer = await screen.findByTestId('main-nav-version-number');
-        const versionNumberLabel = await within(versionNumberContainer).findByText(/bloodhound/i);
+        expect(MainNavBar).toHaveClass('group');
+
+        const versionNumberContainer = await within(MainNavBar).findByTestId('main-nav-version-number');
         const versionNumberDigits = await within(versionNumberContainer).findByText(currentVersionNumber);
+        const versionNumberLabel = await within(versionNumberContainer).findByText(/bloodhound/i);
 
-        await user.hover(MainNavBar);
+        // ---- collapsed classes ----
+        expect(versionNumberDigits).toHaveClass('group-[:not(:hover)]:max-w-9');
+        expect(versionNumberLabel).toHaveClass('hidden');
+        expect(versionNumberLabel).toHaveClass('opacity-0');
+        // ---- collapsed classes ----
 
-        expect(versionNumberDigits).toBeInTheDocument();
-        expect(versionNumberLabel).toBeVisible();
+        // ---- classes displayed on hover ----
+        expect(versionNumberLabel).toHaveClass('group-hover:opacity-100');
+        expect(versionNumberLabel).toHaveClass('group-hover:block');
+        // ---- classes displayed on hover ----
     });
-    it('should only render an icon in list item when collapsed and an icon and label when expanded', async () => {
+    it('should only render an icon in list item when collapsed and the label should be styled to be hidden but appear on group-hover of the nav', async () => {
         const testLinkItem = MainNavPrimaryListData[0];
 
         const MainNavBar = screen.getByRole('navigation');
-        const primaryList = await screen.findByTestId('main-nav-primary-list');
+        expect(MainNavBar).toHaveClass('group');
+
+        const primaryList = await within(MainNavBar).findByTestId('main-nav-primary-list');
         const linkItemIcon = await within(primaryList).findByTestId('main-nav-item-label-icon');
         const linkItemText = await within(primaryList).findByText(testLinkItem.label as string);
 
         expect(linkItemIcon).toBeInTheDocument();
+
+        // ---- collapsed classes ----
         expect(linkItemText).toHaveClass('hidden');
+        expect(linkItemText).toHaveClass('opacity-0');
+        // ---- collapsed classes ----
 
-        await user.hover(MainNavBar);
-
-        expect(linkItemIcon).toBeInTheDocument();
-        expect(linkItemText).toBeVisible();
+        // ---- classes displayed on hover ----
+        expect(linkItemText).toHaveClass('group-hover:opacity-100');
+        expect(linkItemText).toHaveClass('group-hover:flex');
+        // ---- classes displayed on hover ----
     });
-    it('should render a powered by when expanded and image', async () => {
+    it('should style the powered-by to display when nav is expanded', async () => {
         const MainNavBar = screen.getByRole('navigation');
-        const poweredByTextContainer = await screen.findByTestId('main-nav-powered-by');
+        expect(MainNavBar).toHaveClass('group');
+
+        const poweredByTextContainer = await within(MainNavBar).findByTestId('main-nav-powered-by');
         const poweredByText = await within(poweredByTextContainer).findByText(/powered by/i);
-
         expect(poweredByText).toBeInTheDocument();
+
+        // ---- collapsed classes ----
         expect(poweredByText).toHaveClass('hidden');
+        expect(poweredByText).toHaveClass('opacity-0');
+        // ---- collapsed classes ----
 
-        await user.hover(MainNavBar);
-
-        expect(poweredByText).toBeVisible();
+        // ---- classes displayed on hover ----
+        expect(poweredByText).toHaveClass('group-hover:opacity-100');
+        expect(poweredByText).toHaveClass('group-hover:flex');
+        // ---- classes displayed on hover ----
     });
 });
