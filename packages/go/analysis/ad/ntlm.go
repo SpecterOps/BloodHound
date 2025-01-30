@@ -37,12 +37,11 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 	var (
 		adcsComputerCache       = make(map[string]cardinality.Duplex[uint64])
 		operation               = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
-		authenticatedUsersCache map[string]graph.ID
+		authenticatedUsersCache = make(map[string]graph.ID)
 	)
 
 	// TODO: after adding all of our new NTLM edges, benchmark performance between submitting multiple readers per computer or single reader per computer
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-
 		// Fetch all nodes where the node is a Group and is an Authenticated User
 		if innerAuthenticatedUsersCache, err := FetchAuthUsersMappedToDomains(tx); err != nil {
 			return err
@@ -98,7 +97,7 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, db graph.Database, operat
 		return err
 	}
 	for _, outerDomain := range adcsCache.domains {
-		for _, outerEnterpriseCA := range adcsCache.enterpriseCertAuthorities {
+		for _, outerEnterpriseCA := range adcsCache.GetEnterpriseCertAuthorities() {
 			domain := outerDomain
 			enterpriseCA := outerEnterpriseCA
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
