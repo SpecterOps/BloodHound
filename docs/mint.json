@@ -79,96 +79,31 @@
     },
     {
       "group": "Get Started with BloodHound",
-          "pages": [
-            "hc/en-us/get-started/introduction-to-bloodhound",
-            "hc/en-us/get-started/bloodhound-enterprise-quickstart",
-            "hc/en-us/get-started/bloodhound-community-edition-quickstart",
-            "hc/en-us/get-started/bloodhound-glossary"
-          ]
-    },
-    {
-      "group": "General",
       "pages": [
-        "hc/en-us/categories/General",
+        "hc/en-us/get-started/introduction-to-bloodhound",
+        {
+          "group": "Quickstart",
+          "pages": [
+            "hc/en-us/get-started/bloodhound-enterprise-quickstart",
+            "hc/en-us/get-started/bloodhound-community-edition-quickstart"
+          ]
+        },
         {
           "group": "BloodHound and Security Boundaries",
           "pages": [
-            "hc/en-us/sections/BloodHound-and-Security-Boundaries",
+            "hc/en-us/articles/BloodHound-Enterprise-Security-Overview",
             "hc/en-us/articles/Modifying-Tier-Zero",
             "hc/en-us/articles/Tier-Zero-Members-and-Modification"
-          ]
-        },
-        {
-          "group": "Community and Support",
-          "pages": [
-            "hc/en-us/sections/Community-and-Support",
-            "hc/en-us/articles/Additional-Training-and-Resources",
-            "hc/en-us/articles/Getting-Help-and-the-BloodHound-community"
-          ]
-        },
-        {
-          "group": "BloodHound Release Notes",
-          "pages": [
-            "hc/en-us/sections/BloodHound-Release-Notes",
-            "hc/en-us/articles/Release-Notes-Summary-Overview",
-            "hc/en-us/articles/2024-12-09-Release-Notes-v6-3-0",
-            "hc/en-us/articles/2024-11-14-Release-Notes-v6-2-0",
-            "hc/en-us/articles/2024-10-22-Release-Notes-v6-1-0",
-            "hc/en-us/articles/2024-09-30-Release-Notes-v6-0-0",
-            "hc/en-us/articles/2024-09-10-Release-Notes-v5-15-0",
-            "hc/en-us/articles/2024-08-20-Release-Notes-v5-14-0",
-            "hc/en-us/articles/2024-08-06-Release-Notes-v5-13-1",
-            "hc/en-us/articles/2024-08-01-Release-Notes-v5-13-0",
-            "hc/en-us/articles/2024-07-17-Release-Notes-v5-12-0",
-            "hc/en-us/articles/2024-06-17-Release-Notes-v5-11-0",
-            "hc/en-us/articles/2024-05-28-Release-Notes-v5-10-0",
-            "hc/en-us/articles/2024-05-09-Release-Notes-v5-9-0",
-            "hc/en-us/articles/2024-04-15-Release-Notes-v5-8-1",
-            "hc/en-us/articles/2024-03-27-Release-Notes-v5-8-0",
-            "hc/en-us/articles/2024-03-04-Release-Notes-v5-7-0",
-            "hc/en-us/articles/2024-02-14-Release-Notes-v5-6-0",
-            "hc/en-us/articles/2024-01-23-Release-Notes-v5-5-0",
-            "hc/en-us/articles/2024-01-04-Release-Notes-v5-4-0",
-            "hc/en-us/articles/2023-12-05-Release-Notes-v5-3-0",
-            "hc/en-us/articles/2023-11-06-Release-v5-2-0-BHE-Only",
-            "hc/en-us/articles/2023-10-16-Release-notes-v5-1-0",
-            "hc/en-us/articles/2023-09-19-Release-Notes-v5-0-9",
-            "hc/en-us/articles/2023-08-31-Release-Notes-v5-0-8",
-            "hc/en-us/articles/2023-08-30-Release-Notes-v5-0-7",
-            "hc/en-us/articles/2023-08-08-Release-Notes",
-            "hc/en-us/articles/2023-06-20-Release-Notes",
-            "hc/en-us/articles/2023-05-16-Release-Notes",
-            "hc/en-us/articles/2023-04-25-Release-Notes",
-            "hc/en-us/articles/2023-04-13-Release-Notes",
-            "hc/en-us/articles/2023-03-27-Release-Notes",
-            "hc/en-us/articles/2023-03-06-Release-Notes",
-            "hc/en-us/articles/2023-02-21-Release-Notes",
-            "hc/en-us/articles/2023-02-07-Release-Notes",
-            "hc/en-us/articles/2023-01-31-Release-Notes",
-            "hc/en-us/articles/2023-01-18-Release-Notes",
-            "hc/en-us/articles/2022-12-19-Release-Notes",
-            "hc/en-us/articles/2022-12-13-Release-Notes",
-            "hc/en-us/articles/2022-11-21-Release-Notes",
-            "hc/en-us/articles/2022-11-03-Release-Notes",
-            "hc/en-us/articles/2022-10-24-Release-Notes",
-            "hc/en-us/articles/2022-10-11-Release-Notes"
           ]
         }
       ]
     },
     {
-      "group": "Deployment",
+      "group": "Install a Data Collector",
       "pages": [
         "hc/en-us/categories/Deployment",
         {
-          "group": "Deploying BloodHound Enterprise",
-          "pages": [
-            "hc/en-us/sections/Deploying-BloodHound-Enterprise",
-            "hc/en-us/articles/BloodHound-Enterprise-Security-Overview"
-          ]
-        },
-        {
-          "group": "Deploying SharpHound Enterprise",
+          "group": "Install SharpHound",
           "pages": [
             "hc/en-us/sections/Deploying-SharpHound-Enterprise",
             "hc/en-us/articles/SharpHound-Enterprise-System-Requirements-and-Deployment-Process",
@@ -182,7 +117,7 @@
           ]
         },
         {
-          "group": "Deploying AzureHound Enterprise",
+          "group": "Install AzureHound",
           "pages": [
             "hc/en-us/sections/Deploying-AzureHound-Enterprise",
             "hc/en-us/articles/AzureHound-Enterprise-System-Requirements-and-Deployment-Process",
@@ -191,18 +126,11 @@
             "hc/en-us/articles/Install-and-Upgrade-AzureHound-Windows-Docker-or-Kubernetes",
             "hc/en-us/articles/Running-multiple-AzureHound-Enterprise-collectors-on-one-server-with-Scheduled-Tasks"
           ]
-        },
-        {
-          "group": "Deploying BloodHound CE",
-          "pages": [
-            "hc/en-us/sections/Deploying-BloodHound-CE",
-            "hc/en-us/articles/Install-BloodHound-Community-Edition-with-Docker-Compose"
-          ]
         }
       ]
     },
     {
-      "group": "Data Collection",
+      "group": "Collect Data",
       "pages": [
         "hc/en-us/categories/Data-Collection",
         {
@@ -233,7 +161,7 @@
       ]
     },
     {
-      "group": "Data Analysis",
+      "group": "Analyze Attack Path Data",
       "pages": [
         "hc/en-us/categories/Data-Analysis",
         {
@@ -246,7 +174,74 @@
             "hc/en-us/articles/Searching-with-Cypher",
             "hc/en-us/articles/Explore-Search-for-Objects"
           ]
+        }
+      ]
+    },
+    {
+      "group": "Manage BloodHound",
+      "pages": [
+        "hc/en-us/categories/Administration",
+        {
+          "group": " Bloodhound Enterprise Compliance Framework",
+          "pages": [
+            "hc/en-us/sections/Bloodhound-Enterprise-Compliance-Framework",
+            "hc/en-us/articles/Bloodhound-Enterprise-Compliance-Framework-Resource",
+            "hc/en-us/articles/Bloodhound-Enterprise-NIST-SP-800-171-Compliance-Resource",
+            "hc/en-us/articles/Bloodhound-Enterprise-NIST-SP-800-53-Rev-8-Compliance-Resource",
+            "hc/en-us/articles/Bloodhound-Enterprise-NIST-CSF-v2-Compliance-Resource",
+            "hc/en-us/articles/Bloodhound-Enterprise-NIST-CSF-v1-1-Compliance-Resource"
+          ]
         },
+        {
+          "group": "Authentication and Authorization",
+          "pages": [
+            "hc/en-us/sections/Authentication-and-Authorization",
+            "hc/en-us/articles/Administering-users-and-roles",
+            "hc/en-us/articles/Enable-Disable-Multi-Factor-Authentication",
+            "hc/en-us/articles/OIDC-in-BloodHound",
+            "hc/en-us/articles/SAML-in-BloodHound",
+            "hc/en-us/articles/SAML-ADFS-Configuration",
+            "hc/en-us/articles/SAML-Auth0-Configuration",
+            "hc/en-us/articles/SAML-Entra-ID-Configuration",
+            "hc/en-us/articles/SAML-Google-IDP-Configuration",
+            "hc/en-us/articles/SAML-Okta-Configuration"
+          ]
+        },
+        {
+          "group": "Securing BloodHound and collectors",
+          "pages": [
+            "hc/en-us/sections/Securing-BloodHound-and-collectors",
+            "hc/en-us/articles/SharpHound-Enterprise-Service-Hardening"
+          ]
+        }
+      ]
+    },
+    {
+      "group": " API & Integrations",
+      "pages": [
+        "hc/en-us/categories/API-and-Integrations",
+        {
+          "group": "BloodHound API",
+          "pages": [
+            "hc/en-us/sections/BloodHound-API",
+            "hc/en-us/articles/BloodHound-JSON-Formats",
+            "hc/en-us/articles/Working-with-the-BloodHound-API"
+          ]
+        },
+        {
+          "group": "BloodHound Integrations",
+          "pages": [
+            "hc/en-us/sections/BloodHound-Integrations",
+            "hc/en-us/articles/Overview-of-BloodHound-Integrations",
+            "hc/en-us/articles/Integrate-BloodHound-Enterprise-with-Splunk"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Resources",
+      "pages": [
+        "hc/en-us/categories/resources",
         {
           "group": "Nodes",
           "pages": [
@@ -410,66 +405,67 @@
             "hc/en-us/articles/WritePKINameFlag",
             "hc/en-us/articles/WriteSPN"
           ]
-        }
-      ]
-    },
-    {
-      "group": "Administration",
-      "pages": [
-        "hc/en-us/categories/Administration",
+        },
         {
-          "group": " Bloodhound Enterprise Compliance Framework",
+          "group": "Glossary",
           "pages": [
-            "hc/en-us/sections/Bloodhound-Enterprise-Compliance-Framework",
-            "hc/en-us/articles/Bloodhound-Enterprise-Compliance-Framework-Resource",
-            "hc/en-us/articles/Bloodhound-Enterprise-NIST-SP-800-171-Compliance-Resource",
-            "hc/en-us/articles/Bloodhound-Enterprise-NIST-SP-800-53-Rev-8-Compliance-Resource",
-            "hc/en-us/articles/Bloodhound-Enterprise-NIST-CSF-v2-Compliance-Resource",
-            "hc/en-us/articles/Bloodhound-Enterprise-NIST-CSF-v1-1-Compliance-Resource"
+            "hc/en-us/get-started/bloodhound-glossary"
           ]
         },
         {
-          "group": "Authentication and Authorization",
+          "group": "Community and Support",
           "pages": [
-            "hc/en-us/sections/Authentication-and-Authorization",
-            "hc/en-us/articles/Administering-users-and-roles",
-            "hc/en-us/articles/Enable-Disable-Multi-Factor-Authentication",
-            "hc/en-us/articles/OIDC-in-BloodHound",
-            "hc/en-us/articles/SAML-in-BloodHound",
-            "hc/en-us/articles/SAML-ADFS-Configuration",
-            "hc/en-us/articles/SAML-Auth0-Configuration",
-            "hc/en-us/articles/SAML-Entra-ID-Configuration",
-            "hc/en-us/articles/SAML-Google-IDP-Configuration",
-            "hc/en-us/articles/SAML-Okta-Configuration"
+            "hc/en-us/sections/Community-and-Support",
+            "hc/en-us/articles/Additional-Training-and-Resources",
+            "hc/en-us/articles/Getting-Help-and-the-BloodHound-community"
           ]
         },
         {
-          "group": "Securing BloodHound and collectors",
+          "group": "Release Notes",
           "pages": [
-            "hc/en-us/sections/Securing-BloodHound-and-collectors",
-            "hc/en-us/articles/SharpHound-Enterprise-Service-Hardening"
-          ]
-        }
-      ]
-    },
-    {
-      "group": " API & Integrations",
-      "pages": [
-        "hc/en-us/categories/API-and-Integrations",
-        {
-          "group": "BloodHound API",
-          "pages": [
-            "hc/en-us/sections/BloodHound-API",
-            "hc/en-us/articles/BloodHound-JSON-Formats",
-            "hc/en-us/articles/Working-with-the-BloodHound-API"
-          ]
-        },
-        {
-          "group": "BloodHound Integrations",
-          "pages": [
-            "hc/en-us/sections/BloodHound-Integrations",
-            "hc/en-us/articles/Overview-of-BloodHound-Integrations",
-            "hc/en-us/articles/Integrate-BloodHound-Enterprise-with-Splunk"
+            "hc/en-us/sections/BloodHound-Release-Notes",
+            "hc/en-us/articles/Release-Notes-Summary-Overview",
+            "hc/en-us/articles/2024-12-09-Release-Notes-v6-3-0",
+            "hc/en-us/articles/2024-11-14-Release-Notes-v6-2-0",
+            "hc/en-us/articles/2024-10-22-Release-Notes-v6-1-0",
+            "hc/en-us/articles/2024-09-30-Release-Notes-v6-0-0",
+            "hc/en-us/articles/2024-09-10-Release-Notes-v5-15-0",
+            "hc/en-us/articles/2024-08-20-Release-Notes-v5-14-0",
+            "hc/en-us/articles/2024-08-06-Release-Notes-v5-13-1",
+            "hc/en-us/articles/2024-08-01-Release-Notes-v5-13-0",
+            "hc/en-us/articles/2024-07-17-Release-Notes-v5-12-0",
+            "hc/en-us/articles/2024-06-17-Release-Notes-v5-11-0",
+            "hc/en-us/articles/2024-05-28-Release-Notes-v5-10-0",
+            "hc/en-us/articles/2024-05-09-Release-Notes-v5-9-0",
+            "hc/en-us/articles/2024-04-15-Release-Notes-v5-8-1",
+            "hc/en-us/articles/2024-03-27-Release-Notes-v5-8-0",
+            "hc/en-us/articles/2024-03-04-Release-Notes-v5-7-0",
+            "hc/en-us/articles/2024-02-14-Release-Notes-v5-6-0",
+            "hc/en-us/articles/2024-01-23-Release-Notes-v5-5-0",
+            "hc/en-us/articles/2024-01-04-Release-Notes-v5-4-0",
+            "hc/en-us/articles/2023-12-05-Release-Notes-v5-3-0",
+            "hc/en-us/articles/2023-11-06-Release-v5-2-0-BHE-Only",
+            "hc/en-us/articles/2023-10-16-Release-notes-v5-1-0",
+            "hc/en-us/articles/2023-09-19-Release-Notes-v5-0-9",
+            "hc/en-us/articles/2023-08-31-Release-Notes-v5-0-8",
+            "hc/en-us/articles/2023-08-30-Release-Notes-v5-0-7",
+            "hc/en-us/articles/2023-08-08-Release-Notes",
+            "hc/en-us/articles/2023-06-20-Release-Notes",
+            "hc/en-us/articles/2023-05-16-Release-Notes",
+            "hc/en-us/articles/2023-04-25-Release-Notes",
+            "hc/en-us/articles/2023-04-13-Release-Notes",
+            "hc/en-us/articles/2023-03-27-Release-Notes",
+            "hc/en-us/articles/2023-03-06-Release-Notes",
+            "hc/en-us/articles/2023-02-21-Release-Notes",
+            "hc/en-us/articles/2023-02-07-Release-Notes",
+            "hc/en-us/articles/2023-01-31-Release-Notes",
+            "hc/en-us/articles/2023-01-18-Release-Notes",
+            "hc/en-us/articles/2022-12-19-Release-Notes",
+            "hc/en-us/articles/2022-12-13-Release-Notes",
+            "hc/en-us/articles/2022-11-21-Release-Notes",
+            "hc/en-us/articles/2022-11-03-Release-Notes",
+            "hc/en-us/articles/2022-10-24-Release-Notes",
+            "hc/en-us/articles/2022-10-11-Release-Notes"
           ]
         }
       ]
