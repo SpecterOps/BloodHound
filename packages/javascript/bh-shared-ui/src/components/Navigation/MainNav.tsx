@@ -16,7 +16,7 @@
 
 import { FC, ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { useApiVersion } from '../../hooks';
+import { useApiVersion, useIsMouseDragging } from '../../hooks';
 import { cn } from '../../utils';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
 
@@ -52,24 +52,30 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children
 };
 
 const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode }> = ({ onClick, children }) => {
+    const { isMouseDragging } = useIsMouseDragging();
     return (
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed which created a flickering effect just outside the nav
         // Note: had to wrap in div to avoid error of button nesting in a button with the switch
         <div
             role='button'
             onClick={onClick}
-            className={'h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline group-hover:w-full'}>
+            className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline', {
+                'group-hover:w-full': !isMouseDragging,
+            })}>
             {children}
         </div>
     );
 };
 
 const MainNavItemLink: FC<{ route: string; children: ReactNode }> = ({ route, children, ...rest }) => {
+    const { isMouseDragging } = useIsMouseDragging();
     return (
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed
         <RouterLink
             to={route as string}
-            className={'h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline group-hover:w-full'}
+            className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline', {
+                'group-hover:w-full': !isMouseDragging,
+            })}
             {...rest}>
             {children}
         </RouterLink>
@@ -77,6 +83,7 @@ const MainNavItemLink: FC<{ route: string; children: ReactNode }> = ({ route, ch
 };
 
 const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string }> = ({ icon, label }) => {
+    const { isMouseDragging } = useIsMouseDragging();
     return (
         // Note: The min-h here is to keep spacing between the logo and the list below.
         <>
@@ -85,9 +92,13 @@ const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string }> = ({ 
             </span>
             <span
                 data-testid='main-nav-item-label-text'
-                className={
-                    'whitespace-nowrap min-h-10 font-medium text-xl opacity-0 hidden transition-opacity duration-200 ease-in group-hover:opacity-100 group-hover:flex group-hover:items-center group-hover:gap-x-5'
-                }>
+                className={cn(
+                    'whitespace-nowrap min-h-10 font-medium text-xl opacity-0 hidden transition-opacity duration-200 ease-in',
+                    {
+                        'group-hover:w-full group-hover:opacity-100 group-hover:flex group-hover:items-center group-hover:gap-x-5':
+                            !isMouseDragging,
+                    }
+                )}>
                 {label}
             </span>
         </>
@@ -97,35 +108,50 @@ const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string }> = ({ 
 const MainNavVersionNumber: FC = () => {
     const { data: apiVersionResponse, isSuccess } = useApiVersion();
     const apiVersion = isSuccess && apiVersionResponse?.server_version;
+    const { isMouseDragging } = useIsMouseDragging();
 
     return (
         // Note: The min-h allows for the version number to keep its position when the nav is scrollable
         <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='main-nav-version-number'>
             <div
-                className={
-                    'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1 group-hover:left-16'
-                }>
-                <span className={'opacity-0 hidden duration-300 ease-in-out group-hover:opacity-100 group-hover:block'}>
+                className={cn(
+                    'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1',
+                    {
+                        'group-hover:left-16': !isMouseDragging,
+                    }
+                )}>
+                <span
+                    className={cn('opacity-0 hidden duration-300 ease-in-out', {
+                        'group-hover:opacity-100 group-hover:block': !isMouseDragging,
+                    })}>
                     BloodHound:&nbsp;
                 </span>
-                <span className={cn('group-[:not(:hover)]:max-w-9 overflow-x-hidden')}>{apiVersion}</span>
+                <span className={cn('group-[:not(:hover)]:max-w-9 overflow-x-hidden', { 'max-w-9': isMouseDragging })}>
+                    {apiVersion}
+                </span>
             </div>
         </div>
     );
 };
 
 const MainNavPoweredBy: FC<{ children: ReactNode }> = ({ children }) => {
+    const { isMouseDragging } = useIsMouseDragging();
+
     return (
         // Note: The min-h allows for the version number to keep its position when the nav is scrollable
         <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='main-nav-powered-by'>
             <div
-                className={
-                    'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1 group-hover:left-12'
-                }>
+                className={cn(
+                    'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1',
+                    {
+                        'group-hover:left-12': !isMouseDragging,
+                    }
+                )}>
                 <span
-                    className={
-                        'opacity-0 hidden duration-300 ease-in-out group-hover:opacity-100 group-hover:flex group-hover:items-center group-hover:gap-1'
-                    }>
+                    className={cn('opacity-0 hidden duration-300 ease-in-out ', {
+                        'group-hover:opacity-100 group-hover:flex group-hover:items-center group-hover:gap-1':
+                            !isMouseDragging,
+                    })}>
                     powered by&nbsp;
                     {children}
                 </span>
@@ -135,11 +161,16 @@ const MainNavPoweredBy: FC<{ children: ReactNode }> = ({ children }) => {
 };
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
+    const { isMouseDragging } = useIsMouseDragging();
+
     return (
         <nav
-            className={
-                'z-nav fixed top-0 left-0 h-full w-nav-width duration-300 ease-in flex flex-col items-center pt-4 shadow-sm bg-neutral-light-2 dark:bg-neutral-dark-2 print:hidden hover:w-nav-width-expanded hover:overflow-y-auto hover:overflow-x-hidden group'
-            }>
+            className={cn(
+                'z-nav fixed top-0 left-0 h-full w-nav-width duration-300 ease-in flex flex-col items-center pt-4 shadow-sm bg-neutral-light-2 dark:bg-neutral-dark-2 print:hidden group',
+                {
+                    'hover:w-nav-width-expanded hover:overflow-y-auto hover:overflow-x-hidden': !isMouseDragging,
+                }
+            )}>
             <MainNavItemLink route={mainNavData.logo.project.route} data-testid='main-nav-logo'>
                 <MainNavItemLabel
                     icon={mainNavData.logo.project.icon}
