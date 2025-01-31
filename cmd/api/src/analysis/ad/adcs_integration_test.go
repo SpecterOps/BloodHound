@@ -2561,7 +2561,7 @@ func FetchADCSPrereqs(db graph.Database) (impact.PathAggregator, []*graph.Node, 
 		return nil, nil, nil, nil, ad2.ADCSCache{}, err
 	} else {
 		cache := ad2.NewADCSCache()
-		cache.BuildCache(context.Background(), db)
+		cache.BuildCacheFull(context.Background(), db)
 		return expansions, cache.GetEnterpriseCertAuthorities(), cache.GetCertTemplates(), cache.GetDomains(), cache, nil
 	}
 }

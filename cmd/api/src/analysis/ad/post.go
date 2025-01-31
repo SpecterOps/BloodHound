@@ -38,7 +38,7 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled bool, citrixEnable
 		return &aggregateStats, err
 	} else if localGroupStats, err := adAnalysis.PostLocalGroups(ctx, db, groupExpansions, false, citrixEnabled); err != nil {
 		return &aggregateStats, err
-	} else if adcsStats, err := adAnalysis.PostADCS(ctx, db, groupExpansions, adcsEnabled); err != nil {
+	} else if adcsStats, _, err := adAnalysis.PostADCS(ctx, db, groupExpansions, adcsEnabled); err != nil {
 		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(stats)

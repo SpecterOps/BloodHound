@@ -48,6 +48,8 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCS")
 		_, _, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
 
+		cache := ad2.NewADCSCache()
+		err = cache.BuildCacheFull(context.Background(), db)
 		require.NoError(t, err)
 
 		for _, domain := range domains {
@@ -55,7 +57,7 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 			computerCache, err := fetchComputerCache(db, innerDomain)
 			require.NoError(t, err)
 
-			err = ad2.PostCoerceAndRelayNTLMToADCS(context.Background(), db, operation, authenticatedUsers, computerCache)
+			err = ad2.PostCoerceAndRelayNTLMToADCS(context.Background(), db, cache, operation, authenticatedUsers, computerCache)
 			require.NoError(t, err)
 		}
 
