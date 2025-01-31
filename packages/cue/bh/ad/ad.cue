@@ -782,8 +782,8 @@ RelayableToDCLDAP: types.#StringEnum & {
 	representation: "replayabletodcldap"
 }
 
-RelayableToDCLDAPs: types.#StringEnum & {
-	symbol: "RelayableToDCLDAPs"
+RelayableToDCLDAPS: types.#StringEnum & {
+	symbol: "RelayableToDCLDAPS"
 	schema: "ad"
 	name: "Relayable To DC LDAPs"
 	representation: "replayabletodcldaps"
@@ -794,6 +794,13 @@ WebClientRunning: types.#StringEnum & {
 	schema: "ad"
 	name: "WebClient Running"
 	representation: "webclientrunning"
+}
+
+IsDC: types.#StringEnum & {
+	symbol: "IsDC"
+	schema: "ad"
+	name: "Is Domain Controller"
+	representation: "isdc"
 }
 
 
@@ -905,8 +912,9 @@ Properties: [
 	LDAPsAvailable,
 	LDAPsEPA,
 	RelayableToDCLDAP,
-	RelayableToDCLDAPs,
-	WebClientRunning
+	RelayableToDCLDAPS,
+	WebClientRunning,
+	IsDC
 ]
 
 // Kinds

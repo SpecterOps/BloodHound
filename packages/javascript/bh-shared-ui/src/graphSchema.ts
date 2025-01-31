@@ -416,8 +416,9 @@ export enum ActiveDirectoryKindProperties {
     LDAPsAvailable = 'ldasavailable',
     LDAPsEPA = 'ldapsepa',
     RelayableToDCLDAP = 'replayabletodcldap',
-    RelayableToDCLDAPs = 'replayabletodcldaps',
+    RelayableToDCLDAPS = 'replayabletodcldaps',
     WebClientRunning = 'webclientrunning',
+    IsDC = 'isdc',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -635,10 +636,12 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'LDAPs EPA';
         case ActiveDirectoryKindProperties.RelayableToDCLDAP:
             return 'Relayable To DC LDAP';
-        case ActiveDirectoryKindProperties.RelayableToDCLDAPs:
+        case ActiveDirectoryKindProperties.RelayableToDCLDAPS:
             return 'Relayable To DC LDAPs';
         case ActiveDirectoryKindProperties.WebClientRunning:
             return 'WebClient Running';
+        case ActiveDirectoryKindProperties.IsDC:
+            return 'Is Domain Controller';
         default:
             return undefined;
     }

@@ -225,12 +225,13 @@ const (
 	LDAPsAvailable                          Property = "ldasavailable"
 	LDAPsEPA                                Property = "ldapsepa"
 	RelayableToDCLDAP                       Property = "replayabletodcldap"
-	RelayableToDCLDAPs                      Property = "replayabletodcldaps"
+	RelayableToDCLDAPS                      Property = "replayabletodcldaps"
 	WebClientRunning                        Property = "webclientrunning"
+	IsDC                                    Property = "isdc"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationEnabled, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributes, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, SMBSigning, RestrictOutboundNTLM, LDAPSigning, LDAPsAvailable, LDAPsEPA, RelayableToDCLDAP, RelayableToDCLDAPs, WebClientRunning}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, HighValue, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationEnabled, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributes, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, SMBSigning, RestrictOutboundNTLM, LDAPSigning, LDAPsAvailable, LDAPsEPA, RelayableToDCLDAP, RelayableToDCLDAPS, WebClientRunning, IsDC}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -449,9 +450,11 @@ func ParseProperty(source string) (Property, error) {
 	case "replayabletodcldap":
 		return RelayableToDCLDAP, nil
 	case "replayabletodcldaps":
-		return RelayableToDCLDAPs, nil
+		return RelayableToDCLDAPS, nil
 	case "webclientrunning":
 		return WebClientRunning, nil
+	case "isdc":
+		return IsDC, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -672,10 +675,12 @@ func (s Property) String() string {
 		return string(LDAPsEPA)
 	case RelayableToDCLDAP:
 		return string(RelayableToDCLDAP)
-	case RelayableToDCLDAPs:
-		return string(RelayableToDCLDAPs)
+	case RelayableToDCLDAPS:
+		return string(RelayableToDCLDAPS)
 	case WebClientRunning:
 		return string(WebClientRunning)
+	case IsDC:
+		return string(IsDC)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -896,10 +901,12 @@ func (s Property) Name() string {
 		return "LDAPs EPA"
 	case RelayableToDCLDAP:
 		return "Relayable To DC LDAP"
-	case RelayableToDCLDAPs:
+	case RelayableToDCLDAPS:
 		return "Relayable To DC LDAPs"
 	case WebClientRunning:
 		return "WebClient Running"
+	case IsDC:
+		return "Is Domain Controller"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}

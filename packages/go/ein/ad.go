@@ -566,7 +566,6 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 	}
 
 	if computer.IsDC && computer.DomainSID != "" {
-		//TODO: Put IsDC in the property bag as well
 		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleSource{
 				Source:     computer.ObjectIdentifier,
