@@ -47,6 +47,7 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCS")
 		_, _, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
+		require.NoError(t, err)
 
 		cache := ad2.NewADCSCache()
 		enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA)
