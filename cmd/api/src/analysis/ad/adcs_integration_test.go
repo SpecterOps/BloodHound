@@ -2561,8 +2561,14 @@ func FetchADCSPrereqs(db graph.Database) (impact.PathAggregator, []*graph.Node, 
 		return nil, nil, nil, nil, ad2.ADCSCache{}, err
 	} else {
 		cache := ad2.NewADCSCache()
-		cache.BuildCacheFull(context.Background(), db)
-		return expansions, cache.GetEnterpriseCertAuthorities(), cache.GetCertTemplates(), cache.GetDomains(), cache, nil
+		if enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
+			return nil, nil, nil, nil, ad2.ADCSCache{}, err
+		} else if certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate); err != nil {
+			return nil, nil, nil, nil, ad2.ADCSCache{}, err
+		} else {
+			cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
+			return expansions, cache.GetEnterpriseCertAuthorities(), cache.GetCertTemplates(), cache.GetDomains(), cache, nil
+		}
 	}
 }
 

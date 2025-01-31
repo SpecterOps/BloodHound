@@ -66,16 +66,6 @@ func NewADCSCache() ADCSCache {
 	}
 }
 
-func (s *ADCSCache) BuildCacheFull(ctx context.Context, db graph.Database) error {
-	if enterpriseCertAuthorities, err := FetchNodesByKind(ctx, db, ad.EnterpriseCA); err != nil {
-		return fmt.Errorf("failed fetching enterpriseCA nodes: %w", err)
-	} else if certTemplates, err := FetchNodesByKind(ctx, db, ad.CertTemplate); err != nil {
-		return fmt.Errorf("failed fetching certTemplate nodes: %w", err)
-	} else {
-		return s.BuildCache(ctx, db, enterpriseCertAuthorities, certTemplates)
-	}
-}
-
 func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpriseCertAuthorities, certTemplates []*graph.Node) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

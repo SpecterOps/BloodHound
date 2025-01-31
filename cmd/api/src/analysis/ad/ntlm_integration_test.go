@@ -49,7 +49,11 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 		_, _, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
 
 		cache := ad2.NewADCSCache()
-		err = cache.BuildCacheFull(context.Background(), db)
+		enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA)
+		require.NoError(t, err)
+		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+		require.NoError(t, err)
+		err = cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
 		require.NoError(t, err)
 
 		for _, domain := range domains {
