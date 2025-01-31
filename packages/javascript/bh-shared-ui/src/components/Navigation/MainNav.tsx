@@ -100,15 +100,15 @@ const MainNavVersionNumber: FC = () => {
 
     return (
         // Note: The min-h allows for the version number to keep its position when the nav is scrollable
-        <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='main-nav-version-number'>
+        <div className='relative w-full flex min-h-10 h-10' data-testid='main-nav-version-number'>
             <div
                 className={
-                    'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1 group-hover:left-16'
+                    'w-9 break-all group-hover:w-auto group-hover:overflow-x-hidden group-hover:whitespace-nowrap flex absolute top-3 left-3 duration-300 ease-in-out text-xs font-medium text-neutral-dark-0 dark:text-neutral-light-1 group-hover:left-16'
                 }>
                 <span className={'opacity-0 hidden duration-300 ease-in-out group-hover:opacity-100 group-hover:block'}>
                     BloodHound:&nbsp;
                 </span>
-                <span className={cn('group-[:not(:hover)]:max-w-9 overflow-x-hidden')}>{apiVersion}</span>
+                <span className={cn('group-[:not(:hover)]:max-w-9')}>{apiVersion}</span>
             </div>
         </div>
     );
