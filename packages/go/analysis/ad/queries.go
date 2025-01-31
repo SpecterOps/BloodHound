@@ -491,6 +491,79 @@ func FetchEnforcedGPOs(tx graph.Transaction, target *graph.Node, skip, limit int
 	}
 }
 
+func FetchEnforcedGPOsPaths(ctx context.Context, db graph.Database, target *graph.Node) (graph.PathSet, error) {
+	var (
+		pathSet      = graph.NewPathSet()
+		enforcedGPOs = graph.NewNodeSet()
+	)
+
+	return pathSet, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		return ops.Traversal(tx, ops.TraversalPlan{
+			Root:      target,
+			Direction: graph.DirectionInbound,
+			BranchQuery: func() graph.Criteria {
+				return query.And(
+					query.KindIn(query.Start(), ad.Domain, ad.OU, ad.GPO),
+					query.KindIn(query.Relationship(), ad.Contains, ad.GPLink),
+				)
+			},
+		}, func(ctx *ops.TraversalContext, segment *graph.PathSegment) error {
+			// Does this path terminate at a GPO that we haven't seen as a previously enforced GPO?
+			if segment.Node.Kinds.ContainsOneOf(ad.GPO) && !enforcedGPOs.Contains(segment.Node) {
+				gpLinkRelationship := segment.Edge
+
+				// Check if the GPLink relationship is enforced
+				if gpLinkEnforced, _ := gpLinkRelationship.Properties.GetOrDefault(ad.Enforced.String(), false).Bool(); gpLinkEnforced {
+					if ctx.LimitSkipTracker.ShouldCollect() {
+						// Add this GPO right away as enforced and exit
+						enforcedGPOs.Add(segment.Node)
+						pathSet.AddPath(segment.Path())
+					}
+				} else {
+					// Assume that the GPO is enforced at the start
+					isGPOEnforced := true
+					lastNodeBlocks := false
+
+					// Walk the GPO path to see if any of the nodes between the GPO and the enforcement target block GPO
+					// inheritance. This walk starts at the GPO and moves down, with end being the GPO to start
+					segment.Path().WalkReverse(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+						if !start.Kinds.ContainsOneOf(ad.OU, ad.Domain) {
+							// If we run into anything that isn't an OU or a Domain node then we're done checking for
+							// inheritance blocking
+							return false
+						} else if lastNodeBlocks && start.Kinds.ContainsOneOf(ad.OU) {
+							//If the previous node blocks inheritance, and we've hit an OU, then the GPO is not enforced on this path, and we don't need to check any further
+							isGPOEnforced = false
+							return false
+						}
+
+						// Check to see if this node in the Domain and OU contains path blocks GPO inheritance
+						if blocksInheritance, _ := start.Properties.GetOrDefault(ad.BlocksInheritance.String(), false).Bool(); blocksInheritance {
+							// If this Domain or OU node blocks inheritance then we're done walking this GPO enforcement
+							// path
+							lastNodeBlocks = true
+							return true
+						}
+
+						// Continue walking the path otherwise
+						return true
+					})
+
+					// If the GPO is still marked as enforced, meaning that the Domain node nor any of the OU nodes blocked
+					// inheritance of it
+					if isGPOEnforced {
+						// Add this GPO as enforced
+						enforcedGPOs.Add(segment.Node)
+						pathSet.AddPath(segment.Path())
+					}
+				}
+			}
+
+			return nil
+		})
+	})
+}
+
 func FetchOUContainersOfNode(tx graph.Transaction, target *graph.Node) (graph.NodeSet, error) {
 	oUContainers := graph.NewNodeSet()
 	if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{

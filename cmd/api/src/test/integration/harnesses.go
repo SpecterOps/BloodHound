@@ -8498,40 +8498,84 @@ func (s *ESC10bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.DC1)
 }
 
+type CoerceAndRelayNTLMtoADCS struct {
+	AuthenticatedUsersGroup *graph.Node
+	CertTemplate1           *graph.Node
+	Computer                *graph.Node
+	Domain                  *graph.Node
+	EnterpriseCA1           *graph.Node
+	NTAuthStore             *graph.Node
+	RootCA                  *graph.Node
+}
+
+func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
+	domainSid := RandomDomainSID()
+	s.AuthenticatedUsersGroup = graphTestContext.NewActiveDirectoryGroup("Authenticated Users Group", domainSid)
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid, CertTemplateData{
+		ApplicationPolicies:           []string{},
+		AuthenticationEnabled:         true,
+		AuthorizedSignatures:          0,
+		EffectiveEKUs:                 []string{},
+		EnrolleeSuppliesSubject:       false,
+		NoSecurityExtension:           false,
+		RequiresManagerApproval:       false,
+		SchannelAuthenticationEnabled: false,
+		SchemaVersion:                 1,
+		SubjectAltRequireEmail:        false,
+		SubjectAltRequireSPN:          false,
+		SubjectAltRequireUPN:          false,
+	})
+	s.Computer = graphTestContext.NewActiveDirectoryComputer("Computer", domainSid)
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid)
+	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
+	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
+	graphTestContext.NewRelationship(s.AuthenticatedUsersGroup, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.AuthenticatedUsersGroup, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+
+	s.EnterpriseCA1.Properties.Set(ad.ADCSWebEnrollmentHTTP.String(), true)
+	graphTestContext.UpdateNode(s.EnterpriseCA1)
+	s.Computer.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer)
+	s.AuthenticatedUsersGroup.Properties.Set(common.ObjectID.String(), fmt.Sprintf("authenticated-users%s", adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.AuthenticatedUsersGroup)
+}
+
 type NTLMCoerceAndRelayNTLMToSMB struct {
 	AuthenticatedUsers *graph.Node
 	DomainAdminsUser   *graph.Node
 	ServerAdmins       *graph.Node
-	computer3          *graph.Node
-	computer8          *graph.Node
+	Computer3          *graph.Node
+	Computer8          *graph.Node
+	Domain             *graph.Node
 }
 
 func (s *NTLMCoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
 	domainSid := RandomDomainSID()
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
 	s.AuthenticatedUsers = graphTestContext.NewActiveDirectoryGroup("Authenticated Users", domainSid)
-	s.AuthenticatedUsers.Properties.Set("objectid", fmt.Sprintf("authenticated-users%s", adAnalysis.AuthenticatedUsersSuffix))
-	s.AuthenticatedUsers.Properties.Set("Domain", domainSid)
+	s.AuthenticatedUsers.Properties.Set(common.ObjectID.String(), fmt.Sprintf("authenticated-users%s", adAnalysis.AuthenticatedUsersSuffix))
 	graphTestContext.UpdateNode(s.AuthenticatedUsers)
 
-	s.DomainAdminsUser = graphTestContext.NewActiveDirectoryUser("Domain Admins User", domainSid)
+	s.DomainAdminsUser = graphTestContext.NewActiveDirectoryUser("Domain Admin User", domainSid)
 
-	s.ServerAdmins = graphTestContext.NewActiveDirectoryDomain("Server Admins", domainSid, false, true)
-	s.ServerAdmins.Properties.Set("objectid", fmt.Sprintf("server-admins%s", adAnalysis.AuthenticatedUsersSuffix))
-	s.ServerAdmins.Properties.Set("Domain", domainSid)
+	s.ServerAdmins = graphTestContext.NewActiveDirectoryGroup("Server Admins", domainSid)
 	graphTestContext.UpdateNode(s.ServerAdmins)
+	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domainSid)
 
-	s.DomainAdminsUser.Properties.Set("objectid", fmt.Sprintf("domainadminuser-users%s", adAnalysis.AuthenticatedUsersSuffix))
-	s.computer3 = graphTestContext.NewActiveDirectoryComputer("computer3", domainSid)
+	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domainSid)
+	s.Computer8.Properties.Set(ad.SMBSigning.String(), false)
+	s.Computer8.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
+	graphTestContext.UpdateNode(s.Computer8)
 
-	s.computer8 = graphTestContext.NewActiveDirectoryComputer("computer8", domainSid)
-	s.computer8.Properties.Set(ad.SMBSigning.String(), false)
-	s.computer8.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
-	graphTestContext.UpdateNode(s.computer8)
-
-	graphTestContext.NewRelationship(s.computer3, s.ServerAdmins, ad.MemberOf)
-	graphTestContext.NewRelationship(s.ServerAdmins, s.computer8, ad.AdminTo)
-	graphTestContext.NewRelationship(s.AuthenticatedUsers, s.computer8, ad.CoerceAndRelayNTLMToSMB)
-	graphTestContext.NewRelationship(s.computer8, s.DomainAdminsUser, ad.HasSession)
+	graphTestContext.NewRelationship(s.Computer3, s.ServerAdmins, ad.MemberOf)
+	graphTestContext.NewRelationship(s.ServerAdmins, s.Computer8, ad.AdminTo)
+	graphTestContext.NewRelationship(s.Computer8, s.DomainAdminsUser, ad.HasSession)
 }
 
 type CoerceAndRelayNTLMToLDAP struct {
@@ -8796,4 +8840,5 @@ type HarnessDetails struct {
 	NTLMCoerceAndRelayNTLMToSMB                     NTLMCoerceAndRelayNTLMToSMB
 	NTLMCoerceAndRelayNTLMToLDAP                    CoerceAndRelayNTLMToLDAP
 	NTLMCoerceAndRelayNTLMToLDAPS                   CoerceAndRelayNTLMToLDAPS
+	NTLMCoerceAndRelayNTLMToADCS                    CoerceAndRelayNTLMtoADCS
 }

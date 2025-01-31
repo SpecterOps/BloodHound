@@ -161,6 +161,8 @@ const UpdateUserFormInner: React.FC<{
             if (error?.response?.status === 409) {
                 if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
                     setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
+                } else if (error.response?.data?.errors[0]?.message.toLowerCase().includes('email')) {
+                    setError('emailAddress', { type: 'custom', message: 'Email is already in use.' });
                 } else {
                     setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
                 }

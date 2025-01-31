@@ -20,29 +20,19 @@ on:
   pull_request:
     branches:
       - main
-      - develop
     types:
-      - assigned
       - opened
       - synchronize
-      - reopened
-      - closed
-  # https://stephencharlesweiss.com/github-actions-run-on-merge-only
-  push:
-    branches:
-      - main
-      - develop
-
-permissions: write-all
 
 jobs:
   cla-check:
+    # the if statement skips the CLA check when running locally using act
     if: ${{ !github.event.act }}
     name: Process CLA
     runs-on: ubuntu-latest
     steps:
       - name: CLA Assistant
-        if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
+        if: github.event_name == 'pull_request_target'
         uses: contributor-assistant/github-action@v2.2.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,12 +49,11 @@ jobs:
       image_provenance: false
       build_outputs: type=image,push=false
       dockerfile: dockerfiles/bloodhound.Dockerfile
-      image_cache_from: |-
-        type=registry,ref=docker.io/specterops/bloodhound:buildcache
-        type=registry,ref=ghcr.io/specterops/bloodhound:buildcache
-      image_cache_to: |-
-        type=registry,ref=docker.io/specterops/bloodhound:buildcache,mode=max
-        type=registry,ref=ghcr.io/specterops/bloodhound:buildcache,mode=max
+      image_cache_from: type=registry,ref=ghcr.io/specterops/bloodhound:buildcache
+      image_cache_to: type=registry,ref=ghcr.io/specterops/bloodhound:buildcache,mode=max
+      build_args: |
+        checkout_hash=${{ github.sha }}
+
     secrets:
       dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
       dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}

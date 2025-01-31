@@ -59,7 +59,7 @@ RUN go run github.com/specterops/bloodhound/packages/go/stbernard build --os ${T
 ########
 # Package other assets
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.20 as hound-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.20 AS hound-builder
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 
@@ -100,7 +100,7 @@ RUN sha256sum azurehound-$AZUREHOUND_VERSION.zip > azurehound-$AZUREHOUND_VERSIO
 ########
 # Package Bloodhound
 ################
-FROM gcr.io/distroless/static-debian11 as bloodhound
+FROM gcr.io/distroless/static-debian11 AS bloodhound
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 

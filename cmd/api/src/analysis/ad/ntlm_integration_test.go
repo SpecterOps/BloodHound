@@ -21,8 +21,9 @@ package ad_test
 
 import (
 	"context"
-	"strings"
 	"testing"
+
+	"github.com/specterops/bloodhound/dawgs/cardinality"
 
 	"github.com/specterops/bloodhound/analysis"
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
@@ -33,11 +34,56 @@ import (
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/test/integration"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestPostNTLM(t *testing.T) {
+func TestPostNTLMRelayADCS(t *testing.T) {
+	//TODO: Add some negative tests here
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.NTLMCoerceAndRelayNTLMToADCS.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCS")
+		_, _, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
+
+		require.NoError(t, err)
+
+		for _, domain := range domains {
+			innerDomain := domain
+			computerCache, err := fetchComputerCache(db, innerDomain)
+			require.NoError(t, err)
+
+			err = ad2.PostCoerceAndRelayNTLMToADCS(context.Background(), db, operation, authenticatedUsers, computerCache)
+			require.NoError(t, err)
+		}
+
+		operation.Done()
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToADCS)
+			})); err != nil {
+				t.Fatalf("error fetching ntlm to smb edges in integration test; %v", err)
+			} else {
+
+				require.Len(t, results, 1)
+				rel := results[0]
+
+				start, end, err := ops.FetchRelationshipNodes(tx, rel)
+				require.NoError(t, err)
+
+				require.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToADCS.AuthenticatedUsersGroup.ID)
+				require.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToADCS.Computer.ID)
+			}
+			return nil
+		})
+	})
+}
+
+func TestPostNTLMRelaySMB(t *testing.T) {
+	//TODO: Add some negative tests here
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
@@ -55,7 +101,7 @@ func TestPostNTLM(t *testing.T) {
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 				for _, computer := range computers {
 					innerComputer := computer
-					domainSid, _ := innerDomain.Properties.Get(ad.Domain.String()).String()
+					domainSid, _ := innerDomain.Properties.Get(ad.DomainSID.String()).String()
 					authenticatedUserID := authenticatedUsers[domainSid]
 
 					if err = ad2.PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID); err != nil {
@@ -72,49 +118,45 @@ func TestPostNTLM(t *testing.T) {
 
 		// Test start node
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 				return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToSMB)
 			})); err != nil {
 				t.Fatalf("error fetching ntlm to smb edges in integration test; %v", err)
 			} else {
 				require.Len(t, results, 1)
-				resultIds := results.IDs()
-
-				objectId := results.Get(resultIds[0]).Properties.Get("objectid")
-				require.False(t, objectId.IsNil())
-
-				objectIdStr, err := objectId.String()
-				require.NoError(t, err)
-				assert.True(t, strings.HasSuffix(objectIdStr, ad2.AuthenticatedUsersSuffix))
-			}
-			return nil
-		})
-
-		// Test end node
-		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			if results, err := ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
-				return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToSMB)
-			})); err != nil {
-				t.Fatalf("error fetching ntlm to smb edges in integration test; %v", err)
-			} else {
-				require.Len(t, results, 1)
-				resultIds := results.IDs()
-
-				objectId := results.Get(resultIds[0]).Properties.Get("objectid")
-				require.False(t, objectId.IsNil())
-
-				smbSigning, err := results.Get(resultIds[0]).Properties.Get(ad.SMBSigning.String()).Bool()
+				rel := results[0]
+				start, end, err := ops.FetchRelationshipNodes(tx, rel)
 				require.NoError(t, err)
 
-				restrictOutbountNtlm, err := results.Get(resultIds[0]).Properties.Get(ad.RestrictOutboundNTLM.String()).Bool()
-				require.NoError(t, err)
-
-				assert.False(t, smbSigning)
-				assert.False(t, restrictOutbountNtlm)
+				require.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToSMB.AuthenticatedUsers.ID)
+				require.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer8.ID)
 			}
 			return nil
 		})
 	})
+}
+
+func fetchComputerCache(db graph.Database, domain *graph.Node) (map[string]cardinality.Duplex[uint64], error) {
+	cache := make(map[string]cardinality.Duplex[uint64])
+	if domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		return cache, err
+	} else {
+		cache[domainSid] = cardinality.NewBitmap64()
+		return cache, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			return tx.Nodes().Filter(
+				query.And(
+					query.Kind(query.Node(), ad.Computer),
+					query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSid),
+				),
+			).FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
+				for id := range cursor.Chan() {
+					cache[domainSid].Add(id.Uint64())
+				}
+
+				return cursor.Error()
+			})
+		})
+	}
 }
 
 func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {

@@ -62,14 +62,14 @@ outputs:
       The version of the container image, often derived from tags or other versioning patterns.
 
   image_reference:
-    value: ${{ steps.set-image-reference.outputs.image_reference }}
+    value: ${{ fromJSON(steps.generate-metadata.outputs.json).tags[0] }}
     description: |-
       The full image reference, including registry, repository, and tag.
       This fully qualified name is used to pull or locate a specific image
       from a particular registry (e.g., docker.io/myrepo/myimage:tag).
 
   image_name:
-    value: ${{ steps.set-image-reference.outputs.image_name }}
+    value: ${{ steps.set-image-name.outputs.image_name }}
     description: |-
       The image name with repository and tag, typically used locally or
       with the default registry. This shorthand version omits the registry
@@ -78,22 +78,18 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Generate metadata
-      id: generate-metadata
+    - id: generate-metadata
+      name: Generate metadata
       uses: docker/metadata-action@v5
       with:
         images: ${{ inputs.container_image_repository_name }}
         flavor: ${{ inputs.image_flavor }}
-        tags: |-
+        tags: |
           type=raw,value=sha-{{sha}}-{{date 'YYYYMMDD-HHmmss'}},priority=1500
           type=sha,format=long,priority=1450
           ${{ inputs.image_tags }}
 
-    - name: Set Container Image Reference
-      id: set-image-reference
+    - id: set-image-name
+      name: Set Image Name Output
       shell: bash
-      run: |-
-        image_reference=${{ fromJSON(steps.generate-metadata.outputs.json).tags[0] }}
-        echo "image_reference=$image_reference" >> $GITHUB_OUTPUT
-        image_name=$(echo "$image_reference" | sed 's/.*\///')
-        echo "image_name=$image_name" >> $GITHUB_OUTPUT
+      run: basename '${{ fromJSON(steps.generate-metadata.outputs.json).tags[0] }}' | sed s/^/image_name=/ >> "$GITHUB_OUTPUT"

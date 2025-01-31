@@ -747,11 +747,39 @@ SMBSigning: types.#StringEnum & {
 	representation: "smbsigning"
 }
 
+WebClientRunning: types.#StringEnum & {
+	symbol: "WebClientRunning"
+	schema: "ad"
+	name: "WebClient Running"
+	representation: "webclientrunning"
+}
+
 RestrictOutboundNTLM: types.#StringEnum & {
 	symbol: "RestrictOutboundNTLM"
 	schema: "ad"
 	name: "Restrict Outbound NTLM"
 	representation: "restrictoutboundntlm"
+}
+
+ADCSWebEnrollmentHTTP: types.#StringEnum & {
+	symbol: "ADCSWebEnrollmentHTTP"
+	schema: "ad"
+	name: "ADCS Web Enrollment HTTP"
+	representation: "adcswebenrollmenthttp"
+}
+
+ADCSWebEnrollmentHTTPS: types.#StringEnum & {
+	symbol: "ADCSWebEnrollmentHTTPS"
+	schema: "ad"
+	name: "ADCS Web Enrollment HTTPS"
+	representation: "adcswebenrollmenthttps"
+}
+
+ADCSWebEnrollmentHTTPSEPA: types.#StringEnum & {
+	symbol: "ADCSWebEnrollmentHTTPSEPA"
+	schema: "ad"
+	name: "ADCS Web Enrollment HTTPS EPA"
+	representation: "adcswebenrollmenthttpsepa"
 }
 
 LDAPSigning: types.#StringEnum & {
@@ -907,13 +935,16 @@ Properties: [
 	LockoutDuration,
 	LockoutObservationWindow,
 	SMBSigning,
+	WebClientRunning,
 	RestrictOutboundNTLM,
+	ADCSWebEnrollmentHTTP,
+	ADCSWebEnrollmentHTTPS,
+	ADCSWebEnrollmentHTTPSEPA,
 	LDAPSigning,
 	LDAPsAvailable,
 	LDAPsEPA,
 	RelayableToDCLDAP,
 	RelayableToDCLDAPS,
-	WebClientRunning,
 	IsDC
 ]
 
@@ -1371,6 +1402,11 @@ CoerceAndRelayNTLMToSMB: types.#Kind & {
 	schema: "active_directory"
 }
 
+CoerceAndRelayNTLMToADCS: types.#Kind & {
+	symbol: "CoerceAndRelayNTLMToADCS"
+	schema: "active_directory"
+}
+
 CoerceAndRelayNTLMToLDAP: types.#Kind & {
 	symbol: "CoerceAndRelayNTLMToLDAP"
 	schema: "active_directory"
@@ -1452,6 +1488,7 @@ RelationshipKinds: [
 	ADCSESC13,
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPs
 ]
@@ -1532,6 +1569,7 @@ SharedRelationshipKinds: [
 	ADCSESC13,
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPs
 ]
@@ -1558,7 +1596,8 @@ EdgeCompositionRelationships: [
 	ADCSESC10b,
 	ADCSESC13,
 	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPs
-
 ]

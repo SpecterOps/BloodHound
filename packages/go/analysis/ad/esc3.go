@@ -142,10 +142,10 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	return nil
 }
 
-func PostEnrollOnBehalfOf(domains, enterpriseCertAuthorities, certTemplates []*graph.Node, cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
+func PostEnrollOnBehalfOf(cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) error {
 	versionOneTemplates := make([]*graph.Node, 0)
 	versionTwoTemplates := make([]*graph.Node, 0)
-	for _, node := range certTemplates {
+	for _, node := range cache.GetCertTemplates() {
 		if version, err := node.Properties.Get(ad.SchemaVersion.String()).Float64(); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.Warn(fmt.Sprintf("Did not get schema version for cert template %d: %v", node.ID, err))
 		} else if err != nil {
@@ -159,10 +159,10 @@ func PostEnrollOnBehalfOf(domains, enterpriseCertAuthorities, certTemplates []*g
 		}
 	}
 
-	for _, domain := range domains {
+	for _, domain := range cache.GetDomains() {
 		innerDomain := domain
 
-		for _, enterpriseCA := range enterpriseCertAuthorities {
+		for _, enterpriseCA := range cache.GetEnterpriseCertAuthorities() {
 			innerEnterpriseCA := enterpriseCA
 
 			if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {

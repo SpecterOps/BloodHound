@@ -168,7 +168,6 @@ runs:
         platforms: ${{ inputs.build_platforms }}
 
     - name: Set up buildx
-      id: buildx
       uses: docker/setup-buildx-action@v3
       with:
         platforms: ${{ inputs.build_platforms }}

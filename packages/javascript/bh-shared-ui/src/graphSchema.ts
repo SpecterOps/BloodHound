@@ -140,6 +140,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC13 = 'ADCSESC13',
     SyncedToEntraUser = 'SyncedToEntraUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
+    CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
     CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
     CoerceAndRelayNTLMToLDAPs = 'CoerceAndRelayNTLMToLDAPs',
 }
@@ -283,6 +284,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'SyncedToEntraUser';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB:
             return 'CoerceAndRelayNTLMToSMB';
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS:
+            return 'CoerceAndRelayNTLMToADCS';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP:
             return 'CoerceAndRelayNTLMToLDAP';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPs:
@@ -304,6 +307,8 @@ export const EdgeCompositionRelationships = [
     'ADCSESC10a',
     'ADCSESC10b',
     'ADCSESC13',
+    'CoerceAndRelayNTLMToSMB',
+    'CoerceAndRelayNTLMToADCS',
     'CoerceAndRelayNTLMToSMB',
     'CoerceAndRelayNTLMToLDAP',
     'CoerceAndRelayNTLMToLDAPs',
@@ -411,13 +416,16 @@ export enum ActiveDirectoryKindProperties {
     LockoutDuration = 'lockoutduration',
     LockoutObservationWindow = 'lockoutobservationwindow',
     SMBSigning = 'smbsigning',
+    WebClientRunning = 'webclientrunning',
     RestrictOutboundNTLM = 'restrictoutboundntlm',
+    ADCSWebEnrollmentHTTP = 'adcswebenrollmenthttp',
+    ADCSWebEnrollmentHTTPS = 'adcswebenrollmenthttps',
+    ADCSWebEnrollmentHTTPSEPA = 'adcswebenrollmenthttpsepa',
     LDAPSigning = 'ldapsigning',
     LDAPsAvailable = 'ldasavailable',
     LDAPsEPA = 'ldapsepa',
     RelayableToDCLDAP = 'replayabletodcldap',
     RelayableToDCLDAPS = 'replayabletodcldaps',
-    WebClientRunning = 'webclientrunning',
     IsDC = 'isdc',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
@@ -626,8 +634,16 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Lockout Observation Window';
         case ActiveDirectoryKindProperties.SMBSigning:
             return 'SMB Signing';
+        case ActiveDirectoryKindProperties.WebClientRunning:
+            return 'WebClient Running';
         case ActiveDirectoryKindProperties.RestrictOutboundNTLM:
             return 'Restrict Outbound NTLM';
+        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTP:
+            return 'ADCS Web Enrollment HTTP';
+        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPS:
+            return 'ADCS Web Enrollment HTTPS';
+        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPSEPA:
+            return 'ADCS Web Enrollment HTTPS EPA';
         case ActiveDirectoryKindProperties.LDAPSigning:
             return 'LDAP Signing';
         case ActiveDirectoryKindProperties.LDAPsAvailable:
@@ -638,8 +654,6 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Relayable To DC LDAP';
         case ActiveDirectoryKindProperties.RelayableToDCLDAPS:
             return 'Relayable To DC LDAPs';
-        case ActiveDirectoryKindProperties.WebClientRunning:
-            return 'WebClient Running';
         case ActiveDirectoryKindProperties.IsDC:
             return 'Is Domain Controller';
         default:
@@ -692,6 +706,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC13,
         ActiveDirectoryRelationshipKind.SyncedToEntraUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPs,
         ActiveDirectoryRelationshipKind.Contains,

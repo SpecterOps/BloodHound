@@ -86,6 +86,15 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		slog.InfoContext(ctx, "Database migrations are disabled per configuration")
 	}
 
+	// Audit for duplicate email addresses
+	if nonUniqueEmailMap, err := connections.RDMS.GetAllUsersWithNonUniqueEmails(ctx); err != nil {
+		slog.WarnContext(ctx, "Failed to get all non unique email addresses", "error", err)
+	} else {
+		for email, count := range nonUniqueEmailMap {
+			slog.WarnContext(ctx, "Duplicate email detected, unique user emails are required and will be enforced by the database in the following release.", "email", email, "count", count)
+		}
+	}
+
 	if apiCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {
 		return nil, fmt.Errorf("failed to create in-memory cache for API: %w", err)
 	} else if graphQueryCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {
