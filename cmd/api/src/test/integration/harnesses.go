@@ -8712,20 +8712,77 @@ func (s *CoerceAndRelayNTLMToLDAPS) Setup(graphTestContext *GraphTestContext) {
 	domain2Sid := RandomDomainSID()
 	domain3Sid := RandomDomainSID()
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
-	s.Computer10 = graphTestContext.NewActiveDirectoryComputer("Computer10", domain3Sid)
-	s.Computer11 = graphTestContext.NewActiveDirectoryComputer("Computer11", domain3Sid)
-	s.Computer12 = graphTestContext.NewActiveDirectoryComputer("Computer12", domain3Sid)
-	s.Computer13 = graphTestContext.NewActiveDirectoryComputer("Computer13", domain1Sid)
+	s.Computer1.Properties.Set(ad.IsDC.String(), domain1Sid)
+	s.Computer1.Properties.Set(ad.LDAPsEPA.String(), false)
+	s.Computer1.Properties.Set(ad.LDAPsAvailable.String(), true)
+	graphTestContext.UpdateNode(s.Computer1)
+
 	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
+	s.Computer2.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer2)
+
 	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domain3Sid)
+	s.Computer3.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer3)
+
 	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domain1Sid)
+	s.Computer4.Properties.Set(ad.WebClientRunning.String(), false)
+	graphTestContext.UpdateNode(s.Computer4)
+
 	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domain1Sid)
+	s.Computer5.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer5)
+
 	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domain2Sid)
+	s.Computer6.Properties.Set(ad.LDAPsEPA.String(), false)
+	s.Computer6.Properties.Set(ad.LDAPsAvailable.String(), true)
+	graphTestContext.UpdateNode(s.Computer6)
+
 	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domain2Sid)
+	s.Computer7.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer7)
+
 	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domain3Sid)
+	s.Computer8.Properties.Set(ad.LDAPsEPA.String(), false)
+	s.Computer8.Properties.Set(ad.IsDC.String(), domain3Sid)
+	graphTestContext.UpdateNode(s.Computer8)
+
 	s.Computer9 = graphTestContext.NewActiveDirectoryComputer("Computer9", domain3Sid)
+	s.Computer9.Properties.Set(ad.LDAPsEPA.String(), true)
+	s.Computer9.Properties.Set(ad.LDAPsAvailable.String(), true)
+	s.Computer9.Properties.Set(ad.IsDC.String(), domain3Sid)
+	graphTestContext.UpdateNode(s.Computer9)
+
+	s.Computer10 = graphTestContext.NewActiveDirectoryComputer("Computer10", domain3Sid)
+	s.Computer10.Properties.Set(ad.LDAPsEPA.String(), false)
+	s.Computer10.Properties.Set(ad.LDAPsAvailable.String(), false)
+	s.Computer10.Properties.Set(ad.IsDC.String(), domain3Sid)
+	graphTestContext.UpdateNode(s.Computer10)
+
+	s.Computer11 = graphTestContext.NewActiveDirectoryComputer("Computer11", domain3Sid)
+	s.Computer11.Properties.Set(ad.LDAPsEPA.String(), true)
+	s.Computer11.Properties.Set(ad.LDAPsAvailable.String(), false)
+	s.Computer11.Properties.Set(ad.IsDC.String(), domain3Sid)
+	graphTestContext.UpdateNode(s.Computer11)
+
+	s.Computer12 = graphTestContext.NewActiveDirectoryComputer("Computer12", domain3Sid)
+	s.Computer12.Properties.Set(ad.LDAPsAvailable.String(), true)
+	s.Computer12.Properties.Set(ad.IsDC.String(), domain3Sid)
+	graphTestContext.UpdateNode(s.Computer12)
+
+	s.Computer13 = graphTestContext.NewActiveDirectoryComputer("Computer13", domain1Sid)
+	s.Computer13.Properties.Set(ad.WebClientRunning.String(), true)
+	s.Computer13.Properties.Set(ad.RestrictOutboundNTLM.String(), true)
+	graphTestContext.UpdateNode(s.Computer12)
+
 	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domain1Sid, false, true)
+	s.Domain1.Properties.Set(ad.FunctionalLevel.String(), "2016")
+	graphTestContext.UpdateNode(s.Domain1)
+
 	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domain2Sid, false, true)
+	s.Domain2.Properties.Set(ad.FunctionalLevel.String(), "2008")
+	graphTestContext.UpdateNode(s.Domain2)
+
 	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domain3Sid, false, true)
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain3Sid)
