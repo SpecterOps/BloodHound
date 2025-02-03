@@ -48,6 +48,7 @@ const MainNavPrimaryListData: MainNavDataListItem[] = [
         label: 'Link Item',
         icon: <AppIcon.LineChart size={24} />,
         route: '/test',
+        testId: 'global_nav-test-link',
     },
 ];
 
@@ -58,6 +59,7 @@ const MainNavSecondaryListData: MainNavDataListItem[] = [
         label: 'Action Item',
         icon: <AppIcon.LineChart size={24} />,
         functionHandler: handleClick,
+        testId: 'global_nav-test-action',
     },
 ];
 
@@ -100,18 +102,18 @@ describe('MainNav', () => {
     });
     it('should render a nav element with logo, two lists, a version number and a powered by', () => {
         expect(screen.getByRole('navigation')).toBeInTheDocument();
-        expect(screen.getByTestId('main-nav-logo')).toBeInTheDocument();
-        expect(screen.getByTestId('main-nav-primary-list')).toBeInTheDocument();
-        expect(screen.getByTestId('main-nav-secondary-list')).toBeInTheDocument();
-        expect(screen.getByTestId('main-nav-version-number')).toBeInTheDocument();
-        expect(screen.getByTestId('main-nav-powered-by')).toBeInTheDocument();
+        expect(screen.getByTestId('global_nav-home')).toBeInTheDocument();
+        expect(screen.getByTestId('global_nav-primary-list')).toBeInTheDocument();
+        expect(screen.getByTestId('global_nav-secondary-list')).toBeInTheDocument();
+        expect(screen.getByTestId('global_nav-version-number')).toBeInTheDocument();
+        expect(screen.getByTestId('global_nav-powered-by')).toBeInTheDocument();
     });
     it('should render a navigation list item', async () => {
         const testLinkItem = MainNavPrimaryListData[0];
 
-        const primaryList = await screen.findByTestId('main-nav-primary-list');
+        const primaryList = await screen.findByTestId('global_nav-primary-list');
         const linkItem = await within(primaryList).findByRole('link');
-        const linkItemIcon = await within(primaryList).findByTestId('main-nav-item-label-icon');
+        const linkItemIcon = await within(primaryList).findByTestId('global_nav-item-label-icon');
         const linkItemText = await within(primaryList).findByText(testLinkItem.label as string);
 
         expect(linkItem).toBeInTheDocument();
@@ -122,9 +124,9 @@ describe('MainNav', () => {
     it('should render action list item that handles a function', async () => {
         const testLinkItem = MainNavSecondaryListData[0];
 
-        const secondaryList = await screen.findByTestId('main-nav-secondary-list');
+        const secondaryList = await screen.findByTestId('global_nav-secondary-list');
         const actionItem = await within(secondaryList).findByRole('button');
-        const actionItemIcon = await within(secondaryList).findByTestId('main-nav-item-label-icon');
+        const actionItemIcon = await within(secondaryList).findByTestId('global_nav-item-label-icon');
         const actionItemText = await within(secondaryList).findByText(testLinkItem.label as string);
 
         expect(actionItem).toBeInTheDocument();
@@ -139,7 +141,7 @@ describe('MainNav', () => {
         const MainNavBar = await screen.findByRole('navigation');
         expect(MainNavBar).toHaveClass('group');
 
-        const versionNumberContainer = await within(MainNavBar).findByTestId('main-nav-version-number');
+        const versionNumberContainer = await within(MainNavBar).findByTestId('global_nav-version-number');
         const versionNumberLabel = await within(versionNumberContainer).findByText(
             `BloodHound: ${currentVersionNumber}`
         );
@@ -160,8 +162,8 @@ describe('MainNav', () => {
         const MainNavBar = screen.getByRole('navigation');
         expect(MainNavBar).toHaveClass('group');
 
-        const primaryList = await within(MainNavBar).findByTestId('main-nav-primary-list');
-        const linkItemIcon = await within(primaryList).findByTestId('main-nav-item-label-icon');
+        const primaryList = await within(MainNavBar).findByTestId('global_nav-primary-list');
+        const linkItemIcon = await within(primaryList).findByTestId('global_nav-item-label-icon');
         const linkItemText = await within(primaryList).findByText(testLinkItem.label as string);
 
         expect(linkItemIcon).toBeInTheDocument();
@@ -180,7 +182,7 @@ describe('MainNav', () => {
         const MainNavBar = screen.getByRole('navigation');
         expect(MainNavBar).toHaveClass('group');
 
-        const poweredByTextContainer = await within(MainNavBar).findByTestId('main-nav-powered-by');
+        const poweredByTextContainer = await within(MainNavBar).findByTestId('global_nav-powered-by');
         const poweredByText = await within(poweredByTextContainer).findByText(/powered by/i);
         expect(poweredByText).toBeInTheDocument();
 

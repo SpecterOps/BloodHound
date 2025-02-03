@@ -39,6 +39,7 @@ export type MainNavDataListItem = {
     icon: ReactNode;
     route?: string;
     functionHandler?: () => void;
+    testId: string;
 };
 
 export type MainNavData = {

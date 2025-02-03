@@ -59,10 +59,11 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string; hoverActive: bo
     );
 };
 
-const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; hoverActive: boolean }> = ({
+const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; hoverActive: boolean; testId: string }> = ({
     onClick,
     children,
     hoverActive,
+    testId,
 }) => {
     return (
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed which created a flickering effect just outside the nav
@@ -72,17 +73,18 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; hoverAct
             onClick={onClick}
             className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline cursor-default', {
                 'group-hover:w-full cursor-pointer': hoverActive,
-            })}>
+            })}
+            data-testid={testId}>
             {children}
         </div>
     );
 };
 
-const MainNavItemLink: FC<{ route: string; children: ReactNode; hoverActive: boolean }> = ({
+const MainNavItemLink: FC<{ route: string; children: ReactNode; hoverActive: boolean; testId: string }> = ({
     route,
     children,
     hoverActive,
-    ...rest
+    testId,
 }) => {
     return (
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed
@@ -91,7 +93,7 @@ const MainNavItemLink: FC<{ route: string; children: ReactNode; hoverActive: boo
             className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline cursor-default', {
                 'group-hover:w-full cursor-pointer': hoverActive,
             })}
-            {...rest}>
+            data-testid={testId}>
             {children}
         </RouterLink>
     );
@@ -105,11 +107,11 @@ const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string; hoverAc
     return (
         // Note: The min-h here is to keep spacing between the logo and the list below.
         <>
-            <span data-testid='main-nav-item-label-icon' className='flex'>
+            <span data-testid='global_nav-item-label-icon' className='flex'>
                 {icon}
             </span>
             <span
-                data-testid='main-nav-item-label-text'
+                data-testid='global_nav-item-label-text'
                 className={cn(
                     'whitespace-nowrap min-h-10 font-medium text-xl opacity-0 hidden transition-opacity duration-200 ease-in',
                     {
@@ -129,7 +131,7 @@ const MainNavVersionNumber: FC<{ hoverActive: boolean }> = ({ hoverActive }) => 
 
     return (
         // Note: The min-h allows for the version number to keep its position when the nav is scrollable
-        <div className='relative w-full flex min-h-10 h-10' data-testid='main-nav-version-number'>
+        <div className='relative w-full flex min-h-10 h-10' data-testid='global_nav-version-number'>
             <div
                 className={cn(
                     'w-9 flex absolute top-3 left-3 duration-300 ease-in-out text-xs font-medium text-neutral-dark-0 dark:text-neutral-light-1',
@@ -152,7 +154,7 @@ const MainNavVersionNumber: FC<{ hoverActive: boolean }> = ({ hoverActive }) => 
 const MainNavPoweredBy: FC<{ children: ReactNode; hoverActive: boolean }> = ({ children, hoverActive }) => {
     return (
         // Note: The min-h allows for the version number to keep its position when the nav is scrollable
-        <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='main-nav-powered-by'>
+        <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='global_nav-powered-by'>
             <div
                 className={cn(
                     'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1',
@@ -186,7 +188,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             )}>
             <MainNavItemLink
                 route={mainNavData.logo.project.route}
-                data-testid='main-nav-logo'
+                testId='global_nav-home'
                 hoverActive={!isMouseDragging}>
                 <MainNavItemLabel
                     icon={mainNavData.logo.project.icon}
@@ -196,13 +198,16 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             </MainNavItemLink>
             {/* Note: min height here is to keep the version number in bottom of nav */}
             <div className='h-full min-h-[600px] w-full flex flex-col justify-between mt-6'>
-                <ul className='flex flex-col gap-6 mt-8' data-testid='main-nav-primary-list'>
+                <ul className='flex flex-col gap-6 mt-8' data-testid='global_nav-primary-list'>
                     {mainNavData.primaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) => (
                         <MainNavListItem
                             key={itemIndex}
                             route={listDataItem.route as string}
                             hoverActive={!isMouseDragging}>
-                            <MainNavItemLink route={listDataItem.route as string} hoverActive={!isMouseDragging}>
+                            <MainNavItemLink
+                                route={listDataItem.route as string}
+                                hoverActive={!isMouseDragging}
+                                testId={listDataItem.testId}>
                                 <MainNavItemLabel
                                     icon={listDataItem.icon}
                                     label={listDataItem.label}
@@ -212,14 +217,17 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                         </MainNavListItem>
                     ))}
                 </ul>
-                <ul className='flex flex-col gap-4 mt-6' data-testid='main-nav-secondary-list'>
+                <ul className='flex flex-col gap-4 mt-6' data-testid='global_nav-secondary-list'>
                     {mainNavData.secondaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) =>
                         listDataItem.route ? (
                             <MainNavListItem
                                 key={itemIndex}
                                 route={listDataItem.route as string}
                                 hoverActive={!isMouseDragging}>
-                                <MainNavItemLink route={listDataItem.route as string} hoverActive={!isMouseDragging}>
+                                <MainNavItemLink
+                                    route={listDataItem.route as string}
+                                    hoverActive={!isMouseDragging}
+                                    testId={listDataItem.testId}>
                                     <MainNavItemLabel
                                         icon={listDataItem.icon}
                                         label={listDataItem.label}
@@ -231,7 +239,8 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                             <MainNavListItem key={itemIndex} hoverActive={!isMouseDragging}>
                                 <MainNavItemAction
                                     onClick={(() => listDataItem.functionHandler as () => void)()}
-                                    hoverActive={!isMouseDragging}>
+                                    hoverActive={!isMouseDragging}
+                                    testId={listDataItem.testId}>
                                     <MainNavItemLabel
                                         icon={listDataItem.icon}
                                         label={listDataItem.label}
