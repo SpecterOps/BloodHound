@@ -59,11 +59,11 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string; hoverActive: bo
     );
 };
 
-const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; hoverActive: boolean }> = ({
+const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; hoverActive: boolean; testId: string }> = ({
     onClick,
     children,
     hoverActive,
-    ...rest
+    testId,
 }) => {
     return (
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed which created a flickering effect just outside the nav
@@ -74,17 +74,17 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; hoverAct
             className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline cursor-default', {
                 'group-hover:w-full cursor-pointer': hoverActive,
             })}
-            {...rest}>
+            data-testid={testId}>
             {children}
         </div>
     );
 };
 
-const MainNavItemLink: FC<{ route: string; children: ReactNode; hoverActive: boolean }> = ({
+const MainNavItemLink: FC<{ route: string; children: ReactNode; hoverActive: boolean; testId: string }> = ({
     route,
     children,
     hoverActive,
-    ...rest
+    testId,
 }) => {
     return (
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed
@@ -93,7 +93,7 @@ const MainNavItemLink: FC<{ route: string; children: ReactNode; hoverActive: boo
             className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline cursor-default', {
                 'group-hover:w-full cursor-pointer': hoverActive,
             })}
-            {...rest}>
+            data-testid={testId}>
             {children}
         </RouterLink>
     );
@@ -188,7 +188,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             )}>
             <MainNavItemLink
                 route={mainNavData.logo.project.route}
-                data-testid='global_nav-home'
+                testId='global_nav-home'
                 hoverActive={!isMouseDragging}>
                 <MainNavItemLabel
                     icon={mainNavData.logo.project.icon}
@@ -207,7 +207,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                             <MainNavItemLink
                                 route={listDataItem.route as string}
                                 hoverActive={!isMouseDragging}
-                                data-testid={listDataItem.testId}>
+                                testId={listDataItem.testId}>
                                 <MainNavItemLabel
                                     icon={listDataItem.icon}
                                     label={listDataItem.label}
@@ -227,7 +227,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                                 <MainNavItemLink
                                     route={listDataItem.route as string}
                                     hoverActive={!isMouseDragging}
-                                    data-testid={listDataItem.testId}>
+                                    testId={listDataItem.testId}>
                                     <MainNavItemLabel
                                         icon={listDataItem.icon}
                                         label={listDataItem.label}
@@ -240,7 +240,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                                 <MainNavItemAction
                                     onClick={(() => listDataItem.functionHandler as () => void)()}
                                     hoverActive={!isMouseDragging}
-                                    data-testid={listDataItem.testId}>
+                                    testId={listDataItem.testId}>
                                     <MainNavItemLabel
                                         icon={listDataItem.icon}
                                         label={listDataItem.label}
