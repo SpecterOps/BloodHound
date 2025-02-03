@@ -103,12 +103,11 @@ const MainNavVersionNumber: FC = () => {
         <div className='relative w-full flex min-h-10 h-10' data-testid='main-nav-version-number'>
             <div
                 className={
-                    'w-9 break-all group-hover:w-auto group-hover:overflow-x-hidden group-hover:whitespace-nowrap flex absolute top-3 left-3 duration-300 ease-in-out text-xs font-medium text-neutral-dark-0 dark:text-neutral-light-1 group-hover:left-16'
+                    'w-9 group-hover:w-auto group-hover:overflow-x-hidden group-hover:whitespace-nowrap flex absolute top-3 left-3 duration-300 ease-in-out text-xs font-medium text-neutral-dark-0 dark:text-neutral-light-1 group-hover:left-16'
                 }>
                 <span className={'opacity-0 hidden duration-300 ease-in-out group-hover:opacity-100 group-hover:block'}>
-                    BloodHound:&nbsp;
+                    BloodHound:&nbsp;{apiVersion}
                 </span>
-                <span className={cn('group-[:not(:hover)]:max-w-9')}>{apiVersion}</span>
             </div>
         </div>
     );
