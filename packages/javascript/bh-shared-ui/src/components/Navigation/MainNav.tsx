@@ -148,7 +148,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 />
             </MainNavItemLink>
             {/* Note: min height here is to keep the version number in bottom of nav */}
-            <div className='h-full min-h-[700px] w-full flex flex-col justify-between mt-6'>
+            <div className='h-full min-h-[600px] w-full flex flex-col justify-between mt-6'>
                 <ul className='flex flex-col gap-6 mt-8' data-testid='global_nav-primary-list'>
                     {mainNavData.primaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) => (
                         <MainNavListItem key={itemIndex} route={listDataItem.route as string}>
@@ -158,7 +158,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                         </MainNavListItem>
                     ))}
                 </ul>
-                <ul className='flex flex-col gap-4 mt-16' data-testid='global_nav-secondary-list'>
+                <ul className='flex flex-col gap-4 mt-6' data-testid='global_nav-secondary-list'>
                     {mainNavData.secondaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) =>
                         listDataItem.route ? (
                             <MainNavListItem key={itemIndex} route={listDataItem.route as string}>
