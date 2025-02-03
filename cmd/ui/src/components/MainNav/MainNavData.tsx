@@ -59,7 +59,7 @@ export const MainNavPrimaryListData = [
         label: 'Group Management',
         icon: <AppIcon.Diamond size={24} />,
         route: routes.ROUTE_GROUP_MANAGEMENT,
-        testid: 'global_nav-group-management',
+        testId: 'global_nav-group-management',
     },
 ];
 
