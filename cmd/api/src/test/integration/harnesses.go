@@ -8659,11 +8659,19 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.Domain2)
 
 	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domain3Sid, false, true)
+
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group-1%s", adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group1)
+
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain1Sid)
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domain1Sid)
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
+
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain1Sid)
+	s.Group5.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group-5%s", adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group5)
+
 	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain1Sid)
 	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
 	graphTestContext.NewRelationship(s.Computer5, s.Group4, ad.MemberOf)
