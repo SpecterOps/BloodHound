@@ -53,11 +53,13 @@ export const MainNavPrimaryListData = [
         label: 'Explore',
         icon: <AppIcon.LineChart size={24} />,
         route: routes.ROUTE_EXPLORE,
+        testId: 'global_nav-explore',
     },
     {
         label: 'Group Management',
         icon: <AppIcon.Diamond size={24} />,
         route: routes.ROUTE_GROUP_MANAGEMENT,
+        testid: 'global_nav-group-management',
     },
 ];
 
@@ -82,21 +84,25 @@ export const useMainNavSecondaryListData = () => {
             label: 'Profile',
             icon: <AppIcon.User size={24} />,
             route: routes.ROUTE_MY_PROFILE,
+            testId: 'global_nav-my-profile',
         },
         {
             label: 'Docs and Support',
             icon: <AppIcon.FileMagnifyingGlass size={24} />,
             functionHandler: handleGoToSupport,
+            testId: 'global_nav-support',
         },
         {
             label: 'Administration',
             icon: <AppIcon.UserCog size={24} />,
             route: routes.ROUTE_ADMINISTRATION_ROOT,
+            testId: 'global_nav-administration',
         },
         {
             label: 'API Explorer',
             icon: <AppIcon.Compass size={24} />,
             route: routes.ROUTE_API_EXPLORER,
+            testId: 'global_nav-api-explorer',
         },
         {
             label: (
@@ -107,11 +113,13 @@ export const useMainNavSecondaryListData = () => {
             ),
             icon: <AppIcon.EclipseCircle size={24} />,
             functionHandler: handleToggleDarkMode,
+            testId: 'global_nav-dark-mode',
         },
         {
             label: 'Log Out',
             icon: <AppIcon.Logout size={24} />,
             functionHandler: handleLogout,
+            testId: 'global_nav-logout',
         },
     ];
 };
