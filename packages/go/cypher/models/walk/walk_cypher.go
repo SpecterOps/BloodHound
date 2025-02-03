@@ -224,12 +224,12 @@ func newCypherWalkCursor(node cypher.SyntaxNode) (*Cursor[cypher.SyntaxNode], er
 			Node: node,
 		}
 
-		if typedNode.Where != nil {
-			nextCursor.AddBranches(typedNode.Where)
-		}
-
 		if typedNode.Projection != nil {
 			nextCursor.AddBranches(typedNode.Projection)
+		}
+
+		if typedNode.Where != nil {
+			nextCursor.AddBranches(typedNode.Where)
 		}
 
 		return nextCursor, nil

@@ -34,7 +34,7 @@ func (s *Translator) translateDelete(scope *Scope, cypherDelete *cypher.Delete) 
 				if deleteFrame, err := scope.PushFrame(); err != nil {
 					return err
 				} else {
-					if identifierDeletion, err := s.mutations.AddDeletion(scope, typedExpression, deleteFrame); err != nil {
+					if identifierDeletion, err := s.query.CurrentPart().mutations.AddDeletion(scope, typedExpression, deleteFrame); err != nil {
 						return err
 					} else if boundProjections, err := buildVisibleScopeProjections(scope, nil); err != nil {
 						return err
@@ -46,7 +46,7 @@ func (s *Translator) translateDelete(scope *Scope, cypherDelete *cypher.Delete) 
 									return fmt.Errorf("expected aliased expression to have an alias set")
 								} else if typedProjection.Alias.Value == typedExpression {
 									// This is the projection being replaced by the assignment
-									if rewrittenProjections, err := buildProjection(typedExpression, identifierDeletion.UpdateBinding, scope); err != nil {
+									if rewrittenProjections, err := buildProjection(typedExpression, identifierDeletion.UpdateBinding, scope, scope.ReferenceFrame()); err != nil {
 										return err
 									} else {
 										identifierDeletion.Projection = append(identifierDeletion.Projection, rewrittenProjections...)
@@ -73,7 +73,7 @@ func (s *Translator) translateDelete(scope *Scope, cypherDelete *cypher.Delete) 
 }
 
 func (s *Translator) buildDeletions(scope *Scope) error {
-	for _, identifierDeletion := range s.mutations.Deletions.Values() {
+	for _, identifierDeletion := range s.query.CurrentPart().mutations.Deletions.Values() {
 		var (
 			sqlDelete = pgsql.Delete{
 				Using: []pgsql.FromClause{{
@@ -117,7 +117,7 @@ func (s *Translator) buildDeletions(scope *Scope) error {
 		sqlDelete.Returning = identifierDeletion.Projection
 		sqlDelete.Where = models.ValueOptional(joinConstraint.Expression)
 
-		s.query.Model.AddCTE(pgsql.CommonTableExpression{
+		s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
 			Alias: pgsql.TableAlias{
 				Name: scope.CurrentFrameBinding().Identifier,
 			},

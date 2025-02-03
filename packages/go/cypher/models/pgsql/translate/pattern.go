@@ -18,7 +18,7 @@ package translate
 
 import (
 	"github.com/specterops/bloodhound/cypher/models"
-	cypher "github.com/specterops/bloodhound/cypher/models/cypher"
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
 
@@ -27,19 +27,19 @@ type BindingResult struct {
 	AlreadyBound bool
 }
 
-func (s *Translator) bindPatternExpression(scope *Scope, cypherExpression cypher.Expression, dataType pgsql.DataType) (BindingResult, error) {
+func (s *Translator) bindPatternExpression(cypherExpression cypher.Expression, dataType pgsql.DataType) (BindingResult, error) {
 	if cypherBinding, hasCypherBinding, err := extractIdentifierFromCypherExpression(cypherExpression); err != nil {
 		return BindingResult{}, err
-	} else if existingBinding, bound := scope.AliasedLookup(cypherBinding); bound {
+	} else if existingBinding, bound := s.query.Scope.AliasedLookup(cypherBinding); bound {
 		return BindingResult{
 			Binding:      existingBinding,
 			AlreadyBound: true,
 		}, nil
-	} else if binding, err := scope.DefineNew(dataType); err != nil {
+	} else if binding, err := s.query.Scope.DefineNew(dataType); err != nil {
 		return BindingResult{}, err
 	} else {
 		if hasCypherBinding {
-			scope.Alias(cypherBinding, binding)
+			s.query.Scope.Alias(cypherBinding, binding)
 		}
 
 		return BindingResult{
@@ -51,7 +51,7 @@ func (s *Translator) bindPatternExpression(scope *Scope, cypherExpression cypher
 
 func (s *Translator) translatePatternPart(scope *Scope, patternPart *cypher.PatternPart) error {
 	// We expect this to be a node select if there aren't enough pattern elements for a traversal
-	newPatternPart := s.pattern.NewPart()
+	newPatternPart := s.query.CurrentPart().pattern.NewPart()
 	newPatternPart.IsTraversal = len(patternPart.PatternElements) > 1
 	newPatternPart.ShortestPath = patternPart.ShortestPathPattern
 	newPatternPart.AllShortestPaths = patternPart.AllShortestPathsPattern
@@ -73,22 +73,22 @@ func (s *Translator) translatePatternPart(scope *Scope, patternPart *cypher.Patt
 	return nil
 }
 
-func (s *Translator) buildPatternPart(scope *Scope, part *PatternPart) error {
+func (s *Translator) buildPatternPart(part *PatternPart) error {
 	if part.IsTraversal {
-		return s.buildPattern(scope, part)
+		return s.buildPattern(part)
 	} else {
-		return s.buildNodePattern(scope, part)
+		return s.buildNodePattern(part)
 	}
 }
 
-func (s *Translator) buildPattern(scope *Scope, part *PatternPart) error {
+func (s *Translator) buildPattern(part *PatternPart) error {
 	for idx, traversalStep := range part.TraversalSteps {
 		if traversalStep.Expansion.Set {
 			if idx > 0 {
 				if traversalStepQuery, err := s.buildExpansionPatternStep(part, traversalStep); err != nil {
 					return err
 				} else {
-					s.query.Model.AddCTE(pgsql.CommonTableExpression{
+					s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
 						Alias: pgsql.TableAlias{
 							Name: traversalStep.Expansion.Value.Frame.Binding.Identifier,
 						},
@@ -99,7 +99,7 @@ func (s *Translator) buildPattern(scope *Scope, part *PatternPart) error {
 				if traversalStepQuery, err := s.buildExpansionPatternRoot(part, traversalStep); err != nil {
 					return err
 				} else {
-					s.query.Model.AddCTE(pgsql.CommonTableExpression{
+					s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
 						Alias: pgsql.TableAlias{
 							Name: traversalStep.Expansion.Value.Frame.Binding.Identifier,
 						},
@@ -111,7 +111,7 @@ func (s *Translator) buildPattern(scope *Scope, part *PatternPart) error {
 			if traversalStepQuery, err := s.buildTraversalPatternStep(part, traversalStep); err != nil {
 				return err
 			} else {
-				s.query.Model.AddCTE(pgsql.CommonTableExpression{
+				s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
 					Alias: pgsql.TableAlias{
 						Name: traversalStep.Frame.Binding.Identifier,
 					},
@@ -122,7 +122,7 @@ func (s *Translator) buildPattern(scope *Scope, part *PatternPart) error {
 			if traversalStepQuery, err := s.buildTraversalPatternRoot(part, traversalStep); err != nil {
 				return err
 			} else {
-				s.query.Model.AddCTE(pgsql.CommonTableExpression{
+				s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
 					Alias: pgsql.TableAlias{
 						Name: traversalStep.Frame.Binding.Identifier,
 					},

@@ -134,12 +134,14 @@ func prepareExpansionStepComponents(part *PatternPart, traversalStep *PatternSeg
 	return expansionComponents, nil
 }
 
+const translateDefaultMaxTraversalDepth = 10
+
 func expansionConstraints(expansionIdentifier pgsql.Identifier) pgsql.Expression {
 	return pgsql.NewBinaryExpression(
 		pgsql.NewBinaryExpression(
 			pgsql.CompoundIdentifier{expansionIdentifier, expansionDepth},
 			pgsql.OperatorLessThan,
-			pgsql.NewLiteral(5, pgsql.Int),
+			pgsql.NewLiteral(translateDefaultMaxTraversalDepth, pgsql.Int),
 		),
 		pgsql.OperatorAnd,
 		pgsql.UnaryExpression{
@@ -433,22 +435,24 @@ func (s *Translator) buildAllShortestPathsExpansionRoot(part *PatternPart, trave
 				pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnEndID},
 				pgsql.NewLiteral(1, pgsql.Int),
 				pgsql.ExistsExpression{
-					Subquery: pgsql.Query{
-						Body: pgsql.Select{
-							Projection: []pgsql.SelectItem{
-								pgsql.NewLiteral(1, pgsql.Int),
-							},
-							From: []pgsql.FromClause{{
-								Source: pgsql.TableReference{
-									Name:    pgsql.CompoundIdentifier{model.EdgeTable},
-									Binding: models.ValueOptional(traversalStep.Edge.Identifier),
+					Subquery: pgsql.Subquery{
+						Query: pgsql.Query{
+							Body: pgsql.Select{
+								Projection: []pgsql.SelectItem{
+									pgsql.NewLiteral(1, pgsql.Int),
 								},
-							}},
-							Where: pgsql.NewBinaryExpression(
-								pgsql.CompoundIdentifier{traversalStep.RightNode.Identifier, pgsql.ColumnID},
-								pgsql.OperatorEquals,
-								pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnStartID},
-							),
+								From: []pgsql.FromClause{{
+									Source: pgsql.TableReference{
+										Name:    pgsql.CompoundIdentifier{model.EdgeTable},
+										Binding: models.ValueOptional(traversalStep.Edge.Identifier),
+									},
+								}},
+								Where: pgsql.NewBinaryExpression(
+									pgsql.CompoundIdentifier{traversalStep.RightNode.Identifier, pgsql.ColumnID},
+									pgsql.OperatorEquals,
+									pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnStartID},
+								),
+							},
 						},
 					},
 					Negated: false,
@@ -474,22 +478,24 @@ func (s *Translator) buildAllShortestPathsExpansionRoot(part *PatternPart, trave
 					pgsql.NewLiteral(1, pgsql.Int),
 				),
 				pgsql.ExistsExpression{
-					Subquery: pgsql.Query{
-						Body: pgsql.Select{
-							Projection: []pgsql.SelectItem{
-								pgsql.NewLiteral(1, pgsql.Int),
-							},
-							From: []pgsql.FromClause{{
-								Source: pgsql.TableReference{
-									Name:    pgsql.CompoundIdentifier{model.EdgeTable},
-									Binding: models.ValueOptional(traversalStep.Edge.Identifier),
+					Subquery: pgsql.Subquery{
+						Query: pgsql.Query{
+							Body: pgsql.Select{
+								Projection: []pgsql.SelectItem{
+									pgsql.NewLiteral(1, pgsql.Int),
 								},
-							}},
-							Where: pgsql.NewBinaryExpression(
-								pgsql.CompoundIdentifier{traversalStep.RightNode.Identifier, pgsql.ColumnID},
-								pgsql.OperatorEquals,
-								pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnStartID},
-							),
+								From: []pgsql.FromClause{{
+									Source: pgsql.TableReference{
+										Name:    pgsql.CompoundIdentifier{model.EdgeTable},
+										Binding: models.ValueOptional(traversalStep.Edge.Identifier),
+									},
+								}},
+								Where: pgsql.NewBinaryExpression(
+									pgsql.CompoundIdentifier{traversalStep.RightNode.Identifier, pgsql.ColumnID},
+									pgsql.OperatorEquals,
+									pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnStartID},
+								),
+							},
 						},
 					},
 					Negated: false,
@@ -554,7 +560,7 @@ func (s *Translator) buildAllShortestPathsExpansionRoot(part *PatternPart, trave
 		s.translation.Parameters[recursiveParameterBinding.Identifier.String()] = recursiveValue
 		recursiveParameterBinding.Parameter = models.ValueOptional(recursiveParameter)
 
-		return expansion.BuildAllShortestPaths(primerParameter, recursiveParameter, traversalStep.Expansion.Value.Binding.Identifier, 5), nil
+		return expansion.BuildAllShortestPaths(primerParameter, recursiveParameter, traversalStep.Expansion.Value.Binding.Identifier, translateDefaultMaxTraversalDepth), nil
 	}
 }
 
@@ -590,31 +596,75 @@ func (s *Translator) buildExpansionPatternRoot(part *PatternPart, traversalStep 
 		} else if rightNodeJoinCondition, err := rightNodeTraversalStepConstraint(traversalStep); err != nil {
 			return pgsql.Query{}, err
 		} else {
-			expansion.PrimerStatement.From = append(expansion.PrimerStatement.From, pgsql.FromClause{
-				Source: pgsql.TableReference{
-					Name:    pgsql.CompoundIdentifier{pgsql.TableEdge},
-					Binding: models.ValueOptional(traversalStep.Edge.Identifier),
-				},
-				Joins: []pgsql.Join{{
-					Table: pgsql.TableReference{
-						Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
-						Binding: models.ValueOptional(traversalStep.LeftNode.Identifier),
+			// If the left node was already bound at time of translation connect this expansion to the
+			// previously materialized node
+			if traversalStep.LeftNodeBound {
+				expansion.PrimerStatement.From = append(expansion.PrimerStatement.From, pgsql.FromClause{
+					Source: pgsql.TableReference{
+						Name: pgsql.CompoundIdentifier{traversalStep.Expansion.Value.Frame.Previous.Binding.Identifier},
 					},
-					JoinOperator: pgsql.JoinOperator{
-						JoinType:   pgsql.JoinTypeInner,
-						Constraint: leftNodeJoinCondition,
+					Joins: []pgsql.Join{{
+						Table: pgsql.TableReference{
+							Name:    pgsql.CompoundIdentifier{pgsql.TableEdge},
+							Binding: models.ValueOptional(traversalStep.Edge.Identifier),
+						},
+						JoinOperator: pgsql.JoinOperator{
+							JoinType: pgsql.JoinTypeInner,
+							Constraint: pgsql.NewBinaryExpression(
+								pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnStartID},
+								pgsql.OperatorEquals,
+								rewriteCompositeTypeFieldReference(
+									traversalStep.Expansion.Value.Frame.Previous.Binding.Identifier,
+									pgsql.CompoundIdentifier{traversalStep.LeftNode.Identifier, pgsql.ColumnID},
+								)),
+						},
+					}, {
+						Table: pgsql.TableReference{
+							Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
+							Binding: models.ValueOptional(traversalStep.LeftNode.Identifier),
+						},
+						JoinOperator: pgsql.JoinOperator{
+							JoinType:   pgsql.JoinTypeInner,
+							Constraint: leftNodeJoinCondition,
+						},
+					}, {
+						Table: pgsql.TableReference{
+							Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
+							Binding: models.ValueOptional(traversalStep.RightNode.Identifier),
+						},
+						JoinOperator: pgsql.JoinOperator{
+							JoinType:   pgsql.JoinTypeInner,
+							Constraint: rightNodeJoinCondition,
+						},
+					}},
+				})
+			} else {
+				expansion.PrimerStatement.From = append(expansion.PrimerStatement.From, pgsql.FromClause{
+					Source: pgsql.TableReference{
+						Name:    pgsql.CompoundIdentifier{pgsql.TableEdge},
+						Binding: models.ValueOptional(traversalStep.Edge.Identifier),
 					},
-				}, {
-					Table: pgsql.TableReference{
-						Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
-						Binding: models.ValueOptional(traversalStep.RightNode.Identifier),
-					},
-					JoinOperator: pgsql.JoinOperator{
-						JoinType:   pgsql.JoinTypeInner,
-						Constraint: rightNodeJoinCondition,
-					},
-				}},
-			})
+					Joins: []pgsql.Join{{
+						Table: pgsql.TableReference{
+							Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
+							Binding: models.ValueOptional(traversalStep.LeftNode.Identifier),
+						},
+						JoinOperator: pgsql.JoinOperator{
+							JoinType:   pgsql.JoinTypeInner,
+							Constraint: leftNodeJoinCondition,
+						},
+					}, {
+						Table: pgsql.TableReference{
+							Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
+							Binding: models.ValueOptional(traversalStep.RightNode.Identifier),
+						},
+						JoinOperator: pgsql.JoinOperator{
+							JoinType:   pgsql.JoinTypeInner,
+							Constraint: rightNodeJoinCondition,
+						},
+					}},
+				})
+			}
 
 			// Make sure the recursive query has the expansion bound
 			expansion.RecursiveStatement.From = append(expansion.RecursiveStatement.From, pgsql.FromClause{

@@ -17,7 +17,6 @@
 package pg
 
 import (
-	"log/slog"
 	"regexp"
 	"sync"
 
@@ -53,7 +52,6 @@ type queryHook struct {
 func (s *queryHook) Execute(query string, arguments ...any) {
 	switch s.action {
 	case actionTrace:
-		slog.Info("Here")
 	}
 }
 

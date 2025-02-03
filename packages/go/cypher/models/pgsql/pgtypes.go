@@ -110,6 +110,7 @@ const (
 	TimestampWithoutTimeZone DataType = "timestamp without time zone"
 
 	Scope                 DataType = "scope"
+	InlineProjection      DataType = "inline_projection"
 	ParameterIdentifier   DataType = "parameter_identifier"
 	ExpansionPattern      DataType = "expansion_pattern"
 	ExpansionPath         DataType = "expansion_path"

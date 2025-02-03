@@ -73,6 +73,10 @@ func AsIdentifierSet(identifiers ...Identifier) *IdentifierSet {
 	return newSet
 }
 
+func (s *IdentifierSet) Clear() {
+	clear(s.identifiers)
+}
+
 func (s *IdentifierSet) Len() int {
 	return len(s.identifiers)
 }

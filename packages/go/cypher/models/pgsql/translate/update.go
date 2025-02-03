@@ -24,7 +24,7 @@ import (
 )
 
 func (s *Translator) translateUpdates(scope *Scope) error {
-	for _, identifierMutation := range s.mutations.Assignments.Values() {
+	for _, identifierMutation := range s.query.CurrentPart().mutations.Assignments.Values() {
 		if stepFrame, err := s.query.Scope.PushFrame(); err != nil {
 			return err
 		} else {
@@ -40,7 +40,7 @@ func (s *Translator) translateUpdates(scope *Scope) error {
 							return fmt.Errorf("expected aliased expression to have an alias set")
 						} else if typedProjection.Alias.Value == identifierMutation.TargetBinding.Identifier {
 							// This is the projection being replaced by the assignment
-							if rewrittenProjections, err := buildProjection(identifierMutation.TargetBinding.Identifier, identifierMutation.UpdateBinding, scope); err != nil {
+							if rewrittenProjections, err := buildProjection(identifierMutation.TargetBinding.Identifier, identifierMutation.UpdateBinding, scope, scope.ReferenceFrame()); err != nil {
 								return err
 							} else {
 								identifierMutation.Projection = append(identifierMutation.Projection, rewrittenProjections...)
@@ -64,7 +64,7 @@ func (s *Translator) translateUpdates(scope *Scope) error {
 }
 
 func (s *Translator) buildUpdates(scope *Scope) error {
-	for _, identifierMutation := range s.mutations.Assignments.Values() {
+	for _, identifierMutation := range s.query.CurrentPart().mutations.Assignments.Values() {
 		sqlUpdate := pgsql.Update{
 			From: []pgsql.FromClause{{
 				Source: pgsql.TableReference{
@@ -297,7 +297,7 @@ func (s *Translator) buildUpdates(scope *Scope) error {
 		sqlUpdate.Returning = identifierMutation.Projection
 		sqlUpdate.Where = models.ValueOptional(joinConstraint.Expression)
 
-		s.query.Model.AddCTE(pgsql.CommonTableExpression{
+		s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
 			Alias: pgsql.TableAlias{
 				Name: identifierMutation.Frame.Binding.Identifier,
 			},
