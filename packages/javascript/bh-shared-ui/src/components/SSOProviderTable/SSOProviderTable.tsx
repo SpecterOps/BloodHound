@@ -38,7 +38,7 @@ import {
 import withStyles from '@mui/styles/withStyles';
 import { SSOProvider } from 'js-client-library';
 import { FC, MouseEventHandler, useState } from 'react';
-import { SortOrder } from '../../utils';
+import { SortOrder } from '../../';
 
 const StyledMenu = withStyles({
     paper: {

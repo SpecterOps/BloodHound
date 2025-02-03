@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, CircularProgress, Container } from '@mui/material';
-import { GenericErrorBoundaryFallback, Permission, SubNav } from 'bh-shared-ui';
+import { AdministrationSection, GenericErrorBoundaryFallback, Permission, SubNav } from 'bh-shared-ui';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -32,90 +32,84 @@ import {
 
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const QA = React.lazy(() => import('src/views/QA'));
-const Users = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.Users }))) as React.FC<{
-    permissions?: Permission[];
-}>;
-const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures')) as React.FC<{
-    permissions?: Permission[];
-}>;
-const FileIngest = React.lazy(() =>
-    import('bh-shared-ui').then((module) => ({ default: module.FileIngest }))
-) as React.FC<{ permissions?: Permission[] }>;
+const Users = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.Users })));
+const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures'));
+const FileIngest = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.FileIngest })));
 const BloodHoundConfiguration = React.lazy(() => import('src/views/BloodHoundConfiguration'));
 const SSOConfiguration = React.lazy(() =>
     import('bh-shared-ui').then((module) => ({ default: module.SSOConfiguration }))
-) as React.FC<{ permissions?: Permission[] }>;
+);
+
+const sections: AdministrationSection[] = [
+    {
+        title: 'Data Collection',
+        items: [
+            {
+                label: 'File Ingest',
+                path: ROUTE_ADMINISTRATION_FILE_INGEST,
+                component: FileIngest,
+                adminOnly: false,
+            },
+            {
+                label: 'Data Quality',
+                path: ROUTE_ADMINISTRATION_DATA_QUALITY,
+                component: QA,
+                adminOnly: false,
+            },
+            {
+                label: 'Database Management',
+                path: ROUTE_ADMINISTRATION_DB_MANAGEMENT,
+                component: DatabaseManagement,
+                adminOnly: false,
+            },
+        ],
+        order: 0,
+    },
+    {
+        title: 'Users',
+        items: [
+            {
+                label: 'Manage Users',
+                path: ROUTE_ADMINISTRATION_MANAGE_USERS,
+                component: Users,
+                adminOnly: false,
+            },
+        ],
+        order: 0,
+    },
+    {
+        title: 'Authentication',
+        items: [
+            {
+                label: 'SSO Configuration',
+                path: ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
+                component: SSOConfiguration,
+                adminOnly: false,
+            },
+        ],
+        order: 0,
+    },
+    {
+        title: 'Configuration',
+        items: [
+            {
+                label: 'BloodHound Configuration',
+                path: ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
+                component: BloodHoundConfiguration,
+                adminOnly: true,
+            },
+            {
+                label: 'Early Access Features',
+                path: ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
+                component: EarlyAccessFeatures,
+                adminOnly: false,
+            },
+        ],
+        order: 1,
+    },
+];
 
 const Administration: React.FC = () => {
-    const sections = [
-        {
-            title: 'Data Collection',
-            items: [
-                {
-                    label: 'File Ingest',
-                    path: ROUTE_ADMINISTRATION_FILE_INGEST,
-                    component: FileIngest,
-                    adminOnly: false,
-                },
-                {
-                    label: 'Data Quality',
-                    path: ROUTE_ADMINISTRATION_DATA_QUALITY,
-                    component: QA,
-                    adminOnly: false,
-                },
-                {
-                    label: 'Database Management',
-                    path: ROUTE_ADMINISTRATION_DB_MANAGEMENT,
-                    component: DatabaseManagement,
-                    adminOnly: false,
-                },
-            ],
-            order: 0,
-        },
-        {
-            title: 'Users',
-            items: [
-                {
-                    label: 'Manage Users',
-                    path: ROUTE_ADMINISTRATION_MANAGE_USERS,
-                    component: Users,
-                    adminOnly: false,
-                },
-            ],
-            order: 0,
-        },
-        {
-            title: 'Authentication',
-            items: [
-                {
-                    label: 'SSO Configuration',
-                    path: ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
-                    component: SSOConfiguration,
-                    adminOnly: false,
-                },
-            ],
-            order: 0,
-        },
-        {
-            title: 'Configuration',
-            items: [
-                {
-                    label: 'BloodHound Configuration',
-                    path: ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
-                    component: BloodHoundConfiguration,
-                    adminOnly: true,
-                },
-                {
-                    label: 'Early Access Features',
-                    path: ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
-                    component: EarlyAccessFeatures,
-                    adminOnly: false,
-                },
-            ],
-            order: 1,
-        },
-    ];
-
     const { checkAllPermissions, getUserPermissions } = usePermissions();
 
     // Checking these for now because the only route we are currently hiding is to the configuration page.

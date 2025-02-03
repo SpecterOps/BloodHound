@@ -70,3 +70,5 @@ export * from './views';
 export * from './store';
 
 export * from './mocks';
+
+export * from './types';
