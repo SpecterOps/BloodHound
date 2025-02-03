@@ -34,17 +34,24 @@ const MainNavLogoTextImage: FC<{
     );
 };
 
-const MainNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children, route }) => {
+const MainNavListItem: FC<{ children: ReactNode; route?: string; hoverActive: boolean }> = ({
+    children,
+    route,
+    hoverActive,
+}) => {
     const location = useLocation();
     const isActiveRoute = route ? location.pathname.includes(route.replace(/\*/g, '')) : false;
 
     return (
         <li
             className={cn(
-                'h-10 px-2 mx-2 flex items-center rounded text-neutral-dark-0 dark:text-neutral-light-1 hover:text-secondary dark:hover:text-secondary-variant-2',
+                'h-10 px-2 mx-2 flex items-center rounded text-neutral-dark-0 dark:text-neutral-light-1',
                 {
                     'text-primary dark:text-primary dark:hover:text-primary bg-neutral-light-4 cursor-default':
                         isActiveRoute,
+                },
+                {
+                    'hover:text-secondary dark:hover:text-secondary-variant-2': hoverActive,
                 }
             )}>
             {children}
@@ -193,7 +200,10 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             <div className='h-full min-h-[700px] w-full flex flex-col justify-between mt-6'>
                 <ul className='flex flex-col gap-6 mt-8' data-testid='main-nav-primary-list'>
                     {mainNavData.primaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) => (
-                        <MainNavListItem key={itemIndex} route={listDataItem.route as string}>
+                        <MainNavListItem
+                            key={itemIndex}
+                            route={listDataItem.route as string}
+                            hoverActive={!isMouseDragging}>
                             <MainNavItemLink route={listDataItem.route as string} hoverActive={!isMouseDragging}>
                                 <MainNavItemLabel
                                     icon={listDataItem.icon}
@@ -207,7 +217,10 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 <ul className='flex flex-col gap-4 mt-16' data-testid='main-nav-secondary-list'>
                     {mainNavData.secondaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) =>
                         listDataItem.route ? (
-                            <MainNavListItem key={itemIndex} route={listDataItem.route as string}>
+                            <MainNavListItem
+                                key={itemIndex}
+                                route={listDataItem.route as string}
+                                hoverActive={!isMouseDragging}>
                                 <MainNavItemLink route={listDataItem.route as string} hoverActive={!isMouseDragging}>
                                     <MainNavItemLabel
                                         icon={listDataItem.icon}
@@ -217,7 +230,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                                 </MainNavItemLink>
                             </MainNavListItem>
                         ) : (
-                            <MainNavListItem key={itemIndex}>
+                            <MainNavListItem key={itemIndex} hoverActive={!isMouseDragging}>
                                 <MainNavItemAction
                                     onClick={(() => listDataItem.functionHandler as () => void)()}
                                     hoverActive={!isMouseDragging}>
