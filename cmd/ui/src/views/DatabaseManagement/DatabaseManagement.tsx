@@ -16,9 +16,9 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, Box, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
-import { FeatureFlag, PageWithTitle, apiClient } from 'bh-shared-ui';
+import { FeatureFlag, PageWithTitle, Permission, apiClient, useForbiddenNotifier } from 'bh-shared-ui';
 import { ClearDatabaseRequest } from 'js-client-library';
-import { useReducer } from 'react';
+import { FC, useReducer } from 'react';
 import { useMutation } from 'react-query';
 import { useSelector } from 'react-redux';
 import { selectAllAssetGroupIds, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
@@ -200,8 +200,14 @@ const useDatabaseManagement = () => {
     return { handleMutation, state, dispatch };
 };
 
-const DatabaseManagement = () => {
+const DatabaseManagement: FC<{ permissions: Permission[] }> = ({ permissions }) => {
     const { handleMutation, state, dispatch } = useDatabaseManagement();
+    const forbidden = useForbiddenNotifier(
+        Permission.GRAPH_DB_WRITE,
+        permissions,
+        'Your user role does not allow managing the database.',
+        'database-management-permission'
+    );
 
     const {
         deleteCollectedGraphData,
@@ -264,6 +270,7 @@ const DatabaseManagement = () => {
                                                 checked={deleteCollectedGraphData}
                                                 onChange={handleCheckbox}
                                                 name='deleteCollectedGraphData'
+                                                disabled={forbidden}
                                             />
                                         }
                                     />
@@ -276,6 +283,7 @@ const DatabaseManagement = () => {
                                         checked={deleteCustomHighValueSelectors}
                                         onChange={handleCheckbox}
                                         name='deleteCustomHighValueSelectors'
+                                        disabled={forbidden}
                                     />
                                 }
                             />
@@ -286,6 +294,7 @@ const DatabaseManagement = () => {
                                         checked={deleteAllAssetGroupSelectors}
                                         onChange={handleCheckbox}
                                         name='deleteAllAssetGroupSelectors'
+                                        disabled={forbidden}
                                     />
                                 }
                             />
@@ -296,6 +305,7 @@ const DatabaseManagement = () => {
                                         checked={deleteFileIngestHistory}
                                         onChange={handleCheckbox}
                                         name='deleteFileIngestHistory'
+                                        disabled={forbidden}
                                     />
                                 }
                             />
@@ -306,13 +316,16 @@ const DatabaseManagement = () => {
                                         checked={deleteDataQualityHistory}
                                         onChange={handleCheckbox}
                                         name='deleteDataQualityHistory'
+                                        disabled={forbidden}
                                     />
                                 }
                             />
                         </FormGroup>
                     </FormControl>
 
-                    <Button onClick={() => dispatch({ type: 'open_dialog' })}>Proceed</Button>
+                    <Button disabled={forbidden} onClick={() => dispatch({ type: 'open_dialog' })}>
+                        Proceed
+                    </Button>
                 </Box>
             </Box>
 

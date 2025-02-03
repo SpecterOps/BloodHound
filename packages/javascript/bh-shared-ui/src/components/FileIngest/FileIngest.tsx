@@ -30,7 +30,7 @@ const FileIngest: FC<{ permissions: Permission[] }> = ({ permissions }) => {
     const forbidden = useForbiddenNotifier(
         Permission.GRAPH_DB_WRITE,
         permissions,
-        'Your user role does not grant permissions to upload data.',
+        'Your user role does not grant permission to upload data.',
         'file-upload-permission'
     );
 
