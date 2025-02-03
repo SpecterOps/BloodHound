@@ -31,7 +31,8 @@ import {
 import { UpsertOIDCProviderDialog, UpsertSAMLProviderDialog } from '../../components/UpsertSSOProviders';
 import { useFeatureFlag, useForbiddenNotifier } from '../../hooks';
 import { useNotifications } from '../../providers';
-import { Permission, SortOrder, apiClient } from '../../utils';
+import { SortOrder } from '../../types';
+import { Permission, apiClient } from '../../utils';
 
 const SSOConfiguration: FC<{ permissions: Permission[] }> = ({ permissions }) => {
     /* Hooks */

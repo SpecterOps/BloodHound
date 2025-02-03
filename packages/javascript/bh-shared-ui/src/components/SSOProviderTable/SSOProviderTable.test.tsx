@@ -16,8 +16,8 @@
 
 import userEvent from '@testing-library/user-event';
 import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
+import { SortOrder } from '../../';
 import { render, screen } from '../../test-utils';
-import { SortOrder } from '../../utils';
 import SSOProviderTable from './SSOProviderTable';
 
 const samlProvider: SSOProvider = {

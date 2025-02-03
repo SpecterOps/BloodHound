@@ -26,5 +26,4 @@ export * from './icons';
 export * from './passwd';
 export * from './permissions';
 export * from './theme';
-export * from './types';
 export * from './user';
