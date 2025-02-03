@@ -188,12 +188,6 @@ const SSOProviderTable: FC<{
                                     <Skeleton />
                                 </TableCell>
                             </TableRow>
-                        ) : ssoProviders.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={6} align='center'>
-                                    No SSO Providers found
-                                </TableCell>
-                            </TableRow>
                         ) : (
                             ssoProviders.map((ssoProvider) => (
                                 <TableRow key={ssoProvider.id}>

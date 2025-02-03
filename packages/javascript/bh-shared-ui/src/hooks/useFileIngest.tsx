@@ -47,11 +47,11 @@ export const fileUploadKeys = {
     listFileTypes: () => [fileUploadKeys.all, 'accepted-types'] as const,
 };
 
-export const useListFileIngestJobs = (page: number, rowsPerPage: number) => {
+export const useListFileIngestJobs = (forbidden: boolean, page: number, rowsPerPage: number) => {
     return useQuery(
         fileUploadKeys.listJobsPaginated(page, rowsPerPage),
         () => listFileIngestJobs(page * rowsPerPage, rowsPerPage, '-id'),
-        { refetchInterval: 5000 }
+        { refetchInterval: 5000, enabled: !forbidden }
     );
 };
 

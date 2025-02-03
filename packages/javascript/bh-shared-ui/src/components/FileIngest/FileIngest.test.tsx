@@ -18,6 +18,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import FileIngest from '.';
 import { fireEvent, render, waitFor } from '../../test-utils';
+import { Permission } from '../../utils';
 
 const server = setupServer(
     rest.post('/api/v2/file-upload/start', (req, res, ctx) => {
@@ -84,7 +85,7 @@ describe('FileIngest', () => {
     const errorFile = new File(['test text'], 'test.txt', { type: 'text/plain' });
 
     it('accepts a valid file and allows the user to continue through the upload process', async () => {
-        const { getByTestId, getByText } = render(<FileIngest />);
+        const { getByTestId, getByText } = render(<FileIngest permissions={[Permission.GRAPH_DB_WRITE]} />);
         const openButton = getByText('Upload File(s)');
 
         fireEvent.click(openButton);
@@ -106,7 +107,7 @@ describe('FileIngest', () => {
     });
 
     it('prevents a user from proceeding if the file is not valid', async () => {
-        const { getByTestId, getByText } = render(<FileIngest />);
+        const { getByTestId, getByText } = render(<FileIngest permissions={[Permission.GRAPH_DB_WRITE]} />);
         const openButton = getByText('Upload File(s)');
 
         fireEvent.click(openButton);
@@ -121,7 +122,7 @@ describe('FileIngest', () => {
     });
 
     it('displays a table of completed ingest logs', async () => {
-        const { getByText } = render(<FileIngest />);
+        const { getByText } = render(<FileIngest permissions={[Permission.GRAPH_DB_WRITE]} />);
         await waitFor(() => getByText('test_email@specterops.io'));
 
         expect(getByText('test_email@specterops.io')).toBeInTheDocument();

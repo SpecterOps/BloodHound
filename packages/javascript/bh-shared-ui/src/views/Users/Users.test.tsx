@@ -20,6 +20,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import Users from '.';
 import { render, screen, within } from '../../test-utils';
+import { Permission } from '../../utils';
 
 const testAuthenticatedUser = {
     sso_provider_id: null,
@@ -176,7 +177,7 @@ afterAll(() => server.close());
 
 describe('Users', () => {
     it('The password reset dialog is opened when switching a user from SAML based authentication to username/password based authentication', async () => {
-        render(<Users />);
+        render(<Users permissions={[Permission.AUTH_MANAGE_USERS]} />);
 
         expect(screen.getByText('Manage Users')).toBeInTheDocument();
 

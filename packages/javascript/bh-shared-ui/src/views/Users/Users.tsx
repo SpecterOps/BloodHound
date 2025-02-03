@@ -18,29 +18,31 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Paper, Typography } from '@mui/material';
 import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest, User } from 'js-client-library';
 import find from 'lodash/find';
-import { DateTime } from 'luxon';
 import { useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import {
     ConfirmationDialog,
     CreateUserDialog,
-    DataTable,
     Disable2FADialog,
     DocumentationLinks,
-    Header,
     PageWithTitle,
     PasswordDialog,
     UpdateUserDialog,
     UserTokenManagementDialog,
 } from '../../components';
-import UserActionsMenu from '../../components/UserActionsMenu';
 import { useToggle } from '../../hooks';
 import { useNotifications } from '../../providers';
-import { LuxonFormat, apiClient } from '../../utils';
+import { apiClient } from '../../utils';
+import UsersTable from './UsersTable';
 
 const Users = () => {
     const { addNotification } = useNotifications();
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
+    const [disable2FAError, setDisable2FAError] = useState('');
+    const [disable2FASecret, setDisable2FASecret] = useState('');
+    const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
+
     const [createUserDialogOpen, toggleCreateUserDialog] = useToggle(false);
     const [updateUserDialogOpen, toggleUpdateUserDialog] = useToggle(false);
     const [disableUserDialogOpen, toggleDisableUserDialog] = useToggle(false);
@@ -48,11 +50,7 @@ const Users = () => {
     const [deleteUserDialogOpen, toggleDeleteUserDialog] = useToggle(false);
     const [expireUserPasswordDialogOpen, toggleExpireUserPasswordDialog] = useToggle(false);
     const [resetUserPasswordDialogOpen, toggleResetUserPasswordDialog] = useToggle(false);
-    const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
     const [manageUserTokensDialogOpen, toggleManageUserTokensDialog] = useToggle(false);
-    const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
-    const [disable2FAError, setDisable2FAError] = useState('');
-    const [disable2FASecret, setDisable2FASecret] = useState('');
 
     const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
         apiClient.getSelf({ signal }).then((res) => res.data?.data)
@@ -62,10 +60,6 @@ const Users = () => {
 
     const listUsersQuery = useQuery(['listUsers'], ({ signal }) =>
         apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)
-    );
-
-    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
-        apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
     );
 
     const createUserMutation = useMutation((newUser: CreateUserRequest) => apiClient.createUser(newUser), {
@@ -156,73 +150,6 @@ const Users = () => {
         }
     );
 
-    const SSOProvidersMap =
-        listSSOProvidersQuery.data?.reduce((acc: any, val: any) => {
-            acc[val.id] = val;
-            return acc;
-        }, {}) || {};
-
-    const usersTableHeaders: Header[] = [
-        { label: 'Username' },
-        { label: 'Email' },
-        { label: 'Name' },
-        { label: 'Created' },
-        { label: 'Role' },
-        { label: 'Status' },
-        { label: 'Auth Method' },
-        { label: '', alignment: 'right' },
-    ];
-
-    type UserStatus = 'Deleted' | 'Disabled' | 'Active';
-
-    const getUserStatusText = (user: any): UserStatus => {
-        if (user.deleted_at.Valid) {
-            return 'Deleted';
-        } else if (user.is_disabled) {
-            return 'Disabled';
-        } else return 'Active';
-    };
-
-    const getAuthMethodText = (user: any): JSX.Element => {
-        if (user.sso_provider_id)
-            return <span>{`SSO: ${SSOProvidersMap[user.sso_provider_id]?.name || user.sso_provider_id}`}</span>;
-        if (user.AuthSecret?.totp_activated)
-            return <span style={{ whiteSpace: 'pre-wrap' }}>{'Username / Password\nMFA Enabled'}</span>;
-        return <span>Username / Password</span>;
-    };
-
-    const usersTableRows = listUsersQuery.data?.map((user, index) => [
-        // This linting rule is disabled because the elements in this array do not require a key prop.
-        /* eslint-disable react/jsx-key */
-        user.principal_name,
-        user.email_address,
-        `${user.first_name} ${user.last_name}`,
-        <span style={{ whiteSpace: 'pre' }}>{DateTime.fromISO(user.created_at).toFormat(LuxonFormat.DATETIME)}</span>,
-        user.roles?.[0]?.name,
-        getUserStatusText(user),
-        getAuthMethodText(user),
-        <UserActionsMenu
-            userId={user.id}
-            onOpen={(e, userId) => {
-                setSelectedUserId(userId);
-            }}
-            showPasswordOptions={user.sso_provider_id === null || user.sso_provider_id === undefined}
-            showAuthMgmtButtons={user.id !== getSelfQuery.data?.id}
-            showDisableMfaButton={user.AuthSecret?.totp_activated}
-            userDisabled={user.is_disabled}
-            onUpdateUser={toggleUpdateUserDialog}
-            onDisableUser={toggleDisableUserDialog}
-            onEnableUser={toggleEnableUserDialog}
-            onDeleteUser={toggleDeleteUserDialog}
-            onUpdateUserPassword={toggleResetUserPasswordDialog}
-            onExpireUserPassword={toggleExpireUserPasswordDialog}
-            onManageUserTokens={toggleManageUserTokensDialog}
-            onDisableUserMfa={setDisable2FADialogOpen}
-            index={index}
-        />,
-        /* eslint-enable react/jsx-key */
-    ]);
-
     return (
         <>
             <PageWithTitle
@@ -247,11 +174,16 @@ const Users = () => {
                     </Button>
                 </Box>
                 <Paper data-testid='manage-users_table'>
-                    <DataTable
-                        headers={usersTableHeaders}
-                        data={usersTableRows}
-                        isLoading={listUsersQuery.isLoading}
-                        showPaginationControls={false}
+                    <UsersTable
+                        onUpdateUser={toggleUpdateUserDialog}
+                        onDisabledUser={toggleDisableUserDialog}
+                        onEnabledUser={toggleEnableUserDialog}
+                        onDeleteUser={toggleDeleteUserDialog}
+                        onUpdateUserPassword={toggleResetUserPasswordDialog}
+                        onExpiredUserPassword={toggleExpireUserPasswordDialog}
+                        onManageUserTokens={toggleManageUserTokensDialog}
+                        setDisable2FADialogOpen={setDisable2FADialogOpen}
+                        setSelectedUserId={(id) => setSelectedUserId(id)}
                     />
                 </Paper>
             </PageWithTitle>

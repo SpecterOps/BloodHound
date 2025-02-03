@@ -19,6 +19,7 @@ import { ListRolesResponse, ListSSOProvidersResponse, Role, SAMLProviderInfo, SS
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from '../../test-utils';
+import { Permission } from '../../utils';
 import SSOConfiguration from './SSOConfiguration';
 
 const testRoles = [
@@ -154,7 +155,7 @@ describe('SSOConfiguration', async () => {
     it('should eventually render previously configured SSO providers', async () => {
         const user = userEvent.setup();
 
-        render(<SSOConfiguration />);
+        render(<SSOConfiguration permissions={[Permission.AUTH_MANAGE_PROVIDERS]} />);
         expect(await screen.findByText('SSO Configuration')).toBeInTheDocument();
         expect(await screen.findByText(initialSAMLProvider.name)).toBeInTheDocument();
         expect(await screen.findByText('SAML')).toBeInTheDocument();
@@ -176,7 +177,7 @@ describe('SSOConfiguration', async () => {
             metadata: new File([], 'new-saml-provider.xml'),
         };
 
-        render(<SSOConfiguration />);
+        render(<SSOConfiguration permissions={[Permission.AUTH_MANAGE_PROVIDERS]} />);
 
         await user.click(screen.getByRole('button', { name: /create provider/i }));
 

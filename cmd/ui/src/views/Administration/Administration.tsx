@@ -32,13 +32,19 @@ import {
 
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const QA = React.lazy(() => import('src/views/QA'));
-const Users = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.Users })));
-const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures'));
-const FileIngest = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.FileIngest })));
+const Users = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.Users }))) as React.FC<{
+    permissions?: Permission[];
+}>;
+const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures')) as React.FC<{
+    permissions?: Permission[];
+}>;
+const FileIngest = React.lazy(() =>
+    import('bh-shared-ui').then((module) => ({ default: module.FileIngest }))
+) as React.FC<{ permissions?: Permission[] }>;
 const BloodHoundConfiguration = React.lazy(() => import('src/views/BloodHoundConfiguration'));
 const SSOConfiguration = React.lazy(() =>
     import('bh-shared-ui').then((module) => ({ default: module.SSOConfiguration }))
-);
+) as React.FC<{ permissions?: Permission[] }>;
 
 const Administration: React.FC = () => {
     const sections = [
@@ -110,7 +116,7 @@ const Administration: React.FC = () => {
         },
     ];
 
-    const { checkAllPermissions } = usePermissions();
+    const { checkAllPermissions, getUserPermissions } = usePermissions();
 
     // Checking these for now because the only route we are currently hiding is to the configuration page.
     // In practice, this will permit Administrators and Power User roles only.
@@ -163,7 +169,7 @@ const Administration: React.FC = () => {
                                                 key={item.path}
                                                 element={
                                                     <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                                                        <item.component />
+                                                        <item.component permissions={getUserPermissions()} />
                                                     </ErrorBoundary>
                                                 }
                                             />

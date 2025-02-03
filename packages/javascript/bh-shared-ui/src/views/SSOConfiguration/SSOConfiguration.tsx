@@ -29,16 +29,12 @@ import {
     SSOProviderTable,
 } from '../../components';
 import { UpsertOIDCProviderDialog, UpsertSAMLProviderDialog } from '../../components/UpsertSSOProviders';
-import { useFeatureFlag } from '../../hooks';
+import { useFeatureFlag, useForbiddenNotifier } from '../../hooks';
 import { useNotifications } from '../../providers';
-import { SortOrder, apiClient } from '../../utils';
+import { Permission, SortOrder, apiClient } from '../../utils';
 
-const SSOConfiguration: FC = () => {
+const SSOConfiguration: FC<{ permissions: Permission[] }> = ({ permissions }) => {
     /* Hooks */
-    const theme = useTheme();
-    const { addNotification } = useNotifications();
-    const { data: flag } = useFeatureFlag('oidc_support');
-
     const [selectedSSOProviderId, setSelectedSSOProviderId] = useState<SSOProvider['id'] | undefined>();
     const [ssoProviderIdToDeleteOrUpdate, setSSOProviderIdToDeleteOrUpdate] = useState<SSOProvider['id'] | undefined>();
     const [dialogOpen, setDialogOpen] = useState<'SAML' | 'OIDC' | 'DELETE' | ''>('');
@@ -46,12 +42,24 @@ const SSOConfiguration: FC = () => {
     const [upsertProviderError, setUpsertProviderError] = useState<any>();
     const [typeSortOrder, setTypeSortOrder] = useState<SortOrder>();
 
+    const { data: flag } = useFeatureFlag('oidc_support');
+    const theme = useTheme();
+    const { addNotification } = useNotifications();
+    const forbidden = useForbiddenNotifier(
+        Permission.AUTH_MANAGE_PROVIDERS,
+        permissions,
+        'Your role does not grant permission to manage SSO providers.',
+        'manage-sso-permission'
+    );
+
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
         apiClient.getRoles({ signal }).then((res) => res.data.data.roles)
     );
 
-    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
-        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
+    const listSSOProvidersQuery = useQuery(
+        ['listSSOProviders'],
+        ({ signal }) => apiClient.listSSOProviders({ signal }).then((res) => res.data.data),
+        { enabled: !forbidden }
     );
 
     const deleteSSOProviderMutation = useMutation(
@@ -244,6 +252,7 @@ const SSOConfiguration: FC = () => {
                 <Grid container spacing={theme.spacing(2)}>
                     <Grid item display='flex' alignItems='center' justifyContent='end' minHeight='24px' mb={2} xs={12}>
                         <CreateMenu
+                            disabled={forbidden}
                             createMenuTitle={`Create ${flag?.enabled ? '' : 'SAML '}Provider`}
                             featureFlag='oidc_support'
                             featureFlagEnabledMenuItems={[
@@ -296,6 +305,8 @@ const SSOConfiguration: FC = () => {
                     )}
                 </Grid>
             </PageWithTitle>
+
+            {/* Dialogs */}
             <UpsertSAMLProviderDialog
                 open={dialogOpen === 'SAML'}
                 oldSSOProvider={selectedSSOProviderToUpdate}

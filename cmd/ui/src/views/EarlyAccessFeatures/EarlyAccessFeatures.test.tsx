@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { Flag } from 'bh-shared-ui';
+import { Flag, Permission } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen } from 'src/test-utils';
@@ -72,7 +72,7 @@ afterAll(() => server.close());
 describe('EarlyAccessFeatures', () => {
     it('displays a warning dialog when mounted', async () => {
         await act(async () => {
-            render(<EarlyAccessFeatures />);
+            render(<EarlyAccessFeatures permissions={[Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]} />);
         });
 
         expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe('EarlyAccessFeatures', () => {
     it('navigates to previous history entry when warning dialog is cancelled', async () => {
         const user = userEvent.setup();
 
-        render(<EarlyAccessFeatures />);
+        render(<EarlyAccessFeatures permissions={[Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]} />);
 
         // Close (cancel) warning dialog
         await user.click(screen.getByRole('button', { name: 'Take me back' }));
@@ -98,7 +98,7 @@ describe('EarlyAccessFeatures', () => {
     });
 
     it('eventually displays a list of early access features when warning dialog is accepted', async () => {
-        render(<EarlyAccessFeatures />);
+        render(<EarlyAccessFeatures permissions={[Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]} />);
         const user = userEvent.setup();
 
         // Close (accept) warning dialog
@@ -125,7 +125,7 @@ describe('EarlyAccessFeatures', () => {
             })
         );
 
-        render(<EarlyAccessFeatures />);
+        render(<EarlyAccessFeatures permissions={[Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]} />);
         const user = userEvent.setup();
 
         // Close (accept) warning dialog
@@ -151,7 +151,7 @@ describe('EarlyAccessFeatures', () => {
                 return res(ctx.status(500));
             })
         );
-        render(<EarlyAccessFeatures />);
+        render(<EarlyAccessFeatures permissions={[Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]} />);
         const user = userEvent.setup();
 
         // Close (accept) warning dialog
