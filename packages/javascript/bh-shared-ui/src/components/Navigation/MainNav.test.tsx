@@ -141,7 +141,7 @@ describe('MainNav', () => {
         const MainNavBar = await screen.findByRole('navigation');
         expect(MainNavBar).toHaveClass('group');
 
-        const versionNumberContainer = await within(MainNavBar).findByTestId('main-nav-version-number');
+        const versionNumberContainer = await within(MainNavBar).findByTestId('global_nav-version-number');
         const versionNumberLabel = await within(versionNumberContainer).findByText(
             `BloodHound: ${currentVersionNumber}`
         );
