@@ -30,8 +30,15 @@ import {
     Skeleton,
     Typography,
 } from '@mui/material';
-import { Flag, PageWithTitle, useFeatureFlags, useToggleFeatureFlag } from 'bh-shared-ui';
-import { useState } from 'react';
+import {
+    Flag,
+    PageWithTitle,
+    Permission,
+    useFeatureFlags,
+    useForbiddenNotifier,
+    useToggleFeatureFlag,
+} from 'bh-shared-ui';
+import { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setDarkMode } from 'src/ducks/global/actions';
 import { useAppDispatch } from 'src/store';
@@ -53,8 +60,7 @@ export const EarlyAccessFeatureToggle: React.FC<{
                     <Typography variant='body1'>{flag.description}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {/* TODO: replace style prop with TW classes once TW is added */}
-                    <Button disabled={disabled} onClick={handleOnClick} style={{ width: '132px' }}>
+                    <Button disabled={disabled} onClick={handleOnClick} className='w-32'>
                         <Box display={'flex'} alignItems={'center'}>
                             {flag.enabled ? (
                                 <FontAwesomeIcon style={{ marginRight: '8px' }} icon={faCheckCircle} fixedWidth />
@@ -105,12 +111,18 @@ export const EarlyAccessFeaturesWarningDialog: React.FC<{
     );
 };
 
-const EarlyAccessFeatures: React.FC = () => {
+const EarlyAccessFeatures: FC<{ permissions: Permission[] }> = ({ permissions }) => {
+    const [showWarningDialog, setShowWarningDialog] = useState(true);
+    const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const { data, isLoading, isError } = useFeatureFlags();
     const toggleFeatureFlag = useToggleFeatureFlag();
-    const [showWarningDialog, setShowWarningDialog] = useState(true);
-    const dispatch = useAppDispatch();
+    const forbidden = useForbiddenNotifier(
+        Permission.APP_WRITE_APPLICATION_CONFIGURATION,
+        permissions,
+        'Your role does not grant permission to manage feature flags.',
+        'manage-feature-flags-permission'
+    );
 
     return (
         <>
@@ -167,7 +179,7 @@ const EarlyAccessFeatures: React.FC = () => {
                                             }
                                             toggleFeatureFlag.mutate(flagId);
                                         }}
-                                        disabled={showWarningDialog}
+                                        disabled={showWarningDialog || forbidden}
                                     />
                                 </Box>
                             ))
