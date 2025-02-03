@@ -129,12 +129,13 @@ const MainNavVersionNumber: FC<{ hoverActive: boolean }> = ({ hoverActive }) => 
 
     return (
         // Note: The min-h allows for the version number to keep its position when the nav is scrollable
-        <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='main-nav-version-number'>
+        <div className='relative w-full flex min-h-10 h-10' data-testid='main-nav-version-number'>
             <div
                 className={cn(
-                    'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1',
+                    'w-9 break-all flex absolute top-3 left-3 duration-300 ease-in-out text-xs font-medium text-neutral-dark-0 dark:text-neutral-light-1',
                     {
-                        'group-hover:left-16': hoverActive,
+                        'group-hover:w-auto group-hover:overflow-x-hidden group-hover:whitespace-nowrap group-hover:left-16':
+                            hoverActive,
                     }
                 )}>
                 <span
@@ -143,9 +144,7 @@ const MainNavVersionNumber: FC<{ hoverActive: boolean }> = ({ hoverActive }) => 
                     })}>
                     BloodHound:&nbsp;
                 </span>
-                <span className={cn('group-[:not(:hover)]:max-w-9 overflow-x-hidden', { 'max-w-9': !hoverActive })}>
-                    {apiVersion}
-                </span>
+                <span className={cn('group-[:not(:hover)]:max-w-9')}>{apiVersion}</span>
             </div>
         </div>
     );
@@ -197,7 +196,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 />
             </MainNavItemLink>
             {/* Note: min height here is to keep the version number in bottom of nav */}
-            <div className='h-full min-h-[700px] w-full flex flex-col justify-between mt-6'>
+            <div className='h-full min-h-[600px] w-full flex flex-col justify-between mt-6'>
                 <ul className='flex flex-col gap-6 mt-8' data-testid='main-nav-primary-list'>
                     {mainNavData.primaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) => (
                         <MainNavListItem
@@ -214,7 +213,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                         </MainNavListItem>
                     ))}
                 </ul>
-                <ul className='flex flex-col gap-4 mt-16' data-testid='main-nav-secondary-list'>
+                <ul className='flex flex-col gap-4 mt-6' data-testid='main-nav-secondary-list'>
                     {mainNavData.secondaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) =>
                         listDataItem.route ? (
                             <MainNavListItem
