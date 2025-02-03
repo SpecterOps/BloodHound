@@ -73,7 +73,7 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; hoverAct
             onClick={onClick}
             className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline cursor-default', {
                 'group-hover:w-full cursor-pointer': hoverActive,
-            })}>
+            })}
             {...rest}>
             {children}
         </div>
@@ -204,7 +204,10 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                             key={itemIndex}
                             route={listDataItem.route as string}
                             hoverActive={!isMouseDragging}>
-                            <MainNavItemLink route={listDataItem.route as string} hoverActive={!isMouseDragging} data-testid={listDataItem.testId}>
+                            <MainNavItemLink
+                                route={listDataItem.route as string}
+                                hoverActive={!isMouseDragging}
+                                data-testid={listDataItem.testId}>
                                 <MainNavItemLabel
                                     icon={listDataItem.icon}
                                     label={listDataItem.label}
@@ -221,7 +224,10 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                                 key={itemIndex}
                                 route={listDataItem.route as string}
                                 hoverActive={!isMouseDragging}>
-                                <MainNavItemLink route={listDataItem.route as string} hoverActive={!isMouseDragging} data-testid={listDataItem.testId}>
+                                <MainNavItemLink
+                                    route={listDataItem.route as string}
+                                    hoverActive={!isMouseDragging}
+                                    data-testid={listDataItem.testId}>
                                     <MainNavItemLabel
                                         icon={listDataItem.icon}
                                         label={listDataItem.label}
