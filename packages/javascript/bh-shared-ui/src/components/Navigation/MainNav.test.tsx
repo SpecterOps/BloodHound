@@ -135,24 +135,16 @@ describe('MainNav', () => {
 
         expect(testLinkItem.functionHandler).toBeCalled();
     });
-    it('should render only a version number when collapsed', async () => {
-        const versionNumberContainer = await screen.findByTestId('main-nav-version-number');
-        const versionNumberLabel = await within(versionNumberContainer).findByText(/bloodhound/i);
-        const versionNumberDigits = await within(versionNumberContainer).findByText(currentVersionNumber);
-
-        expect(versionNumberDigits).toBeInTheDocument();
-        expect(versionNumberLabel).toHaveClass('hidden');
-    });
     it('should render a label and version number when expanded', async () => {
         const MainNavBar = await screen.findByRole('navigation');
         expect(MainNavBar).toHaveClass('group');
 
         const versionNumberContainer = await within(MainNavBar).findByTestId('main-nav-version-number');
-        const versionNumberDigits = await within(versionNumberContainer).findByText(currentVersionNumber);
-        const versionNumberLabel = await within(versionNumberContainer).findByText(/bloodhound/i);
+        const versionNumberLabel = await within(versionNumberContainer).findByText(
+            `BloodHound: ${currentVersionNumber}`
+        );
 
         // ---- collapsed classes ----
-        expect(versionNumberDigits).toHaveClass('group-[:not(:hover)]:max-w-9');
         expect(versionNumberLabel).toHaveClass('hidden');
         expect(versionNumberLabel).toHaveClass('opacity-0');
         // ---- collapsed classes ----
