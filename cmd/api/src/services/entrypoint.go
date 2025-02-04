@@ -86,6 +86,14 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		slog.InfoContext(ctx, "Database migrations are disabled per configuration")
 	}
 
+	// Allow recreating the default admin account to help with lockouts/loading database dumps
+	if cfg.RecreateDefaultAdmin {
+		slog.InfoContext(ctx, "Recreating default admin user")
+		if err := bootstrap.CreateDefaultAdmin(ctx, cfg, connections.RDMS); err != nil {
+			return nil, err
+		}
+	}
+
 	// Audit for duplicate email addresses
 	if nonUniqueEmailMap, err := connections.RDMS.GetAllUsersWithNonUniqueEmails(ctx); err != nil {
 		slog.WarnContext(ctx, "Failed to get all non unique email addresses", "error", err)
