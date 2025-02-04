@@ -176,7 +176,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('Users', () => {
-    it('The password reset dialog is opened when switching a user from SAML based authentication to username/password based authentication', async () => {
+    test('The password reset dialog is opened when switching a user from SAML based authentication to username/password based authentication', async () => {
         render(<Users permissions={[Permission.AUTH_MANAGE_USERS]} />);
 
         expect(screen.getByText('Manage Users')).toBeInTheDocument();
@@ -215,5 +215,18 @@ describe('Users', () => {
 
         // the force password reset option should be checked
         expect(screen.getByLabelText('Force Password Reset?')).toBeChecked();
+    });
+
+    it('disables the create user button and does not populate a table if the user lacks the permission', async () => {
+        render(<Users permissions={[Permission.APP_READ_APPLICATION_CONFIGURATION]} />);
+
+        expect(screen.getByTestId('manage-users_button-create-user')).toBeDisabled();
+
+        const nameElement = await screen.queryByText(testBloodHoundUsers[0].principal_name);
+        expect(nameElement).toBeNull();
+
+        const rows = screen.getAllByRole('row');
+        // Only the header row renders even though there is a mock endpoint that serves data
+        expect(rows).toHaveLength(1);
     });
 });
