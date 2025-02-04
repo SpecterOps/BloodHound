@@ -87,10 +87,10 @@ export const useMainNavSecondaryListData = () => {
             testId: 'global_nav-my-profile',
         },
         {
-            label: 'Docs and Support',
-            icon: <AppIcon.FileMagnifyingGlass size={24} />,
-            functionHandler: handleGoToSupport,
-            testId: 'global_nav-support',
+            label: 'Download Collectors',
+            icon: <AppIcon.Download size={24} />,
+            route: routes.ROUTE_DOWNLOAD_COLLECTORS,
+            testId: 'global_nav-download-collectors',
         },
         {
             label: 'Administration',
@@ -103,6 +103,12 @@ export const useMainNavSecondaryListData = () => {
             icon: <AppIcon.Compass size={24} />,
             route: routes.ROUTE_API_EXPLORER,
             testId: 'global_nav-api-explorer',
+        },
+        {
+            label: 'Docs and Support',
+            icon: <AppIcon.FileMagnifyingGlass size={24} />,
+            functionHandler: handleGoToSupport,
+            testId: 'global_nav-support',
         },
         {
             label: (
