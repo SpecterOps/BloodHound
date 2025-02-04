@@ -23,6 +23,7 @@ export * from './CaretDown';
 export * from './CaretUp';
 export * from './Compass';
 export * from './Diamond';
+export * from './Download';
 export * from './EclipseCircle';
 export * from './Equals';
 export * from './FileMagnifyingGlass';
