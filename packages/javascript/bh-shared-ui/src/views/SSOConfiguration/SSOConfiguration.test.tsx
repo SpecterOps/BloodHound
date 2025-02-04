@@ -201,4 +201,12 @@ describe('SSOConfiguration', async () => {
         expect(await screen.findByText(newSAMLDetails.sp_acs_uri)).toBeInTheDocument();
         expect(await screen.findByText(newSAMLDetails.sp_metadata_uri)).toBeInTheDocument();
     });
+
+    it('should disable the create provider button and not display providers if the user lacks permission', async () => {
+        render(<SSOConfiguration permissions={[Permission.APP_READ_APPLICATION_CONFIGURATION]} />);
+
+        expect(screen.getByRole('button', { name: /create provider/i })).toBeDisabled();
+
+        expect(await screen.queryByText(newSAMLProvider.name)).toBeNull();
+    });
 });

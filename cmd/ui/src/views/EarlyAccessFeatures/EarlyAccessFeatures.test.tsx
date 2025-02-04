@@ -163,4 +163,18 @@ describe('EarlyAccessFeatures', () => {
 
         expect(await screen.findByText('Could Not Display Early Access Features')).toBeInTheDocument();
     });
+
+    it('disables any available button toggles if the user lacks the permission', async () => {
+        render(<EarlyAccessFeatures permissions={[Permission.APP_READ_APPLICATION_CONFIGURATION]} />);
+        const user = userEvent.setup();
+
+        // Close (accept) warning dialog
+        await user.click(screen.getByRole('button', { name: 'I understand, show me the new stuff!' }));
+
+        const buttons = screen.getAllByRole('button');
+
+        buttons.forEach((button) => {
+            expect(button).toBeDisabled;
+        });
+    });
 });

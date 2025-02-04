@@ -128,4 +128,13 @@ describe('FileIngest', () => {
         expect(getByText('test_email@specterops.io')).toBeInTheDocument();
         expect(getByText('1 minute')).toBeInTheDocument();
     });
+
+    it('disables the upload button and does not populate a table if the user lacks the permission', async () => {
+        const { queryByText, getByTestId } = render(<FileIngest permissions={[Permission.GRAPH_DB_READ]} />);
+
+        expect(await queryByText('test_email@specterops.io')).toBeNull();
+        expect(await queryByText('1 minute')).toBeNull();
+
+        expect(getByTestId('file-ingest_button-upload-files')).toBeDisabled();
+    });
 });
