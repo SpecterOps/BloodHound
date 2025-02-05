@@ -59,6 +59,7 @@ describe('SSOProviderTable', () => {
         render(
             <SSOProviderTable
                 ssoProviders={ssoProviders}
+                forbidden={false}
                 loading={false}
                 onClickSSOProvider={onClickSSOProvider}
                 onDeleteSSOProvider={onDeleteSSOProvider}
@@ -87,6 +88,7 @@ describe('SSOProviderTable', () => {
         render(
             <SSOProviderTable
                 ssoProviders={ssoProviders}
+                forbidden={false}
                 loading={false}
                 onClickSSOProvider={onClickSSOProvider}
                 onDeleteSSOProvider={onDeleteSSOProvider}

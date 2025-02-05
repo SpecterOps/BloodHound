@@ -14,29 +14,26 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect } from 'react';
 import { useNotifications } from '../providers';
 import { Permission } from '../utils';
+import { useOnMount } from './useOnMount';
 
 export const useForbiddenNotifier = (need: Permission, have: Permission[], message: string, key: string): boolean => {
     const { addNotification, dismissNotification } = useNotifications();
     const hasPermission = !!have?.includes(need);
-
-    useEffect(() => {
+    const effect = () => {
         if (!hasPermission) {
             addNotification(`${message} Please contact your admnistrator for details.`, key, {
                 persist: true,
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             });
         }
+    };
+    const cleanup = () => {
+        dismissNotification(key);
+    };
 
-        return () => {
-            dismissNotification(key);
-        };
-        // This linting is disabled because adding the dependencies would cause a render loop
-        // and we only want the effect to happen on first render.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    useOnMount(effect, cleanup);
 
     return !hasPermission;
 };

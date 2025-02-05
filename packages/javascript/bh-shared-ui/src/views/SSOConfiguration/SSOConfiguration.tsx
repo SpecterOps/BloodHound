@@ -49,7 +49,7 @@ const SSOConfiguration: FC<{ permissions: Permission[] }> = ({ permissions }) =>
     const forbidden = useForbiddenNotifier(
         Permission.AUTH_MANAGE_PROVIDERS,
         permissions,
-        'Your role does not grant permission to manage SSO providers.',
+        'Your user role does not grant permission to manage SSO providers.',
         'manage-sso-permission'
     );
 
@@ -290,6 +290,7 @@ const SSOConfiguration: FC<{ permissions: Permission[] }> = ({ permissions }) =>
                             </Box>
                             <SSOProviderTable
                                 ssoProviders={ssoProviders}
+                                forbidden={forbidden}
                                 loading={listSSOProvidersQuery.isLoading}
                                 onClickSSOProvider={onClickSSOProvider}
                                 onDeleteSSOProvider={onSelectDeleteOrUpdateSSOProvider('DELETE')}

@@ -116,6 +116,7 @@ const SSOProviderTableActionsMenu: FC<{
 
 const SSOProviderTable: FC<{
     ssoProviders: SSOProvider[];
+    forbidden: boolean;
     loading: boolean;
     onDeleteSSOProvider: (ssoProvider: SSOProvider) => void;
     onUpdateSSOProvider: (ssoProvider: SSOProvider) => void;
@@ -124,6 +125,7 @@ const SSOProviderTable: FC<{
     typeSortOrder?: SortOrder;
 }> = ({
     ssoProviders,
+    forbidden,
     loading,
     onDeleteSSOProvider,
     onUpdateSSOProvider,
@@ -186,6 +188,12 @@ const SSOProviderTable: FC<{
                                 </TableCell>
                                 <TableCell>
                                     <Skeleton />
+                                </TableCell>
+                            </TableRow>
+                        ) : ssoProviders.length === 0 && !forbidden ? (
+                            <TableRow>
+                                <TableCell colSpan={6} align='center'>
+                                    No SSO Providers found
                                 </TableCell>
                             </TableRow>
                         ) : (
