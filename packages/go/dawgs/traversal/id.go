@@ -88,13 +88,25 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 						return nil
 					} else if tx.GraphQueryMemoryLimit() > 0 && pathTree.SizeOf() > tx.GraphQueryMemoryLimit() {
 						return fmt.Errorf("%w - Limit: %.2f MB - Memory In-Use: %.2f MB", ops.ErrGraphQueryMemoryLimit, tx.GraphQueryMemoryLimit().Mebibytes(), pathTree.SizeOf().Mebibytes())
-					} else if descendingSegments, err := plan.Delegate(traversalCtx, tx, nextDescent); err != nil {
-						return err
-					} else if len(descendingSegments) > 0 {
-						for _, descendingSegment := range descendingSegments {
-							// Add to the descent count before submitting to the channel
-							descentCount.Add(1)
-							channels.Submit(traversalCtx, segmentWriterC, descendingSegment)
+						//} else if descendingSegments, err := plan.Delegate(traversalCtx, tx, nextDescent); err != nil {
+						//	return err
+						//} else if len(descendingSegments) > 0 {
+						//	for _, descendingSegment := range descendingSegments {
+						//		// Add to the descent count before submitting to the channel
+						//		descentCount.Add(1)
+						//		channels.Submit(traversalCtx, segmentWriterC, descendingSegment)
+						//	}
+						//}
+					} else {
+						// Traverse the descending relationships of the current segment
+						if descendingSegments, err := plan.Delegate(traversalCtx, tx, nextDescent); err != nil {
+							return err
+						} else {
+							for _, descendingSegment := range descendingSegments {
+								// Add to the descent count before submitting to the channel
+								descentCount.Add(1)
+								channels.Submit(traversalCtx, segmentWriterC, descendingSegment)
+							}
 						}
 					}
 
@@ -116,11 +128,11 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 
 	// Add to the descent wait group and then queue the root of the path tree for traversal
 	descentCount.Add(1)
-	segmentWriterC <- pathTree
-
-	for {
-		if _, ok := channels.Receive(traversalCtx, completionC); !ok || descentCount.Load() == 0 {
-			break
+	if channels.Submit(traversalCtx, segmentWriterC, pathTree) {
+		for {
+			if _, ok := channels.Receive(traversalCtx, completionC); !ok || descentCount.Load() == 0 {
+				break
+			}
 		}
 	}
 
