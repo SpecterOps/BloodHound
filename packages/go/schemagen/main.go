@@ -23,8 +23,6 @@ import (
 	"path/filepath"
 
 	"cuelang.org/go/cue/errors"
-	"github.com/specterops/bloodhound/bhlog"
-	"github.com/specterops/bloodhound/bhlog/level"
 	"github.com/specterops/bloodhound/schemagen/generator"
 	"github.com/specterops/bloodhound/schemagen/model"
 	"github.com/specterops/bloodhound/schemagen/tsgen"
@@ -71,9 +69,6 @@ func GenerateSharedTypeScript(projectRoot string, rootSchema Schema) error {
 }
 
 func main() {
-	bhlog.ConfigureDefaultText(os.Stdout)
-	level.SetGlobalLevel(slog.LevelDebug)
-
 	cfgBuilder := generator.NewConfigBuilder("/schemas")
 
 	if projectRoot, err := generator.FindGolangWorkspaceRoot(); err != nil {

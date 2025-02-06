@@ -927,7 +927,6 @@ Properties: [
 	MSA,
 	DoesAnyAceGrantOwnerRights,
 	DoesAnyInheritedAceGrantOwnerRights,
-	OwnerSid,
 	ADCSWebEnrollmentHTTP,
 	ADCSWebEnrollmentHTTPS,
 	ADCSWebEnrollmentHTTPSEPA,
