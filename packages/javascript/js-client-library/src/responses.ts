@@ -41,6 +41,14 @@ type TimestampFields = {
     };
 };
 
+export type Domain = {
+    type: 'active-directory' | 'azure';
+    impactValue: number;
+    name: string;
+    id: string;
+    collected: boolean;
+};
+
 export type ActiveDirectoryQualityStat = TimestampFields & {
     users: number;
     computers: number;
@@ -105,7 +113,11 @@ type PostureFindingTrend = {
     finding: string;
     finding_count_start: number;
     finding_count_end: number;
+    finding_count_increase: number;
+    finding_count_decrease: number;
     composite_risk: number;
+    display_title: string;
+    display_type: string;
 };
 
 export type PostureFindingTrendsResponse = TimeWindowedResponse<{

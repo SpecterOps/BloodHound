@@ -353,44 +353,63 @@ func (s *SinglePartQueryVisitor) ExitOC_UpdatingClause(ctx *parser.OC_UpdatingCl
 type MultiPartQueryVisitor struct {
 	BaseVisitor
 
-	Query *cypher.MultiPartQuery
+	Query   *cypher.MultiPartQuery
+	partIdx int
 }
 
 func NewMultiPartQueryVisitor() *MultiPartQueryVisitor {
 	return &MultiPartQueryVisitor{
-		Query: cypher.NewMultiPartQuery(),
+		Query:   cypher.NewMultiPartQuery(),
+		partIdx: 0,
 	}
 }
 
 func (s *MultiPartQueryVisitor) EnterOC_ReadingClause(ctx *parser.OC_ReadingClauseContext) {
+	// If the part index is equal to the length of parts then this signifies that a new query part
+	// is required. We do not advance the index here - this is done with the following `with`
+	// cypher AST component
+	if len(s.Query.Parts) == s.partIdx {
+		s.Query.Parts = append(s.Query.Parts, cypher.NewMultiPartQueryPart())
+	}
+
 	s.ctx.Enter(NewReadingClauseVisitor())
 }
 
 func (s *MultiPartQueryVisitor) ExitOC_ReadingClause(ctx *parser.OC_ReadingClauseContext) {
-	part := cypher.NewMultiPartQueryPart()
-	part.AddReadingClause(s.ctx.Exit().(*ReadingClauseVisitor).ReadingClause)
-	s.Query.Parts = append(s.Query.Parts, part)
+	s.Query.CurrentPart().AddReadingClause(s.ctx.Exit().(*ReadingClauseVisitor).ReadingClause)
 }
 
 func (s *MultiPartQueryVisitor) EnterOC_UpdatingClause(ctx *parser.OC_UpdatingClauseContext) {
+	if len(s.Query.Parts) == s.partIdx {
+		s.Query.Parts = append(s.Query.Parts, cypher.NewMultiPartQueryPart())
+	}
+
 	s.ctx.Enter(NewUpdatingClauseVisitor())
 }
 
 func (s *MultiPartQueryVisitor) ExitOC_UpdatingClause(ctx *parser.OC_UpdatingClauseContext) {
+	// Make sure to mark that this multipart query part contains a mutation (non-read operation). This
+	// field is being set to make it easier for downstream consumers of the openCypher AST to identify
+	// if this query contains a mutation.
 	s.ctx.HasMutation = true
-	part := cypher.NewMultiPartQueryPart()
-	part.AddUpdatingClause(s.ctx.Exit().(*UpdatingClauseVisitor).UpdatingClause)
-	s.Query.Parts = append(s.Query.Parts, part)
+
+	s.Query.CurrentPart().AddUpdatingClause(s.ctx.Exit().(*UpdatingClauseVisitor).UpdatingClause)
 }
 
 func (s *MultiPartQueryVisitor) EnterOC_With(ctx *parser.OC_WithContext) {
+	if len(s.Query.Parts) == s.partIdx {
+		s.Query.Parts = append(s.Query.Parts, cypher.NewMultiPartQueryPart())
+	}
+
 	s.ctx.Enter(NewWithVisitor())
 }
 
 func (s *MultiPartQueryVisitor) ExitOC_With(ctx *parser.OC_WithContext) {
-	part := cypher.NewMultiPartQueryPart()
-	part.With = s.ctx.Exit().(*WithVisitor).With
-	s.Query.Parts = append(s.Query.Parts, part)
+	s.Query.CurrentPart().With = s.ctx.Exit().(*WithVisitor).With
+
+	// Advance the part index so a new multipart query part gets allocated for the next reading
+	// or updating clause
+	s.partIdx += 1
 }
 
 func (s *MultiPartQueryVisitor) EnterOC_SinglePartQuery(ctx *parser.OC_SinglePartQueryContext) {

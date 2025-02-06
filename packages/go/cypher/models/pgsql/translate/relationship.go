@@ -24,26 +24,34 @@ import (
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
 
-func (s *Translator) translateRelationshipPattern(scope *Scope, relationshipPattern *cypher.RelationshipPattern, part *PatternPart) error {
-	if bindingResult, err := s.bindPatternExpression(scope, relationshipPattern, pgsql.EdgeComposite); err != nil {
+func (s *Translator) translateRelationshipPattern(relationshipPattern *cypher.RelationshipPattern) error {
+	var (
+		queryPart   = s.query.CurrentPart()
+		patternPart = queryPart.pattern.CurrentPart()
+	)
+
+	if bindingResult, err := s.bindPatternExpression(relationshipPattern, pgsql.EdgeComposite); err != nil {
 		return err
 	} else {
-		if err := s.translateRelationshipPatternToStep(scope, bindingResult, part, relationshipPattern); err != nil {
+		if err := s.translateRelationshipPatternToStep(bindingResult, patternPart, relationshipPattern); err != nil {
 			return err
 		}
 
-		if len(s.properties) > 0 {
+		if len(queryPart.properties) > 0 {
 			var propertyConstraints pgsql.Expression
 
-			for key, value := range s.properties {
-				propertyConstraints = pgsql.OptionalAnd(propertyConstraints, pgsql.NewBinaryExpression(
-					pgsql.NewPropertyLookup(pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnProperties}, pgsql.NewLiteral(key, pgsql.Text)),
-					pgsql.OperatorEquals,
-					value,
-				))
+			for key, value := range queryPart.properties {
+				s.treeTranslator.Push(pgsql.NewPropertyLookup(pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnProperties}, pgsql.NewLiteral(key, pgsql.Text)))
+				s.treeTranslator.Push(value)
+
+				if newConstraint, err := s.treeTranslator.PopBinaryExpression(pgsql.OperatorEquals); err != nil {
+					return err
+				} else {
+					propertyConstraints = pgsql.OptionalAnd(propertyConstraints, newConstraint)
+				}
 			}
 
-			if err := part.Constraints.Constrain(pgsql.AsIdentifierSet(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
+			if err := patternPart.Constraints.Constrain(pgsql.AsIdentifierSet(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
 				return err
 			}
 		}
@@ -64,7 +72,7 @@ func (s *Translator) translateRelationshipPattern(scope *Scope, relationshipPatt
 					)
 				)
 
-				if err := part.Constraints.Constrain(dependencies, expression); err != nil {
+				if err := patternPart.Constraints.Constrain(dependencies, expression); err != nil {
 					return err
 				}
 			}
@@ -74,7 +82,7 @@ func (s *Translator) translateRelationshipPattern(scope *Scope, relationshipPatt
 	return nil
 }
 
-func (s *Translator) translateRelationshipPatternToStep(scope *Scope, bindingResult BindingResult, part *PatternPart, relationshipPattern *cypher.RelationshipPattern) error {
+func (s *Translator) translateRelationshipPatternToStep(bindingResult BindingResult, part *PatternPart, relationshipPattern *cypher.RelationshipPattern) error {
 	var (
 		expansion      models.Optional[Expansion]
 		numSteps       = len(part.TraversalSteps)
@@ -107,7 +115,7 @@ func (s *Translator) translateRelationshipPatternToStep(scope *Scope, bindingRes
 		// Set the edge type to an expansion of edges
 		bindingResult.Binding.DataType = pgsql.ExpansionEdge
 
-		if expansionScopeBinding, err := scope.DefineNew(pgsql.ExpansionPattern); err != nil {
+		if expansionScopeBinding, err := s.query.Scope.DefineNew(pgsql.ExpansionPattern); err != nil {
 			return err
 		} else {
 			// Link the edge to the expansion
@@ -126,7 +134,7 @@ func (s *Translator) translateRelationshipPatternToStep(scope *Scope, bindingRes
 				MaxDepth: models.PointerOptional(relationshipPattern.Range.EndIndex),
 			})
 
-			if expansionPathBinding, err := scope.DefineNew(pgsql.ExpansionPath); err != nil {
+			if expansionPathBinding, err := s.query.Scope.DefineNew(pgsql.ExpansionPath); err != nil {
 				return err
 			} else {
 				// Link the path array to the expansion that declares it
@@ -154,12 +162,7 @@ func (s *Translator) translateRelationshipPatternToStep(scope *Scope, bindingRes
 			Edge:        bindingResult.Binding,
 			Direction:   relationshipPattern.Direction,
 			LeftNode:    currentStep.RightNode,
-			Definitions: []*BoundIdentifier{bindingResult.Binding},
 			Expansion:   expansion,
-		}
-
-		if expansion.Set {
-			nextStep.Definitions = append(nextStep.Definitions, expansion.Value.PathBinding)
 		}
 
 		part.TraversalSteps = append(part.TraversalSteps, nextStep)
@@ -175,12 +178,6 @@ func (s *Translator) translateRelationshipPatternToStep(scope *Scope, bindingRes
 		currentStep.Edge = bindingResult.Binding
 		currentStep.Direction = relationshipPattern.Direction
 		currentStep.Expansion = expansion
-
-		if expansion.Set {
-			currentStep.Definitions = append(currentStep.Definitions, bindingResult.Binding, expansion.Value.PathBinding)
-		} else {
-			currentStep.Definitions = append(currentStep.Definitions, bindingResult.Binding)
-		}
 	}
 
 	return nil

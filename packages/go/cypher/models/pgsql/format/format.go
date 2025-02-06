@@ -492,7 +492,7 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 			}
 
 		case pgsql.ExistsExpression:
-			exprStack = append(exprStack, pgsql.FormattingLiteral(")"), typedNextExpr.Subquery, pgsql.FormattingLiteral("exists ("))
+			exprStack = append(exprStack, typedNextExpr.Subquery, pgsql.FormattingLiteral("exists "))
 
 			if typedNextExpr.Negated {
 				exprStack = append(exprStack, pgsql.FormattingLiteral("not "))
@@ -516,6 +516,9 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 					return err
 				}
 			}
+
+		case pgsql.Subquery:
+			exprStack = append(exprStack, pgsql.FormattingLiteral(")"), typedNextExpr.Query, pgsql.FormattingLiteral("("))
 
 		default:
 			return fmt.Errorf("unable to format pgsql node type: %T", nextExpr)

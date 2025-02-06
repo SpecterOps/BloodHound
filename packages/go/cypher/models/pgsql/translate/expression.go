@@ -719,7 +719,7 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 						return fmt.Errorf("unknown identifier %s", typedROperand)
 					} else {
 						switch boundLOperand.DataType {
-						case pgsql.NodeComposite:
+						case pgsql.NodeComposite, pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
 							switch boundROperand.DataType {
 							case pgsql.NodeComposite, pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
 							default:
@@ -730,7 +730,7 @@ func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operato
 							newExpression.LOperand = pgsql.CompoundIdentifier{typedLOperand, pgsql.ColumnID}
 							newExpression.ROperand = pgsql.CompoundIdentifier{typedROperand, pgsql.ColumnID}
 
-						case pgsql.EdgeComposite:
+						case pgsql.EdgeComposite, pgsql.ExpansionEdge:
 							switch boundROperand.DataType {
 							case pgsql.EdgeComposite, pgsql.ExpansionEdge:
 							default:

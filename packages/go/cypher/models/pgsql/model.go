@@ -228,6 +228,14 @@ type Subquery struct {
 	Query Query
 }
 
+func (s Subquery) NodeType() string {
+	return "subquery"
+}
+
+func (s Subquery) AsExpression() Expression {
+	return s
+}
+
 // not <expr>
 type UnaryExpression struct {
 	Operator Expression
@@ -319,6 +327,10 @@ func (s CompositeValue) AsSelectItem() SelectItem {
 // (<expr>)
 type Parenthetical struct {
 	Expression Expression
+}
+
+func (s Parenthetical) AsSelectItem() SelectItem {
+	return s
 }
 
 func (s Parenthetical) NodeType() string {
@@ -1022,7 +1034,6 @@ func (s Select) NodeType() string {
 // select 1
 // union
 // select 2;
-
 type SetOperation struct {
 	Operator Operator
 	LOperand SetExpression
@@ -1047,7 +1058,7 @@ func (s SetOperation) NodeType() string {
 //
 // [not] exists(<query>)
 type ExistsExpression struct {
-	Subquery Query
+	Subquery Subquery
 	Negated  bool
 }
 
@@ -1130,18 +1141,6 @@ func (s Query) AsStatement() Statement {
 
 func (s Query) NodeType() string {
 	return "query"
-}
-
-func BinaryExpressionJoinTyped(optional Expression, operator Operator, conjoined *BinaryExpression) *BinaryExpression {
-	if optional == nil {
-		return conjoined
-	}
-
-	return NewBinaryExpression(
-		conjoined,
-		operator,
-		optional,
-	)
 }
 
 func BinaryExpressionJoin(optional Expression, operator Operator, conjoined Expression) Expression {

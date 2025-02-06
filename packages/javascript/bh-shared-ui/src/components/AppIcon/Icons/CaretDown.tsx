@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import LeftNav from './LeftNav';
+import React from 'react';
+import { BasePath, BaseSVG, BaseSVGProps } from './utils';
 
-export default LeftNav;
+export const CaretDown: React.FC<BaseSVGProps> = (props) => {
+    return (
+        <BaseSVG
+            name='caret-down'
+            width='10'
+            height='6'
+            viewBox='0 0 10 6'
+            fill='none'
+            xmlns='http://www.w3.org/2000/svg'
+            {...props}>
+            <BasePath d='M0 0.977539L5 5.97754L10 0.977539H0Z' />
+        </BaseSVG>
+    );
+};

@@ -26,10 +26,10 @@ import (
 
 func (s *Translator) translatePatternPredicate(scope *Scope) error {
 	// Set the pattern frame
-	s.pattern.Frame = scope.CurrentFrame()
+	s.query.CurrentPart().pattern.Frame = scope.CurrentFrame()
 
 	// All pattern predicates must be relationship patterns
-	newPatternPart := s.pattern.NewPart()
+	newPatternPart := s.query.CurrentPart().pattern.NewPart()
 	newPatternPart.IsTraversal = true
 
 	return nil
@@ -54,18 +54,20 @@ func (s *Translator) buildOptimizedRelationshipExistPredicate(part *PatternPart,
 
 	// explain analyze select * from node n0 where not exists(select 1 from edge e0 where e0.start_id = n0.id or e0.end_id = n0.id);
 	s.treeTranslator.Push(pgsql.ExistsExpression{
-		Subquery: pgsql.Query{
-			Body: pgsql.Select{
-				Projection: []pgsql.SelectItem{
-					pgsql.NewLiteral(1, pgsql.Int),
+		Subquery: pgsql.Subquery{
+			Query: pgsql.Query{
+				Body: pgsql.Select{
+					Projection: []pgsql.SelectItem{
+						pgsql.NewLiteral(1, pgsql.Int),
+					},
+					From: []pgsql.FromClause{{
+						Source: pgsql.TableReference{
+							Name:    pgsql.CompoundIdentifier{pgsql.TableEdge},
+							Binding: models.ValueOptional(traversalStep.Edge.Identifier),
+						}},
+					},
+					Where: whereClause,
 				},
-				From: []pgsql.FromClause{{
-					Source: pgsql.TableReference{
-						Name:    pgsql.CompoundIdentifier{pgsql.TableEdge},
-						Binding: models.ValueOptional(traversalStep.Edge.Identifier),
-					}},
-				},
-				Where: whereClause,
 			},
 		},
 	})
@@ -74,14 +76,14 @@ func (s *Translator) buildOptimizedRelationshipExistPredicate(part *PatternPart,
 }
 
 func (s *Translator) buildPatternPredicate() error {
-	if numPatternParts := len(s.pattern.Parts); numPatternParts < 1 || numPatternParts > 1 {
+	if numPatternParts := len(s.query.CurrentPart().pattern.Parts); numPatternParts < 1 || numPatternParts > 1 {
 		return fmt.Errorf("expected exactly one pattern part for pattern predicate but found: %d", numPatternParts)
 	}
 
 	var (
 		lastFrame *Frame
 
-		patternPart = s.pattern.Parts[0]
+		patternPart = s.query.CurrentPart().pattern.Parts[0]
 		subQuery    = pgsql.Query{
 			CommonTableExpressions: &pgsql.With{},
 		}
@@ -162,8 +164,8 @@ func (s *Translator) buildPatternPredicate() error {
 		}},
 	}
 
-	s.treeTranslator.Push(pgsql.Parenthetical{
-		Expression: subQuery,
+	s.treeTranslator.Push(pgsql.Subquery{
+		Query: subQuery,
 	})
 
 	return nil

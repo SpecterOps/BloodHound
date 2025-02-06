@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,10 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import LeftNav from 'src/components/LeftNav';
-import { render, screen } from 'src/test-utils';
+import { BrowserRouter } from 'react-router-dom';
+import { render, screen } from '../../test-utils';
+import SubNav from './SubNav';
 
-describe('LeftNav', () => {
+describe('SubNav', () => {
     it('should render a single section with a single navigation item', () => {
         const testSectionTitle = 'testSectionTitle';
         const testNavItem = {
@@ -25,7 +26,11 @@ describe('LeftNav', () => {
             path: '/administration/test-nav-item-path',
         };
 
-        render(<LeftNav sections={[{ title: testSectionTitle, items: [testNavItem] }]} />);
+        render(
+            <BrowserRouter>
+                <SubNav sections={[{ title: testSectionTitle, items: [testNavItem] }]} />
+            </BrowserRouter>
+        );
         expect(screen.getByRole('navigation')).toBeInTheDocument();
         expect(screen.getByText(testSectionTitle)).toBeInTheDocument();
         expect(screen.getByText(testNavItem.label)).toBeInTheDocument();
@@ -33,7 +38,7 @@ describe('LeftNav', () => {
         expect(screen.getByRole('link', { name: testNavItem.label })).toHaveAttribute('href', testNavItem.path);
     });
 
-    it('should render many sections with a many navigation items', () => {
+    it('should render many sections with many navigation items', () => {
         const testSections = [
             {
                 title: 'testSection1',
@@ -61,7 +66,11 @@ describe('LeftNav', () => {
             },
         ];
 
-        render(<LeftNav sections={testSections} />);
+        render(
+            <BrowserRouter>
+                <SubNav sections={testSections} />
+            </BrowserRouter>
+        );
         expect(screen.getByRole('navigation')).toBeInTheDocument();
         expect(screen.getAllByRole('link')).toHaveLength(9);
         for (const section of testSections) {

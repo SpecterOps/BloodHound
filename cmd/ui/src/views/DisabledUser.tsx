@@ -20,7 +20,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 import { logout } from 'src/ducks/auth/authSlice';
-import { ROUTE_LOGIN } from 'src/ducks/global/routes';
+import { ROUTE_LOGIN } from 'src/routes/constants';
 import { useAppDispatch } from 'src/store';
 
 const DisabledUser: React.FC = () => {
