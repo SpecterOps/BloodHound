@@ -128,6 +128,7 @@ services:
       bhe_enable_cypher_mutations: ${bhe_enable_cypher_mutations:-false}
       bhe_graph_query_memory_limit: ${bhe_graph_query_memory_limit:-2}
       bhe_enable_text_logger: ${bhe_enable_text_logger:-true}
+      bhe_recreate_default_admin: ${bhe_recreate_default_admin:-false}
     ports:
       - ${BH_API_PORT:-127.0.0.1:8080}:8080
       - ${TOOLAPI_PORT:-127.0.0.1:2112}:2112
@@ -176,6 +177,12 @@ services:
       context: tools/docker-compose
       dockerfile: api.Dockerfile
     command: "-c .air.debug.toml ${AIR_FLAGS:-''}"
+    environment:
+      bhe_disable_cypher_complexity_limit: ${bhe_disable_cypher_complexity_limit:-false}
+      bhe_enable_cypher_mutations: ${bhe_enable_cypher_mutations:-false}
+      bhe_graph_query_memory_limit: ${bhe_graph_query_memory_limit:-2}
+      bhe_enable_text_logger: ${bhe_enable_text_logger:-true}
+      bhe_recreate_default_admin: ${bhe_recreate_default_admin:-false}
     ports:
       - ${BH_API_PORT:-127.0.0.1:8080}:8080
       - ${TOOLAPI_PORT:-127.0.0.1:2112}:2112

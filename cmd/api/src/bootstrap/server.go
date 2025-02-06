@@ -18,6 +18,7 @@ package bootstrap
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -76,7 +77,11 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 		return nil
 	}
 
-	secretDigester := cfg.Crypto.Argon2.NewDigester()
+	return CreateDefaultAdmin(ctx, cfg, db)
+}
+
+func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db database.Database) error {
+	var secretDigester = cfg.Crypto.Argon2.NewDigester()
 
 	if roles, err := db.GetAllRoles(ctx, "", model.SQLFilter{}); err != nil {
 		return fmt.Errorf("error while attempting to fetch user roles: %w", err)
@@ -85,6 +90,14 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 	} else if adminRole, found := roles.FindByName(auth.RoleAdministrator); !found {
 		return fmt.Errorf("unable to find admin role")
 	} else {
+		if existingUser, err := db.LookupUser(ctx, cfg.DefaultAdmin.PrincipalName); !errors.Is(err, database.ErrNotFound) && err != nil {
+			return fmt.Errorf("unable to lookup existing admin user: %w", err)
+		} else if err == nil {
+			if err := db.DeleteUser(ctx, existingUser); err != nil {
+				return fmt.Errorf("unable to delete exisiting admin user: %s: %w", existingUser.PrincipalName, err)
+			}
+		}
+
 		var (
 			adminUser = model.User{
 				Roles: model.Roles{

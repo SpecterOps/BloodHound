@@ -165,6 +165,7 @@ type Configuration struct {
 	AuthSessionTTLHours          int                       `json:"auth_session_ttl_hours"`
 	FedRAMPEULAText              string                    `json:"fedramp_eula_text"` // Enterprise only
 	EnableTextLogger             bool                      `json:"enable_text_logger"`
+	RecreateDefaultAdmin         bool                      `json:"recreate_default_admin"`
 }
 
 func (s Configuration) AuthSessionTTL() time.Duration {
