@@ -104,6 +104,8 @@ const SSOConfiguration: FC<{ permissions: Permission[] }> = ({ permissions }) =>
         return ssoProviders;
     }, [nameFilter, typeSortOrder, listSSOProvidersQuery.data]);
 
+    const noProvidersText = forbidden ? undefined : 'No SSO Providers found';
+
     const selectedSSOProvider = useMemo(() => {
         return listSSOProvidersQuery.data?.find(({ id }) => id === selectedSSOProviderId);
     }, [selectedSSOProviderId, listSSOProvidersQuery.data]);
@@ -290,7 +292,7 @@ const SSOConfiguration: FC<{ permissions: Permission[] }> = ({ permissions }) =>
                             </Box>
                             <SSOProviderTable
                                 ssoProviders={ssoProviders}
-                                forbidden={forbidden}
+                                noProvidersText={noProvidersText}
                                 loading={listSSOProvidersQuery.isLoading}
                                 onClickSSOProvider={onClickSSOProvider}
                                 onDeleteSSOProvider={onSelectDeleteOrUpdateSSOProvider('DELETE')}

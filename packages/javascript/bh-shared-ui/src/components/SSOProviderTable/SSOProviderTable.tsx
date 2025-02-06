@@ -116,22 +116,22 @@ const SSOProviderTableActionsMenu: FC<{
 
 const SSOProviderTable: FC<{
     ssoProviders: SSOProvider[];
-    forbidden: boolean;
     loading: boolean;
     onDeleteSSOProvider: (ssoProvider: SSOProvider) => void;
     onUpdateSSOProvider: (ssoProvider: SSOProvider) => void;
     onClickSSOProvider: (ssoProviderId: SSOProvider['id']) => void;
     onToggleTypeSortOrder: () => void;
     typeSortOrder?: SortOrder;
+    noProvidersText?: string;
 }> = ({
     ssoProviders,
-    forbidden,
     loading,
     onDeleteSSOProvider,
     onUpdateSSOProvider,
     onClickSSOProvider,
     onToggleTypeSortOrder,
     typeSortOrder,
+    noProvidersText,
 }) => {
     const theme = useTheme();
     return (
@@ -190,10 +190,10 @@ const SSOProviderTable: FC<{
                                     <Skeleton />
                                 </TableCell>
                             </TableRow>
-                        ) : ssoProviders.length === 0 && !forbidden ? (
+                        ) : ssoProviders.length === 0 && noProvidersText ? (
                             <TableRow>
                                 <TableCell colSpan={6} align='center'>
-                                    No SSO Providers found
+                                    {noProvidersText}
                                 </TableCell>
                             </TableRow>
                         ) : (

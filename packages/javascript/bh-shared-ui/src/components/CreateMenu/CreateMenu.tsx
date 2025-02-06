@@ -23,11 +23,10 @@ import FeatureFlag from '../FeatureFlag';
 
 type MenuItems = { title: string; onClick: () => void }[];
 
-const MenuWithDropdown: React.FC<{ menuTitle: string; menuItems: MenuItems; disabled: boolean; testId: string }> = ({
+const MenuWithDropdown: React.FC<{ menuTitle: string; menuItems: MenuItems; disabled: boolean }> = ({
     menuTitle,
     menuItems,
     disabled,
-    testId,
 }) => {
     const buttonRef = React.useRef(null);
     const [isOpen, setIsOpen] = React.useState(false);
@@ -43,7 +42,6 @@ const MenuWithDropdown: React.FC<{ menuTitle: string; menuItems: MenuItems; disa
     return (
         <>
             <Button
-                data-testid={testId}
                 aria-controls='create-menu'
                 aria-haspopup='true'
                 ref={buttonRef}
@@ -70,18 +68,16 @@ const MenuWithDropdown: React.FC<{ menuTitle: string; menuItems: MenuItems; disa
     );
 };
 
-const MenuOrButton: React.FC<{ menuTitle: string; menuItems: MenuItems; disabled: boolean; testId: string }> = ({
+const MenuOrButton: React.FC<{ menuTitle: string; menuItems: MenuItems; disabled: boolean }> = ({
     menuTitle,
     menuItems,
     disabled,
-    testId,
 }) => {
     if (menuItems.length > 1) {
-        return <MenuWithDropdown menuItems={menuItems} menuTitle={menuTitle} disabled={disabled} testId={testId} />;
+        return <MenuWithDropdown menuItems={menuItems} menuTitle={menuTitle} disabled={disabled} />;
     } else if (menuItems.length === 1) {
         return (
             <Button
-                data-testid={testId}
                 disabled={disabled}
                 onClick={() => {
                     menuItems[0].onClick();
@@ -96,30 +92,15 @@ const MenuOrButton: React.FC<{ menuTitle: string; menuItems: MenuItems; disabled
 const CreateMenu: React.FC<{
     createMenuTitle: string;
     menuItems: MenuItems;
-    testId?: string;
     disabled?: boolean;
     featureFlag?: string;
     featureFlagEnabledMenuItems?: MenuItems;
-}> = ({
-    createMenuTitle,
-    menuItems,
-    featureFlag,
-    featureFlagEnabledMenuItems,
-    disabled = false,
-    testId = createMenuTitle,
-}) => {
-    const menuOrButton = (
-        <MenuOrButton menuTitle={createMenuTitle} menuItems={menuItems} disabled={disabled} testId={testId} />
-    );
+}> = ({ createMenuTitle, menuItems, featureFlag, featureFlagEnabledMenuItems, disabled = false }) => {
+    const menuOrButton = <MenuOrButton menuTitle={createMenuTitle} menuItems={menuItems} disabled={disabled} />;
 
     if (featureFlag !== undefined && !!featureFlagEnabledMenuItems) {
         const featureFlagEnabledMenuOrButton = (
-            <MenuOrButton
-                menuTitle={createMenuTitle}
-                menuItems={featureFlagEnabledMenuItems}
-                disabled={disabled}
-                testId={testId}
-            />
+            <MenuOrButton menuTitle={createMenuTitle} menuItems={featureFlagEnabledMenuItems} disabled={disabled} />
         );
 
         return <FeatureFlag flagKey={featureFlag} enabled={featureFlagEnabledMenuOrButton} disabled={menuOrButton} />;
