@@ -28,9 +28,9 @@ import {
     TextWithFallback,
     UserTokenManagementDialog,
 } from '../../components';
+import useApiVersion from '../../hooks/useApiVersion';
 import { useNotifications } from '../../providers';
 import { apiClient, getUsername } from '../../utils';
-import useApiVersion from '../../hooks/useApiVersion';
 
 const UserProfile = () => {
     const { addNotification } = useNotifications();

@@ -1,19 +1,3 @@
-// Copyright 2025 Specter Ops, Inc.
-//
-// Licensed under the Apache License, Version 2.0
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// SPDX-License-Identifier: Apache-2.0
-
 export enum ActiveDirectoryNodeKind {
     Entity = 'Base',
     User = 'User',
@@ -141,6 +125,10 @@ export enum ActiveDirectoryRelationshipKind {
     SyncedToEntraUser = 'SyncedToEntraUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
     CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
+    WriteOwnerLimitedRights = 'WriteOwnerLimitedRights',
+    WriteOwnerRaw = 'WriteOwnerRaw',
+    OwnsLimitedRights = 'OwnsLimitedRights',
+    OwnsRaw = 'OwnsRaw',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -284,6 +272,14 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CoerceAndRelayNTLMToSMB';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS:
             return 'CoerceAndRelayNTLMToADCS';
+        case ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights:
+            return 'WriteOwnerLimitedRights';
+        case ActiveDirectoryRelationshipKind.WriteOwnerRaw:
+            return 'WriteOwnerRaw';
+        case ActiveDirectoryRelationshipKind.OwnsLimitedRights:
+            return 'OwnsLimitedRights';
+        case ActiveDirectoryRelationshipKind.OwnsRaw:
+            return 'OwnsRaw';
         default:
             return undefined;
     }
@@ -406,9 +402,14 @@ export enum ActiveDirectoryKindProperties {
     MaxPwdAge = 'maxpwdage',
     LockoutDuration = 'lockoutduration',
     LockoutObservationWindow = 'lockoutobservationwindow',
+    OwnerSid = 'ownersid',
     SMBSigning = 'smbsigning',
     WebClientRunning = 'webclientrunning',
     RestrictOutboundNTLM = 'restrictoutboundntlm',
+    GMSA = 'gmsa',
+    MSA = 'msa',
+    DoesAnyAceGrantOwnerRights = 'doesanyacegrantownerrights',
+    DoesAnyInheritedAceGrantOwnerRights = 'doesanyinheritedacegrantownerrights',
     ADCSWebEnrollmentHTTP = 'adcswebenrollmenthttp',
     ADCSWebEnrollmentHTTPS = 'adcswebenrollmenthttps',
     ADCSWebEnrollmentHTTPSEPA = 'adcswebenrollmenthttpsepa',
@@ -617,12 +618,22 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Lockout Duration';
         case ActiveDirectoryKindProperties.LockoutObservationWindow:
             return 'Lockout Observation Window';
+        case ActiveDirectoryKindProperties.OwnerSid:
+            return 'Owner SID';
         case ActiveDirectoryKindProperties.SMBSigning:
             return 'SMB Signing';
         case ActiveDirectoryKindProperties.WebClientRunning:
             return 'WebClient Running';
         case ActiveDirectoryKindProperties.RestrictOutboundNTLM:
             return 'Restrict Outbound NTLM';
+        case ActiveDirectoryKindProperties.GMSA:
+            return 'GMSA';
+        case ActiveDirectoryKindProperties.MSA:
+            return 'MSA';
+        case ActiveDirectoryKindProperties.DoesAnyAceGrantOwnerRights:
+            return 'Does Any ACE Grant Owner Rights';
+        case ActiveDirectoryKindProperties.DoesAnyInheritedAceGrantOwnerRights:
+            return 'Does Any Inherited ACE Grant Owner Rights';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTP:
             return 'ADCS Web Enrollment HTTP';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPS:
@@ -680,6 +691,8 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.SyncedToEntraUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+        ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
+        ActiveDirectoryRelationshipKind.OwnsLimitedRights,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.TrustedBy,

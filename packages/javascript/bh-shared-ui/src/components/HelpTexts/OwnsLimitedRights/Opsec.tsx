@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2023 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useQuery } from 'react-query';
-import { apiClient } from '../utils';
+import { Typography } from '@mui/material';
+import { FC } from 'react';
 
-const useApiVersion = () => useQuery('api-version', () => apiClient.version().then((res) => res.data.data));
-export default useApiVersion;
+const Opsec: FC = () => {
+    return (
+        <>
+            <Typography variant='body2'>
+                Please refer to the OPSEC info for the specific granted permissions at
+                https://bloodhound.readthedocs.io/en/latest/data-analysis/edges.html
+            </Typography>
+        </>
+    );
+};
+
+export default Opsec;

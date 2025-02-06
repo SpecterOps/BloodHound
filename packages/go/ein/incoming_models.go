@@ -68,6 +68,16 @@ func (s ACE) Kind() graph.Kind {
 	return parseADKind(s.PrincipalType)
 }
 
+func (s ACE) GetCachedValue() WriteOwnerLimitedPrincipal {
+	return WriteOwnerLimitedPrincipal{
+		SourceData: IngestibleSource{
+			Source:     s.PrincipalSID,
+			SourceType: s.Kind(),
+		},
+		IsInherited: s.IsInherited,
+	}
+}
+
 type IngestBase struct {
 	ObjectIdentifier string
 	Properties       map[string]any
