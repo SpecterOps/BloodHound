@@ -51,7 +51,7 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string; hoverActive: bo
                         isActiveRoute,
                 },
                 {
-                    'hover:text-secondary dark:hover:text-secondary-variant-2': hoverActive,
+                    'hover:text-secondary dark:hover:text-secondary-variant-2': hoverActive && !isActiveRoute,
                 }
             )}>
             {children}

@@ -17,14 +17,24 @@ import { FC, ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { cn } from '../../utils';
 
+const SubNavListTitle: FC<{ children: ReactNode }> = ({ children }) => {
+    return (
+        <li className={'flex items-center mx-2 mb-1 px-2 text-neutral-dark-0 dark:text-neutral-light-1 font-medium'}>
+            {children}
+        </li>
+    );
+};
+
 const SubNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children, route }) => {
     const location = useLocation();
     const isActiveRoute = route ? location.pathname.includes(route.replace(/\*/g, '')) : false;
 
     return (
         <li
-            className={cn('w-full mx-2 mb-1 px-2 py-1 rounded', {
-                'text-primary bg-neutral-light-4': isActiveRoute,
+            className={cn('h-auto flex items-center mx-2 mb-1 px-2 rounded hover:underline', {
+                'text-primary hover:text-primary bg-neutral-light-4': isActiveRoute,
+                'text-neutral-dark-0 dark:text-neutral-light-1 hover:text-secondary dark:hover:text-secondary-variant-2':
+                    !isActiveRoute,
             })}>
             {children}
         </li>
@@ -35,7 +45,7 @@ const SubNavListItemLink: FC<{ route: string; children: ReactNode }> = ({ route,
     return (
         <RouterLink
             to={route as string}
-            className={`h-8 min-h-8 w-full flex items-center gap-x-2 text-sm cursor-pointer whitespace-nowrap hover:text-secondary hover:underline dark:hover:text-secondary-variant-2`}>
+            className={`h-7 min-h-7 w-full flex items-center gap-x-2 text-sm whitespace-nowrap`}>
             {children}
         </RouterLink>
     );
@@ -51,18 +61,18 @@ const SubNav: React.FC<{
     }[];
 }> = ({ sections }) => {
     return (
-        <nav className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 text-neutral-dark-0 pt-6 border-x border-solid border-neutral-light-5 dark:bg-neutral-dark-2 dark:text-neutral-light-1'>
+        <nav className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 pt-6 border-x border-solid border-neutral-light-5 dark:bg-neutral-dark-2 overflow-x-hidden overflow-y-auto'>
             {sections.map((section, sectionIndex) => (
                 <ul key={sectionIndex}>
-                    <SubNavListItem>
-                        <span className='font-medium decoration-none'>{section.title}</span>
-                    </SubNavListItem>
+                    <SubNavListTitle>
+                        <span>{section.title}</span>
+                    </SubNavListTitle>
                     {section.items.map((item, itemIndex) => (
-                        <SubNavListItemLink key={itemIndex} route={item.path}>
-                            <SubNavListItem route={item.path}>
+                        <SubNavListItem key={itemIndex} route={item.path}>
+                            <SubNavListItemLink route={item.path}>
                                 <span>{item.label}</span>
-                            </SubNavListItem>
-                        </SubNavListItemLink>
+                            </SubNavListItemLink>
+                        </SubNavListItem>
                     ))}
                 </ul>
             ))}
