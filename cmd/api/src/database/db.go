@@ -47,6 +47,7 @@ var (
 	ErrDuplicateAGTag           = errors.New("duplicate asset group tag")
 	ErrDuplicateSSOProviderName = errors.New("duplicate sso provider name")
 	ErrDuplicateUserPrincipal   = errors.New("duplicate user principal name")
+	ErrDuplicateEmail           = errors.New("duplicate user email address")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -112,8 +113,6 @@ type Database interface {
 	GetUser(ctx context.Context, id uuid.UUID) (model.User, error)
 	DeleteUser(ctx context.Context, user model.User) error
 	LookupUser(ctx context.Context, principalName string) (model.User, error)
-	GetAllUsersWithNonUniqueEmails(ctx context.Context) (map[string]int, error)
-	IsNewEmail(ctx context.Context, email string) bool
 
 	// Auth
 	CreateAuthToken(ctx context.Context, authToken model.AuthToken) (model.AuthToken, error)
