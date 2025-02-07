@@ -8498,7 +8498,6 @@ func (s *ESC10bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.DC1)
 }
 
-
 type OwnsWriteOwnerPriorCollectorVersions struct {
 
 	// Domain 1

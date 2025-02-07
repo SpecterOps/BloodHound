@@ -18,9 +18,10 @@ package translate
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
-	"strings"
 )
 
 func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocation) {
