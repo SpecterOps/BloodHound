@@ -113,10 +113,11 @@ func TestFilteredSkipLimit(t *testing.T) {
 
 func TestTraversalBreadthFirstContextCancel(t *testing.T) {
 	var (
+		numWorkers    = 4
 		mockCtrl      = gomock.NewController(t)
 		mockDB        = graph_mocks.NewMockDatabase(mockCtrl)
 		mockTx        = graph_mocks.NewMockTransaction(mockCtrl)
-		traversalInst = New(mockDB, 4)
+		traversalInst = New(mockDB, numWorkers)
 		plan          = Plan{
 			RootSegment: root,
 			Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
@@ -127,10 +128,7 @@ func TestTraversalBreadthFirstContextCancel(t *testing.T) {
 
 	mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(testCtx context.Context, logic func(tx graph.Transaction) error, options ...graph.TransactionOption) error {
 		return logic(mockTx)
-	}).AnyTimes()
-
-	mockTx.EXPECT().GraphQueryMemoryLimit().AnyTimes()
-	mockTx.EXPECT().Relationships().AnyTimes()
+	}).Times(numWorkers)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
