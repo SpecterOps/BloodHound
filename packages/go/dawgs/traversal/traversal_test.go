@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/graph/mocks"
+	graph_mocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
