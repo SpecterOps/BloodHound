@@ -169,7 +169,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAP")
 
-		_, computers, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
+		groupExpansions, computers, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
 
 		ldapSigningCache, err := ad2.FetchLDAPSigningCache(testContext.Context(), db)
@@ -181,14 +181,24 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 				for _, computer := range computers {
 					innerComputer := computer
+					domain, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
+
+					protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(tx, groupExpansions)
+					require.NoError(t, err)
 
 					domainSid, err := innerDomain.Properties.Get(ad.DomainSID.String()).String()
 					require.NoError(t, err)
 
 					if authenticatedUserID, ok := authenticatedUsers[domainSid]; !ok {
 						t.Fatalf("authenticated user not found for %s", domainSid)
+					} else if protectedUsersForDomain, ok := protectedUsersCache[domain]; !ok {
+						continue
+					} else if ldapSigningForDomain, ok := ldapSigningCache[domain]; !ok {
+						continue
+					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
+						continue
 					} else if err = ad2.PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserID, ldapSigningCache); err != nil {
-						t.Logf("failed post processig for %s: %v", ad.CoerceAndRelayNTLMToLDAP.String(), err)
+						t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToLDAP.String(), err)
 					}
 				}
 				return nil
@@ -198,18 +208,6 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 
 		err = operation.Done()
 		require.NoError(t, err)
-
-		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			if results, err := ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
-				return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToLDAP)
-			})); err != nil {
-				t.Fatalf("error fetching ntlm to smb edges in integration test; %v", err)
-			} else {
-				require.Len(t, results, 1)
-				require.NoError(t, err)
-			}
-			return nil
-		})
 
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {

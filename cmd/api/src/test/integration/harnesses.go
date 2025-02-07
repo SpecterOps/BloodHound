@@ -8607,7 +8607,6 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
 	s.Computer1.Properties.Set(ad.LDAPSigning.String(), false)
-	s.Computer1.Properties.Set(ad.LDAPsAvailable.String(), true)
 	s.Computer1.Properties.Set(ad.IsDC.String(), domain1Sid)
 	graphTestContext.UpdateNode(s.Computer1)
 
@@ -8615,7 +8614,7 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 	s.Computer2.Properties.Set(ad.WebClientRunning.String(), true)
 	graphTestContext.UpdateNode(s.Computer2)
 
-	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domain1Sid)
+	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domain3Sid)
 	s.Computer3.Properties.Set(ad.WebClientRunning.String(), true)
 	graphTestContext.UpdateNode(s.Computer3)
 
@@ -8629,9 +8628,10 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 
 	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domain2Sid)
 	s.Computer6.Properties.Set(ad.IsDC.String(), domain2Sid)
+	s.Computer6.Properties.Set(ad.LDAPSigning.String(), false)
 	graphTestContext.UpdateNode(s.Computer6)
 
-	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domain1Sid)
+	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domain2Sid)
 	s.Computer7.Properties.Set(ad.WebClientRunning.String(), true)
 	graphTestContext.UpdateNode(s.Computer7)
 
@@ -8664,15 +8664,24 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group-1%s", adAnalysis.AuthenticatedUsersSuffix))
 	graphTestContext.UpdateNode(s.Group1)
 
-	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain1Sid)
-	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domain1Sid)
-	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain3Sid)
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group-2%s", adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group2)
 
-	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain1Sid)
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domain1Sid)
+
+	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
+	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group-4%s", adAnalysis.ProtectedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group4)
+
+	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain2Sid)
 	s.Group5.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group-5%s", adAnalysis.AuthenticatedUsersSuffix))
 	graphTestContext.UpdateNode(s.Group5)
 
-	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain1Sid)
+	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain2Sid)
+	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group-6%s", adAnalysis.ProtectedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group6)
+
 	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
 	graphTestContext.NewRelationship(s.Computer5, s.Group4, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Computer6, s.Domain2, ad.DCFor)

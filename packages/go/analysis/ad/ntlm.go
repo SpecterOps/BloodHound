@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -38,6 +39,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		adcsComputerCache       = make(map[string]cardinality.Duplex[uint64])
 		operation               = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
 		authenticatedUsersCache = make(map[string]graph.ID)
+		protectedUsersCache     = make(map[string]cardinality.Duplex[uint64])
 	)
 
 	// TODO: after adding all of our new NTLM edges, benchmark performance between submitting multiple readers per computer or single reader per computer
@@ -45,8 +47,14 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		// Fetch all nodes where the node is a Group and is an Authenticated User
 		if innerAuthenticatedUsersCache, err := FetchAuthUsersMappedToDomains(tx); err != nil {
 			return err
+		} else if innerProtectedUsersCache, err := FetchProtectedUsersMappedToDomains(tx, groupExpansions); err != nil {
+			return err
+		} else if ldapSigningCache, err := FetchLDAPSigningCache(ctx, db); err != nil {
+			return err
 		} else {
 			authenticatedUsersCache = innerAuthenticatedUsersCache
+			protectedUsersCache = innerProtectedUsersCache
+
 			// Fetch all nodes where the type is Computer
 			return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 				for computer := range cursor.Chan() {
@@ -58,14 +66,17 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 						continue
 					} else if authenticatedUserID, ok := authenticatedUsersCache[domain]; !ok {
 						continue
+					} else if protectedUsersForDomain, ok := protectedUsersCache[domain]; !ok {
+						continue
+					} else if ldapSigningForDomain, ok := ldapSigningCache[domain]; !ok {
+						continue
+					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
+						continue
 					} else if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 						return PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID)
 					}); err != nil {
 						slog.WarnContext(ctx, fmt.Sprintf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToSMB, err))
 						// Additional analysis may occur if one of our analysis errors
-						continue
-					} else if ldapSigningCache, err := FetchLDAPSigningCache(ctx, db); err != nil {
-						slog.WarnContext(ctx, fmt.Sprintf("Fetching LDAP Signing Cache failed: %v", err))
 						continue
 					} else if err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 						return PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserID, ldapSigningCache)
@@ -211,7 +222,7 @@ func isCertTemplateValidForADCSRelay(ct *graph.Node) (bool, error) {
 	}
 }
 
-// PostCoerceAndRelayNtlmToSmb creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
+// PostCoerceAndRelayNTLMToSMB creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
 // Comprised solely of adminTo and memberOf edges
 func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, computer *graph.Node, authenticatedUserID graph.ID) error {
 	if smbSigningEnabled, err := computer.Properties.Get(ad.SMBSigning.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
@@ -261,7 +272,7 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 
 // PostCoerceAndRelayNTLMToLDAP creates edges where an authenticated user group, for a given domain, is able to target the provided computer.
 // This will create either a CoerceAndRelayNTLMToLDAP or CoerceAndRelayNTLMToLDAPs edges, depending on the ldapSigning property of the domain
-func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob, computer *graph.Node, authenticatedUserID graph.ID, ldapSigningCache map[string]LdapSigningCache) error {
+func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob, computer *graph.Node, authenticatedUserID graph.ID, ldapSigningCache map[string]LDAPSigningCache) error {
 	if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
 		return err
 	} else if restrictOutboundNtlm {
@@ -279,7 +290,7 @@ func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob
 			if signingCache, ok := ldapSigningCache[domainSid]; !ok {
 				return nil
 			} else {
-				if len(signingCache.relayableToDcLdap) > 0 {
+				if len(signingCache.relayableToDCLDAP) > 0 {
 					outC <- analysis.CreatePostRelationshipJob{
 						FromID: authenticatedUserID,
 						ToID:   computer.ID,
@@ -287,7 +298,7 @@ func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob
 					}
 				}
 
-				if len(signingCache.relayableToDcLdaps) > 0 {
+				if len(signingCache.relayableToDCLDAPS) > 0 {
 					outC <- analysis.CreatePostRelationshipJob{
 						FromID: authenticatedUserID,
 						ToID:   computer.ID,
@@ -325,18 +336,48 @@ func FetchAuthUsersMappedToDomains(tx graph.Transaction) (map[string]graph.ID, e
 	return authenticatedUsers, err
 }
 
-type LdapSigningCache struct {
-	relayableToDcLdap  []graph.ID
-	relayableToDcLdaps []graph.ID
+// FetchProtectedUsersMappedToDomains fetches all protected users groups mapped by their domain SID
+func FetchProtectedUsersMappedToDomains(tx graph.Transaction, groupExpansions impact.PathAggregator) (map[string]cardinality.Duplex[uint64], error) {
+	protectedUsers := make(map[string]cardinality.Duplex[uint64])
+
+	err := tx.Nodes().Filter(
+		query.And(
+			query.Kind(query.Node(), ad.Group),
+			query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), ProtectedUsersSuffix)),
+	).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+		for protectedUserGroup := range cursor.Chan() {
+			if domain, err := protectedUserGroup.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+				continue
+			} else {
+				set := cardinality.NewBitmap64()
+				set.Or(groupExpansions.Cardinality(protectedUserGroup.ID.Uint64()))
+				protectedUsers[domain] = set
+			}
+		}
+
+		return cursor.Error()
+	},
+	)
+
+	return protectedUsers, err
+}
+
+// LDAPSigningCache encapsulates whether a domain had a valid functionallevel property and slices of node ids that meet the criteria
+// for a CoerceAndRelayNTLMToLDAP or CoerceAndRelayNTLMToLDAPS edge
+type LDAPSigningCache struct {
+	IsValidFunctionalLevel bool
+	relayableToDCLDAP      []graph.ID
+	relayableToDCLDAPS     []graph.ID
 }
 
 // FetchLDAPSigningCache will check all Domain Controllers (DCs) for LDAP signing. If the DC has the "ldap_signing" set to true along with "ldaps_available" to true and "ldaps_epa" to false,
 // we add the DC to the relayableToDCLDAPS slice. If the DC has "ldap_signing" set to false then we simply set the DC to be a relayableToDCLDAP" slice
-func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]LdapSigningCache, error) {
+func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]LDAPSigningCache, error) {
 	if domains, err := FetchAllDomains(ctx, db); err != nil {
 		return nil, err
 	} else {
-		cache := make(map[string]LdapSigningCache)
+		cache := make(map[string]LDAPSigningCache)
+		// Iterate all domains to obtain the DomainSID, which we can use to query for DCs that control the domain
 		for _, domain := range domains {
 			if domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 				if errors.Is(err, graph.ErrPropertyNotFound) {
@@ -352,9 +393,6 @@ func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]L
 						),
 						query.Equals(
 							query.NodeProperty(ad.IsDC.String()), domainSid,
-						),
-						query.Equals(
-							query.NodeProperty(ad.LDAPSigning.String()), false,
 						),
 					),
 				)); err != nil {
@@ -380,10 +418,23 @@ func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]L
 				)); err != nil {
 					return err
 				} else {
-					cache[domainSid] = LdapSigningCache{
-						relayableToDcLdap:  relayableToDcLdap,
-						relayableToDcLdaps: relayableToDcLdaps,
+					isFunctionalLevelValid := false
+					if functionalLevel, err := domain.Properties.Get(ad.FunctionalLevel.String()).String(); err != nil {
+						if errors.Is(err, graph.ErrPropertyNotFound) {
+							isFunctionalLevelValid = true
+						} else {
+							return err
+						}
+					} else if slices.Contains(vulnerableFunctionalLevels(), functionalLevel) {
+						isFunctionalLevelValid = true
 					}
+
+					cache[domainSid] = LDAPSigningCache{
+						IsValidFunctionalLevel: isFunctionalLevelValid,
+						relayableToDCLDAP:      relayableToDcLdap,
+						relayableToDCLDAPS:     relayableToDcLdaps,
+					}
+
 					return nil
 				}
 			}); err != nil {
@@ -392,5 +443,18 @@ func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]L
 		}
 
 		return cache, nil
+	}
+}
+
+// vulnerableFunctionalLevels is a simple constant slice of releases that are vulnerable to a CoerceAndRelayNTLMToLDAP(S) attack path
+// They can be used by checking a node's functionalllevel property
+func vulnerableFunctionalLevels() []string {
+	return []string{
+		"2000 Mixed/Native",
+		"2003 Interim",
+		"2003",
+		"2008",
+		"2008 R2",
+		"2012",
 	}
 }
