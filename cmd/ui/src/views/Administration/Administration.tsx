@@ -15,11 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, CircularProgress, Container } from '@mui/material';
-import { AdministrationSection, GenericErrorBoundaryFallback, Permission, SubNav } from 'bh-shared-ui';
+import { AdministrationSection, GenericErrorBoundaryFallback, Permission, SubNav, usePermissions } from 'bh-shared-ui';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import usePermissions from 'src/hooks/usePermissions/usePermissions';
 import {
     ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
     ROUTE_ADMINISTRATION_DATA_QUALITY,
@@ -110,7 +109,7 @@ const sections: AdministrationSection[] = [
 ];
 
 const Administration: React.FC = () => {
-    const { checkAllPermissions, getUserPermissions } = usePermissions();
+    const { checkAllPermissions } = usePermissions();
 
     // Checking these for now because the only route we are currently hiding is to the configuration page.
     // In practice, this will permit Administrators and Power User roles only.
@@ -163,7 +162,7 @@ const Administration: React.FC = () => {
                                                 key={item.path}
                                                 element={
                                                     <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                                                        <item.component permissions={getUserPermissions()} />
+                                                        <item.component />
                                                     </ErrorBoundary>
                                                 }
                                             />

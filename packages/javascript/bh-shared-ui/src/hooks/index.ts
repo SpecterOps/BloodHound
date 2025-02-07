@@ -28,15 +28,17 @@ export * from './useConfiguration';
 
 export * from './useDataQualityStats';
 
-export * from './useForbiddenNotifier';
-
 export * from './useFeatureFlags';
 
 export * from './useFetchEntityProperties';
 
 export * from './useFileIngest';
 
+export * from './useForbiddenNotifier';
+
 export * from './useOnMount';
+
+export * from './usePermissions';
 
 export * from './useSavedQueries';
 
