@@ -99,7 +99,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Domain Admins logons to non-Domain Controllers',
-                cypher: `MATCH (dc)-[:MemberOf*0..]->(g:Group)\nWHERE g.objectid ENDS WITH '-516'\nWITH COLLECT(dc) AS exclude\nMATCH p = (c:Computer)-[:HasSession]->(u:User)-[r2:MemberOf*1..]->(g:Group)\nWHERE g.objectid ENDS WITH '-512' AND NOT c IN exclude\nRETURN p\n${LIMIT_1000}`,
+                cypher: `MATCH (s)-[:MemberOf*0..]->(g:Group)\nWHERE g.objectid ENDS WITH '-516'\nWITH COLLECT(s) AS exclude\nMATCH p = (c:Computer)-[:HasSession]->(:User)-[:MemberOf*1..]->(g:Group)\nWHERE g.objectid ENDS WITH '-512' AND NOT c IN exclude\nRETURN p\n${LIMIT_1000}`,
             },
         ],
     },
@@ -181,7 +181,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Enrollment rights on published ESC2 certificate templates',
-                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.requiresmanagerapproval = False\nAND (ct.effectiveekus = [] OR '2.5.29.37.0' IN ct.effectiveekus)\nAND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1)\nRETURN p\n${LIMIT_1000}`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(c:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE c.requiresmanagerapproval = false\nAND (c.effectiveekus = [''] OR '2.5.29.37.0' IN c.effectiveekus)\nAND (c.authorizedsignatures = 0 OR c.schemaversion = 1)\nRETURN p\n${LIMIT_1000}`,
             },
             {
                 description: 'Enrollment rights on published enrollment agent certificate templates',
@@ -202,11 +202,11 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Domain controllers with weak certificate binding enabled',
-                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(:Domain)\nWHERE dc.strongcertificatebindingenforcementraw = 0 OR dc.strongcertificatebindingenforcementraw = 1\nRETURN p\n${LIMIT_1000}`,
+                cypher: `MATCH p = (s:Computer)-[:DCFor]->(:Domain)\nWHERE s.strongcertificatebindingenforcementraw = 0 OR s.strongcertificatebindingenforcementraw = 1\nRETURN p\n${LIMIT_1000}`,
             },
             {
                 description: 'Domain controllers with UPN certificate mapping enabled',
-                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(:Domain)\nWHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p\n${LIMIT_1000}`,
+                cypher: `MATCH p = (s:Computer)-[:DCFor]->(:Domain)\nWHERE s.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p\n${LIMIT_1000}`,
             },
             {
                 description: 'Non-default permissions on IssuancePolicy nodes',
