@@ -19,6 +19,7 @@ import { apiClient } from 'bh-shared-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
 import { DateTime } from 'luxon';
 
+import { queryClient } from 'src/main';
 import type { AppDispatch, AppState } from 'src/store';
 import { addSnackbar } from '../global/actions';
 import * as types from './types';
@@ -52,6 +53,10 @@ export const login = createAsyncThunk(
                 },
                 signal,
             });
+
+            // warm up the react-query cache
+            queryClient.setQueryData(['getSelf'], getSelfResponse.data.data);
+
             return {
                 sessionToken: loginResponse.data.data.session_token,
                 user: getSelfResponse.data.data,
@@ -101,6 +106,10 @@ export const initialize = createAsyncThunk<
                 Authorization: `Bearer ${sessionToken}`,
             },
         });
+
+        // warm up the react-query cache
+        queryClient.setQueryData(['getSelf'], getSelfResponse.data.data);
+
         return getSelfResponse.data.data;
     } catch (error) {
         return rejectWithValue(error);

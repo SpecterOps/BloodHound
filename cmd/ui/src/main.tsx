@@ -73,7 +73,7 @@ declare global {
     }
 }
 
-const queryClient = new QueryClient();
+export const queryClient = new QueryClient();
 
 const main = async () => {
     const rootContainer = document.getElementById('root');
