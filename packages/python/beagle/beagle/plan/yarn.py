@@ -29,7 +29,7 @@ class YarnTestPlan(TestPlan):
         name: str,
         source_path: str,
         project_ctx: ProjectContext,
-        yarn_workspace = False,
+        yarn_workspace=False,
     ) -> None:
         super().__init__(
             name=name,
@@ -38,7 +38,7 @@ class YarnTestPlan(TestPlan):
         )
 
         self.source_path = source_path
-        self.yarn_workspace = yarn_workspace,
+        self.yarn_workspace = (yarn_workspace,)
         self.node_modules_path = os.path.join(self.source_path, "node_modules")
 
     def prepare(self) -> None:
@@ -79,6 +79,10 @@ class YarnBuildPlan(BuildPlan):
         self.node_modules_path = os.path.join(self.source_path, "node_modules")
 
     def prepare(self) -> None:
+
+        environment = os.environ.copy()
+        environment["NODE_ENV"] = "production"
+
         run(
             cmd=["yarn", "install"],
             cwd=self.source_path,
@@ -114,6 +118,10 @@ class UIBuildPlan(BuildPlan):
         self.node_modules_path = os.path.join(self.source_path, "node_modules")
 
     def prepare(self) -> None:
+
+        environment = os.environ.copy()
+        environment["NODE_ENV"] = "production"
+
         run(
             cmd=["yarn", "install"],
             cwd=os.path.join(
