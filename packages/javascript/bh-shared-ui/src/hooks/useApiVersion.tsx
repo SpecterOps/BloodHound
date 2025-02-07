@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { apiClient } from '../utils';
 import { useQuery } from 'react-query';
+import { apiClient } from '../utils';
 
 const useApiVersion = () => useQuery('api-version', () => apiClient.version().then((res) => res.data.data));
 export default useApiVersion;

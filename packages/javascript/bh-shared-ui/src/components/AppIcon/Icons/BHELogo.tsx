@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { BaseSVG, BasePath, BaseSVGProps } from './utils';
+import { BasePath, BaseSVG, BaseSVGProps } from './utils';
 
 export const BHELogo: React.FC<BaseSVGProps> = (props) => {
     return (

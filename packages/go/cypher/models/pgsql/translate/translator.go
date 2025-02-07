@@ -18,6 +18,7 @@ package translate
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
