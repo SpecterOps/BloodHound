@@ -534,12 +534,17 @@ func (s *BloodhoundDB) DeleteAuthSecret(ctx context.Context, authSecret model.Au
 // CreateUserSession creates a new UserSession row
 // INSERT INTO user_sessions (...) VALUES (..)
 func (s *BloodhoundDB) CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error) {
-	var (
-		newUserSession = userSession
-		result         = s.db.WithContext(ctx).Create(&newUserSession)
-	)
+	var newUserSession = userSession
 
-	return newUserSession, CheckError(result)
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := CheckError(tx.Exec(`UPDATE users SET last_login = ? WHERE id = ?`, time.Now().UTC(), userSession.UserID)); err != nil {
+			return err
+		}
+
+		return CheckError(tx.Create(&newUserSession))
+	})
+
+	return newUserSession, err
 }
 
 // EndUserSession terminates the provided session

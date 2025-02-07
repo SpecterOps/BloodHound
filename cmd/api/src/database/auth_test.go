@@ -536,6 +536,9 @@ func TestDatabase_CreateUserSession(t *testing.T) {
 	} else {
 		assert.Equal(t, user, newUserSession.User)
 	}
+	user, err := dbInst.GetUser(testCtx, user.ID)
+	assert.Nil(t, err)
+	assert.True(t, !user.LastLogin.IsZero(), "User last login date was not set")
 }
 
 func TestDatabase_SetUserSessionFlag(t *testing.T) {
