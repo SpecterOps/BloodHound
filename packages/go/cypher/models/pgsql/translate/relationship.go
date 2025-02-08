@@ -159,10 +159,10 @@ func (s *Translator) translateRelationshipPatternToStep(bindingResult BindingRes
 		// This is a traversal continuation so copy the right node identifier of the preceding step and then
 		// add the new step
 		nextStep := &PatternSegment{
-			Edge:        bindingResult.Binding,
-			Direction:   relationshipPattern.Direction,
-			LeftNode:    currentStep.RightNode,
-			Expansion:   expansion,
+			Edge:      bindingResult.Binding,
+			Direction: relationshipPattern.Direction,
+			LeftNode:  currentStep.RightNode,
+			Expansion: expansion,
 		}
 
 		part.TraversalSteps = append(part.TraversalSteps, nextStep)

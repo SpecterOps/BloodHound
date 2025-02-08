@@ -59,8 +59,8 @@ func (s *Translator) buildInlineProjection(part *QueryPart) (pgsql.Select, error
 
 func (s *Translator) buildTailProjection() error {
 	var (
-		currentPart = s.query.CurrentPart()
-		currentFrame = s.query.Scope.CurrentFrame()
+		currentPart           = s.query.CurrentPart()
+		currentFrame          = s.query.Scope.CurrentFrame()
 		singlePartQuerySelect = pgsql.Select{}
 	)
 
