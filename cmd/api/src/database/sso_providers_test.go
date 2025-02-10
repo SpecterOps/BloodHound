@@ -141,6 +141,7 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 		user, err := dbInst.CreateUser(testCtx, model.User{
 			SSOProviderID: samlProvider.SSOProviderID,
 			PrincipalName: user2Principal,
+			EmailAddress:  null.StringFrom(user2Principal),
 		})
 		require.NoError(t, err)
 
@@ -159,6 +160,7 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 		user, err := dbInst.CreateUser(testCtx, model.User{
 			SSOProviderID: null.Int32From(int32(oidcProvider.SSOProviderID)),
 			PrincipalName: user3Principal,
+			EmailAddress:  null.StringFrom(user3Principal),
 		})
 		require.NoError(t, err)
 
@@ -185,6 +187,7 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 		user, err := dbInst.CreateUser(testCtx, model.User{
 			SSOProviderID: null.Int32From(int32(oidcProvider.SSOProviderID)),
 			PrincipalName: user4Principal,
+			EmailAddress:  null.StringFrom(user4Principal),
 		})
 		require.NoError(t, err)
 
@@ -360,6 +363,7 @@ func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
 		user, err := dbInst.CreateUser(testCtx, model.User{
 			SSOProviderID: null.Int32From(provider.ID),
 			PrincipalName: userPrincipal,
+			EmailAddress:  null.StringFrom(userPrincipal),
 		})
 		require.NoError(t, err)
 
@@ -388,6 +392,7 @@ func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
 		user, err := dbInst.CreateUser(testCtx, model.User{
 			SSOProviderID: null.Int32From(provider.ID),
 			PrincipalName: user2Principal,
+			EmailAddress:  null.StringFrom(user2Principal),
 		})
 		require.NoError(t, err)
 
@@ -405,6 +410,7 @@ func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
 		user, err := dbInst.CreateUser(testCtx, model.User{
 			SSOProviderID: null.Int32From(provider.ID),
 			PrincipalName: user3Principal,
+			EmailAddress:  null.StringFrom(user3Principal),
 		})
 		require.NoError(t, err)
 
@@ -433,6 +439,7 @@ func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
 		user, err := dbInst.CreateUser(testCtx, model.User{
 			SSOProviderID: null.Int32From(provider.ID),
 			PrincipalName: user4Principal,
+			EmailAddress:  null.StringFrom(user4Principal),
 		})
 		require.NoError(t, err)
 
