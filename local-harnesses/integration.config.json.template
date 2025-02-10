@@ -9,6 +9,7 @@
     "log_path": "bhapi.log",
     "enable_startup_wait_period": false,
     "datapipe_interval": 1,
+    "graph_driver": neo4j,
     "database": {
         "connection": "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=65432"
     },

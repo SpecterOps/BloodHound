@@ -19,8 +19,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/specterops/bloodhound/dawgs/drivers/pg"
-
+	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/src/serde"
 )
 
@@ -58,7 +57,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			EnableTextLogger:             false, // Default to JSON logging
 			TLS:                          TLSConfiguration{},
 			SAML:                         SAMLConfiguration{},
-			GraphDriver:                  pg.DriverName, // Default to PG as the graph driver
+			GraphDriver:                  neo4j.DriverName, // Default to PG as the graph driver
 			Database: DatabaseConfiguration{
 				MaxConcurrentSessions: 10,
 			},
