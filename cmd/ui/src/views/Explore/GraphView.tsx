@@ -54,7 +54,7 @@ const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
 
 const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
 
-const columnStyles = { height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' };
+const columnStyles = { height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', zIndex: '1' };
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -208,6 +208,7 @@ const GraphView: FC = () => {
                     boxSizing: 'border-box',
                     pointerEvents: 'none',
                     height: '100%',
+                    zIndex: 1,
                 }}>
                 <Grid
                     item
@@ -225,7 +226,9 @@ const GraphView: FC = () => {
                         sx={{
                             pointerEvents: 'auto',
                             width: '100%',
-                            position: 'relative',
+                            position: 'absolute',
+                            bottom: '16px',
+                            zIndex: '0',
                         }}
                         ref={currentSearchAnchorElement}>
                         <GraphButtons
@@ -266,10 +269,10 @@ const GraphView: FC = () => {
                         <Popper
                             open={currentSearchOpen}
                             anchorEl={currentSearchAnchorElement.current}
-                            placement='top'
+                            placement='top-start'
                             disablePortal
                             sx={{
-                                width: '90%',
+                                width: '530px',
                                 zIndex: 1,
                             }}>
                             <SearchCurrentNodes
