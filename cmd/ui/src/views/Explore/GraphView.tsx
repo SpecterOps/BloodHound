@@ -50,12 +50,6 @@ import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 
-const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
-
-const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
-
-const columnStyles = { height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', zIndex: '1' };
-
 const GraphView: FC = () => {
     /* Hooks */
     const theme = useTheme();
@@ -89,8 +83,6 @@ const GraphView: FC = () => {
     const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
 
     const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
-
-    const [columns, setColumns] = useState(columnsDefault);
 
     const [showNodeLabels, setShowNodeLabels] = useState(true);
 
@@ -175,10 +167,6 @@ const GraphView: FC = () => {
         setContextMenu(null);
     };
 
-    const handleCypherTab = (tab: string) => {
-        tab === 'cypher' ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
-    };
-
     const infoPaneStyles: SxProps = {
         bottom: 0,
         top: 0,
@@ -216,7 +204,7 @@ const GraphView: FC = () => {
                 sx={{
                     pointerEvents: 'none',
                 }}>
-                <ExploreSearch onTabChange={handleCypherTab} />
+                <ExploreSearch />
                 <Box
                     display={'flex'}
                     gap={1}
