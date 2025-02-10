@@ -114,7 +114,7 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
 
             <div
                 className={cn(
-                    'hidden h-min-0 p-1 rounded-lg pointer-events-auto bg-neutral-light-2 dark:bg-neutral-dark-2',
+                    'hidden h-min-0 p-2 rounded-lg pointer-events-auto bg-neutral-light-2 dark:bg-neutral-dark-2',
                     {
                         block: showSearchWidget,
                     }
