@@ -35,17 +35,9 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionToPublic(t *testing.T
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
+		user    = createUser(t, dbInst, userPrincipal)
+		user2   = createUser(t, dbInst, user2Principal)
 	)
-
-	user, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: userPrincipal,
-	})
-	require.NoError(t, err)
-
-	user2, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: user2Principal,
-	})
-	require.NoError(t, err)
 
 	t.Run("Creates saved query permission to public", func(t *testing.T) {
 		query, err := dbInst.CreateSavedQuery(testCtx, user.ID, "Test Query", "TESTING", "Example")
@@ -95,27 +87,11 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsToUsers(t *testing.T
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
+		user1   = createUser(t, dbInst, userPrincipal)
+		user2   = createUser(t, dbInst, user2Principal)
+		user3   = createUser(t, dbInst, user3Principal)
+		user4   = createUser(t, dbInst, user4Principal)
 	)
-
-	user1, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: userPrincipal,
-	})
-	require.NoError(t, err)
-
-	user2, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: user2Principal,
-	})
-	require.NoError(t, err)
-
-	user3, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: "first3.last3@example.com",
-	})
-	require.NoError(t, err)
-
-	user4, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: "first4.last4@example.com",
-	})
-	require.NoError(t, err)
 
 	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
 	require.NoError(t, err)
@@ -152,16 +128,9 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsBatchBadDataError(t 
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
+		user1   = createUser(t, dbInst, userPrincipal)
+		user2   = createUser(t, dbInst, user2Principal)
 	)
-	user1, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: userPrincipal,
-	})
-	require.NoError(t, err)
-
-	user2, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: userPrincipal + "2",
-	})
-	require.NoError(t, err)
 
 	unknownUUID, _ := uuid.NewV4()
 
@@ -193,17 +162,9 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryPublic(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
+		user1   = createUser(t, dbInst, userPrincipal)
+		user2   = createUser(t, dbInst, user2Principal)
 	)
-
-	user1, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: userPrincipal,
-	})
-	require.NoError(t, err)
-
-	user2, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: user2Principal,
-	})
-	require.NoError(t, err)
 
 	query, err := dbInst.CreateSavedQuery(testCtx, user2.ID, "Test Query", "TESTING", "Example")
 	require.NoError(t, err)
@@ -225,17 +186,9 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryShared(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
+		user1   = createUser(t, dbInst, userPrincipal)
+		user2   = createUser(t, dbInst, user2Principal)
 	)
-
-	user1, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: userPrincipal,
-	})
-	require.NoError(t, err)
-
-	user2, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: user2Principal,
-	})
-	require.NoError(t, err)
 
 	query, err := dbInst.CreateSavedQuery(testCtx, user2.ID, "Test Query", "TESTING", "Example")
 	require.NoError(t, err)
@@ -257,17 +210,9 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryOwned(t *testing.T) {
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
+		user1   = createUser(t, dbInst, userPrincipal)
+		user2   = createUser(t, dbInst, user2Principal)
 	)
-
-	user1, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: userPrincipal,
-	})
-	require.NoError(t, err)
-
-	user2, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: user2Principal,
-	})
-	require.NoError(t, err)
 
 	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
 	require.NoError(t, err)
@@ -289,22 +234,10 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
+		user1   = createUser(t, dbInst, userPrincipal)
+		user2   = createUser(t, dbInst, user2Principal)
+		user3   = createUser(t, dbInst, user3Principal)
 	)
-
-	user1, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: userPrincipal,
-	})
-	require.NoError(t, err)
-
-	user2, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: user2Principal,
-	})
-	require.NoError(t, err)
-
-	user3, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: "first3.last3@example.com",
-	})
-	require.NoError(t, err)
 
 	t.Run("Deletes saved query permissions for user(s)", func(t *testing.T) {
 		query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
@@ -378,16 +311,10 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.
 }
 
 func TestSavedQueriesPermissions_IsSavedQueryPublic(t *testing.T) {
-
 	var (
-		testCtx = context.Background()
-		dbInst  = integration.SetupDB(t)
+		testCtx       = context.Background()
+		dbInst, user1 = initAndCreateUser(t)
 	)
-
-	user1, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: userPrincipal,
-	})
-	require.NoError(t, err)
 
 	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
 	require.NoError(t, err)
@@ -401,16 +328,10 @@ func TestSavedQueriesPermissions_IsSavedQueryPublic(t *testing.T) {
 }
 
 func TestSavedQueriesPermissions_IsSavedQuerySharedToUser(t *testing.T) {
-
 	var (
-		testCtx = context.Background()
-		dbInst  = integration.SetupDB(t)
+		testCtx       = context.Background()
+		dbInst, user1 = initAndCreateUser(t)
 	)
-
-	user1, err := dbInst.CreateUser(testCtx, model.User{
-		PrincipalName: userPrincipal,
-	})
-	require.NoError(t, err)
 
 	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
 	require.NoError(t, err)

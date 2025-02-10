@@ -24,7 +24,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"log/slog"
 	"strings"
 	"time"
 
@@ -272,6 +271,8 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 		if result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"users_principal_name_key\"") {
 				return fmt.Errorf("%w: %v", ErrDuplicateUserPrincipal, tx.Error)
+			} else if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"users_email_address_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateEmail, tx.Error)
 			}
 		}
 
@@ -314,6 +315,8 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 		if result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"users_principal_name_key\"") {
 				return fmt.Errorf("%w: %v", ErrDuplicateUserPrincipal, tx.Error)
+			} else if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"users_email_address_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateEmail, tx.Error)
 			}
 		}
 
@@ -350,39 +353,6 @@ func (s *BloodhoundDB) GetUser(ctx context.Context, id uuid.UUID) (model.User, e
 	)
 
 	return user, CheckError(result)
-}
-
-func (s *BloodhoundDB) GetAllUsersWithNonUniqueEmails(ctx context.Context) (map[string]int, error) {
-	countByNonUniqueEmail := make(map[string]int)
-
-	if result, err := s.db.WithContext(ctx).Raw("SELECT lower(email_address) AS email_address, count(lower(email_address)) AS c FROM users GROUP BY lower(email_address) HAVING count(lower(email_address)) > 1;").Rows(); err != nil {
-		return countByNonUniqueEmail, err
-	} else {
-		defer result.Close()
-		for result.Next() {
-			var (
-				email string
-				count int
-			)
-			if err := result.Scan(&email, &count); err != nil {
-				slog.WarnContext(ctx, "failed to scan user email address:  ... skipping", "error", err)
-				continue
-			}
-			countByNonUniqueEmail[email] = count
-		}
-	}
-
-	return countByNonUniqueEmail, nil
-}
-
-// IsNewEmail determines if the provided email already exists in the users table, temporary check until db constraint is added
-func (s *BloodhoundDB) IsNewEmail(ctx context.Context, email string) bool {
-	var foundEmail string
-
-	if err := s.db.WithContext(ctx).Raw(`SELECT email_address FROM users WHERE lower(email_address) = lower(?);`, email).First(&foundEmail).Error; errors.Is(err, gorm.ErrRecordNotFound) {
-		return true
-	}
-	return false
 }
 
 // DeleteUser removes all roles for a given user, thereby revoking all permissions
