@@ -16,9 +16,9 @@
 
 import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
+import { Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { CYPHER_SEARCH, Icon, PATHFINDING_SEARCH, PRIMARY_SEARCH, searchbarActions } from 'bh-shared-ui';
+import { CYPHER_SEARCH, Icon, PATHFINDING_SEARCH, PRIMARY_SEARCH, cn, searchbarActions } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import CypherSearch from './CypherSearch';
@@ -87,27 +87,11 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
     };
 
     return (
-        <Box
-            sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: 0,
-                gap: 2,
-                width: activeTab === 2 && showSearchWidget ? '600px' : '410px',
-                boxShadow: '1px solid white',
-                borderRadius: '8px',
-            }}>
-            <Box
-                sx={{
-                    height: '40px',
-                    display: 'flex',
-                    gap: 1,
-                    backgroundColor: theme.palette.neutral.secondary,
-                    borderRadius: '8px',
-                    pointerEvents: 'auto',
-                    width: '100%',
-                }}>
+        <div
+            className={cn('h-full h-min-0 w-[410px] flex gap-2 flex-col rounded-lg shadow-[1px solid white]', {
+                'w-[600px]': activeTab === 2 && showSearchWidget,
+            })}>
+            <div className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-neutral-light-2 dark:bg-neutral-dark-2'>
                 <Icon
                     className={classes.icon}
                     click={() => {
@@ -126,17 +110,15 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
                     }}>
                     {getTabsContent(classes.tab, matches)}
                 </Tabs>
-            </Box>
+            </div>
 
-            <Box
-                sx={{
-                    p: 1,
-                    backgroundColor: theme.palette.neutral.secondary,
-                    borderRadius: '8px',
-                    display: showSearchWidget ? 'initial' : 'none',
-                    minHeight: 0,
-                    pointerEvents: 'auto',
-                }}>
+            <div
+                className={cn(
+                    'hidden h-min-0 p-1 rounded-lg pointer-events-auto bg-neutral-light-2 dark:bg-neutral-dark-2',
+                    {
+                        block: showSearchWidget,
+                    }
+                )}>
                 <TabPanels
                     tabs={[
                         // This linting rule is disabled because the elements in this array do not require a key prop.
@@ -148,8 +130,8 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
                     ]}
                     activeTab={activeTab}
                 />
-            </Box>
-        </Box>
+            </div>
+        </div>
     );
 };
 
@@ -195,9 +177,9 @@ const TabPanels = ({ tabs, activeTab }: TabPanelsProps) => {
             {tabs.map((tab, index) => {
                 if (activeTab === index) {
                     return (
-                        <Box role='tabpanel' key={index} height='100%'>
+                        <div role='tabpanel' key={index} className='h-full'>
                             {tab}
-                        </Box>
+                        </div>
                     );
                 } else {
                     return null;
