@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Popper, SxProps, useTheme } from '@mui/material';
+import { Popper, SxProps, useTheme } from '@mui/material';
 import {
     EdgeInfoState,
     GraphProgress,
@@ -123,9 +123,9 @@ const GraphView: FC = () => {
 
     if (isLoading) {
         return (
-            <Box sx={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
+            <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
                 <GraphProgress loading={isLoading} />
-            </Box>
+            </div>
         );
     }
 
@@ -180,7 +180,7 @@ const GraphView: FC = () => {
 
     return (
         <div
-            style={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }}
+            className='relative h-full w-full overflow-hidden'
             data-testid='explore'
             onContextMenu={(e) => e.preventDefault()}>
             <SigmaChart
@@ -192,26 +192,9 @@ const GraphView: FC = () => {
                 ref={sigmaChartRef}
             />
 
-            <Box
-                position='absolute'
-                top={0}
-                height='100%'
-                padding={theme.spacing(2)}
-                gap={2}
-                justifyContent='space-between'
-                display='flex'
-                flexDirection='column'
-                sx={{
-                    pointerEvents: 'none',
-                }}>
+            <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
-                <Box
-                    display={'flex'}
-                    gap={1}
-                    sx={{
-                        pointerEvents: 'auto',
-                    }}
-                    ref={currentSearchAnchorElement}>
+                <div className='flex gap-1 pointer-events-auto' ref={currentSearchAnchorElement}>
                     <GraphButtons
                         onExportJson={() => {
                             exportToJson(exportableGraphState);
@@ -247,7 +230,7 @@ const GraphView: FC = () => {
                         showEdgeLabels={showEdgeLabels}
                         isCurrentSearchOpen={false}
                     />
-                </Box>
+                </div>
                 <Popper
                     open={currentSearchOpen}
                     anchorEl={currentSearchAnchorElement.current}
@@ -257,17 +240,19 @@ const GraphView: FC = () => {
                         width: '90%',
                         zIndex: 1,
                     }}>
-                    <SearchCurrentNodes
-                        sx={{ padding: 1, marginBottom: 1 }}
-                        currentNodes={currentNodes || {}}
-                        onSelect={(node) => {
-                            handleClickNode?.(node.id);
-                            toggleCurrentSearch?.();
-                        }}
-                        onClose={toggleCurrentSearch}
-                    />
+                    <div className='pointer-events-none' data-testid='explore_graph-controls'>
+                        <SearchCurrentNodes
+                            sx={{ padding: 1, marginBottom: 1 }}
+                            currentNodes={currentNodes || {}}
+                            onSelect={(node) => {
+                                handleClickNode?.(node.id);
+                                toggleCurrentSearch?.();
+                            }}
+                            onClose={toggleCurrentSearch}
+                        />
+                    </div>
                 </Popper>
-            </Box>
+            </div>
             {edgeInfoState.open ? (
                 <EdgeInfoPane sx={infoPaneStyles} selectedEdge={edgeInfoState.selectedEdge} />
             ) : (
