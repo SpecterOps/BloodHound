@@ -1,0 +1,46 @@
+/* Style for the product comparison table in /get-started/introduction-to-bloodhound.mdx */
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.comparison-table td {
+    width: 50%;
+    padding: 15px;
+    text-align: left;
+    border: none;
+    border-bottom: 1px solid rgba(229, 231, 235, 0.3);
+}
+
+.comparison-table img {
+    max-width: 200px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.comparison-table strong {
+    color: #FFFFFF;
+    display: inline;
+}
+
+.comparison-table td strong {
+    display: inline;
+}
+ 
+.comparison-table a {
+    display: inline-block;
+    margin-top: 15px;
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.comparison-table td:first-child {
+    padding-right: 30px; /* Space on the right of the first column */
+}
+
+.comparison-table td:last-child {
+    padding-left: 30px; /* Space on the left of the second column */
+}
