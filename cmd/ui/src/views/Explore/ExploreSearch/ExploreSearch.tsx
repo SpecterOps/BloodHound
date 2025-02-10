@@ -16,7 +16,7 @@
 
 import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Paper, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { CYPHER_SEARCH, Icon, PATHFINDING_SEARCH, PRIMARY_SEARCH, searchbarActions } from 'bh-shared-ui';
 import React, { useState } from 'react';
@@ -38,15 +38,6 @@ const useStyles = makeStyles((theme) => ({
         padding: theme.spacing(2),
         fontSize: theme.typography.fontSize,
         color: theme.palette.color.primary,
-    },
-    tab: {
-        height: '40px',
-        minHeight: '40px',
-        color: theme.palette.primary.main,
-        opacity: 1,
-        padding: 0,
-        flexGrow: 1,
-        minWidth: theme.spacing(2),
     },
 }));
 
@@ -102,19 +93,21 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
                 display: 'flex',
                 flexDirection: 'column',
                 minHeight: 0,
-                gap: 1,
+                gap: 2,
+                width: activeTab === 2 && showSearchWidget ? '600px' : '410px',
+                boxShadow: '1px solid white',
+                borderRadius: '8px',
             }}>
-            <Paper
+            <Box
                 sx={{
                     height: '40px',
                     display: 'flex',
-                    flexShrink: 0,
                     gap: 1,
                     backgroundColor: theme.palette.neutral.secondary,
                     borderRadius: '8px',
                     pointerEvents: 'auto',
-                }}
-                elevation={0}>
+                    width: '100%',
+                }}>
                 <Icon
                     className={classes.icon}
                     click={() => {
@@ -127,48 +120,34 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
                     value={activeTab}
                     onChange={(e, newTabIdx) => handleTabChange(newTabIdx)}
                     onClick={() => setShowSearchWidget(true)}
-                    sx={{
-                        height: '40px',
-                        minHeight: '40px',
-                        display: 'flex',
-                        justifyContent: 'space-around',
-                        width: '100%',
-                    }}
+                    sx={{ height: '40px', minHeight: '40px', width: '100%' }}
                     TabIndicatorProps={{
                         sx: { height: 3, backgroundColor: '#6798B9' },
                     }}>
                     {getTabsContent(classes.tab, matches)}
                 </Tabs>
-            </Paper>
+            </Box>
 
             <Box
-                display={showSearchWidget ? 'flex' : 'none'}
                 sx={{
+                    p: 1,
+                    backgroundColor: theme.palette.neutral.secondary,
+                    borderRadius: '8px',
+                    display: showSearchWidget ? 'initial' : 'none',
                     minHeight: 0,
-                    flexDirection: 'column',
+                    pointerEvents: 'auto',
                 }}>
-                <Paper
-                    sx={{
-                        p: 1,
-                        backgroundColor: theme.palette.neutral.secondary,
-                        borderRadius: '8px',
-                        boxSizing: 'border-box',
-                        height: '100%',
-                        pointerEvents: 'auto',
-                    }}
-                    elevation={0}>
-                    <TabPanels
-                        tabs={[
-                            // This linting rule is disabled because the elements in this array do not require a key prop.
-                            /* eslint-disable react/jsx-key */
-                            <NodeSearch />,
-                            <PathfindingSearch />,
-                            <CypherSearch />,
-                            /* eslint-enable react/jsx-key */
-                        ]}
-                        activeTab={activeTab}
-                    />
-                </Paper>
+                <TabPanels
+                    tabs={[
+                        // This linting rule is disabled because the elements in this array do not require a key prop.
+                        /* eslint-disable react/jsx-key */
+                        <NodeSearch />,
+                        <PathfindingSearch />,
+                        <CypherSearch />,
+                        /* eslint-enable react/jsx-key */
+                    ]}
+                    activeTab={activeTab}
+                />
             </Box>
         </Box>
     );
@@ -197,7 +176,10 @@ const getTabsContent = (className: string, matches: boolean) => {
             icon={<FontAwesomeIcon icon={icon} />}
             iconPosition='start'
             title={label}
-            className={className}
+            sx={{
+                height: '40px',
+                minHeight: '40px',
+            }}
         />
     ));
 };
