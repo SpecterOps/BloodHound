@@ -17,13 +17,13 @@
 package middleware
 
 import (
+	"compress/gzip"
 	"context"
 	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -284,10 +284,16 @@ func EnsureRequestBodyClosed() mux.MiddlewareFunc {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			next.ServeHTTP(response, request)
 
-			// We must check that the body is not nil AND that the value of the body is not nil
-			// because of how Go interfaces work. https://go.dev/doc/faq#nil_error
-			if request.Body != nil && !reflect.ValueOf(request.Body).IsNil() {
-				request.Body.Close()
+			switch b := request.Body.(type) {
+			case *gzip.Reader:
+				if b != nil {
+					b.Close()
+				}
+			default:
+				slog.WarnContext(request.Context(), "Failed to cast request body to a closable type")
+				if b != nil {
+					b.Close()
+				}
 			}
 		})
 	}
