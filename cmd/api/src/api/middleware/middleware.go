@@ -290,7 +290,6 @@ func EnsureRequestBodyClosed() mux.MiddlewareFunc {
 					b.Close()
 				}
 			default:
-				slog.WarnContext(request.Context(), "Failed to cast request body to a closable type")
 				if b != nil {
 					b.Close()
 				}
