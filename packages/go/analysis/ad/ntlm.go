@@ -64,7 +64,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 
 					if err != nil {
 						continue
-					} else if authenticatedUserID, ok := authenticatedUsersCache[domain]; !ok {
+					} else if authenticatedUserGroupID, ok := authenticatedUsersCache[domain]; !ok {
 						continue
 					} else if protectedUsersForDomain, ok := protectedUsersCache[domain]; !ok {
 						continue
@@ -73,13 +73,13 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
 						continue
 					} else if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						return PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID)
+						return PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserGroupID)
 					}); err != nil {
 						slog.WarnContext(ctx, fmt.Sprintf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToSMB, err))
 						// Additional analysis may occur if one of our analysis errors
 						continue
 					} else if err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-						return PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserID, ldapSigningCache)
+						return PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserGroupID, ldapSigningCache)
 					}); err != nil {
 						slog.WarnContext(ctx, fmt.Sprintf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToLDAP, err))
 						continue
@@ -271,7 +271,7 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 }
 
 // PostCoerceAndRelayNTLMToLDAP creates edges where an authenticated user group, for a given domain, is able to target the provided computer.
-// This will create either a CoerceAndRelayNTLMToLDAP or CoerceAndRelayNTLMToLDAPs edges, depending on the ldapSigning property of the domain
+// This will create either a CoerceAndRelayNTLMToLDAP or CoerceAndRelayNTLMToLDAPS edges, depending on the ldapSigning property of the domain
 func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob, computer *graph.Node, authenticatedUserID graph.ID, ldapSigningCache map[string]LDAPSigningCache) error {
 	if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
 		return err
@@ -302,7 +302,7 @@ func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob
 					outC <- analysis.CreatePostRelationshipJob{
 						FromID: authenticatedUserID,
 						ToID:   computer.ID,
-						Kind:   ad.CoerceAndRelayNTLMToLDAPs,
+						Kind:   ad.CoerceAndRelayNTLMToLDAPS,
 					}
 				}
 			}
@@ -394,6 +394,9 @@ func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]L
 						query.Equals(
 							query.NodeProperty(ad.IsDC.String()), domainSid,
 						),
+						query.Equals(
+							query.NodeProperty(ad.LDAPSigning.String()), false,
+						),
 					),
 				)); err != nil {
 					return err
@@ -406,25 +409,18 @@ func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]L
 							query.NodeProperty(ad.IsDC.String()), domainSid,
 						),
 						query.Equals(
-							query.NodeProperty(ad.LDAPSigning.String()), true,
+							query.NodeProperty(ad.LDAPSAvailable.String()), true,
 						),
 						query.Equals(
-							query.NodeProperty(ad.LDAPsAvailable.String()), true,
-						),
-						query.Equals(
-							query.NodeProperty(ad.LDAPsEPA.String()), false,
+							query.NodeProperty(ad.LDAPSEPA.String()), false,
 						),
 					),
 				)); err != nil {
 					return err
 				} else {
 					isFunctionalLevelValid := false
-					if functionalLevel, err := domain.Properties.Get(ad.FunctionalLevel.String()).String(); err != nil {
-						if errors.Is(err, graph.ErrPropertyNotFound) {
-							isFunctionalLevelValid = true
-						} else {
-							return err
-						}
+					if functionalLevel, err := domain.Properties.Get(ad.FunctionalLevel.String()).String(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
+						return err
 					} else if slices.Contains(vulnerableFunctionalLevels(), functionalLevel) {
 						isFunctionalLevelValid = true
 					}

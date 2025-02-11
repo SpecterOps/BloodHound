@@ -789,17 +789,17 @@ LDAPSigning: types.#StringEnum & {
 	representation: "ldapsigning"
 }
 
-LDAPsAvailable: types.#StringEnum & {
-	symbol: "LDAPsAvailable"
+LDAPSAvailable: types.#StringEnum & {
+	symbol: "LDAPSAvailable"
 	schema: "ad"
-	name: "LDAPs Available"
+	name: "LDAPS Available"
 	representation: "ldasavailable"
 }
 
-LDAPsEPA: types.#StringEnum & {
-	symbol: "LDAPsEPA"
+LDAPSEPA: types.#StringEnum & {
+	symbol: "LDAPSEPA"
 	schema: "ad"
-	name: "LDAPs EPA"
+	name: "LDAPS EPA"
 	representation: "ldapsepa"
 }
 
@@ -813,7 +813,7 @@ RelayableToDCLDAP: types.#StringEnum & {
 RelayableToDCLDAPS: types.#StringEnum & {
 	symbol: "RelayableToDCLDAPS"
 	schema: "ad"
-	name: "Relayable To DC LDAPs"
+	name: "Relayable To DC LDAPS"
 	representation: "replayabletodcldaps"
 }
 
@@ -941,8 +941,8 @@ Properties: [
 	ADCSWebEnrollmentHTTPS,
 	ADCSWebEnrollmentHTTPSEPA,
 	LDAPSigning,
-	LDAPsAvailable,
-	LDAPsEPA,
+	LDAPSAvailable,
+	LDAPSEPA,
 	RelayableToDCLDAP,
 	RelayableToDCLDAPS,
 	IsDC
@@ -1412,8 +1412,8 @@ CoerceAndRelayNTLMToLDAP: types.#Kind & {
 	schema: "active_directory"
 }
 
-CoerceAndRelayNTLMToLDAPs: types.#Kind & {
-	symbol: "CoerceAndRelayNTLMToLDAPs"
+CoerceAndRelayNTLMToLDAPS: types.#Kind & {
+	symbol: "CoerceAndRelayNTLMToLDAPS"
 	schema: "active_directory"
 }
 
@@ -1490,7 +1490,7 @@ RelationshipKinds: [
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToLDAP,
-	CoerceAndRelayNTLMToLDAPs
+	CoerceAndRelayNTLMToLDAPS
 ]
 
 // ACL Relationships
@@ -1571,7 +1571,7 @@ SharedRelationshipKinds: [
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToLDAP,
-	CoerceAndRelayNTLMToLDAPs
+	CoerceAndRelayNTLMToLDAPS
 ]
 
 // Edges that are used during inbound traversal
@@ -1599,5 +1599,5 @@ EdgeCompositionRelationships: [
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToLDAP,
-	CoerceAndRelayNTLMToLDAPs
+	CoerceAndRelayNTLMToLDAPS
 ]
