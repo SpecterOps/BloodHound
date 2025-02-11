@@ -73,58 +73,58 @@
     "name": "Home"
   },
   "navigation": [
-        {
+    {
       "group": "Home",
       "pages": ["home"]
     },
     {
       "group": "Get Started with BloodHound",
       "pages": [
-        "hc/en-us/get-started/introduction-to-bloodhound",
+        "get-started/introduction",
         {
           "group": "Quickstart",
           "pages": [
-            "hc/en-us/get-started/bloodhound-enterprise-quickstart",
-            "hc/en-us/get-started/bloodhound-community-edition-quickstart"
+            "get-started/quickstart/enterprise-quickstart",
+            "get-started/quickstart/community-edition-quickstart"
           ]
         },
         {
-          "group": "BloodHound and Security Boundaries",
+          "group": "Security Boundaries",
           "pages": [
-            "hc/en-us/articles/BloodHound-Enterprise-Security-Overview",
-            "hc/en-us/articles/Modifying-Tier-Zero",
-            "hc/en-us/articles/Tier-Zero-Members-and-Modification"
+            "get-started/security-boundaries/enterprise-security-overview",
+            "get-started/security-boundaries/modifying-tier-zero",
+            "get-started/security-boundaries/tier-zero-members"
           ]
         }
       ]
     },
     {
-      "group": "Install a Data Collector",
+      "group": "Install Data Collector",
       "pages": [
-        "hc/en-us/categories/Deployment",
+        "install-data-collector/overview",
         {
           "group": "Install SharpHound",
           "pages": [
-            "hc/en-us/sections/Deploying-SharpHound-Enterprise",
-            "hc/en-us/articles/SharpHound-Enterprise-System-Requirements-and-Deployment-Process",
-            "hc/en-us/articles/Install-and-Upgrade-SharpHound-Enterprise",
-            "hc/en-us/articles/Deploying-a-tiered-SharpHound-Enterprise-collector-strategy",
-            "hc/en-us/articles/Create-a-gMSA-for-use-with-SharpHound-Enterprise",
-            "hc/en-us/articles/SharpHound-Enterprise-Local-Configuration",
-            "hc/en-us/articles/Modify-the-service-account-used-by-SharpHound-Enterprise",
-            "hc/en-us/articles/SharpHound-Enterprise-Tenant-Configuration",
-            "hc/en-us/articles/Troubleshooting-Local-Collection-Coverage"
+            "install-data-collector/install-sharphound/overview",
+            "install-data-collector/install-sharphound/system-requirements",
+            "install-data-collector/install-sharphound/installation-upgrade",
+            "install-data-collector/install-sharphound/tiered-collector-strategy",
+            "install-data-collector/install-sharphound/create-gmsa",
+            "install-data-collector/install-sharphound/local-configuration",
+            "install-data-collector/install-sharphound/modify-service-account",
+            "install-data-collector/install-sharphound/tenant-configuration",
+            "install-data-collector/install-sharphound/troubleshooting"
           ]
         },
         {
           "group": "Install AzureHound",
           "pages": [
-            "hc/en-us/sections/Deploying-AzureHound-Enterprise",
-            "hc/en-us/articles/AzureHound-Enterprise-System-Requirements-and-Deployment-Process",
-            "hc/en-us/articles/AzureHound-Enterprise-Azure-Configuration",
-            "hc/en-us/articles/Create-an-AzureHound-Configuration",
-            "hc/en-us/articles/Install-and-Upgrade-AzureHound-Windows-Docker-or-Kubernetes",
-            "hc/en-us/articles/Running-multiple-AzureHound-Enterprise-collectors-on-one-server-with-Scheduled-Tasks"
+            "install-data-collector/install-azurehound/overview",
+            "install-data-collector/install-azurehound/system-requirements",
+            "install-data-collector/install-azurehound/azure-configuration",
+            "install-data-collector/install-azurehound/create-configuration",
+            "install-data-collector/install-azurehound/installation-options",
+            "install-data-collector/install-azurehound/multiple-collectors"
           ]
         }
       ]
@@ -132,30 +132,30 @@
     {
       "group": "Collect Data",
       "pages": [
-        "hc/en-us/categories/Data-Collection",
+        "collect-data/overview",
         {
           "group": "BloodHound Enterprise Collection",
           "pages": [
-            "hc/en-us/sections/BloodHound-Enterprise-Collection",
-            "hc/en-us/articles/SharpHound-Enterprise-Data-Collection-and-Permissions",
-            "hc/en-us/articles/Data-reconciliation-and-retention",
-            "hc/en-us/articles/Ad-hoc-BHE-Data-Collection-with-SharpHound-CE",
-            "hc/en-us/articles/Run-an-On-Demand-Scan",
-            "hc/en-us/articles/Create-a-BloodHound-Enterprise-collector-client",
-            "hc/en-us/articles/Create-a-data-collection-schedule",
-            "hc/en-us/articles/Why-perform-privileged-collection-in-SharpHound",
-            "hc/en-us/articles/SharpHound-Enterprise-Cross-Trust-Collection",
-            "hc/en-us/articles/SharpHound-Collection-FAQ"
+            "collect-data/enterprise-collection/overview",
+            "collect-data/enterprise-collection/permissions",
+            "collect-data/enterprise-collection/data-retention",
+            "collect-data/enterprise-collection/ad-hoc-collection",
+            "collect-data/enterprise-collection/on-demand-scan",
+            "collect-data/enterprise-collection/create-collector",
+            "collect-data/enterprise-collection/collection-schedule",
+            "collect-data/enterprise-collection/privileged-collection",
+            "collect-data/enterprise-collection/cross-trust",
+            "collect-data/enterprise-collection/faq"
           ]
         },
         {
-          "group": "BloodHound CE Collection",
+          "group": "Community Edition Collection",
           "pages": [
-            "hc/en-us/sections/BloodHound-CE-Collection",
-            "hc/en-us/articles/SharpHound-Community-Edition",
-            "hc/en-us/articles/All-SharpHound-Community-Edition-Flags-Explained",
-            "hc/en-us/articles/AzureHound-Community-Edition",
-            "hc/en-us/articles/All-AzureHound-Community-Edition-Flags-Explained"
+            "collect-data/ce-collection/overview",
+            "collect-data/ce-collection/sharphound",
+            "collect-data/ce-collection/sharphound-flags",
+            "collect-data/ce-collection/azurehound",
+            "collect-data/ce-collection/azurehound-flags"
           ]
         }
       ]
