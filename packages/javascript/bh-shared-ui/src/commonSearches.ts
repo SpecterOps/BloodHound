@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { OWNED_OBJECT_TAG, TIER_ZERO_TAG } from './constants';
 import { ActiveDirectoryPathfindingEdges, AzurePathfindingEdges } from './graphSchema';
 
 const categoryAD = 'Active Directory';
@@ -41,19 +42,19 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All Domain Admins',
-                cypher: `MATCH p=(n:Group)<-[:MemberOf*1..]-(m:Base)\nWHERE n.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(t:Group)<-[:MemberOf*1..]-(:Base)\nWHERE t.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Map domain trusts',
-                cypher: `MATCH p=(n:Domain)-[:TrustedBy]->(m:Domain)\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(:Domain)-[:TrustedBy]->(:Domain)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Locations of Tier Zero / High Value objects',
-                cypher: `MATCH p = (:Domain)-[:Contains*1..]->(n:Base)\nWHERE 'admin_tier_0' IN split(n.system_tags, ' ')\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p = (:Domain)-[:Contains*1..]->(t:Base)\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Map OU structure',
-                cypher: `MATCH p = (:Domain)-[:Contains*1..]->(n:OU)\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p = (:Domain)-[:Contains*1..]->(:OU)\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
@@ -67,35 +68,35 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Principals with foreign domain group membership',
-                cypher: `MATCH p=(n:Base)-[:MemberOf]->(m:Group)\nWHERE m.domainsid<>n.domainsid\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(s:Base)-[:MemberOf]->(t:Group)\nWHERE s.domainsid<>t.domainsid\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Computers where Domain Users are local administrators',
-                cypher: `MATCH p=(m:Group)-[:AdminTo]->(n:Computer)\nWHERE m.objectid ENDS WITH '-513'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(s:Group)-[:AdminTo]->(:Computer)\nWHERE s.objectid ENDS WITH '-513'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Computers where Domain Users can read LAPS passwords',
-                cypher: `MATCH p=(m:Group)-[:AllExtendedRights|ReadLAPSPassword]->(n:Computer)\nWHERE m.objectid ENDS WITH '-513'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(s:Group)-[:AllExtendedRights|ReadLAPSPassword]->(:Computer)\nWHERE s.objectid ENDS WITH '-513'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Paths from Domain Users to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((m:Group)-[:${adTransitEdgeTypes}*1..]->(n))\nWHERE 'admin_tier_0' IN split(n.system_tags, ' ') AND m.objectid ENDS WITH '-513' AND m<>n\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:Group)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s.objectid ENDS WITH '-513' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Workstations where Domain Users can RDP',
-                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH '-513' AND NOT toUpper(c.operatingsystem) CONTAINS 'SERVER'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(s:Group)-[:CanRDP]->(t:Computer)\nWHERE s.objectid ENDS WITH '-513' AND NOT toUpper(t.operatingsystem) CONTAINS 'SERVER'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Servers where Domain Users can RDP',
-                cypher: `MATCH p=(m:Group)-[:CanRDP]->(c:Computer)\nWHERE m.objectid ENDS WITH '-513' AND toUpper(c.operatingsystem) CONTAINS 'SERVER'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(s:Group)-[:CanRDP]->(t:Computer)\nWHERE s.objectid ENDS WITH '-513' AND toUpper(t.operatingsystem) CONTAINS 'SERVER'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Dangerous privileges for Domain Users groups',
-                cypher: `MATCH p=(m:Group)-[:${adTransitEdgeTypes}]->(n:Base)\nWHERE m.objectid ENDS WITH '-513'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(s:Group)-[:${adTransitEdgeTypes}]->(:Base)\nWHERE s.objectid ENDS WITH '-513'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Domain Admins logons to non-Domain Controllers',
-                cypher: `MATCH (dc)-[r:MemberOf*0..]->(g:Group)\nWHERE g.objectid ENDS WITH '-516'\nWITH COLLECT(dc) AS exclude\nMATCH p = (c:Computer)-[n:HasSession]->(u:User)-[r2:MemberOf*1..]->(g:Group)\nWHERE g.objectid ENDS WITH '-512' AND NOT c IN exclude\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH (s)-[:MemberOf*0..]->(g:Group)\nWHERE g.objectid ENDS WITH '-516'\nWITH COLLECT(s) AS exclude\nMATCH p = (c:Computer)-[:HasSession]->(:User)-[:MemberOf*1..]->(g:Group)\nWHERE g.objectid ENDS WITH '-512' AND NOT c IN exclude\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
@@ -105,15 +106,15 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Kerberoastable members of Tier Zero / High Value groups',
-                cypher: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT coalesce(u.gmsa, false) = true\nAND NOT coalesce(u.msa, false) = true\nAND coalesce(u.system_tags, '') = 'admin_tier_0'\nRETURN u\nLIMIT 100`,
+                cypher: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT COALESCE(u.gmsa, false) = true\nAND NOT COALESCE(u.msa, false) = true\nAND COALESCE(u.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nRETURN u\nLIMIT 100`,
             },
             {
                 description: 'All Kerberoastable users',
-                cypher: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT coalesce(u.gmsa, false) = true\nAND NOT coalesce(u.msa, false) = true\nRETURN u\nLIMIT 100`,
+                cypher: `MATCH (u:User)\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT COALESCE(u.gmsa, false) = true\nAND NOT COALESCE(u.msa, false) = true\nRETURN u\nLIMIT 100`,
             },
             {
                 description: 'Kerberoastable users with most admin privileges',
-                cypher: `MATCH (u:User)\nWHERE u.hasspn = true\n  AND u.enabled = true\n  AND NOT u.objectid ENDS WITH '-502'\n  AND NOT coalesce(u.gmsa, false) = true\n  AND NOT coalesce(u.msa, false) = true\nMATCH (u)-[:MemberOf|AdminTo*1..]->(c:Computer)\nWITH DISTINCT u, COUNT(c) AS adminCount\nRETURN u\nORDER BY adminCount DESC\nLIMIT 100`,
+                cypher: `MATCH (u:User)\nWHERE u.hasspn = true\n  AND u.enabled = true\n  AND NOT u.objectid ENDS WITH '-502'\n  AND NOT COALESCE(u.gmsa, false) = true\n  AND NOT COALESCE(u.msa, false) = true\nMATCH (u)-[:MemberOf|AdminTo*1..]->(c:Computer)\nWITH DISTINCT u, COUNT(c) AS adminCount\nRETURN u\nORDER BY adminCount DESC\nLIMIT 100`,
             },
             {
                 description: 'AS-REP Roastable users (DontReqPreAuth)',
@@ -127,31 +128,31 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Shortest paths to systems trusted for unconstrained delegation',
-                cypher: `MATCH p=shortestPath((n)-[:${adTransitEdgeTypes}*1..]->(m:Computer))\nWHERE m.unconstraineddelegation = true AND n<>m\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s)-[:${adTransitEdgeTypes}*1..]->(t:Computer))\nWHERE t.unconstraineddelegation = true AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths to Domain Admins from Kerberoastable users',
-                cypher: `MATCH p=shortestPath((u:User)-[:${adTransitEdgeTypes}*1..]->(m:Group))\nWHERE u.hasspn=true\nAND u.enabled = true\nAND NOT u.objectid ENDS WITH '-502'\nAND NOT coalesce(u.gmsa, false) = true\nAND NOT coalesce(u.msa, false) = true\nAND m.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:User)-[:${adTransitEdgeTypes}*1..]->(t:Group))\nWHERE s.hasspn=true\nAND s.enabled = true\nAND NOT s.objectid ENDS WITH '-502'\nAND NOT COALESCE(s.gmsa, false) = true\nAND NOT COALESCE(s.msa, false) = true\nAND t.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((n)-[:${adTransitEdgeTypes}*1..]->(m))\nWHERE 'admin_tier_0' IN split(m.system_tags, ' ') AND n<>m\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths from Domain Users to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((n:Group)-[:${adTransitEdgeTypes}*1..]->(m))\nWHERE 'admin_tier_0' IN split(m.system_tags, ' ') AND n.objectid ENDS WITH '-513' AND n<>m\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:Group)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(s.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s.objectid ENDS WITH '-513' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths to Domain Admins',
-                cypher: `MATCH p=shortestPath((n:Base)-[:${adTransitEdgeTypes}*1..]->(g:Group))\nWHERE g.objectid ENDS WITH '-512' AND n<>g\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:Base)-[:${adTransitEdgeTypes}*1..]->(t:Group))\nWHERE t.objectid ENDS WITH '-512' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths from Owned objects to Tier Zero',
-                cypher: `// MANY TO MANY SHORTEST PATH QUERIES USE EXCESSIVE SYSTEM RESOURCES AND TYPICALLY WILL NOT COMPLETE\n// UNCOMMENT THE FOLLOWING LINES BY REMOVING THE DOUBLE FORWARD SLASHES AT YOUR OWN RISK\n// MATCH p=shortestPath((n)-[:${adTransitEdgeTypes}*1..]->(m))\n// WHERE 'admin_tier_0' IN split(m.system_tags, ' ') AND n<>m\n// AND 'owned' IN split(n.system_tags,' ')\n// RETURN p\n// LIMIT 1000`,
+                cypher: `// MANY TO MANY SHORTEST PATH QUERIES USE EXCESSIVE SYSTEM RESOURCES AND TYPICALLY WILL NOT COMPLETE\n// UNCOMMENT THE FOLLOWING LINES BY REMOVING THE DOUBLE FORWARD SLASHES AT YOUR OWN RISK\n// MATCH p=shortestPath((s)-[:${adTransitEdgeTypes}*1..]->(t))\n// WHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s<>t\n// AND COALESCE(s.system_tags, '') CONTAINS '${OWNED_OBJECT_TAG}'\n// RETURN p\n// LIMIT 1000`,
             },
             {
                 description: 'Shortest paths from Owned objects',
-                cypher: `MATCH p=shortestPath((n:Base)-[:${adTransitEdgeTypes}*1..]->(g:Base))\nWHERE 'owned' IN split(n.system_tags,' ') AND n<>g\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:Base)-[:${adTransitEdgeTypes}*1..]->(t:Base))\nWHERE COALESCE(s.system_tags, '') CONTAINS '${OWNED_OBJECT_TAG}' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
@@ -169,7 +170,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Enrollment rights on published certificate templates',
-                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Enrollment rights on published ESC1 certificate templates',
@@ -177,7 +178,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Enrollment rights on published ESC2 certificate templates',
-                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.requiresmanagerapproval = False\nAND (ct.effectiveekus = [] OR '2.5.29.37.0' IN ct.effectiveekus)\nAND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1)\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(c:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE c.requiresmanagerapproval = false\nAND (c.effectiveekus = [''] OR '2.5.29.37.0' IN c.effectiveekus)\nAND (c.authorizedsignatures = 0 OR c.schemaversion = 1)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Enrollment rights on published enrollment agent certificate templates',
@@ -198,19 +199,19 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Domain controllers with weak certificate binding enabled',
-                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d:Domain)\nWHERE dc.strongcertificatebindingenforcementraw = 0 OR dc.strongcertificatebindingenforcementraw = 1\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p = (s:Computer)-[:DCFor]->(:Domain)\nWHERE s.strongcertificatebindingenforcementraw = 0 OR s.strongcertificatebindingenforcementraw = 1\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Domain controllers with UPN certificate mapping enabled',
-                cypher: `MATCH p = (dc:Computer)-[:DCFor]->(d:Domain)\nWHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p = (s:Computer)-[:DCFor]->(:Domain)\nWHERE s.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Non-default permissions on IssuancePolicy nodes',
-                cypher: `MATCH p = (n:Base)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(:IssuancePolicy)\nWHERE NOT n.objectid ENDS WITH '-512' AND NOT n.objectid ENDS WITH '-519'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p = (s:Base)-[:GenericAll|GenericWrite|Owns|WriteOwner|WriteDacl]->(:IssuancePolicy)\nWHERE NOT s.objectid ENDS WITH '-512' AND NOT s.objectid ENDS WITH '-519'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Enrollment rights on CertTemplates with OIDGroupLink',
-                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:ExtendedByPolicy]->(:IssuancePolicy)-[:OIDGroupLink]->(g:Group)\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(:CertTemplate)-[:ExtendedByPolicy]->(:IssuancePolicy)-[:OIDGroupLink]->(:Group)\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
@@ -220,19 +221,19 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Enabled Tier Zero / High Value principals inactive for 60 days',
-                cypher: `WITH 60 as inactive_days\nMATCH (n:Base)\nWHERE n.system_tags CONTAINS 'admin_tier_0'\nAND n.enabled = true\nAND n.lastlogontimestamp < (datetime().epochseconds - (inactive_days * 86400)) // Replicated value\nAND n.lastlogon < (datetime().epochseconds - (inactive_days * 86400)) // Non-replicated value\nAND n.whencreated < (datetime().epochseconds - (inactive_days * 86400)) // Exclude recently created principals\nAND NOT n.name STARTS WITH 'AZUREADKERBEROS.' // Removes false positive, Azure KRBTGT\nAND NOT n.objectid ENDS WITH '-500' // Removes false positive, built-in Administrator\nAND NOT n.name STARTS WITH 'AZUREADSSOACC.' // Removes false positive, Entra Seamless SSO\nRETURN n`,
+                cypher: `WITH 60 as inactive_days\nMATCH (n:Base)\nWHERE COALESCE(n.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND n.enabled = true\nAND n.lastlogontimestamp < (datetime().epochseconds - (inactive_days * 86400)) // Replicated value\nAND n.lastlogon < (datetime().epochseconds - (inactive_days * 86400)) // Non-replicated value\nAND n.whencreated < (datetime().epochseconds - (inactive_days * 86400)) // Exclude recently created principals\nAND NOT n.name STARTS WITH 'AZUREADKERBEROS.' // Removes false positive, Azure KRBTGT\nAND NOT n.objectid ENDS WITH '-500' // Removes false positive, built-in Administrator\nAND NOT n.name STARTS WITH 'AZUREADSSOACC.' // Removes false positive, Entra Seamless SSO\nRETURN n`,
             },
             {
                 description: 'Tier Zero / High Value enabled users not requiring smart card authentication',
-                cypher: `MATCH (n:User)\nWHERE 'admin_tier_0' IN split(n.system_tags, ' ')\nAND n.enabled = true\nAND n.smartcardrequired = false\nAND NOT n.name STARTS WITH 'MSOL_' // Removes false positive, Entra sync\nAND NOT n.name STARTS WITH 'PROVAGENTGMSA' // Removes false positive, Entra sync\nAND NOT n.name STARTS WITH 'ADSYNCMSA_' // Removes false positive, Entra sync\nRETURN n`,
+                cypher: `MATCH (u:User)\nWHERE COALESCE(u.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND u.enabled = true\nAND u.smartcardrequired = false\nAND NOT u.name STARTS WITH 'MSOL_' // Removes false positive, Entra sync\nAND NOT u.name STARTS WITH 'PROVAGENTGMSA' // Removes false positive, Entra sync\nAND NOT u.name STARTS WITH 'ADSYNCMSA_' // Removes false positive, Entra sync\nRETURN u`,
             },
             {
                 description: 'Domains where any user can join a computer to the domain',
-                cypher: `MATCH (n:Domain)\nWHERE n.machineaccountquota > 0\nRETURN n`,
+                cypher: `MATCH (d:Domain)\nWHERE d.machineaccountquota > 0\nRETURN d`,
             },
             {
                 description: 'Domains with smart card accounts where smart account passwords do not expire',
-                cypher: `MATCH (n:Domain)-[:Contains*1..]->(m:Base)\nWHERE n.expirepasswordsonsmartcardonlyaccounts = false\nAND m.enabled = true\nAND m.smartcardrequired = true\nRETURN n`,
+                cypher: `MATCH (s:Domain)-[:Contains*1..]->(t:Base)\nWHERE s.expirepasswordsonsmartcardonlyaccounts = false\nAND t.enabled = true\nAND t.smartcardrequired = true\nRETURN s`,
             },
             {
                 description: 'Two-way forest trusts enabled for delegation',
@@ -240,7 +241,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Computers with unsupported operating systems',
-                cypher: `MATCH (n:Computer)\nWHERE n.operatingsystem =~ '(?i).*Windows.* (2000|2003|2008|2012|xp|vista|7|8|me|nt).*'\nRETURN n\nLIMIT 100`,
+                cypher: `MATCH (c:Computer)\nWHERE c.operatingsystem =~ '(?i).*Windows.* (2000|2003|2008|2012|xp|vista|7|8|me|nt).*'\nRETURN c\nLIMIT 100`,
             },
             {
                 description: 'Users which do not require password to authenticate',
@@ -252,11 +253,11 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Nested groups within Tier Zero / High Value',
-                cypher: `MATCH p=(n:Group)-[:MemberOf*..]->(t:Group)\nWHERE coalesce(t.system_tags, '') CONTAINS ('tier_0')\nAND NOT n.objectid ENDS WITH '-512' // Domain Admins\nAND NOT n.objectid ENDS WITH '-519' // Enterprise Admins\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(s:Group)-[:MemberOf*..]->(t:Group)\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND NOT s.objectid ENDS WITH '-512' // Domain Admins\nAND NOT s.objectid ENDS WITH '-519' // Enterprise Admins\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Disabled Tier Zero / High Value principals',
-                cypher: `MATCH (n:Base)\nWHERE n.system_tags CONTAINS 'admin_tier_0'\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH '-502' // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH '-500' // Removes false positive, built-in Administrator\nRETURN n\nLIMIT 100`,
+                cypher: `MATCH (n:Base)\nWHERE COALESCE(n.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND n.enabled = false\nAND NOT n.objectid ENDS WITH '-502' // Removes false positive, KRBTGT\nAND NOT n.objectid ENDS WITH '-500' // Removes false positive, built-in Administrator\nRETURN n\nLIMIT 100`,
             },
             {
                 description: 'Principals with passwords stored using reversible encryption',
@@ -272,7 +273,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Tier Zero / High Value users with non-expiring passwords',
-                cypher: `MATCH (u:User)\nWHERE u.enabled = true\nAND u.pwdneverexpires = true\nand u.system_tags CONTAINS 'admin_tier_0'\nRETURN u\nLIMIT 100`,
+                cypher: `MATCH (u:User)\nWHERE u.enabled = true\nAND u.pwdneverexpires = true\nand COALESCE(u.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nRETURN u\nLIMIT 100`,
             },
         ],
     },
@@ -282,11 +283,11 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All Global Administrators',
-                cypher: 'MATCH p = (n:AZBase)-[r:AZGlobalAdmin*1..]->(m:AZTenant)\nRETURN p\nLIMIT 1000',
+                cypher: `MATCH p = (:AZBase)-[:AZGlobalAdmin*1..]->(:AZTenant)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'All members of high privileged roles',
-                cypher: `MATCH p=(n:AZBase)-[:AZHasRole|AZMemberOf*1..2]->(r:AZRole)\nWHERE r.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(:AZBase)-[:AZHasRole|AZMemberOf*1..2]->(t:AZRole)\nWHERE t.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}'\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
@@ -296,19 +297,19 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Shortest paths from Entra Users to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((m:AZUser)-[r:${azureTransitEdgeTypes}*1..]->(n:AZBase))\nWHERE 'admin_tier_0' IN split(n.system_tags, ' ') AND n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:AZUser)-[:${azureTransitEdgeTypes}*1..]->(t:AZBase))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND t.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths to privileged roles',
-                cypher: `MATCH p=shortestPath((m:AZBase)-[r:${azureTransitEdgeTypes}*1..]->(n:AZRole))\nWHERE n.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND m<>n\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:AZBase)-[:${azureTransitEdgeTypes}*1..]->(t:AZRole))\nWHERE t.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths from Azure Applications to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((m:AZApp)-[r:${azureTransitEdgeTypes}*1..]->(n:AZBase))\nWHERE 'admin_tier_0' IN split(n.system_tags, ' ') AND m<>n\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:AZApp)-[:${azureTransitEdgeTypes}*1..]->(t:AZBase))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths to Azure Subscriptions',
-                cypher: `MATCH p=shortestPath((m:AZBase)-[r:${azureTransitEdgeTypes}*1..]->(n:AZSubscription))\nWHERE m<>n\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:AZBase)-[:${azureTransitEdgeTypes}*1..]->(t:AZSubscription))\nWHERE s<>t\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
@@ -318,11 +319,11 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All service principals with Microsoft Graph privilege to grant arbitrary App Roles',
-                cypher: 'MATCH p=(n:AZServicePrincipal)-[r:AZMGGrantAppRoles]->(o:AZTenant)\nRETURN p\nLIMIT 1000',
+                cypher: `MATCH p=(:AZServicePrincipal)-[:AZMGGrantAppRoles]->(:AZTenant)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'All service principals with Microsoft Graph App Role assignments',
-                cypher: 'MATCH p=(m:AZServicePrincipal)-[r:AZMGAppRoleAssignment_ReadWrite_All|AZMGApplication_ReadWrite_All|AZMGDirectory_ReadWrite_All|AZMGGroupMember_ReadWrite_All|AZMGGroup_ReadWrite_All|AZMGRoleManagement_ReadWrite_Directory|AZMGServicePrincipalEndpoint_ReadWrite_All]->(n:AZServicePrincipal)\nRETURN p\nLIMIT 1000',
+                cypher: `MATCH p=(:AZServicePrincipal)-[:AZMGAppRoleAssignment_ReadWrite_All|AZMGApplication_ReadWrite_All|AZMGDirectory_ReadWrite_All|AZMGGroupMember_ReadWrite_All|AZMGGroup_ReadWrite_All|AZMGRoleManagement_ReadWrite_Directory|AZMGServicePrincipalEndpoint_ReadWrite_All]->(:AZServicePrincipal)\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
@@ -332,19 +333,19 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Foreign principals in Tier Zero / High Value targets',
-                cypher: `MATCH (n:AZServicePrincipal)\nWHERE n.system_tags contains 'admin_tier_0'\nAND NOT toUpper(n.appownerorganizationid) = toUpper(n.tenantid)\nAND n.appownerorganizationid CONTAINS '-'\nRETURN n\nLIMIT 100`,
+                cypher: `MATCH (n:AZServicePrincipal)\nWHERE COALESCE(n.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND NOT toUpper(n.appownerorganizationid) = toUpper(n.tenantid)\nAND n.appownerorganizationid CONTAINS '-'\nRETURN n\nLIMIT 100`,
             },
             {
                 description: 'Tier Zero AD principals synchronized with Entra ID',
-                cypher: `MATCH (ENTRA:AZBase)\nMATCH (AD:Base)\nWHERE ENTRA.onpremsyncenabled = true\nAND ENTRA.onpremid = AD.objectid\nAND AD.system_tags CONTAINS 'admin_tier_0'\nRETURN ENTRA\n// Replace 'RETURN ENTRA' with 'RETURN AD' to see the corresponding AD principals\nLIMIT 100`,
+                cypher: `MATCH (ENTRA:AZBase)\nMATCH (AD:Base)\nWHERE ENTRA.onpremsyncenabled = true\nAND ENTRA.onpremid = AD.objectid\nAND COALESCE(AD.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nRETURN ENTRA\n// Replace 'RETURN ENTRA' with 'RETURN AD' to see the corresponding AD principals\nLIMIT 100`,
             },
             {
                 description: 'Tier Zero / High Value external Entra ID users',
-                cypher: `MATCH (n:AZUser)\nWHERE n.system_tags contains 'admin_tier_0'\nAND n.name CONTAINS '#EXT#@'\nRETURN n\nLIMIT 100`,
+                cypher: `MATCH (n:AZUser)\nWHERE COALESCE(n.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND n.name CONTAINS '#EXT#@'\nRETURN n\nLIMIT 100`,
             },
             {
                 description: 'Disabled Tier Zero / High Value principals',
-                cypher: `MATCH (n:AZBase)\nWHERE n.system_tags CONTAINS 'admin_tier_0'\nAND n.enabled = false\nRETURN n\nLIMIT 100`,
+                cypher: `MATCH (n:AZBase)\nWHERE COALESCE(n.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND n.enabled = false\nRETURN n\nLIMIT 100`,
             },
             {
                 description: 'Devices with unsupported operating systems',
@@ -358,31 +359,31 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Entra Users synced from On-Prem Users added to Domain Admins group',
-                cypher: `MATCH p = (:AZUser)-[:SyncedToADUser]->(:User)-[:MemberOf]->(g:Group)\nWHERE g.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p = (:AZUser)-[:SyncedToADUser]->(:User)-[:MemberOf]->(t:Group)\nWHERE t.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'On-Prem Users synced to Entra Users with Entra Admin Roles (direct)',
-                cypher: 'MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZHasRole]->(:AZRole)\nRETURN p\nLIMIT 1000',
+                cypher: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZHasRole]->(:AZRole)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'On-Prem Users synced to Entra Users with Entra Admin Roles (group delegated)',
-                cypher: 'MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZHasRole]->(:AZRole)\nRETURN p\nLIMIT 1000',
+                cypher: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZHasRole]->(:AZRole)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'On-Prem Users synced to Entra Users with Azure RM Roles (direct)',
-                cypher: 'MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutmomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nRETURN p\nLIMIT 1000',
+                cypher: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'On-Prem Users synced to Entra Users with Azure RM Roles (group delegated)',
-                cypher: 'MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutmomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nRETURN p\nLIMIT 1000',
+                cypher: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'On-Prem Users synced to Entra Users that Own Entra Objects',
-                cypher: 'MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZOwns]->(:AZBase)\nRETURN p\nLIMIT 1000',
+                cypher: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZOwns]->(:AZBase)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'On-Prem Users synced to Entra Users with Entra Group Membership',
-                cypher: 'MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)\nRETURN p\nLIMIT 1000',
+                cypher: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
