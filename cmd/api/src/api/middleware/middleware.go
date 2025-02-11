@@ -23,6 +23,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -283,7 +284,9 @@ func EnsureRequestBodyClosed() mux.MiddlewareFunc {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			next.ServeHTTP(response, request)
 
-			if request.Body != nil {
+			// We must check that the body is not nil AND that the value of the body is not nil
+			// because of how Go interfaces work. https://go.dev/doc/faq#nil_error
+			if request.Body != nil && !reflect.ValueOf(request.Body).IsNil() {
 				request.Body.Close()
 			}
 		})
