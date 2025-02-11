@@ -108,7 +108,7 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
                     TabIndicatorProps={{
                         sx: { height: 3, backgroundColor: '#6798B9' },
                     }}>
-                    {getTabsContent(classes.tab, matches)}
+                    {getTabsContent(matches)}
                 </Tabs>
             </div>
 
@@ -135,7 +135,7 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
     );
 };
 
-const getTabsContent = (className: string, matches: boolean) => {
+const getTabsContent = (matches: boolean) => {
     const tabs = [
         {
             label: 'Search',
