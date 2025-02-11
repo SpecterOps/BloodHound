@@ -277,3 +277,15 @@ func FeatureFlagMiddleware(db database.Database, flagKey string) mux.MiddlewareF
 		})
 	}
 }
+
+func EnsureRequestBodyClosed() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			next.ServeHTTP(response, request)
+
+			if request.Body != nil {
+				request.Body.Close()
+			}
+		})
+	}
+}
