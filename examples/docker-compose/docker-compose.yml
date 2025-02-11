@@ -68,7 +68,11 @@ services:
       - bhe_graph_query_memory_limit=${bhe_graph_query_memory_limit:-2}
       - bhe_database_connection=user=${POSTGRES_USER:-bloodhound} password=${POSTGRES_PASSWORD:-bloodhoundcommunityedition} dbname=${POSTGRES_DB:-bloodhound} host=app-db
       - bhe_neo4j_connection=neo4j://${NEO4J_USER:-neo4j}:${NEO4J_SECRET:-bloodhoundcommunityedition}@graph-db:7687/
+<<<<<<< HEAD
       - bhe_recreate_default_admin=${bhe_recreate_default_admin:-false}
+=======
+      - bhe_graph_driver=${GRAPH_DRIVER:-neo4j}
+>>>>>>> acb0c506 (BED-5419: Revert mistaken change to make pg the global default driver (#1143))
       ### Add additional environment variables you wish to use here.
       ### For common configuration options that you might want to use environment variables for, see `.env.example`
       ### example: bhe_database_connection=${bhe_database_connection}
