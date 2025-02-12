@@ -14,28 +14,34 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SearchValue, SourceNodeEditedAction, SourceNodeSelectedAction, searchbarActions } from 'bh-shared-ui';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { SearchValue } from 'bh-shared-ui';
+import { useState } from 'react';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 
-const NodeSearch = () => {
-    const dispatch = useAppDispatch();
+interface NodeSearchProps {
+    selectedNode?: SearchValue | null;
+    onSelectNode?: (node: SearchValue) => void;
+}
 
-    const primary = useAppSelector((state) => state.search.primary);
-    const { searchTerm, value: selectedItem } = primary;
+const NodeSearch = ({ selectedNode = null, onSelectNode = () => {} }: NodeSearchProps) => {
+    const [inputValue, setInputValue] = useState('');
 
-    const handleNodeEdited = (edit: string): SourceNodeEditedAction =>
-        dispatch(searchbarActions.sourceNodeEdited(edit));
-    const handleNodeSelected = (selected?: SearchValue): SourceNodeSelectedAction =>
-        dispatch(searchbarActions.sourceNodeSelected(selected));
+    const handleChangeInputValue = (edit: string) => {
+        setInputValue(edit);
+    };
+
+    const handleSelectItem = (item: SearchValue) => {
+        setInputValue('');
+        onSelectNode(item);
+    };
 
     return (
         <ExploreSearchCombobox
             labelText={'Search Nodes'}
-            inputValue={searchTerm}
-            selectedItem={selectedItem || null}
-            handleNodeEdited={handleNodeEdited}
-            handleNodeSelected={handleNodeSelected}
+            inputValue={inputValue || selectedNode?.name || ''}
+            onChangeInputValue={handleChangeInputValue}
+            selectedItem={selectedNode}
+            onSelectItem={handleSelectItem}
         />
     );
 };

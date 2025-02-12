@@ -29,11 +29,11 @@ import { useCombobox } from 'downshift';
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
     inputValue: string;
+    onChangeInputValue: (value: string) => void;
     selectedItem: SearchValue | null;
-    handleNodeEdited: (edit: string) => any;
-    handleNodeSelected: (selection: SearchValue) => any;
+    onSelectItem: (item: SearchValue) => void;
     disabled?: boolean;
-}> = ({ labelText, inputValue, selectedItem, handleNodeEdited, handleNodeSelected, disabled = false }) => {
+}> = ({ labelText, inputValue, selectedItem, onChangeInputValue, onSelectItem, disabled = false }) => {
     const theme = useTheme();
 
     const { keyword, type } = getKeywordAndTypeValues(inputValue);
@@ -46,7 +46,7 @@ const ExploreSearchCombobox: React.FC<{
             selectedItem,
             onSelectedItemChange: ({ selectedItem }) => {
                 if (selectedItem) {
-                    handleNodeSelected(selectedItem);
+                    onSelectItem(selectedItem);
                 }
             },
             itemToString: (item) => item?.name || item?.objectid || '',
@@ -85,7 +85,7 @@ const ExploreSearchCombobox: React.FC<{
                     onFocus: openMenu,
                     refKey: 'inputRef',
                     onChange: (e) => {
-                        handleNodeEdited(e.currentTarget.value);
+                        onChangeInputValue(e.currentTarget.value);
                     },
                 })}
                 data-testid='explore_search_input-search'

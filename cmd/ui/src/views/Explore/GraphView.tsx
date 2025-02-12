@@ -19,7 +19,9 @@ import {
     EdgeInfoState,
     GraphProgress,
     SearchCurrentNodes,
+    SearchValue,
     WebGLDisabledAlert,
+    apiClient,
     exportToJson,
     isWebGLEnabled,
     setEdgeInfoOpen,
@@ -32,11 +34,14 @@ import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useRef, useState } from 'react';
+import { useQuery } from 'react-query';
+import { useSearchParams } from 'react-router-dom';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
 import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
+import { putGraphData } from 'src/ducks/explore/actions';
 import { GraphState } from 'src/ducks/explore/types';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
@@ -61,6 +66,8 @@ const GraphView: FC = () => {
     const theme = useTheme();
 
     const dispatch = useAppDispatch();
+
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const graphState: GraphState = useAppSelector((state) => state.explore);
 
@@ -129,6 +136,29 @@ const GraphView: FC = () => {
         formIsDirty
     );
 
+    useQuery(
+        ['getGraphSearchResult', searchParams.get('sourceNodeID')],
+        () => apiClient.getSearchResult(searchParams.get('sourceNodeID')!, 'EXACT').then((res) => res.data.data),
+        {
+            enabled: searchParams.get('sourceNodeID') !== null,
+            refetchOnWindowFocus: false,
+            onSuccess: (data) => {
+                dispatch(putGraphData(data));
+            },
+        }
+    );
+
+    const getSourceNodeQuery = useQuery(
+        ['getNode', searchParams.get('sourceNodeID')],
+        () => apiClient.searchHandler(searchParams.get('sourceNodeID')!).then((res) => res.data.data),
+        {
+            enabled: searchParams.get('sourceNodeID') !== null,
+            refetchOnWindowFocus: false,
+        }
+    );
+
+    const selectedSourceNode = getSourceNodeQuery.data?.[0];
+
     if (isLoading) {
         return (
             <Box sx={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
@@ -179,6 +209,12 @@ const GraphView: FC = () => {
         tab === 'cypher' ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
     };
 
+    const handleSelectSourceNode = (node: SearchValue) => {
+        setSearchParams((prev) => {
+            return { ...prev, sourceNodeID: node.objectid };
+        });
+    };
+
     return (
         <Box
             sx={{
@@ -220,7 +256,11 @@ const GraphView: FC = () => {
                         gap: 2,
                     }}
                     key={'exploreSearch'}>
-                    <ExploreSearch onTabChange={handleCypherTab} />
+                    <ExploreSearch
+                        onTabChange={handleCypherTab}
+                        selectedSourceNode={selectedSourceNode}
+                        onSelectSourceNode={handleSelectSourceNode}
+                    />
                     <Box
                         sx={{
                             pointerEvents: 'auto',

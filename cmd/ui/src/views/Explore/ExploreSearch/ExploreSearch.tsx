@@ -18,7 +18,7 @@ import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/fr
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Paper, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { CYPHER_SEARCH, Icon, PATHFINDING_SEARCH, PRIMARY_SEARCH, searchbarActions } from 'bh-shared-ui';
+import { CYPHER_SEARCH, Icon, PATHFINDING_SEARCH, PRIMARY_SEARCH, SearchValue, searchbarActions } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import CypherSearch from './CypherSearch';
@@ -58,10 +58,12 @@ const tabNameMap = {
 };
 
 interface ExploreSearchProps {
+    selectedSourceNode?: SearchValue;
+    onSelectSourceNode?: (node: SearchValue) => void;
     onTabChange?: (tab: string) => void;
 }
 
-const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
+const ExploreSearch = ({ selectedSourceNode, onSelectSourceNode, onTabChange = () => {} }: ExploreSearchProps) => {
     /* Hooks */
     const classes = useStyles();
 
@@ -161,7 +163,7 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
                         tabs={[
                             // This linting rule is disabled because the elements in this array do not require a key prop.
                             /* eslint-disable react/jsx-key */
-                            <NodeSearch />,
+                            <NodeSearch selectedNode={selectedSourceNode} onSelectNode={onSelectSourceNode} />,
                             <PathfindingSearch />,
                             <CypherSearch />,
                             /* eslint-enable react/jsx-key */
