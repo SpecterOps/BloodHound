@@ -226,7 +226,6 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 		})
 	})
 
-	// TODO: why is Computer5 in the results?
 	t.Run("NTLMCoerceAndRelayNTLMToLDAPS Success", func(t *testing.T) {
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayNTLMToLDAPS.Setup(testContext)
