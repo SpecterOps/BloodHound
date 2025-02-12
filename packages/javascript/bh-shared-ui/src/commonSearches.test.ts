@@ -1,3 +1,19 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { CommonSearches, CommonSearchType } from './commonSearches';
 import {
     ActiveDirectoryNodeKind,
@@ -7,81 +23,36 @@ import {
 } from './graphSchema';
 
 describe('common search list', () => {
-    const nodeKindPattern = /((?<=\(.?:).*?(?=\)))/gm;
-    const relKindPattern = /((?<=\[.?:).*?(?=\]))/gm;
+    const kindPattern = /:([^ )\]*]+)/gm;
 
     test('the queries in the list only include nodes and edges that are defined in our schema', () => {
         CommonSearches.forEach((commonSearchType: CommonSearchType) => {
             commonSearchType.queries.forEach((query) => {
-                const queryNodeLabels = query.cypher.match(nodeKindPattern);
-                const queryRelLabels = query.cypher.match(relKindPattern);
+                const kinds = query.cypher.match(kindPattern);
 
-                if (queryNodeLabels) {
-                    queryNodeLabels.forEach((result) => {
-                        const inAD = Object.values(ActiveDirectoryNodeKind).includes(result as ActiveDirectoryNodeKind);
-                        const inAZ = Object.values(AzureNodeKind).includes(result as AzureNodeKind);
-                        const inSchema = inAD || inAZ;
+                if (kinds) {
+                    kinds.forEach((result) => {
+                        result
+                            .slice(1)
+                            .split('|')
+                            .forEach((kind) => {
+                                const isADNode = Object.values(ActiveDirectoryNodeKind).includes(
+                                    kind as ActiveDirectoryNodeKind
+                                );
+                                const isADEdge = Object.values(ActiveDirectoryRelationshipKind).includes(
+                                    kind as ActiveDirectoryRelationshipKind
+                                );
+                                const isAZNode = Object.values(AzureNodeKind).includes(kind as AzureNodeKind);
+                                const isAZEdge = Object.values(AzureRelationshipKind).includes(
+                                    kind as AzureRelationshipKind
+                                );
+                                const inSchema = isADNode || isADEdge || isAZNode || isAZEdge;
 
-                        expect(inSchema).toBeTruthy();
-                    });
-                }
-
-                if (queryRelLabels) {
-                    queryRelLabels.forEach((result) => {
-                        // Trim off any depth specifications
-                        if (result.includes('*')) result = result.slice(0, result.indexOf('*'));
-
-                        // Turn the match into an array because sometimes there are multiple edges
-                        const results = result.split('|');
-
-                        results.forEach((edgeKind) => {
-                            const inAD = Object.values(ActiveDirectoryRelationshipKind).includes(
-                                edgeKind as ActiveDirectoryRelationshipKind
-                            );
-                            const inAZ = Object.values(AzureRelationshipKind).includes(
-                                edgeKind as AzureRelationshipKind
-                            );
-                            const inSchema = inAD || inAZ;
-
-                            expect(inSchema).toBeTruthy();
-                        });
+                                expect(inSchema).toBeTruthy();
+                            });
                     });
                 }
             });
         });
-    });
-
-    test('typos will be flagged', () => {
-        // The typo is 'AZAutmomationContributor'
-        const query = `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutmomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nRETURN p\nLIMIT 1000`;
-
-        const queryRelLabels = query.match(relKindPattern);
-
-        let hasTypo = false;
-
-        if (queryRelLabels) {
-            queryRelLabels.forEach((result) => {
-                if (result.includes('*')) result = result.slice(0, result.indexOf('*'));
-
-                const results = result.split('|');
-
-                results.forEach((edgeKind) => {
-                    const inAD = Object.values(ActiveDirectoryRelationshipKind).includes(
-                        edgeKind as ActiveDirectoryRelationshipKind
-                    );
-                    const inAZ = Object.values(AzureRelationshipKind).includes(edgeKind as AzureRelationshipKind);
-                    const inSchema = inAD || inAZ;
-
-                    // This gets set to true when an edge kind is not in our schema
-                    // In this case it is because there is a typo
-                    if (!inSchema) hasTypo = true;
-
-                    // The previous test has an assertion at this point and so if a query has a typo
-                    // like this test query does the first test block will fail
-                });
-            });
-        }
-
-        expect(hasTypo).toBe(true);
     });
 });

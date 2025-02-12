@@ -26,8 +26,8 @@ import (
 
 func (s *Translator) translateRelationshipPattern(relationshipPattern *cypher.RelationshipPattern) error {
 	var (
-		queryPart   = s.query.CurrentPart()
-		patternPart = queryPart.pattern.CurrentPart()
+		currentQueryPart = s.query.CurrentPart()
+		patternPart      = currentQueryPart.currentPattern.CurrentPart()
 	)
 
 	if bindingResult, err := s.bindPatternExpression(relationshipPattern, pgsql.EdgeComposite); err != nil {
@@ -37,10 +37,10 @@ func (s *Translator) translateRelationshipPattern(relationshipPattern *cypher.Re
 			return err
 		}
 
-		if len(queryPart.properties) > 0 {
+		if currentQueryPart.HasProperties() {
 			var propertyConstraints pgsql.Expression
 
-			for key, value := range queryPart.properties {
+			for key, value := range currentQueryPart.ConsumeProperties() {
 				s.treeTranslator.Push(pgsql.NewPropertyLookup(pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnProperties}, pgsql.NewLiteral(key, pgsql.Text)))
 				s.treeTranslator.Push(value)
 
@@ -51,7 +51,7 @@ func (s *Translator) translateRelationshipPattern(relationshipPattern *cypher.Re
 				}
 			}
 
-			if err := patternPart.Constraints.Constrain(pgsql.AsIdentifierSet(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
+			if err := s.treeTranslator.Constrain(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
 				return err
 			}
 		}
@@ -59,22 +59,15 @@ func (s *Translator) translateRelationshipPattern(relationshipPattern *cypher.Re
 		// Capture the kind matchers for this relationship pattern
 		if len(relationshipPattern.Kinds) > 0 {
 			if kindIDs, err := s.kindMapper.MapKinds(s.ctx, relationshipPattern.Kinds); err != nil {
-				s.SetError(fmt.Errorf("failed to translate kinds: %w", err))
+				return fmt.Errorf("failed to translate kinds: %w", err)
 			} else if kindIDsLiteral, err := pgsql.AsLiteral(kindIDs); err != nil {
-				s.SetError(err)
-			} else {
-				var (
-					dependencies = pgsql.AsIdentifierSet(bindingResult.Binding.Identifier)
-					expression   = pgsql.NewBinaryExpression(
-						pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnKindID},
-						pgsql.OperatorEquals,
-						pgsql.NewAnyExpression(kindIDsLiteral),
-					)
-				)
-
-				if err := patternPart.Constraints.Constrain(dependencies, expression); err != nil {
-					return err
-				}
+				return err
+			} else if err := s.treeTranslator.Constrain(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), pgsql.NewBinaryExpression(
+				pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnKindID},
+				pgsql.OperatorEquals,
+				pgsql.NewAnyExpression(kindIDsLiteral),
+			)); err != nil {
+				return err
 			}
 		}
 	}
@@ -115,39 +108,27 @@ func (s *Translator) translateRelationshipPatternToStep(bindingResult BindingRes
 		// Set the edge type to an expansion of edges
 		bindingResult.Binding.DataType = pgsql.ExpansionEdge
 
-		if expansionScopeBinding, err := s.query.Scope.DefineNew(pgsql.ExpansionPattern); err != nil {
+		if !isContinuation {
+			// If this isn't a continuation then the left node was defined in isolation from the preceding node
+			// pattern. Retype the left node to an expansion root node and link it to the expansion
+			currentStep.LeftNode.DataType = pgsql.ExpansionRootNode
+		}
+
+		expansion = models.ValueOptional(Expansion{
+			MinDepth: models.PointerOptional(relationshipPattern.Range.StartIndex),
+			MaxDepth: models.PointerOptional(relationshipPattern.Range.EndIndex),
+		})
+
+		if expansionPathBinding, err := s.query.Scope.DefineNew(pgsql.ExpansionPath); err != nil {
 			return err
 		} else {
-			// Link the edge to the expansion
-			expansionScopeBinding.Link(bindingResult.Binding)
+			// Set the path binding in the expansion struct for easier referencing upstream
+			expansion.Value.PathBinding = expansionPathBinding
 
-			if !isContinuation {
-				// If this isn't a continuation then the left node was defined in isolation from the preceding node
-				// pattern. Retype the left node to an expansion root node and link it to the expansion
-				currentStep.LeftNode.DataType = pgsql.ExpansionRootNode
-				expansionScopeBinding.Link(currentStep.LeftNode)
-			}
-
-			expansion = models.ValueOptional(Expansion{
-				Binding:  expansionScopeBinding,
-				MinDepth: models.PointerOptional(relationshipPattern.Range.StartIndex),
-				MaxDepth: models.PointerOptional(relationshipPattern.Range.EndIndex),
-			})
-
-			if expansionPathBinding, err := s.query.Scope.DefineNew(pgsql.ExpansionPath); err != nil {
-				return err
-			} else {
-				// Link the path array to the expansion that declares it
-				expansionPathBinding.Link(expansion.Value.Binding)
-
-				// Set the path binding in the expansion struct for easier referencing upstream
-				expansion.Value.PathBinding = expansionPathBinding
-
-				if part.PatternBinding.Set {
-					// If there's a bound pattern track this expansion's path as a dependency of the
-					// pattern identifier
-					part.PatternBinding.Value.DependOn(expansionPathBinding)
-				}
+			if part.PatternBinding.Set {
+				// If there's a bound pattern track this expansion's path as a dependency of the
+				// pattern identifier
+				part.PatternBinding.Value.DependOn(expansionPathBinding)
 			}
 		}
 	} else if part.PatternBinding.Set {

@@ -42,11 +42,11 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All Domain Admins',
-                cypher: `MATCH p=(t:Group)<-[:MemberOf*1..]-(:Base)\nWHERE t.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p = (a)-[:MemberOf*1..]->(t:Group)\nWHERE (a:User or a:Computer) and t.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Map domain trusts',
-                cypher: `MATCH p=(:Domain)-[:TrustedBy]->(:Domain)\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p = (:Domain)-[:TrustedBy]->(:Domain)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Locations of Tier Zero / High Value objects',
@@ -162,7 +162,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'PKI hierarchy',
-                cypher: `MATCH p=(:Domain)<-[:HostsCAService|IssuedSignedBy|EnterpriseCAFor|RootCAFor|TrustedForNTAuth|NTAuthStoreFor*..]-()\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=()-[:HostsCAService|IssuedSignedBy|EnterpriseCAFor|RootCAFor|TrustedForNTAuth|NTAuthStoreFor*..]->(:Domain)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Public Key Services container',
@@ -237,7 +237,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Two-way forest trusts enabled for delegation',
-                cypher: `MATCH p=(n:Domain)-[r:TrustedBy]->(m:Domain)\nWHERE (n)<-[:TrustedBy]-(m)\nAND r.trusttype = 'Forest'\nAND r.tgtdelegationenabled = true\nRETURN p`,
+                cypher: `MATCH p=(n:Domain)-[r:TrustedBy]->(m:Domain)\nWHERE (m)-[:TrustedBy]->(n)\nAND r.trusttype = 'Forest'\nAND r.tgtdelegationenabled = true\nRETURN p`,
             },
             {
                 description: 'Computers with unsupported operating systems',
@@ -269,7 +269,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Principals with weak supported Kerberos encryption types',
-                cypher: `MATCH (n:Base)\nWHERE ANY(keyword IN n.supportedencryptiontypes WHERE keyword IN ['DES-CBC-CRC', 'DES-CBC-MD5', 'RC4-HMAC-MD5'])\nRETURN n`,
+                cypher: `MATCH (u:Base)\nWHERE 'DES-CBC-CRC' IN u.supportedencryptiontypes\nOR 'DES-CBC-MD5' IN u.supportedencryptiontypes\nOR 'RC4-HMAC-MD5' IN u.supportedencryptiontypes\nRETURN u`,
             },
             {
                 description: 'Tier Zero / High Value users with non-expiring passwords',

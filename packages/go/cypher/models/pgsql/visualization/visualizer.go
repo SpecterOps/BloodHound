@@ -85,7 +85,7 @@ func SQLToDigraph(node pgsql.SyntaxNode) (Graph, error) {
 		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[pgsql.SyntaxNode](),
 	}
 
-	if title, err := format.SyntaxNode(node, format.NewOutputBuilder()); err != nil {
+	if title, err := format.SyntaxNode(node); err != nil {
 		return Graph{}, err
 	} else {
 		visualizer.Graph.Title = title
