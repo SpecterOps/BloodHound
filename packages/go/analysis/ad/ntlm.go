@@ -47,7 +47,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		// Fetch all nodes where the node is a Group and is an Authenticated User
 		if innerAuthenticatedUsersCache, err := FetchAuthUsersMappedToDomains(tx); err != nil {
 			return err
-		} else if innerProtectedUsersCache, err := FetchProtectedUsersMappedToDomains(tx, groupExpansions); err != nil {
+		} else if innerProtectedUsersCache, err := FetchProtectedUsersMappedToDomains(ctx, db, groupExpansions); err != nil {
 			return err
 		} else if ldapSigningCache, err := FetchLDAPSigningCache(ctx, db); err != nil {
 			return err
@@ -337,27 +337,29 @@ func FetchAuthUsersMappedToDomains(tx graph.Transaction) (map[string]graph.ID, e
 }
 
 // FetchProtectedUsersMappedToDomains fetches all protected users groups mapped by their domain SID
-func FetchProtectedUsersMappedToDomains(tx graph.Transaction, groupExpansions impact.PathAggregator) (map[string]cardinality.Duplex[uint64], error) {
+func FetchProtectedUsersMappedToDomains(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (map[string]cardinality.Duplex[uint64], error) {
 	protectedUsers := make(map[string]cardinality.Duplex[uint64])
 
-	err := tx.Nodes().Filter(
-		query.And(
-			query.Kind(query.Node(), ad.Group),
-			query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), ProtectedUsersSuffix)),
-	).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-		for protectedUserGroup := range cursor.Chan() {
-			if domain, err := protectedUserGroup.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				continue
-			} else {
-				set := cardinality.NewBitmap64()
-				set.Or(groupExpansions.Cardinality(protectedUserGroup.ID.Uint64()))
-				protectedUsers[domain] = set
+	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		return tx.Nodes().Filter(
+			query.And(
+				query.Kind(query.Node(), ad.Group),
+				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), ProtectedUsersSuffix)),
+		).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			for protectedUserGroup := range cursor.Chan() {
+				if domain, err := protectedUserGroup.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+					continue
+				} else {
+					set := cardinality.NewBitmap64()
+					set.Or(groupExpansions.Cardinality(protectedUserGroup.ID.Uint64()))
+					protectedUsers[domain] = set
+				}
 			}
-		}
 
-		return cursor.Error()
-	},
-	)
+			return cursor.Error()
+		},
+		)
+	})
 
 	return protectedUsers, err
 }

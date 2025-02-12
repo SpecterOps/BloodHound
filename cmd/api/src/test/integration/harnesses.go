@@ -8661,25 +8661,25 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domain3Sid, false, true)
 
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
-	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain3Sid, adAnalysis.AuthenticatedUsersSuffix))
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1-%s%s", domain3Sid, adAnalysis.AuthenticatedUsersSuffix))
 	graphTestContext.UpdateNode(s.Group1)
 
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain3Sid)
-	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain3Sid, adAnalysis.AuthenticatedUsersSuffix))
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2-%s%s", domain3Sid, adAnalysis.AuthenticatedUsersSuffix))
 	graphTestContext.UpdateNode(s.Group2)
 
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domain1Sid)
 
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
-	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain1Sid, adAnalysis.ProtectedUsersSuffix))
+	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group4-%s%s", domain1Sid, adAnalysis.ProtectedUsersSuffix))
 	graphTestContext.UpdateNode(s.Group4)
 
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain2Sid)
-	s.Group5.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain2Sid, adAnalysis.AuthenticatedUsersSuffix))
+	s.Group5.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group5-%s%s", domain2Sid, adAnalysis.AuthenticatedUsersSuffix))
 	graphTestContext.UpdateNode(s.Group5)
 
 	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain2Sid)
-	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain2Sid, adAnalysis.ProtectedUsersSuffix))
+	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group6-%s%s", domain2Sid, adAnalysis.ProtectedUsersSuffix))
 	graphTestContext.UpdateNode(s.Group6)
 
 	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
