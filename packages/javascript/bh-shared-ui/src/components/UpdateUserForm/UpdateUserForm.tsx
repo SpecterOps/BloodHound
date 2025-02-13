@@ -21,6 +21,7 @@ import {
     DialogContent,
     DialogContentText,
     FormControl,
+    FormHelperText,
     Grid,
     InputLabel,
     MenuItem,
@@ -152,13 +153,24 @@ const UpdateUserFormInner: React.FC<{
 
     const authenticationMethod = watch('authenticationMethod');
 
+    const selectedSSOProviderHasRoleProvisionEnabled = !!SSOProviders?.find(
+        ({ id }) => id === Number(watch('SSOProviderId'))
+    )?.config.auto_provision.role_provision;
+
     useEffect(() => {
         if (authenticationMethod === 'password') {
             setValue('SSOProviderId', undefined);
         }
 
         if (error) {
-            if (error?.response?.status === 409) {
+            if (error?.response?.status === 400) {
+                if (error.response?.data?.errors[0]?.message.toLowerCase().includes('role provision enabled')) {
+                    setError('root.generic', {
+                        type: 'custom',
+                        message: 'Cannot modify user roles for role provision enabled SSO providers.',
+                    });
+                }
+            } else if (error?.response?.status === 409) {
                 if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
                     setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
                 } else if (error.response?.data?.errors[0]?.message.toLowerCase().includes('email')) {
@@ -365,6 +377,7 @@ const UpdateUserFormInner: React.FC<{
                                         value={isNaN(field.value) ? '' : field.value.toString()}
                                         variant='standard'
                                         fullWidth
+                                        disabled={selectedSSOProviderHasRoleProvisionEnabled}
                                         data-testid='update-user-dialog_select-role'
                                         hidden={hasSelectedSelf}>
                                         {roles?.map((role: Role) => (
@@ -373,6 +386,11 @@ const UpdateUserFormInner: React.FC<{
                                             </MenuItem>
                                         ))}
                                     </Select>
+                                    {selectedSSOProviderHasRoleProvisionEnabled && (
+                                        <FormHelperText id='role-helper-text'>
+                                            SSO Provider has enabled role provision.
+                                        </FormHelperText>
+                                    )}
                                 </FormControl>
                             )}
                         />
