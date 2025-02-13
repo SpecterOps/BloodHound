@@ -55,8 +55,8 @@ var (
 
 type oidcClaims struct {
 	Name              string `json:"name"`
-	FamilyName        string `json:"family_name"`
-	DisplayName       string `json:"given_name"`
+	LastName          string `json:"family_name"`
+	FirstName         string `json:"given_name"`
 	Email             string `json:"email"` // Not always present
 	Verified          bool   `json:"email_verified"`
 	PreferredUsername string `json:"preferred_username"` // Present in Entra claims, may be an email
@@ -240,7 +240,7 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		api.RedirectToLoginURL(response, request, "Claims invalid: no valid email address found")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
-			if err := jitOIDCUserCreation(request.Context(), ssoProvider, email, claims, s.db); err != nil {
+			if err := jitOIDCUserUpsert(request.Context(), ssoProvider, email, claims, s.db); err != nil {
 				// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
 				slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Error during JIT User Creation: %v", err))
 			}
@@ -349,15 +349,15 @@ func getEmailFromOIDCClaims(claims oidcClaims) (string, error) {
 	return "", ErrEmailMissing
 }
 
-func jitOIDCUserCreation(ctx context.Context, ssoProvider model.SSOProvider, email string, claims oidcClaims, u jitUserCreator) error {
+func jitOIDCUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, email string, claims oidcClaims, u jitUserUpserter) error {
 	if roles, err := SanitizeAndGetRoles(ctx, ssoProvider.Config.AutoProvision, claims.Roles, u); err != nil {
 		return fmt.Errorf("sanitize roles: %v", err)
 	} else if len(roles) != 1 {
 		return fmt.Errorf("invalid roles")
-	} else if _, err := u.LookupUser(ctx, email); err != nil && !errors.Is(err, database.ErrNotFound) {
+	} else if user, err := u.LookupUser(ctx, email); err != nil && !errors.Is(err, database.ErrNotFound) {
 		return fmt.Errorf("lookup user: %v", err)
 	} else if errors.Is(err, database.ErrNotFound) {
-		var user = model.User{
+		user = model.User{
 			EmailAddress:  null.StringFrom(email),
 			PrincipalName: email,
 			Roles:         roles,
@@ -367,16 +367,24 @@ func jitOIDCUserCreation(ctx context.Context, ssoProvider model.SSOProvider, ema
 			LastName:      null.StringFrom("Last name not found"),
 		}
 
-		if claims.DisplayName != "" {
-			user.FirstName = null.StringFrom(claims.DisplayName)
+		if claims.FirstName != "" {
+			user.FirstName = null.StringFrom(claims.FirstName)
 		}
 
-		if claims.FamilyName != "" {
-			user.LastName = null.StringFrom(claims.FamilyName)
+		if claims.LastName != "" {
+			user.LastName = null.StringFrom(claims.LastName)
 		}
 
 		if _, err := u.CreateUser(ctx, user); err != nil {
 			return fmt.Errorf("create user: %v", err)
+		}
+	} else {
+		//  roles should only ever have 1 role
+		if ssoProvider.Config.AutoProvision.RoleProvision && !user.Roles.Has(roles[0]) {
+			user.Roles = roles
+			if err := u.UpdateUser(ctx, user); err != nil {
+				return fmt.Errorf("update user: %v", err)
+			}
 		}
 	}
 

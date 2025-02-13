@@ -62,6 +62,7 @@ const (
 	ErrorResponseUserSelfDisable                    = "user attempted to disable themselves"
 	ErrorResponseUserSelfRoleChange                 = "user attempted to change own role"
 	ErrorResponseUserSelfSSOProviderChange          = "user attempted to change own SSO Provider"
+	ErrorResponseUserSSOProviderRoleProvisionChange = "user attempted to change a role for a SSO Provider with role provision enabled"
 	ErrorResponseAGTagWhiteSpace                    = "asset group tags must not contain whitespace"
 	ErrorResponseAGNameTagEmpty                     = "asset group name or tag must not be empty"
 	ErrorResponseAGDuplicateName                    = "asset group name must be unique"

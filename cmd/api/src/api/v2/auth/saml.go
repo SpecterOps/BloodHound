@@ -460,7 +460,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		api.RedirectToLoginURL(response, request, "Invalid assertion: no valid email address found")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
-			if err := jitSAMLUserCreation(request.Context(), ssoProvider, principalName, assertion, s.db); err != nil {
+			if err := jitSAMLUserUpsert(request.Context(), ssoProvider, principalName, assertion, s.db); err != nil {
 				// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
 				slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Error during JIT User Creation: %v", err))
 			}
@@ -470,15 +470,15 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 	}
 }
 
-func jitSAMLUserCreation(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserCreator) error {
+func jitSAMLUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserUpserter) error {
 	if roles, err := SanitizeAndGetRoles(ctx, ssoProvider.Config.AutoProvision, ssoProvider.SAMLProvider.GetSAMLUserRolesFromAssertion(assertion), u); err != nil {
 		return fmt.Errorf("sanitize roles: %v", err)
 	} else if len(roles) != 1 {
 		return fmt.Errorf("invalid roles detected")
-	} else if _, err := u.LookupUser(ctx, principalName); err != nil && !errors.Is(err, database.ErrNotFound) {
+	} else if user, err := u.LookupUser(ctx, principalName); err != nil && !errors.Is(err, database.ErrNotFound) {
 		return fmt.Errorf("lookup user: %v", err)
 	} else if errors.Is(err, database.ErrNotFound) {
-		user := model.User{
+		user = model.User{
 			EmailAddress:  null.StringFrom(principalName),
 			PrincipalName: principalName,
 			Roles:         roles,
@@ -498,6 +498,14 @@ func jitSAMLUserCreation(ctx context.Context, ssoProvider model.SSOProvider, pri
 
 		if _, err := u.CreateUser(ctx, user); err != nil {
 			return fmt.Errorf("create user: %v", err)
+		}
+	} else {
+		//  roles should only ever have 1 role
+		if ssoProvider.Config.AutoProvision.RoleProvision && !user.Roles.Has(roles[0]) {
+			user.Roles = roles
+			if err := u.UpdateUser(ctx, user); err != nil {
+				return fmt.Errorf("update user: %v", err)
+			}
 		}
 	}
 
