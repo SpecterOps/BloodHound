@@ -155,7 +155,7 @@ const UpdateUserFormInner: React.FC<{
 
     const selectedSSOProviderHasRoleProvisionEnabled = !!SSOProviders?.find(
         ({ id }) => id === Number(watch('SSOProviderId'))
-    )?.config.auto_provision.role_provision;
+    )?.config?.auto_provision?.role_provision;
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
