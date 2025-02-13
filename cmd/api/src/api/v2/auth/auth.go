@@ -389,12 +389,26 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 	} else if roles, err := s.db.GetRoles(request.Context(), updateUserRequest.Roles); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		user.Roles = roles
-		user.FirstName = null.StringFrom(updateUserRequest.FirstName)
-		user.LastName = null.StringFrom(updateUserRequest.LastName)
-		user.EmailAddress = null.StringFrom(updateUserRequest.EmailAddress)
-		user.PrincipalName = updateUserRequest.Principal
-		user.IsDisabled = updateUserRequest.IsDisabled
+		// PATCH requests may not contain every field, only conditionally update if fields exist
+		if updateUserRequest.FirstName != "" {
+			user.FirstName = null.StringFrom(updateUserRequest.FirstName)
+		}
+
+		if updateUserRequest.LastName != "" {
+			user.LastName = null.StringFrom(updateUserRequest.LastName)
+		}
+
+		if updateUserRequest.EmailAddress != "" {
+			user.EmailAddress = null.StringFrom(updateUserRequest.EmailAddress)
+		}
+
+		if updateUserRequest.Principal != "" {
+			user.PrincipalName = updateUserRequest.Principal
+		}
+
+		if updateUserRequest.IsDisabled != nil {
+			user.IsDisabled = *updateUserRequest.IsDisabled
+		}
 
 		loggedInUser, _ := auth.GetUserFromAuthCtx(authCtx.AuthCtx)
 

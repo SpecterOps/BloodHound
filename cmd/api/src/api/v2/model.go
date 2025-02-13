@@ -68,7 +68,7 @@ type UpdateUserRequest struct {
 	Roles          []int32    `json:"roles"`
 	SAMLProviderID string     `json:"saml_provider_id"`
 	SSOProviderID  null.Int32 `json:"sso_provider_id"`
-	IsDisabled     bool       `json:"is_disabled"`
+	IsDisabled     *bool      `json:"is_disabled,omitempty"`
 }
 
 type CreateUserRequest struct {
