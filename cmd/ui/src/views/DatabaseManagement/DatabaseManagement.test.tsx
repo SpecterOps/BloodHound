@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { Permission } from 'bh-shared-ui';
+import { Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from 'src/test-utils';
@@ -23,6 +23,13 @@ import DatabaseManagement from '.';
 
 describe('DatabaseManagement', () => {
     const server = setupServer(
+        rest.get('/api/v2/self', (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: createAuthStateWithPermissions([Permission.GRAPH_DB_WRITE]).user,
+                })
+            );
+        }),
         rest.post('/api/v2/clear-database', (req, res, ctx) => {
             return res(ctx.status(204));
         }),
@@ -49,7 +56,7 @@ describe('DatabaseManagement', () => {
     afterAll(() => server.close());
 
     it('renders', async () => {
-        render(<DatabaseManagement permissions={[Permission.GRAPH_DB_WRITE]} />);
+        render(<DatabaseManagement />);
 
         const title = screen.getByText(/Database Management/i);
         const button = screen.getByRole('button', { name: /proceed/i });
@@ -63,7 +70,7 @@ describe('DatabaseManagement', () => {
     });
 
     it('disables the proceed button and all checkboxes if the user lacks permission', async () => {
-        render(<DatabaseManagement permissions={[Permission.GRAPH_DB_READ]} />);
+        render(<DatabaseManagement />);
 
         const checkboxes = await screen.getAllByRole('checkbox');
 
@@ -77,7 +84,7 @@ describe('DatabaseManagement', () => {
     });
 
     it('displays error if proceed button is clicked when no checkbox is selected', async () => {
-        render(<DatabaseManagement permissions={[Permission.GRAPH_DB_WRITE]} />);
+        render(<DatabaseManagement />);
 
         const user = userEvent.setup();
 
@@ -89,14 +96,14 @@ describe('DatabaseManagement', () => {
     });
 
     it('clicking checkbox will remove error if present', async () => {
-        render(<DatabaseManagement permissions={[Permission.GRAPH_DB_WRITE]} />);
+        render(<DatabaseManagement />);
 
         const user = userEvent.setup();
 
         const button = screen.getByRole('button', { name: /proceed/i });
         await user.click(button);
 
-        const errorMsg = screen.getByText(/please make a selection/i);
+        const errorMsg = await screen.findByText(/please make a selection/i);
         expect(errorMsg).toBeInTheDocument();
 
         const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
@@ -106,7 +113,7 @@ describe('DatabaseManagement', () => {
     });
 
     it('open and closes dialog', async () => {
-        render(<DatabaseManagement permissions={[Permission.GRAPH_DB_WRITE]} />);
+        render(<DatabaseManagement />);
 
         const user = userEvent.setup();
 
@@ -126,7 +133,7 @@ describe('DatabaseManagement', () => {
     });
 
     it('handles posting a mutation', async () => {
-        render(<DatabaseManagement permissions={[Permission.GRAPH_DB_WRITE]} />);
+        render(<DatabaseManagement />);
 
         const user = userEvent.setup();
 

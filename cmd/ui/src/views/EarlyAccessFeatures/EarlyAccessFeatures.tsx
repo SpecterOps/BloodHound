@@ -35,7 +35,9 @@ import {
     PageWithTitle,
     Permission,
     useFeatureFlags,
-    useForbiddenNotifier,
+    useMountEffect,
+    useNotifications,
+    usePermissions,
     useToggleFeatureFlag,
 } from 'bh-shared-ui';
 import { FC, useState } from 'react';
@@ -111,18 +113,35 @@ export const EarlyAccessFeaturesWarningDialog: React.FC<{
     );
 };
 
-const EarlyAccessFeatures: FC<{ permissions: Permission[] }> = ({ permissions }) => {
+const EarlyAccessFeatures: FC = () => {
     const [showWarningDialog, setShowWarningDialog] = useState(true);
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const { data, isLoading, isError } = useFeatureFlags();
     const toggleFeatureFlag = useToggleFeatureFlag();
-    const forbidden = useForbiddenNotifier(
-        Permission.APP_WRITE_APPLICATION_CONFIGURATION,
-        permissions,
-        'Your role does not grant permission to manage feature flags.',
-        'manage-feature-flags-permission'
-    );
+
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.APP_WRITE_APPLICATION_CONFIGURATION);
+
+    const { addNotification, dismissNotification } = useNotifications();
+    const notificationKey = 'manage-feature-flags-permission';
+
+    const effect: React.EffectCallback = (): void => {
+        if (!hasPermission) {
+            addNotification(
+                `Your role does not grant permission to manage feature flags. Please contact your administrator for details.`,
+                notificationKey,
+                {
+                    persist: true,
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
+        }
+
+        return dismissNotification(notificationKey);
+    };
+
+    useMountEffect(effect);
 
     return (
         <>
@@ -179,7 +198,7 @@ const EarlyAccessFeatures: FC<{ permissions: Permission[] }> = ({ permissions })
                                             }
                                             toggleFeatureFlag.mutate(flagId);
                                         }}
-                                        disabled={showWarningDialog || forbidden}
+                                        disabled={showWarningDialog || !hasPermission}
                                     />
                                 </Box>
                             ))

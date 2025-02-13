@@ -29,12 +29,12 @@ import {
     SSOProviderTable,
 } from '../../components';
 import { UpsertOIDCProviderDialog, UpsertSAMLProviderDialog } from '../../components/UpsertSSOProviders';
-import { useFeatureFlag, useForbiddenNotifier } from '../../hooks';
+import { useFeatureFlag, useMountEffect, usePermissions } from '../../hooks';
 import { useNotifications } from '../../providers';
 import { SortOrder } from '../../types';
 import { Permission, apiClient } from '../../utils';
 
-const SSOConfiguration: FC<{ permissions: Permission[] }> = ({ permissions }) => {
+const SSOConfiguration: FC = () => {
     /* Hooks */
     const [selectedSSOProviderId, setSelectedSSOProviderId] = useState<SSOProvider['id'] | undefined>();
     const [ssoProviderIdToDeleteOrUpdate, setSSOProviderIdToDeleteOrUpdate] = useState<SSOProvider['id'] | undefined>();
@@ -45,13 +45,29 @@ const SSOConfiguration: FC<{ permissions: Permission[] }> = ({ permissions }) =>
 
     const { data: flag } = useFeatureFlag('oidc_support');
     const theme = useTheme();
-    const { addNotification } = useNotifications();
-    const forbidden = useForbiddenNotifier(
-        Permission.AUTH_MANAGE_PROVIDERS,
-        permissions,
-        'Your user role does not grant permission to manage SSO providers.',
-        'manage-sso-permission'
-    );
+
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_PROVIDERS);
+
+    const { addNotification, dismissNotification } = useNotifications();
+    const notificationKey = 'manage-sso-providers-permission';
+
+    const effect: React.EffectCallback = (): void => {
+        if (!hasPermission) {
+            addNotification(
+                `Your user role does not grant permission to manage SSO providers. Please contact your administrator for details.`,
+                notificationKey,
+                {
+                    persist: true,
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
+        }
+
+        return dismissNotification(notificationKey);
+    };
+
+    useMountEffect(effect);
 
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
         apiClient.getRoles({ signal }).then((res) => res.data.data.roles)
@@ -60,7 +76,7 @@ const SSOConfiguration: FC<{ permissions: Permission[] }> = ({ permissions }) =>
     const listSSOProvidersQuery = useQuery(
         ['listSSOProviders'],
         ({ signal }) => apiClient.listSSOProviders({ signal }).then((res) => res.data.data),
-        { enabled: !forbidden }
+        { enabled: hasPermission }
     );
 
     const deleteSSOProviderMutation = useMutation(
@@ -103,8 +119,6 @@ const SSOConfiguration: FC<{ permissions: Permission[] }> = ({ permissions }) =>
 
         return ssoProviders;
     }, [nameFilter, typeSortOrder, listSSOProvidersQuery.data]);
-
-    const noProvidersText = forbidden ? undefined : 'No SSO Providers found';
 
     const selectedSSOProvider = useMemo(() => {
         return listSSOProvidersQuery.data?.find(({ id }) => id === selectedSSOProviderId);
@@ -255,7 +269,7 @@ const SSOConfiguration: FC<{ permissions: Permission[] }> = ({ permissions }) =>
                 <Grid container spacing={theme.spacing(2)}>
                     <Grid item display='flex' alignItems='center' justifyContent='end' minHeight='24px' mb={2} xs={12}>
                         <CreateMenu
-                            disabled={forbidden}
+                            disabled={!hasPermission}
                             createMenuTitle={`Create ${flag?.enabled ? '' : 'SAML '}Provider`}
                             featureFlag='oidc_support'
                             featureFlagEnabledMenuItems={[
@@ -292,7 +306,6 @@ const SSOConfiguration: FC<{ permissions: Permission[] }> = ({ permissions }) =>
                             </Box>
                             <SSOProviderTable
                                 ssoProviders={ssoProviders}
-                                noProvidersText={noProvidersText}
                                 loading={listSSOProvidersQuery.isLoading}
                                 onClickSSOProvider={onClickSSOProvider}
                                 onDeleteSSOProvider={onSelectDeleteOrUpdateSSOProvider('DELETE')}

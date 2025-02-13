@@ -16,24 +16,21 @@
 
 import { useNotifications } from '../providers';
 import { Permission } from '../utils';
-import { useOnMount } from './useOnMount';
+import { useMountEffect } from './useMountEffect';
 
 export const useForbiddenNotifier = (need: Permission, have: Permission[], message: string, key: string): boolean => {
-    const { addNotification, dismissNotification } = useNotifications();
+    const { addNotification } = useNotifications();
     const hasPermission = !!have?.includes(need);
     const effect = () => {
         if (!hasPermission) {
-            addNotification(`${message} Please contact your admnistrator for details.`, key, {
+            addNotification(`${message} Please contact your administrator for details.`, key, {
                 persist: true,
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             });
         }
     };
-    const cleanup = () => {
-        dismissNotification(key);
-    };
 
-    useOnMount(effect, cleanup);
+    useMountEffect(effect);
 
     return !hasPermission;
 };

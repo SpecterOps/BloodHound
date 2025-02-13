@@ -25,9 +25,14 @@ export const useNotifications = () => {
 
     return {
         notifications,
-        addNotification: (notification: string, key?: string, options: OptionsObject = {}) =>
-            dispatch && dispatch(addNotification(notification, key, options)),
-        dismissNotification: (key?: string) => dispatch && dispatch(dismissNotification(key)),
-        removeNotification: (key?: string) => dispatch && dispatch(removeNotification(key)),
+        addNotification: (notification: string, key?: string, options: OptionsObject = {}) => {
+            if (dispatch) dispatch(addNotification(notification, key, options));
+        },
+        dismissNotification: (key?: string) => {
+            dispatch && dispatch(dismissNotification(key));
+        },
+        removeNotification: (key?: string) => {
+            dispatch && dispatch(removeNotification(key));
+        },
     };
 };

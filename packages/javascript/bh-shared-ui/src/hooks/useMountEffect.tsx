@@ -16,16 +16,5 @@
 
 import { useEffect } from 'react';
 
-export const useOnMount = (effect: () => void, cleanup?: () => void): void => {
-    useEffect(() => {
-        effect();
-
-        if (cleanup)
-            return () => {
-                cleanup();
-            };
-
-        // This linting is disabled because we only want the effect to happen on first render.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-};
+// eslint-disable-next-line react-hooks/exhaustive-deps
+export const useMountEffect = (cb: React.EffectCallback) => useEffect(cb, []);

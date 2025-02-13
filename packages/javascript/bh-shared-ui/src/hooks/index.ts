@@ -36,7 +36,7 @@ export * from './useFileIngest';
 
 export * from './useForbiddenNotifier';
 
-export * from './useOnMount';
+export * from './useMountEffect';
 
 export * from './usePermissions';
 

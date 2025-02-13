@@ -16,7 +16,15 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, Box, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
-import { FeatureFlag, PageWithTitle, Permission, apiClient, useForbiddenNotifier } from 'bh-shared-ui';
+import {
+    FeatureFlag,
+    PageWithTitle,
+    Permission,
+    apiClient,
+    useMountEffect,
+    useNotifications,
+    usePermissions,
+} from 'bh-shared-ui';
 import { ClearDatabaseRequest } from 'js-client-library';
 import { FC, useReducer } from 'react';
 import { useMutation } from 'react-query';
@@ -200,14 +208,30 @@ const useDatabaseManagement = () => {
     return { handleMutation, state, dispatch };
 };
 
-const DatabaseManagement: FC<{ permissions: Permission[] }> = ({ permissions }) => {
+const DatabaseManagement: FC = () => {
     const { handleMutation, state, dispatch } = useDatabaseManagement();
-    const forbidden = useForbiddenNotifier(
-        Permission.GRAPH_DB_WRITE,
-        permissions,
-        'Your user role does not allow managing the database.',
-        'database-management-permission'
-    );
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
+
+    const { addNotification, dismissNotification } = useNotifications();
+    const notificationKey = 'database-management-permission';
+
+    const effect: React.EffectCallback = (): void => {
+        if (!hasPermission) {
+            addNotification(
+                `Your user role does not allow managing the database. Please contact your administrator for details.`,
+                notificationKey,
+                {
+                    persist: true,
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
+        }
+
+        return dismissNotification(notificationKey);
+    };
+
+    useMountEffect(effect);
 
     const {
         deleteCollectedGraphData,
@@ -270,7 +294,7 @@ const DatabaseManagement: FC<{ permissions: Permission[] }> = ({ permissions }) 
                                                 checked={deleteCollectedGraphData}
                                                 onChange={handleCheckbox}
                                                 name='deleteCollectedGraphData'
-                                                disabled={forbidden}
+                                                disabled={!hasPermission}
                                             />
                                         }
                                     />
@@ -283,7 +307,7 @@ const DatabaseManagement: FC<{ permissions: Permission[] }> = ({ permissions }) 
                                         checked={deleteCustomHighValueSelectors}
                                         onChange={handleCheckbox}
                                         name='deleteCustomHighValueSelectors'
-                                        disabled={forbidden}
+                                        disabled={!hasPermission}
                                     />
                                 }
                             />
@@ -294,7 +318,7 @@ const DatabaseManagement: FC<{ permissions: Permission[] }> = ({ permissions }) 
                                         checked={deleteAllAssetGroupSelectors}
                                         onChange={handleCheckbox}
                                         name='deleteAllAssetGroupSelectors'
-                                        disabled={forbidden}
+                                        disabled={!hasPermission}
                                     />
                                 }
                             />
@@ -305,7 +329,7 @@ const DatabaseManagement: FC<{ permissions: Permission[] }> = ({ permissions }) 
                                         checked={deleteFileIngestHistory}
                                         onChange={handleCheckbox}
                                         name='deleteFileIngestHistory'
-                                        disabled={forbidden}
+                                        disabled={!hasPermission}
                                     />
                                 }
                             />
@@ -316,14 +340,14 @@ const DatabaseManagement: FC<{ permissions: Permission[] }> = ({ permissions }) 
                                         checked={deleteDataQualityHistory}
                                         onChange={handleCheckbox}
                                         name='deleteDataQualityHistory'
-                                        disabled={forbidden}
+                                        disabled={!hasPermission}
                                     />
                                 }
                             />
                         </FormGroup>
                     </FormControl>
 
-                    <Button disabled={forbidden} onClick={() => dispatch({ type: 'open_dialog' })}>
+                    <Button disabled={!hasPermission} onClick={() => dispatch({ type: 'open_dialog' })}>
                         Proceed
                     </Button>
                 </Box>

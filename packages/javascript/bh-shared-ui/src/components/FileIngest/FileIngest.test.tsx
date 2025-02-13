@@ -17,10 +17,18 @@
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import FileIngest from '.';
-import { fireEvent, render, waitFor } from '../../test-utils';
+import { createAuthStateWithPermissions } from '../../mocks';
+import { fireEvent, render, screen, waitFor } from '../../test-utils';
 import { Permission } from '../../utils';
 
 const server = setupServer(
+    rest.get('/api/v2/self', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: createAuthStateWithPermissions([Permission.GRAPH_DB_WRITE]).user,
+            })
+        );
+    }),
     rest.post('/api/v2/file-upload/start', (req, res, ctx) => {
         return res(
             ctx.json({
@@ -85,56 +93,60 @@ describe('FileIngest', () => {
     const errorFile = new File(['test text'], 'test.txt', { type: 'text/plain' });
 
     it('accepts a valid file and allows the user to continue through the upload process', async () => {
-        const { getByTestId, getByText } = render(<FileIngest permissions={[Permission.GRAPH_DB_WRITE]} />);
-        const openButton = getByText('Upload File(s)');
+        render(<FileIngest />);
+
+        const openButton = screen.getByText('Upload File(s)');
+        await waitFor(() => expect(openButton).toBeEnabled());
 
         fireEvent.click(openButton);
 
-        const fileInput = getByTestId('ingest-file-upload');
+        const fileInput = screen.getByTestId('ingest-file-upload');
         await waitFor(() => expect(fileInput).toBeEnabled());
 
         await waitFor(() => fireEvent.change(fileInput, { target: { files: [testFile] } }));
 
-        const submitButton = getByTestId('confirmation-dialog_button-yes');
+        const submitButton = screen.getByTestId('confirmation-dialog_button-yes');
         await expect(submitButton).toBeEnabled();
 
         fireEvent.click(submitButton);
-        expect(getByText('Press "Upload" to continue.')).toBeInTheDocument();
+        expect(screen.getByText('Press "Upload" to continue.')).toBeInTheDocument();
 
         fireEvent.click(submitButton);
-        await waitFor(() => getByText('All files have successfully been uploaded for ingest.'));
-        expect(getByText('All files have successfully been uploaded for ingest.')).toBeInTheDocument();
+        await waitFor(() => screen.getByText('All files have successfully been uploaded for ingest.'));
+        expect(screen.getByText('All files have successfully been uploaded for ingest.')).toBeInTheDocument();
     });
 
     it('prevents a user from proceeding if the file is not valid', async () => {
-        const { getByTestId, getByText } = render(<FileIngest permissions={[Permission.GRAPH_DB_WRITE]} />);
-        const openButton = getByText('Upload File(s)');
+        render(<FileIngest />);
+
+        const openButton = screen.getByText('Upload File(s)');
+        await waitFor(() => expect(openButton).toBeEnabled());
 
         fireEvent.click(openButton);
 
-        const fileInput = getByTestId('ingest-file-upload');
+        const fileInput = screen.getByTestId('ingest-file-upload');
         await waitFor(() => expect(fileInput).toBeEnabled());
 
         await waitFor(() => fireEvent.change(fileInput, { target: { files: [errorFile] } }));
 
-        const submitButton = getByTestId('confirmation-dialog_button-yes');
+        const submitButton = screen.getByTestId('confirmation-dialog_button-yes');
         expect(submitButton).toBeDisabled();
     });
 
     it('displays a table of completed ingest logs', async () => {
-        const { getByText } = render(<FileIngest permissions={[Permission.GRAPH_DB_WRITE]} />);
-        await waitFor(() => getByText('test_email@specterops.io'));
+        render(<FileIngest />);
+        await waitFor(() => screen.getByText('test_email@specterops.io'));
 
-        expect(getByText('test_email@specterops.io')).toBeInTheDocument();
-        expect(getByText('1 minute')).toBeInTheDocument();
+        expect(screen.getByText('test_email@specterops.io')).toBeInTheDocument();
+        expect(screen.getByText('1 minute')).toBeInTheDocument();
     });
 
     it('disables the upload button and does not populate a table if the user lacks the permission', async () => {
-        const { queryByText, getByTestId } = render(<FileIngest permissions={[Permission.GRAPH_DB_READ]} />);
+        render(<FileIngest />);
 
-        expect(await queryByText('test_email@specterops.io')).toBeNull();
-        expect(await queryByText('1 minute')).toBeNull();
+        expect(screen.queryByText('test_email@specterops.io')).toBeNull();
+        expect(screen.queryByText('1 minute')).toBeNull();
 
-        expect(getByTestId('file-ingest_button-upload-files')).toBeDisabled();
+        expect(screen.getByTestId('file-ingest_button-upload-files')).toBeDisabled();
     });
 });
