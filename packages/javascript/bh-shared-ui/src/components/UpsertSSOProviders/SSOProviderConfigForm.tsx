@@ -26,12 +26,22 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { Role, UpsertOIDCProviderRequest, UpsertSAMLProviderFormInputs } from 'js-client-library';
+import {
+    Role,
+    SSOProviderConfiguration,
+    UpsertOIDCProviderRequest,
+    UpsertSAMLProviderFormInputs,
+} from 'js-client-library';
 import { FC } from 'react';
 import { Control, Controller, FieldErrors, UseFormResetField, UseFormWatch } from 'react-hook-form';
 
-export const backfillSSOProviderConfig = (readOnlyRoleId?: number) => ({
-    auto_provision: { enabled: false, default_role: readOnlyRoleId, role_provision: false },
+export const maybeBackfillSSOProviderConfig = (
+    readOnlyRoleId?: number,
+    oldSSOProviderConfig?: SSOProviderConfiguration['config']
+) => ({
+    auto_provision: oldSSOProviderConfig?.auto_provision.enabled
+        ? oldSSOProviderConfig.auto_provision
+        : { enabled: false, default_role: readOnlyRoleId, role_provision: false },
 });
 
 const SSOProviderConfigForm: FC<{
