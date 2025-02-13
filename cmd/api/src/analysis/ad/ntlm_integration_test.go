@@ -190,6 +190,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 				for _, computer := range computers {
 					innerComputer := computer
 					domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
+					require.NoError(t, err)
 
 					if authenticatedUserID, ok := authenticatedUsers[domainSid]; !ok {
 						t.Fatalf("authenticated user not found for %s", domainSid)
@@ -253,6 +254,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 				for _, computer := range computers {
 					innerComputer := computer
 					domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
+					require.NoError(t, err)
 
 					if authenticatedUserID, ok := authenticatedUsers[domainSid]; !ok {
 						t.Fatalf("authenticated user not found for %s", domainSid)
