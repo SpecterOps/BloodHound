@@ -321,7 +321,6 @@ export const EdgeCompositionRelationships = [
     'ADCSESC13',
     'CoerceAndRelayNTLMToSMB',
     'CoerceAndRelayNTLMToADCS',
-    'CoerceAndRelayNTLMToSMB',
     'CoerceAndRelayNTLMToLDAP',
     'CoerceAndRelayNTLMToLDAPS',
 ];
