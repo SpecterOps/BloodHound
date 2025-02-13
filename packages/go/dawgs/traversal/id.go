@@ -116,11 +116,11 @@ func (s IDTraversal) BreadthFirst(ctx context.Context, plan IDPlan) error {
 
 	// Add to the descent wait group and then queue the root of the path tree for traversal
 	descentCount.Add(1)
-	segmentWriterC <- pathTree
-
-	for {
-		if _, ok := channels.Receive(traversalCtx, completionC); !ok || descentCount.Load() == 0 {
-			break
+	if channels.Submit(traversalCtx, segmentWriterC, pathTree) {
+		for {
+			if _, ok := channels.Receive(traversalCtx, completionC); !ok || descentCount.Load() == 0 {
+				break
+			}
 		}
 	}
 

@@ -15,9 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { faWarning } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Paper, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
 import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest, User } from 'js-client-library';
 import find from 'lodash/find';
 import { DateTime } from 'luxon';
@@ -42,7 +40,6 @@ import { LuxonFormat, apiClient } from '../../utils';
 
 const Users = () => {
     const { addNotification } = useNotifications();
-    const theme = useTheme();
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [createUserDialogOpen, toggleCreateUserDialog] = useToggle(false);
     const [updateUserDialogOpen, toggleUpdateUserDialog] = useToggle(false);
@@ -194,59 +191,37 @@ const Users = () => {
         return <span>Username / Password</span>;
     };
 
-    const usersTableRows = listUsersQuery.data?.map((user, index) => {
-        const isNonUniqueEmail = !!listUsersQuery.data?.find(
-            ({ email_address, id }) =>
-                user.email_address?.toLowerCase() === email_address?.toLowerCase() && user.id !== id
-        );
-
-        return [
-            // This linting rule is disabled because the elements in this array do not require a key prop.
-            /* eslint-disable react/jsx-key */
-            user.principal_name,
-            <>
-                {user.email_address}
-                {isNonUniqueEmail ? (
-                    <Tooltip
-                        title='Duplicate email detected, unique user emails are required and will be enforced by the database in the following release.'
-                        placement='top-start'>
-                        <FontAwesomeIcon
-                            icon={faWarning}
-                            style={{ marginLeft: theme.spacing(1) }}
-                            color={theme.palette.warning.main}
-                        />
-                    </Tooltip>
-                ) : null}
-            </>,
-            `${user.first_name} ${user.last_name}`,
-            <span style={{ whiteSpace: 'pre' }}>
-                {DateTime.fromISO(user.created_at).toFormat(LuxonFormat.DATETIME)}
-            </span>,
-            user.roles?.[0]?.name,
-            getUserStatusText(user),
-            getAuthMethodText(user),
-            <UserActionsMenu
-                userId={user.id}
-                onOpen={(e, userId) => {
-                    setSelectedUserId(userId);
-                }}
-                showPasswordOptions={user.sso_provider_id === null || user.sso_provider_id === undefined}
-                showAuthMgmtButtons={user.id !== getSelfQuery.data?.id}
-                showDisableMfaButton={user.AuthSecret?.totp_activated}
-                userDisabled={user.is_disabled}
-                onUpdateUser={toggleUpdateUserDialog}
-                onDisableUser={toggleDisableUserDialog}
-                onEnableUser={toggleEnableUserDialog}
-                onDeleteUser={toggleDeleteUserDialog}
-                onUpdateUserPassword={toggleResetUserPasswordDialog}
-                onExpireUserPassword={toggleExpireUserPasswordDialog}
-                onManageUserTokens={toggleManageUserTokensDialog}
-                onDisableUserMfa={setDisable2FADialogOpen}
-                index={index}
-            />,
-            /* eslint-enable react/jsx-key */
-        ];
-    });
+    const usersTableRows = listUsersQuery.data?.map((user, index) => [
+        // This linting rule is disabled because the elements in this array do not require a key prop.
+        /* eslint-disable react/jsx-key */
+        user.principal_name,
+        user.email_address,
+        `${user.first_name} ${user.last_name}`,
+        <span style={{ whiteSpace: 'pre' }}>{DateTime.fromISO(user.created_at).toFormat(LuxonFormat.DATETIME)}</span>,
+        user.roles?.[0]?.name,
+        getUserStatusText(user),
+        getAuthMethodText(user),
+        <UserActionsMenu
+            userId={user.id}
+            onOpen={(e, userId) => {
+                setSelectedUserId(userId);
+            }}
+            showPasswordOptions={user.sso_provider_id === null || user.sso_provider_id === undefined}
+            showAuthMgmtButtons={user.id !== getSelfQuery.data?.id}
+            showDisableMfaButton={user.AuthSecret?.totp_activated}
+            userDisabled={user.is_disabled}
+            onUpdateUser={toggleUpdateUserDialog}
+            onDisableUser={toggleDisableUserDialog}
+            onEnableUser={toggleEnableUserDialog}
+            onDeleteUser={toggleDeleteUserDialog}
+            onUpdateUserPassword={toggleResetUserPasswordDialog}
+            onExpireUserPassword={toggleExpireUserPasswordDialog}
+            onManageUserTokens={toggleManageUserTokensDialog}
+            onDisableUserMfa={setDisable2FADialogOpen}
+            index={index}
+        />,
+        /* eslint-enable react/jsx-key */
+    ]);
 
     return (
         <>

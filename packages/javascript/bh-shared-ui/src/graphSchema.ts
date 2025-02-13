@@ -141,8 +141,12 @@ export enum ActiveDirectoryRelationshipKind {
     SyncedToEntraUser = 'SyncedToEntraUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
     CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
+    WriteOwnerLimitedRights = 'WriteOwnerLimitedRights',
+    WriteOwnerRaw = 'WriteOwnerRaw',
+    OwnsLimitedRights = 'OwnsLimitedRights',
+    OwnsRaw = 'OwnsRaw',
     CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
-    CoerceAndRelayNTLMToLDAPs = 'CoerceAndRelayNTLMToLDAPs',
+    CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -286,10 +290,18 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CoerceAndRelayNTLMToSMB';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS:
             return 'CoerceAndRelayNTLMToADCS';
+        case ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights:
+            return 'WriteOwnerLimitedRights';
+        case ActiveDirectoryRelationshipKind.WriteOwnerRaw:
+            return 'WriteOwnerRaw';
+        case ActiveDirectoryRelationshipKind.OwnsLimitedRights:
+            return 'OwnsLimitedRights';
+        case ActiveDirectoryRelationshipKind.OwnsRaw:
+            return 'OwnsRaw';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP:
             return 'CoerceAndRelayNTLMToLDAP';
-        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPs:
-            return 'CoerceAndRelayNTLMToLDAPs';
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS:
+            return 'CoerceAndRelayNTLMToLDAPS';
         default:
             return undefined;
     }
@@ -311,7 +323,7 @@ export const EdgeCompositionRelationships = [
     'CoerceAndRelayNTLMToADCS',
     'CoerceAndRelayNTLMToSMB',
     'CoerceAndRelayNTLMToLDAP',
-    'CoerceAndRelayNTLMToLDAPs',
+    'CoerceAndRelayNTLMToLDAPS',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -415,15 +427,20 @@ export enum ActiveDirectoryKindProperties {
     MaxPwdAge = 'maxpwdage',
     LockoutDuration = 'lockoutduration',
     LockoutObservationWindow = 'lockoutobservationwindow',
+    OwnerSid = 'ownersid',
     SMBSigning = 'smbsigning',
     WebClientRunning = 'webclientrunning',
     RestrictOutboundNTLM = 'restrictoutboundntlm',
+    GMSA = 'gmsa',
+    MSA = 'msa',
+    DoesAnyAceGrantOwnerRights = 'doesanyacegrantownerrights',
+    DoesAnyInheritedAceGrantOwnerRights = 'doesanyinheritedacegrantownerrights',
     ADCSWebEnrollmentHTTP = 'adcswebenrollmenthttp',
     ADCSWebEnrollmentHTTPS = 'adcswebenrollmenthttps',
     ADCSWebEnrollmentHTTPSEPA = 'adcswebenrollmenthttpsepa',
     LDAPSigning = 'ldapsigning',
-    LDAPsAvailable = 'ldasavailable',
-    LDAPsEPA = 'ldapsepa',
+    LDAPSAvailable = 'ldasavailable',
+    LDAPSEPA = 'ldapsepa',
     RelayableToDCLDAP = 'replayabletodcldap',
     RelayableToDCLDAPS = 'replayabletodcldaps',
     IsDC = 'isdc',
@@ -632,12 +649,22 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Lockout Duration';
         case ActiveDirectoryKindProperties.LockoutObservationWindow:
             return 'Lockout Observation Window';
+        case ActiveDirectoryKindProperties.OwnerSid:
+            return 'Owner SID';
         case ActiveDirectoryKindProperties.SMBSigning:
             return 'SMB Signing';
         case ActiveDirectoryKindProperties.WebClientRunning:
             return 'WebClient Running';
         case ActiveDirectoryKindProperties.RestrictOutboundNTLM:
             return 'Restrict Outbound NTLM';
+        case ActiveDirectoryKindProperties.GMSA:
+            return 'GMSA';
+        case ActiveDirectoryKindProperties.MSA:
+            return 'MSA';
+        case ActiveDirectoryKindProperties.DoesAnyAceGrantOwnerRights:
+            return 'Does Any ACE Grant Owner Rights';
+        case ActiveDirectoryKindProperties.DoesAnyInheritedAceGrantOwnerRights:
+            return 'Does Any Inherited ACE Grant Owner Rights';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTP:
             return 'ADCS Web Enrollment HTTP';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPS:
@@ -646,14 +673,14 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'ADCS Web Enrollment HTTPS EPA';
         case ActiveDirectoryKindProperties.LDAPSigning:
             return 'LDAP Signing';
-        case ActiveDirectoryKindProperties.LDAPsAvailable:
-            return 'LDAPs Available';
-        case ActiveDirectoryKindProperties.LDAPsEPA:
-            return 'LDAPs EPA';
+        case ActiveDirectoryKindProperties.LDAPSAvailable:
+            return 'LDAPS Available';
+        case ActiveDirectoryKindProperties.LDAPSEPA:
+            return 'LDAPS EPA';
         case ActiveDirectoryKindProperties.RelayableToDCLDAP:
             return 'Relayable To DC LDAP';
         case ActiveDirectoryKindProperties.RelayableToDCLDAPS:
-            return 'Relayable To DC LDAPs';
+            return 'Relayable To DC LDAPS';
         case ActiveDirectoryKindProperties.IsDC:
             return 'Is Domain Controller';
         default:
@@ -707,8 +734,10 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.SyncedToEntraUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+        ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
+        ActiveDirectoryRelationshipKind.OwnsLimitedRights,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
-        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPs,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.TrustedBy,

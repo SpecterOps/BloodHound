@@ -28,7 +28,7 @@ RelationshipKinds: [...types.#Kind]
 ACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
 InboundRelationshipKinds: [...types.#Kind]
-OutboundRelationshipKinds: [...types.#Kind] 
+OutboundRelationshipKinds: [...types.#Kind]
 EdgeCompositionRelationships: [...types.#Kind]
 
 // Property name enumerations
@@ -740,6 +740,20 @@ MinPwdLength: types.#StringEnum & {
 	representation: "minpwdlength"
 }
 
+GMSA: types.#StringEnum & {
+ 	symbol: "GMSA"
+ 	schema: "ad"
+ 	name: "GMSA"
+ 	representation: "gmsa"
+}
+
+MSA: types.#StringEnum & {
+ 	symbol: "MSA"
+ 	schema: "ad"
+ 	name: "MSA"
+ 	representation: "msa"
+}
+
 SMBSigning: types.#StringEnum & {
 	symbol: "SMBSigning"
 	schema: "ad"
@@ -780,6 +794,27 @@ ADCSWebEnrollmentHTTPSEPA: types.#StringEnum & {
 	schema: "ad"
 	name: "ADCS Web Enrollment HTTPS EPA"
 	representation: "adcswebenrollmenthttpsepa"
+}
+
+DoesAnyAceGrantOwnerRights: types.#StringEnum & {
+ 	symbol: "DoesAnyAceGrantOwnerRights"
+ 	schema: "ad"
+ 	name: "Does Any ACE Grant Owner Rights"
+ 	representation: "doesanyacegrantownerrights"
+}
+
+DoesAnyInheritedAceGrantOwnerRights: types.#StringEnum & {
+ 	symbol: "DoesAnyInheritedAceGrantOwnerRights"
+ 	schema: "ad"
+ 	name: "Does Any Inherited ACE Grant Owner Rights"
+ 	representation: "doesanyinheritedacegrantownerrights"
+}
+
+OwnerSid: types.#StringEnum & {
+	symbol: "OwnerSid"
+ 	schema: "ad"
+ 	name: "Owner SID"
+ 	representation: "ownersid"
 }
 
 LDAPSigning: types.#StringEnum & {
@@ -934,9 +969,14 @@ Properties: [
 	MaxPwdAge,
 	LockoutDuration,
 	LockoutObservationWindow,
+	OwnerSid,
 	SMBSigning,
 	WebClientRunning,
 	RestrictOutboundNTLM,
+	GMSA,
+	MSA,
+	DoesAnyAceGrantOwnerRights,
+	DoesAnyInheritedAceGrantOwnerRights,
 	ADCSWebEnrollmentHTTP,
 	ADCSWebEnrollmentHTTPS,
 	ADCSWebEnrollmentHTTPSEPA,
@@ -1407,6 +1447,26 @@ CoerceAndRelayNTLMToADCS: types.#Kind & {
 	schema: "active_directory"
 }
 
+WriteOwnerLimitedRights: types.#Kind & {
+	symbol: "WriteOwnerLimitedRights"
+	schema: "active_directory"
+}
+
+WriteOwnerRaw: types.#Kind & {
+	symbol: "WriteOwnerRaw"
+	schema: "active_directory"
+}
+
+OwnsLimitedRights: types.#Kind & {
+	symbol: "OwnsLimitedRights"
+	schema: "active_directory"
+}
+
+OwnsRaw: types.#Kind & {
+	symbol: "OwnsRaw"
+	schema: "active_directory"
+}
+
 CoerceAndRelayNTLMToLDAP: types.#Kind & {
 	symbol: "CoerceAndRelayNTLMToLDAP"
 	schema: "active_directory"
@@ -1489,6 +1549,10 @@ RelationshipKinds: [
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	WriteOwnerLimitedRights,
+	WriteOwnerRaw,
+	OwnsLimitedRights,
+	OwnsRaw,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS
 ]
@@ -1521,6 +1585,10 @@ ACLRelationships: [
 	Enroll,
 	WritePKIEnrollmentFlag,
 	WritePKINameFlag,
+	WriteOwnerLimitedRights,
+	OwnsLimitedRights,
+	OwnsRaw,
+	WriteOwnerRaw
 ]
 
 // these edges are common to inbound/outbound/pathfinding
@@ -1570,6 +1638,8 @@ SharedRelationshipKinds: [
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	WriteOwnerLimitedRights,
+	OwnsLimitedRights,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS
 ]

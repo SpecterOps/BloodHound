@@ -70,7 +70,7 @@ func buildExternalProjection(scope *Scope, projections []*Projection) (pgsql.Pro
 					alias = projectedBinding.Alias.Value
 				}
 
-				if builtProjection, err := buildProjection(alias, projectedBinding, scope); err != nil {
+				if builtProjection, err := buildProjection(alias, projectedBinding, scope, projectedBinding.LastProjection); err != nil {
 					return nil, err
 				} else {
 					for _, buildProjectionItem := range builtProjection {
@@ -115,7 +115,7 @@ func buildInternalProjection(scope *Scope, projectedBindings []*BoundIdentifier)
 		projected[projectedBinding.Identifier] = struct{}{}
 
 		// Build the identifier's projection
-		if newSelectItems, err := buildProjection(projectedBinding.Identifier, projectedBinding, scope); err != nil {
+		if newSelectItems, err := buildProjection(projectedBinding.Identifier, projectedBinding, scope, projectedBinding.LastProjection); err != nil {
 			return BoundProjections{}, err
 		} else {
 			boundProjections.Items = append(boundProjections.Items, newSelectItems...)
@@ -126,26 +126,45 @@ func buildInternalProjection(scope *Scope, projectedBindings []*BoundIdentifier)
 	return boundProjections, nil
 }
 
-func buildVisibleScopeProjections(scope *Scope, boundIdentifiers []*BoundIdentifier) (BoundProjections, error) {
-	if visibleBindings, err := scope.LookupBindings(scope.Visible().Slice()...); err != nil {
-		return BoundProjections{}, err
-	} else if projection, err := buildInternalProjection(scope, append(visibleBindings, boundIdentifiers...)); err != nil {
+func buildVisibleScopeProjections(scope *Scope, newlyBound []*BoundIdentifier) (BoundProjections, error) {
+	currentFrame := scope.CurrentFrame()
+
+	if visibleBindings, err := scope.LookupBindings(currentFrame.Known().Slice()...); err != nil {
 		return BoundProjections{}, err
 	} else {
-		for _, boundIdentifier := range boundIdentifiers {
-			scope.Declare(boundIdentifier.Identifier)
-		}
+		allVisibleIdentifiers := append(visibleBindings, newlyBound...)
 
-		return projection, nil
+		if projection, err := buildInternalProjection(scope, allVisibleIdentifiers); err != nil {
+			return BoundProjections{}, err
+		} else {
+			// Mark all new bound identifiers as visible so they do not get reconstructed again on reference
+			for _, boundIdentifier := range newlyBound {
+				currentFrame.Reveal(boundIdentifier.Identifier)
+				currentFrame.Export(boundIdentifier.Identifier)
+			}
+
+			// Zip through all projected identifiers and update their last projecte frame
+			for _, boundIdentifier := range allVisibleIdentifiers {
+				boundIdentifier.LastProjection = currentFrame
+			}
+
+			return projection, nil
+		}
 	}
 }
 
-func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *Scope) ([]pgsql.SelectItem, error) {
-	referenceFrame := scope.ReferenceFrame()
-
+func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *Scope, referenceFrame *Frame) ([]pgsql.SelectItem, error) {
 	switch projected.DataType {
+	case pgsql.InlineProjection:
+		return []pgsql.SelectItem{
+			&pgsql.AliasedExpression{
+				Expression: pgsql.CompoundIdentifier{referenceFrame.Binding.Identifier, projected.Identifier},
+				Alias:      pgsql.AsOptionalIdentifier(alias),
+			},
+		}, nil
+
 	case pgsql.ExpansionPath:
-		if scope.IsVisible(projected.Identifier) {
+		if projected.LastProjection != nil {
 			return []pgsql.SelectItem{
 				&pgsql.AliasedExpression{
 					Expression: pgsql.CompoundIdentifier{referenceFrame.Binding.Identifier, projected.Identifier},
@@ -218,7 +237,7 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 		}, nil
 
 	case pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
-		if scope.IsVisible(projected.Identifier) {
+		if projected.LastProjection != nil {
 			return []pgsql.SelectItem{
 				&pgsql.AliasedExpression{
 					Expression: pgsql.CompoundIdentifier{referenceFrame.Binding.Identifier, projected.Identifier},
@@ -247,7 +266,7 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 		}, nil
 
 	case pgsql.NodeComposite:
-		if scope.IsVisible(projected.Identifier) {
+		if projected.LastProjection != nil {
 			return []pgsql.SelectItem{
 				&pgsql.AliasedExpression{
 					Expression: pgsql.CompoundIdentifier{referenceFrame.Binding.Identifier, projected.Identifier},
@@ -321,7 +340,7 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 		}
 
 	case pgsql.EdgeComposite:
-		if scope.IsVisible(projected.Identifier) {
+		if projected.LastProjection != nil {
 			return []pgsql.SelectItem{
 				&pgsql.AliasedExpression{
 					Expression: pgsql.CompoundIdentifier{referenceFrame.Binding.Identifier, projected.Identifier},

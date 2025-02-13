@@ -70,6 +70,17 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
 select count(s0.e0)::int8 as the_count
 from s0;
 
+-- case: match ()-[r:EdgeKind1]->({name: "123"}) return count(r) as the_count
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite                        as n0,
+                   (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0,
+                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite                        as n1
+            from edge e0
+                   join node n0 on n0.id = e0.start_id
+                   join node n1 on n1.properties ->> 'name' = '123' and n1.id = e0.end_id
+            where e0.kind_id = any (array [3]::int2[]))
+select count(s0.e0)::int8 as the_count
+from s0;
+
 -- cypher_params: {"a": 1, "b": 2, "c": "123", "d": "456"}
 -- pgsql_params: {"pi0": 1, "pi1": 2, "pi2": "123", "pi3": "456"}
 -- case:  match (s)-[r]->(e) where id(e) = $a and not (id(s) = $b) and (r:EdgeKind1 or r:EdgeKind2) and not (s.objectid ends with $c or e.objectid ends with $d) return distinct id(s), id(r), id(e)
@@ -312,6 +323,17 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite           
                    join node n0 on n0.id = e0.start_id
                    join node n1 on n1.id = e0.end_id
             where n0.id <> n1.id)
+select s0.n1 as n2
+from s0;
+
+-- case: match (n1)-[]->(n2) where n2 <> n1 return n2
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite                        as n0,
+                   (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0,
+                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite                        as n1
+            from edge e0
+                   join node n0 on n0.id = e0.start_id
+                   join node n1 on n1.id = e0.end_id
+            where n1.id <> n0.id)
 select s0.n1 as n2
 from s0;
 

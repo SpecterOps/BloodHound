@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/slicesext"
 )
 
@@ -46,10 +47,24 @@ func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
 		convertInvalidDomainProperties(itemProps)
 	}
 
+	convertOwnsEdgeToProperty(item, itemProps)
+
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
 		PropertyMap: itemProps,
 		Label:       itemType,
+	}
+}
+
+// This function is to support our new method of doing Owns edges and makes older data sets backwards compatible
+func convertOwnsEdgeToProperty(item IngestBase, itemProps map[string]any) {
+	for _, ace := range item.Aces {
+		if rightName, err := analysis.ParseKind(ace.RightName); err != nil {
+			continue
+		} else if rightName.Is(ad.Owns) || rightName.Is(ad.OwnsRaw) {
+			itemProps[ad.OwnerSid.String()] = ace.PrincipalSID
+			return
+		}
 	}
 }
 
@@ -115,7 +130,7 @@ func ParseObjectContainer(item IngestBase, itemType graph.Kind) IngestibleRelati
 				TargetType: itemType,
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.Contains,
 			},
 		)
@@ -137,7 +152,7 @@ func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid str
 				TargetType: ad.Group,
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false, "isprimarygroup": true},
+				RelProps: map[string]any{ad.IsACL.String(): false, "isprimarygroup": true},
 				RelType:  ad.MemberOf,
 			},
 		)
@@ -161,7 +176,7 @@ func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
 					TargetType: ad.Group,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{"isacl": false, "isprimarygroup": false},
+					RelProps: map[string]any{ad.IsACL.String(): false, "isprimarygroup": false},
 					RelType:  ad.MemberOf,
 				},
 			))
@@ -176,7 +191,7 @@ func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
 					TargetType: ad.Group,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{"isacl": false, "isprimarygroup": false},
+					RelProps: map[string]any{ad.IsACL.String(): false, "isprimarygroup": false},
 					RelType:  ad.MemberOf,
 				},
 			))
@@ -186,8 +201,40 @@ func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
 	return result
 }
 
-func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []IngestibleRelationship {
-	converted := make([]IngestibleRelationship, 0)
+type WriteOwnerLimitedPrincipal struct {
+	SourceData  IngestibleSource
+	IsInherited bool
+}
+
+// getFromPropertyMap attempts to look up a given key in the given properties map. If the value does not exist this
+// function returns false and the zero-value of type T. If the value does exist but the type of the value does not
+// correctly cast to type T this function returns false and the zero-value of type T. Lastly, if the value does exist
+// and converts to type T, this function returns true and the typed value.
+func getFromPropertyMap[T any](props map[string]any, keyName string) (T, bool) {
+	var empty T
+
+	if value, exists := props[keyName]; !exists {
+		return empty, false
+	} else if typedValue, typeOK := value.(T); !typeOK {
+		return empty, false
+	} else {
+		return typedValue, true
+	}
+}
+
+// ParseACEData parses Windows Access Control Entries (ACE) and also handles the first half of post-processing work
+// for the following edges: Owns, OwnsLimitRights, WriteOwner WriteOwnerLimitedRights.
+//
+// Part of the goal of this function was to make it backwards compatible with older collectors (or third-party
+// collectors). As such, this function will attempt to translate data as it comes in.
+func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, targetType graph.Kind) []IngestibleRelationship {
+	var (
+		ownerPrincipalInfo                   IngestibleSource
+		ownerLimitedPrivs                    = make([]string, 0)
+		writeOwnerLimitedPrivs               = make([]string, 0)
+		potentialWriteOwnerLimitedPrincipals = make([]WriteOwnerLimitedPrincipal, 0)
+		converted                            = make([]IngestibleRelationship, 0)
+	)
 
 	for _, ace := range aces {
 		if ace.PrincipalSID == targetID {
@@ -200,7 +247,30 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 		} else if !ad.IsACLKind(rightKind) {
 			slog.Error(fmt.Sprintf("Non-ace edge type given to process aces: %s", ace.RightName))
 			continue
+
+		} else if rightKind.Is(ad.Owns) || rightKind.Is(ad.OwnsRaw) {
+			// Get Owner SID from ACE granting Owns permission
+			ownerPrincipalInfo = ace.GetCachedValue().SourceData
+
+		} else if rightKind.Is(ad.WriteOwner) || rightKind.Is(ad.WriteOwnerRaw) {
+			// Don't convert every WriteOwner permission to an edge, as they are not always abusable
+			// Cache ACEs where WriteOwner permission is granted
+			potentialWriteOwnerLimitedPrincipals = append(potentialWriteOwnerLimitedPrincipals, ace.GetCachedValue())
+
+		} else if strings.HasSuffix(ace.PrincipalSID, "S-1-3-4") {
+			// Cache ACEs where the OWNER RIGHTS SID is granted explicit abusable permissions
+			ownerLimitedPrivs = append(ownerLimitedPrivs, rightKind.String())
+
+			if ace.IsInherited {
+				// If the ACE is inherited, it is abusable by principals with WriteOwner permission
+				writeOwnerLimitedPrivs = append(writeOwnerLimitedPrivs, rightKind.String())
+			} else {
+				// If the ACE is not inherited, it not abusable after abusing WriteOwner
+				continue
+			}
+
 		} else {
+			// Create edges for all other ACEs
 			converted = append(converted, NewIngestibleRelationship(
 				IngestibleSource{
 					Source:     ace.PrincipalSID,
@@ -211,8 +281,143 @@ func ParseACEData(aces []ACE, targetID string, targetType graph.Kind) []Ingestib
 					TargetType: targetType,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{"isacl": true, "isinherited": ace.IsInherited},
+					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): ace.IsInherited},
 					RelType:  rightKind,
+				},
+			))
+		}
+	}
+
+	//TODO: When inheritance hashes are added, add them to these aces
+
+	// Process abusable permissions granted to the OWNER RIGHTS SID if any were found
+	if len(ownerLimitedPrivs) > 0 {
+
+		// Create an OwnsLimitedRights edge containing all abusable permissions granted to the OWNER RIGHTS SID
+		if ownerPrincipalInfo.Source != "" {
+			converted = append(converted, NewIngestibleRelationship(
+				ownerPrincipalInfo,
+				IngestibleTarget{
+					Target:     targetID,
+					TargetType: targetType,
+				},
+
+				// Owns is never inherited
+				IngestibleRel{
+					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): false, "privileges": ownerLimitedPrivs},
+					RelType:  ad.OwnsLimitedRights,
+				},
+			))
+		}
+
+		if len(writeOwnerLimitedPrivs) > 0 {
+			// For every principal granted WriteOwner permission, create a WriteOwnerLimitedRights edge
+			for _, limitedPrincipal := range potentialWriteOwnerLimitedPrincipals {
+				converted = append(converted, NewIngestibleRelationship(
+					limitedPrincipal.SourceData,
+					IngestibleTarget{
+						Target:     targetID,
+						TargetType: targetType,
+					},
+
+					// Create an edge property containing an array of all INHERITED abusable permissions granted to the OWNER RIGHTS SID
+					IngestibleRel{
+						RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited, "privileges": writeOwnerLimitedPrivs},
+						RelType:  ad.WriteOwnerLimitedRights,
+					},
+				))
+			}
+		} else {
+			// We're dealing with a case where the OWNER RIGHTS SID is granted uninherited abusable permissions
+			// We can tell if any non-abusable ACE is present and inherited by checking the DoesAnyInheritedAceGrantOwnerRights property
+			// If there are no inherited abusable permissions but there are inherited non-abusable permissions,
+			// the non-abusable permissions will NOT be deleted on ownership change, so WriteOwner will NOT be abusable
+			if doesAnyInheritedAceGrantOwnerRights, hasValidProperty := getFromPropertyMap[bool](targetNode.PropertyMap, ad.DoesAnyInheritedAceGrantOwnerRights.String()); hasValidProperty && doesAnyInheritedAceGrantOwnerRights {
+				return converted
+			}
+			// If the non-abusable rights were NOT inherited, they are deleted on ownership change and WriteOwner may be abusable
+			// Post will determine if WriteOwner is abusable based on dSHeuristics:BlockOwnerImplicitRights enforcement and object type
+
+			// If there are abusable permissions granted to the OWNER RIGHTS SID, but they are not inherited,
+			// they will be deleted on ownership change and WriteOwner may be abusable, so create a WriteOwnerRaw
+			// edge for post-processing so we can check BlockOwnerImplicitRights enforcement and object type
+			for _, limitedPrincipal := range potentialWriteOwnerLimitedPrincipals {
+				converted = append(converted, NewIngestibleRelationship(
+					limitedPrincipal.SourceData,
+					IngestibleTarget{
+						Target:     targetID,
+						TargetType: targetType,
+					},
+					IngestibleRel{
+						RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
+						RelType:  ad.WriteOwnerRaw,
+					},
+				))
+			}
+		}
+
+	} else {
+		// If no abusable permissions in the ACL are granted to the OWNER RIGHTS SID check whether any permissions were
+		// granted to the OWNER RIGHTS SID that are not abusable
+		if doesAnyAceGrantOwnerRights, hasValidProperty := getFromPropertyMap[bool](targetNode.PropertyMap, ad.DoesAnyAceGrantOwnerRights.String()); hasValidProperty && doesAnyAceGrantOwnerRights {
+			// If the non-abusable rights were inherited, they are not deleted on ownership change and WriteOwner is not abusable
+			// Do NOT create the OwnsRaw or WriteOwnerRaw edges if the OWNER RIGHTS SID has inherited, non-abusable permissions
+			if doesAnyInheritedAceGrantOwnerRights, hasValidProperty := getFromPropertyMap[bool](targetNode.PropertyMap, ad.DoesAnyInheritedAceGrantOwnerRights.String()); hasValidProperty && doesAnyInheritedAceGrantOwnerRights {
+				return converted
+			} else {
+				// If the non-abusable rights were NOT inherited, they are deleted on ownership change and WriteOwner may be abusable
+				// Post will determine if WriteOwner is abusable based on dSHeuristics:BlockOwnerImplicitRights enforcement and object type
+				// Create a non-traversable WriteOwnerRaw edge for post-processing
+				for _, limitedPrincipal := range potentialWriteOwnerLimitedPrincipals {
+					converted = append(converted, NewIngestibleRelationship(
+						limitedPrincipal.SourceData,
+						IngestibleTarget{
+							Target:     targetID,
+							TargetType: targetType,
+						},
+						IngestibleRel{
+							RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
+							RelType:  ad.WriteOwnerRaw,
+						},
+					))
+				}
+
+				// Don't add the OwnsRaw edge if the OWNER RIGHTS SID has uninherited, non-abusable permissions
+				return converted
+			}
+		}
+
+		// When the SharpHound collection does not include the doesanyacegrantownerrights property
+		// Or when the doesanyinheritedacegrantownerrights property is false
+
+		// Create a non-traversable OwnsRaw edge for post-processing
+		if ownerPrincipalInfo.Source != "" {
+			converted = append(converted, NewIngestibleRelationship(
+				ownerPrincipalInfo,
+				IngestibleTarget{
+					Target:     targetID,
+					TargetType: targetType,
+				},
+
+				// Owns is never inherited
+				IngestibleRel{
+					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): false},
+					RelType:  ad.OwnsRaw,
+				},
+			))
+		}
+
+		// Create a non-traversable WriteOwnerRaw edge for post-processing
+		for _, limitedPrincipal := range potentialWriteOwnerLimitedPrincipals {
+			converted = append(converted, NewIngestibleRelationship(
+				limitedPrincipal.SourceData,
+				IngestibleTarget{
+					Target:     targetID,
+					TargetType: targetType,
+				},
+				IngestibleRel{
+					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
+					RelType:  ad.WriteOwnerRaw,
 				},
 			))
 		}
@@ -238,7 +443,7 @@ func convertSPNData(spns []SPNTarget, sourceID string) []IngestibleRelationship 
 					TargetType: ad.Computer,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{"isacl": true, "port": s.Port},
+					RelProps: map[string]any{ad.IsACL.String(): true, "port": s.Port},
 					RelType:  kind,
 				},
 			))
@@ -267,7 +472,7 @@ func ParseUserMiscData(user User) []IngestibleRelationship {
 				TargetType: target.Kind(),
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.AllowedToDelegate,
 			},
 		))
@@ -284,7 +489,7 @@ func ParseUserMiscData(user User) []IngestibleRelationship {
 				TargetType: target.Kind(),
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.HasSIDHistory,
 			},
 		))
@@ -331,7 +536,7 @@ func ParseChildObjects(data []TypedPrincipal, containerId string, containerType 
 				TargetType: childObject.Kind(),
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.Contains,
 			},
 		))
@@ -352,7 +557,7 @@ func ParseGpLinks(links []GPLink, itemIdentifier string, itemType graph.Kind) []
 				TargetType: itemType,
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false, "enforced": gpLink.IsEnforced},
+				RelProps: map[string]any{ad.IsACL.String(): false, "enforced": gpLink.IsEnforced},
 				RelType:  ad.GPLink,
 			},
 		))
@@ -399,7 +604,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 				},
 				IngestibleRel{
 					RelProps: map[string]any{
-						"isacl":                false,
+						ad.IsACL.String():      false,
 						"sidfiltering":         trust.SidFilteringEnabled,
 						"tgtdelegationenabled": trust.TGTDelegationEnabled,
 						"trustattributes":      finalTrustAttributes,
@@ -422,7 +627,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 				},
 				IngestibleRel{
 					RelProps: map[string]any{
-						"isacl":                false,
+						ad.IsACL.String():      false,
 						"sidfiltering":         trust.SidFilteringEnabled,
 						"tgtdelegationenabled": trust.TGTDelegationEnabled,
 						"trustattributes":      finalTrustAttributes,
@@ -451,7 +656,7 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 				TargetType: target.Kind(),
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.AllowedToDelegate,
 			},
 		))
@@ -468,7 +673,7 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 				TargetType: ad.Computer,
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.AllowedToAct,
 			},
 		))
@@ -485,7 +690,7 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 				TargetType: target.Kind(),
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.DumpSMSAPassword,
 			},
 		))
@@ -502,7 +707,7 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 				TargetType: target.Kind(),
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.HasSIDHistory,
 			},
 		))
@@ -520,7 +725,7 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 					TargetType: ad.User,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{"isacl": false},
+					RelProps: map[string]any{ad.IsACL.String(): false},
 					RelType:  ad.HasSession,
 				},
 			))
@@ -539,7 +744,7 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 					TargetType: ad.User,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{"isacl": false},
+					RelProps: map[string]any{ad.IsACL.String(): false},
 					RelType:  ad.HasSession,
 				},
 			))
@@ -558,7 +763,7 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 					TargetType: ad.User,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{"isacl": false},
+					RelProps: map[string]any{ad.IsACL.String(): false},
 					RelType:  ad.HasSession,
 				},
 			))
@@ -576,7 +781,7 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 				TargetType: ad.Domain,
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.DCFor,
 			},
 		))
@@ -631,7 +836,7 @@ func ConvertLocalGroup(localGroup LocalGroupAPIResult, computer Computer) Parsed
 			TargetType: ad.Computer,
 		},
 		IngestibleRel{
-			RelProps: map[string]any{"isacl": false},
+			RelProps: map[string]any{ad.IsACL.String(): false},
 			RelType:  ad.LocalToComputer,
 		},
 	))
@@ -647,7 +852,7 @@ func ConvertLocalGroup(localGroup LocalGroupAPIResult, computer Computer) Parsed
 				TargetType: ad.LocalGroup,
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.MemberOfLocalGroup,
 			},
 		))
@@ -680,7 +885,7 @@ func ParseUserRightData(userRight UserRightsAssignmentAPIResult, computer Comput
 				TargetType: ad.Computer,
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  right,
 			},
 		))
@@ -737,7 +942,7 @@ func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationsh
 				TargetType: ad.EnterpriseCA,
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.PublishedTo,
 			},
 		))
@@ -754,7 +959,7 @@ func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationsh
 				TargetType: ad.EnterpriseCA,
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.HostsCAService,
 			},
 		))
@@ -789,7 +994,7 @@ func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, re
 							TargetType: ad.CertTemplate,
 						},
 						IngestibleRel{
-							RelProps: map[string]any{"isacl": false},
+							RelProps: map[string]any{ad.IsACL.String(): false},
 							RelType:  ad.DelegatedEnrollmentAgent,
 						},
 					))
@@ -803,6 +1008,10 @@ func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, re
 }
 
 func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship) []IngestibleRelationship {
+
+	// Get IngesibleNode for EnterpriceCA
+	baseNodeProp := ConvertObjectToNode(enterpriseCA.IngestBase, ad.EnterpriseCA)
+
 	if enterpriseCA.CARegistryData.CASecurity.Collected {
 		caSecurityData := slicesext.Filter(enterpriseCA.CARegistryData.CASecurity.Data, func(s ACE) bool {
 			if s.PrincipalType == ad.LocalGroup.String() {
@@ -828,10 +1037,10 @@ func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []Inges
 		})
 
 		combinedData := append(caSecurityData, filteredACES...)
-		relationships = append(relationships, ParseACEData(combinedData, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
+		relationships = append(relationships, ParseACEData(baseNodeProp, combinedData, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
 
 	} else {
-		relationships = append(relationships, ParseACEData(enterpriseCA.Aces, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
+		relationships = append(relationships, ParseACEData(baseNodeProp, enterpriseCA.Aces, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
 	}
 
 	return relationships
@@ -854,7 +1063,7 @@ func ParseRootCAMiscData(rootCA RootCA) []IngestibleRelationship {
 				TargetType: ad.Domain,
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.RootCAFor,
 			},
 		))
@@ -880,7 +1089,7 @@ func ParseNTAuthStoreData(ntAuthStore NTAuthStore) []IngestibleRelationship {
 				TargetType: ad.Domain,
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.NTAuthStoreFor,
 			},
 		))

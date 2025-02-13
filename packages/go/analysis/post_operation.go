@@ -47,8 +47,18 @@ func NewPostRelationshipOperation(ctx context.Context, db graph.Database, operat
 		)
 
 		for nextJob := range inC {
-			if err := batch.CreateRelationshipByIDs(nextJob.FromID, nextJob.ToID, nextJob.Kind, relProp); err != nil {
-				return err
+			if len(nextJob.RelProperties) > 0 {
+				tempRelProp := relProp.Clone()
+				for key, val := range nextJob.RelProperties {
+					tempRelProp.Set(key, val)
+				}
+				if err := batch.CreateRelationshipByIDs(nextJob.FromID, nextJob.ToID, nextJob.Kind, tempRelProp); err != nil {
+					return err
+				}
+			} else {
+				if err := batch.CreateRelationshipByIDs(nextJob.FromID, nextJob.ToID, nextJob.Kind, relProp); err != nil {
+					return err
+				}
 			}
 
 			operation.Stats.AddRelationshipsCreated(nextJob.Kind, 1)

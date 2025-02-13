@@ -17,10 +17,13 @@
 package traversal
 
 import (
+	"context"
 	"testing"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
+	graph_mocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 var (
@@ -106,4 +109,29 @@ func TestFilteredSkipLimit(t *testing.T) {
 	// Validate that we've collected exactly one node
 	require.Equal(t, 1, len(nodes))
 	require.Equal(t, nodes[0].ID, graph.ID(3))
+}
+
+func TestTraversalBreadthFirstContextCancel(t *testing.T) {
+	var (
+		numWorkers    = 4
+		mockCtrl      = gomock.NewController(t)
+		mockDB        = graph_mocks.NewMockDatabase(mockCtrl)
+		mockTx        = graph_mocks.NewMockTransaction(mockCtrl)
+		traversalInst = New(mockDB, numWorkers)
+		plan          = Plan{
+			RootSegment: root,
+			Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
+				return []*graph.PathSegment{}, nil
+			},
+		}
+	)
+
+	mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(testCtx context.Context, logic func(tx graph.Transaction) error, options ...graph.TransactionOption) error {
+		return logic(mockTx)
+	}).Times(numWorkers)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	err := traversalInst.BreadthFirst(ctx, plan)
+	require.Nil(t, err)
 }

@@ -21,7 +21,6 @@ import { useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 
 import {
-    ApiVersion,
     Disable2FADialog,
     Enable2FADialog,
     PageWithTitle,
@@ -29,6 +28,7 @@ import {
     TextWithFallback,
     UserTokenManagementDialog,
 } from '../../components';
+import useApiVersion from '../../hooks/useApiVersion';
 import { useNotifications } from '../../providers';
 import { apiClient, getUsername } from '../../utils';
 
@@ -47,6 +47,9 @@ const UserProfile = () => {
     const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
         apiClient.getSelf({ signal }).then((res) => res.data.data)
     );
+
+    const { data: apiVersionResponse, isSuccess } = useApiVersion();
+    const apiVersion = isSuccess && apiVersionResponse?.server_version;
 
     const updateUserPasswordMutation = useMutation(
         ({ userId, ...payload }: { userId: string } & PutUserAuthSecretRequest) =>
@@ -105,9 +108,7 @@ const UserProfile = () => {
                     <br />
                     Please try refreshing the page or logging in again.
                 </Alert>
-                <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>
-                    <ApiVersion></ApiVersion>
-                </Box>
+                <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>BloodHound: {apiVersion}</Box>
             </PageWithTitle>
         );
     }
@@ -222,9 +223,7 @@ const UserProfile = () => {
                             )}
                         </Grid>
                     </Box>
-                    <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>
-                        <ApiVersion></ApiVersion>
-                    </Box>
+                    <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>BloodHound: {apiVersion}</Box>
                 </Box>
             </PageWithTitle>
 

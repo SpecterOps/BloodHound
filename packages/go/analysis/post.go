@@ -113,9 +113,10 @@ func (s PostProcessingStats) LogStats() {
 }
 
 type CreatePostRelationshipJob struct {
-	FromID graph.ID
-	ToID   graph.ID
-	Kind   graph.Kind
+	FromID        graph.ID
+	ToID          graph.ID
+	Kind          graph.Kind
+	RelProperties map[string]any
 }
 
 type DeleteRelationshipJob struct {

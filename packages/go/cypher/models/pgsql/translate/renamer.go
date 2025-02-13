@@ -64,10 +64,21 @@ type IdentifierRewriter struct {
 
 	scopeIdentifier pgsql.Identifier
 	targets         *pgsql.IdentifierSet
-	stack           []pgsql.SyntaxNode
+	skipDepth       int
 }
 
 func (s *IdentifierRewriter) enter(node pgsql.SyntaxNode) error {
+	// Quick check to compensate for unwanted rewriting of sub-query expressions. Since these
+	// can be nested we track depth instead a boolean for skipping AST elements.
+	switch node.(type) {
+	case pgsql.Subquery:
+		s.skipDepth += 1
+	}
+
+	if s.skipDepth > 0 {
+		return nil
+	}
+
 	switch typedExpression := node.(type) {
 	case pgsql.Projection:
 		for idx, projection := range typedExpression {
@@ -193,7 +204,6 @@ func (s *IdentifierRewriter) enter(node pgsql.SyntaxNode) error {
 		}
 	}
 
-	s.stack = append(s.stack, node)
 	return nil
 }
 
@@ -201,12 +211,13 @@ func (s *IdentifierRewriter) Enter(node pgsql.SyntaxNode) {
 	if err := s.enter(node); err != nil {
 		s.SetError(err)
 	}
-
-	s.stack = append(s.stack, node)
 }
 
-func (s *IdentifierRewriter) exit(_ pgsql.SyntaxNode) error {
-	s.stack = s.stack[:len(s.stack)-1]
+func (s *IdentifierRewriter) exit(node pgsql.SyntaxNode) error {
+	switch node.(type) {
+	case pgsql.Subquery:
+		s.skipDepth -= 1
+	}
 	return nil
 }
 
@@ -221,6 +232,7 @@ func NewIdentifierRewriter(scopeIdentifier pgsql.Identifier, targets *pgsql.Iden
 		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[pgsql.SyntaxNode](),
 		scopeIdentifier:     scopeIdentifier,
 		targets:             targets,
+		skipDepth:           0,
 	}
 }
 

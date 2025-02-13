@@ -34,7 +34,7 @@ import (
 )
 
 // PostNTLM is the initial function used to execute our NTLM analysis
-func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
+func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, adcsCache ADCSCache) (*analysis.AtomicPostProcessingStats, error) {
 	var (
 		adcsComputerCache       = make(map[string]cardinality.Duplex[uint64])
 		operation               = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
@@ -103,18 +103,14 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		return nil, err
 	}
 
-	if err := PostCoerceAndRelayNTLMToADCS(ctx, db, operation, authenticatedUsersCache, adcsComputerCache); err != nil {
+	if err := PostCoerceAndRelayNTLMToADCS(ctx, db, adcsCache, operation, authenticatedUsersCache, adcsComputerCache); err != nil {
 		return nil, err
 	}
 
 	return &operation.Stats, operation.Done()
 }
 
-func PostCoerceAndRelayNTLMToADCS(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], authUsersCache map[string]graph.ID, adcsComputerCache map[string]cardinality.Duplex[uint64]) error {
-	adcsCache := NewADCSCache()
-	if err := adcsCache.BuildCache(ctx, db); err != nil {
-		return err
-	}
+func PostCoerceAndRelayNTLMToADCS(ctx context.Context, db graph.Database, adcsCache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], authUsersCache map[string]graph.ID, adcsComputerCache map[string]cardinality.Duplex[uint64]) error {
 	for _, outerDomain := range adcsCache.domains {
 		for _, outerEnterpriseCA := range adcsCache.GetEnterpriseCertAuthorities() {
 			domain := outerDomain

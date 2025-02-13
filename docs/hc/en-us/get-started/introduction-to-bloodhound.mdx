@@ -2,7 +2,7 @@
 title: Introduction to BloodHound
 ---
 
-<Card title="BloodHound is an Attack Path Management solution for identity attack path risks." icon="shield" horizontal="true"></Card>
+<Card title="Know your adversary with BloodHound security testing." icon="shield" iconType="solid" horizontal={true} />
 
 BloodHound uses graph theory to reveal hidden and often unintended relationships within Active Directory, Entra ID (formerly Azure AD), and Microsoft Azure IaaS. Defenders (blue teams) and attackers (red teams) use BloodHound for a deeper understanding of privileged relationships in an environment.
 
@@ -10,40 +10,71 @@ There are two BloodHound products: BloodHound Enterprise and BloodHound Communit
 
 ## BloodHound Enterprise vs BloodHound Community Edition
 
-<CardGroup cols={2}>
-<Card title="Continuously monitor, prioritize, and eliminate attack path risk across your environment." img="../../images/enterprise-logo.png">
-    <br/>
-    BloodHound Enterprise is for blue teams focused on **risk management**. 
-    
-    <br/>It has 24/7/365 enterprise support.
+<div>
+    <table className="comparison-table">
+    <tbody>
+    <tr>
+        <td>
+        <img src="../../images/BHE-logo-square.png" alt="BloodHound Enterprise logo" />
+        </td>
+        <td>
+        <img src="../../images/CE-logo-square.svg" alt="BloodHound Community Edition logo" />
+        </td>
+    </tr>
+    <tr>
+        <td>
+        With BloodHound Enterprise, <strong>continuously monitor, prioritize, and eliminate attack path risk across your environment.</strong>
+        </td>
+        <td>
+        With BloodHound Community Edition, <strong>identify, test, and validate attack path risk.</strong>
+        </td>
+    </tr>
+    <tr>
+        <td>
+        A fully-managed SaaS application for blue teams focused on <strong>risk management.</strong>
+        </td>
+        <td>
+        An offering for red teams focused on <strong>security testing.</strong>
+        </td>
+    </tr>
+    <tr>
+        <td>Leverage features like scheduled data collection and data reconciliation.</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>Manage attack paths over time with exposure measurement and remediation guidance.</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>24/7/365 enterprise support.</td>
+        <td>No dedicated support.</td>
+    </tr>
+    <tr>
+        <td>
+        <a href="/hc/en-us/get-started/bloodhound-enterprise-quickstart">Get started</a>
+        </td>
+        <td>
+        <a href="/hc/en-us/get-started/bloodhound-community-edition-quickstart">Get started</a>
+        </td>
+    </tr>
+    </tbody>
+    </table>
+</div>
 
-    <br/> <Icon icon="arrow-right" iconType="solid" /> [Get started](/hc/en-us/get-started/bloodhound-enterprise-quickstart)
-</Card>
-<Card title="Identify, test, and validate attack path risk." img="../../images/ce-logo.png">
-    <br/>
-    BloodHound Community Edition is for red teams focused on **security testing**.
-    
-    <br/>It has no dedicated support.
-
-    <br/><br/><br/><br/> <Icon icon="arrow-right" iconType="solid" /> [Get started](/hc/en-us/get-started/bloodhound-community-edition-quickstart)
-</Card>
-</CardGroup>
-
-
-See the [full feature comparison](https://specterops.io/bloodhound-feature-comparison/).
+<Icon icon="arrow-right" iconType="solid" /> See the [full feature comparison](https://specterops.io/bloodhound-feature-comparison/).
 
 ## BloodHound Enterprise
 
-[Attack Path Management](https://bloodhoundenterprise.io/what-is-attack-path-management/) is a framework designed to help organizations measure and remediate the risk created by attack paths. 
-
 BloodHound Enterprise is a fully deployed and secured SaaS offering by SpecterOps to address the need for Attack Path Management. 
 It requires requires no additional installation or maintenance.
+
+[Attack Path Management](https://specterops.io/what-is-attack-path-management/) is a framework designed to help organizations measure and remediate the risk created by attack paths. 
 
 With BloodHound Enterprise, leverage ongoing collection, data reconciliation, and analysis to manage risk following the Attack Path Management framework.
 It's the only tool available that helps defenders easily identify and eliminate highly complex attack paths that would otherwise be impossible to manage.
 
 <Icon icon="arrow-right" iconType="solid" /> [Get started](/hc/en-us/get-started/bloodhound-enterprise-quickstart)
-<Icon icon="arrow-right" iconType="solid" /> [Request a demo](https://bloodhoundenterprise.io/demo/)
+<Icon icon="arrow-right" iconType="solid" /> [Request a demo](https://specterops.io/get-a-demo/)
 
 ## BloodHound Community Edition
 
@@ -54,11 +85,9 @@ BloodHound CE is free, open-source, and focused on enabling penetration testers 
 ## Need help?
 <CardGroup>
     <Card title="BloodHound Enterprise Support" icon="square-question">
-        <br/>
         [**Submit a request**](https://support.bloodhoundenterprise.io/hc/en-us/requests/new) for dedicated support or ask in the [**BloodHound user Slack community**](https://ghst.ly/BHSlack).
     </Card>
     <Card title="BloodHound Community Edition Support" icon="users"> 
-        <br/>
         Ask in the [**BloodHound user Slack community**](https://ghst.ly/BHSlack).
         </Card>
 </CardGroup>

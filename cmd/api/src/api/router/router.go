@@ -97,6 +97,7 @@ func (s *Route) CheckFeatureFlag(db database.Database, flagKey string) *Route {
 
 func NewRouter(cfg config.Configuration, authorizer auth.Authorizer, contentSecurityPolicy string) Router {
 	muxRouter := mux.NewRouter()
+	muxRouter.Use(middleware.EnsureRequestBodyClosed())
 	muxRouter.Use(middleware.SecureHandlerMiddleware(cfg, contentSecurityPolicy))
 
 	return Router{mux: muxRouter, authorizer: authorizer}

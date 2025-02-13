@@ -55,6 +55,24 @@ func initAndGetRoles(t *testing.T) (database.Database, model.Roles) {
 	return nil, nil
 }
 
+func createUser(t *testing.T, dbInst database.Database, principalName string) model.User {
+	if roles, err := dbInst.GetAllRoles(context.Background(), "", model.SQLFilter{}); err != nil {
+		t.Fatalf("Error fetching roles: %v", err)
+	} else if newUser, err := dbInst.CreateUser(context.Background(), model.User{
+		Roles:         roles,
+		FirstName:     null.StringFrom("First"),
+		LastName:      null.StringFrom("Last"),
+		EmailAddress:  null.StringFrom(principalName),
+		PrincipalName: principalName,
+	}); err != nil {
+		t.Fatalf("Error creating user: %v", err)
+	} else {
+		return newUser
+	}
+
+	return model.User{}
+}
+
 func initAndCreateUser(t *testing.T) (database.Database, model.User) {
 	var (
 		dbInst, roles = initAndGetRoles(t)
@@ -536,6 +554,9 @@ func TestDatabase_CreateUserSession(t *testing.T) {
 	} else {
 		assert.Equal(t, user, newUserSession.User)
 	}
+	user, err := dbInst.GetUser(testCtx, user.ID)
+	assert.NoError(t, err)
+	assert.False(t, user.LastLogin.IsZero(), "User last login date was not set")
 }
 
 func TestDatabase_SetUserSessionFlag(t *testing.T) {

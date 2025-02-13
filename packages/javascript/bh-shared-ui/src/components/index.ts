@@ -14,8 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as ApiVersion } from './ApiVersion';
-
 export * from './AppNotifications';
 export { default as AppNotifications } from './AppNotifications';
 
@@ -181,3 +179,6 @@ export { default as UserTokenManagementDialog } from './UserTokenManagementDialo
 
 export * from './WebGLDisabledAlert';
 export { default as WebGLDisabledAlert } from './WebGLDisabledAlert';
+
+export * from './AppIcon';
+export * from './Navigation';

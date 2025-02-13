@@ -14,6 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import DataSelector from './DataSelector';
+import { Typography } from '@mui/material';
+import { FC } from 'react';
 
-export default DataSelector;
+const Opsec: FC = () => {
+    return (
+        <>
+            <Typography variant='body2'>
+                Please refer to the OPSEC info for the specific granted permissions at
+                https://bloodhound.readthedocs.io/en/latest/data-analysis/edges.html
+            </Typography>
+        </>
+    );
+};
+
+export default Opsec;

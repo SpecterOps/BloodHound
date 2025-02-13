@@ -658,6 +658,21 @@ func (mr *MockDatabaseMockRecorder) GetADDataQualityStats(arg0, arg1, arg2, arg3
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetADDataQualityStats), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
+// GetAggregateADDataQualityStats mocks base method.
+func (m *MockDatabase) GetAggregateADDataQualityStats(arg0 context.Context, arg1 []string, arg2, arg3 time.Time) (model.ADDataQualityStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAggregateADDataQualityStats", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(model.ADDataQualityStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAggregateADDataQualityStats indicates an expected call of GetAggregateADDataQualityStats.
+func (mr *MockDatabaseMockRecorder) GetAggregateADDataQualityStats(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregateADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetAggregateADDataQualityStats), arg0, arg1, arg2, arg3)
+}
+
 // GetAllAssetGroups mocks base method.
 func (m *MockDatabase) GetAllAssetGroups(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.AssetGroups, error) {
 	m.ctrl.T.Helper()
@@ -822,21 +837,6 @@ func (m *MockDatabase) GetAllUsers(arg0 context.Context, arg1 string, arg2 model
 func (mr *MockDatabaseMockRecorder) GetAllUsers(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsers", reflect.TypeOf((*MockDatabase)(nil).GetAllUsers), arg0, arg1, arg2)
-}
-
-// GetAllUsersWithNonUniqueEmails mocks base method.
-func (m *MockDatabase) GetAllUsersWithNonUniqueEmails(arg0 context.Context) (map[string]int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllUsersWithNonUniqueEmails", arg0)
-	ret0, _ := ret[0].(map[string]int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllUsersWithNonUniqueEmails indicates an expected call of GetAllUsersWithNonUniqueEmails.
-func (mr *MockDatabaseMockRecorder) GetAllUsersWithNonUniqueEmails(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsersWithNonUniqueEmails", reflect.TypeOf((*MockDatabase)(nil).GetAllUsersWithNonUniqueEmails), arg0)
 }
 
 // GetAnalysisRequest mocks base method.
@@ -1392,20 +1392,6 @@ func (m *MockDatabase) InitializeSecretAuth(arg0 context.Context, arg1 model.Use
 func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeSecretAuth", reflect.TypeOf((*MockDatabase)(nil).InitializeSecretAuth), arg0, arg1, arg2)
-}
-
-// IsNewEmail mocks base method.
-func (m *MockDatabase) IsNewEmail(arg0 context.Context, arg1 string) bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsNewEmail", arg0, arg1)
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// IsNewEmail indicates an expected call of IsNewEmail.
-func (mr *MockDatabaseMockRecorder) IsNewEmail(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsNewEmail", reflect.TypeOf((*MockDatabase)(nil).IsNewEmail), arg0, arg1)
 }
 
 // IsSavedQueryPublic mocks base method.

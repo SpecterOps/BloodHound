@@ -72,7 +72,8 @@ const (
 	ErrorResponseDetailsUniqueViolation             = "unique constraint was violated"
 	ErrorResponseDetailsNotImplemented              = "All good things to those who wait. Not implemented."
 
-	FmtErrorResponseDetailsBadQueryParameters = "there are errors in the query parameters: %v"
+	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
+	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"
 )
 
 func IsErrorResponse(response *http.Response) bool {

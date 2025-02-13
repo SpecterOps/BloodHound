@@ -193,7 +193,6 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 		mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{}, nil)
 		mockDB.EXPECT().GetSAMLProvider(gomock.Any(), ssoProvider.SAMLProvider.ID).Return(*ssoProvider.SAMLProvider, nil)
 		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), ssoProvider.ID).Return(ssoProvider, nil)
-		mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
 		test.Request(t).
@@ -215,7 +214,6 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 		mockDB.EXPECT().GetSAMLProvider(gomock.Any(), ssoProvider.SAMLProvider.ID).Return(*ssoProvider.SAMLProvider, nil)
 		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), ssoProvider.ID).Return(ssoProvider, nil)
 		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
-		mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 
 		test.Request(t).
 			WithContext(bhCtx).
@@ -233,7 +231,6 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 	t.Run("Successful user update with sso provider-saml", func(t *testing.T) {
 		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Eq(goodRoles)).Return(model.Roles{}, nil)
 		mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{}, nil)
-		mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), ssoProvider.ID).Return(ssoProvider, nil)
 		mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
@@ -1051,7 +1048,6 @@ func TestCreateUser_Failure(t *testing.T) {
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Not(badRole)).Return(model.Roles{}, nil).AnyTimes()
 	mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	mockDB.EXPECT().CreateUser(gomock.Any(), badUser).Return(model.User{}, fmt.Errorf("db error"))
-	mockDB.EXPECT().IsNewEmail(gomock.Any(), gomock.Any()).Return(true).AnyTimes()
 
 	type Input struct {
 		Body v2.CreateUserRequest
@@ -1158,7 +1154,13 @@ func TestCreateUser_FailureDuplicateEmail(t *testing.T) {
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(false)
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+		Key: appcfg.PasswordExpirationWindow,
+		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
+			Duration: appcfg.DefaultPasswordExpirationWindow,
+		}),
+	}, nil)
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(model.User{}, database.ErrDuplicateEmail)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1204,7 +1206,6 @@ func TestCreateUser_Success(t *testing.T) {
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
-	mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1258,7 +1259,6 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
-	mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 
 	input := struct {
 		Body v2.CreateUserRequest
@@ -1332,7 +1332,6 @@ func TestManagementResource_UpdateUser_IDMalformed(t *testing.T) {
 	}, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
-	mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1397,7 +1396,6 @@ func TestManagementResource_UpdateUser_GetUserError(t *testing.T) {
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, fmt.Errorf("foo"))
-	mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1463,7 +1461,6 @@ func TestManagementResource_UpdateUser_GetRolesError(t *testing.T) {
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, fmt.Errorf("foo"))
-	mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1511,12 +1508,12 @@ func TestManagementResource_UpdateUser_DuplicateEmailError(t *testing.T) {
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
-	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, nil)
-	mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(false)
+	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{EmailAddress: null.StringFrom("")}, nil)
+	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(database.ErrDuplicateEmail)
 
 	reqCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 
-	payload, err := json.Marshal(v2.UpdateUserRequest{})
+	payload, err := json.Marshal(v2.UpdateUserRequest{EmailAddress: "different"})
 	require.Nil(t, err)
 
 	endpoint := fmt.Sprintf("/api/v2/bloodhound-users/%v", goodUserID)
@@ -1561,7 +1558,6 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 		}},
 		Serial: model.Serial{},
 	}}, nil)
-	mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true).AnyTimes()
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1635,7 +1631,6 @@ func TestManagementResource_UpdateUser_UserSelfModify(t *testing.T) {
 		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{adminRole}, nil)
 		mockDB.EXPECT().GetUser(gomock.Any(), adminUser.ID).Return(adminUser, nil)
 		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(model.SSOProvider{}, nil)
-		mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 
 		test.Request(t).
 			WithContext(bhCtx).
@@ -1653,7 +1648,6 @@ func TestManagementResource_UpdateUser_UserSelfModify(t *testing.T) {
 	t.Run("Prevent users from changing their own roles", func(t *testing.T) {
 		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{badRole}, nil)
 		mockDB.EXPECT().GetUser(gomock.Any(), adminUser.ID).Return(adminUser, nil)
-		mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true)
 
 		test.Request(t).
 			WithContext(bhCtx).
@@ -1705,7 +1699,6 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 		Serial: model.Serial{},
 	}}, nil)
 	mockDB.EXPECT().LookupActiveSessionsByUser(gomock.Any(), gomock.Any()).Return([]model.UserSession{}, fmt.Errorf("foo"))
-	mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true).AnyTimes()
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -1787,7 +1780,6 @@ func TestManagementResource_UpdateUser_DBError(t *testing.T) {
 		Serial: model.Serial{},
 	}}, nil)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(fmt.Errorf("foo"))
-	mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true).AnyTimes()
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{
@@ -2014,7 +2006,6 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 	}}, nil)
 	mockDB.EXPECT().LookupActiveSessionsByUser(gomock.Any(), gomock.Any()).Return([]model.UserSession{}, nil)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
-	mockDB.EXPECT().IsNewEmail(gomock.Any(), "").Return(true).AnyTimes()
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	input := v2.CreateUserRequest{

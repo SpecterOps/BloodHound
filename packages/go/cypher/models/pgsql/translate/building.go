@@ -20,54 +20,95 @@ import (
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
 
-func (s *Translator) buildProjection(scope *Scope) error {
+func (s *Translator) buildInlineProjection(part *QueryPart) (pgsql.Select, error) {
+	var sqlSelect pgsql.Select
+
+	if part.projections.Frame != nil {
+		sqlSelect.From = []pgsql.FromClause{{
+			Source: part.projections.Frame.Binding.Identifier,
+		}}
+	}
+
+	if projectionConstraint, err := s.treeTranslator.ConsumeAll(); err != nil {
+		return sqlSelect, err
+	} else {
+		sqlSelect.Where = projectionConstraint.Expression
+	}
+
+	for _, projection := range part.projections.Items {
+		builtProjection := projection.SelectItem
+
+		if projection.Alias.Set {
+			builtProjection = &pgsql.AliasedExpression{
+				Expression: builtProjection,
+				Alias:      projection.Alias,
+			}
+		}
+
+		sqlSelect.Projection = append(sqlSelect.Projection, builtProjection)
+	}
+
+	if len(part.projections.GroupBy) > 0 {
+		for _, groupBy := range part.projections.GroupBy {
+			sqlSelect.GroupBy = append(sqlSelect.GroupBy, groupBy)
+		}
+	}
+
+	return sqlSelect, nil
+}
+
+func (s *Translator) buildTailProjection() error {
 	var (
+		currentPart           = s.query.CurrentPart()
+		currentFrame          = s.query.Scope.CurrentFrame()
 		singlePartQuerySelect = pgsql.Select{}
 	)
 
 	singlePartQuerySelect.From = []pgsql.FromClause{{
 		Source: pgsql.TableReference{
-			Name: pgsql.CompoundIdentifier{scope.CurrentFrameBinding().Identifier},
+			Name: pgsql.CompoundIdentifier{currentFrame.Binding.Identifier},
 		},
 	}}
 
 	if projectionConstraint, err := s.treeTranslator.ConsumeAll(); err != nil {
 		return err
-	} else if projection, err := buildExternalProjection(scope, s.projections.Projections); err != nil {
+	} else if projection, err := buildExternalProjection(s.query.Scope, currentPart.projections.Items); err != nil {
+		return err
+	} else if err := RewriteExpressionIdentifiers(projectionConstraint.Expression, currentFrame.Binding.Identifier, nil); err != nil {
 		return err
 	} else {
 		singlePartQuerySelect.Projection = projection
 		singlePartQuerySelect.Where = projectionConstraint.Expression
 	}
 
-	s.query.Model.Body = singlePartQuerySelect
+	currentPart.Model.Body = singlePartQuerySelect
 
-	if s.query.Skip.Set {
-		s.query.Model.Offset = s.query.Skip
+	if currentPart.Skip.Set {
+		currentPart.Model.Offset = currentPart.Skip
 	}
 
-	if s.query.Limit.Set {
-		s.query.Model.Limit = s.query.Limit
+	if currentPart.Limit.Set {
+		currentPart.Model.Limit = currentPart.Limit
 	}
 
-	if len(s.query.OrderBy) > 0 {
-		s.query.Model.OrderBy = s.query.OrderBy
+	if len(currentPart.OrderBy) > 0 {
+		currentPart.Model.OrderBy = currentPart.OrderBy
 	}
 
 	return nil
 }
 
-func (s *Translator) buildMatch(scope *Scope) error {
-	for _, part := range s.match.Pattern.Parts {
+func (s *Translator) buildMatch() error {
+	for _, part := range s.query.CurrentPart().match.Pattern.Parts {
 		// Pattern can't be in scope at time of select as the pattern's scope directly depends on the
 		// pattern parts
-		if err := s.buildPatternPart(scope, part); err != nil {
+		if err := s.buildPatternPart(part); err != nil {
 			return err
 		}
 
 		// Declare the pattern variable in scope if set
 		if part.PatternBinding.Set {
-			scope.Declare(part.PatternBinding.Value.Identifier)
+			s.query.Scope.Declare(part.PatternBinding.Value.Identifier)
 		}
 	}
 

@@ -22,7 +22,7 @@ import { Navigate } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 
 import { login as loginAction, logout } from 'src/ducks/auth/authSlice';
-import { ROUTE_HOME, ROUTE_USER_DISABLED } from 'src/ducks/global/routes';
+import { ROUTE_HOME, ROUTE_USER_DISABLED } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const Login: React.FC = () => {
