@@ -21,7 +21,8 @@ import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { DataTable, Header } from '../../components';
-import { LuxonFormat, apiClient } from '../../utils';
+import { usePermissions } from '../../hooks';
+import { LuxonFormat, Permission, apiClient } from '../../utils';
 import UserActionsMenu from './UserActionsMenu';
 
 const usersTableHeaders: Header[] = [
@@ -46,7 +47,6 @@ const getUserStatusText = (user: any): UserStatus => {
 };
 
 type UsersTableProps = {
-    forbidden: boolean;
     onUpdateUser: (open: boolean) => void;
     onDisabledUser: (open: boolean) => void;
     onEnabledUser: (open: boolean) => void;
@@ -59,7 +59,6 @@ type UsersTableProps = {
 };
 
 const UsersTable: FC<UsersTableProps> = ({
-    forbidden,
     onUpdateUser,
     onDisabledUser,
     onEnabledUser,
@@ -76,16 +75,19 @@ const UsersTable: FC<UsersTableProps> = ({
         apiClient.getSelf({ signal }).then((res) => res.data?.data)
     );
 
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
+
     const listUsersQuery = useQuery(
         ['listUsers'],
         ({ signal }) => apiClient.listUsers({ signal }).then((res) => res.data?.data?.users),
-        { enabled: !forbidden }
+        { enabled: hasPermission }
     );
 
     const listSSOProvidersQuery = useQuery(
         ['listSSOProviders'],
         ({ signal }) => apiClient.listSSOProviders({ signal }).then((res) => res.data?.data),
-        { enabled: !forbidden }
+        { enabled: hasPermission }
     );
 
     const SSOProvidersMap =

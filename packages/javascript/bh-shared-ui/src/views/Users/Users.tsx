@@ -18,7 +18,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Paper, Typography } from '@mui/material';
 import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest, User } from 'js-client-library';
 import find from 'lodash/find';
-import { useState } from 'react';
+import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import {
     ConfirmationDialog,
@@ -30,13 +30,12 @@ import {
     UpdateUserDialog,
     UserTokenManagementDialog,
 } from '../../components';
-import { useToggle } from '../../hooks';
+import { useMountEffect, usePermissions, useToggle } from '../../hooks';
 import { useNotifications } from '../../providers';
-import { apiClient } from '../../utils';
+import { Permission, apiClient } from '../../utils';
 import UsersTable from './UsersTable';
 
-const Users = () => {
-    const { addNotification } = useNotifications();
+const Users: FC = () => {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
     const [disable2FAError, setDisable2FAError] = useState('');
@@ -52,14 +51,39 @@ const Users = () => {
     const [resetUserPasswordDialogOpen, toggleResetUserPasswordDialog] = useToggle(false);
     const [manageUserTokensDialogOpen, toggleManageUserTokensDialog] = useToggle(false);
 
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
+
+    const { addNotification, dismissNotification } = useNotifications();
+    const notificationKey = 'manage-users-permission';
+
+    const effect: React.EffectCallback = () => {
+        if (!hasPermission) {
+            addNotification(
+                `Your user role does not grant permission for managing users. Please contact your administrator for details.`,
+                notificationKey,
+                {
+                    persist: true,
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
+        }
+
+        return () => dismissNotification(notificationKey);
+    };
+
+    useMountEffect(effect);
+
     const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
         apiClient.getSelf({ signal }).then((res) => res.data?.data)
     );
 
     const hasSelectedSelf = getSelfQuery.data?.id === selectedUserId!;
 
-    const listUsersQuery = useQuery(['listUsers'], ({ signal }) =>
-        apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)
+    const listUsersQuery = useQuery(
+        ['listUsers'],
+        ({ signal }) => apiClient.listUsers({ signal }).then((res) => res.data?.data?.users),
+        { enabled: hasPermission }
     );
 
     const createUserMutation = useMutation((newUser: CreateUserRequest) => apiClient.createUser(newUser), {
@@ -165,6 +189,7 @@ const Users = () => {
                 }>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                     <Button
+                        disabled={!hasPermission}
                         onClick={() => {
                             setSelectedUserId(null);
                             toggleCreateUserDialog();

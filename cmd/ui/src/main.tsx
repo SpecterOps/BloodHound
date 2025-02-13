@@ -21,10 +21,11 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { StyledEngineProvider } from '@mui/material';
 import { createRoot } from 'react-dom/client';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClientProvider } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
 import { Provider } from 'react-redux';
 import App from './App';
+import { queryClient } from './queryClient';
 import { store } from './store';
 import './styles/index.css';
 import './styles/index.scss';
@@ -72,8 +73,6 @@ declare global {
         };
     }
 }
-
-export const queryClient = new QueryClient();
 
 const main = async () => {
     const rootContainer = document.getElementById('root');

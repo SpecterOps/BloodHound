@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // recursively applies Partial<T> to nested object types
-import { Permission } from './utils';
 
 export type DeepPartial<T> = T extends object
     ? {
@@ -35,11 +34,7 @@ export type MappedStringLiteral<T extends string | number, V = ''> = {
 type AdministrationItem = {
     label: string;
     path: string;
-    component: React.LazyExoticComponent<
-        React.FC<{
-            permissions: Permission[];
-        }>
-    >;
+    component: React.LazyExoticComponent<React.FC>;
     adminOnly: boolean;
 };
 

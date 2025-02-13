@@ -18,6 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { ListRolesResponse, ListSSOProvidersResponse, Role, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { createAuthStateWithPermissions } from '../../mocks';
 import { render, screen } from '../../test-utils';
 import { Permission } from '../../utils';
 import SSOConfiguration from './SSOConfiguration';
@@ -98,6 +99,13 @@ interface CreateSAMLProviderResponse {
 }
 
 const server = setupServer(
+    rest.get('/api/v2/self', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: createAuthStateWithPermissions([Permission.AUTH_MANAGE_PROVIDERS]).user,
+            })
+        );
+    }),
     rest.get<any, any, ListRolesResponse>(`/api/v2/roles`, (req, res, ctx) => {
         return res(
             ctx.json({
@@ -155,7 +163,7 @@ describe('SSOConfiguration', async () => {
     it('should eventually render previously configured SSO providers', async () => {
         const user = userEvent.setup();
 
-        render(<SSOConfiguration permissions={[Permission.AUTH_MANAGE_PROVIDERS]} />);
+        render(<SSOConfiguration />);
         expect(await screen.findByText('SSO Configuration')).toBeInTheDocument();
         expect(await screen.findByText(initialSAMLProvider.name)).toBeInTheDocument();
         expect(await screen.findByText('SAML')).toBeInTheDocument();
@@ -177,7 +185,7 @@ describe('SSOConfiguration', async () => {
             metadata: new File([], 'new-saml-provider.xml'),
         };
 
-        render(<SSOConfiguration permissions={[Permission.AUTH_MANAGE_PROVIDERS]} />);
+        render(<SSOConfiguration />);
 
         await user.click(screen.getByRole('button', { name: /create provider/i }));
 
@@ -203,10 +211,10 @@ describe('SSOConfiguration', async () => {
     });
 
     it('should disable the create provider button and not display providers if the user lacks permission', async () => {
-        render(<SSOConfiguration permissions={[Permission.APP_READ_APPLICATION_CONFIGURATION]} />);
+        render(<SSOConfiguration />);
 
         expect(screen.getByRole('button', { name: /create provider/i })).toBeDisabled();
 
-        expect(await screen.queryByText(newSAMLProvider.name)).toBeNull();
+        expect(screen.queryByText(newSAMLProvider.name)).toBeNull();
     });
 });

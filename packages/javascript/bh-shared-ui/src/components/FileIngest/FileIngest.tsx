@@ -17,22 +17,39 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Typography } from '@mui/material';
 import { FC, useState } from 'react';
-import { useForbiddenNotifier } from '../../hooks';
+import { useMountEffect, usePermissions } from '../../hooks';
+import { useNotifications } from '../../providers';
 import { Permission } from '../../utils';
 import DocumentationLinks from '../DocumentationLinks';
 import FileUploadDialog from '../FileUploadDialog';
 import FinishedIngestLog from '../FinishedIngestLog';
 import PageWithTitle from '../PageWithTitle';
 
-const FileIngest: FC<{ permissions: Permission[] }> = ({ permissions }) => {
+const FileIngest: FC = () => {
     const [fileUploadDialogOpen, setFileUploadDialogOpen] = useState<boolean>(false);
 
-    const forbidden = useForbiddenNotifier(
-        Permission.GRAPH_DB_WRITE,
-        permissions,
-        'Your user role does not grant permission to upload data.',
-        'file-upload-permission'
-    );
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
+
+    const { addNotification, dismissNotification } = useNotifications();
+    const notificationKey = 'file-upload-permission';
+
+    const effect: React.EffectCallback = (): void => {
+        if (!hasPermission) {
+            addNotification(
+                `Your user role does not grant permission to upload data. Please contact your administrator for details.`,
+                notificationKey,
+                {
+                    persist: true,
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
+        }
+
+        return dismissNotification(notificationKey);
+    };
+
+    useMountEffect(effect);
 
     const toggleFileUploadDialog = () => setFileUploadDialogOpen((prev) => !prev);
 
@@ -52,11 +69,11 @@ const FileIngest: FC<{ permissions: Permission[] }> = ({ permissions }) => {
                 <Button
                     onClick={() => toggleFileUploadDialog()}
                     data-testid='file-ingest_button-upload-files'
-                    disabled={forbidden}>
+                    disabled={!hasPermission}>
                     Upload File(s)
                 </Button>
             </Box>
-            <FinishedIngestLog forbidden={forbidden} />
+            <FinishedIngestLog />
 
             <FileUploadDialog open={fileUploadDialogOpen} onClose={toggleFileUploadDialog} />
         </>

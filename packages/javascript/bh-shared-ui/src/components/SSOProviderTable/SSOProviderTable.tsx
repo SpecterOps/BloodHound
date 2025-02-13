@@ -38,7 +38,9 @@ import {
 import withStyles from '@mui/styles/withStyles';
 import { SSOProvider } from 'js-client-library';
 import { FC, MouseEventHandler, useState } from 'react';
-import { SortOrder } from '../../';
+import { usePermissions } from '../../hooks';
+import { SortOrder } from '../../types';
+import { Permission } from '../../utils';
 
 const StyledMenu = withStyles({
     paper: {
@@ -122,7 +124,6 @@ const SSOProviderTable: FC<{
     onClickSSOProvider: (ssoProviderId: SSOProvider['id']) => void;
     onToggleTypeSortOrder: () => void;
     typeSortOrder?: SortOrder;
-    noProvidersText?: string;
 }> = ({
     ssoProviders,
     loading,
@@ -131,9 +132,11 @@ const SSOProviderTable: FC<{
     onClickSSOProvider,
     onToggleTypeSortOrder,
     typeSortOrder,
-    noProvidersText,
 }) => {
     const theme = useTheme();
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_PROVIDERS);
+
     return (
         <Paper>
             <TableContainer sx={{ maxHeight: 777 }}>
@@ -190,10 +193,10 @@ const SSOProviderTable: FC<{
                                     <Skeleton />
                                 </TableCell>
                             </TableRow>
-                        ) : ssoProviders.length === 0 && noProvidersText ? (
+                        ) : ssoProviders.length === 0 && hasPermission ? (
                             <TableRow>
                                 <TableCell colSpan={6} align='center'>
-                                    {noProvidersText}
+                                    No SSO Providers found
                                 </TableCell>
                             </TableRow>
                         ) : (

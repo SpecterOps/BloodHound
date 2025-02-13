@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { Flag, Permission } from 'bh-shared-ui';
+import { createAuthStateWithPermissions, Flag, Permission } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen } from 'src/test-utils';
@@ -49,6 +49,13 @@ const testFeatureFlags: Flag[] = [
 ];
 
 const server = setupServer(
+    rest.get('/api/v2/self', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: createAuthStateWithPermissions([Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]).user,
+            })
+        );
+    }),
     rest.get(`/api/v2/features`, (req, res, ctx) => {
         return res(
             ctx.json({
@@ -72,7 +79,7 @@ afterAll(() => server.close());
 describe('EarlyAccessFeatures', () => {
     it('displays a warning dialog when mounted', async () => {
         await act(async () => {
-            render(<EarlyAccessFeatures permissions={[Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]} />);
+            render(<EarlyAccessFeatures />);
         });
 
         expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -89,7 +96,7 @@ describe('EarlyAccessFeatures', () => {
     it('navigates to previous history entry when warning dialog is cancelled', async () => {
         const user = userEvent.setup();
 
-        render(<EarlyAccessFeatures permissions={[Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]} />);
+        render(<EarlyAccessFeatures />);
 
         // Close (cancel) warning dialog
         await user.click(screen.getByRole('button', { name: 'Take me back' }));
@@ -98,7 +105,7 @@ describe('EarlyAccessFeatures', () => {
     });
 
     it('eventually displays a list of early access features when warning dialog is accepted', async () => {
-        render(<EarlyAccessFeatures permissions={[Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]} />);
+        render(<EarlyAccessFeatures />);
         const user = userEvent.setup();
 
         // Close (accept) warning dialog
@@ -125,7 +132,7 @@ describe('EarlyAccessFeatures', () => {
             })
         );
 
-        render(<EarlyAccessFeatures permissions={[Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]} />);
+        render(<EarlyAccessFeatures />);
         const user = userEvent.setup();
 
         // Close (accept) warning dialog
@@ -151,7 +158,7 @@ describe('EarlyAccessFeatures', () => {
                 return res(ctx.status(500));
             })
         );
-        render(<EarlyAccessFeatures permissions={[Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]} />);
+        render(<EarlyAccessFeatures />);
         const user = userEvent.setup();
 
         // Close (accept) warning dialog
@@ -165,7 +172,7 @@ describe('EarlyAccessFeatures', () => {
     });
 
     it('disables any available button toggles if the user lacks the permission', async () => {
-        render(<EarlyAccessFeatures permissions={[Permission.APP_READ_APPLICATION_CONFIGURATION]} />);
+        render(<EarlyAccessFeatures />);
         const user = userEvent.setup();
 
         // Close (accept) warning dialog

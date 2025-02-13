@@ -19,7 +19,7 @@ import { apiClient } from 'bh-shared-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
 import { DateTime } from 'luxon';
 
-import { queryClient } from 'src/main';
+import { queryClient } from 'src/queryClient';
 import type { AppDispatch, AppState } from 'src/store';
 import { addSnackbar } from '../global/actions';
 import * as types from './types';
@@ -246,6 +246,16 @@ export const fullyAuthenticatedSelector = createSelector(
             DateTime.fromISO(authState.user.AuthSecret.expires_at) < DateTime.local();
 
         return !authExpired;
+    }
+);
+
+/**
+ * Returns a boolean indicating whether the user is logged in and does not have an expired password.
+ */
+export const isInitializedSelector = createSelector(
+    (state: AppState) => state.auth,
+    (authState) => {
+        return authState.isInitialized;
     }
 );
 

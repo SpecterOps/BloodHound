@@ -6764,7 +6764,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphology@npm:^0.25.1":
+"graphology@npm:0.25.1":
   version: 0.25.1
   resolution: "graphology@npm:0.25.1"
   dependencies:
@@ -6773,6 +6773,18 @@ __metadata:
   peerDependencies:
     graphology-types: ">=0.24.0"
   checksum: 6f5b9391832d13aa39b68c87d815f0bdd848db6ca119b9576941c7654cd4aaaec17d1e388b0c88ca268500bcfc88eb24022f90a0f4cd5862b24b0c6d97f59ed8
+  languageName: node
+  linkType: hard
+
+"graphology@patch:graphology@npm%3A0.25.1#./.yarn/patches/graphology-npm-0.25.1-6f041f5e3d.patch::locator=bloodhound-ce%40workspace%3A.":
+  version: 0.25.1
+  resolution: "graphology@patch:graphology@npm%3A0.25.1#./.yarn/patches/graphology-npm-0.25.1-6f041f5e3d.patch::version=0.25.1&hash=777433&locator=bloodhound-ce%40workspace%3A."
+  dependencies:
+    events: ^3.3.0
+    obliterator: ^2.0.2
+  peerDependencies:
+    graphology-types: ">=0.24.0"
+  checksum: 72f07b5a021154c525b71ba16a53882d1a1d4b14cb173b886bf70f373c68f0a94ab096ce0e989cda8026603128925aa5082f1fb90c6884c409c2ddb410c0b8df
   languageName: node
   linkType: hard
 
