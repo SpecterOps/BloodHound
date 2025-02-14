@@ -1,0 +1,56 @@
+---
+title: 2022-11-03 Release Notes
+---
+
+## Summary
+
+* BloodHound Enterprise
+    * New and Improved Features - Tier Zero nodes now have an indicator in the Explore tab, and pathfinding queries that exceed resource constraints will show a notification.
+    * Bug Fixes - Reduced memory usage on Explore tab to prevent browser hangs. Completed collection jobs will no longer sit in 'ingesting.'
+* SharpHound Enterprise (v1.0.25 GA, v2.0.4 Early Access)
+    * New and Improved Features - SharpHound Enterprise automatically clears logs older than two weeks.
+    * Bug Fixes - SharpHound should start despite its inability to get its IP address. Cross-trust collections now perform proper LDAP validations before attempting collection. Local administrators should collect accurately.
+* AzureHound Enterprise (v1.2.1)
+    * New and Improved Features - Improved collection performance.
+    * Bug Fixes - new tasks can no longer stop running tasks mid-collection.
+
+### BloodHound Enterprise
+
+* Improved Functionality
+    * Members of Tier Zero are now indicated by a diamond icon in the Explore tab, making them easier to recognize at a glance.
+<Frame>
+  <img src="/assets/image-36.png" alt=""/>
+</Frame>
+    * Pathfinding queries that exceed resource constraints will now show a notification.
+<Frame>
+  <img src="/assets/image-37.png" alt=""/>
+</Frame>
+* Bug Fixes
+    * We resolved several issues that, combined, would result in browser hangs after selecting an entity in the Explore page. Explore should be much more performant now.
+    * Finished Collections should no longer hang in the "Ingesting" status.
+
+### SharpHound Enterprise (v1.0.25 GA, v2.0.4 Early Access)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.0.4_
+
+### SharpHound v2.0.4
+
+* Improved Functionality
+    * SharpHound Enterprise automatically clears logs older than two weeks.
+* Bug Fixes -
+    * SharpHound should start despite its inability to get its IP address.
+    * Cross-trust collections now perform proper LDAP validations before attempting collection.
+    * Local administrators should collect accurately.
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the “User Rights Assignment Collection” experimental feature at the same time. Please contact your TAM or respond to this email for assistance.
+
+### AzureHound Enterprise (v1.2.1 GA)
+
+_Minimum version of AzureHound Service to support all current functionality: v1.2.1_
+
+* New and Improved Features
+    * Improved collection performance
+* Bug Fixes
+    * New tasks can no longer stop running tasks mid-collection. In larger organizations, this may have resulted in partial collections.
+
+

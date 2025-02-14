@@ -1,0 +1,331 @@
+---
+title: BloodHound Enterprise NIST SP 800-53 Rev.8 Compliance Resource
+---
+
+The Following information is meant to provide a more detailed and in-depth view of compliance items that BloodHound Enterprise can provide coverage for.
+
+## AC-2 - Account Management
+
+### Summary
+
+Accounts are assigned, managed, and maintained in accordance with organizational policy
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit and verify access levels for users and groups throughout the enterprise.
+
+Related Controls: IA-1, PM-9, PM-24, PS-8, SI-12.
+
+**References**
+
+OMB A-130, SP 800-12, SP 800-30, SP 800-39, SP 800-100, IR 7874
+
+## AC-3 - Access Enforcement
+
+### Summary
+
+Enforce approved authorizations for logical access to information and system resources
+in accordance with applicable access control policies.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access levels and validate access enforcement controls.
+
+#### **References**
+
+OMB A-130, SP 800-12, SP 800-30, SP 800-39, SP 800-100, IR 7874
+
+## AC-4 - Information Flow Enforcement
+
+### Summary
+
+Enforce approved authorizations for controlling the flow of information within the system and between connected systems based on organization-defined information flow control policies.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. The logical relationships between AD/Azure objects and Tier Zero assets aid in validating information flow enforcement architecture.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## CA-2 - Security Assessments
+
+### Summary
+
+Security Assessments, mandates regular evaluations of security controls within a system to verify their effectiveness and correct implementation. These assessments, which should occur periodically and after significant system changes, involve examining documentation, interviewing personnel, and technical testing. The findings must be documented and reviewed by organizational officials to guide corrective actions. Additionally, independent assessments by external parties are recommended to ensure an unbiased perspective on the security posture.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. Dashboard and reporting features in BloodHound Enterprise provide continuous evaluation of relationships in your environment and provide actionable data in support of organizational security assessment activities and policies.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## CA-3 - System Interconnections
+
+### Summary
+
+System Interconnections, requires the management, approval, and monitoring of connections between different systems. This control emphasizes establishing and documenting agreements for interfacing systems, assessing security risks associated with these interconnections, and ensuring compliance with relevant security requirements. Organizations must maintain an inventory of all interconnections and regularly review and update the security controls associated with them to mitigate any potential security risks
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound Enterprises dashboard and reports both illustrate the logical system interconnections within the environment and evaluates and reports any discovered risk.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## CA-7 - Continuous Monitoring
+
+### Summary
+
+Continuous Monitoring, mandates the establishment of a continuous monitoring strategy to maintain the security of systems and environments. This strategy should include defining the frequency and scope of monitoring to ensure ongoing awareness of security controls' effectiveness. Organizations are required to deploy automated tools to support real-time analysis and reporting of security alerts. The results of continuous monitoring must be reviewed and used to respond to risks in a timely manner.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound Enterprise’s scheduled collection feature is designed to continuously monitor your environment for Tier Zero risk exposure.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## CA-8-Penetration Testing
+
+### Summary
+
+Penetration Testing, involves conducting simulated attacks on systems to identify vulnerabilities and assess the effectiveness of existing security controls. This control requires organizations to plan and execute regular penetration testing based on documented procedures that define the scope, testing methods, and evaluation criteria. The results should be analyzed to determine system weaknesses and develop strategies for mitigation. Regular updates and improvements to the security posture are essential following these tests.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment. BloodHound Enterprise provides actionable intelligence on the risks present in your environment which can both aid penetration test assessment functions and activities.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## CM-2-Baseline Configuration
+
+### Summary
+
+Baseline Configuration, mandates the development, documentation, and maintenance of a baseline configuration for organizational systems. This baseline serves as a standard for proper system configuration and includes information on system components, security controls, and user-accessible functions. Organizations are required to review and update the baseline regularly, ensuring that any deviations are authorized, documented, and justified. This control is crucial for maintaining the integrity and security of system configurations over time.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound Enterprise’s initial collection and scheduled collections can be used to establish and monitor your organizations identity baseline.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## CM-8-Information System Component Inventory
+
+### Summary
+
+Information System Component Inventory, requires organizations to maintain an accurate, up-to-date inventory of all system components that are within the authorization boundary of the information systems. This inventory should include details like the component's identification, version, and configuration. The control emphasizes the need to verify the presence of authorized components and detect unauthorized components to ensure the integrity of the system. Regular reviews and updates of the inventory are mandatory to reflect changes due to system modifications or upgrades.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## CP-2-Contingency Plan
+
+### Summary
+
+Contingency Plan, requires organizations to develop, document, and implement plans to recover and restore organizational IT system functionalities in the event of a disruption, compromise, or failure. The contingency plans must be coordinated with organizational emergency plans, regularly reviewed and updated, and communicated to relevant personnel. Organizations must also test the plans to ensure they are effective and feasible, using tests that reflect realistic conditions to identify potential weaknesses in the plans.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and inform the development of organizational contingency plans.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## IA-1-Identification and Authentication
+
+### Summary
+
+Identification and Authentication Policy and Procedures, mandates that organizations develop, document, and maintain an identification and authentication policy that includes procedures to manage and control user identification and authentication mechanisms. This policy should align with the organization's security requirements and include details on how identity and authentication systems are implemented and managed. The control also emphasizes the need for ongoing updates and dissemination of the policy to ensure it remains effective and relevant to current security challenges.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## IA-2-Identification and Authentication (Organizational Users)
+
+### Summary
+
+Identification and Authentication (Organizational Users), requires that the identity of organizational users is verified before granting access to organizational information systems. This control involves establishing and managing unique user IDs, employing robust authentication processes (like passwords, tokens, or biometric data), and ensuring that authentication mechanisms meet the required security strength levels. Additionally, the control mandates periodic updates and reviews of the authentication mechanisms to adapt to emerging threats and ensure the security of user access.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## IA-4-Identifier Management
+
+### Summary
+
+Identifier Management, requires the management of user identifiers by ensuring they are uniquely assigned to individual users. This control requires organizations to establish a system for managing identifiers that includes issuing, maintaining, and revoking identifiers as needed. It also emphasizes the need to protect identifier information to prevent misuse or unauthorized access. Regular audits are required to ensure that identifiers are not shared and are disabled or removed when no longer associated with an active user account.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment and highlight instances of misconfigured identities.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## IA-8-Identification and Authentication
+
+### Summary
+
+Identification and Authentication (Non-Organizational Users), focuses on ensuring that non-organizational users (such as contractors, customers, or partners) are uniquely identified and authenticated before accessing organizational information systems. This control requires organizations to implement measures that are consistent with the risk associated with such external users. It involves establishing terms and conditions for non-organizational user access, using robust authentication mechanisms, and monitoring and controlling these authentication processes to mitigate potential security risks effectively.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## IR-5-Incident Monitoring
+
+### Summary
+
+Incident Monitoring, requires organizations to establish and maintain the capability to detect, analyze, and respond to information security incidents in real time. This control involves the continuous monitoring of information system activity to identify occurrences that may indicate a security incident. Organizations must also implement effective communication channels that allow for timely dissemination of incident information. The control emphasizes the need for maintaining historical incident data to support after-action reviews and to improve incident response effectiveness and prevention strategies.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## PM-5-Information System Inventory
+
+### Summary
+
+Information System Inventory, requires organizations to develop, document, maintain, and review an inventory of information systems that includes all components within the authorization boundary. This inventory should capture the interfaces between systems (both internal and external), the data classification associated with the systems, and the organizational responsible entities. The control emphasizes the importance of keeping the inventory current to support effective risk management and security decision-making processes. Regular updates and validations of the inventory ensure accuracy and completeness in reflecting system changes.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## RA-2-Security Categorization
+
+### Summary
+
+Security Categorization, requires organizations to categorize information and information systems according to the risk of harm that could result from unauthorized access, use, disclosure, disruption, modification, or destruction. This categorization should be based on the potential impact to organizational operations, assets, individuals, other organizations, and national security. The categorization must guide the selection of security controls appropriate to protecting the information system at the required security level. The process should be consistent with applicable laws, executive orders, directives, policies, standards, and guidelines.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## RA-3-Risk Assessment
+
+### Summary
+
+Risk Assessment, mandates organizations to conduct comprehensive assessments of risks to their operations, assets, individuals, and other organizations resulting from the operation of information systems. This includes identifying potential threats and vulnerabilities, evaluating the likelihood and impact of different scenarios, and determining the potential adverse effects. Organizations are required to periodically perform these risk assessments to account for changes in the operational environment or in response to new threats. The results should be used to update security measures and inform risk response decisions.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## RA-5-Vulnerability Scanning
+
+### Summary
+
+RA-5, Vulnerability Scanning, requires organizations to periodically scan information systems and hosted applications to identify security vulnerabilities. The control stipulates that the scans should be conducted using updated tools and techniques, tailored to the system's security requirements and the organization's risk environment. Findings from these scans must be analyzed, documented, and reviewed by designated officials to prioritize remediation actions based on risk. The control also mandates that organizations establish processes to remediate vulnerabilities within an acceptable timeframe to maintain the security and integrity of the system.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## SA-5-Information System Documentation
+
+### Summary
+
+Information System Documentation, mandates that organizations maintain documentation for information systems and their environments of operation. This documentation should accurately reflect the current configuration and architecture of the system, including details of all components, interfaces, and security controls. The purpose is to ensure that all aspects of the system are fully documented to support effective management, maintenance, and upgrades. Organizations must ensure that this documentation is available to authorized personnel and protected from unauthorized access or modification.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## SA-11-Security Testing and Evaluation
+
+### Summary
+
+Developer Security Testing and Evaluation, requires organizations to require developers to conduct security testing and evaluation of the information system and its components. This includes unit testing, integration testing, system testing, and regression testing to identify flaws and vulnerabilities in the system. The control specifies that these tests should be comprehensive, covering security functionality, boundary testing, and penetration testing. Results from these tests must be documented and used to make necessary corrections before deploying the system. Organizations are also encouraged to employ independent evaluators to verify the results and effectiveness of the developer's tests.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## SI-2-Flaw Remediation
+
+## Summary
+
+Flaw Remediation, requires organizations to identify, report, and correct information system flaws in a timely manner. This control involves regularly scanning for vulnerabilities using updated tools, and promptly addressing detected flaws to mitigate potential security risks. The control also emphasizes the importance of prioritizing the remediation of flaws based on the severity of the potential impact on the organization. Furthermore, organizations are mandated to install security-relevant software and firmware updates and patches to ensure systems remain resilient against known threats.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+
+## SI-4-Information Systems Monitoring
+
+### Summary
+
+Information System Monitoring, mandates continuous monitoring activities to detect unauthorized access, use, disclosure, disruption, modification, or destruction of information and information systems. This control requires organizations to deploy monitoring tools capable of generating alerts in response to detected anomalies. The scope of monitoring should include network traffic, user activities, and system configurations. Organizations are also expected to regularly review and update their monitoring strategies to adapt to new threats and incorporate advancements in technology. Additionally, the results of monitoring activities should be protected, analyzed, and used to inform risk management decisions.
+
+### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound enterprise will assign a risk metric, represented as exposure to tier 0 assets, and report the overall level of exposure present in an environment.
+
+#### **References**
+
+SP 800-12, SP 800-30, SP 800-39
+

@@ -1,0 +1,155 @@
+---
+title: Integrate BloodHound Enterprise with Splunk
+---
+
+<Frame>
+  <img src="/assets/18258001080731.png"/>
+</Frame>
+
+The BloodHound Enterprise Splunk app allows you to view and analyze BloodHound Enterprise data in Splunk. This integration provides:
+
+- Dashboards for visualizing attack paths and security posture
+- Alerts for new attack paths and security issues
+- Correlation with other security data in Splunk
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+1. A BloodHound Enterprise instance
+2. A Splunk instance
+3. Admin access to both systems
+4. The BloodHound Enterprise Splunk app installed
+5. A BloodHound Enterprise API key with appropriate permissions
+
+## Configuration
+
+1. Install the BloodHound Enterprise Splunk app from Splunkbase.
+
+2. Configure the app in Splunk:
+   - Navigate to **Settings** > **Data inputs** > **BloodHound Enterprise**
+   - Click **New**
+   - Enter your BloodHound Enterprise URL and API key
+   - Configure the polling interval
+   - Click **Save**
+
+3. Create a non-personal API key/ID pair in BloodHound Enterprise:
+   - Navigate to **Settings** > **API Keys**
+   - Click **Create API Key**
+   - Select appropriate permissions
+   - Save the key securely
+
+4. Verify the integration:
+   - Check the Splunk logs for successful API connections
+   - View the BloodHound Enterprise dashboards in Splunk
+   - Test alerts and data collection
+
+## Using the Integration
+
+The BloodHound Enterprise Splunk app provides several dashboards and features:
+
+1. **Attack Path Dashboard**
+   - View current attack paths
+   - Track changes over time
+   - Filter by severity and type
+
+2. **Security Posture Dashboard**
+   - Monitor overall security metrics
+   - Track remediation progress
+   - View trend analysis
+
+3. **Alerts and Reports**
+   - Configure alerts for new attack paths
+   - Generate compliance reports
+   - Track security improvements
+
+## Troubleshooting
+
+If you encounter issues:
+
+1. Check API connectivity
+2. Verify API key permissions
+3. Review Splunk logs
+4. Ensure proper network access
+5. Validate data input configuration
+
+**Note: Version 2.0+ introduces ingest of BHE Audit Log data. To successfully ingest this data the BHE API user must be assigned the 'Administrator' role in BHE.**
+
+## Installation
+
+1.  Log into your Splunk installation and click on the **Find More Apps** button.
+<Frame>
+  <img src="/assets/image1-9.png"/>
+</Frame>
+2.  Search for "BloodHound Enterprise" and hit Enter. The first result should be the app.
+<Frame>
+  <img src="/assets/image1-10.png"/>
+</Frame>
+3.  Click **Install**. If not already logged in, you will be prompted for your Splunk.com username and password.
+<Frame>
+  <img src="/assets/image1-11.png"/>
+</Frame>
+4.  After installation completes, click **Open the App**.
+<Frame>
+  <img src="/assets/image1-12.png"/>
+</Frame>
+5.  The App will prompt you to configure itself. Click **Continue to the app setup page**.
+<Frame>
+  <img src="/assets/image1-13.png"/>
+</Frame>
+6.  If you have not already, create an API key/ID pair, following [Create an API Key](/manage-bloodhound/auth/api-keys)
+    * The API user must at least have the **_read-only_** role. The **_Administrator_** role is required to collect BloodHound Enterprise audit logs.
+7.  In the setup screen, enter your BloodHound Enterprise domain name (`CODENAME.bloodhoundenterprise.io`), the API key/ID pair you created and click **Submit**
+
+    **Please note the warning—the initial collection can take some time, particularly for longer-term BloodHound Enterprise customers.**
+<Frame>
+  <img src="/assets/image1-14.png"/>
+</Frame>
+
+## Create Index (Splunk cloud only)
+
+The index "bhe-splunk-app" will be created automatically if running Splunk on-prem.
+
+1.  In Splunk Web, go to **Settings > Indexes**.
+2.  On the Indexes page, click **New Index**.
+3.  On the New Index page, in the **Index Name** field, enter "bhe-splunk-app".
+4.  Click **Save**.
+
+## Enable Data Input
+
+1.  In Splunk Web, go to **Settings > Data inputs**.
+<Frame>
+  <img src="/assets/image1-15.png"/>
+</Frame>
+2.  Scroll down, locate, and click on **BloodHound Enterprise**.
+<Frame>
+  <img src="/assets/image1-16.png"/>
+</Frame>
+3.  Click **Enable** to enable the data input.
+<Frame>
+  <img src="/assets/image1-17.png"/>
+</Frame>
+
+Data will now begin flowing into the environment. You can monitor this progress through Splunk itself with the following query:
+
+```
+index=_internal source="*splunkd.log" "BHE "
+```
+
+## Customize Index
+
+1.  Update Data Input
+    1.  In Splunk Web, go to Settings -> Data Inputs
+    2.  Click BloodHound Enterprise
+    3.  Click Input
+    4.  Click More Settings & select preferred index from the drop-down.
+    5.  Click Save
+
+2.  Update Search Macro
+    1.  In Splunk Web, go to Settings -> Advanced Search
+    2.  Click Search Macros
+    3.  For App, Select BloodHound Enterprise
+    4.  Click bhe_index
+    5.  Update the Definition to match the custom index name.
+        Example: index=&lt;custom index name&gt;
+    6.  Click Save

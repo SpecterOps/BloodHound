@@ -1,0 +1,174 @@
+---
+title: Working with the BloodHound API
+---
+
+<Frame>
+  <img src="/assets/18246479746331.png"/>
+</Frame>
+
+The BloodHound product family are API-first products, meaning everything functions on the underlying API layer. All data displayed in the portal, all commands given to SharpHound or AzureHound Enterprise collectors, and all data uploaded pass through the BloodHound APIs. Customers may utilize these APIs to extend the use of the BloodHound product to function with other tools in their environment. This article will show how to access the API and include some example use cases.
+
+## API Documentation
+
+API documentation is hosted utilizing Swagger behind authentication within your tenant environment. After logging in, you may access it by clicking the cog in the top right corner of your tenant and clicking **API Explorer.**
+
+<Frame>
+    <img src="/assets/image1-1.png"/>
+</Frame>
+
+
+## Using the API
+
+The BloodHound API accepts two forms of authentication, each with its own limitations for security.
+
+- A JWT is generated through the login process utilizing your username, password, and 2FA token (or SAML-based authentication flow). These JWT tokens are active for 8 hours and are primarily for end-user access to the web-based application.
+- An API key/ID pair is generated within the Administration interface. These do not expire and are primarily for long-term API integrations.
+
+BloodHound users should understand that there are two methods of creating API key/ID pairs, each serving a different purpose:
+
+- Non-personal API key/ID pairs, for integrations like [Splunk](/integrations/integrations/splunk) or [Sentinel](/integrations/integrations/sentinel)
+- [Personal API key/ID pairs](#create-a-personal-api-key-id-pair), for day-to-day use like [BloodHound Operator](https://www.youtube.com/watch?v=9Og-6_qyw_A)
+
+## Create a non-personal API key/ID pair
+
+Administrators can create non-personal BloodHound users solely meant for API integrations.
+
+1. Log in as a user with the Administrator role.
+2. Create a new BloodHound user, see Creating Users.
+   - Give the user a long and unique password.
+3. **_Optional recommendation:_** Login as the newly created user and enable MFA.
+4. **_Optional recommendation:_** Securely dispose of the password and MFA configuration, as they are not needed for authenticating with a key/ID pair and they can be reset by an Administrator if needed.
+5. As the Administrator, go back to the Manage Users page.
+6. On the API user, click the hamburger menu and select **Generate / Revoke API Tokens**.
+
+<Frame>
+  <img src="/assets/image1-2.png" alt="Generate API Tokens"/>
+</Frame>
+
+7. Select **Create Token**.
+8. Give the token a descriptive name and click **Save**.
+9. Save the presented API key/ID pair and click **Close**.
+   - **The API key will never be shown again. If you lose it, you must revoke the previous key and regenerate a new one.**
+10. You may now utilize this key ID pair for [calling the API](#calling-the-api)
+
+## Create a personal API Key/ID pair
+
+BloodHound users can create personal API Key/ID pairs from their "My Profile" section.
+
+1. <p>In the top-right corner click <Icon icon="gear"iconType="solid"/> <Icon icon="arrow-right"iconType="solid"/> **My Profile**.</p>
+<Frame>
+  <img src="/assets/image1-3.png" alt="Create Token"/>
+</Frame>
+2. Click **API Key Management**.
+<Frame>
+  <img src="/assets/image1-7.png" alt="API Key Mangement"/>
+</Frame>
+3. Click **Create Token**.
+<Frame>
+  <img src="/assets/image1-4.png" alt="Create Token"/>
+</Frame>
+4. Give the token a descriptive name and click **Save**.
+<Frame>
+  <img src="/assets/image1-5.png" alt="Create Token"/>
+</Frame>
+5. Save the presented API key/ID pair and click **Close**.
+   - The API key will never be shown again. If you lose it, you must revoke the previous key and regenerate a new one.
+
+<Frame>
+  <img src="/assets/image1-6.png" alt="API Key Pair"/>
+</Frame>
+
+6. You may now utilize this key/ID pair for calling the API.
+
+## Calling the API
+
+Once you have your token, you can call the BloodHound API.
+
+**Using a JWT/Bearer Token**
+
+For quick tests or one-time calls, the JWT used by your browser may be the simplest route. The API will accept calls using the following header structure in the HTTP request:
+
+```
+'Authorization': Bearer $JWT_TOKEN
+```
+If you open the Network tab within your browser, you will see calls against the API made utilizing this structure.
+
+**Using your API Key/ID Pair**
+
+For long-running API integrations, BloodHound's API utilizes hash-based message authentication code (HMAC) authentication using the API key as the secret key to verify the authenticity and integrity of the request. Calls against the API must include the following in the signed hash:
+
+- API key
+- HTTP method and URI
+- Current time
+- Body content (if applicable to the request)
+
+Calls against the API would need to include the following headers in the HTTP request:
+
+```
+'Authorization': bhesignature $TOKEN_ID
+'RequestDate': $RFC3339_DATETIME
+'Signature': $BASE64ENCODED_HMAC_SIGNATURE
+```
+By validating the hash signature against the request, the API can validate that the calls were made by the original requestor, within a reasonable timeframe, against the proper API endpoint, including the original content body, and that no replay or content modification has occurred.
+
+The attached Python script is a full example implementation for calling the BloodHound APIs utilizing the API key/ID pair, however, the code block specific to calling the API has been extracted below.
+
+```
+def_request(self, method: str, uri: str, body: Optional[bytes] = None) -> requests.Response:
+    # Digester is initialized with HMAC-SHA-256 using the token key as the HMAC digest key.
+    digester = hmac.new(self._credentials.token_key.encode(), None, hashlib.sha256)
+
+    # OperationKey is the first HMAC digest link in the signature chain. This prevents replay attacks that seek to
+    # modify the request method or URI. It is composed of concatenating the request method and the request URI with
+    # no delimiter and computing the HMAC digest using the token key as the digest secret.
+    #
+    # Example: GET /api/v2/test/resource HTTP/1.1
+    # Signature Component: GET/api/v2/test/resource
+    digester.update(f'{method}{uri}'.encode())
+
+    # Update the digester for further chaining
+    digester = hmac.new(digester.digest(), None, hashlib.sha256)
+
+    # DateKey is the next HMAC digest link in the signature chain. This encodes the RFC3339 formatted datetime
+    # value as part of the signature to the hour to prevent replay attacks that are older than max two hours. This
+    # value is added to the signature chain by cutting off all values from the RFC3339 formatted datetime from the
+    # hours value forward:
+    #
+    # Example: 2020-12-01T23:59:60Z
+    # Signature Component: 2020-12-01T23
+    datetime_formatted = datetime.datetime.now().astimezone().isoformat('T')
+    digester.update(datetime_formatted[:13].encode())
+
+    # Update the digester for further chaining
+    digester = hmac.new(digester.digest(), None, hashlib.sha256)
+
+    # Body signing is the last HMAC digest link in the signature chain. This encodes the request body as part of
+    # the signature to prevent replay attacks that seek to modify the payload of a signed request. In the case
+    # where there is no body content the HMAC digest is computed anyway, simply with no values written to the
+    # digester.
+    ifbodyisnotNone:
+        digester.update(body)
+
+    # Perform the request with the signed and expected headers
+    return requests.request(
+        method=method,
+        url=self._format_url(uri),
+        headers={
+            'User-Agent': 'bhe-python-sdk 0001',
+            'Authorization': f'bhesignature {self._credentials.token_id}',
+            'RequestDate': datetime_formatted,
+            'Signature': base64.b64encode(digester.digest()),
+            'Content-Type': 'application/json',
+        },
+        data=body,
+    )
+```
+<CardGroup>
+  <Card
+    title="apiclient.py 10KB"
+    icon="paperclip"
+    href="/assets/bloodhound-api-collection.json"
+    iconType="solid"
+    horizontal
+  />
+</CardGroup>

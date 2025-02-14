@@ -1,0 +1,28 @@
+---
+title: OIDGroupLink
+---
+
+<Frame>
+  <img src="/assets/image-2-1.png"/>
+</Frame>
+
+The edge indicates that an IssuancePolicy has an OID group link to a group.
+
+Certificate templates may include the IssuancePolicy as an issuance policy extension. Users authenticating using a certificate of such a certificate template will be granted access as a member of the group.
+
+Abuse Info[](#h_01HZ7C2A3P68728AS1KESC5R59)
+-------------------------------------------
+
+An attacker may perform the ADCS ESC13 abuse which relies on the OID group link. This relationship alone is not enough to escalate rights or impersonate other principals.
+
+Opsec Considerations[](#h_01HZ7C2A3PBG7CXN767B2E029D)
+-----------------------------------------------------
+
+When an attacker abuses a privilege escalation or impersonation primitive that relies on this relationship, it will necessarily result in the issuance of a certificate. A copy of the issued certificate will be saved on the host that issued the certificate.
+
+References[](#h_01HZ7C2A3P1X6A8N9YB4RR83ZJ)
+-------------------------------------------
+
+* [ADCS ESC13 Abuse Technique](https://posts.specterops.io/adcs-esc13-abuse-technique-fda4272fbd53)
+* [Authentication Mechanism Assurance for AD DS in Windows Server 2008 R2 Step-by-Step Guide](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/dd378897(v=ws.10)?redirectedfrom=MSDN)
+* [Use Authentication Mechanism Assurance (AMA) to secure administrative account login](https://www.gradenegger.eu/en/using-authentication-mechanism-assurance-ama-to-secure-the-login-of-administrative-accounts/)

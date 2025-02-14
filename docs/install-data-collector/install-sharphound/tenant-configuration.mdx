@@ -1,0 +1,54 @@
+---
+title: SharpHound Enterprise Tenant Configuration
+---
+
+<Frame>
+  <img src="/assets/18246479746331.png"/>
+</Frame>
+
+## Configuration location
+1.  Tenant configuration of SharpHound Enterprise occurs within the Config -> Administration -> Manage clients view.
+<Frame>
+  <img src="/assets/image-98.png" alt=""/>
+</Frame>
+
+2.  Click on the hamburger menu on the right-hand side of any SharpHound collector to see the options available.
+<Frame>
+  <img src="/assets/image-99.png" alt=""/>
+</Frame>
+
+## Configure Options
+
+### On Demand Scan
+
+Kick a collection off immediately. See [Run an On Demand Scan](/collect-data/enterprise-collection/on-demand-scan)
+
+### Edit Client
+
+Opens the client modification dialog, providing multiple options:
+<Frame>
+  <img src="/assets/image-100.png" alt=""/>
+</Frame>
+
+| **Option** | **Description** |
+| --- | --- |
+| Client Name | An identifiable name for the collector. Many customers utilize the name of the domain it collects from or the system it runs on. |
+| Collection Schedule | Click the + sign to add a new schedule or the - sign to delete a schedule. See [Collection Scheduling](#h_01GECVQCVDK8KMMENQ4D7J0NKH) for more. |
+| Advanced Options -> Domain Controller | By default, SharpHound automatically selects a Domain Controller for LDAP queries. Specifying a Domain Controller hostname or FQDN here will define the default value utilized on all scheduled collections.<br/><br/>We recommend not configuring a Domain Controller manually. |
+
+
+## Collection Scheduling
+
+Collectors support multiple schedules, however, can only run a single job at any time.
+
+## Scanning
+
+Both the On Demand Scan option and the schedule window provide the same options for scanning.
+
+
+| **Option** | **Description** |
+| --- | --- |
+| Data (Required) | Multi-select option for the different types of collection available. See [SharpHound Data Collection and Permissions](/collect-data/enterprise-collection/permissions) for details on the data collected and permissions necessary for each. |
+| Domain controller | By default, SharpHound automatically selects a Domain Controller for LDAP queries. Specifying a Domain Controller hostname or FQDN here will define the default value utilized on this schedule.<br/><br/>If not set, SharpHound will utilize the value set in the client configuration.<br/><br/>We recommend not configuring a Domain Controller manually. |
+| Target Local Group and/or User Session Collection by Organizational Unit | Define one or more OUs within a domain to only collect Local Group and Session data from computers contained within the specified OUs and their descendants.<br/><br/>If left empty, SharpHoun_d will collect from all OUs._<br/><br/>If defined, the schedule or On Demand Scan will not collect AD structure data. A dedicated schedule or On Demand Scan must therefore be created for AD structure collection.<br/><br/>_Note: Not supported with multi-domain collections._ |
+| Scope Collection to Multiple Domains | Utilize trust relationships in your environment to collect data from multiple domains.<br/><br/>If left empty, SharpHound will collect from the domain to which the Service Account belongs.<br/><br/>SharpHound supports two options:<br/><br/>* Define a specific list of domains from which to collect data.<br/>* Collect data from all domains within the forest that the SharpHound service account belongs.<br/><br/>_Note: Multi-domain collections cannot be scoped by OU._ |
