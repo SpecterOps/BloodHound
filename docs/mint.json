@@ -199,6 +199,7 @@
         {
           "group": "Authentication and Authorization",
           "pages": [
+            "manage-bloodhound/auth/overview",
             "manage-bloodhound/auth/users-and-roles",
             "manage-bloodhound/auth/mfa",
             "manage-bloodhound/auth/oidc",

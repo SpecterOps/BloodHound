@@ -10,7 +10,7 @@ SharpHound v2 is officially generally available. If you have not already done so
 
 **NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the "Enable post processing of local groups" early access feature simultaneously.
 
-Instructions to upgrade your collector may be found [here](/install-data-collector/install-sharphound/install-upgrade)! Our Customer Success team will begin reaching out to all customers still running SharpHound v1 and would be happy to help if you require it.
+Instructions to upgrade your collector may be found [here](/install-data-collector/install-sharphound/installation-upgrade)! Our Customer Success team will begin reaching out to all customers still running SharpHound v1 and would be happy to help if you require it.
 
 ## Summary
 
@@ -30,9 +30,9 @@ Instructions to upgrade your collector may be found [here](/install-data-collect
 
 - **Enhanced Performance**: Improved database query optimization and caching
 - **UI Improvements**: Better visualization of attack paths and relationships
-- **Cross-Trust Collection**: Added support for cross-trust collection. See [SharpHound Cross-Trust Collection](/install-data-collector/install-sharphound/cross-trust-collection) documentation for more.
+- **Cross-Trust Collection**: Added support for cross-trust collection. See [SharpHound Cross-Trust Collection](/collect-data/enterprise-collection/cross-trust) documentation for more.
 
-For instructions on upgrading your collector, see [Install and Upgrade SharpHound Enterprise](/install-data-collector/install-sharphound/install-upgrade).
+For instructions on upgrading your collector, see [Install and Upgrade SharpHound Enterprise](/install-data-collector/install-sharphound/installation-upgrade).
 
 ### Bug Fixes
 
@@ -48,7 +48,7 @@ _Minimum version of SharpHound Service to support all current functionality: v2.
 
 * **Optional support for LDAP authentication auto-negotiation (simplified External trust collection support)** \- SharpHound now supports a configurable option to enable authentication auto-negotiation for LDAP authentication (ForceLDAPkerberosAuth, defaulted to True). In most cases, the default value is preferred.
 
-    By default, your forest will not attempt to search for principals across External trusts without a specific configuration to do so. If you are unable to configure the Forest Search Order to do so, auto-negotiation will allow NTLM authentication to the trusted domains (mimicking the behavior of the SharpHound open-source collector). See [SharpHound Cross-Trust Collection](/install-data-collector/install-sharphound/cross-trust-collection) documentation for more.
+    By default, your forest will not attempt to search for principals across External trusts without a specific configuration to do so. If you are unable to configure the Forest Search Order to do so, auto-negotiation will allow NTLM authentication to the trusted domains (mimicking the behavior of the SharpHound open-source collector). See [SharpHound Cross-Trust Collection](/collect-data/enterprise-collection/cross-trust) documentation for more.
 
 
 * **Maximum concurrent search query support** \- SharpHound now supports a configurable number of maximum concurrent queries executed against a domain controller (MaxConcurrentSearchQueries, defaulted to 15). Historically, SharpHound would attempt queries as quickly as possible; however, this could exceed the maximum allowable queries configured. In most cases, the default value should be sufficient.
