@@ -99,7 +99,7 @@ BloodHound CE analyzes data collected by its two collector services, each collec
 Each collector is a standalone binary. Download collectors using one of these methods:
 * From BloodHound CE, click ⚙️ → **Download Collectors** → the download button for **SHARPHOUND** or **AZUREHOUND**.
 * Download the collector from their respective GitHub repository: [SharpHound repository](https://github.com/BloodHoundAD/SharpHound/releases) or [AzureHound repository](https://github.com/BloodHoundAD/AzureHound/releases).
-* Build the collector from source with the source code for [SharpHound](../articles/SharpHound-Community-Edition) or [AzureHound](../articles/AzureHound-Community-Edition).
+* Build the collector from source with the source code for [SharpHound](/collect-data/ce-collection/sharphound) or [AzureHound](/collect-data/ce-collection/azurehound).
 
 ### Run a collector
 Run the SharpHound or AzureHound collector. During collection, JSON files are generated and compressed into a ZIP file.
@@ -116,13 +116,13 @@ C:\> SharpHound.exe
 C:\> AzureHound.exe --username "MattNelson@contoso.onmicrosoft.com" --password "MyVeryStrongPassword" --tenant "contoso.onmicrosoft.com" list
 ```
 </CodeGroup>
-For Azure argument definitions, see [All AzureHound Community Edition Flags, Explained](../articles/All-AzureHound-Community-Edition-Flags-Explained).
+For Azure argument definitions, see [All AzureHound Community Edition Flags, Explained](/collect-data/ce-collection/azurehound-flags).
 
 ### Ingest data into BloodHound
 
 Use the BloodHound CE API or the BloodHound CE UI to ingest collected data into BloodHound.
 
-To ingest collected data with the API, use the BloodHound CE endpoint `/api/v2/file-upload/`. See the [BloodHound API documentation](../articles/Working-with-the-BloodHound-API) for details.
+To ingest collected data with the API, use the BloodHound CE endpoint `/api/v2/file-upload/`. See the [BloodHound API documentation](/integrations/bloodhound-api/working-with-api) for details.
 
 To ingest collected data with the BloodHound CE UI, go to settings (⚙️) → **Administration → Data Collection →** select **File Ingest →** click **UPLOAD FILES** and upload your files.
 
@@ -148,8 +148,8 @@ To look at identified attack paths in the graph, go to the **Explore** page in t
  </Step>
 </Steps>
 
-Learn more in [Explore → Search for Objects](../articles/Explore-Search-for-Objects).
+Learn more in [Explore → Search for Objects](/analyze-data/bloodhound-gui/explore-objects).
 
 # Next steps
-* [Learn how to work with the BloodHound API](../articles/Working-with-the-BloodHound-API)
-* [Configure BloodHound integrations](../articles/Overview-of-BloodHound-Integrations)
+* [Learn how to work with the BloodHound API](/integrations/bloodhound-api/working-with-api)
+* [Configure BloodHound integrations](/integrations/integrations/overview)
