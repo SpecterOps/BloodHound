@@ -126,7 +126,7 @@ const EarlyAccessFeatures: FC = () => {
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'manage-feature-flags-permission';
 
-    const effect: React.EffectCallback = (): void => {
+    const effect: React.EffectCallback = () => {
         if (!hasPermission) {
             addNotification(
                 `Your role does not grant permission to manage feature flags. Please contact your administrator for details.`,
@@ -138,7 +138,7 @@ const EarlyAccessFeatures: FC = () => {
             );
         }
 
-        return dismissNotification(notificationKey);
+        return () => dismissNotification(notificationKey);
     };
 
     useMountEffect(effect);

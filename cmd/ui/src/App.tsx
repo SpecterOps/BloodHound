@@ -35,7 +35,7 @@ import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useQueryClient } from 'react-query';
 import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
-import { fullyAuthenticatedSelector, initialize, isInitializedSelector } from 'src/ducks/auth/authSlice';
+import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice';
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
@@ -50,7 +50,7 @@ import { setDarkMode } from './ducks/global/actions';
 
 export const Inner: React.FC = () => {
     const dispatch = useAppDispatch();
-    const isInitialized = useAppSelector(isInitializedSelector);
+    const authState = useAppSelector((state) => state.auth);
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
@@ -58,7 +58,7 @@ export const Inner: React.FC = () => {
 
     const featureFlagsRes = useFeatureFlags({
         retry: false,
-        enabled: !!(isInitialized && fullyAuthenticated),
+        enabled: !!(authState.isInitialized && fullyAuthenticated),
     });
 
     const mainNavData = {
@@ -162,11 +162,11 @@ export const Inner: React.FC = () => {
 
     // initialize authentication state and BHE client request/response handlers
     useEffect(() => {
-        if (!isInitialized) {
+        if (!authState.isInitialized) {
             dispatch(initialize());
             initializeBHEClient();
         }
-    }, [dispatch, isInitialized]);
+    }, [dispatch, authState.isInitialized]);
 
     // remove dark_mode if feature flag is disabled
     useEffect(() => {
@@ -180,7 +180,7 @@ export const Inner: React.FC = () => {
     }, [dispatch, queryClient, featureFlagsRes.data, darkMode]);
 
     // block rendering until authentication initialization is complete
-    if (!isInitialized) {
+    if (!authState.isInitialized) {
         return null;
     }
 

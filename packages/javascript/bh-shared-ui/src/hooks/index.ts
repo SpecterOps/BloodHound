@@ -34,8 +34,6 @@ export * from './useFetchEntityProperties';
 
 export * from './useFileIngest';
 
-export * from './useForbiddenNotifier';
-
 export * from './useMountEffect';
 
 export * from './usePermissions';

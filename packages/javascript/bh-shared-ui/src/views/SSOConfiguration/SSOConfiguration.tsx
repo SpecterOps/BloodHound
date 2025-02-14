@@ -52,7 +52,7 @@ const SSOConfiguration: FC = () => {
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'manage-sso-providers-permission';
 
-    const effect: React.EffectCallback = (): void => {
+    const effect: React.EffectCallback = () => {
         if (!hasPermission) {
             addNotification(
                 `Your user role does not grant permission to manage SSO providers. Please contact your administrator for details.`,
@@ -64,7 +64,7 @@ const SSOConfiguration: FC = () => {
             );
         }
 
-        return dismissNotification(notificationKey);
+        return () => dismissNotification(notificationKey);
     };
 
     useMountEffect(effect);

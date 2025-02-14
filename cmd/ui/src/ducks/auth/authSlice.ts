@@ -249,16 +249,6 @@ export const fullyAuthenticatedSelector = createSelector(
     }
 );
 
-/**
- * Returns a boolean indicating whether the user is logged in and does not have an expired password.
- */
-export const isInitializedSelector = createSelector(
-    (state: AppState) => state.auth,
-    (authState) => {
-        return authState.isInitialized;
-    }
-);
-
 // Action creators are generated for each case reducer function
 // export const {  } = authSlice.actions;
 
