@@ -1,0 +1,99 @@
+---
+title: 2024-09-30 Release Notes (v6.0.0)
+---
+
+## Announcements
+
+### Join us for Specter Bash 2024
+
+Save your spot at Specter Bash from October 7-10 in Denver, CO!
+
+Join us onsite for training and spooky activities, including:
+
+* 🎓 Five training options, including our all-new "Identity-Driven Offensive Tradecraft" course!🎃 Scary Movies, pumpkin carving, and hacking horror stories.
+* 👻 Halloween costume contest (win free tickets to SO-CON 2025 or a discount on training at SO-CON).
+
+Register now: [https://specterops.io/specter-bash/](https://specterops.io/specter-bash/)
+
+### BloodHound 6.0 Release
+
+This release marks a significant milestone for the BloodHound product family, representing years of hard work and support from our BloodHound Enterprise engineering team and our incredible community contributors. With recent overhauls to the UI in the Attack Paths view for our BloodHound Enterprise customers, the general availability of dark mode, and the upcoming production support for PostgreSQL as the backend graph database, a lot has changed in BloodHound over the last year.
+
+We look forward to working with our customers and community members to continue delivering the most complete and robust Attack Path Management product. Thank you for your continuing support of BloodHound!
+
+## Summary
+
+
+* **BloodHound (v6.0.0****)**
+    * New and Improved Features
+        * Dark mode is now generally available!
+        * Introducing optional support for Citrix Direct Access Users group in CanRDP logic!
+        * _\[BHE Only\]_ Reconciliation timelines are now configurable!
+        * Improved logic for identifying and creating complex edges requiring multiple permissions (including ADCS ESC, DCSync, etc.) when Authenticated Users@ or Everyone@ groups are involved.
+        * Improved accuracy on ADCS ESC9 and ESC10 processing logic
+        * CanRDP edges will now appropriately appear from Computer objects with permission to RDP to another computer.
+        * Provided additional abuse information to ADCSESC9b, ADCSESC10b, GenericAll, GenericWrite, Contains, Owns, WriteDacl, AllExtendedWrites, and WriteOwner Attack Path primitives.
+        * Support for .zip file uploads that include UTFBOM markings within contained JSON files has been added.
+    * Bug Fixes
+        * Resolved an intermittent issue with the parallelization of ADCS post-processing.
+        * Applying multiple filter predicates to an API query will no longer throw an error.
+        * Admin Audit log API endpoints now correctly support the "skip" query parameter.
+        * The Cypher query window will no longer extend beyond the end of the browser.
+        * _\[BHE Only\]_ Resolved some duplicate collection issues related to highly available deployments.
+* **SharpHound (v2.5.10 - BHE, v2.5.7 - CE)**
+    * _Note: Last week's SharpHound hotfix included several specific collection issues. We highly recommend Enterprise customers upgrade to SharpHound Enterprise v2.5.9+._
+    * Bug Fixes
+        * _\[BHE Only\]_ Resolved several installation issues for specific scenarios.
+* **AzureHound (v2.2.1)**
+    * _Note: AzureHound v2.2.1 has demonstrated significant performance improvements over v2.1.9. We highly recommend all customers upgrade to AzureHound v2.2.1+_
+    * _No new release._
+
+### BloodHound (v6.0.0)
+
+#### New and Improved Features
+
+* **Dark mode general availability** \- Save your eyeballs with the flip of a switch!
+<Frame>
+  <img src="/assets/image-1.png" alt=""/>
+</Frame>
+* **Citrix Direct Access Users group support in CanRDP** \- A long-time pain point for BloodHound users, Citrix's preferred deployment model frequently introduced perceived false positives through a compensating control that BloodHound did not model. With today's release, Administrators may optionally enable the ability for BloodHound to identify systems with the default "Direct Access Users" group deployed by Citrix and, where found, to utilize that group membership to limit the scope of the CanRDP Attack Path primitives identified in your environment.
+
+    To enable, go to _Administration -> BloodHound_ _Configuration_.
+<Frame>
+  <img src="/assets/image-2.png" alt=""/>
+</Frame>
+* **_\[BHE Only\]_ Configurable reconciliation timelines** \- BloodHound Enterprise supports automatic data reconciliation for changes made within your environment over time. One of those functions relates to clearing HasSession edges and clearing out data that BloodHound Enterprise has not seen in a long while. Previously hard-coded, Administrators may now configure these values within _Administration -> BloodHound_ _Configuration_.
+
+    We've reduced the default values to 7 days for age-out and 3 days for session data. Please feel free to contact your TAM if you have any questions.
+<Frame>
+  <img src="/assets/image-3.png" alt=""/>
+</Frame>
+* **Improved performance on complex Attack Paths** \- Complex Attack Paths requiring multiple permissions (including ADCS ESC, DCSync, etc.) utilize specialized logic to identify the most common denominator of control, making risk and abuse clearer. This release improves processing logic when Authenticated Users@ or Everyone@ groups are involved.
+* **Improved accuracy on ADCS ESC9 and ESC10 processing logic** \- We've improved the logic for ESC9 and ESC10 Attack Path identification, including additional consideration for SChannel Authentication and DC Strong Certificate binding enforcement.
+* **RDP from computers ** \- CanRDP edges will now appropriately appear from Computer objects with permission to RDP to another computer.
+* **Documentation of abuse** \- Additional abuse information has been added to ADCSESC9b, ADCSESC10b, GenericAll, GenericWrite, Contains, Owns, WriteDacl, AllExtendedWrites, and WriteOwner Attack Path primitives.
+* **Improved .zip support** \- We have added support for .zip file uploads that include UTFBOM markings within contained JSON files.
+
+#### Bug Fixes
+
+* Resolved an intermittent issue with the parallelization of ADCS post-processing.
+* Applying multiple filter predicates to an API query will no longer throw an error.
+* Admin Audit log API endpoints now correctly support the "skip" query parameter.
+* The Cypher query window will no longer extend beyond the end of the browser.
+* _\[BHE Only\]_ Resolved some duplicate collection issues related to highly available deployments.
+
+### SharpHound (v2.5.10 - BHE, v2.5.7 - CE)
+
+* _Note: Last week's SharpHound hotfix included several specific collection issues. We highly recommend Enterprise customers upgrade to SharpHound Enterprise v2.5.9+._
+
+#### Bug Fixes
+
+* _\[BHE Only\]_ Resolved several installation issues for specific scenarios.
+
+### AzureHound (v2.2.1)
+
+
+_No new release._
+
+* _Note: AzureHound v2.2.1 has demonstrated significant performance improvements over v2.1.9. We highly recommend all customers upgrade to AzureHound v2.2.1+_
+

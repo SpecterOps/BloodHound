@@ -1,0 +1,51 @@
+---
+title: Create a BloodHound Enterprise collector client
+---
+
+<Frame>
+  <img src="/assets/18246479746331.png"/>
+</Frame>
+
+## Purpose
+
+This guide explains how to create a BloodHound Enterprise collector client, either of:
+
+* SharpHound Enterprise
+* AzureHound Enterprise
+
+It should be used by BloodHound Enterprise (BHE) administrators when deploying SharpHound Enterprise or AzureHound Enterprise.
+
+## Prerequisites
+
+* Having deployed a BloodHound Enterprise Tenant
+* Logged in as a user role, which is authorized to create a new collector client, see [Administering users and roles](/manage-bloodhound/auth/users-and-roles)
+
+## Process
+
+1.  In the top right, click settings ⚙️ → **Administration**
+<Frame>
+  <img src="/assets/image-69.png" alt=""/>
+</Frame>
+2.  In the top left side, click **Manage Clients**
+<Frame>
+  <img src="/assets/image-70.png" alt=""/>
+</Frame>
+3.  On the right side, click **Create Client** and, from the drop-down, select one of the collector clients, for example **Create SharpHound Client**
+<Frame>
+  <img src="/assets/image-71.png" alt=""/>
+</Frame>
+4.  In the pop-up window, for example named _New SharpHound Client_, input the **Client Name** and click **CREATE**
+<Frame>
+  <img src="/assets/image-72.png" alt=""/>
+</Frame>
+5.  The pop-up window _Client Token Info_ will appear; follow the instructions in it - save the key before clicking **CLOSE**
+<Frame>
+  <img src="/assets/image-73.png" alt=""/>
+</Frame>
+## Outcome
+
+The collector client will appear in the **Manage Clients** table with a **Status** of **Unconfigured**.
+
+<Frame>
+  <img src="/assets/image-74.png" alt=""/>
+</Frame>

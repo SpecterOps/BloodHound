@@ -1,0 +1,21 @@
+---
+title: AZLogicAppContributor
+description: The Logic Contributor role grants full control of the target Logic App. This includes the ability to execute arbitrary commands on the Logic App.
+---
+
+<Frame>
+  <img src="/assets/image-2-1.png"/>
+</Frame>
+## Abuse Info
+
+Currently you need access to the portal GUI to execute this abuse. The abuse involves adding or modifying an existing logic app to coerce the logic app into sending a JWT for its managed identity service principal to a web server you control.
+
+You can see a full walkthrough for executing that abuse in this blog post: [Andy Robbins - Managed Identity Attack Paths, Part 2: Logic Apps](https://medium.com/p/52b29354fc54)
+
+## Opsec Considerations
+This will depend on which particular abuse you perform, but in general Azure will create a log event for each abuse.
+
+## References
+
+* [https://github.com/BloodHoundAD/BARK](https://github.com/BloodHoundAD/BARK)
+* [https://medium.com/p/52b29354fc54](https://medium.com/p/52b29354fc54)
