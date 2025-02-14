@@ -771,17 +771,22 @@ func resetPasswordEndNodeBitmapForRole(role *graph.Node, roleAssignments RoleAss
 		case azure.UserAccountAdministratorRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
 			result.Or(roleAssignments.UsersWithRolesExclusive(UserAdministratorPasswordResetTargetRoles()...))
+			result.AndNot(roleAssignments.UsersWithRoleAssignableGroupMembership())
 		case azure.HelpdeskAdministratorRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
 			result.Or(roleAssignments.UsersWithRolesExclusive(HelpdeskAdministratorPasswordResetTargetRoles()...))
+			result.AndNot(roleAssignments.UsersWithRoleAssignableGroupMembership())
 		case azure.AuthenticationAdministratorRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
 			result.Or(roleAssignments.UsersWithRolesExclusive(AuthenticationAdministratorPasswordResetTargetRoles()...))
+			result.AndNot(roleAssignments.UsersWithRoleAssignableGroupMembership())
 		case azure.PasswordAdministratorRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
 			result.Or(roleAssignments.UsersWithRolesExclusive(PasswordAdministratorPasswordResetTargetRoles()...))
+			result.AndNot(roleAssignments.UsersWithRoleAssignableGroupMembership())
 		case azure.PartnerTier1SupportRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
+			result.AndNot(roleAssignments.UsersWithRoleAssignableGroupMembership())
 		default:
 			return nil, fmt.Errorf("role node %d has unsupported role template id '%s'", role.ID, roleTemplateID)
 		}

@@ -88,8 +88,9 @@ func (s RoleAssignmentMap) HasRole(id graph.ID, roleTemplateIDs ...string) bool 
 }
 
 type RoleAssignments struct {
-	Principals graph.NodeKindSet
-	RoleMap    map[string]cardinality.Duplex[uint64]
+	Principals      graph.NodeKindSet
+	RoleMap         map[string]cardinality.Duplex[uint64]
+	GroupMembership map[graph.ID]cardinality.Duplex[uint64]
 }
 
 func (s RoleAssignments) GetNodeKindSet(bm cardinality.Duplex[uint64]) graph.NodeKindSet {
@@ -140,6 +141,20 @@ func (s RoleAssignments) UsersWithRolesExclusive(roleTemplateIDs ...string) card
 	result := s.PrincipalsWithRolesExclusive(roleTemplateIDs...)
 	result.And(s.Users())
 	return result
+}
+
+func (s RoleAssignments) UsersWithRoleAssignableGroupMembership() cardinality.Duplex[uint64] {
+	members := cardinality.NewBitmap64()
+
+	// loop through all the groups
+	for groupID, groupMemberIDBitmap := range s.GroupMembership {
+		// if that group is role assignable, set the bits
+		if isRoleAssignable, err := s.Principals.AllNodes().Get(groupID).Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil && isRoleAssignable {
+			members.Or(groupMemberIDBitmap)
+		}
+
+	}
+	return members
 }
 
 // PrincipalsWithRole returns a roaring bitmap of principals that have been assigned one or more of the matching roles from list of role template IDs
@@ -208,6 +223,14 @@ func TenantRoleAssignments(ctx context.Context, db graph.Database, tenant *graph
 		} else if roles, err := TenantRoles(tx, tenant); err != nil {
 			return err
 		} else {
+			// fetch the members for each of the groups returned
+			for _, group := range fetchedRoleAssignments.Principals.Get(azure.Group) {
+				if members, err := FetchGroupMembersUsers(tx, group, 0, 0); err != nil {
+					return err
+				} else {
+					fetchedRoleAssignments.GroupMembership[group.ID] = members.IDBitmap()
+				}
+			}
 			return roles.KindSet().EachNode(func(node *graph.Node) error {
 				if roleTemplateID, err := node.Properties.Get(azure.RoleTemplateID.String()).String(); err != nil {
 					if !graph.IsErrPropertyNotFound(err) {
