@@ -163,17 +163,18 @@ const UpdateUserFormInner: React.FC<{
         }
 
         if (error) {
-            if (error?.response?.status === 400) {
-                if (error.response?.data?.errors[0]?.message.toLowerCase().includes('role provision enabled')) {
+            const errMsg = error.response?.data?.errors[0]?.message.toLowerCase();
+            if (error.response?.status === 400) {
+                if (errMsg.includes('role provision enabled')) {
                     setError('root.generic', {
                         type: 'custom',
                         message: 'Cannot modify user roles for role provision enabled SSO providers.',
                     });
                 }
-            } else if (error?.response?.status === 409) {
-                if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
+            } else if (error.response?.status === 409) {
+                if (errMsg.includes('principal name')) {
                     setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
-                } else if (error.response?.data?.errors[0]?.message.toLowerCase().includes('email')) {
+                } else if (errMsg.includes('email')) {
                     setError('emailAddress', { type: 'custom', message: 'Email is already in use.' });
                 } else {
                     setError('root.generic', { type: 'custom', message: `A conflict has occured.` });

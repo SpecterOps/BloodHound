@@ -15,17 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Switch } from '@bloodhoundenterprise/doodleui';
-import {
-    Alert,
-    FormControl,
-    FormControlLabel,
-    Grid,
-    InputLabel,
-    MenuItem,
-    Select,
-    Typography,
-    useTheme,
-} from '@mui/material';
+import { Alert, FormControl, FormControlLabel, Grid, InputLabel, MenuItem, Select, Typography } from '@mui/material';
 import {
     Role,
     SSOProviderConfiguration,
@@ -51,123 +41,109 @@ const SSOProviderConfigForm: FC<{
     resetField: UseFormResetField<UpsertSAMLProviderFormInputs | UpsertOIDCProviderRequest>;
     roles?: Role[];
     readOnlyRoleId?: number;
-}> = ({ control, errors, readOnlyRoleId, resetField, roles, watch }) => {
-    const theme = useTheme();
-
-    return (
-        <>
-            <Grid item xs={12} sx={{ m: theme.spacing(2) }}>
-                <Controller
-                    name='config.auto_provision.enabled'
-                    control={control}
-                    defaultValue={false}
-                    render={({ field }) => (
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={field.value}
-                                    onCheckedChange={(checked) => {
-                                        field.onChange(checked);
-                                        if (!checked) {
-                                            resetField('config.auto_provision.role_provision');
-                                            resetField('config.auto_provision.default_role_id');
-                                        }
-                                    }}
-                                    data-testid='sso-provider-config-form_toggle-auto-provision'
-                                />
-                            }
-                            label={
-                                <Typography
-                                    sx={{
-                                        ml: theme.spacing(2),
-                                        color: !watch('config.auto_provision.enabled')
-                                            ? theme.palette.text.disabled
-                                            : '',
-                                    }}>
-                                    Automatically create new users on login
-                                </Typography>
-                            }
-                        />
-                    )}
-                />
-            </Grid>
-            <Grid item xs={12} sx={{ mx: theme.spacing(2), mb: theme.spacing(2) }}>
-                <Controller
-                    name='config.auto_provision.role_provision'
-                    control={control}
-                    defaultValue={false}
-                    render={({ field }) => (
-                        <FormControlLabel
-                            disabled={!watch('config.auto_provision.enabled')}
-                            control={
-                                <Switch
-                                    checked={field.value}
-                                    onCheckedChange={(checked) => field.onChange(checked)}
-                                    data-testid='sso-provider-config-form_toggle-role-provision'
-                                />
-                            }
-                            label={
-                                <Typography
-                                    sx={{
-                                        ml: theme.spacing(2),
-                                        color: !watch('config.auto_provision.role_provision')
-                                            ? theme.palette.text.disabled
-                                            : '',
-                                    }}>
-                                    Allow SSO Provider to modify roles
-                                </Typography>
-                            }
-                        />
-                    )}
-                />
-            </Grid>
-            <Grid item xs={3}>
-                <Controller
-                    name='config.auto_provision.default_role_id'
-                    control={control}
-                    defaultValue={readOnlyRoleId}
-                    rules={{
-                        required: 'Default role is required',
-                        validate: (value) => value != 0 || 'Default role is required',
-                    }}
-                    render={({ field }) => (
-                        <FormControl>
-                            <InputLabel
-                                id='role-label'
-                                sx={{ ml: '-14px', mt: '8px' }}
-                                disabled={!watch('config.auto_provision.enabled')}>
-                                Default User Role
-                            </InputLabel>
-                            <Select
-                                disabled={!watch('config.auto_provision.enabled')}
-                                labelId='role-label'
-                                id='role'
-                                name='role'
-                                onChange={(e) => {
-                                    const output = parseInt(e.target.value as string, 10);
-                                    field.onChange(isNaN(output) ? 1 : output);
+}> = ({ control, errors, readOnlyRoleId, resetField, roles, watch }) => (
+    <>
+        <Grid item xs={12} className='mx-4 mb-4'>
+            <Controller
+                name='config.auto_provision.enabled'
+                control={control}
+                defaultValue={false}
+                render={({ field }) => (
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={field.value}
+                                onCheckedChange={(checked) => {
+                                    field.onChange(checked);
+                                    if (!checked) {
+                                        resetField('config.auto_provision.role_provision');
+                                        resetField('config.auto_provision.default_role_id');
+                                    }
                                 }}
-                                value={isNaN(field.value) ? '' : field.value.toString()}
-                                variant='standard'
-                                fullWidth
-                                data-testid='sso-provider-config-form_select-default-role'>
-                                {roles?.map((role: Role) => (
-                                    <MenuItem key={role.id} value={role.id.toString()}>
-                                        {role.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    )}
-                />
+                                data-testid='sso-provider-config-form_toggle-auto-provision'
+                            />
+                        }
+                        label={
+                            <Typography
+                                className={`ml-4 ${!watch('config.auto_provision.enabled') && 'dark:text-white dark:text-opacity-50 text-black text-opacity-40'}`}>
+                                Automatically create new users on login
+                            </Typography>
+                        }
+                    />
+                )}
+            />
+        </Grid>
+        <Grid item xs={12} className='mx-4 mb-4'>
+            <Controller
+                name='config.auto_provision.role_provision'
+                control={control}
+                defaultValue={false}
+                render={({ field }) => (
+                    <FormControlLabel
+                        disabled={!watch('config.auto_provision.enabled')}
+                        control={
+                            <Switch
+                                checked={field.value}
+                                onCheckedChange={(checked) => field.onChange(checked)}
+                                data-testid='sso-provider-config-form_toggle-role-provision'
+                            />
+                        }
+                        label={
+                            <Typography
+                                className={`ml-4 ${!watch('config.auto_provision.role_provision') && 'dark:text-white dark:text-opacity-50 text-black text-opacity-40'}`}>
+                                Allow SSO Provider to modify roles
+                            </Typography>
+                        }
+                    />
+                )}
+            />
+        </Grid>
+        <Grid item xs={3}>
+            <Controller
+                name='config.auto_provision.default_role_id'
+                control={control}
+                defaultValue={readOnlyRoleId}
+                rules={{
+                    required: 'Default role is required',
+                    validate: (value) => value != 0 || 'Default role is required',
+                }}
+                render={({ field }) => (
+                    <FormControl>
+                        <InputLabel
+                            id='role-label'
+                            className='-ml-3.5 mt-2'
+                            disabled={!watch('config.auto_provision.enabled')}>
+                            Default User Role
+                        </InputLabel>
+                        <Select
+                            disabled={!watch('config.auto_provision.enabled')}
+                            labelId='role-label'
+                            id='role'
+                            name='role'
+                            onChange={(e) => {
+                                const output = parseInt(e.target.value as string, 10);
+                                field.onChange(isNaN(output) ? 1 : output);
+                            }}
+                            value={isNaN(field.value) ? '' : field.value.toString()}
+                            variant='standard'
+                            fullWidth
+                            data-testid='sso-provider-config-form_select-default-role'>
+                            {roles?.map((role: Role) => (
+                                <MenuItem key={role.id} value={role.id.toString()}>
+                                    {role.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                )}
+            />
+        </Grid>
+        {!!errors.config?.auto_provision?.default_role_id && (
+            <Grid item xs={5}>
+                <Alert severity='error'>{errors.config?.auto_provision?.default_role_id?.message}</Alert>
             </Grid>
-            {!!errors.config?.auto_provision?.default_role_id && (
-                <Grid item xs={5}>
-                    <Alert severity='error'>{errors.config?.auto_provision?.default_role_id?.message}</Alert>
-                </Grid>
-            )}
-        </>
-    );
-};
+        )}
+    </>
+);
 
 export default SSOProviderConfigForm;
