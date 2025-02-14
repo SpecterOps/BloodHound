@@ -354,39 +354,43 @@ func jitOIDCUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, email
 		return fmt.Errorf("sanitize roles: %v", err)
 	} else if len(roles) != 1 {
 		return fmt.Errorf("invalid roles")
-	} else if user, err := u.LookupUser(ctx, email); err != nil && !errors.Is(err, database.ErrNotFound) {
-		return fmt.Errorf("lookup user: %v", err)
-	} else if errors.Is(err, database.ErrNotFound) {
-		user = model.User{
-			EmailAddress:  null.StringFrom(email),
-			PrincipalName: email,
-			Roles:         roles,
-			SSOProviderID: null.Int32From(ssoProvider.ID),
-			EULAAccepted:  true, // EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users
-			FirstName:     null.StringFrom(email),
-			LastName:      null.StringFrom("Last name not found"),
+	} else if user, err := u.LookupUser(ctx, email); err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return jitOIDCUserCreate(ctx, ssoProvider, email, claims, u, roles)
 		}
-
-		if claims.FirstName != "" {
-			user.FirstName = null.StringFrom(claims.FirstName)
-		}
-
-		if claims.LastName != "" {
-			user.LastName = null.StringFrom(claims.LastName)
-		}
-
-		if _, err := u.CreateUser(ctx, user); err != nil {
-			return fmt.Errorf("create user: %v", err)
-		}
-	} else {
+		return fmt.Errorf("user lookup: %v", err)
+	} else if ssoProvider.Config.AutoProvision.RoleProvision && !user.Roles.Has(roles[0]) {
 		//  roles should only ever have 1 role
-		if ssoProvider.Config.AutoProvision.RoleProvision && !user.Roles.Has(roles[0]) {
-			user.Roles = roles
-			if err := u.UpdateUser(ctx, user); err != nil {
-				return fmt.Errorf("update user: %v", err)
-			}
+		user.Roles = roles
+		if err := u.UpdateUser(ctx, user); err != nil {
+			return fmt.Errorf("update user: %v", err)
 		}
 	}
 
+	return nil
+}
+
+func jitOIDCUserCreate(ctx context.Context, ssoProvider model.SSOProvider, email string, claims oidcClaims, u jitUserUpserter, roles model.Roles) error {
+	user := model.User{
+		EmailAddress:  null.StringFrom(email),
+		PrincipalName: email,
+		Roles:         roles,
+		SSOProviderID: null.Int32From(ssoProvider.ID),
+		EULAAccepted:  true, // EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users
+		FirstName:     null.StringFrom(email),
+		LastName:      null.StringFrom("Last name not found"),
+	}
+
+	if claims.FirstName != "" {
+		user.FirstName = null.StringFrom(claims.FirstName)
+	}
+
+	if claims.LastName != "" {
+		user.LastName = null.StringFrom(claims.LastName)
+	}
+
+	if _, err := u.CreateUser(ctx, user); err != nil {
+		return fmt.Errorf("create user: %v", err)
+	}
 	return nil
 }

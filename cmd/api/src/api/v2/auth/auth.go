@@ -470,7 +470,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		}
 
 		// We have to wait until after SSOProvider updates are handled above to validate roles can be safely updated.
-		if user.SSOProvider != nil && user.SSOProvider.Config.AutoProvision.Enabled && user.SSOProvider.Config.AutoProvision.RoleProvision && !slices.Equal(roles.IDs(), user.Roles.IDs()) {
+		if user.SSOProviderHasRoleProvisionEnabled() && !slices.Equal(roles.IDs(), user.Roles.IDs()) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSSOProviderRoleProvisionChange, request), response)
 			return
 		} else if updateUserRequest.Roles != nil {

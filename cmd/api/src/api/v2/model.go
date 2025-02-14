@@ -19,7 +19,6 @@ package v2
 import (
 	"github.com/gorilla/schema"
 	"github.com/specterops/bloodhound/cache"
-	_ "github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"

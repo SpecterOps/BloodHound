@@ -475,39 +475,43 @@ func jitSAMLUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, princ
 		return fmt.Errorf("sanitize roles: %v", err)
 	} else if len(roles) != 1 {
 		return fmt.Errorf("invalid roles detected")
-	} else if user, err := u.LookupUser(ctx, principalName); err != nil && !errors.Is(err, database.ErrNotFound) {
+	} else if user, err := u.LookupUser(ctx, principalName); err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return jitSAMLUserCreate(ctx, ssoProvider, principalName, assertion, u, roles)
+		}
 		return fmt.Errorf("lookup user: %v", err)
-	} else if errors.Is(err, database.ErrNotFound) {
-		user = model.User{
-			EmailAddress:  null.StringFrom(principalName),
-			PrincipalName: principalName,
-			Roles:         roles,
-			SSOProviderID: null.Int32From(ssoProvider.ID),
-			EULAAccepted:  true, // EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users
-			FirstName:     null.StringFrom(principalName),
-			LastName:      null.StringFrom("Last name not found"),
-		}
-
-		if givenName, err := ssoProvider.SAMLProvider.GetSAMLUserGivenNameFromAssertion(assertion); err == nil {
-			user.FirstName = null.StringFrom(givenName)
-		}
-
-		if surname, err := ssoProvider.SAMLProvider.GetSAMLUserSurnameFromAssertion(assertion); err == nil {
-			user.LastName = null.StringFrom(surname)
-		}
-
-		if _, err := u.CreateUser(ctx, user); err != nil {
-			return fmt.Errorf("create user: %v", err)
-		}
-	} else {
+	} else if ssoProvider.Config.AutoProvision.RoleProvision && !user.Roles.Has(roles[0]) {
 		//  roles should only ever have 1 role
-		if ssoProvider.Config.AutoProvision.RoleProvision && !user.Roles.Has(roles[0]) {
-			user.Roles = roles
-			if err := u.UpdateUser(ctx, user); err != nil {
-				return fmt.Errorf("update user: %v", err)
-			}
+		user.Roles = roles
+		if err := u.UpdateUser(ctx, user); err != nil {
+			return fmt.Errorf("update user: %v", err)
 		}
 	}
 
+	return nil
+}
+
+func jitSAMLUserCreate(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserUpserter, roles model.Roles) error {
+	user := model.User{
+		EmailAddress:  null.StringFrom(principalName),
+		PrincipalName: principalName,
+		Roles:         roles,
+		SSOProviderID: null.Int32From(ssoProvider.ID),
+		EULAAccepted:  true, // EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users
+		FirstName:     null.StringFrom(principalName),
+		LastName:      null.StringFrom("Last name not found"),
+	}
+
+	if givenName, err := ssoProvider.SAMLProvider.GetSAMLUserGivenNameFromAssertion(assertion); err == nil {
+		user.FirstName = null.StringFrom(givenName)
+	}
+
+	if surname, err := ssoProvider.SAMLProvider.GetSAMLUserSurnameFromAssertion(assertion); err == nil {
+		user.LastName = null.StringFrom(surname)
+	}
+
+	if _, err := u.CreateUser(ctx, user); err != nil {
+		return fmt.Errorf("create user: %v", err)
+	}
 	return nil
 }
