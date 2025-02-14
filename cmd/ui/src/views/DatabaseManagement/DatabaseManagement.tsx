@@ -216,7 +216,7 @@ const DatabaseManagement: FC = () => {
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'database-management-permission';
 
-    const effect: React.EffectCallback = (): void => {
+    const effect: React.EffectCallback = () => {
         if (!hasPermission) {
             addNotification(
                 `Your user role does not allow managing the database. Please contact your administrator for details.`,
@@ -228,7 +228,7 @@ const DatabaseManagement: FC = () => {
             );
         }
 
-        return dismissNotification(notificationKey);
+        return () => dismissNotification(notificationKey);
     };
 
     useMountEffect(effect);

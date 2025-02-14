@@ -34,7 +34,7 @@ const FileIngest: FC = () => {
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'file-upload-permission';
 
-    const effect: React.EffectCallback = (): void => {
+    const effect: React.EffectCallback = () => {
         if (!hasPermission) {
             addNotification(
                 `Your user role does not grant permission to upload data. Please contact your administrator for details.`,
@@ -46,7 +46,7 @@ const FileIngest: FC = () => {
             );
         }
 
-        return dismissNotification(notificationKey);
+        return () => dismissNotification(notificationKey);
     };
 
     useMountEffect(effect);

@@ -27,7 +27,6 @@
   },
   "resolutions": {
     "dompurify": "3.1.3",
-    "cross-spawn": "^7.0.5",
-    "graphology@^0.25.1": "patch:graphology@npm%3A0.25.1#./.yarn/patches/graphology-npm-0.25.1-6f041f5e3d.patch"
+    "cross-spawn": "^7.0.5"
   }
 }
