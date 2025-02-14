@@ -73,12 +73,17 @@ const SSOProviderConfigForm: FC<{
                                             resetField('config.auto_provision.default_role_id');
                                         }
                                     }}
-                                    color='primary'
                                     data-testid='sso-provider-config-form_toggle-auto-provision'
                                 />
                             }
                             label={
-                                <Typography sx={{ ml: theme.spacing(2) }}>
+                                <Typography
+                                    sx={{
+                                        ml: theme.spacing(2),
+                                        color: !watch('config.auto_provision.enabled')
+                                            ? theme.palette.text.disabled
+                                            : '',
+                                    }}>
                                     Automatically create new users on login
                                 </Typography>
                             }
@@ -98,12 +103,17 @@ const SSOProviderConfigForm: FC<{
                                 <Switch
                                     checked={field.value}
                                     onCheckedChange={(checked) => field.onChange(checked)}
-                                    color='primary'
                                     data-testid='sso-provider-config-form_toggle-role-provision'
                                 />
                             }
                             label={
-                                <Typography sx={{ ml: theme.spacing(2) }}>
+                                <Typography
+                                    sx={{
+                                        ml: theme.spacing(2),
+                                        color: !watch('config.auto_provision.role_provision')
+                                            ? theme.palette.text.disabled
+                                            : '',
+                                    }}>
                                     Allow SSO Provider to modify roles
                                 </Typography>
                             }
