@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryRelationshipKind, AzureRelationshipKind } from '../../../graphSchema';
+import {ActiveDirectoryRelationshipKind, AzureRelationshipKind} from '../../../graphSchema';
 
 export type EdgeCheckboxType = {
     category: string;
@@ -117,7 +117,11 @@ export const AllEdgeTypes: Category[] = [
             },
             {
                 name: 'NTLM Relay',
-                edgeTypes: [ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB],
+                edgeTypes: [
+                    ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
+                    ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
+                    ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS
+                ],
             },
         ],
     },
