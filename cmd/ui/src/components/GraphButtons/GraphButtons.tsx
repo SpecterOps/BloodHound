@@ -16,7 +16,7 @@
 
 import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, MenuItem } from '@mui/material';
+import { MenuItem } from '@mui/material';
 import { GraphButton, GraphMenu } from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import { FC } from 'react';
@@ -52,7 +52,7 @@ const GraphButtons: FC<GraphButtonsProps> = ({
     const exportableGraphState = useAppSelector((state) => state.explore.export);
 
     return (
-        <Box display={'flex'} gap={1}>
+        <>
             <GraphButton onClick={onReset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
 
             <GraphMenu label={'Hide Labels'}>
@@ -79,7 +79,7 @@ const GraphButtons: FC<GraphButtonsProps> = ({
                 displayText={'Search Current Results'}
                 disabled={isCurrentSearchOpen}
             />
-        </Box>
+        </>
     );
 };
 
