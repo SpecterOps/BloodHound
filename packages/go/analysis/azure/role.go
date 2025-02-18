@@ -209,8 +209,9 @@ func initTenantRoleAssignments(tx graph.Transaction, tenant *graph.Node) (RoleAs
 		return RoleAssignments{}, err
 	} else {
 		return RoleAssignments{
-			Principals: roleMembers.KindSet(),
-			RoleMap:    make(map[string]cardinality.Duplex[uint64]),
+			Principals:      roleMembers.KindSet(),
+			RoleMap:         make(map[string]cardinality.Duplex[uint64]),
+			GroupMembership: make(map[graph.ID]cardinality.Duplex[uint64]),
 		}, nil
 	}
 }
@@ -223,7 +224,7 @@ func TenantRoleAssignments(ctx context.Context, db graph.Database, tenant *graph
 		} else if roles, err := TenantRoles(tx, tenant); err != nil {
 			return err
 		} else {
-			// fetch the members for each of the groups returned
+			//fetch the users who are members for each of the groups returned
 			for _, group := range fetchedRoleAssignments.Principals.Get(azure.Group) {
 				if members, err := FetchGroupMembersUsers(tx, group, 0, 0); err != nil {
 					return err
