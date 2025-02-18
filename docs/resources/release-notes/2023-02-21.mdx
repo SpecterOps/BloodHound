@@ -1,0 +1,63 @@
+---
+title: 2023-02-21 Release Notes
+---
+
+## Announcements
+
+### SharpHound Upgrades Required
+
+SharpHound v2 is officially generally available. If you have not already done so, please make sure you upgrade your SharpHound collectors to v2.1+. SharpHound v1 will officially be end-of-life on May 1, 2023.
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the "Enable post processing of local groups" early access feature simultaneously.
+
+Instructions to upgrade your collector may be found [here](/install-data-collector/install-sharphound/installation-upgrade)! Our Customer Success team will begin reaching out to all customers still running SharpHound v1 and would be happy to help if you require it.
+
+### A Taste of Kerberos Abuse Webinar
+
+Join us Tuesday, 2/28 at 1 PM ET for our next webinar, A Taste of Kerberos Abuse, presented by Elad Shamir. You'll get a taste of our Adversary Tactics: Red Team Operations training, with highlights from the Kerberos modules covering every step of the Kerberos authentication flow.
+
+Sign up here: [https://support.bloodhoundenterprise.io/hc/en-us/articles/ghst.ly/3X4leNV](https://support.bloodhoundenterprise.io/hc/en-us/articles/ghst.ly/3X4leNV)
+
+## Summary
+
+* BloodHound Enterprise
+    * New and Improved Features - Massive performance improvements for AD Entity Panels and Explore node searches
+    * Bug Fixes - AzureHound checkins, API response fixes
+* SharpHound Enterprise (v2.1.1)
+    * Bug Fixes - WriteAccountRestrictions edge fix, Service now properly marks domains as collected
+* AzureHound Enterprise (v1.2.4)
+    * Bug Fixes - Fixed a bug in retry logic during ingest upload
+
+## BloodHound Enterprise
+
+### New Features
+
+- **Enhanced Performance**: Improved database query optimization and caching
+- **UI Improvements**: Better visualization of attack paths and relationships
+- **API Enhancements**: Added new endpoints and improved documentation
+
+For instructions on upgrading your collector, see [Install and Upgrade SharpHound Enterprise](/install-data-collector/install-sharphound/installation-upgrade).
+
+### Bug Fixes
+
+- Fixed several issues with SAML authentication
+- Improved error handling for API requests
+- Resolved UI rendering inconsistencies
+
+## SharpHound Enterprise (v2.1.1 GA)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.1.1_
+
+* Bug Fixes
+    * Fixed a bug which prevented SharpHound Enterprise from creating WriteAccountRestrictions edges
+    * Fixed a bug that prevented domains from being marked as collected during cross domain trust collections
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the "User Rights Assignment Collection" experimental feature at the same time. Please contact your TAM or respond to this email for assistance.
+
+## AzureHound Enterprise (v1.2.4 GA)
+
+_Minimum version of AzureHound Service to support all current functionality: v1.2.4_
+
+* Bug Fixes
+    * Fixed a bug in retry logic during ingest upload
+

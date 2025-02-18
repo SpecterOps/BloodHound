@@ -1,0 +1,46 @@
+---
+title: 2022-11-21 Release Notes
+---
+
+## Summary
+
+* BloodHound Enterprise
+    * New and Improved Features - API documentation is now available in-app.
+    * Bug Fixes - Reconciliation issue with local groups, fixes for analysis hanging occasionally, and more.
+* SharpHound Enterprise (v1.0.25 GA, v2.0.4 Early Access)
+    * _No release this week._
+* AzureHound Enterprise (v1.2.1)
+    * _No release this week._
+
+### BloodHound Enterprise
+
+* Improved Functionality
+    * API Documentation is now easily accessible within your portal. Additionally, the documentation will now support the ability to test API endpoints from within your portal.
+<Frame>
+  <img src="/assets/image-34.png" alt=""/>
+</Frame>
+<Frame>
+  <img src="/assets/image-35.png" alt=""/>
+</Frame>
+
+* Bug Fixes
+    * In some instances, on SharpHound 2.X, BloodHound Enterprise did not properly resolve the removal of local group memberships. This has been resolved, however, requires a collection of local groups for the fix to take effect in your environment.
+    * BloodHound Enterprise would occasionally hang during analysis for customers with multiple domains due to a deadlock condition. This has been resolved.
+    * Resolved an issue in which the Data Quality page would not load properly.
+    * Finished Jobs now increment by one on each job run on a collector (previously, this would increase by two in certain cases).
+
+SharpHound Enterprise (v1.0.25 GA, v2.0.4 Early Access)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.0.4_
+
+No release this week.
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the “User Rights Assignment Collection” experimental feature at the same time. Please contact your TAM or respond to this email for assistance.
+
+### AzureHound Enterprise (v1.2.1 GA)
+
+_Minimum version of AzureHound Service to support all current functionality: v1.2.1_
+
+No release this week.
+
+

@@ -1,0 +1,72 @@
+---
+title: 2023-11-06 Release (v5.2.0 - BHE Only)
+---
+
+## Announcements
+
+### SO-CON Speakers Announced
+We're so excited for SO-CON and have announced our speakers for the event! We've got some fantastic folks lined up to share knowledge with attendees!
+
+* 🗓️ March 11 - 15, 2024, at Convene in Arlington, VA
+* 🏔️ Full day, multi-track summit with presentations on a variety of security topics
+* 🎓 Four days of training classes, including our first-ever Azure Security Fundamentals course!
+
+Training students will receive free entry to the summit, and classes are available for a 25% early registration discount, with summit registration coming soon!
+
+See our speakers and sign up at [https://specterops.io/so-con/#speakers](https://specterops.io/so-con/#speakers)!
+
+### BloodHound Update: Fall 2023
+
+
+Join Andy Robbins (BloodHound cofounder and Principal Product Architect at SpecterOps) and Stephen Hinck (Director of Product Management at SpecterOps) for a recap of 2023 in BloodHound and some early looks at what's coming in the future. In this webinar:
+
+* Announcing general availability of BloodHound CE
+* Discuss new features and improvements
+* Capture and answer your questions
+* Share some of our plans for the future of the product
+
+Register at [https://ghst.ly/40rYRoZ](https://ghst.ly/40rYRoZ)
+
+## Summary
+
+* **BloodHound (v5.2.0 - BHE Only****)**
+    * New and Improved Features
+        * Custom user-saved Cypher queries
+    * Bug Fixes
+        * Fixed several inaccurate pre-saved Cypher queries
+        * Azure analysis runs will now properly display error messages when they fail
+        * Fixed multiple API endpoints and their documentation
+* **SharpHound (v2.2.1)**
+    * * _No new release._
+* **AzureHound (v2.1.5)**
+    * Bug Fixes
+        * Resolved multiple additional dead-lock resource-exhaustion condition edge cases during collection.
+
+### BloodHound (v5.2.0)
+
+#### New and Improved Features
+
+* **Custom user-saved Cypher queries** \- You can save your favorite Cypher queries directly in BloodHound. Write your query and click the "Save Query" button to give it a name and store it.
+<Frame>
+  <img src="/assets/image-17.png" alt=""/>
+</Frame>
+
+
+#### Bug Fixes
+
+* Fixed several inaccurate pre-saved Cypher queries.
+* Azure analysis runs will now properly display error messages when they fail.
+* Fixed multiple API endpoints and/or their documentation
+    * /api/v2/asset-groups/:assetGroupId/members
+    * /api/v2/asset-groups/\{asset\_group\_id}/selectors
+    * /api/v2/audit
+
+### SharpHound (v2.2.1 - BHE Only)
+
+_No new release._
+
+### AzureHound (v2.1.5)
+
+#### Bug Fixes
+
+* Resolved multiple additional dead-lock resource-exhaustion condition edge cases during collection.
