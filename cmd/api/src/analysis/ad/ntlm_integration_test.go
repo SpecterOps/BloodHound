@@ -155,7 +155,7 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 					} else if start.ID == harness.NTLMCoerceAndRelayNTLMToSMB.Group1.ID {
 						assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer2.ID)
 					} else {
-						t.Fatalf("unrecognized start node id")
+						require.FailNow(t, "unrecognized start node id")
 					}
 				}
 			}
@@ -239,15 +239,18 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 				} else {
 					require.Len(t, results, 2)
 
-					start, end, err := ops.FetchRelationshipNodes(tx, results[0])
-					require.NoError(t, err)
-					assert.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToLDAP.Group1.ID)
-					assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAP.Computer2.ID)
+					for _, result := range results {
+						start, end, err := ops.FetchRelationshipNodes(tx, result)
+						require.NoError(t, err)
 
-					start, end, err = ops.FetchRelationshipNodes(tx, results[1])
-					require.NoError(t, err)
-					assert.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToLDAP.Group5.ID)
-					assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAP.Computer7.ID)
+						if start.ID == harness.NTLMCoerceAndRelayNTLMToLDAP.Group1.ID {
+							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAP.Computer2.ID)
+						} else if start.ID == harness.NTLMCoerceAndRelayNTLMToLDAP.Group5.ID {
+							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAP.Computer7.ID)
+						} else {
+							require.FailNow(t, "unrecognized start node id")
+						}
+					}
 				}
 				return nil
 			})
@@ -303,20 +306,20 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 				} else {
 					require.Len(t, results, 3)
 
-					start, end, err := ops.FetchRelationshipNodes(tx, results[0])
-					require.NoError(t, err)
-					assert.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToLDAPS.Group1.ID)
-					assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer2.ID)
+					for _, result := range results {
+						start, end, err := ops.FetchRelationshipNodes(tx, result)
+						require.NoError(t, err)
 
-					start, end, err = ops.FetchRelationshipNodes(tx, results[1])
-					require.NoError(t, err)
-					assert.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToLDAPS.Group1.ID)
-					assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer5.ID)
-
-					start, end, err = ops.FetchRelationshipNodes(tx, results[2])
-					require.NoError(t, err)
-					assert.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToLDAPS.Group5.ID)
-					assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer7.ID)
+						if start.ID == harness.NTLMCoerceAndRelayNTLMToLDAPS.Group1.ID {
+							if end.ID != harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer2.ID && end.ID != harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer5.ID {
+								require.FailNow(t, "unrecognized end node associated with Group1")
+							}
+						} else if start.ID == harness.NTLMCoerceAndRelayNTLMToLDAPS.Group5.ID {
+							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer7.ID)
+						} else {
+							require.FailNow(t, "unrecognized start node id")
+						}
+					}
 				}
 				return nil
 			})
