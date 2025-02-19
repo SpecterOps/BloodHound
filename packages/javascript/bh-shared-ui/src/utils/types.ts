@@ -30,4 +30,4 @@ export type MappedStringLiteral<T extends string | number, V = ''> = {
     [key in T]: V;
 };
 
-export type nullish = undefined | null;
+export type nil = undefined | null | 0 | '';

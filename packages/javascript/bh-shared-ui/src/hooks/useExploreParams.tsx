@@ -22,6 +22,9 @@ interface ExploreQuery {
     secondarySearch: string | null;
     cypherSearch: string | null;
     searchType: 'node' | 'pathfinding' | 'cypher' | 'relationship' | 'composition' | null;
+    graphSelection: string | null;
+    panelSelection: string | null;
+    expandedRelationship: string[] | null;
 }
 
 export type ExploreQueryParams = Partial<ExploreQuery>;
@@ -50,13 +53,28 @@ export const useExploreParams = (): useExploreParamsReturn => {
     const secondarySearch = searchParams.get('secondarySearch');
     const cypherSearch = searchParams.get('cypherSearch');
     const searchType = parseSearchQuery(searchParams.get('searchType'));
+    const graphSelection = searchParams.get('graphSelection');
+    const panelSelection = searchParams.get('panelSelection');
+    const expandedRelationship = searchParams.getAll('expandedRelationship');
 
     const setExploreParams = setParamsFactory<ExploreQueryParams>(setSearchParams, [
         'primarySearch',
         'secondarySearch',
         'cypherSearch',
         'searchType',
+        'graphSelection',
+        'panelSelection',
+        'expandedRelationship',
     ]);
 
-    return { primarySearch, secondarySearch, cypherSearch, searchType, setExploreParams };
+    return {
+        primarySearch,
+        secondarySearch,
+        cypherSearch,
+        searchType,
+        graphSelection,
+        panelSelection,
+        expandedRelationship,
+        setExploreParams,
+    };
 };

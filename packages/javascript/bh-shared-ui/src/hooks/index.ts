@@ -24,8 +24,6 @@ export { default as useToggle } from './useToggle';
 
 export { default as useApiVersion } from './useApiVersion';
 
-export * from './useQueryParams';
-
 export * from './useConfiguration';
 
 export * from './useDataQualityStats';

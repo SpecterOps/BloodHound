@@ -15,31 +15,52 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { SetURLSearchParams } from 'react-router-dom';
-import { nullish } from './types';
+import { nil } from './types';
 
-export const isNotNullish = <T>(value: T | nullish): value is T => {
-    return value !== undefined && value !== null;
+export const isNotNullish = <T>(value: T | nil): value is T => {
+    return value !== undefined && value !== null && value !== 0 && value !== '';
 };
 
-export const setSingleParamFactory = <T>(updatedParams: T, urlParams: URLSearchParams, deleteFalsy = true) => {
+/**
+ * returns a function for updating a single search param found in updatedParams
+ * @param updatedParams all keys in the updatedParams will either update or delete the matching urlParam
+ * @param searchParams current url params
+ * @param deleteFalsy if updatedParam[key] is falsy, remove from searchParams
+ * @returns
+ */
+export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSearchParams, deleteFalsy: boolean) => {
     return (param: keyof T) => {
         const key = param as string;
         const value = (updatedParams as Record<string, string>)[key];
 
-        if (isNotNullish(value)) {
-            urlParams.set(key, value);
-        } else if (deleteFalsy) {
-            urlParams.delete(key);
+        // only set keys that have been passed via updatedParams
+        if (key in (updatedParams as Record<string, string>)) {
+            if (isNotNullish(value)) {
+                searchParams.set(key, value);
+            } else if (deleteFalsy) {
+                searchParams.delete(key);
+            }
         }
     };
 };
 
-export const setParamsFactory = <T>(setSearchParams: SetURLSearchParams, availableParams: Array<keyof T>) => {
+/**
+ * returns a function for updating all availableParams in search params.
+ * @param setSearchParams react-router-doms setSearchParams
+ * @param availableParams all params that can be controlled
+ * @param deleteFalsy if a key in availableParams is passed and it has a falsy value, this will remove it from searchParams
+ * @returns
+ */
+export const setParamsFactory = <T>(
+    setSearchParams: SetURLSearchParams,
+    availableParams: Array<keyof T>,
+    deleteFalsy = true
+) => {
     return (updatedParams: T) => {
         setSearchParams((params) => {
-            const setParams = setSingleParamFactory(updatedParams, params);
+            const setParam = setSingleParamFactory(updatedParams, params, deleteFalsy);
 
-            availableParams.forEach((param) => setParams(param));
+            availableParams.forEach((param) => setParam(param));
 
             return params;
         });
