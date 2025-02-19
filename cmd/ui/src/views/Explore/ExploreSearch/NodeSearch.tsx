@@ -14,14 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import {
-    SearchValue,
-    SourceNodeEditedAction,
-    SourceNodeSelectedAction,
-    searchbarActions,
-    useExploreParams,
-} from 'bh-shared-ui';
+import { SearchValue, SourceNodeEditedAction, SourceNodeSelectedAction, searchbarActions } from 'bh-shared-ui';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 
@@ -31,37 +24,19 @@ const NodeSearch = () => {
     const primary = useAppSelector((state) => state.search.primary);
     const { searchTerm, value: selectedItem } = primary;
 
-    const { primarySearch, expandedRelationships, setExploreParams } = useExploreParams();
-    console.log('expandedRelationships', expandedRelationships);
-    const testClick = () => {
-        const firstTime = 'node^`';
-        if (primarySearch !== firstTime) {
-            setExploreParams({ primarySearch: 'node^`', expandedRelationships: null });
-        } else {
-            setExploreParams({
-                primarySearch: 'literally anything!!',
-                secondarySearch: 'plusOne more that should stay',
-                expandedRelationships: ['', 'test another', 'can we get one more?'],
-            });
-        }
-    };
-
     const handleNodeEdited = (edit: string): SourceNodeEditedAction =>
         dispatch(searchbarActions.sourceNodeEdited(edit));
     const handleNodeSelected = (selected?: SearchValue): SourceNodeSelectedAction =>
         dispatch(searchbarActions.sourceNodeSelected(selected));
 
     return (
-        <>
-            <ExploreSearchCombobox
-                labelText={'Search Nodes'}
-                inputValue={searchTerm}
-                selectedItem={selectedItem || null}
-                handleNodeEdited={handleNodeEdited}
-                handleNodeSelected={handleNodeSelected}
-            />
-            <Button onClick={testClick} />
-        </>
+        <ExploreSearchCombobox
+            labelText={'Search Nodes'}
+            inputValue={searchTerm}
+            selectedItem={selectedItem || null}
+            handleNodeEdited={handleNodeEdited}
+            handleNodeSelected={handleNodeSelected}
+        />
     );
 };
 
