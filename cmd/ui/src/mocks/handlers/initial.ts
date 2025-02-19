@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { rest } from 'msw';
-import { createMockSearchResult } from 'src/mocks/factories';
+import { createMockSearchResult } from 'src/mocks/factories/initial';
 
 export const handlers = [
     rest.get('/api/v2/search', (req, res, ctx) => {
@@ -52,3 +52,5 @@ export const handlers = [
         );
     }),
 ];
+
+export default handlers;
