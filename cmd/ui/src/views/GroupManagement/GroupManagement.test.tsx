@@ -27,7 +27,7 @@ import {
 } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { createMockDomain } from 'src/mocks/factories';
+import { createMockDomain } from 'src/mocks/factories/initial';
 import { AppState } from 'src/store';
 import { act, render, waitFor } from '../../test-utils';
 import GroupManagement from './GroupManagement';
