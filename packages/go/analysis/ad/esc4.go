@@ -33,15 +33,10 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 )
 
-func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
+func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	// 1.
 	principals := cardinality.NewBitmap64()
 	publishedTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID)
-	domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String()
-	if err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", domain.ID, err))
-		return nil
-	}
 
 	// 2. iterate certtemplates that have an outbound `PublishedTo` edge to eca
 	for _, certTemplate := range publishedTemplates {
@@ -67,7 +62,6 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			// 2a. principals that control the cert template
 			principals.Or(
 				CalculateCrossProductNodeSets(tx,
-					domainsid,
 					groupExpansions,
 					enterpriseCAEnrollers,
 					certTemplateControllers,
@@ -76,7 +70,6 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			// 2b. principals with `Enroll/AllExtendedRights` + `Generic Write` combination on the cert template
 			principals.Or(
 				CalculateCrossProductNodeSets(tx,
-					domainsid,
 					groupExpansions,
 					enterpriseCAEnrollers,
 					principalsWithGenericWrite.Slice(),
@@ -94,7 +87,6 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 
 			// 2d. principals with `Enroll/AllExtendedRights` + `WritePKINameFlag` + `WritePKIEnrollmentFlag` on the cert template
 			principals.Or(CalculateCrossProductNodeSets(tx,
-				domainsid,
 				groupExpansions,
 				enterpriseCAEnrollers,
 				principalsWithEnrollOrAllExtendedRights.Slice(),
@@ -106,7 +98,6 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			if enrolleeSuppliesSubject {
 				principals.Or(
 					CalculateCrossProductNodeSets(tx,
-						domainsid,
 						groupExpansions,
 						enterpriseCAEnrollers,
 						principalsWithEnrollOrAllExtendedRights.Slice(),
@@ -119,7 +110,6 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 			if !requiresManagerApproval {
 				principals.Or(
 					CalculateCrossProductNodeSets(tx,
-						domainsid,
 						groupExpansions,
 						enterpriseCAEnrollers,
 						principalsWithEnrollOrAllExtendedRights.Slice(),
@@ -131,11 +121,13 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	}
 
 	principals.Each(func(value uint64) bool {
-		channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-			FromID: graph.ID(value),
-			ToID:   domain.ID,
-			Kind:   ad.ADCSESC4,
-		})
+		for _, domain := range targetDomains.Slice() {
+			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+				FromID: graph.ID(value),
+				ToID:   domain.ID,
+				Kind:   ad.ADCSESC4,
+			})
+		}
 		return true
 	})
 
@@ -596,7 +588,6 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 	var (
 		startNode  *graph.Node
-		endNode    *graph.Node
 		startNodes = graph.NodeSet{}
 
 		enrollAndNTAuthECAs cardinality.Duplex[uint64]
@@ -611,8 +602,6 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		var err error
 		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
 			return err
-		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
-			return err
 		} else {
 			return nil
 		}
@@ -621,11 +610,8 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	// Add startnode, Auth. Users, and Everyone to start nodes
-	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", endNode.ID, err))
-		return nil, err
-	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
 			return err
 		} else {
 			startNodes.AddSet(nodeSet)

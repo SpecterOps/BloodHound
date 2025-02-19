@@ -34,11 +34,8 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 )
 
-func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
-	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", domain.ID, err))
-		return nil
-	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
+func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
 		ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID)
@@ -54,21 +51,23 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else if len(groupNodes) == 0 {
 				continue
 			} else {
-				controlBitmap := CalculateCrossProductNodeSets(tx, domainsid, groupExpansions, ecaEnrollers, cache.GetCertTemplateEnrollers(template.ID))
+				controlBitmap := CalculateCrossProductNodeSets(tx, groupExpansions, ecaEnrollers, cache.GetCertTemplateEnrollers(template.ID))
 				if filtered, err := filterUserDNSResults(tx, controlBitmap, template); err != nil {
 					slog.WarnContext(ctx, fmt.Sprintf("Error filtering users from victims for esc13: %v", err))
 					continue
 				} else {
 					for _, group := range groupNodes.Slice() {
-						if groupIsContainedOrTrusted(tx, group, domain) {
-							filtered.Each(func(value uint64) bool {
-								channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-									FromID: graph.ID(value),
-									ToID:   group.ID,
-									Kind:   ad.ADCSESC13,
+						for _, domain := range targetDomains.Slice() {
+							if groupIsContainedOrTrusted(tx, group, domain) {
+								filtered.Each(func(value uint64) bool {
+									channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+										FromID: graph.ID(value),
+										ToID:   group.ID,
+										Kind:   ad.ADCSESC13,
+									})
+									return true
 								})
-								return true
-							})
+							}
 						}
 					}
 				}
@@ -223,11 +222,8 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 	}
 
 	// Add startnode, Auth. Users, and Everyone to start nodes
-	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", endNode.ID, err))
-		return nil, err
-	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
 			return err
 		} else {
 			startNodes.AddSet(nodeSet)
