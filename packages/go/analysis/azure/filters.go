@@ -73,6 +73,13 @@ func FilterGroupMembers() graph.Criteria {
 	)
 }
 
+func FilterGroupMembersUsers() graph.Criteria {
+	return query.And(
+		query.Kind(query.Relationship(), azure.MemberOf),
+		query.Kind(query.Start(), azure.User),
+	)
+}
+
 func FilterContains() graph.Criteria {
 	return query.KindIn(query.Relationship(), azure.Contains)
 }
