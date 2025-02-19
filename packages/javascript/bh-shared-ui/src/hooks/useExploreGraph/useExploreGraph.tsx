@@ -16,10 +16,10 @@
 
 import { useQuery } from 'react-query';
 import { useNotifications } from '../../providers/NotificationProvider/hooks';
-import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
+import { ExploreQueryParams, useExploreParams } from '../useExploreParams/useExploreParams';
 import { ExploreGraphQueryOptions, GraphItemMutationFn, nodeSearchGraphQuery } from './search-modes';
 
-function getExploreGraphQuery(
+export function getExploreGraphQuery(
     addNotification: ReturnType<typeof useNotifications>['addNotification'],
     paramOptions: Partial<ExploreQueryParams>,
     mutateResponse?: GraphItemMutationFn

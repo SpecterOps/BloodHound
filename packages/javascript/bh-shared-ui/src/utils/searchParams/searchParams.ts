@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { SetURLSearchParams } from 'react-router-dom';
-import { nil } from './types';
+import { nil } from '../types';
 
 export const isNotNullish = <T>(value: T | nil): value is T => {
     return value !== undefined && value !== null && value !== 0 && value !== '';
@@ -25,10 +25,10 @@ export const isNotNullish = <T>(value: T | nil): value is T => {
  * returns a function for updating a single search param found in updatedParams
  * @param updatedParams all keys in the updatedParams will either update or delete the matching urlParam
  * @param searchParams current url params
- * @param deleteFalsy if updatedParam[key] is falsy, remove from searchParams
+ * @param deleteNil if updatedParam[key] is falsy, remove from searchParams
  * @returns
  */
-export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSearchParams, deleteFalsy: boolean) => {
+export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSearchParams, deleteNil: boolean) => {
     return (param: keyof T) => {
         const key = param as string;
         const value = (updatedParams as Record<string, string>)[key];
@@ -42,8 +42,10 @@ export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSear
                 } else {
                     searchParams.set(key, value);
                 }
-            } else if (deleteFalsy) {
+            } else if (deleteNil) {
                 searchParams.delete(key);
+            } else {
+                searchParams.set(key, value);
             }
         }
     };
@@ -53,17 +55,17 @@ export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSear
  * returns a function for updating all availableParams in search params.
  * @param setSearchParams react-router-doms setSearchParams
  * @param availableParams all params that can be controlled
- * @param deleteFalsy if a key in availableParams is passed and it has a falsy value, this will remove it from searchParams
+ * @param deleteNil if a key in availableParams is passed and it has a falsy value, this will remove it from searchParams
  * @returns
  */
 export const setParamsFactory = <T>(
     setSearchParams: SetURLSearchParams,
     availableParams: Array<keyof T>,
-    deleteFalsy = true
+    deleteNil = true
 ) => {
     return (updatedParams: T) => {
         setSearchParams((params) => {
-            const setParam = setSingleParamFactory(updatedParams, params, deleteFalsy);
+            const setParam = setSingleParamFactory(updatedParams, params, deleteNil);
 
             availableParams.forEach((param) => setParam(param));
 
