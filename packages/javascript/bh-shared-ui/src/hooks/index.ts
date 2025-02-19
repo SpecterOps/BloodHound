@@ -40,6 +40,10 @@ export * from './useSavedQueries';
 
 export * from './useSearch';
 
+export * from './useExploreParams';
+
+export * from './useExploreGraph';
+
 export * from './useShowNavBar';
 
 export * from './useIsMouseDragging';
