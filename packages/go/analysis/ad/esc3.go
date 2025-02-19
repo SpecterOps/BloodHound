@@ -35,12 +35,9 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 )
 
-func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca2, domain *graph.Node, cache ADCSCache) error {
+func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca2 *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	results := cardinality.NewBitmap64()
-	if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", domain.ID, err))
-		return nil
-	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca2.ID); len(publishedCertTemplates) == 0 {
+	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca2.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else if collected, err := eca2.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
 		return fmt.Errorf("error getting enrollmentagentcollected for eca2 %d: %w", eca2.ID, err)
@@ -92,7 +89,6 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 						} else {
 							for _, eca1 := range publishedECAs {
 								tempResults := CalculateCrossProductNodeSets(tx,
-									domainsid,
 									groupExpansions,
 									certTemplateEnrollersOne,
 									certTemplateEnrollersTwo,
@@ -111,7 +107,6 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 					} else {
 						for _, eca1 := range publishedECAs {
 							tempResults := CalculateCrossProductNodeSets(tx,
-								domainsid,
 								groupExpansions,
 								certTemplateEnrollersOne,
 								certTemplateEnrollersTwo,
@@ -131,11 +126,13 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	}
 
 	results.Each(func(value uint64) bool {
-		channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-			FromID: graph.ID(value),
-			ToID:   domain.ID,
-			Kind:   ad.ADCSESC3,
-		})
+		for _, domain := range targetDomains.Slice() {
+			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+				FromID: graph.ID(value),
+				ToID:   domain.ID,
+				Kind:   ad.ADCSESC3,
+			})
+		}
 		return true
 	})
 
@@ -400,7 +397,6 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	*/
 	var (
 		startNode  *graph.Node
-		endNode    *graph.Node
 		startNodes = graph.NodeSet{}
 
 		traversalInst            = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
@@ -422,8 +418,6 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		var err error
 		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
 			return err
-		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
-			return err
 		} else {
 			return nil
 		}
@@ -432,11 +426,8 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	// Add startnode, Auth. Users, and Everyone to start nodes
-	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", endNode.ID, err))
-		return nil, err
-	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
 			return err
 		} else {
 			startNodes.AddSet(nodeSet)

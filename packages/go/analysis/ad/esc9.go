@@ -33,12 +33,10 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 )
 
-func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
+func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	results := cardinality.NewBitmap64()
 
-	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint64()); !ok {
-		return nil
-	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
+	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaEnrollers) == 0 {
 		return nil
@@ -68,23 +66,26 @@ func PostADCSESC9a(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		}
 
 		results.Each(func(value uint64) bool {
-			return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-				FromID: graph.ID(value),
-				ToID:   domain.ID,
-				Kind:   ad.ADCSESC9a,
-			})
+			for _, domain := range targetDomains.Slice() {
+				if cache.HasWeakCertBindingInForest(domain.ID.Uint64()) {
+					channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+						FromID: graph.ID(value),
+						ToID:   domain.ID,
+						Kind:   ad.ADCSESC9a,
+					})
+				}
+			}
+			return true
 		})
 
 		return nil
 	}
 }
 
-func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca, domain *graph.Node, cache ADCSCache) error {
+func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	results := cardinality.NewBitmap64()
 
-	if ok := cache.HasWeakCertBindingInForest(domain.ID.Uint64()); !ok {
-		return nil
-	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
+	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else if ecaEnrollers := cache.GetEnterpriseCAEnrollers(eca.ID); len(ecaEnrollers) == 0 {
 		return nil
@@ -111,12 +112,18 @@ func PostADCSESC9b(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		}
 
 		results.Each(func(value uint64) bool {
-			return channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-				FromID: graph.ID(value),
-				ToID:   domain.ID,
-				Kind:   ad.ADCSESC9b,
-			})
+			for _, domain := range targetDomains.Slice() {
+				if cache.HasWeakCertBindingInForest(domain.ID.Uint64()) {
+					channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+						FromID: graph.ID(value),
+						ToID:   domain.ID,
+						Kind:   ad.ADCSESC9b,
+					})
+				}
+			}
+			return true
 		})
+
 		return nil
 	}
 }
