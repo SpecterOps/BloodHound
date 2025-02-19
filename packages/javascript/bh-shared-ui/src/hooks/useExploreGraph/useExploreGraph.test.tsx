@@ -13,3 +13,28 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
+import * as modes from './search-modes';
+import { getExploreGraphQuery } from './useExploreGraph';
+
+const nodeSearchGraphQuerySpy = vi.spyOn(modes, 'nodeSearchGraphQuery');
+
+describe('useExploreGraph', () => {
+    describe('getExploreGraphQuery', () => {
+        it('returns {enabled: false} if there is not a match on the switch statement', () => {
+            const mockAddNotification = vi.fn();
+            const actual = getExploreGraphQuery(mockAddNotification, {
+                searchType: 'noMatch',
+            } as any);
+
+            expect(actual).toStrictEqual({ enabled: false });
+        });
+        it('runs nodeSearchGraphQuery when search type is node', () => {
+            const mockAddNotification = vi.fn();
+            const paramOptions = { searchType: 'node', primarySearch: 'test1' } as any;
+            getExploreGraphQuery(mockAddNotification, paramOptions);
+
+            expect(nodeSearchGraphQuerySpy).toBeCalledWith(mockAddNotification, paramOptions, undefined);
+        });
+    });
+});
