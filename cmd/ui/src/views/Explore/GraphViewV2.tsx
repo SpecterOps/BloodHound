@@ -56,7 +56,7 @@ const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
 
 const columnStyles = { height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' };
 
-const GraphView: FC = () => {
+const GraphViewV2: FC = () => {
     /* Hooks */
     const theme = useTheme();
 
@@ -299,4 +299,4 @@ const GraphView: FC = () => {
     );
 };
 
-export default GraphView;
+export default GraphViewV2;

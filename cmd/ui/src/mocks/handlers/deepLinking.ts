@@ -24,7 +24,7 @@ const handlers = [
             ctx.json({
                 data: createFeatureFlags([
                     {
-                        key: 'deep-linking',
+                        key: 'back_button_support',
                         enabled: true,
                     },
                 ]),
