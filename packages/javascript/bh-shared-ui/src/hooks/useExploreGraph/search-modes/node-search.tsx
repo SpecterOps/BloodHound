@@ -19,7 +19,7 @@ import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
 import { ExploreGraphQueryKey, ExploreGraphQueryOptions, GraphItemMutationFn } from './utils';
 
-// here we can mutate request, response, and handle errors
+// Temporary example code. To be fully implemented in BED-5445
 export const nodeSearchGraphQuery = (
     addNotification: ReturnType<typeof useNotifications>['addNotification'],
     paramOptions: Partial<ExploreQueryParams>,
