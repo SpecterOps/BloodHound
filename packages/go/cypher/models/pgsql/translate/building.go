@@ -294,10 +294,11 @@ func (s *Translator) translateTraversalPatternPartWithExpansion(isFirstTraversal
 		return err
 	} else {
 		traversalStep.Expansion.Value.Frame = expansionFrame
-		traversalStep.Expansion.Value.RecursiveConstraints = pgsql.OptionalAnd(
-			traversalStep.Expansion.Value.PrimerConstraints,
-			expansionConstraints(expansionFrame.Binding.Identifier),
-		)
+		traversalStep.Expansion.Value.RecursiveConstraints = expansionConstraints(expansionFrame.Binding.Identifier, traversalStep.Expansion.Value.MinDepth, traversalStep.Expansion.Value.MaxDepth)
+
+		// Remove the previous projections of the root and terminal node to reproject them after expansion
+		traversalStep.LeftNode.LastProjection = nil
+		traversalStep.RightNode.LastProjection = nil
 
 		if boundProjections, err := buildVisibleScopeProjections(s.query.Scope); err != nil {
 			return err

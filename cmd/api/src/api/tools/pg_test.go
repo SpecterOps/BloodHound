@@ -132,7 +132,7 @@ func TestPGMigrator(t *testing.T) {
 		})
 		require.Nil(t, err)
 
-		err = migrator.StartMigration()
+		err = migrator.StartMigrationToPG()
 		require.Nil(t, err)
 
 		// wait until migration status returns to "idle"

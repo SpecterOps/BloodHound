@@ -518,7 +518,7 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 			exprStack = append(exprStack, typedNextExpr.Unwrap())
 
 		default:
-			return fmt.Errorf("unable to format pgsql node type: %T", nextExpr)
+			panic(fmt.Errorf("unable to format pgsql node type: %T", nextExpr))
 		}
 	}
 

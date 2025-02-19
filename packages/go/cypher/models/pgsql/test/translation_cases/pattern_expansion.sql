@@ -43,9 +43,8 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s1
-                   join edge e0 on e0.id = any (s1.path)
                    join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.end_id)
+                   join node n1 on n1.id = s1.next_id)
 select s0.n0 as n, s0.n1 as e
 from s0;
 
@@ -78,14 +77,12 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s1
-                   join edge e0 on e0.id = any (s1.path)
                    join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.end_id
+                   join node n1 on n1.id = s1.next_id
             where s1.satisfied)
 select s0.n1 as e
 from s0;
 
--- todo: cypher expects the right hand binding for `r` to already be a list of relationships which seems strange
 -- case: match (n)-[r*..]->(e:NodeKind1) where n.name = 'n1' and r.prop = 'a' return e
 with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path) as (select e0.start_id,
                                                                                              e0.end_id,
@@ -105,11 +102,10 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                                                                                              e0.id = any (s1.path),
                                                                                              s1.path || e0.id
                                                                                       from s1
-                                                                                             join edge e0 on e0.start_id = s1.next_id
+                                                                                             join edge e0 on e0.start_id = s1.next_id and e0.properties ->> 'prop' = 'a'
                                                                                              join node n1 on n1.id = e0.end_id
                                                                                       where s1.depth < 10
-                                                                                        and not s1.is_cycle
-                                                                                        and e0.properties ->> 'prop' = 'a')
+                                                                                        and not s1.is_cycle)
             select (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
                     from edge e0
                     where e0.id = any (s1.path))                      as e0,
@@ -117,9 +113,8 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s1
-                   join edge e0 on e0.id = any (s1.path)
                    join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.end_id
+                   join node n1 on n1.id = s1.next_id
             where s1.satisfied)
 select s0.n1 as e
 from s0;
@@ -153,9 +148,8 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s1
-                   join edge e0 on e0.id = any (s1.path)
                    join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.end_id
+                   join node n1 on n1.id = s1.next_id
             where s1.satisfied)
 select s0.n0 as n
 from s0;
@@ -189,9 +183,8 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s1
-                   join edge e0 on e0.id = any (s1.path)
                    join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.end_id
+                   join node n1 on n1.id = s1.next_id
             where s1.satisfied),
      s2 as (select s0.e0                                                                     as e0,
                    (e1.id, e1.start_id, e1.end_id, e1.kind_id, e1.properties)::edgecomposite as e1,
@@ -235,9 +228,8 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s1
-                   join edge e0 on e0.id = any (s1.path)
                    join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.end_id
+                   join node n1 on n1.id = s1.next_id
             where s1.satisfied),
      s2 as (select s0.e0                                                                     as e0,
                    (e1.id, e1.start_id, e1.end_id, e1.kind_id, e1.properties)::edgecomposite as e1,
@@ -267,7 +259,7 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                                                                                              e2.id = any (s4.path),
                                                                                              s4.path || e2.id
                                                                                       from s4
-                                                                                             join edge e2 on e2.start_id = s4.next_id
+                                                                                             join edge e2 on e2.end_id = s4.next_id
                                                                                              join node n3 on n3.id = e2.end_id
                                                                                       where s4.depth < 10
                                                                                         and not s4.is_cycle)
@@ -280,13 +272,12 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    s4.path                                            as ep1,
                    s2.n0                                              as n0,
                    s2.n1                                              as n1,
-                   s2.n2                                              as n2,
+                   (n2.id, n2.kind_ids, n2.properties)::nodecomposite as n2,
                    (n3.id, n3.kind_ids, n3.properties)::nodecomposite as n3
             from s2,
                  s4
-                   join edge e2 on e2.id = any (s4.path)
                    join node n2 on n2.id = s4.root_id
-                   join node n3 on e2.id = s4.path[array_length(s4.path, 1)::int] and n3.id = e2.end_id)
+                   join node n3 on n3.id = s4.next_id)
 select s3.n3 as l
 from s3;
 
@@ -301,12 +292,10 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                                                                                              e0.start_id = e0.end_id,
                                                                                              array [e0.id]
                                                                                       from edge e0
-                                                                                             join node n0
-                                                                                                  on
-                                                                                                    n0.kind_ids operator (pg_catalog.&&)
-                                                                                                    array [1]::int2[] and
-                                                                                                    n0.id =
-                                                                                                    e0.start_id
+                                                                                             join node n0 on
+                                                                                        n0.kind_ids operator (pg_catalog.&&)
+                                                                                        array [1]::int2[] and
+                                                                                        n0.id = e0.start_id
                                                                                              join node n1 on n1.id = e0.end_id
                                                                                       where e0.kind_id = any (array [3]::int2[])
                                                                                       union
@@ -320,11 +309,11 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                                                                                              e0.id = any (s1.path),
                                                                                              s1.path || e0.id
                                                                                       from s1
-                                                                                             join edge e0 on e0.start_id = s1.next_id
+                                                                                             join edge e0
+                                                                                                  on e0.start_id = s1.next_id and e0.kind_id = any (array [3]::int2[])
                                                                                              join node n1 on n1.id = e0.end_id
                                                                                       where s1.depth < 10
-                                                                                        and not s1.is_cycle
-                                                                                        and e0.kind_id = any (array [3]::int2[]))
+                                                                                        and not s1.is_cycle)
             select (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
                     from edge e0
                     where e0.id = any (s1.path))                      as e0,
@@ -332,9 +321,8 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s1
-                   join edge e0 on e0.id = any (s1.path)
                    join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.end_id
+                   join node n1 on n1.id = s1.next_id
             where s1.satisfied)
 select edges_to_path(variadic ep0)::pathcomposite as p
 from s0
@@ -348,12 +336,10 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                                                                                              e0.start_id = e0.end_id,
                                                                                              array [e0.id]
                                                                                       from edge e0
-                                                                                             join node n0
-                                                                                                  on
-                                                                                                    n0.kind_ids operator (pg_catalog.&&)
-                                                                                                    array [1]::int2[] and
-                                                                                                    n0.id =
-                                                                                                    e0.start_id
+                                                                                             join node n0 on
+                                                                                        n0.kind_ids operator (pg_catalog.&&)
+                                                                                        array [1]::int2[] and
+                                                                                        n0.id = e0.start_id
                                                                                              join node n1 on n1.id = e0.end_id
                                                                                       union
                                                                                       select s1.root_id,
@@ -374,9 +360,8 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s1
-                   join edge e0 on e0.id = any (s1.path)
                    join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.end_id
+                   join node n1 on n1.id = s1.next_id
             where s1.satisfied
               and n0.id <> n1.id)
 select edges_to_path(variadic ep0)::pathcomposite as p
@@ -393,14 +378,12 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                                                                                              e0.start_id = e0.end_id,
                                                                                              array [e0.id]
                                                                                       from edge e0
-                                                                                             join node n0
-                                                                                                  on n0.properties ->>
-                                                                                                     'objectid' like
-                                                                                                     '%1234' and
-                                                                                                     n0.kind_ids operator (pg_catalog.&&)
-                                                                                                     array [1]::int2[] and
-                                                                                                     n0.id =
-                                                                                                     e0.start_id
+                                                                                             join node n0 on
+                                                                                        n0.properties ->>
+                                                                                        'objectid' like '%1234' and
+                                                                                        n0.kind_ids operator (pg_catalog.&&)
+                                                                                        array [1]::int2[] and
+                                                                                        n0.id = e0.start_id
                                                                                              join node n1 on n1.id = e0.end_id
                                                                                       where e0.kind_id = any (array [3, 4]::int2[])
                                                                                       union
@@ -414,11 +397,11 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                                                                                              e0.id = any (s1.path),
                                                                                              s1.path || e0.id
                                                                                       from s1
-                                                                                             join edge e0 on e0.start_id = s1.next_id
+                                                                                             join edge e0
+                                                                                                  on e0.start_id = s1.next_id and e0.kind_id = any (array [3, 4]::int2[])
                                                                                              join node n1 on n1.id = e0.end_id
                                                                                       where s1.depth < 10
-                                                                                        and not s1.is_cycle
-                                                                                        and e0.kind_id = any (array [3, 4]::int2[]))
+                                                                                        and not s1.is_cycle)
             select (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
                     from edge e0
                     where e0.id = any (s1.path))                      as e0,
@@ -426,9 +409,8 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s1
-                   join edge e0 on e0.id = any (s1.path)
                    join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.end_id
+                   join node n1 on n1.id = s1.next_id
             where s1.satisfied)
 select edges_to_path(variadic ep0)::pathcomposite as p
 from s0;
@@ -461,11 +443,11 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                                                                                              e0.id = any (s1.path),
                                                                                              s1.path || e0.id
                                                                                       from s1
-                                                                                             join edge e0 on e0.start_id = s1.next_id
+                                                                                             join edge e0
+                                                                                                  on e0.start_id = s1.next_id and e0.kind_id = any (array [3]::int2[])
                                                                                              join node n1 on n1.id = e0.end_id
                                                                                       where s1.depth < 10
-                                                                                        and not s1.is_cycle
-                                                                                        and e0.kind_id = any (array [3]::int2[]))
+                                                                                        and not s1.is_cycle)
             select (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
                     from edge e0
                     where e0.id = any (s1.path))                      as e0,
@@ -473,86 +455,40 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s1
-                   join edge e0 on e0.id = any (s1.path)
                    join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.end_id
-            where s1.satisfied)
-select edges_to_path(variadic ep0)::pathcomposite as p
-from s0
-limit 10;
-
--- todo: match p = (n:NodeKind1)<-[:EdgeKind1*1..]-(m:NodeKind2) where n.objectid = '1234' return p limit 10
-with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path) as (select e0.start_id,
-                                                                                             e0.end_id,
-                                                                                             1,
-                                                                                             n1.kind_ids operator (pg_catalog.&&) array [2]::int2[],
-                                                                                             e0.start_id = e0.end_id,
-                                                                                             array [e0.id]
-                                                                                      from edge e0
-                                                                                             join node n0 on
-                                                                                        n0.properties ->> 'objectid' =
-                                                                                        '1234' and
-                                                                                        n0.kind_ids operator (pg_catalog.&&)
-                                                                                        array [1]::int2[] and
-                                                                                        n0.id = e0.end_id
-                                                                                             join node n1 on n1.id = e0.start_id
-                                                                                      where e0.kind_id = any (array [3]::int2[])
-                                                                                      union
-                                                                                      select s1.root_id,
-                                                                                             e0.end_id,
-                                                                                             s1.depth + 1,
-                                                                                             n1.kind_ids operator (pg_catalog.&&) array [2]::int2[],
-                                                                                             e0.id = any (s1.path),
-                                                                                             s1.path || e0.id
-                                                                                      from s1
-                                                                                             join edge e0 on e0.start_id = s1.next_id
-                                                                                             join node n1 on n1.id = e0.start_id
-                                                                                      where s1.depth < 10
-                                                                                        and not s1.is_cycle
-                                                                                        and e0.kind_id = any (array [3]::int2[]))
-            select (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
-                    from edge e0
-                    where e0.id = any (s1.path))                      as e0,
-                   s1.path                                            as ep0,
-                   (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
-                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
-            from s1
-                   join edge e0 on e0.id = any (s1.path)
-                   join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.start_id
+                   join node n1 on n1.id = s1.next_id
             where s1.satisfied)
 select edges_to_path(variadic ep0)::pathcomposite as p
 from s0
 limit 10;
 
 -- case: match p = (:NodeKind1)<-[:EdgeKind1|EdgeKind2*..]-() return p limit 10
-with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path) as (select e0.start_id,
-                                                                                             e0.end_id,
+with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path) as (select e0.end_id,
+                                                                                             e0.start_id,
                                                                                              1,
                                                                                              false,
-                                                                                             e0.start_id = e0.end_id,
+                                                                                             e0.end_id = e0.start_id,
                                                                                              array [e0.id]
                                                                                       from edge e0
-                                                                                             join node n0
-                                                                                                  on
-                                                                                                    n0.kind_ids operator (pg_catalog.&&)
-                                                                                                    array [1]::int2[] and
-                                                                                                    n0.id = e0.end_id
+                                                                                             join node n0 on
+                                                                                        n0.kind_ids operator (pg_catalog.&&)
+                                                                                        array [1]::int2[] and
+                                                                                        n0.id = e0.end_id
                                                                                              join node n1 on n1.id = e0.start_id
                                                                                       where e0.kind_id = any (array [3, 4]::int2[])
                                                                                       union
                                                                                       select s1.root_id,
-                                                                                             e0.end_id,
+                                                                                             e0.start_id,
                                                                                              s1.depth + 1,
                                                                                              false,
                                                                                              e0.id = any (s1.path),
                                                                                              s1.path || e0.id
                                                                                       from s1
-                                                                                             join edge e0 on e0.start_id = s1.next_id
+                                                                                             join edge e0
+                                                                                                  on e0.end_id = s1.next_id and e0.kind_id = any (array [3, 4]::int2[])
                                                                                              join node n1 on n1.id = e0.start_id
                                                                                       where s1.depth < 10
-                                                                                        and not s1.is_cycle
-                                                                                        and e0.kind_id = any (array [3, 4]::int2[]))
+                                                                                        and not s1.is_cycle)
             select (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
                     from edge e0
                     where e0.id = any (s1.path))                      as e0,
@@ -560,41 +496,39 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s1
-                   join edge e0 on e0.id = any (s1.path)
                    join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.start_id)
+                   join node n1 on n1.id = s1.next_id)
 select edges_to_path(variadic ep0)::pathcomposite as p
 from s0
 limit 10;
 
 -- case: match p = (:NodeKind1)<-[:EdgeKind1|EdgeKind2*..]-(:NodeKind2)<-[:EdgeKind1|EdgeKind2*..]-(:NodeKind1) return p limit 10
-with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path) as (select e0.start_id,
-                                                                                             e0.end_id,
+with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path) as (select e0.end_id,
+                                                                                             e0.start_id,
                                                                                              1,
                                                                                              n1.kind_ids operator (pg_catalog.&&) array [2]::int2[],
-                                                                                             e0.start_id = e0.end_id,
+                                                                                             e0.end_id = e0.start_id,
                                                                                              array [e0.id]
                                                                                       from edge e0
-                                                                                             join node n0
-                                                                                                  on
-                                                                                                    n0.kind_ids operator (pg_catalog.&&)
-                                                                                                    array [1]::int2[] and
-                                                                                                    n0.id = e0.end_id
+                                                                                             join node n0 on
+                                                                                        n0.kind_ids operator (pg_catalog.&&)
+                                                                                        array [1]::int2[] and
+                                                                                        n0.id = e0.end_id
                                                                                              join node n1 on n1.id = e0.start_id
                                                                                       where e0.kind_id = any (array [3, 4]::int2[])
                                                                                       union
                                                                                       select s1.root_id,
-                                                                                             e0.end_id,
+                                                                                             e0.start_id,
                                                                                              s1.depth + 1,
                                                                                              n1.kind_ids operator (pg_catalog.&&) array [2]::int2[],
                                                                                              e0.id = any (s1.path),
                                                                                              s1.path || e0.id
                                                                                       from s1
-                                                                                             join edge e0 on e0.start_id = s1.next_id
+                                                                                             join edge e0
+                                                                                                  on e0.end_id = s1.next_id and e0.kind_id = any (array [3, 4]::int2[])
                                                                                              join node n1 on n1.id = e0.start_id
                                                                                       where s1.depth < 10
-                                                                                        and not s1.is_cycle
-                                                                                        and e0.kind_id = any (array [3, 4]::int2[]))
+                                                                                        and not s1.is_cycle)
             select (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
                     from edge e0
                     where e0.id = any (s1.path))                      as e0,
@@ -602,9 +536,8 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s1
-                   join edge e0 on e0.id = any (s1.path)
                    join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.start_id
+                   join node n1 on n1.id = s1.next_id
             where s1.satisfied),
      s2 as (with recursive s3(root_id, next_id, depth, satisfied, is_cycle, path) as (select e1.start_id,
                                                                                              e1.end_id,
@@ -613,11 +546,10 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                                                                                              e1.start_id = e1.end_id,
                                                                                              array [e1.id]
                                                                                       from s0
-                                                                                             join edge e1
-                                                                                                  on e1.kind_id = any
-                                                                                                     (array [3, 4]::int2[]) and
-                                                                                                     (s0.e0).start_id =
-                                                                                                     e1.end_id
+                                                                                             join edge e1 on
+                                                                                        e1.kind_id = any
+                                                                                        (array [3, 4]::int2[]) and
+                                                                                        (s0.e0).start_id = e1.end_id
                                                                                              join node n2 on n2.id = e1.start_id
                                                                                       union
                                                                                       select s3.root_id,
@@ -638,13 +570,12 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    s0.ep0                                             as ep0,
                    s3.path                                            as ep1,
                    s0.n0                                              as n0,
-                   s0.n1                                              as n1,
+                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1,
                    (n2.id, n2.kind_ids, n2.properties)::nodecomposite as n2
             from s0,
                  s3
-                   join edge e1 on e1.id = any (s3.path)
                    join node n1 on n1.id = s3.root_id
-                   join node n2 on e1.id = s3.path[array_length(s3.path, 1)::int] and n2.id = e1.start_id)
+                   join node n2 on n2.id = s3.next_id)
 select edges_to_path(variadic s2.ep1 || s2.ep0)::pathcomposite as p
 from s2
 limit 10;
@@ -677,11 +608,11 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                                                                                              e0.id = any (s1.path),
                                                                                              s1.path || e0.id
                                                                                       from s1
-                                                                                             join edge e0 on e0.start_id = s1.next_id
+                                                                                             join edge e0
+                                                                                                  on e0.start_id = s1.next_id and e0.kind_id = any (array [3, 4]::int2[])
                                                                                              join node n1 on n1.id = e0.end_id
-                                                                                      where s1.depth < 10
-                                                                                        and not s1.is_cycle
-                                                                                        and e0.kind_id = any (array [3, 4]::int2[]))
+                                                                                      where s1.depth < 2
+                                                                                        and not s1.is_cycle)
             select (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
                     from edge e0
                     where e0.id = any (s1.path))                      as e0,
@@ -689,10 +620,59 @@ with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path
                    (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
                    (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
             from s1
-                   join edge e0 on e0.id = any (s1.path)
                    join node n0 on n0.id = s1.root_id
-                   join node n1 on e0.id = s1.path[array_length(s1.path, 1)::int] and n1.id = e0.end_id
+                   join node n1 on n1.id = s1.next_id
             where s1.satisfied)
 select edges_to_path(variadic ep0)::pathcomposite as p
 from s0
 limit 10;
+
+-- case: match p = (t:NodeKind2)<-[:EdgeKind1*1..]-(a) where (a:NodeKind1 or a:NodeKind2) and t.objectid ends with '-512' return p limit 1000
+with s0 as (with recursive s1(root_id, next_id, depth, satisfied, is_cycle, path) as (select e0.end_id,
+                                                                                             e0.start_id,
+                                                                                             1,
+                                                                                             (n1.kind_ids operator (pg_catalog.&&)
+                                                                                              array [1]::int2[] or
+                                                                                              n1.kind_ids operator (pg_catalog.&&)
+                                                                                              array [2]::int2[]),
+                                                                                             e0.end_id = e0.start_id,
+                                                                                             array [e0.id]
+                                                                                      from edge e0
+                                                                                             join node n0 on
+                                                                                        n0.properties ->>
+                                                                                        'objectid' like '%-512' and
+                                                                                        n0.kind_ids operator (pg_catalog.&&)
+                                                                                        array [2]::int2[] and
+                                                                                        n0.id = e0.end_id
+                                                                                             join node n1 on n1.id = e0.start_id
+                                                                                      where e0.kind_id = any (array [3]::int2[])
+                                                                                      union
+                                                                                      select s1.root_id,
+                                                                                             e0.start_id,
+                                                                                             s1.depth + 1,
+                                                                                             (n1.kind_ids operator (pg_catalog.&&)
+                                                                                              array [1]::int2[] or
+                                                                                              n1.kind_ids operator (pg_catalog.&&)
+                                                                                              array [2]::int2[]),
+                                                                                             e0.id = any (s1.path),
+                                                                                             s1.path || e0.id
+                                                                                      from s1
+                                                                                             join edge e0
+                                                                                                  on e0.end_id = s1.next_id and e0.kind_id = any (array [3]::int2[])
+                                                                                             join node n1 on n1.id = e0.start_id
+                                                                                      where s1.depth < 10
+                                                                                        and not s1.is_cycle)
+            select (select array_agg((e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite)
+                    from edge e0
+                    where e0.id = any (s1.path))                      as e0,
+                   s1.path                                            as ep0,
+                   (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0,
+                   (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1
+            from s1
+                   join node n0 on n0.id = s1.root_id
+                   join node n1 on n1.id = s1.next_id
+            where s1.satisfied)
+select edges_to_path(variadic ep0)::pathcomposite as p
+from s0
+limit 1000;
+

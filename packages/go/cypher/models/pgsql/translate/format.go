@@ -19,6 +19,7 @@ package translate
 import (
 	"bytes"
 	"context"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	cypherFormat "github.com/specterops/bloodhound/cypher/models/cypher/format"
@@ -41,6 +42,8 @@ func FromCypher(ctx context.Context, regularQuery *cypher.RegularQuery, kindMapp
 	if err := emitter.Write(regularQuery, output); err != nil {
 		return format.Formatted{}, err
 	}
+
+	slog.Info(output.String())
 
 	output.WriteString("\n")
 

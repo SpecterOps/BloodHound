@@ -26,19 +26,19 @@ import (
 )
 
 const (
-	expansionRootID     pgsql.Identifier = "root_id"
-	nextExpansionNodeID pgsql.Identifier = "next_id"
-	expansionDepth      pgsql.Identifier = "depth"
-	expansionSatisfied  pgsql.Identifier = "satisfied"
-	expansionIsCycle    pgsql.Identifier = "is_cycle"
-	expansionPath       pgsql.Identifier = "path"
+	expansionRootID    pgsql.Identifier = "root_id"
+	expansionNextID    pgsql.Identifier = "next_id"
+	expansionDepth     pgsql.Identifier = "depth"
+	expansionSatisfied pgsql.Identifier = "satisfied"
+	expansionIsCycle   pgsql.Identifier = "is_cycle"
+	expansionPath      pgsql.Identifier = "path"
 )
 
 func expansionColumns() pgsql.RecordShape {
 	return pgsql.RecordShape{
 		Columns: []pgsql.Identifier{
 			expansionRootID,
-			nextExpansionNodeID,
+			expansionNextID,
 			expansionDepth,
 			expansionSatisfied,
 			expansionIsCycle,
