@@ -103,6 +103,12 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 		groupExpansions, computers, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
 
+		ldapSigningCache, err := ad2.FetchLDAPSigningCache(testContext.Context(), db)
+		require.NoError(t, err)
+
+		protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, groupExpansions)
+		require.NoError(t, err)
+
 		for _, domain := range domains {
 			innerDomain := domain
 
@@ -110,9 +116,16 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 				for _, computer := range computers {
 					innerComputer := computer
 					domainSid, _ := innerDomain.Properties.Get(ad.DomainSID.String()).String()
-					authenticatedUserID := authenticatedUsers[domainSid]
 
-					if err = ad2.PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID); err != nil {
+					if authenticatedUserID, ok := authenticatedUsers[domainSid]; !ok {
+						t.Fatalf("authenticated user not found for %s", domainSid)
+					} else if protectedUsersForDomain, ok := protectedUsersCache[domainSid]; !ok {
+						continue
+					} else if ldapSigningForDomain, ok := ldapSigningCache[domainSid]; !ok {
+						continue
+					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
+						continue
+					} else if err = ad2.PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID); err != nil {
 						t.Logf("failed post processig for %s: %v", ad.CoerceAndRelayNTLMToSMB.String(), err)
 					}
 				}
@@ -131,13 +144,19 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 			})); err != nil {
 				t.Fatalf("error fetching ntlm to smb edges in integration test; %v", err)
 			} else {
-				require.Len(t, results, 1)
-				rel := results[0]
-				start, end, err := ops.FetchRelationshipNodes(tx, rel)
+				require.Len(t, results, 2)
+
+				start, end, err := ops.FetchRelationshipNodes(tx, results[0])
 				require.NoError(t, err)
 
-				require.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToSMB.AuthenticatedUsers.ID)
-				require.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer8.ID)
+				assert.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Group2.ID)
+				assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer9.ID)
+
+				start, end, err = ops.FetchRelationshipNodes(tx, results[1])
+				require.NoError(t, err)
+
+				assert.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Group1.ID)
+				assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer2.ID)
 			}
 			return nil
 		})

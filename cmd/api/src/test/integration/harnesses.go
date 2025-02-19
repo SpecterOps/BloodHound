@@ -8503,7 +8503,7 @@ type OwnsWriteOwnerPriorCollectorVersions struct {
 	// Domain 1
 	Domain1_BlockImplicitOwnerRights *graph.Node
 
-	//// Object owners
+	// // Object owners
 	Domain1_User101_Owner           *graph.Node
 	Domain1_User102_DomainAdmin     *graph.Node
 	Domain1_User103_EnterpriseAdmin *graph.Node
@@ -8511,7 +8511,7 @@ type OwnsWriteOwnerPriorCollectorVersions struct {
 	Domain1_Group1_DomainAdmins     *graph.Node
 	Domain1_Group2_EnterpriseAdmins *graph.Node
 
-	//// Owned objects
+	// // Owned objects
 	Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv                *graph.Node
 	Domain1_Computer2_NoOwnerRights_OwnerIsDA                     *graph.Node
 	Domain1_Computer3_NoOwnerRights_OwnerIsEA                     *graph.Node
@@ -8551,11 +8551,11 @@ type OwnsWriteOwnerPriorCollectorVersions struct {
 	// Domain 2
 	Domain2_DoNotBlockImplicitOwnerRights *graph.Node
 
-	//// Object owners
+	// // Object owners
 	Domain2_User1_Owner      *graph.Node
 	Domain2_User2_WriteOwner *graph.Node
 
-	//// Owned objects
+	// // Owned objects
 	Domain2_Computer1_NoOwnerRights                               *graph.Node
 	Domain2_Computer2_AbusableOwnerRightsNoneInherited            *graph.Node
 	Domain2_Computer3_AbusableOwnerRightsInherited                *graph.Node
@@ -8577,27 +8577,27 @@ func (s *OwnsWriteOwnerPriorCollectorVersions) Setup(graphTestContext *GraphTest
 	s.Domain1_BlockImplicitOwnerRights.Properties.Set(ad.DSHeuristics.String(), "00000000000000000000000000001")
 	graphTestContext.UpdateNode(s.Domain1_BlockImplicitOwnerRights)
 
-	//// Object owners
+	// // Object owners
 	s.Domain1_User101_Owner = graphTestContext.NewActiveDirectoryUser("User101_Owner", domainSid)
 	s.Domain1_User102_DomainAdmin = graphTestContext.NewActiveDirectoryUser("User102_DomainAdmin", domainSid)
 	s.Domain1_User103_EnterpriseAdmin = graphTestContext.NewActiveDirectoryUser("User103_EnterpriseAdmin", domainSid)
 	s.Domain1_User104_WriteOwner = graphTestContext.NewActiveDirectoryUser("User104_WriteOwner", domainSid)
 
-	////// Add the Domain Admins group and member
+	// //// Add the Domain Admins group and member
 	s.Domain1_Group1_DomainAdmins = graphTestContext.NewActiveDirectoryGroup("Domain Admins", domainSid)
 	s.Domain1_Group1_DomainAdmins.Properties.Set(common.ObjectID.String(), domainSid+"-512")
 	graphTestContext.UpdateNode(s.Domain1_Group1_DomainAdmins)
 	graphTestContext.NewRelationship(s.Domain1_User102_DomainAdmin, s.Domain1_Group1_DomainAdmins, ad.MemberOf)
 
-	////// Add the Enterprise Admins group and member
+	// //// Add the Enterprise Admins group and member
 	s.Domain1_Group2_EnterpriseAdmins = graphTestContext.NewActiveDirectoryGroup("Enterprise Admins", domainSid)
 	s.Domain1_Group2_EnterpriseAdmins.Properties.Set(common.ObjectID.String(), domainSid+"-519")
 	graphTestContext.UpdateNode(s.Domain1_Group2_EnterpriseAdmins)
 	graphTestContext.NewRelationship(s.Domain1_User103_EnterpriseAdmin, s.Domain1_Group2_EnterpriseAdmins, ad.MemberOf)
 
-	//// Owned objects
+	// // Owned objects
 
-	////// Computers
+	// //// Computers
 	s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("Computer1_NoOwnerRights_OwnerIsLowPriv", domainSid)
 	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv, ad.OwnsRaw)
 	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv, ad.WriteOwnerRaw)
@@ -8644,7 +8644,7 @@ func (s *OwnsWriteOwnerPriorCollectorVersions) Setup(graphTestContext *GraphTest
 	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer8_OnlyNonabusableOwnerRightsInherited, ad.OwnsRaw)
 	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer8_OnlyNonabusableOwnerRightsInherited, ad.WriteOwnerRaw)
 
-	////// MSAs
+	// //// MSAs
 	s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("MSA1_NoOwnerRights_OwnerIsLowPriv", domainSid)
 	s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.MSA.String(), true)
 	graphTestContext.UpdateNode(s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv)
@@ -8707,7 +8707,7 @@ func (s *OwnsWriteOwnerPriorCollectorVersions) Setup(graphTestContext *GraphTest
 	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited, ad.OwnsRaw)
 	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited, ad.WriteOwnerRaw)
 
-	////// GMSAs
+	// //// GMSAs
 	s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("GMSA1_NoOwnerRights_OwnerIsLowPriv", domainSid)
 	s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.GMSA.String(), true)
 	graphTestContext.UpdateNode(s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv)
@@ -8770,7 +8770,7 @@ func (s *OwnsWriteOwnerPriorCollectorVersions) Setup(graphTestContext *GraphTest
 	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited, ad.OwnsRaw)
 	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited, ad.WriteOwnerRaw)
 
-	////// Users
+	// //// Users
 	s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryUser("User1_NoOwnerRights_OwnerIsLowPriv", domainSid)
 	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv, ad.OwnsRaw)
 	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv, ad.WriteOwnerRaw)
@@ -8823,13 +8823,13 @@ func (s *OwnsWriteOwnerPriorCollectorVersions) Setup(graphTestContext *GraphTest
 	s.Domain2_DoNotBlockImplicitOwnerRights.Properties.Set(ad.DSHeuristics.String(), "00000000000000000000000000000")
 	graphTestContext.UpdateNode(s.Domain2_DoNotBlockImplicitOwnerRights)
 
-	//// Object owners
+	// // Object owners
 	s.Domain2_User1_Owner = graphTestContext.NewActiveDirectoryUser("User1_Owner", domainSid)
 	s.Domain2_User2_WriteOwner = graphTestContext.NewActiveDirectoryUser("User2_WriteOwner", domainSid)
 
-	//// Owned objects
+	// // Owned objects
 
-	////// Computers
+	// //// Computers
 	s.Domain2_Computer1_NoOwnerRights = graphTestContext.NewActiveDirectoryComputer("Computer1_NoOwnerRights", domainSid)
 	graphTestContext.NewRelationship(s.Domain2_User1_Owner, s.Domain2_Computer1_NoOwnerRights, ad.OwnsRaw)
 	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer1_NoOwnerRights, ad.WriteOwnerRaw)
@@ -8917,36 +8917,105 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.AuthenticatedUsersGroup)
 }
 
-type NTLMCoerceAndRelayNTLMToSMB struct {
-	AuthenticatedUsers *graph.Node
-	DomainAdminsUser   *graph.Node
-	ServerAdmins       *graph.Node
-	Computer3          *graph.Node
-	Computer8          *graph.Node
-	Domain             *graph.Node
+type CoerceAndRelayNTLMToSMB struct {
+	Computer1  *graph.Node
+	Computer10 *graph.Node
+	Computer2  *graph.Node
+	Computer3  *graph.Node
+	Computer4  *graph.Node
+	Computer5  *graph.Node
+	Computer6  *graph.Node
+	Computer7  *graph.Node
+	Computer8  *graph.Node
+	Computer9  *graph.Node
+	Domain1    *graph.Node
+	Domain2    *graph.Node
+	Group1     *graph.Node
+	Group2     *graph.Node
+	Group3     *graph.Node
+	Group4     *graph.Node
+	Group5     *graph.Node
+	Group6     *graph.Node
+	Group7     *graph.Node
+	Group8     *graph.Node
 }
 
-func (s *NTLMCoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
-	domainSid := RandomDomainSID()
-	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
-	s.AuthenticatedUsers = graphTestContext.NewActiveDirectoryGroup("Authenticated Users", domainSid)
-	s.AuthenticatedUsers.Properties.Set(common.ObjectID.String(), fmt.Sprintf("authenticated-users%s", adAnalysis.AuthenticatedUsersSuffix))
-	graphTestContext.UpdateNode(s.AuthenticatedUsers)
+func (s *CoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+	domain2Sid := RandomDomainSID()
 
-	s.DomainAdminsUser = graphTestContext.NewActiveDirectoryUser("Domain Admin User", domainSid)
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
 
-	s.ServerAdmins = graphTestContext.NewActiveDirectoryGroup("Server Admins", domainSid)
-	graphTestContext.UpdateNode(s.ServerAdmins)
-	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domainSid)
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
+	s.Computer2.Properties.Set(ad.SMBSigning.String(), false)
+	graphTestContext.UpdateNode(s.Computer2)
 
-	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domainSid)
-	s.Computer8.Properties.Set(ad.SMBSigning.String(), false)
-	s.Computer8.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
-	graphTestContext.UpdateNode(s.Computer8)
+	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domain2Sid)
 
-	graphTestContext.NewRelationship(s.Computer3, s.ServerAdmins, ad.MemberOf)
-	graphTestContext.NewRelationship(s.ServerAdmins, s.Computer8, ad.AdminTo)
-	graphTestContext.NewRelationship(s.Computer8, s.DomainAdminsUser, ad.HasSession)
+	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domain2Sid)
+	s.Computer4.Properties.Set(ad.SMBSigning.String(), true)
+	graphTestContext.UpdateNode(s.Computer4)
+
+	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domain2Sid)
+
+	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domain2Sid)
+	s.Computer6.Properties.Set(ad.SMBSigning.String(), false)
+	graphTestContext.UpdateNode(s.Computer6)
+
+	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domain2Sid)
+	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domain2Sid)
+
+	s.Computer9 = graphTestContext.NewActiveDirectoryComputer("Computer9", domain2Sid)
+	s.Computer9.Properties.Set(ad.SMBSigning.String(), false)
+	graphTestContext.UpdateNode(s.Computer2)
+
+	s.Computer10 = graphTestContext.NewActiveDirectoryComputer("Computer10", domain2Sid)
+	s.Computer10.Properties.Set(ad.RestrictOutboundNTLM.String(), true)
+	graphTestContext.UpdateNode(s.Computer10)
+
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domain1Sid, false, true)
+	s.Domain1.Properties.Set(ad.FunctionalLevel.String(), "2008")
+	graphTestContext.UpdateNode(s.Domain1)
+
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domain2Sid, false, true)
+	s.Domain2.Properties.Set(ad.FunctionalLevel.String(), "2016")
+	graphTestContext.UpdateNode(s.Domain2)
+
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1%s", adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group1)
+
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain2Sid)
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2%s", adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group2)
+
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domain1Sid)
+
+	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
+	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group4%s", adAnalysis.ProtectedUsersSuffix))
+	s.Group4.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN1")
+
+	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain2Sid)
+
+	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain2Sid)
+	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group6%s", adAnalysis.ProtectedUsersSuffix))
+	s.Group6.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN2")
+
+	s.Group7 = graphTestContext.NewActiveDirectoryGroup("Group7", domain2Sid)
+	s.Group8 = graphTestContext.NewActiveDirectoryGroup("Group8", domain2Sid)
+	graphTestContext.NewRelationship(s.Group1, s.Computer2, ad.CoerceAndRelayNTLMToSMB)
+	graphTestContext.NewRelationship(s.Computer1, s.Computer2, ad.AdminTo)
+	graphTestContext.NewRelationship(s.Computer1, s.Group4, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer3, s.Group5, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group5, s.Group6, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer7, s.Computer4, ad.AdminTo)
+	graphTestContext.NewRelationship(s.Computer7, s.Computer5, ad.AdminTo)
+	graphTestContext.NewRelationship(s.Group5, s.Computer6, ad.AdminTo)
+	graphTestContext.NewRelationship(s.Group8, s.Computer9, ad.AdminTo)
+	graphTestContext.NewRelationship(s.Computer8, s.Group7, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group7, s.Group8, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group2, s.Computer9, ad.CoerceAndRelayNTLMToSMB)
+	graphTestContext.NewRelationship(s.Computer10, s.Computer6, ad.AdminTo)
 }
 
 type OwnsWriteOwner struct {
@@ -8954,7 +9023,7 @@ type OwnsWriteOwner struct {
 	// Domain 1
 	Domain1_BlockImplicitOwnerRights *graph.Node
 
-	//// Object owners
+	// // Object owners
 	Domain1_User101_Owner           *graph.Node
 	Domain1_User102_DomainAdmin     *graph.Node
 	Domain1_User103_EnterpriseAdmin *graph.Node
@@ -8962,7 +9031,7 @@ type OwnsWriteOwner struct {
 	Domain1_Group1_DomainAdmins     *graph.Node
 	Domain1_Group2_EnterpriseAdmins *graph.Node
 
-	//// Owned objects
+	// // Owned objects
 	Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv                *graph.Node
 	Domain1_Computer2_NoOwnerRights_OwnerIsDA                     *graph.Node
 	Domain1_Computer3_NoOwnerRights_OwnerIsEA                     *graph.Node
@@ -9002,11 +9071,11 @@ type OwnsWriteOwner struct {
 	// Domain 2
 	Domain2_DoNotBlockImplicitOwnerRights *graph.Node
 
-	//// Object owners
+	// // Object owners
 	Domain2_User1_Owner      *graph.Node
 	Domain2_User2_WriteOwner *graph.Node
 
-	//// Owned objects
+	// // Owned objects
 	Domain2_Computer1_NoOwnerRights                               *graph.Node
 	Domain2_Computer2_AbusableOwnerRightsNoneInherited            *graph.Node
 	Domain2_Computer3_AbusableOwnerRightsInherited                *graph.Node
@@ -9023,27 +9092,27 @@ func (s *OwnsWriteOwner) Setup(graphTestContext *GraphTestContext) {
 	s.Domain1_BlockImplicitOwnerRights.Properties.Set(ad.DSHeuristics.String(), "00000000000000000000000000001")
 	graphTestContext.UpdateNode(s.Domain1_BlockImplicitOwnerRights)
 
-	//// Object owners
+	// // Object owners
 	s.Domain1_User101_Owner = graphTestContext.NewActiveDirectoryUser("User101_Owner", domainSid)
 	s.Domain1_User102_DomainAdmin = graphTestContext.NewActiveDirectoryUser("User102_DomainAdmin", domainSid)
 	s.Domain1_User103_EnterpriseAdmin = graphTestContext.NewActiveDirectoryUser("User103_EnterpriseAdmin", domainSid)
 	s.Domain1_User104_WriteOwner = graphTestContext.NewActiveDirectoryUser("User104_WriteOwner", domainSid)
 
-	////// Add the Domain Admins group and member
+	// //// Add the Domain Admins group and member
 	s.Domain1_Group1_DomainAdmins = graphTestContext.NewActiveDirectoryGroup("Domain Admins", domainSid)
 	s.Domain1_Group1_DomainAdmins.Properties.Set(common.ObjectID.String(), domainSid+"-512")
 	graphTestContext.UpdateNode(s.Domain1_Group1_DomainAdmins)
 	graphTestContext.NewRelationship(s.Domain1_User102_DomainAdmin, s.Domain1_Group1_DomainAdmins, ad.MemberOf)
 
-	////// Add the Enterprise Admins group and member
+	// //// Add the Enterprise Admins group and member
 	s.Domain1_Group2_EnterpriseAdmins = graphTestContext.NewActiveDirectoryGroup("Enterprise Admins", domainSid)
 	s.Domain1_Group2_EnterpriseAdmins.Properties.Set(common.ObjectID.String(), domainSid+"-519")
 	graphTestContext.UpdateNode(s.Domain1_Group2_EnterpriseAdmins)
 	graphTestContext.NewRelationship(s.Domain1_User103_EnterpriseAdmin, s.Domain1_Group2_EnterpriseAdmins, ad.MemberOf)
 
-	//// Owned objects
+	// // Owned objects
 
-	////// Computers
+	// //// Computers
 	s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("Computer1_NoOwnerRights_OwnerIsLowPriv", domainSid)
 	s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
 	graphTestContext.UpdateNode(s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv)
@@ -9104,7 +9173,7 @@ func (s *OwnsWriteOwner) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.Domain1_Computer8_OnlyNonabusableOwnerRightsInherited)
 	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
 
-	////// MSAs
+	// //// MSAs
 	s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("MSA1_NoOwnerRights_OwnerIsLowPriv", domainSid)
 	s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.MSA.String(), true)
 	s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
@@ -9173,7 +9242,7 @@ func (s *OwnsWriteOwner) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited)
 	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
 
-	////// GMSAs
+	// //// GMSAs
 	s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("GMSA1_NoOwnerRights_OwnerIsLowPriv", domainSid)
 	s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.GMSA.String(), true)
 	s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
@@ -9242,7 +9311,7 @@ func (s *OwnsWriteOwner) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited)
 	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
 
-	////// Users
+	// //// Users
 	s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryUser("User1_NoOwnerRights_OwnerIsLowPriv", domainSid)
 	s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
 	graphTestContext.UpdateNode(s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv)
@@ -9309,13 +9378,13 @@ func (s *OwnsWriteOwner) Setup(graphTestContext *GraphTestContext) {
 	s.Domain2_DoNotBlockImplicitOwnerRights.Properties.Set(ad.DSHeuristics.String(), "00000000000000000000000000000")
 	graphTestContext.UpdateNode(s.Domain2_DoNotBlockImplicitOwnerRights)
 
-	//// Object owners
+	// // Object owners
 	s.Domain2_User1_Owner = graphTestContext.NewActiveDirectoryUser("User1_Owner", domainSid)
 	s.Domain2_User2_WriteOwner = graphTestContext.NewActiveDirectoryUser("User2_WriteOwner", domainSid)
 
-	//// Owned objects
+	// // Owned objects
 
-	////// Computers
+	// //// Computers
 	s.Domain2_Computer1_NoOwnerRights = graphTestContext.NewActiveDirectoryComputer("Computer1_NoOwnerRights", domainSid)
 	s.Domain2_Computer1_NoOwnerRights.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
 	graphTestContext.UpdateNode(s.Domain2_Computer1_NoOwnerRights)
@@ -9720,7 +9789,7 @@ type HarnessDetails struct {
 	SyncLAPSPasswordHarness                         SyncLAPSPasswordHarness
 	HybridAttackPaths                               HybridAttackPaths
 	OwnsWriteOwner                                  OwnsWriteOwner
-	NTLMCoerceAndRelayNTLMToSMB                     NTLMCoerceAndRelayNTLMToSMB
+	NTLMCoerceAndRelayNTLMToSMB                     CoerceAndRelayNTLMToSMB
 	NTLMCoerceAndRelayNTLMToLDAP                    CoerceAndRelayNTLMToLDAP
 	NTLMCoerceAndRelayNTLMToLDAPS                   CoerceAndRelayNTLMToLDAPS
 	NTLMCoerceAndRelayNTLMToADCS                    CoerceAndRelayNTLMtoADCS
