@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default } from './UserActionsMenu';
+import { useEffect } from 'react';
 
-export * from './UserActionsMenu';
+// eslint-disable-next-line react-hooks/exhaustive-deps
+export const useMountEffect = (cb: React.EffectCallback) => useEffect(cb, []);

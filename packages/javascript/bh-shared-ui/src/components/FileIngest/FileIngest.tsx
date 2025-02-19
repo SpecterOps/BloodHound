@@ -16,34 +16,40 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { useListFileIngestJobs } from '../../hooks';
+import { FC, useState } from 'react';
+import { useMountEffect, usePermissions } from '../../hooks';
+import { useNotifications } from '../../providers';
+import { Permission } from '../../utils';
 import DocumentationLinks from '../DocumentationLinks';
 import FileUploadDialog from '../FileUploadDialog';
 import FinishedIngestLog from '../FinishedIngestLog';
 import PageWithTitle from '../PageWithTitle';
 
-const FileIngest = () => {
+const FileIngest: FC = () => {
     const [fileUploadDialogOpen, setFileUploadDialogOpen] = useState<boolean>(false);
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [totalCount, setTotalCount] = useState(0);
 
-    const { data: listFileIngestJobsData } = useListFileIngestJobs(page, rowsPerPage);
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
 
-    useEffect(() => setTotalCount(listFileIngestJobsData?.count || 0), [listFileIngestJobsData]);
+    const { addNotification, dismissNotification } = useNotifications();
+    const notificationKey = 'file-upload-permission';
 
-    const handlePageChange: (event: React.MouseEvent<HTMLButtonElement> | null, page: number) => void = (
-        _event,
-        newPage
-    ) => {
-        setPage(newPage);
+    const effect: React.EffectCallback = () => {
+        if (!hasPermission) {
+            addNotification(
+                `Your user role does not grant permission to upload data. Please contact your administrator for details.`,
+                notificationKey,
+                {
+                    persist: true,
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
+        }
+
+        return () => dismissNotification(notificationKey);
     };
 
-    const handleRowsPerPageChange: React.ChangeEventHandler<HTMLTextAreaElement | HTMLInputElement> = (event) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
-    };
+    useMountEffect(effect);
 
     const toggleFileUploadDialog = () => setFileUploadDialogOpen((prev) => !prev);
 
@@ -60,20 +66,14 @@ const FileIngest = () => {
                 }></PageWithTitle>
 
             <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' my={2}>
-                <Button onClick={() => toggleFileUploadDialog()} data-testid='file-ingest_button-upload-files'>
+                <Button
+                    onClick={() => toggleFileUploadDialog()}
+                    data-testid='file-ingest_button-upload-files'
+                    disabled={!hasPermission}>
                     Upload File(s)
                 </Button>
             </Box>
-            <FinishedIngestLog
-                ingestJobs={listFileIngestJobsData?.data || []}
-                paginationProps={{
-                    page,
-                    rowsPerPage,
-                    count: totalCount,
-                    onPageChange: handlePageChange,
-                    onRowsPerPageChange: handleRowsPerPageChange,
-                }}
-            />
+            <FinishedIngestLog />
 
             <FileUploadDialog open={fileUploadDialogOpen} onClose={toggleFileUploadDialog} />
         </>

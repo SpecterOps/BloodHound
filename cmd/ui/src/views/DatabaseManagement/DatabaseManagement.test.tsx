@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from 'src/test-utils';
@@ -22,6 +23,13 @@ import DatabaseManagement from '.';
 
 describe('DatabaseManagement', () => {
     const server = setupServer(
+        rest.get('/api/v2/self', (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: createAuthStateWithPermissions([Permission.GRAPH_DB_WRITE]).user,
+                })
+            );
+        }),
         rest.post('/api/v2/clear-database', (req, res, ctx) => {
             return res(ctx.status(204));
         }),
@@ -43,15 +51,13 @@ describe('DatabaseManagement', () => {
         })
     );
 
-    beforeEach(() => {
-        render(<DatabaseManagement />);
-    });
-
     beforeAll(() => server.listen());
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
     it('renders', async () => {
+        render(<DatabaseManagement />);
+
         const title = screen.getByText(/Database Management/i);
         const button = screen.getByRole('button', { name: /proceed/i });
 
@@ -63,7 +69,23 @@ describe('DatabaseManagement', () => {
         expect(button).toBeInTheDocument();
     });
 
+    it('disables the proceed button and all checkboxes if the user lacks permission', async () => {
+        render(<DatabaseManagement />);
+
+        const checkboxes = await screen.getAllByRole('checkbox');
+
+        checkboxes.forEach((checkbox) => {
+            expect(checkbox).toBeDisabled();
+        });
+
+        const proceedButton = screen.getByRole('button', { name: 'Proceed' });
+
+        expect(proceedButton).toBeDisabled();
+    });
+
     it('displays error if proceed button is clicked when no checkbox is selected', async () => {
+        render(<DatabaseManagement />);
+
         const user = userEvent.setup();
 
         const button = screen.getByRole('button', { name: /proceed/i });
@@ -74,12 +96,14 @@ describe('DatabaseManagement', () => {
     });
 
     it('clicking checkbox will remove error if present', async () => {
+        render(<DatabaseManagement />);
+
         const user = userEvent.setup();
 
         const button = screen.getByRole('button', { name: /proceed/i });
         await user.click(button);
 
-        const errorMsg = screen.getByText(/please make a selection/i);
+        const errorMsg = await screen.findByText(/please make a selection/i);
         expect(errorMsg).toBeInTheDocument();
 
         const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
@@ -89,6 +113,8 @@ describe('DatabaseManagement', () => {
     });
 
     it('open and closes dialog', async () => {
+        render(<DatabaseManagement />);
+
         const user = userEvent.setup();
 
         const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
@@ -107,6 +133,8 @@ describe('DatabaseManagement', () => {
     });
 
     it('handles posting a mutation', async () => {
+        render(<DatabaseManagement />);
+
         const user = userEvent.setup();
 
         const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
