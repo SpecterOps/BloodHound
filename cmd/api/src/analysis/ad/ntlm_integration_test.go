@@ -146,17 +146,18 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 			} else {
 				require.Len(t, results, 2)
 
-				start, end, err := ops.FetchRelationshipNodes(tx, results[0])
-				require.NoError(t, err)
+				for _, result := range results {
+					start, end, err := ops.FetchRelationshipNodes(tx, result)
+					require.NoError(t, err)
 
-				assert.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Group2.ID)
-				assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer9.ID)
-
-				start, end, err = ops.FetchRelationshipNodes(tx, results[1])
-				require.NoError(t, err)
-
-				assert.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Group1.ID)
-				assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer2.ID)
+					if start.ID == harness.NTLMCoerceAndRelayNTLMToSMB.Group2.ID {
+						assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer9.ID)
+					} else if start.ID == harness.NTLMCoerceAndRelayNTLMToSMB.Group1.ID {
+						assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer2.ID)
+					} else {
+						t.Fatalf("unrecognized start node id")
+					}
+				}
 			}
 			return nil
 		})
