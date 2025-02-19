@@ -2,10 +2,9 @@ import { setParamsFactory, setSingleParamFactory } from './searchParams';
 
 describe('searchParams', () => {
     describe('setSingleParamFactory', () => {
-        const deleteNil = true;
         it('takes updatedParams and current URLSearchParams and returns a function', () => {
             const searchParams = new URLSearchParams();
-            const actual = setSingleParamFactory({}, searchParams, deleteNil);
+            const actual = setSingleParamFactory({}, searchParams);
 
             expect(typeof actual).toEqual('function');
         });
@@ -14,7 +13,7 @@ describe('searchParams', () => {
             searchParams.set('key', 'original');
 
             const updatedParams = { key: 'updated' };
-            const setParam = setSingleParamFactory(updatedParams, searchParams, deleteNil);
+            const setParam = setSingleParamFactory(updatedParams, searchParams);
 
             setParam('key');
 
@@ -25,28 +24,18 @@ describe('searchParams', () => {
             searchParams.set('key', 'original');
 
             const updatedParams = { notFound: 'updated' };
-            const setParam = setSingleParamFactory(updatedParams, searchParams, deleteNil);
+            const setParam = setSingleParamFactory(updatedParams, searchParams);
 
             setParam('key' as any); // must cast because TS wants these keys to only match whats in updatedParams
 
             expect(searchParams.get('key')).toEqual('original');
-        });
-        it('returns a function that does NOT delete keys from search params if the updatedParams value is nil', () => {
-            const searchParams = new URLSearchParams();
-            searchParams.set('key', 'original');
-
-            const updatedParams = { key: '' };
-            const setParam = setSingleParamFactory(updatedParams, searchParams, false);
-
-            setParam('key');
-            expect(searchParams.get('key')).toEqual(updatedParams.key);
         });
         it('returns a function that can set arrays query params removes previous values set to that array query param', () => {
             const searchParams = new URLSearchParams();
             searchParams.set('key', 'original');
 
             const updateParams = { key: ['multiple', 'values'] };
-            const setParam = setSingleParamFactory(updateParams, searchParams, deleteNil);
+            const setParam = setSingleParamFactory(updateParams, searchParams);
             setParam('key');
 
             const keyArray = searchParams.getAll('key');
@@ -56,7 +45,7 @@ describe('searchParams', () => {
             expect(keyArray[1]).toEqual(updateParams.key[1]);
 
             const updateParams2 = { key: ['new', 'values'] };
-            const setParam2 = setSingleParamFactory(updateParams2, searchParams, deleteNil);
+            const setParam2 = setSingleParamFactory(updateParams2, searchParams);
             setParam2('key');
 
             const keyArray2 = searchParams.getAll('key');

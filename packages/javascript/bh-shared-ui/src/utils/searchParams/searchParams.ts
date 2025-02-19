@@ -25,10 +25,9 @@ export const isNotNullish = <T>(value: T | nil): value is T => {
  * returns a function for updating a single search param found in updatedParams
  * @param updatedParams all keys in the updatedParams will either update or delete the matching urlParam
  * @param searchParams current url params
- * @param deleteNil if updatedParam[key] is falsy, remove from searchParams
  * @returns
  */
-export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSearchParams, deleteNil: boolean) => {
+export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSearchParams) => {
     return (param: keyof T) => {
         const key = param as string;
         const value = (updatedParams as Record<string, string>)[key];
@@ -42,10 +41,8 @@ export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSear
                 } else {
                     searchParams.set(key, value);
                 }
-            } else if (deleteNil) {
-                searchParams.delete(key);
             } else {
-                searchParams.set(key, value);
+                searchParams.delete(key);
             }
         }
     };
@@ -58,14 +55,10 @@ export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSear
  * @param deleteNil if a key in availableParams is passed and it has a falsy value, this will remove it from searchParams
  * @returns
  */
-export const setParamsFactory = <T>(
-    setSearchParams: SetURLSearchParams,
-    availableParams: Array<keyof T>,
-    deleteNil = true
-) => {
+export const setParamsFactory = <T>(setSearchParams: SetURLSearchParams, availableParams: Array<keyof T>) => {
     return (updatedParams: T) => {
         setSearchParams((params) => {
-            const setParam = setSingleParamFactory(updatedParams, params, deleteNil);
+            const setParam = setSingleParamFactory(updatedParams, params);
 
             availableParams.forEach((param) => setParam(param));
 
