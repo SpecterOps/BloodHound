@@ -16,7 +16,7 @@
 
 import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { GenericErrorBoundaryFallback, apiClient } from 'bh-shared-ui';
+import { GenericErrorBoundaryFallback, apiClient, useFeatureFlag } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
@@ -25,7 +25,9 @@ import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups, setDomain } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
+import * as routes from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
+import GraphViewV2 from './Explore/GraphViewV2';
 
 const useStyles = makeStyles({
     content: {
@@ -41,6 +43,7 @@ const Content: React.FC = () => {
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const { data: flag } = useFeatureFlag('deep-linking');
 
     useEffect(() => {
         if (isFullyAuthenticated) {
@@ -100,6 +103,11 @@ const Content: React.FC = () => {
                                     <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                                         <AuthenticatedRoute>
                                             <div className={`h-full ${route.navigation && 'pl-nav-width'} `}>
+                                                {route.path === routes.ROUTE_EXPLORE && flag?.enabled ? (
+                                                    <GraphViewV2 />
+                                                ) : (
+                                                    <route.component />
+                                                )}
                                                 <route.component />
                                             </div>
                                         </AuthenticatedRoute>
