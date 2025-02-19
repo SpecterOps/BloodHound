@@ -15,19 +15,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSearchParams } from 'react-router-dom';
+import { EntityInfoDataTableProps } from '../utils/content';
 import { setParamsFactory } from '../utils/searchParams';
 
-interface ExploreQuery {
+export type ExploreQueryParams = Partial<{
     primarySearch: string | null;
     secondarySearch: string | null;
     cypherSearch: string | null;
     searchType: 'node' | 'pathfinding' | 'cypher' | 'relationship' | 'composition' | null;
     graphSelection: string | null;
     panelSelection: string | null;
-    expandedRelationship: string[] | null;
-}
-
-export type ExploreQueryParams = Partial<ExploreQuery>;
+    expandedRelationships: EntityInfoDataTableProps['label'][] | null;
+}>;
 
 const parseSearchQuery = (param: string | null) => {
     if (
@@ -55,7 +54,7 @@ export const useExploreParams = (): useExploreParamsReturn => {
     const searchType = parseSearchQuery(searchParams.get('searchType'));
     const graphSelection = searchParams.get('graphSelection');
     const panelSelection = searchParams.get('panelSelection');
-    const expandedRelationship = searchParams.getAll('expandedRelationship');
+    const expandedRelationships = searchParams.getAll('expandedRelationship');
 
     const setExploreParams = setParamsFactory<ExploreQueryParams>(setSearchParams, [
         'primarySearch',
@@ -64,7 +63,7 @@ export const useExploreParams = (): useExploreParamsReturn => {
         'searchType',
         'graphSelection',
         'panelSelection',
-        'expandedRelationship',
+        'expandedRelationships',
     ]);
 
     return {
@@ -74,7 +73,7 @@ export const useExploreParams = (): useExploreParamsReturn => {
         searchType,
         graphSelection,
         panelSelection,
-        expandedRelationship,
+        expandedRelationships,
         setExploreParams,
     };
 };
