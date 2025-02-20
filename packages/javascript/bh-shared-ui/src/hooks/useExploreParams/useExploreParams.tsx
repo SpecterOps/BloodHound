@@ -46,11 +46,11 @@ export const parseSearchType = (paramValue: string | null): SearchType | null =>
     return null;
 };
 
-interface useExploreParamsReturn extends ExploreQueryParams {
+interface UseExploreParamsReturn extends ExploreQueryParams {
     setExploreParams: (params: Partial<ExploreQueryParams>) => void;
 }
 
-export const useExploreParams = (): useExploreParamsReturn => {
+export const useExploreParams = (): UseExploreParamsReturn => {
     const [searchParams, setSearchParams] = useSearchParams();
 
     return {
