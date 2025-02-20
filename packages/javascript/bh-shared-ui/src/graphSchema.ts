@@ -145,6 +145,8 @@ export enum ActiveDirectoryRelationshipKind {
     WriteOwnerRaw = 'WriteOwnerRaw',
     OwnsLimitedRights = 'OwnsLimitedRights',
     OwnsRaw = 'OwnsRaw',
+    CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
+    CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -296,6 +298,10 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'OwnsLimitedRights';
         case ActiveDirectoryRelationshipKind.OwnsRaw:
             return 'OwnsRaw';
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP:
+            return 'CoerceAndRelayNTLMToLDAP';
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS:
+            return 'CoerceAndRelayNTLMToLDAPS';
         default:
             return undefined;
     }
@@ -315,6 +321,8 @@ export const EdgeCompositionRelationships = [
     'ADCSESC13',
     'CoerceAndRelayNTLMToSMB',
     'CoerceAndRelayNTLMToADCS',
+    'CoerceAndRelayNTLMToLDAP',
+    'CoerceAndRelayNTLMToLDAPS',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -428,6 +436,12 @@ export enum ActiveDirectoryKindProperties {
     ADCSWebEnrollmentHTTP = 'adcswebenrollmenthttp',
     ADCSWebEnrollmentHTTPS = 'adcswebenrollmenthttps',
     ADCSWebEnrollmentHTTPSEPA = 'adcswebenrollmenthttpsepa',
+    LDAPSigning = 'ldapsigning',
+    LDAPSAvailable = 'ldasavailable',
+    LDAPSEPA = 'ldapsepa',
+    RelayableToDCLDAP = 'replayabletodcldap',
+    RelayableToDCLDAPS = 'replayabletodcldaps',
+    IsDC = 'isdc',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -653,6 +667,18 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'ADCS Web Enrollment HTTPS';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPSEPA:
             return 'ADCS Web Enrollment HTTPS EPA';
+        case ActiveDirectoryKindProperties.LDAPSigning:
+            return 'LDAP Signing';
+        case ActiveDirectoryKindProperties.LDAPSAvailable:
+            return 'LDAPS Available';
+        case ActiveDirectoryKindProperties.LDAPSEPA:
+            return 'LDAPS EPA';
+        case ActiveDirectoryKindProperties.RelayableToDCLDAP:
+            return 'Relayable To DC LDAP';
+        case ActiveDirectoryKindProperties.RelayableToDCLDAPS:
+            return 'Relayable To DC LDAPS';
+        case ActiveDirectoryKindProperties.IsDC:
+            return 'Is Domain Controller';
         default:
             return undefined;
     }
@@ -706,6 +732,8 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
         ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
         ActiveDirectoryRelationshipKind.OwnsLimitedRights,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.TrustedBy,

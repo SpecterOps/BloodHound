@@ -810,6 +810,56 @@ OwnerSid: types.#StringEnum & {
  	representation: "ownersid"
 }
 
+LDAPSigning: types.#StringEnum & {
+	symbol: "LDAPSigning"
+	schema: "ad"
+	name: "LDAP Signing"
+	representation: "ldapsigning"
+}
+
+LDAPSAvailable: types.#StringEnum & {
+	symbol: "LDAPSAvailable"
+	schema: "ad"
+	name: "LDAPS Available"
+	representation: "ldasavailable"
+}
+
+LDAPSEPA: types.#StringEnum & {
+	symbol: "LDAPSEPA"
+	schema: "ad"
+	name: "LDAPS EPA"
+	representation: "ldapsepa"
+}
+
+RelayableToDCLDAP: types.#StringEnum & {
+	symbol: "RelayableToDCLDAP"
+	schema: "ad"
+	name: "Relayable To DC LDAP"
+	representation: "replayabletodcldap"
+}
+
+RelayableToDCLDAPS: types.#StringEnum & {
+	symbol: "RelayableToDCLDAPS"
+	schema: "ad"
+	name: "Relayable To DC LDAPS"
+	representation: "replayabletodcldaps"
+}
+
+WebClientRunning: types.#StringEnum & {
+	symbol: "WebClientRunning"
+	schema: "ad"
+	name: "WebClient Running"
+	representation: "webclientrunning"
+}
+
+IsDC: types.#StringEnum & {
+	symbol: "IsDC"
+	schema: "ad"
+	name: "Is Domain Controller"
+	representation: "isdc"
+}
+
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -922,6 +972,12 @@ Properties: [
 	ADCSWebEnrollmentHTTP,
 	ADCSWebEnrollmentHTTPS,
 	ADCSWebEnrollmentHTTPSEPA,
+	LDAPSigning,
+	LDAPSAvailable,
+	LDAPSEPA,
+	RelayableToDCLDAP,
+	RelayableToDCLDAPS,
+	IsDC
 ]
 
 // Kinds
@@ -1403,6 +1459,16 @@ OwnsRaw: types.#Kind & {
 	schema: "active_directory"
 }
 
+CoerceAndRelayNTLMToLDAP: types.#Kind & {
+	symbol: "CoerceAndRelayNTLMToLDAP"
+	schema: "active_directory"
+}
+
+CoerceAndRelayNTLMToLDAPS: types.#Kind & {
+	symbol: "CoerceAndRelayNTLMToLDAPS"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1479,6 +1545,8 @@ RelationshipKinds: [
 	WriteOwnerRaw,
 	OwnsLimitedRights,
 	OwnsRaw,
+	CoerceAndRelayNTLMToLDAP,
+	CoerceAndRelayNTLMToLDAPS
 ]
 
 // ACL Relationships
@@ -1564,6 +1632,8 @@ SharedRelationshipKinds: [
 	CoerceAndRelayNTLMToADCS,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
+	CoerceAndRelayNTLMToLDAP,
+	CoerceAndRelayNTLMToLDAPS
 ]
 
 // Edges that are used during inbound traversal
@@ -1589,4 +1659,6 @@ EdgeCompositionRelationships: [
 	ADCSESC13,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToLDAP,
+	CoerceAndRelayNTLMToLDAPS
 ]
