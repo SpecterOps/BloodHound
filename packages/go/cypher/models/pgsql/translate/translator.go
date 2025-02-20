@@ -57,18 +57,19 @@ func NewTranslator(ctx context.Context, kindMapper pgsql.KindMapper, parameters 
 
 func (s *Translator) Enter(expression cypher.SyntaxNode) {
 	switch typedExpression := expression.(type) {
-	case *cypher.RegularQuery, *cypher.SingleQuery, *cypher.PatternElement, *cypher.Return,
+	case *cypher.RegularQuery, *cypher.SingleQuery, *cypher.PatternElement,
 		*cypher.Comparison, *cypher.Skip, *cypher.Limit, cypher.Operator, *cypher.ArithmeticExpression,
 		*cypher.NodePattern, *cypher.RelationshipPattern, *cypher.Remove, *cypher.Set,
 		*cypher.ReadingClause, *cypher.UnaryAddOrSubtractExpression, *cypher.PropertyLookup,
 		*cypher.Negation, *cypher.Create, *cypher.Where, *cypher.ListLiteral,
 		*cypher.FunctionInvocation, *cypher.Order, *cypher.RemoveItem, *cypher.SetItem,
-		*cypher.MapItem:
+		*cypher.MapItem, *cypher.UpdatingClause, *cypher.Delete:
 	// No operation for these syntax nodes
 
+	case *cypher.Return:
 	case *cypher.MultiPartQuery:
 	case *cypher.MultiPartQueryPart:
-		if err := s.query.PreparePart(true); err != nil {
+		if err := s.query.PreparePart(len(typedExpression.ReadingClauses), len(typedExpression.UpdatingClauses), true); err != nil {
 			s.SetError(err)
 		}
 
@@ -76,18 +77,12 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 		s.SetError(nil)
 
 	case *cypher.SinglePartQuery:
-		if err := s.query.PreparePart(false); err != nil {
+		if err := s.query.PreparePart(len(typedExpression.ReadingClauses), len(typedExpression.UpdatingClauses), false); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.Match:
-		// Start with a fresh match and where clause. Instantiation of the where clause here is necessary since
-		// cypher will store identifier constraints in the query pattern which precedes the query where clause.
-		s.query.CurrentPart().pattern = &Pattern{}
-		s.query.CurrentPart().match = &Match{
-			Scope:   s.query.Scope,
-			Pattern: s.query.CurrentPart().pattern,
-		}
+		s.query.CurrentPart().currentPattern = &Pattern{}
 
 	case graph.Kinds:
 		s.treeTranslator.Push(pgsql.KindListLiteral{
@@ -173,14 +168,12 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 		s.query.CurrentPart().PrepareProjection()
 
 	case *cypher.PatternPredicate:
-		s.query.CurrentPart().pattern = &Pattern{}
-
-		if err := s.translatePatternPredicate(s.query.Scope); err != nil {
+		if err := s.preparePatternPredicate(); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.PatternPart:
-		if err := s.translatePatternPart(s.query.Scope, typedExpression); err != nil {
+		if err := s.translatePatternPart(typedExpression); err != nil {
 			s.SetError(err)
 		}
 
@@ -200,15 +193,7 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 			s.treeTranslator.PushOperator(pgsql.OperatorAnd)
 		}
 
-	case *cypher.UpdatingClause:
-		s.query.CurrentPart().PrepareMutations()
-
 	case *cypher.Properties:
-		s.query.CurrentPart().PrepareProperties()
-
-	case *cypher.Delete:
-		s.query.CurrentPart().PrepareMutations()
-
 	default:
 		s.SetErrorf("unable to translate cypher type: %T", expression)
 	}
@@ -230,14 +215,11 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		if value, err := s.treeTranslator.Pop(); err != nil {
 			s.SetError(err)
 		} else {
-			s.query.CurrentPart().properties[typedExpression.Key] = value
+			s.query.CurrentPart().AddProperty(typedExpression.Key, value)
 		}
 
 	case *cypher.PatternPredicate:
-		// Retire the predicate scope frames and build the predicate
-		if err := s.query.Scope.UnwindToFrame(s.query.CurrentPart().pattern.Frame); err != nil {
-			s.SetError(err)
-		} else if err := s.buildPatternPredicate(); err != nil {
+		if err := s.translatePatternPredicate(); err != nil {
 			s.SetError(err)
 		}
 
@@ -253,6 +235,11 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 
 	case *cypher.SetItem:
 		if err := s.translateSetItem(typedExpression); err != nil {
+			s.SetError(err)
+		}
+
+	case *cypher.UpdatingClause:
+		if err := s.translateUpdates(); err != nil {
 			s.SetError(err)
 		}
 
@@ -293,7 +280,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		// Rewrite the order by constraints
 		if lookupExpression, err := s.treeTranslator.Pop(); err != nil {
 			s.SetError(err)
-		} else if err := RewriteExpressionIdentifiers(lookupExpression, s.query.Scope.CurrentFrameBinding().Identifier, s.query.Scope.Visible()); err != nil {
+		} else if err := RewriteFrameBindings(s.query.Scope, lookupExpression); err != nil {
 			s.SetError(err)
 		} else {
 			if propertyLookup, isPropertyLookup := asPropertyLookup(lookupExpression); isPropertyLookup {
@@ -420,15 +407,13 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		}
 
 	case *cypher.Projection:
-		s.SetError(nil)
-
 	case *cypher.ProjectionItem:
 		if err := s.translateProjectionItem(s.query.Scope, typedExpression); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.Match:
-		if err := s.buildMatch(); err != nil {
+		if err := s.translateMatch(); err != nil {
 			s.SetError(err)
 		}
 

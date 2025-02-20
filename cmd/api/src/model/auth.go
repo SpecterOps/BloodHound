@@ -465,6 +465,10 @@ func (s *User) RemoveRole(role Role) {
 	s.Roles = s.Roles.RemoveByName(role.Name)
 }
 
+func (s *User) SSOProviderHasRoleProvisionEnabled() bool {
+	return s.SSOProvider != nil && s.SSOProvider.Config.AutoProvision.Enabled && s.SSOProvider.Config.AutoProvision.RoleProvision
+}
+
 type Users []User
 
 func (s Users) IsSortable(column string) bool {
