@@ -45,10 +45,10 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 import { transformFlatGraphResponse } from 'src/utils';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
-import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
+import ExploreSearchV2 from './ExploreSearch/ExploreSearchV2';
 
 const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
 
@@ -220,7 +220,7 @@ const GraphViewV2: FC = () => {
                         gap: 2,
                     }}
                     key={'exploreSearch'}>
-                    <ExploreSearch onTabChange={handleCypherTab} />
+                    <ExploreSearchV2 onTabChange={handleCypherTab} />
                     <Box
                         sx={{
                             pointerEvents: 'auto',
