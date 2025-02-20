@@ -178,8 +178,8 @@ func (s ThreadSafeKindBitmap) Get(kinds ...Kind) cardinality.Duplex[uint64] {
 }
 
 func (s ThreadSafeKindBitmap) Or(kind Kind, other cardinality.Duplex[uint64]) {
-	s.rwLock.RLock()
-	defer s.rwLock.RUnlock()
+	s.rwLock.Lock()
+	defer s.rwLock.Unlock()
 
 	if kindBitmap, hasKind := s.bitmaps[kind.String()]; hasKind {
 		kindBitmap.Or(other)

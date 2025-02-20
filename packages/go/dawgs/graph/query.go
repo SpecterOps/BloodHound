@@ -23,6 +23,7 @@ type ValueMapper interface {
 	Map(target any) error
 	MapOptions(target ...any) (any, error)
 	Scan(targets ...any) error
+	Count() int
 }
 
 type Scanner interface {

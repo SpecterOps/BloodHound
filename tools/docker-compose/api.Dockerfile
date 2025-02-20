@@ -23,7 +23,7 @@ ARG AZUREHOUND_VERSION=v2.2.1
 ########
 # Package other assets
 ################
-FROM docker.io/library/alpine:3.16 as hound-builder
+FROM docker.io/library/alpine:3.21 AS hound-builder
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 
