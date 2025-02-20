@@ -22,3 +22,14 @@ ALTER TABLE IF EXISTS users
   DROP CONSTRAINT IF EXISTS users_email_address_key;
 ALTER TABLE IF EXISTS users
   ADD CONSTRAINT users_email_address_key UNIQUE (email_address);
+
+-- Add `back_button_support` feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'back_button_support',
+        'Back Button Support',
+        'Enable users to quickly navigate between views in a wider range of scenarios by utilizing the browser navigation buttons.',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
