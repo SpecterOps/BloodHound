@@ -347,7 +347,6 @@ export enum ActiveDirectoryKindProperties {
     DomainFQDN = 'domain',
     DomainSID = 'domainsid',
     Sensitive = 'sensitive',
-    HighValue = 'highvalue',
     BlocksInheritance = 'blocksinheritance',
     IsACL = 'isacl',
     IsACLProtected = 'isaclprotected',
@@ -490,8 +489,6 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Domain SID';
         case ActiveDirectoryKindProperties.Sensitive:
             return 'Marked Sensitive';
-        case ActiveDirectoryKindProperties.HighValue:
-            return 'High Value';
         case ActiveDirectoryKindProperties.BlocksInheritance:
             return 'Blocks GPO Inheritance';
         case ActiveDirectoryKindProperties.IsACL:

@@ -173,13 +173,6 @@ Sensitive: types.#StringEnum & {
 	representation: "sensitive"
 }
 
-HighValue: types.#StringEnum & {
-	symbol:         "HighValue"
-	schema:         "ad"
-	name:           "High Value"
-	representation: "highvalue"
-}
-
 BlocksInheritance: types.#StringEnum & {
 	symbol:         "BlocksInheritance"
 	schema:         "ad"
@@ -890,7 +883,6 @@ Properties: [
 	DomainFQDN,
 	DomainSID,
 	Sensitive,
-	HighValue,
 	BlocksInheritance,
 	IsACL,
 	IsACLProtected,
