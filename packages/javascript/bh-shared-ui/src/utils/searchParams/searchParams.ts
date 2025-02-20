@@ -15,10 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { SetURLSearchParams } from 'react-router-dom';
-import { nil } from '../types';
 
-export const isNotNullish = <T>(value: T | nil): value is T => {
-    return value !== undefined && value !== null && value !== 0 && value !== '';
+type EmptyParam = undefined | null | '';
+
+export const isEmptyParam = <T>(value: T | EmptyParam): value is EmptyParam => {
+    return value === undefined || value === null || value === '';
 };
 
 /**
@@ -34,15 +35,15 @@ export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSear
 
         // only set keys that have been passed via updatedParams
         if (key in (updatedParams as Record<string, string>)) {
-            if (isNotNullish(value)) {
+            if (isEmptyParam(value)) {
+                searchParams.delete(key);
+            } else {
                 if (Array.isArray(value)) {
                     searchParams.delete(key);
                     value.forEach((item) => searchParams.append(key, item));
                 } else {
                     searchParams.set(key, value);
                 }
-            } else {
-                searchParams.delete(key);
             }
         }
     };
@@ -52,7 +53,6 @@ export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSear
  * returns a function for updating all availableParams in search params.
  * @param setSearchParams react-router-doms setSearchParams
  * @param availableParams all params that can be controlled
- * @param deleteNil if a key in availableParams is passed and it has a falsy value, this will remove it from searchParams
  * @returns
  */
 export const setParamsFactory = <T>(setSearchParams: SetURLSearchParams, availableParams: Array<keyof T>) => {

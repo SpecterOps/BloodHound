@@ -29,5 +29,3 @@ export type ValueOf<T> = T[keyof T];
 export type MappedStringLiteral<T extends string | number, V = ''> = {
     [key in T]: V;
 };
-
-export type nil = undefined | null | 0 | '';
