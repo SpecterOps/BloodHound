@@ -1,6 +1,9 @@
 import { setParamsFactory, setSingleParamFactory } from './searchParams';
 
 describe('searchParams', () => {
+    describe('isEmptyParam', () => {
+        it('returns ');
+    });
     describe('setSingleParamFactory', () => {
         it('takes updatedParams and current URLSearchParams and returns a function', () => {
             const searchParams = new URLSearchParams();

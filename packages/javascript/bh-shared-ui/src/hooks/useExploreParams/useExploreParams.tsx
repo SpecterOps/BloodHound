@@ -61,7 +61,10 @@ export const useExploreParams = (): useExploreParamsReturn => {
         graphSelection: searchParams.get('graphSelection'),
         panelSelection: searchParams.get('panelSelection'),
         expandedRelationships: searchParams.getAll('expandedRelationship'),
-        setExploreParams: useCallback(() => {
+        // react doesnt like this because it doesnt know the params needed for the function factory return function.
+        // but the params needed are not needed in the deps array
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        setExploreParams: useCallback(
             setParamsFactory(setSearchParams, [
                 'primarySearch',
                 'secondarySearch',
@@ -70,7 +73,8 @@ export const useExploreParams = (): useExploreParamsReturn => {
                 'graphSelection',
                 'panelSelection',
                 'expandedRelationships',
-            ]);
-        }, [setSearchParams]),
+            ]),
+            [setSearchParams]
+        ),
     };
 };
