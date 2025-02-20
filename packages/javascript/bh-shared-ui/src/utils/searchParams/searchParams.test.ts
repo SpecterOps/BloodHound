@@ -1,8 +1,17 @@
-import { setParamsFactory, setSingleParamFactory } from './searchParams';
+import { isEmptyParam, setParamsFactory, setSingleParamFactory } from './searchParams';
 
 describe('searchParams', () => {
     describe('isEmptyParam', () => {
-        it('returns ');
+        const empty = [undefined, null, ''];
+        it.each(empty)('returns true if value is %o', (value) => {
+            const actual = isEmptyParam(value);
+            expect(actual).toBeTruthy();
+        });
+        const notEmpty = ['string', 0, ['array'], {}];
+        it.each(notEmpty)('returns false if value is %o', (value) => {
+            const actual = isEmptyParam(value);
+            expect(actual).toBeFalsy();
+        });
     });
     describe('setSingleParamFactory', () => {
         it('takes updatedParams and current URLSearchParams and returns a function', () => {
