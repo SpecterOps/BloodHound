@@ -36,8 +36,10 @@ type ADCSCache struct {
 	domains                   []*graph.Node
 
 	// To discourage direct access without getting a read lock, these are private
-	authStoreForChainValid          map[graph.ID]cardinality.Duplex[uint64]
-	rootCAForChainValid             map[graph.ID]cardinality.Duplex[uint64]
+	authStoreForChainValid map[graph.ID]cardinality.Duplex[uint64] //Auth stores with a valid chain to the domain, key is domain ID
+	rootCAForChainValid    map[graph.ID]cardinality.Duplex[uint64] //Root CA with a valid chain to the domain, key is domain ID
+	//authStorePathToDomain           map[graph.ID]map[graph.ID]graph.Path
+	//rootCAPathToDomain              map[graph.ID]map[graph.ID]graph.Path
 	expandedCertTemplateControllers map[graph.ID]cardinality.Duplex[uint64]
 	certTemplateHasSpecialEnrollers map[graph.ID]bool          // whether Auth. Users or Everyone has enrollment rights on templates
 	enterpriseCAHasSpecialEnrollers map[graph.ID]bool          // whether Auth. Users or Everyone has enrollment rights on enterprise CAs
@@ -128,14 +130,23 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 		}
 
 		for _, domain := range s.domains {
-			if rootCaForNodes, err := FetchEnterpriseCAsRootCAForPathToDomain(tx, domain); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting cas via rootcafor for domain %d: %v", domain.ID, err))
-			} else if authStoreForNodes, err := FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, domain); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting cas via authstorefor for domain %d: %v", domain.ID, err))
-			} else {
-				s.authStoreForChainValid[domain.ID] = graph.NodeSetToDuplex(authStoreForNodes)
-				s.rootCAForChainValid[domain.ID] = graph.NodeSetToDuplex(rootCaForNodes)
-			}
+			//if rootCaPaths, err := FetchEnterpriseCAsRootCAForPathToDomainFull(tx, domain); err != nil {
+			//	slog.ErrorContext(ctx, fmt.Sprintf("Error getting cas via rootcafor for domain %d: %v", domain.ID, err))
+			//} else {
+			//	s.rootCAForChainValid[domain.ID] = graph.NodeSetToDuplex(rootCaPaths.Terminals())
+			//	for _, path := range rootCaPaths {
+			//		s.rootCAPathToDomain[domain.ID][path.Terminal().ID] = path
+			//	}
+			//}
+			//
+			//if authStoreForPaths, err := FetchEnterpriseCAsTrustedForNTAuthToDomainFull(tx, domain); err != nil {
+			//	slog.ErrorContext(ctx, fmt.Sprintf("Error getting cas via authstorefor for domain %d: %v", domain.ID, err))
+			//} else {
+			//	s.authStoreForChainValid[domain.ID] = graph.NodeSetToDuplex(authStoreForPaths.Terminals())
+			//	for _, path := range authStoreForPaths {
+			//		s.authStorePathToDomain[domain.ID][path.Terminal().ID] = path
+			//	}
+			//}
 
 			// Check for weak cert config on DCs
 			if upnMapping, err := hasUPNCertMappingInForest(tx, domain); err != nil {

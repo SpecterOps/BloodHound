@@ -143,6 +143,13 @@ IsInherited: types.#StringEnum & {
 	representation: "isinherited"
 }
 
+CompositionID: types.#StringEnum & {
+	symbol: 		"CompositionID"
+	schema: 		"common"
+	name: 			"Composition ID"
+	representation: "compositionid"
+}
+
 Properties: [
 	ObjectID,
 	Name,
@@ -160,6 +167,7 @@ Properties: [
 	Title,
 	Email,
 	IsInherited,
+	CompositionID
 ]
 
 // Kinds

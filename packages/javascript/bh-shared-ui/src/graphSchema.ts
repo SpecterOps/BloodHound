@@ -1107,6 +1107,7 @@ export enum CommonKindProperties {
     Title = 'title',
     Email = 'email',
     IsInherited = 'isinherited',
+    CompositionID = 'compositionid',
 }
 export function CommonKindPropertiesToDisplay(value: CommonKindProperties): string | undefined {
     switch (value) {
@@ -1142,6 +1143,8 @@ export function CommonKindPropertiesToDisplay(value: CommonKindProperties): stri
             return 'Email';
         case CommonKindProperties.IsInherited:
             return 'Is Inherited';
+        case CommonKindProperties.CompositionID:
+            return 'Composition ID';
         default:
             return undefined;
     }
