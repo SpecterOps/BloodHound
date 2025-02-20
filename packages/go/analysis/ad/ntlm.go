@@ -269,6 +269,9 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 // PostCoerceAndRelayNTLMToLDAP creates edges where an authenticated user group, for a given domain, is able to target the provided computer.
 // This will create either a CoerceAndRelayNTLMToLDAP or CoerceAndRelayNTLMToLDAPS edges, depending on the ldapSigning property of the domain
 func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob, computer *graph.Node, authenticatedUserID graph.ID, ldapSigningCache map[string]LDAPSigningCache) error {
+	// restrictoutboundntlm must be set to false and webclientrunning must be set to true for the computer's properties
+	// in order for this attack path to be viable
+	// If the property is not found, we will assume false
 	if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
 		return err
 	} else if restrictOutboundNtlm {
@@ -284,8 +287,11 @@ func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob
 			}
 		} else {
 			if signingCache, ok := ldapSigningCache[domainSid]; !ok {
+				// If no DomainSID was found in our cache, then we can simply ignore the domain as it does not match our path creation criteria
 				return nil
 			} else {
+				// We will create relationships from the AuthenticatedUsers group to the vulnerable computer,
+				// for both LDAP and LDAPS scenarios, assuming the passed in signingCache has any vulnerable paths
 				if len(signingCache.relayableToDCLDAP) > 0 {
 					outC <- analysis.CreatePostRelationshipJob{
 						FromID: authenticatedUserID,
@@ -389,6 +395,8 @@ func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]L
 						query.Equals(
 							query.NodeProperty(ad.DomainSID.String()), domainSid,
 						),
+						// IsDC is a property for computers that are Domain Controllers for a Domain
+						// This allows us to ensure the computer has a DCFor relationship to the currently iterated domain
 						query.Equals(
 							query.NodeProperty(ad.IsDC.String()), domainSid,
 						),
@@ -416,6 +424,9 @@ func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]L
 				)); err != nil {
 					return err
 				} else {
+					// Domains with a functionallevel property after 2012 are protected from this attack path
+					// This will ensure that the domain is vulnerable
+					// If the domain does not have this property set, we will assume that the domain is protected
 					isFunctionalLevelValid := false
 					if functionalLevel, err := domain.Properties.Get(ad.FunctionalLevel.String()).String(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
 						return err
