@@ -104,9 +104,9 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
                     value={activeTab}
                     onChange={(e, newTabIdx) => handleTabChange(newTabIdx)}
                     onClick={() => setShowSearchWidget(true)}
-                    sx={{ height: '40px', minHeight: '40px', width: '100%' }}
+                    className='h-10 min-h-10 w-full'
                     TabIndicatorProps={{
-                        sx: { height: 3, backgroundColor: '#6798B9' },
+                        className: 'h-[3px]',
                     }}>
                     {getTabsContent(matches)}
                 </Tabs>
@@ -158,10 +158,7 @@ const getTabsContent = (matches: boolean) => {
             icon={<FontAwesomeIcon icon={icon} />}
             iconPosition='start'
             title={label}
-            sx={{
-                height: '40px',
-                minHeight: '40px',
-            }}
+            className='h-10 min-h-10'
         />
     ));
 };
