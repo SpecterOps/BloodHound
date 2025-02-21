@@ -88,7 +88,7 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
 
     return (
         <div
-            className={cn('h-full h-min-0 w-[410px] flex gap-2 flex-col rounded-lg shadow-[1px solid white]', {
+            className={cn('h-full min-h-0 w-[410px] flex gap-2 flex-col rounded-lg shadow-[1px solid white]', {
                 'w-[600px]': activeTab === tabNameMap.cypher && showSearchWidget,
             })}>
             <div className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-neutral-light-2 dark:bg-neutral-dark-2'>
@@ -114,7 +114,7 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
 
             <div
                 className={cn(
-                    'hidden h-min-0 p-2 rounded-lg pointer-events-auto bg-neutral-light-2 dark:bg-neutral-dark-2',
+                    'hidden min-h-0 p-2 rounded-lg pointer-events-auto bg-neutral-light-2 dark:bg-neutral-dark-2',
                     {
                         block: showSearchWidget,
                     }
