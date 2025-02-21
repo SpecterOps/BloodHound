@@ -22,15 +22,15 @@ export const availableDomainKeys = {
     all: ['available-domains'],
 } as const;
 
-type QueryOptions = Omit<
-    UseQueryOptions<unknown, unknown, Domain[], readonly ['available-domains']>,
-    'queryKey' | 'queryFn'
->;
-const useAvailableDomains = (options?: QueryOptions) =>
-    useQuery(
-        availableDomainKeys.all,
-        ({ signal }) => apiClient.getAvailableDomains({ signal }).then((response) => response.data.data),
-        options
-    );
+interface QueryOptions extends Omit<UseQueryOptions<unknown, unknown, Domain[], string[]>, 'queryKey' | 'queryFn'> {
+    appendQueryKey?: string[];
+}
 
-export default useAvailableDomains;
+const useAvailableEnvironments = (options?: QueryOptions) =>
+    useQuery({
+        queryKey: [...availableDomainKeys.all, ...(options?.appendQueryKey ?? [])],
+        queryFn: ({ signal }) => apiClient.getAvailableEnvironments({ signal }).then((response) => response.data.data),
+        ...options,
+    });
+
+export default useAvailableEnvironments;

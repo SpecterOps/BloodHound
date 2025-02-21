@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as useAvailableDomains } from './useAvailableDomains';
+export { default as useAvailableEnvironments } from './useAvailableEnvironments';
 
 export { default as useOnClickOutside } from './useOnClickOutside';
 
@@ -45,3 +45,7 @@ export * from './useExploreGraph';
 export * from './useShowNavBar';
 
 export * from './useIsMouseDragging';
+
+export * from './useEnvironmentParams';
+
+export * from './useMatchingPaths';
