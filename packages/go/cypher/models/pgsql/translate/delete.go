@@ -33,36 +33,9 @@ func (s *Translator) translateDelete(scope *Scope, cypherDelete *cypher.Delete) 
 			case pgsql.Identifier:
 				if deleteFrame, err := scope.PushFrame(); err != nil {
 					return err
-				} else {
-					if identifierDeletion, err := s.mutations.AddDeletion(scope, typedExpression, deleteFrame); err != nil {
-						return err
-					} else if boundProjections, err := buildVisibleScopeProjections(scope, nil); err != nil {
-						return err
-					} else {
-						for _, selectItem := range boundProjections.Items {
-							switch typedProjection := selectItem.(type) {
-							case *pgsql.AliasedExpression:
-								if !typedProjection.Alias.Set {
-									return fmt.Errorf("expected aliased expression to have an alias set")
-								} else if typedProjection.Alias.Value == typedExpression {
-									// This is the projection being replaced by the assignment
-									if rewrittenProjections, err := buildProjection(typedExpression, identifierDeletion.UpdateBinding, scope); err != nil {
-										return err
-									} else {
-										identifierDeletion.Projection = append(identifierDeletion.Projection, rewrittenProjections...)
-									}
-								} else {
-									// Reflects this scope binding to the next query part
-									identifierDeletion.Projection = append(identifierDeletion.Projection, typedProjection)
-								}
-
-							default:
-								return fmt.Errorf("expected aliased expression as projection but got: %T", selectItem)
-							}
-						}
-					}
+				} else if _, err := s.query.CurrentPart().mutations.AddDeletion(scope, typedExpression, deleteFrame); err != nil {
+					return err
 				}
-
 			default:
 				return fmt.Errorf("unsupported delete expression: %T", expression)
 			}
@@ -73,7 +46,7 @@ func (s *Translator) translateDelete(scope *Scope, cypherDelete *cypher.Delete) 
 }
 
 func (s *Translator) buildDeletions(scope *Scope) error {
-	for _, identifierDeletion := range s.mutations.Deletions.Values() {
+	for _, identifierDeletion := range s.query.CurrentPart().mutations.Deletions.Values() {
 		var (
 			sqlDelete = pgsql.Delete{
 				Using: []pgsql.FromClause{{
@@ -110,14 +83,13 @@ func (s *Translator) buildDeletions(scope *Scope) error {
 			return fmt.Errorf("invalid identifier data type for deletion: %s", identifierDeletion.UpdateBinding.Identifier)
 		}
 
-		if err := rewriteConstraintIdentifierReferences(identifierDeletion.Frame, []*Constraint{joinConstraint}); err != nil {
+		if err := rewriteConstraintIdentifierReferences(s.query.Scope, identifierDeletion.Frame, []*Constraint{joinConstraint}); err != nil {
 			return err
 		}
 
-		sqlDelete.Returning = identifierDeletion.Projection
 		sqlDelete.Where = models.ValueOptional(joinConstraint.Expression)
 
-		s.query.Model.AddCTE(pgsql.CommonTableExpression{
+		s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
 			Alias: pgsql.TableAlias{
 				Name: scope.CurrentFrameBinding().Identifier,
 			},

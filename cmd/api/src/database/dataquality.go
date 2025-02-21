@@ -57,6 +57,74 @@ func (s *BloodhoundDB) GetADDataQualityStats(ctx context.Context, domainSid stri
 	return adDataQualityStats, int(count), nil
 }
 
+// GetAggregateADDataQualityStats will aggregate AD Quality stats by
+// summing the maximum asset counts per environment per day. Due to
+// session and group completeness being percentages, it will return
+// the single maximum value of all environments per day.
+func (s *BloodhoundDB) GetAggregateADDataQualityStats(ctx context.Context, domainSIDs []string, start time.Time, end time.Time) (model.ADDataQualityStats, error) {
+	var (
+		adDataQualityStats model.ADDataQualityStats
+		params             = map[string]any{
+			"ids":   domainSIDs,
+			"start": start,
+			"end":   end,
+		}
+	)
+
+	const aggregateAdDataQualityStatsSql = `
+WITH aggregated_quality_stats AS (
+    SELECT
+        DATE_TRUNC('day', created_at) AS created_date,
+        MAX(users) AS max_users,
+        MAX(groups) AS max_groups,
+        MAX(computers) AS max_computers,
+        MAX(ous) AS max_ous,
+        MAX(containers) AS max_containers,
+        MAX(gpos) AS max_gpos,
+        MAX(acls) AS max_acls,
+        MAX(sessions) AS max_sessions,
+        MAX(relationships) AS max_relationships,
+        MAX(aiacas) AS max_aiacas,
+        MAX(rootcas) AS max_rootcas,
+        MAX(enterprisecas) AS max_enterprisecas,
+        MAX(ntauthstores) AS max_ntauthstores,
+        MAX(certtemplates) AS max_certtemplates,
+        MAX(issuancepolicies) AS max_issuancepolicies,
+        MAX(session_completeness) AS max_session_completeness,
+        MAX(local_group_completeness) AS max_local_group_completeness
+    FROM ad_data_quality_stats
+    WHERE domain_sid IN @ids
+    AND created_at BETWEEN @start AND @end
+    GROUP BY domain_sid, created_date
+	)
+SELECT
+    created_date AS created_at,
+    SUM(max_users) AS users,
+    SUM(max_groups) AS groups,
+    SUM(max_computers) AS computers,
+    SUM(max_ous) AS ous,
+    SUM(max_containers) AS containers,
+    SUM(max_gpos) AS gpos,
+    SUM(max_acls) AS acls,
+    SUM(max_sessions) AS sessions,
+    SUM(max_relationships) AS relationships,
+    SUM(max_aiacas) AS aiacas,
+    SUM(max_rootcas) AS rootcas,
+    SUM(max_enterprisecas) AS enterprisecas,
+    SUM(max_ntauthstores) AS ntauthstores,
+    SUM(max_certtemplates) AS certtemplates,
+    SUM(max_issuancepolicies) AS issuancepolicies,
+    MAX(max_session_completeness) AS session_completeness,
+    MAX(max_local_group_completeness) AS local_group_completeness
+FROM aggregated_quality_stats
+GROUP BY created_at
+ORDER BY created_at;`
+
+	result := s.db.WithContext(ctx).Raw(aggregateAdDataQualityStatsSql, params).Scan(&adDataQualityStats)
+
+	return adDataQualityStats, CheckError(result)
+}
+
 func (s *BloodhoundDB) CreateADDataQualityAggregation(ctx context.Context, aggregation model.ADDataQualityAggregation) (model.ADDataQualityAggregation, error) {
 	result := s.db.WithContext(ctx).Create(&aggregation)
 	return aggregation, CheckError(result)

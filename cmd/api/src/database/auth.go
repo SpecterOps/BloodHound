@@ -30,6 +30,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/database/types"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
 )
@@ -255,6 +256,8 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 		updatedUser.ID = newID
 		updatedUser.AuthSecret.UserID = newID
 	} else {
+		// Ensure lowercase emails
+		updatedUser.EmailAddress = null.StringFrom(strings.ToLower(updatedUser.EmailAddress.String))
 		updatedUser.ID = newID
 	}
 
@@ -268,6 +271,8 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 		if result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"users_principal_name_key\"") {
 				return fmt.Errorf("%w: %v", ErrDuplicateUserPrincipal, tx.Error)
+			} else if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"users_email_address_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateEmail, tx.Error)
 			}
 		}
 
@@ -278,6 +283,9 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 // UpdateUser updates the roles associated with the user according to the input struct
 // UPDATE users SET roles = ....
 func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
+	// Ensure lowercase emails
+	user.EmailAddress = null.StringFrom(strings.ToLower(user.EmailAddress.String))
+
 	auditEntry := model.AuditEntry{
 		Action: model.AuditLogActionUpdateUser,
 		Model:  &user, // Pointer is required to ensure success log contains updated fields after transaction
@@ -307,6 +315,8 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 		if result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"users_principal_name_key\"") {
 				return fmt.Errorf("%w: %v", ErrDuplicateUserPrincipal, tx.Error)
+			} else if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"users_email_address_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateEmail, tx.Error)
 			}
 		}
 
@@ -494,12 +504,17 @@ func (s *BloodhoundDB) DeleteAuthSecret(ctx context.Context, authSecret model.Au
 // CreateUserSession creates a new UserSession row
 // INSERT INTO user_sessions (...) VALUES (..)
 func (s *BloodhoundDB) CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error) {
-	var (
-		newUserSession = userSession
-		result         = s.db.WithContext(ctx).Create(&newUserSession)
-	)
+	var newUserSession = userSession
 
-	return newUserSession, CheckError(result)
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := CheckError(tx.Exec(`UPDATE users SET last_login = ? WHERE id = ?`, time.Now().UTC(), userSession.UserID)); err != nil {
+			return err
+		}
+
+		return CheckError(tx.Create(&newUserSession))
+	})
+
+	return newUserSession, err
 }
 
 // EndUserSession terminates the provided session

@@ -86,6 +86,14 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		slog.InfoContext(ctx, "Database migrations are disabled per configuration")
 	}
 
+	// Allow recreating the default admin account to help with lockouts/loading database dumps
+	if cfg.RecreateDefaultAdmin {
+		slog.InfoContext(ctx, "Recreating default admin user")
+		if err := bootstrap.CreateDefaultAdmin(ctx, cfg, connections.RDMS); err != nil {
+			return nil, err
+		}
+	}
+
 	if apiCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {
 		return nil, fmt.Errorf("failed to create in-memory cache for API: %w", err)
 	} else if graphQueryCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {

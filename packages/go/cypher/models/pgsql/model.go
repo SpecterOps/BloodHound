@@ -18,6 +18,7 @@ package pgsql
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -224,8 +225,53 @@ func (s Literal) NodeType() string {
 	return "literal"
 }
 
+type Future[U any] struct {
+	SyntaxNode SyntaxNode
+	Data       U
+	DataType   DataType
+}
+
+func NewFuture[U any](data U, dataType DataType) *Future[U] {
+	return &Future[U]{
+		Data:     data,
+		DataType: dataType,
+	}
+}
+
+func (s Future[U]) Satisfied() bool {
+	return s.SyntaxNode != nil
+}
+
+func (s Future[U]) Unwrap() SyntaxNode {
+	return s.SyntaxNode
+}
+
+func (s Future[U]) TypeHint() DataType {
+	return s.DataType
+}
+
+func (s Future[U]) NodeType() string {
+	var (
+		emptyU U
+	)
+
+	return fmt.Sprintf("syntax_node_future[%T]", emptyU)
+}
+
+func (s Future[U]) AsExpression() Expression {
+	return s
+}
+
 type Subquery struct {
 	Query Query
+}
+
+func (s Subquery) NodeType() string {
+	return "subquery"
+}
+
+func (s Subquery) AsExpression() Expression {
+	return s
 }
 
 // not <expr>
@@ -319,6 +365,10 @@ func (s CompositeValue) AsSelectItem() SelectItem {
 // (<expr>)
 type Parenthetical struct {
 	Expression Expression
+}
+
+func (s Parenthetical) AsSelectItem() SelectItem {
+	return s
 }
 
 func (s Parenthetical) NodeType() string {
@@ -560,21 +610,20 @@ func (s ArrayIndex) AsExpression() Expression {
 	return s
 }
 
-type CompoundExpression []Expression
-
-func (s CompoundExpression) NodeType() string {
-	return "compound_expression"
+type RowColumnReference struct {
+	Identifier Expression
+	Column     Identifier
 }
 
-func (s CompoundExpression) AsExpression() Expression {
+func (s RowColumnReference) NodeType() string {
+	return "row_member_reference"
+}
+
+func (s RowColumnReference) AsExpression() Expression {
 	return s
 }
 
-func (s CompoundExpression) AsSlice() []Expression {
-	return s
-}
-
-func (s CompoundExpression) AsSelectItem() SelectItem {
+func (s RowColumnReference) AsSelectItem() SelectItem {
 	return s
 }
 
@@ -1022,7 +1071,6 @@ func (s Select) NodeType() string {
 // select 1
 // union
 // select 2;
-
 type SetOperation struct {
 	Operator Operator
 	LOperand SetExpression
@@ -1047,7 +1095,7 @@ func (s SetOperation) NodeType() string {
 //
 // [not] exists(<query>)
 type ExistsExpression struct {
-	Subquery Query
+	Subquery Subquery
 	Negated  bool
 }
 
@@ -1130,18 +1178,6 @@ func (s Query) AsStatement() Statement {
 
 func (s Query) NodeType() string {
 	return "query"
-}
-
-func BinaryExpressionJoinTyped(optional Expression, operator Operator, conjoined *BinaryExpression) *BinaryExpression {
-	if optional == nil {
-		return conjoined
-	}
-
-	return NewBinaryExpression(
-		conjoined,
-		operator,
-		optional,
-	)
 }
 
 func BinaryExpressionJoin(optional Expression, operator Operator, conjoined Expression) Expression {

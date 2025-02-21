@@ -12479,6 +12479,157 @@
         }
       }
     },
+    "/api/v2/attack-paths/finding-trends": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "FindingTrendsForEnvironment",
+        "summary": "List finding trends",
+        "description": "Lists findings and their changes in between two dates for an environment",
+        "tags": [
+          "Attack Paths",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "environments",
+            "description": "Environment IDs",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "start",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end",
+            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "environments": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "findings": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "environment_ids": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "finding": {
+                                    "type": "string"
+                                  },
+                                  "display_title": {
+                                    "type": "string"
+                                  },
+                                  "display_type": {
+                                    "type": "string"
+                                  },
+                                  "composite_risk": {
+                                    "type": "number",
+                                    "format": "double"
+                                  },
+                                  "finding_count_start": {
+                                    "type": "integer"
+                                  },
+                                  "finding_count_end": {
+                                    "type": "integer"
+                                  },
+                                  "finding_count_increase": {
+                                    "type": "integer"
+                                  },
+                                  "finding_count_decrease": {
+                                    "type": "integer"
+                                  },
+                                  "finding_impact_count": {
+                                    "type": "integer",
+                                    "nullable": true
+                                  },
+                                  "finding_exposure_count": {
+                                    "type": "integer",
+                                    "nullable": true
+                                  }
+                                }
+                              }
+                            },
+                            "total_finding_count_start": {
+                              "type": "integer"
+                            },
+                            "total_finding_count_end": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/attack-path-types": {
       "parameters": [
         {
@@ -13380,6 +13531,129 @@
                           "type": "array",
                           "items": {
                             "$ref": "#/components/schemas/model.risk-posture-stat"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/posture-history/{data_type}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "data_type",
+          "description": "The type of posture data to return",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/enum.posture-history-type"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "PostureHistoryForEnvironments",
+        "summary": "Get Posture History",
+        "description": "Gets posture data count changes over a time period",
+        "tags": [
+          "Risk Posture",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "environments",
+            "description": "Environment IDs",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "start",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end",
+            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.time-window"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "environments": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "data_type": {
+                          "$ref": "#/components/schemas/enum.posture-history-type"
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date-time",
+                                "readOnly": true
+                              },
+                              "value": {
+                                "type": "number",
+                                "format": "double",
+                                "readOnly": true
+                              }
+                            }
                           }
                         }
                       }
@@ -16356,6 +16630,18 @@
               }
             }
           }
+        ]
+      },
+      "enum.posture-history-type": {
+        "type": "string",
+        "description": "This enum describes the valid data types for posture history results.",
+        "enum": [
+          "findings",
+          "exposure",
+          "assets",
+          "session-completeness",
+          "group-completeness",
+          "attack-paths"
         ]
       }
     },

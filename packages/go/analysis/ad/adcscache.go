@@ -31,6 +31,10 @@ import (
 type ADCSCache struct {
 	mu *sync.RWMutex
 
+	enterpriseCertAuthorities []*graph.Node
+	certTemplates             []*graph.Node
+	domains                   []*graph.Node
+
 	// To discourage direct access without getting a read lock, these are private
 	authStoreForChainValid          map[graph.ID]cardinality.Duplex[uint64]
 	rootCAForChainValid             map[graph.ID]cardinality.Duplex[uint64]
@@ -62,12 +66,19 @@ func NewADCSCache() ADCSCache {
 	}
 }
 
-func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpriseCAs, certTemplates, domains []*graph.Node) {
+func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpriseCertAuthorities, certTemplates []*graph.Node) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		for _, ct := range certTemplates {
+		if domains, err := FetchNodesByKind(ctx, db, ad.Domain); err != nil {
+			return fmt.Errorf("failed fetching domain nodes: %w", err)
+		} else {
+			s.certTemplates = certTemplates
+			s.enterpriseCertAuthorities = enterpriseCertAuthorities
+			s.domains = domains
+		}
+		for _, ct := range s.certTemplates {
 			// cert template enrollers
 			if firstDegreePrincipals, err := fetchFirstDegreeNodes(tx, ct, ad.Enroll, ad.GenericAll, ad.AllExtendedRights); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching enrollers for cert template %d: %v", ct.ID, err))
@@ -93,7 +104,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 		}
 
-		for _, eca := range enterpriseCAs {
+		for _, eca := range s.enterpriseCertAuthorities {
 			if firstDegreeEnrollers, err := fetchFirstDegreeNodes(tx, eca, ad.Enroll); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching enrollers for enterprise ca %d: %v", eca.ID, err))
 			} else {
@@ -116,7 +127,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			}
 		}
 
-		for _, domain := range domains {
+		for _, domain := range s.domains {
 			if rootCaForNodes, err := FetchEnterpriseCAsRootCAForPathToDomain(tx, domain); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Error getting cas via rootcafor for domain %d: %v", domain.ID, err))
 			} else if authStoreForNodes, err := FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, domain); err != nil {
@@ -148,6 +159,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 	}
 
 	slog.InfoContext(ctx, "Finished building adcs cache")
+	return err
 }
 
 func (s *ADCSCache) DoesCAChainProperlyToDomain(enterpriseCA, domain *graph.Node) bool {
@@ -241,6 +253,27 @@ func (s *ADCSCache) HasWeakCertBindingInForest(id uint64) bool {
 	defer s.mu.RUnlock()
 
 	return s.hasWeakCertBindingInForest.Contains(id)
+}
+
+func (s *ADCSCache) GetEnterpriseCertAuthorities() []*graph.Node {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.enterpriseCertAuthorities
+}
+
+func (s *ADCSCache) GetCertTemplates() []*graph.Node {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.certTemplates
+}
+
+func (s *ADCSCache) GetDomains() []*graph.Node {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.domains
 }
 
 func hasUPNCertMappingInForest(tx graph.Transaction, domain *graph.Node) (bool, error) {

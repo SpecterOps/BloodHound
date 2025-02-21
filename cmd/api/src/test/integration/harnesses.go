@@ -1832,7 +1832,7 @@ type ADCSGoldenCertHarness struct {
 }
 
 func (s *ADCSGoldenCertHarness) Setup(graphTestContext *GraphTestContext) {
-	//Positive test cases for GoldenCert edge
+	// Positive test cases for GoldenCert edge
 	sid := RandomDomainSID()
 	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("domain 1", sid, false, true)
 	s.RootCA1 = graphTestContext.NewActiveDirectoryRootCA("rca 1", sid)
@@ -1859,7 +1859,7 @@ func (s *ADCSGoldenCertHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.EnterpriseCA3, s.RootCA3, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.Computer3, s.EnterpriseCA3, ad.HostsCAService)
 
-	//Negative test cases for GoldenCert edge
+	// Negative test cases for GoldenCert edge
 	sid = RandomDomainSID()
 	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("domain 2", sid, false, true)
 	s.RootCA2 = graphTestContext.NewActiveDirectoryRootCA("rca2", sid)
@@ -3705,7 +3705,7 @@ func initHarnessNodes(c *GraphTestContext, nodes []harnesses.Node, sid string) m
 		if kind, ok := node.Properties["kind"]; !ok {
 			continue
 		} else {
-			//The rest of the node kinds need handlers for initialization
+			// The rest of the node kinds need handlers for initialization
 			switch kind {
 			case ad.Group.String():
 				nodeMap[node.ID] = c.NewActiveDirectoryGroup(node.Caption, sid)
@@ -3722,8 +3722,8 @@ func initHarnessNodes(c *GraphTestContext, nodes []harnesses.Node, sid string) m
 			case ad.User.String():
 				nodeMap[node.ID] = c.NewActiveDirectoryUser(node.Caption, sid)
 			case ad.Domain.String():
-				//Unable to assign the same sid to a new domain
-				//It is probably best to segment isolated graphs into their own files or ensure a domainsid property is present if the test relies on pivoting off of it
+				// Unable to assign the same sid to a new domain
+				// It is probably best to segment isolated graphs into their own files or ensure a domainsid property is present if the test relies on pivoting off of it
 				sid := RandomDomainSID()
 				nodeMap[node.ID] = c.NewActiveDirectoryDomain(node.Caption, sid, false, true)
 			default:
@@ -3738,13 +3738,13 @@ func initHarnessNodes(c *GraphTestContext, nodes []harnesses.Node, sid string) m
 
 func initHarnessNodeProperties(c *GraphTestContext, nodeMap map[string]*graph.Node, node harnesses.Node) {
 	for key, value := range node.Properties {
-		//Unfortunately, all properties set within arrows.app are output as strings so we have to do a type dance here
-		//It would be best to define value types for all node properties to avoid handling them this way
+		// Unfortunately, all properties set within arrows.app are output as strings so we have to do a type dance here
+		// It would be best to define value types for all node properties to avoid handling them this way
 		if strings.ToLower(value) == "null" {
 			continue
 		}
 
-		//This is an exception for schemaVersion which should not be a boolean
+		// This is an exception for schemaVersion which should not be a boolean
 		if value == "1" || value == "0" || value == "2" {
 			intValue, _ := strconv.ParseInt(value, 10, 32)
 			nodeMap[node.ID].Properties.Set(strings.ToLower(key), float64(intValue))
@@ -8498,40 +8498,1194 @@ func (s *ESC10bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.DC1)
 }
 
-type NTLMCoerceAndRelayNTLMToSMB struct {
-	AuthenticatedUsers *graph.Node
-	DomainAdminsUser   *graph.Node
-	ServerAdmins       *graph.Node
-	computer3          *graph.Node
-	computer8          *graph.Node
+type OwnsWriteOwnerPriorCollectorVersions struct {
+
+	// Domain 1
+	Domain1_BlockImplicitOwnerRights *graph.Node
+
+	// // Object owners
+	Domain1_User101_Owner           *graph.Node
+	Domain1_User102_DomainAdmin     *graph.Node
+	Domain1_User103_EnterpriseAdmin *graph.Node
+	Domain1_User104_WriteOwner      *graph.Node
+	Domain1_Group1_DomainAdmins     *graph.Node
+	Domain1_Group2_EnterpriseAdmins *graph.Node
+
+	// // Owned objects
+	Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv                *graph.Node
+	Domain1_Computer2_NoOwnerRights_OwnerIsDA                     *graph.Node
+	Domain1_Computer3_NoOwnerRights_OwnerIsEA                     *graph.Node
+	Domain1_Computer4_AbusableOwnerRightsNoneInherited            *graph.Node
+	Domain1_Computer5_AbusableOwnerRightsInherited                *graph.Node
+	Domain1_Computer6_AbusableOwnerRightsOnlyNonabusableInherited *graph.Node
+	Domain1_Computer7_OnlyNonabusableOwnerRightsAndNoneInherited  *graph.Node
+	Domain1_Computer8_OnlyNonabusableOwnerRightsInherited         *graph.Node
+
+	Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv                *graph.Node
+	Domain1_MSA2_NoOwnerRights_OwnerIsDA                     *graph.Node
+	Domain1_MSA3_NoOwnerRights_OwnerIsEA                     *graph.Node
+	Domain1_MSA4_AbusableOwnerRightsNoneInherited            *graph.Node
+	Domain1_MSA5_AbusableOwnerRightsInherited                *graph.Node
+	Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited *graph.Node
+	Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited  *graph.Node
+	Domain1_MSA8_OnlyNonabusableOwnerRightsInherited         *graph.Node
+
+	Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv                *graph.Node
+	Domain1_GMSA2_NoOwnerRights_OwnerIsDA                     *graph.Node
+	Domain1_GMSA3_NoOwnerRights_OwnerIsEA                     *graph.Node
+	Domain1_GMSA4_AbusableOwnerRightsNoneInherited            *graph.Node
+	Domain1_GMSA5_AbusableOwnerRightsInherited                *graph.Node
+	Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited *graph.Node
+	Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited  *graph.Node
+	Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited         *graph.Node
+
+	Domain1_User1_NoOwnerRights_OwnerIsLowPriv                *graph.Node
+	Domain1_User2_NoOwnerRights_OwnerIsDA                     *graph.Node
+	Domain1_User3_NoOwnerRights_OwnerIsEA                     *graph.Node
+	Domain1_User4_AbusableOwnerRightsNoneInherited            *graph.Node
+	Domain1_User5_AbusableOwnerRightsInherited                *graph.Node
+	Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited *graph.Node
+	Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited  *graph.Node
+	Domain1_User8_OnlyNonabusableOwnerRightsInherited         *graph.Node
+
+	// Domain 2
+	Domain2_DoNotBlockImplicitOwnerRights *graph.Node
+
+	// // Object owners
+	Domain2_User1_Owner      *graph.Node
+	Domain2_User2_WriteOwner *graph.Node
+
+	// // Owned objects
+	Domain2_Computer1_NoOwnerRights                               *graph.Node
+	Domain2_Computer2_AbusableOwnerRightsNoneInherited            *graph.Node
+	Domain2_Computer3_AbusableOwnerRightsInherited                *graph.Node
+	Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited *graph.Node
+	Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited  *graph.Node
+	Domain2_Computer6_OnlyNonabusableOwnerRightsInherited         *graph.Node
 }
 
-func (s *NTLMCoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
+func (s *OwnsWriteOwnerPriorCollectorVersions) Setup(graphTestContext *GraphTestContext) {
+
+	// This is the same as OwnsWriteOwner except that DoesAnyAceGrantOwnerRights and DoesAnyInheritedAceGrantOwnerRights are
+	// not set on any objects because SharpHound didn't collect them prior to moving Owns and WriteOwner to post-processing
+	// This also impacts ingest for Domain1_<Object>7 and 8 and Domain2_Computer5 and 6
+
 	domainSid := RandomDomainSID()
-	s.AuthenticatedUsers = graphTestContext.NewActiveDirectoryGroup("Authenticated Users", domainSid)
-	s.AuthenticatedUsers.Properties.Set("objectid", fmt.Sprintf("authenticated-users%s", adAnalysis.AuthenticatedUsersSuffix))
-	s.AuthenticatedUsers.Properties.Set("Domain", domainSid)
-	graphTestContext.UpdateNode(s.AuthenticatedUsers)
 
-	s.DomainAdminsUser = graphTestContext.NewActiveDirectoryUser("Domain Admins User", domainSid)
+	// Domain 1
+	s.Domain1_BlockImplicitOwnerRights = graphTestContext.NewActiveDirectoryDomain("Domain1_BlockImplicitOwnerRights", domainSid, false, true)
+	s.Domain1_BlockImplicitOwnerRights.Properties.Set(ad.DSHeuristics.String(), "00000000000000000000000000001")
+	graphTestContext.UpdateNode(s.Domain1_BlockImplicitOwnerRights)
 
-	s.ServerAdmins = graphTestContext.NewActiveDirectoryDomain("Server Admins", domainSid, false, true)
-	s.ServerAdmins.Properties.Set("objectid", fmt.Sprintf("server-admins%s", adAnalysis.AuthenticatedUsersSuffix))
-	s.ServerAdmins.Properties.Set("Domain", domainSid)
-	graphTestContext.UpdateNode(s.ServerAdmins)
+	// // Object owners
+	s.Domain1_User101_Owner = graphTestContext.NewActiveDirectoryUser("User101_Owner", domainSid)
+	s.Domain1_User102_DomainAdmin = graphTestContext.NewActiveDirectoryUser("User102_DomainAdmin", domainSid)
+	s.Domain1_User103_EnterpriseAdmin = graphTestContext.NewActiveDirectoryUser("User103_EnterpriseAdmin", domainSid)
+	s.Domain1_User104_WriteOwner = graphTestContext.NewActiveDirectoryUser("User104_WriteOwner", domainSid)
 
-	s.DomainAdminsUser.Properties.Set("objectid", fmt.Sprintf("domainadminuser-users%s", adAnalysis.AuthenticatedUsersSuffix))
-	s.computer3 = graphTestContext.NewActiveDirectoryComputer("computer3", domainSid)
+	// //// Add the Domain Admins group and member
+	s.Domain1_Group1_DomainAdmins = graphTestContext.NewActiveDirectoryGroup("Domain Admins", domainSid)
+	s.Domain1_Group1_DomainAdmins.Properties.Set(common.ObjectID.String(), domainSid+"-512")
+	graphTestContext.UpdateNode(s.Domain1_Group1_DomainAdmins)
+	graphTestContext.NewRelationship(s.Domain1_User102_DomainAdmin, s.Domain1_Group1_DomainAdmins, ad.MemberOf)
 
-	s.computer8 = graphTestContext.NewActiveDirectoryComputer("computer8", domainSid)
-	s.computer8.Properties.Set(ad.SMBSigning.String(), false)
-	s.computer8.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
-	graphTestContext.UpdateNode(s.computer8)
+	// //// Add the Enterprise Admins group and member
+	s.Domain1_Group2_EnterpriseAdmins = graphTestContext.NewActiveDirectoryGroup("Enterprise Admins", domainSid)
+	s.Domain1_Group2_EnterpriseAdmins.Properties.Set(common.ObjectID.String(), domainSid+"-519")
+	graphTestContext.UpdateNode(s.Domain1_Group2_EnterpriseAdmins)
+	graphTestContext.NewRelationship(s.Domain1_User103_EnterpriseAdmin, s.Domain1_Group2_EnterpriseAdmins, ad.MemberOf)
 
-	graphTestContext.NewRelationship(s.computer3, s.ServerAdmins, ad.MemberOf)
-	graphTestContext.NewRelationship(s.ServerAdmins, s.computer8, ad.AdminTo)
-	graphTestContext.NewRelationship(s.AuthenticatedUsers, s.computer8, ad.CoerceAndRelayNTLMToSMB)
-	graphTestContext.NewRelationship(s.computer8, s.DomainAdminsUser, ad.HasSession)
+	// // Owned objects
+
+	// //// Computers
+	s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("Computer1_NoOwnerRights_OwnerIsLowPriv", domainSid)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv, ad.WriteOwnerRaw)
+
+	s.Domain1_Computer2_NoOwnerRights_OwnerIsDA = graphTestContext.NewActiveDirectoryComputer("Computer2_NoOwnerRights_OwnerIsDA", domainSid)
+	graphTestContext.NewRelationship(s.Domain1_User102_DomainAdmin, s.Domain1_Computer2_NoOwnerRights_OwnerIsDA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer2_NoOwnerRights_OwnerIsDA, ad.WriteOwnerRaw)
+
+	s.Domain1_Computer3_NoOwnerRights_OwnerIsEA = graphTestContext.NewActiveDirectoryComputer("Computer3_NoOwnerRights_OwnerIsEA", domainSid)
+	graphTestContext.NewRelationship(s.Domain1_User103_EnterpriseAdmin, s.Domain1_Computer3_NoOwnerRights_OwnerIsEA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer3_NoOwnerRights_OwnerIsEA, ad.WriteOwnerRaw)
+
+	s.Domain1_Computer4_AbusableOwnerRightsNoneInherited = graphTestContext.NewActiveDirectoryComputer("Computer4_AbusableOwnerRightsNoneInherited", domainSid)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer4_AbusableOwnerRightsNoneInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer4_AbusableOwnerRightsNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_Computer5_AbusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("Computer5_AbusableOwnerRightsInherited", domainSid)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer5_AbusableOwnerRightsInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer5_AbusableOwnerRightsInherited, ad.WriteOwnerLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+
+	s.Domain1_Computer6_AbusableOwnerRightsOnlyNonabusableInherited = graphTestContext.NewActiveDirectoryComputer("Computer6_AbusableOwnerRightsOnlyNonabusableInherited", domainSid)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer6_AbusableOwnerRightsOnlyNonabusableInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+	// Ingest adds WriteOwnerRaw if no abusable owner rights are present and DoesAnyInheritedAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer6_AbusableOwnerRightsOnlyNonabusableInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_Computer7_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryComputer("Computer7_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
+	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_Computer8_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("Computer8_OnlyNonabusableOwnerRightsInherited", domainSid)
+	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer8_OnlyNonabusableOwnerRightsInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer8_OnlyNonabusableOwnerRightsInherited, ad.WriteOwnerRaw)
+
+	// //// MSAs
+	s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("MSA1_NoOwnerRights_OwnerIsLowPriv", domainSid)
+	s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.MSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv, ad.WriteOwnerRaw)
+
+	s.Domain1_MSA2_NoOwnerRights_OwnerIsDA = graphTestContext.NewActiveDirectoryComputer("MSA2_NoOwnerRights_OwnerIsDA", domainSid)
+	s.Domain1_MSA2_NoOwnerRights_OwnerIsDA.Properties.Set(ad.MSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_MSA2_NoOwnerRights_OwnerIsDA)
+	graphTestContext.NewRelationship(s.Domain1_User102_DomainAdmin, s.Domain1_MSA2_NoOwnerRights_OwnerIsDA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA2_NoOwnerRights_OwnerIsDA, ad.WriteOwnerRaw)
+
+	s.Domain1_MSA3_NoOwnerRights_OwnerIsEA = graphTestContext.NewActiveDirectoryComputer("MSA3_NoOwnerRights_OwnerIsEA", domainSid)
+	s.Domain1_MSA3_NoOwnerRights_OwnerIsEA.Properties.Set(ad.MSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_MSA3_NoOwnerRights_OwnerIsEA)
+	graphTestContext.NewRelationship(s.Domain1_User103_EnterpriseAdmin, s.Domain1_MSA3_NoOwnerRights_OwnerIsEA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA3_NoOwnerRights_OwnerIsEA, ad.WriteOwnerRaw)
+
+	s.Domain1_MSA4_AbusableOwnerRightsNoneInherited = graphTestContext.NewActiveDirectoryComputer("MSA4_AbusableOwnerRightsNoneInherited", domainSid)
+	s.Domain1_MSA4_AbusableOwnerRightsNoneInherited.Properties.Set(ad.MSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_MSA4_AbusableOwnerRightsNoneInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_MSA4_AbusableOwnerRightsNoneInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA4_AbusableOwnerRightsNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_MSA5_AbusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("MSA5_AbusableOwnerRightsInherited", domainSid)
+	s.Domain1_MSA5_AbusableOwnerRightsInherited.Properties.Set(ad.MSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_MSA5_AbusableOwnerRightsInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_MSA5_AbusableOwnerRightsInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA5_AbusableOwnerRightsInherited, ad.WriteOwnerLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+
+	s.Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited = graphTestContext.NewActiveDirectoryComputer("MSA6_AbusableOwnerRightsOnlyNonabusableInherited", domainSid)
+	s.Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.MSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+	// Ingest adds WriteOwnerRaw if no abusable owner rights are present and DoesAnyInheritedAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryComputer("MSA7_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
+	s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.MSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited)
+	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("MSA8_OnlyNonabusableOwnerRightsInherited", domainSid)
+	s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.MSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited)
+	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited, ad.WriteOwnerRaw)
+
+	// //// GMSAs
+	s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("GMSA1_NoOwnerRights_OwnerIsLowPriv", domainSid)
+	s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.GMSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv, ad.WriteOwnerRaw)
+
+	s.Domain1_GMSA2_NoOwnerRights_OwnerIsDA = graphTestContext.NewActiveDirectoryComputer("GMSA2_NoOwnerRights_OwnerIsDA", domainSid)
+	s.Domain1_GMSA2_NoOwnerRights_OwnerIsDA.Properties.Set(ad.GMSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_GMSA2_NoOwnerRights_OwnerIsDA)
+	graphTestContext.NewRelationship(s.Domain1_User102_DomainAdmin, s.Domain1_GMSA2_NoOwnerRights_OwnerIsDA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA2_NoOwnerRights_OwnerIsDA, ad.WriteOwnerRaw)
+
+	s.Domain1_GMSA3_NoOwnerRights_OwnerIsEA = graphTestContext.NewActiveDirectoryComputer("GMSA3_NoOwnerRights_OwnerIsEA", domainSid)
+	s.Domain1_GMSA3_NoOwnerRights_OwnerIsEA.Properties.Set(ad.GMSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_GMSA3_NoOwnerRights_OwnerIsEA)
+	graphTestContext.NewRelationship(s.Domain1_User103_EnterpriseAdmin, s.Domain1_GMSA3_NoOwnerRights_OwnerIsEA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA3_NoOwnerRights_OwnerIsEA, ad.WriteOwnerRaw)
+
+	s.Domain1_GMSA4_AbusableOwnerRightsNoneInherited = graphTestContext.NewActiveDirectoryComputer("GMSA4_AbusableOwnerRightsNoneInherited", domainSid)
+	s.Domain1_GMSA4_AbusableOwnerRightsNoneInherited.Properties.Set(ad.GMSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_GMSA4_AbusableOwnerRightsNoneInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_GMSA4_AbusableOwnerRightsNoneInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA4_AbusableOwnerRightsNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_GMSA5_AbusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("GMSA5_AbusableOwnerRightsInherited", domainSid)
+	s.Domain1_GMSA5_AbusableOwnerRightsInherited.Properties.Set(ad.GMSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_GMSA5_AbusableOwnerRightsInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_GMSA5_AbusableOwnerRightsInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA5_AbusableOwnerRightsInherited, ad.WriteOwnerLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+
+	s.Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited = graphTestContext.NewActiveDirectoryComputer("GMSA6_AbusableOwnerRightsOnlyNonabusableInherited", domainSid)
+	s.Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.GMSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+	// Ingest adds WriteOwnerRaw if no abusable owner rights are present and DoesAnyInheritedAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryComputer("GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
+	s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.GMSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited)
+	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("GMSA8_OnlyNonabusableOwnerRightsInherited", domainSid)
+	s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.GMSA.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited)
+	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited, ad.WriteOwnerRaw)
+
+	// //// Users
+	s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryUser("User1_NoOwnerRights_OwnerIsLowPriv", domainSid)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv, ad.WriteOwnerRaw)
+
+	s.Domain1_User2_NoOwnerRights_OwnerIsDA = graphTestContext.NewActiveDirectoryUser("User2_NoOwnerRights_OwnerIsDA", domainSid)
+	graphTestContext.NewRelationship(s.Domain1_User102_DomainAdmin, s.Domain1_User2_NoOwnerRights_OwnerIsDA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User2_NoOwnerRights_OwnerIsDA, ad.WriteOwnerRaw)
+
+	s.Domain1_User3_NoOwnerRights_OwnerIsEA = graphTestContext.NewActiveDirectoryUser("User3_NoOwnerRights_OwnerIsEA", domainSid)
+	graphTestContext.NewRelationship(s.Domain1_User103_EnterpriseAdmin, s.Domain1_User3_NoOwnerRights_OwnerIsEA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User3_NoOwnerRights_OwnerIsEA, ad.WriteOwnerRaw)
+
+	s.Domain1_User4_AbusableOwnerRightsNoneInherited = graphTestContext.NewActiveDirectoryUser("User4_AbusableOwnerRightsNoneInherited", domainSid)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_User4_AbusableOwnerRightsNoneInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User4_AbusableOwnerRightsNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_User5_AbusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryUser("User5_AbusableOwnerRightsInherited", domainSid)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_User5_AbusableOwnerRightsInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User5_AbusableOwnerRightsInherited, ad.WriteOwnerLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+
+	s.Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited = graphTestContext.NewActiveDirectoryUser("User6_AbusableOwnerRightsOnlyNonabusableInherited", domainSid)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+	// Ingest adds WriteOwnerRaw if no abusable owner rights are present and DoesAnyInheritedAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryUser("User7_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
+	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_User8_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryUser("User8_OnlyNonabusableOwnerRightsInherited", domainSid)
+	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_User8_OnlyNonabusableOwnerRightsInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User8_OnlyNonabusableOwnerRightsInherited, ad.WriteOwnerRaw)
+
+	// Domain 2
+	domainSid = RandomDomainSID()
+	s.Domain2_DoNotBlockImplicitOwnerRights = graphTestContext.NewActiveDirectoryDomain("Domain2_DoNotBlockImplicitOwnerRights", domainSid, false, true)
+	s.Domain2_DoNotBlockImplicitOwnerRights.Properties.Set(ad.DSHeuristics.String(), "00000000000000000000000000000")
+	graphTestContext.UpdateNode(s.Domain2_DoNotBlockImplicitOwnerRights)
+
+	// // Object owners
+	s.Domain2_User1_Owner = graphTestContext.NewActiveDirectoryUser("User1_Owner", domainSid)
+	s.Domain2_User2_WriteOwner = graphTestContext.NewActiveDirectoryUser("User2_WriteOwner", domainSid)
+
+	// // Owned objects
+
+	// //// Computers
+	s.Domain2_Computer1_NoOwnerRights = graphTestContext.NewActiveDirectoryComputer("Computer1_NoOwnerRights", domainSid)
+	graphTestContext.NewRelationship(s.Domain2_User1_Owner, s.Domain2_Computer1_NoOwnerRights, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer1_NoOwnerRights, ad.WriteOwnerRaw)
+
+	s.Domain2_Computer2_AbusableOwnerRightsNoneInherited = graphTestContext.NewActiveDirectoryComputer("Computer2_AbusableOwnerRightsNoneInherited", domainSid)
+	graphTestContext.NewRelationship(s.Domain2_User1_Owner, s.Domain2_Computer2_AbusableOwnerRightsNoneInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer2_AbusableOwnerRightsNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain2_Computer3_AbusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("Computer3_AbusableOwnerRightsInherited", domainSid)
+	graphTestContext.NewRelationship(s.Domain2_User1_Owner, s.Domain2_Computer3_AbusableOwnerRightsInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer3_AbusableOwnerRightsInherited, ad.WriteOwnerLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+
+	s.Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited = graphTestContext.NewActiveDirectoryComputer("Computer4_AbusableOwnerRightsOnlyNonabusableInherited", domainSid)
+	graphTestContext.NewRelationship(s.Domain2_User1_Owner, s.Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+	// Ingest adds WriteOwnerRaw if no abusable owner rights are present and DoesAnyInheritedAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited, ad.WriteOwnerRaw)
+
+	s.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryComputer("Computer5_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
+	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain2_User1_Owner, s.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("Computer6_OnlyNonabusableOwnerRightsInherited", domainSid)
+	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+	// Ingest adds OwnsRaw and WriteOwnerRaw if no abusable owner rights are present and DoesAnyAceGrantOwnerRights is not present
+	graphTestContext.NewRelationship(s.Domain2_User1_Owner, s.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited, ad.WriteOwnerRaw)
+}
+
+type CoerceAndRelayNTLMtoADCS struct {
+	AuthenticatedUsersGroup *graph.Node
+	CertTemplate1           *graph.Node
+	Computer                *graph.Node
+	Domain                  *graph.Node
+	EnterpriseCA1           *graph.Node
+	NTAuthStore             *graph.Node
+	RootCA                  *graph.Node
+}
+
+func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
+	domainSid := RandomDomainSID()
+	s.AuthenticatedUsersGroup = graphTestContext.NewActiveDirectoryGroup("Authenticated Users Group", domainSid)
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid, CertTemplateData{
+		ApplicationPolicies:           []string{},
+		AuthenticationEnabled:         true,
+		AuthorizedSignatures:          0,
+		EffectiveEKUs:                 []string{},
+		EnrolleeSuppliesSubject:       false,
+		NoSecurityExtension:           false,
+		RequiresManagerApproval:       false,
+		SchannelAuthenticationEnabled: false,
+		SchemaVersion:                 1,
+		SubjectAltRequireEmail:        false,
+		SubjectAltRequireSPN:          false,
+		SubjectAltRequireUPN:          false,
+	})
+	s.Computer = graphTestContext.NewActiveDirectoryComputer("Computer", domainSid)
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid)
+	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
+	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
+	graphTestContext.NewRelationship(s.AuthenticatedUsersGroup, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.AuthenticatedUsersGroup, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+
+	s.EnterpriseCA1.Properties.Set(ad.ADCSWebEnrollmentHTTP.String(), true)
+	graphTestContext.UpdateNode(s.EnterpriseCA1)
+	s.Computer.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer)
+	s.AuthenticatedUsersGroup.Properties.Set(common.ObjectID.String(), fmt.Sprintf("authenticated-users%s", adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.AuthenticatedUsersGroup)
+}
+
+type CoerceAndRelayNTLMToSMB struct {
+	Computer1  *graph.Node
+	Computer10 *graph.Node
+	Computer2  *graph.Node
+	Computer3  *graph.Node
+	Computer4  *graph.Node
+	Computer5  *graph.Node
+	Computer6  *graph.Node
+	Computer7  *graph.Node
+	Computer8  *graph.Node
+	Computer9  *graph.Node
+	Domain1    *graph.Node
+	Domain2    *graph.Node
+	Group1     *graph.Node
+	Group2     *graph.Node
+	Group3     *graph.Node
+	Group4     *graph.Node
+	Group5     *graph.Node
+	Group6     *graph.Node
+	Group7     *graph.Node
+	Group8     *graph.Node
+}
+
+func (s *CoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+	domain2Sid := RandomDomainSID()
+
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
+	s.Computer2.Properties.Set(ad.SMBSigning.String(), false)
+	graphTestContext.UpdateNode(s.Computer2)
+
+	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domain2Sid)
+
+	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domain2Sid)
+	s.Computer4.Properties.Set(ad.SMBSigning.String(), true)
+	graphTestContext.UpdateNode(s.Computer4)
+
+	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domain2Sid)
+
+	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domain2Sid)
+	s.Computer6.Properties.Set(ad.SMBSigning.String(), false)
+	graphTestContext.UpdateNode(s.Computer6)
+
+	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domain2Sid)
+	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domain2Sid)
+
+	s.Computer9 = graphTestContext.NewActiveDirectoryComputer("Computer9", domain2Sid)
+	s.Computer9.Properties.Set(ad.SMBSigning.String(), false)
+	graphTestContext.UpdateNode(s.Computer2)
+
+	s.Computer10 = graphTestContext.NewActiveDirectoryComputer("Computer10", domain2Sid)
+	s.Computer10.Properties.Set(ad.RestrictOutboundNTLM.String(), true)
+	graphTestContext.UpdateNode(s.Computer10)
+
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domain1Sid, false, true)
+	s.Domain1.Properties.Set(ad.FunctionalLevel.String(), "2008")
+	graphTestContext.UpdateNode(s.Domain1)
+
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domain2Sid, false, true)
+	s.Domain2.Properties.Set(ad.FunctionalLevel.String(), "2016")
+	graphTestContext.UpdateNode(s.Domain2)
+
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1%s", adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group1)
+
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain2Sid)
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2%s", adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group2)
+
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domain1Sid)
+
+	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
+	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group4%s", adAnalysis.ProtectedUsersSuffix))
+	s.Group4.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN1")
+
+	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain2Sid)
+
+	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain2Sid)
+	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group6%s", adAnalysis.ProtectedUsersSuffix))
+	s.Group6.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN2")
+
+	s.Group7 = graphTestContext.NewActiveDirectoryGroup("Group7", domain2Sid)
+	s.Group8 = graphTestContext.NewActiveDirectoryGroup("Group8", domain2Sid)
+	graphTestContext.NewRelationship(s.Group1, s.Computer2, ad.CoerceAndRelayNTLMToSMB)
+	graphTestContext.NewRelationship(s.Computer1, s.Computer2, ad.AdminTo)
+	graphTestContext.NewRelationship(s.Computer1, s.Group4, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer3, s.Group5, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group5, s.Group6, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer7, s.Computer4, ad.AdminTo)
+	graphTestContext.NewRelationship(s.Computer7, s.Computer5, ad.AdminTo)
+	graphTestContext.NewRelationship(s.Group5, s.Computer6, ad.AdminTo)
+	graphTestContext.NewRelationship(s.Group8, s.Computer9, ad.AdminTo)
+	graphTestContext.NewRelationship(s.Computer8, s.Group7, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group7, s.Group8, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group2, s.Computer9, ad.CoerceAndRelayNTLMToSMB)
+	graphTestContext.NewRelationship(s.Computer10, s.Computer6, ad.AdminTo)
+}
+
+type OwnsWriteOwner struct {
+
+	// Domain 1
+	Domain1_BlockImplicitOwnerRights *graph.Node
+
+	// // Object owners
+	Domain1_User101_Owner           *graph.Node
+	Domain1_User102_DomainAdmin     *graph.Node
+	Domain1_User103_EnterpriseAdmin *graph.Node
+	Domain1_User104_WriteOwner      *graph.Node
+	Domain1_Group1_DomainAdmins     *graph.Node
+	Domain1_Group2_EnterpriseAdmins *graph.Node
+
+	// // Owned objects
+	Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv                *graph.Node
+	Domain1_Computer2_NoOwnerRights_OwnerIsDA                     *graph.Node
+	Domain1_Computer3_NoOwnerRights_OwnerIsEA                     *graph.Node
+	Domain1_Computer4_AbusableOwnerRightsNoneInherited            *graph.Node
+	Domain1_Computer5_AbusableOwnerRightsInherited                *graph.Node
+	Domain1_Computer6_AbusableOwnerRightsOnlyNonabusableInherited *graph.Node
+	Domain1_Computer7_OnlyNonabusableOwnerRightsAndNoneInherited  *graph.Node
+	Domain1_Computer8_OnlyNonabusableOwnerRightsInherited         *graph.Node
+
+	Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv                *graph.Node
+	Domain1_MSA2_NoOwnerRights_OwnerIsDA                     *graph.Node
+	Domain1_MSA3_NoOwnerRights_OwnerIsEA                     *graph.Node
+	Domain1_MSA4_AbusableOwnerRightsNoneInherited            *graph.Node
+	Domain1_MSA5_AbusableOwnerRightsInherited                *graph.Node
+	Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited *graph.Node
+	Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited  *graph.Node
+	Domain1_MSA8_OnlyNonabusableOwnerRightsInherited         *graph.Node
+
+	Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv                *graph.Node
+	Domain1_GMSA2_NoOwnerRights_OwnerIsDA                     *graph.Node
+	Domain1_GMSA3_NoOwnerRights_OwnerIsEA                     *graph.Node
+	Domain1_GMSA4_AbusableOwnerRightsNoneInherited            *graph.Node
+	Domain1_GMSA5_AbusableOwnerRightsInherited                *graph.Node
+	Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited *graph.Node
+	Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited  *graph.Node
+	Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited         *graph.Node
+
+	Domain1_User1_NoOwnerRights_OwnerIsLowPriv                *graph.Node
+	Domain1_User2_NoOwnerRights_OwnerIsDA                     *graph.Node
+	Domain1_User3_NoOwnerRights_OwnerIsEA                     *graph.Node
+	Domain1_User4_AbusableOwnerRightsNoneInherited            *graph.Node
+	Domain1_User5_AbusableOwnerRightsInherited                *graph.Node
+	Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited *graph.Node
+	Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited  *graph.Node
+	Domain1_User8_OnlyNonabusableOwnerRightsInherited         *graph.Node
+
+	// Domain 2
+	Domain2_DoNotBlockImplicitOwnerRights *graph.Node
+
+	// // Object owners
+	Domain2_User1_Owner      *graph.Node
+	Domain2_User2_WriteOwner *graph.Node
+
+	// // Owned objects
+	Domain2_Computer1_NoOwnerRights                               *graph.Node
+	Domain2_Computer2_AbusableOwnerRightsNoneInherited            *graph.Node
+	Domain2_Computer3_AbusableOwnerRightsInherited                *graph.Node
+	Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited *graph.Node
+	Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited  *graph.Node
+	Domain2_Computer6_OnlyNonabusableOwnerRightsInherited         *graph.Node
+}
+
+func (s *OwnsWriteOwner) Setup(graphTestContext *GraphTestContext) {
+	domainSid := RandomDomainSID()
+
+	// Domain 1
+	s.Domain1_BlockImplicitOwnerRights = graphTestContext.NewActiveDirectoryDomain("Domain1_BlockImplicitOwnerRights", domainSid, false, true)
+	s.Domain1_BlockImplicitOwnerRights.Properties.Set(ad.DSHeuristics.String(), "00000000000000000000000000001")
+	graphTestContext.UpdateNode(s.Domain1_BlockImplicitOwnerRights)
+
+	// // Object owners
+	s.Domain1_User101_Owner = graphTestContext.NewActiveDirectoryUser("User101_Owner", domainSid)
+	s.Domain1_User102_DomainAdmin = graphTestContext.NewActiveDirectoryUser("User102_DomainAdmin", domainSid)
+	s.Domain1_User103_EnterpriseAdmin = graphTestContext.NewActiveDirectoryUser("User103_EnterpriseAdmin", domainSid)
+	s.Domain1_User104_WriteOwner = graphTestContext.NewActiveDirectoryUser("User104_WriteOwner", domainSid)
+
+	// //// Add the Domain Admins group and member
+	s.Domain1_Group1_DomainAdmins = graphTestContext.NewActiveDirectoryGroup("Domain Admins", domainSid)
+	s.Domain1_Group1_DomainAdmins.Properties.Set(common.ObjectID.String(), domainSid+"-512")
+	graphTestContext.UpdateNode(s.Domain1_Group1_DomainAdmins)
+	graphTestContext.NewRelationship(s.Domain1_User102_DomainAdmin, s.Domain1_Group1_DomainAdmins, ad.MemberOf)
+
+	// //// Add the Enterprise Admins group and member
+	s.Domain1_Group2_EnterpriseAdmins = graphTestContext.NewActiveDirectoryGroup("Enterprise Admins", domainSid)
+	s.Domain1_Group2_EnterpriseAdmins.Properties.Set(common.ObjectID.String(), domainSid+"-519")
+	graphTestContext.UpdateNode(s.Domain1_Group2_EnterpriseAdmins)
+	graphTestContext.NewRelationship(s.Domain1_User103_EnterpriseAdmin, s.Domain1_Group2_EnterpriseAdmins, ad.MemberOf)
+
+	// // Owned objects
+
+	// //// Computers
+	s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("Computer1_NoOwnerRights_OwnerIsLowPriv", domainSid)
+	s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer1_NoOwnerRights_OwnerIsLowPriv, ad.WriteOwnerRaw)
+
+	s.Domain1_Computer2_NoOwnerRights_OwnerIsDA = graphTestContext.NewActiveDirectoryComputer("Computer2_NoOwnerRights_OwnerIsDA", domainSid)
+	s.Domain1_Computer2_NoOwnerRights_OwnerIsDA.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_Computer2_NoOwnerRights_OwnerIsDA)
+	graphTestContext.NewRelationship(s.Domain1_User102_DomainAdmin, s.Domain1_Computer2_NoOwnerRights_OwnerIsDA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer2_NoOwnerRights_OwnerIsDA, ad.WriteOwnerRaw)
+
+	s.Domain1_Computer3_NoOwnerRights_OwnerIsEA = graphTestContext.NewActiveDirectoryComputer("Computer3_NoOwnerRights_OwnerIsEA", domainSid)
+	s.Domain1_Computer3_NoOwnerRights_OwnerIsEA.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_Computer3_NoOwnerRights_OwnerIsEA)
+	graphTestContext.NewRelationship(s.Domain1_User103_EnterpriseAdmin, s.Domain1_Computer3_NoOwnerRights_OwnerIsEA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer3_NoOwnerRights_OwnerIsEA, ad.WriteOwnerRaw)
+
+	s.Domain1_Computer4_AbusableOwnerRightsNoneInherited = graphTestContext.NewActiveDirectoryComputer("Computer4_AbusableOwnerRightsNoneInherited", domainSid)
+	s.Domain1_Computer4_AbusableOwnerRightsNoneInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_Computer4_AbusableOwnerRightsNoneInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_Computer4_AbusableOwnerRightsNoneInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer4_AbusableOwnerRightsNoneInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer4_AbusableOwnerRightsNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_Computer5_AbusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("Computer5_AbusableOwnerRightsInherited", domainSid)
+	s.Domain1_Computer5_AbusableOwnerRightsInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_Computer5_AbusableOwnerRightsInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_Computer5_AbusableOwnerRightsInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer5_AbusableOwnerRightsInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer5_AbusableOwnerRightsInherited, ad.WriteOwnerLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+
+	s.Domain1_Computer6_AbusableOwnerRightsOnlyNonabusableInherited = graphTestContext.NewActiveDirectoryComputer("Computer6_AbusableOwnerRightsOnlyNonabusableInherited", domainSid)
+	s.Domain1_Computer6_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_Computer6_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_Computer6_AbusableOwnerRightsOnlyNonabusableInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_Computer6_AbusableOwnerRightsOnlyNonabusableInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+
+	s.Domain1_Computer7_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryComputer("Computer7_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
+	s.Domain1_Computer7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_Computer7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_Computer7_OnlyNonabusableOwnerRightsAndNoneInherited)
+	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_Computer7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_Computer8_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("Computer8_OnlyNonabusableOwnerRightsInherited", domainSid)
+	s.Domain1_Computer8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_Computer8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_Computer8_OnlyNonabusableOwnerRightsInherited)
+	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+
+	// //// MSAs
+	s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("MSA1_NoOwnerRights_OwnerIsLowPriv", domainSid)
+	s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.MSA.String(), true)
+	s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA1_NoOwnerRights_OwnerIsLowPriv, ad.WriteOwnerRaw)
+
+	s.Domain1_MSA2_NoOwnerRights_OwnerIsDA = graphTestContext.NewActiveDirectoryComputer("MSA2_NoOwnerRights_OwnerIsDA", domainSid)
+	s.Domain1_MSA2_NoOwnerRights_OwnerIsDA.Properties.Set(ad.MSA.String(), true)
+	s.Domain1_MSA2_NoOwnerRights_OwnerIsDA.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_MSA2_NoOwnerRights_OwnerIsDA)
+	graphTestContext.NewRelationship(s.Domain1_User102_DomainAdmin, s.Domain1_MSA2_NoOwnerRights_OwnerIsDA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA2_NoOwnerRights_OwnerIsDA, ad.WriteOwnerRaw)
+
+	s.Domain1_MSA3_NoOwnerRights_OwnerIsEA = graphTestContext.NewActiveDirectoryComputer("MSA3_NoOwnerRights_OwnerIsEA", domainSid)
+	s.Domain1_MSA3_NoOwnerRights_OwnerIsEA.Properties.Set(ad.MSA.String(), true)
+	s.Domain1_MSA3_NoOwnerRights_OwnerIsEA.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_MSA3_NoOwnerRights_OwnerIsEA)
+	graphTestContext.NewRelationship(s.Domain1_User103_EnterpriseAdmin, s.Domain1_MSA3_NoOwnerRights_OwnerIsEA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA3_NoOwnerRights_OwnerIsEA, ad.WriteOwnerRaw)
+
+	s.Domain1_MSA4_AbusableOwnerRightsNoneInherited = graphTestContext.NewActiveDirectoryComputer("MSA4_AbusableOwnerRightsNoneInherited", domainSid)
+	s.Domain1_MSA4_AbusableOwnerRightsNoneInherited.Properties.Set(ad.MSA.String(), true)
+	s.Domain1_MSA4_AbusableOwnerRightsNoneInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_MSA4_AbusableOwnerRightsNoneInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_MSA4_AbusableOwnerRightsNoneInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_MSA4_AbusableOwnerRightsNoneInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA4_AbusableOwnerRightsNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_MSA5_AbusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("MSA5_AbusableOwnerRightsInherited", domainSid)
+	s.Domain1_MSA5_AbusableOwnerRightsInherited.Properties.Set(ad.MSA.String(), true)
+	s.Domain1_MSA5_AbusableOwnerRightsInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_MSA5_AbusableOwnerRightsInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_MSA5_AbusableOwnerRightsInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_MSA5_AbusableOwnerRightsInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA5_AbusableOwnerRightsInherited, ad.WriteOwnerLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+
+	s.Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited = graphTestContext.NewActiveDirectoryComputer("MSA6_AbusableOwnerRightsOnlyNonabusableInherited", domainSid)
+	s.Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.MSA.String(), true)
+	s.Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_MSA6_AbusableOwnerRightsOnlyNonabusableInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+
+	s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryComputer("MSA7_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
+	s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.MSA.String(), true)
+	s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited)
+	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_MSA7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("MSA8_OnlyNonabusableOwnerRightsInherited", domainSid)
+	s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.MSA.String(), true)
+	s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_MSA8_OnlyNonabusableOwnerRightsInherited)
+	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+
+	// //// GMSAs
+	s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryComputer("GMSA1_NoOwnerRights_OwnerIsLowPriv", domainSid)
+	s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.GMSA.String(), true)
+	s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA1_NoOwnerRights_OwnerIsLowPriv, ad.WriteOwnerRaw)
+
+	s.Domain1_GMSA2_NoOwnerRights_OwnerIsDA = graphTestContext.NewActiveDirectoryComputer("GMSA2_NoOwnerRights_OwnerIsDA", domainSid)
+	s.Domain1_GMSA2_NoOwnerRights_OwnerIsDA.Properties.Set(ad.GMSA.String(), true)
+	s.Domain1_GMSA2_NoOwnerRights_OwnerIsDA.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_GMSA2_NoOwnerRights_OwnerIsDA)
+	graphTestContext.NewRelationship(s.Domain1_User102_DomainAdmin, s.Domain1_GMSA2_NoOwnerRights_OwnerIsDA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA2_NoOwnerRights_OwnerIsDA, ad.WriteOwnerRaw)
+
+	s.Domain1_GMSA3_NoOwnerRights_OwnerIsEA = graphTestContext.NewActiveDirectoryComputer("GMSA3_NoOwnerRights_OwnerIsEA", domainSid)
+	s.Domain1_GMSA3_NoOwnerRights_OwnerIsEA.Properties.Set(ad.GMSA.String(), true)
+	s.Domain1_GMSA3_NoOwnerRights_OwnerIsEA.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_GMSA3_NoOwnerRights_OwnerIsEA)
+	graphTestContext.NewRelationship(s.Domain1_User103_EnterpriseAdmin, s.Domain1_GMSA3_NoOwnerRights_OwnerIsEA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA3_NoOwnerRights_OwnerIsEA, ad.WriteOwnerRaw)
+
+	s.Domain1_GMSA4_AbusableOwnerRightsNoneInherited = graphTestContext.NewActiveDirectoryComputer("GMSA4_AbusableOwnerRightsNoneInherited", domainSid)
+	s.Domain1_GMSA4_AbusableOwnerRightsNoneInherited.Properties.Set(ad.GMSA.String(), true)
+	s.Domain1_GMSA4_AbusableOwnerRightsNoneInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_GMSA4_AbusableOwnerRightsNoneInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_GMSA4_AbusableOwnerRightsNoneInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_GMSA4_AbusableOwnerRightsNoneInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA4_AbusableOwnerRightsNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_GMSA5_AbusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("GMSA5_AbusableOwnerRightsInherited", domainSid)
+	s.Domain1_GMSA5_AbusableOwnerRightsInherited.Properties.Set(ad.GMSA.String(), true)
+	s.Domain1_GMSA5_AbusableOwnerRightsInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_GMSA5_AbusableOwnerRightsInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_GMSA5_AbusableOwnerRightsInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_GMSA5_AbusableOwnerRightsInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA5_AbusableOwnerRightsInherited, ad.WriteOwnerLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+
+	s.Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited = graphTestContext.NewActiveDirectoryComputer("GMSA6_AbusableOwnerRightsOnlyNonabusableInherited", domainSid)
+	s.Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.GMSA.String(), true)
+	s.Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_GMSA6_AbusableOwnerRightsOnlyNonabusableInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+
+	s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryComputer("GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
+	s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.GMSA.String(), true)
+	s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited)
+	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_GMSA7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("GMSA8_OnlyNonabusableOwnerRightsInherited", domainSid)
+	s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.GMSA.String(), true)
+	s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_GMSA8_OnlyNonabusableOwnerRightsInherited)
+	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+
+	// //// Users
+	s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv = graphTestContext.NewActiveDirectoryUser("User1_NoOwnerRights_OwnerIsLowPriv", domainSid)
+	s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User1_NoOwnerRights_OwnerIsLowPriv, ad.WriteOwnerRaw)
+
+	s.Domain1_User2_NoOwnerRights_OwnerIsDA = graphTestContext.NewActiveDirectoryUser("User2_NoOwnerRights_OwnerIsDA", domainSid)
+	s.Domain1_User2_NoOwnerRights_OwnerIsDA.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_User2_NoOwnerRights_OwnerIsDA)
+	graphTestContext.NewRelationship(s.Domain1_User102_DomainAdmin, s.Domain1_User2_NoOwnerRights_OwnerIsDA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User2_NoOwnerRights_OwnerIsDA, ad.WriteOwnerRaw)
+
+	s.Domain1_User3_NoOwnerRights_OwnerIsEA = graphTestContext.NewActiveDirectoryUser("User3_NoOwnerRights_OwnerIsEA", domainSid)
+	s.Domain1_User3_NoOwnerRights_OwnerIsEA.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_User3_NoOwnerRights_OwnerIsEA)
+	graphTestContext.NewRelationship(s.Domain1_User103_EnterpriseAdmin, s.Domain1_User3_NoOwnerRights_OwnerIsEA, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User3_NoOwnerRights_OwnerIsEA, ad.WriteOwnerRaw)
+
+	s.Domain1_User4_AbusableOwnerRightsNoneInherited = graphTestContext.NewActiveDirectoryUser("User4_AbusableOwnerRightsNoneInherited", domainSid)
+	s.Domain1_User4_AbusableOwnerRightsNoneInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_User4_AbusableOwnerRightsNoneInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_User4_AbusableOwnerRightsNoneInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_User4_AbusableOwnerRightsNoneInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User4_AbusableOwnerRightsNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_User5_AbusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryUser("User5_AbusableOwnerRightsInherited", domainSid)
+	s.Domain1_User5_AbusableOwnerRightsInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_User5_AbusableOwnerRightsInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_User5_AbusableOwnerRightsInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_User5_AbusableOwnerRightsInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User5_AbusableOwnerRightsInherited, ad.WriteOwnerLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+
+	s.Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited = graphTestContext.NewActiveDirectoryUser("User6_AbusableOwnerRightsOnlyNonabusableInherited", domainSid)
+	s.Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited)
+	graphTestContext.NewRelationship(s.Domain1_User101_Owner, s.Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+
+	s.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryUser("User7_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
+	s.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited)
+	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	graphTestContext.NewRelationship(s.Domain1_User104_WriteOwner, s.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain1_User8_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryUser("User8_OnlyNonabusableOwnerRightsInherited", domainSid)
+	s.Domain1_User8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain1_User8_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain1_User8_OnlyNonabusableOwnerRightsInherited)
+	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+
+	// Domain 2
+	domainSid = RandomDomainSID()
+	s.Domain2_DoNotBlockImplicitOwnerRights = graphTestContext.NewActiveDirectoryDomain("Domain2_DoNotBlockImplicitOwnerRights", domainSid, false, true)
+	s.Domain2_DoNotBlockImplicitOwnerRights.Properties.Set(ad.DSHeuristics.String(), "00000000000000000000000000000")
+	graphTestContext.UpdateNode(s.Domain2_DoNotBlockImplicitOwnerRights)
+
+	// // Object owners
+	s.Domain2_User1_Owner = graphTestContext.NewActiveDirectoryUser("User1_Owner", domainSid)
+	s.Domain2_User2_WriteOwner = graphTestContext.NewActiveDirectoryUser("User2_WriteOwner", domainSid)
+
+	// // Owned objects
+
+	// //// Computers
+	s.Domain2_Computer1_NoOwnerRights = graphTestContext.NewActiveDirectoryComputer("Computer1_NoOwnerRights", domainSid)
+	s.Domain2_Computer1_NoOwnerRights.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain2_Computer1_NoOwnerRights)
+	graphTestContext.NewRelationship(s.Domain2_User1_Owner, s.Domain2_Computer1_NoOwnerRights, ad.OwnsRaw)
+	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer1_NoOwnerRights, ad.WriteOwnerRaw)
+
+	s.Domain2_Computer2_AbusableOwnerRightsNoneInherited = graphTestContext.NewActiveDirectoryComputer("Computer2_AbusableOwnerRightsNoneInherited", domainSid)
+	s.Domain2_Computer2_AbusableOwnerRightsNoneInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain2_Computer2_AbusableOwnerRightsNoneInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain2_Computer2_AbusableOwnerRightsNoneInherited)
+	graphTestContext.NewRelationship(s.Domain2_User1_Owner, s.Domain2_Computer2_AbusableOwnerRightsNoneInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer2_AbusableOwnerRightsNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain2_Computer3_AbusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("Computer3_AbusableOwnerRightsInherited", domainSid)
+	s.Domain2_Computer3_AbusableOwnerRightsInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain2_Computer3_AbusableOwnerRightsInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain2_Computer3_AbusableOwnerRightsInherited)
+	graphTestContext.NewRelationship(s.Domain2_User1_Owner, s.Domain2_Computer3_AbusableOwnerRightsInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer3_AbusableOwnerRightsInherited, ad.WriteOwnerLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+
+	s.Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited = graphTestContext.NewActiveDirectoryComputer("Computer4_AbusableOwnerRightsOnlyNonabusableInherited", domainSid)
+	s.Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited)
+	graphTestContext.NewRelationship(s.Domain2_User1_Owner, s.Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited, ad.OwnsLimitedRights, graph.AsProperties(graph.PropertyMap{
+		ad.Property("privileges"): []string{"AddKeyCredentialLink", "WriteSPN"},
+	}))
+	// Ingest does not add WriteOwnerRaw if only non-abusable owner rights are inherited
+
+	s.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited = graphTestContext.NewActiveDirectoryComputer("Computer5_OnlyNonabusableOwnerRightsAndNoneInherited", domainSid)
+	s.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), false)
+	graphTestContext.UpdateNode(s.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited)
+	// Ingest does not add OwnsRaw if only non-abusable owner rights are present, but adds WriteOwnerRaw if none are inherited
+	graphTestContext.NewRelationship(s.Domain2_User2_WriteOwner, s.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited, ad.WriteOwnerRaw)
+
+	s.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited = graphTestContext.NewActiveDirectoryComputer("Computer6_OnlyNonabusableOwnerRightsInherited", domainSid)
+	s.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.DoesAnyAceGrantOwnerRights.String(), true)
+	s.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited.Properties.Set(ad.DoesAnyInheritedAceGrantOwnerRights.String(), true)
+	graphTestContext.UpdateNode(s.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited)
+	// Ingest does not add OwnsRaw or WriteOwnerRaw if only non-abusable, inherited owner rights are present
+}
+
+type CoerceAndRelayNTLMToLDAP struct {
+	Computer1  *graph.Node
+	Computer10 *graph.Node
+	Computer2  *graph.Node
+	Computer3  *graph.Node
+	Computer4  *graph.Node
+	Computer5  *graph.Node
+	Computer6  *graph.Node
+	Computer7  *graph.Node
+	Computer8  *graph.Node
+	Computer9  *graph.Node
+	Domain1    *graph.Node
+	Domain2    *graph.Node
+	Domain3    *graph.Node
+	Group1     *graph.Node
+	Group2     *graph.Node
+	Group3     *graph.Node
+	Group4     *graph.Node
+	Group5     *graph.Node
+	Group6     *graph.Node
+}
+
+func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+	domain2Sid := RandomDomainSID()
+	domain3Sid := RandomDomainSID()
+
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set(ad.LDAPSigning.String(), false)
+	s.Computer1.Properties.Set(ad.IsDC.String(), domain1Sid)
+	graphTestContext.UpdateNode(s.Computer1)
+
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
+	s.Computer2.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer2)
+
+	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domain3Sid)
+	s.Computer3.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer3)
+
+	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domain1Sid)
+	s.Computer4.Properties.Set(ad.WebClientRunning.String(), false)
+	graphTestContext.UpdateNode(s.Computer4)
+
+	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domain1Sid)
+	s.Computer5.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer5)
+
+	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domain2Sid)
+	s.Computer6.Properties.Set(ad.IsDC.String(), domain2Sid)
+	s.Computer6.Properties.Set(ad.LDAPSigning.String(), false)
+	graphTestContext.UpdateNode(s.Computer6)
+
+	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domain2Sid)
+	s.Computer7.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer7)
+
+	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domain3Sid)
+	s.Computer8.Properties.Set(ad.LDAPSigning.String(), true)
+	s.Computer8.Properties.Set(ad.LDAPSAvailable.String(), true)
+	s.Computer8.Properties.Set(ad.IsDC.String(), domain3Sid)
+	graphTestContext.UpdateNode(s.Computer8)
+
+	s.Computer9 = graphTestContext.NewActiveDirectoryComputer("Computer9", domain3Sid)
+	s.Computer9.Properties.Set(ad.IsDC.String(), domain3Sid)
+	graphTestContext.UpdateNode(s.Computer9)
+
+	s.Computer10 = graphTestContext.NewActiveDirectoryComputer("Computer10", domain1Sid)
+	s.Computer10.Properties.Set(ad.WebClientRunning.String(), true)
+	s.Computer10.Properties.Set(ad.RestrictOutboundNTLM.String(), true)
+	graphTestContext.UpdateNode(s.Computer10)
+
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domain1Sid, false, true)
+	s.Domain1.Properties.Set(ad.FunctionalLevel.String(), "2016")
+	graphTestContext.UpdateNode(s.Domain1)
+
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domain2Sid, false, true)
+	s.Domain2.Properties.Set(ad.FunctionalLevel.String(), "2008")
+	graphTestContext.UpdateNode(s.Domain2)
+
+	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domain3Sid, false, true)
+
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1-%s%s", domain3Sid, adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group1)
+
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain3Sid)
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2-%s%s", domain3Sid, adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group2)
+
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domain1Sid)
+
+	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
+	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group4-%s%s", domain1Sid, adAnalysis.ProtectedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group4)
+
+	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain2Sid)
+	s.Group5.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group5-%s%s", domain2Sid, adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group5)
+
+	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain2Sid)
+	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group6-%s%s", domain2Sid, adAnalysis.ProtectedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group6)
+
+	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer5, s.Group4, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer6, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer7, s.Group6, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer2, s.Group6, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer8, s.Domain3, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer9, s.Domain3, ad.DCFor)
+}
+
+type CoerceAndRelayNTLMToLDAPS struct {
+	Computer1  *graph.Node
+	Computer10 *graph.Node
+	Computer11 *graph.Node
+	Computer12 *graph.Node
+	Computer13 *graph.Node
+	Computer2  *graph.Node
+	Computer3  *graph.Node
+	Computer4  *graph.Node
+	Computer5  *graph.Node
+	Computer6  *graph.Node
+	Computer7  *graph.Node
+	Computer8  *graph.Node
+	Computer9  *graph.Node
+	Domain1    *graph.Node
+	Domain2    *graph.Node
+	Domain3    *graph.Node
+	Group1     *graph.Node
+	Group2     *graph.Node
+	Group3     *graph.Node
+	Group4     *graph.Node
+	Group5     *graph.Node
+	Group6     *graph.Node
+}
+
+func (s *CoerceAndRelayNTLMToLDAPS) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+	domain2Sid := RandomDomainSID()
+	domain3Sid := RandomDomainSID()
+
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set(ad.IsDC.String(), domain1Sid)
+	s.Computer1.Properties.Set(ad.LDAPSEPA.String(), false)
+	s.Computer1.Properties.Set(ad.LDAPSAvailable.String(), true)
+	graphTestContext.UpdateNode(s.Computer1)
+
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
+	s.Computer2.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer2)
+
+	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domain3Sid)
+	s.Computer3.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer3)
+
+	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domain1Sid)
+	s.Computer4.Properties.Set(ad.WebClientRunning.String(), false)
+	graphTestContext.UpdateNode(s.Computer4)
+
+	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domain1Sid)
+	s.Computer5.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer5)
+
+	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domain2Sid)
+	s.Computer6.Properties.Set(ad.LDAPSEPA.String(), false)
+	s.Computer6.Properties.Set(ad.LDAPSAvailable.String(), true)
+	s.Computer6.Properties.Set(ad.IsDC.String(), domain2Sid)
+	graphTestContext.UpdateNode(s.Computer6)
+
+	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domain2Sid)
+	s.Computer7.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer7)
+
+	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domain3Sid)
+	s.Computer8.Properties.Set(ad.LDAPSEPA.String(), false)
+	s.Computer8.Properties.Set(ad.IsDC.String(), domain3Sid)
+	graphTestContext.UpdateNode(s.Computer8)
+
+	s.Computer9 = graphTestContext.NewActiveDirectoryComputer("Computer9", domain3Sid)
+	s.Computer9.Properties.Set(ad.LDAPSEPA.String(), true)
+	s.Computer9.Properties.Set(ad.LDAPSAvailable.String(), true)
+	s.Computer9.Properties.Set(ad.IsDC.String(), domain3Sid)
+	graphTestContext.UpdateNode(s.Computer9)
+
+	s.Computer10 = graphTestContext.NewActiveDirectoryComputer("Computer10", domain3Sid)
+	s.Computer10.Properties.Set(ad.LDAPSEPA.String(), false)
+	s.Computer10.Properties.Set(ad.LDAPSAvailable.String(), false)
+	s.Computer10.Properties.Set(ad.IsDC.String(), domain3Sid)
+	graphTestContext.UpdateNode(s.Computer10)
+
+	s.Computer11 = graphTestContext.NewActiveDirectoryComputer("Computer11", domain3Sid)
+	s.Computer11.Properties.Set(ad.LDAPSEPA.String(), true)
+	s.Computer11.Properties.Set(ad.LDAPSAvailable.String(), false)
+	s.Computer11.Properties.Set(ad.IsDC.String(), domain3Sid)
+	graphTestContext.UpdateNode(s.Computer11)
+
+	s.Computer12 = graphTestContext.NewActiveDirectoryComputer("Computer12", domain3Sid)
+	s.Computer12.Properties.Set(ad.LDAPSAvailable.String(), true)
+	s.Computer12.Properties.Set(ad.IsDC.String(), domain3Sid)
+	graphTestContext.UpdateNode(s.Computer12)
+
+	s.Computer13 = graphTestContext.NewActiveDirectoryComputer("Computer13", domain1Sid)
+	s.Computer13.Properties.Set(ad.WebClientRunning.String(), true)
+	s.Computer13.Properties.Set(ad.RestrictOutboundNTLM.String(), true)
+	graphTestContext.UpdateNode(s.Computer12)
+
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domain1Sid, false, true)
+	s.Domain1.Properties.Set(ad.FunctionalLevel.String(), "2003")
+	graphTestContext.UpdateNode(s.Domain1)
+
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domain2Sid, false, true)
+	s.Domain2.Properties.Set(ad.FunctionalLevel.String(), "2008")
+	graphTestContext.UpdateNode(s.Domain2)
+
+	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domain3Sid, false, true)
+
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group-1%s", adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group1)
+
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain3Sid)
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group-2%s", adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group2)
+
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domain1Sid)
+
+	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
+	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain1Sid, adAnalysis.ProtectedUsersSuffix))
+	s.Group4.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN1")
+	graphTestContext.UpdateNode(s.Group4)
+
+	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain2Sid)
+	s.Group5.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain2Sid, adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group5)
+
+	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain2Sid)
+	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain2Sid, adAnalysis.ProtectedUsersSuffix))
+	s.Group6.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN2")
+	graphTestContext.UpdateNode(s.Group6)
+
+	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer2, s.Group6, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer5, s.Group4, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer6, s.Domain2, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer7, s.Group6, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Computer8, s.Domain3, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer9, s.Domain3, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer10, s.Domain3, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer11, s.Domain3, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer12, s.Domain3, ad.DCFor)
 }
 
 type HarnessDetails struct {
@@ -8634,5 +9788,10 @@ type HarnessDetails struct {
 	DCSyncHarness                                   DCSyncHarness
 	SyncLAPSPasswordHarness                         SyncLAPSPasswordHarness
 	HybridAttackPaths                               HybridAttackPaths
-	NTLMCoerceAndRelayNTLMToSMB                     NTLMCoerceAndRelayNTLMToSMB
+	OwnsWriteOwner                                  OwnsWriteOwner
+	NTLMCoerceAndRelayNTLMToSMB                     CoerceAndRelayNTLMToSMB
+	NTLMCoerceAndRelayNTLMToLDAP                    CoerceAndRelayNTLMToLDAP
+	NTLMCoerceAndRelayNTLMToLDAPS                   CoerceAndRelayNTLMToLDAPS
+	NTLMCoerceAndRelayNTLMToADCS                    CoerceAndRelayNTLMtoADCS
+	OwnsWriteOwnerPriorCollectorVersions            OwnsWriteOwnerPriorCollectorVersions
 }

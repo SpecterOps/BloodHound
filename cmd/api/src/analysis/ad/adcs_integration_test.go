@@ -551,10 +551,10 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - EnrollOnBehalfOf 3")
 
-		_, enterpriseCertAuthorities, certTemplates, domains, cache, err := FetchADCSPrereqs(db)
+		_, _, _, _, cache, err := FetchADCSPrereqs(db)
 		require.Nil(t, err)
 
-		if err := ad2.PostEnrollOnBehalfOf(domains, enterpriseCertAuthorities, certTemplates, cache, operation); err != nil {
+		if err := ad2.PostEnrollOnBehalfOf(cache, operation); err != nil {
 			t.Logf("failed post processing for %s: %v", ad.EnrollOnBehalfOf.String(), err)
 		}
 		err = operation.Done()
@@ -2559,16 +2559,16 @@ func TestADCSESC6b(t *testing.T) {
 func FetchADCSPrereqs(db graph.Database) (impact.PathAggregator, []*graph.Node, []*graph.Node, []*graph.Node, ad2.ADCSCache, error) {
 	if expansions, err := ad2.ExpandAllRDPLocalGroups(context.Background(), db); err != nil {
 		return nil, nil, nil, nil, ad2.ADCSCache{}, err
-	} else if eca, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
-		return nil, nil, nil, nil, ad2.ADCSCache{}, err
-	} else if certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate); err != nil {
-		return nil, nil, nil, nil, ad2.ADCSCache{}, err
-	} else if domains, err := ad2.FetchNodesByKind(context.Background(), db, ad.Domain); err != nil {
-		return nil, nil, nil, nil, ad2.ADCSCache{}, err
 	} else {
 		cache := ad2.NewADCSCache()
-		cache.BuildCache(context.Background(), db, eca, certTemplates, domains)
-		return expansions, eca, certTemplates, domains, cache, nil
+		if enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
+			return nil, nil, nil, nil, ad2.ADCSCache{}, err
+		} else if certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate); err != nil {
+			return nil, nil, nil, nil, ad2.ADCSCache{}, err
+		} else {
+			cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
+			return expansions, cache.GetEnterpriseCertAuthorities(), cache.GetCertTemplates(), cache.GetDomains(), cache, nil
+		}
 	}
 }
 

@@ -49,34 +49,51 @@ func expansionColumns() pgsql.RecordShape {
 
 type Match struct {
 	Pattern *Pattern
-	Scope   *Scope
 }
 
 type NodeSelect struct {
-	Frame        *Frame
-	Binding      *BoundIdentifier
-	IsDefinition bool
-	Select       pgsql.Select
+	Frame      *Frame
+	Binding    *BoundIdentifier
+	Select     pgsql.Select
+	Constraint *Constraint
 }
 
 type Expansion struct {
-	Binding     *BoundIdentifier
+	Frame       *Frame
 	PathBinding *BoundIdentifier
 	MinDepth    models.Optional[int64]
 	MaxDepth    models.Optional[int64]
-	Frame       *Frame
+
+	PrimerProjection          []pgsql.SelectItem
+	PrimerRootNodeConstraints pgsql.Expression
+	PrimerConstraints         pgsql.Expression
+
+	ExpansionEdgeConstraints pgsql.Expression
+	ExpansionNodeConstraints pgsql.Expression
+
+	RecursiveProjection  []pgsql.SelectItem
+	RecursiveConstraints pgsql.Expression
+
+	TerminalNodeConstraints pgsql.Expression
+
 	Projection  []pgsql.SelectItem
+	Constraints pgsql.Expression
 }
 
 type PatternSegment struct {
-	Frame       *Frame
-	Direction   graph.Direction
-	Expansion   models.Optional[Expansion]
-	LeftNode    *BoundIdentifier
-	Edge        *BoundIdentifier
-	RightNode   *BoundIdentifier
-	Definitions []*BoundIdentifier
-	Projection  []pgsql.SelectItem
+	Frame                  *Frame
+	Direction              graph.Direction
+	Expansion              models.Optional[Expansion]
+	LeftNode               *BoundIdentifier
+	LeftNodeBound          bool
+	LeftNodeJoinCondition  pgsql.Expression
+	Edge                   *BoundIdentifier
+	EdgeConstraint         *Constraint
+	RightNode              *BoundIdentifier
+	RightNodeBound         bool
+	RightNodeJoinCondition pgsql.Expression
+	Definitions            []*BoundIdentifier
+	Projection             []pgsql.SelectItem
 }
 
 // TerminalNode will find the terminal node of this pattern segment based on the segment's direction
@@ -128,12 +145,10 @@ func (s *PatternPart) ContainsExpansions() bool {
 }
 
 type Pattern struct {
-	Frame *Frame
 	Parts []*PatternPart
 }
 
 func (s *Pattern) Reset() {
-	s.Frame = nil
 	s.Parts = s.Parts[:0]
 }
 
@@ -151,15 +166,144 @@ func (s *Pattern) CurrentPart() *PatternPart {
 }
 
 type Query struct {
+	Parts []*QueryPart
+	Scope *Scope
+}
+
+func (s *Query) HasParts() bool {
+	return len(s.Parts) > 0
+}
+
+func (s *Query) CurrentPart() *QueryPart {
+	return s.Parts[len(s.Parts)-1]
+}
+
+func (s *Query) PreparePart(numReadingClauses, numUpdatingClauses int, allocateFrame bool) error {
+	newPart := &QueryPart{
+		Model: &pgsql.Query{
+			CommonTableExpressions: &pgsql.With{},
+		},
+
+		numReadingClauses:  numReadingClauses,
+		numUpdatingClauses: numUpdatingClauses,
+		mutations:          NewMutations(),
+		properties:         map[string]pgsql.Expression{},
+	}
+
+	if allocateFrame {
+		if frame, err := s.Scope.PushFrame(); err != nil {
+			return err
+		} else {
+			newPart.Frame = frame
+		}
+	}
+
+	s.Parts = append(s.Parts, newPart)
+	return nil
+}
+
+type QueryPart struct {
 	Model   *pgsql.Query
-	Scope   *Scope
+	Frame   *Frame
 	Updates []*Mutations
 	OrderBy []pgsql.OrderBy
 	Skip    models.Optional[pgsql.Expression]
 	Limit   models.Optional[pgsql.Expression]
+
+	numReadingClauses  int
+	numUpdatingClauses int
+
+	// The fields below are meant to be used to build each component as the source AST is walked. There's some
+	// repetition of some of the exported fields above which is intentional and may be a good refactor target
+	// in the future
+	patternPredicates []*pgsql.Future[*Pattern]
+	properties        map[string]pgsql.Expression
+	currentPattern    *Pattern
+	stashedPattern    *Pattern
+	projections       *Projections
+	mutations         *Mutations
+	fromClauses       []pgsql.FromClause
 }
 
-func (s *Query) CurrentOrderBy() *pgsql.OrderBy {
+func (s *QueryPart) AddFromClause(clause pgsql.FromClause) {
+	s.fromClauses = append(s.fromClauses, clause)
+}
+
+func (s *QueryPart) ConsumeFromClauses() []pgsql.FromClause {
+	fromClauses := s.fromClauses
+	s.fromClauses = nil
+
+	return fromClauses
+}
+
+func (s *QueryPart) RestoreStashedPattern() {
+	s.currentPattern = s.stashedPattern
+	s.stashedPattern = nil
+}
+
+func (s *QueryPart) StashCurrentPattern() {
+	s.stashedPattern = s.ConsumeCurrentPattern()
+}
+
+func (s *QueryPart) AddPatternPredicateFuture(predicateFuture *pgsql.Future[*Pattern]) {
+	s.patternPredicates = append(s.patternPredicates, predicateFuture)
+}
+
+func (s *QueryPart) ConsumeCurrentPattern() *Pattern {
+	currentPattern := s.currentPattern
+	s.currentPattern = &Pattern{}
+
+	return currentPattern
+}
+
+func (s *QueryPart) HasProjections() bool {
+	return s.projections != nil && len(s.projections.Items) > 0
+}
+
+func (s *QueryPart) PrepareProjections(distinct bool) {
+	s.projections = &Projections{
+		Distinct: distinct,
+	}
+}
+
+func (s *QueryPart) PrepareMutations() {
+	if s.mutations == nil {
+		s.mutations = NewMutations()
+	}
+}
+
+func (s *QueryPart) HasMutations() bool {
+	return s.mutations != nil && s.mutations.Updates.Len() > 0
+}
+
+func (s *QueryPart) HasDeletions() bool {
+	return s.mutations != nil && s.mutations.Deletions.Len() > 0
+}
+
+func (s *QueryPart) PrepareProjection() {
+	s.projections.Items = append(s.projections.Items, &Projection{})
+}
+
+func (s *QueryPart) CurrentProjection() *Projection {
+	return s.projections.Current()
+}
+
+func (s *QueryPart) HasProperties() bool {
+	return len(s.properties) > 0
+}
+
+func (s *QueryPart) AddProperty(key string, expression pgsql.Expression) {
+	s.properties[key] = expression
+}
+
+func (s *QueryPart) ConsumeProperties() map[string]pgsql.Expression {
+	properties := s.properties
+	s.properties = map[string]pgsql.Expression{}
+
+	return properties
+}
+
+func (s *QueryPart) CurrentOrderBy() *pgsql.OrderBy {
 	return &s.OrderBy[len(s.OrderBy)-1]
 }
 
@@ -190,8 +334,9 @@ type PropertyAssignment struct {
 	ValueExpression pgsql.Expression
 }
 
-type IdentifierMutation struct {
+type Update struct {
 	Frame               *Frame
+	JoinConstraint      pgsql.Expression
 	Projection          []pgsql.SelectItem
 	TargetBinding       *BoundIdentifier
 	UpdateBinding       *BoundIdentifier
@@ -201,33 +346,31 @@ type IdentifierMutation struct {
 	KindAssignments     graph.Kinds
 }
 
-type IdentifierDeletion struct {
+type Delete struct {
 	Frame         *Frame
-	Projection    []pgsql.SelectItem
 	TargetBinding *BoundIdentifier
 	UpdateBinding *BoundIdentifier
 }
 
 type Mutations struct {
-	Frame       *Frame
-	Deletions   *IndexedSlice[pgsql.Identifier, *IdentifierDeletion]
-	Assignments *IndexedSlice[pgsql.Identifier, *IdentifierMutation]
+	Deletions *IndexedSlice[pgsql.Identifier, *Delete]
+	Updates   *IndexedSlice[pgsql.Identifier, *Update]
 }
 
 func NewMutations() *Mutations {
 	return &Mutations{
-		Deletions:   NewIndexedSlice[pgsql.Identifier, *IdentifierDeletion](),
-		Assignments: NewIndexedSlice[pgsql.Identifier, *IdentifierMutation](),
+		Deletions: NewIndexedSlice[pgsql.Identifier, *Delete](),
+		Updates:   NewIndexedSlice[pgsql.Identifier, *Update](),
 	}
 }
 
-func (s *Mutations) AddDeletion(scope *Scope, targetIdentifier pgsql.Identifier, frame *Frame) (*IdentifierDeletion, error) {
+func (s *Mutations) AddDeletion(scope *Scope, targetIdentifier pgsql.Identifier, frame *Frame) (*Delete, error) {
 	if targetBinding, bound := scope.Lookup(targetIdentifier); !bound {
 		return nil, fmt.Errorf("invalid identifier: %s", targetIdentifier)
 	} else if updateBinding, err := scope.DefineNew(targetBinding.DataType); err != nil {
 		return nil, err
 	} else {
-		deletion := &IdentifierDeletion{
+		deletion := &Delete{
 			TargetBinding: targetBinding,
 			UpdateBinding: updateBinding,
 			Frame:         frame,
@@ -238,28 +381,28 @@ func (s *Mutations) AddDeletion(scope *Scope, targetIdentifier pgsql.Identifier,
 	}
 }
 
-func (s *Mutations) newIdentifierAssignment(scope *Scope, targetBinding *BoundIdentifier) (*IdentifierMutation, error) {
+func (s *Mutations) newIdentifierAssignment(scope *Scope, targetBinding *BoundIdentifier) (*Update, error) {
 	if updateBinding, err := scope.DefineNew(targetBinding.DataType); err != nil {
 		return nil, err
 	} else {
 		// Create a unique scope binding for this mutation since there may be assignments that also
 		// target the same identifier later in the query
-		newUpdates := &IdentifierMutation{
+		newUpdates := &Update{
 			TargetBinding:       targetBinding,
 			UpdateBinding:       updateBinding,
 			PropertyAssignments: NewIndexedSlice[string, PropertyAssignment](),
 			Removals:            NewIndexedSlice[string, Removal](),
 		}
 
-		s.Assignments.Put(targetBinding.Identifier, newUpdates)
+		s.Updates.Put(targetBinding.Identifier, newUpdates)
 		return newUpdates, nil
 	}
 }
 
-func (s *Mutations) getIdentifierMutation(scope *Scope, targetIdentifier pgsql.Identifier) (*IdentifierMutation, error) {
+func (s *Mutations) getIdentifierMutation(scope *Scope, targetIdentifier pgsql.Identifier) (*Update, error) {
 	if targetBinding, bound := scope.Lookup(targetIdentifier); !bound {
 		return nil, fmt.Errorf("invalid identifier: %s", targetIdentifier)
-	} else if existingAssignments, hasExisting := s.Assignments.Get(targetIdentifier); hasExisting {
+	} else if existingAssignments, hasExisting := s.Updates.Get(targetIdentifier); hasExisting {
 		return existingAssignments, nil
 	} else {
 		return s.newIdentifierAssignment(scope, targetBinding)
@@ -278,14 +421,16 @@ func (s *Mutations) AddPropertyRemoval(scope *Scope, propertyLookup PropertyLook
 	return nil
 }
 
-func (s *Mutations) AddPropertyAssignment(scope *Scope, propertyLookup PropertyLookup, operator pgsql.Operator, expression pgsql.Expression) error {
+func (s *Mutations) AddPropertyAssignment(scope *Scope, propertyLookup PropertyLookup, operator pgsql.Operator, assignmentValueExpression pgsql.Expression) error {
 	if mutation, err := s.getIdentifierMutation(scope, propertyLookup.Reference.Root()); err != nil {
+		return err
+	} else if err := RewriteFrameBindings(scope, assignmentValueExpression); err != nil {
 		return err
 	} else {
 		mutation.PropertyAssignments.Put(propertyLookup.Field, PropertyAssignment{
 			Field:           propertyLookup.Field,
 			Operator:        operator,
-			ValueExpression: expression,
+			ValueExpression: assignmentValueExpression,
 		})
 	}
 
@@ -312,21 +457,19 @@ func (s *Mutations) AddKindRemoval(scope *Scope, targetIdentifier pgsql.Identifi
 	return nil
 }
 
-type ProjectionClause struct {
-	Distinct    bool
-	Projections []*Projection
+type Projections struct {
+	Distinct bool
+	Frame    *Frame
+	Items    []*Projection
+	GroupBy  []pgsql.SelectItem
 }
 
-func NewProjectionClause() *ProjectionClause {
-	return &ProjectionClause{}
+func (s *Projections) Add(projection *Projection) {
+	s.Items = append(s.Items, projection)
 }
 
-func (s *ProjectionClause) PushProjection() {
-	s.Projections = append(s.Projections, &Projection{})
-}
-
-func (s *ProjectionClause) CurrentProjection() *Projection {
-	return s.Projections[len(s.Projections)-1]
+func (s *Projections) Current() *Projection {
+	return s.Items[len(s.Items)-1]
 }
 
 func extractIdentifierFromCypherExpression(expression cypher.Expression) (pgsql.Identifier, bool, error) {

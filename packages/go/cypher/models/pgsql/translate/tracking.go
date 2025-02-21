@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/specterops/bloodhound/cypher/models/walk"
+
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
@@ -51,7 +53,7 @@ func (s IdentifierGenerator) NewIdentifier(dataType pgsql.DataType) (pgsql.Ident
 	case pgsql.ParameterIdentifier:
 		return pgsql.Identifier("pi" + nextIDStr), nil
 	default:
-		return "", fmt.Errorf("identifier with data type %s does not have a prefix case", dataType)
+		return pgsql.Identifier("i" + nextIDStr), nil
 	}
 }
 
@@ -110,16 +112,18 @@ func NewConstraintTracker() *ConstraintTracker {
 	return &ConstraintTracker{}
 }
 
-func (s *ConstraintTracker) HasConstraints(scope *pgsql.IdentifierSet) bool {
+func (s *ConstraintTracker) HasConstraints(scope *pgsql.IdentifierSet) (bool, error) {
 	for idx := 0; idx < len(s.Constraints); idx++ {
 		nextConstraint := s.Constraints[idx]
 
-		if scope.Satisfies(nextConstraint.Dependencies) {
-			return true
+		if syntaxNodeSatisfied, err := isSyntaxNodeSatisfied(nextConstraint.Expression); err != nil {
+			return false, err
+		} else if syntaxNodeSatisfied && scope.Satisfies(nextConstraint.Dependencies) {
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 func (s *ConstraintTracker) ConsumeAll() (*Constraint, error) {
@@ -144,6 +148,26 @@ func (s *ConstraintTracker) ConsumeAll() (*Constraint, error) {
 			Expression:   conjoined,
 		}, nil
 	}
+}
+
+func isSyntaxNodeSatisfied(syntaxNode pgsql.SyntaxNode) (bool, error) {
+	var (
+		satisfied = true
+		err       = walk.WalkPgSQL(syntaxNode, walk.NewSimpleVisitor[pgsql.SyntaxNode](
+			func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+				switch typedNode := node.(type) {
+				case pgsql.SyntaxNodeFuture:
+					satisfied = typedNode.Satisfied()
+
+					if !satisfied {
+						errorHandler.SetDone()
+					}
+				}
+			},
+		))
+	)
+
+	return satisfied, err
 }
 
 /*
@@ -185,7 +209,14 @@ func (s *ConstraintTracker) ConsumeSet(scope *pgsql.IdentifierSet) (*Constraint,
 	for idx := 0; idx < len(s.Constraints); {
 		nextConstraint := s.Constraints[idx]
 
-		if scope.Satisfies(nextConstraint.Dependencies) {
+		// If this is a syntax node that has not been realized do not allow the constraint it represents
+		// to be consumed even if the dependencies are satisfied
+		if syntaxNodeSatisfied, err := isSyntaxNodeSatisfied(nextConstraint.Expression); err != nil {
+			return nil, err
+		} else if !syntaxNodeSatisfied || !scope.Satisfies(nextConstraint.Dependencies) {
+			// This constraint isn't satisfied, move to the next one
+			idx += 1
+		} else {
 			// Remove this constraint
 			s.Constraints = append(s.Constraints[:idx], s.Constraints[idx+1:]...)
 
@@ -194,9 +225,6 @@ func (s *ConstraintTracker) ConsumeSet(scope *pgsql.IdentifierSet) (*Constraint,
 
 			// Track which identifiers were satisfied
 			matchedDependencies.MergeSet(nextConstraint.Dependencies)
-		} else {
-			// This constraint isn't satisfied by the identifiers in scope move to the next constraint
-			idx += 1
 		}
 	}
 
@@ -238,9 +266,46 @@ func (s *ConstraintTracker) Constrain(dependencies *pgsql.IdentifierSet, constra
 
 // Frame represents a snapshot of all identifiers defined and visible in a given scope
 type Frame struct {
-	Previous *Frame
-	Binding  *BoundIdentifier
-	Visible  *pgsql.IdentifierSet
+	id              int
+	Previous        *Frame
+	Binding         *BoundIdentifier
+	Visible         *pgsql.IdentifierSet
+	stashedVisible  *pgsql.IdentifierSet
+	Exported        *pgsql.IdentifierSet
+	stashedExported *pgsql.IdentifierSet
+}
+
+func (s *Frame) RestoreStashed() {
+	s.Visible.MergeSet(s.stashedVisible)
+	s.Exported.MergeSet(s.stashedExported)
+}
+
+func (s *Frame) Known() *pgsql.IdentifierSet {
+	return s.Visible.Copy().MergeSet(s.Exported)
+}
+
+func (s *Frame) Unexport(identifer pgsql.Identifier) {
+	s.Exported.Remove(identifer)
+}
+
+func (s *Frame) Export(identifier pgsql.Identifier) {
+	s.Exported.Add(identifier)
+}
+
+func (s *Frame) Veil(identifier pgsql.Identifier) {
+	if s.Exported.Contains(identifier) {
+		s.stashedExported.Add(identifier)
+		s.Exported.Remove(identifier)
+	}
+
+	if s.Visible.Contains(identifier) {
+		s.stashedVisible.Add(identifier)
+		s.Visible.Remove(identifier)
+	}
+}
+
+func (s *Frame) Reveal(identifier pgsql.Identifier) {
+	s.Visible.Add(identifier)
 }
 
 // Scope contains all identifier definitions and their temporal resolutions in a []*Frame field.
@@ -253,6 +318,7 @@ type Frame struct {
 // all visible projections. This is required when disambiguating references that otherwise belong to
 // a frame.
 type Scope struct {
+	nextFrameID int
 	stack       []*Frame
 	generator   IdentifierGenerator
 	aliases     map[pgsql.Identifier]pgsql.Identifier
@@ -261,9 +327,66 @@ type Scope struct {
 
 func NewScope() *Scope {
 	return &Scope{
+		nextFrameID: 0,
 		generator:   NewIdentifierGenerator(),
 		aliases:     map[pgsql.Identifier]pgsql.Identifier{},
 		definitions: map[pgsql.Identifier]*BoundIdentifier{},
+	}
+}
+
+func (s *Scope) PruneDefinitions(protectedIdentifiers *pgsql.IdentifierSet) error {
+	var (
+		prunedAliases     = make(map[pgsql.Identifier]pgsql.Identifier, len(s.aliases))
+		prunedDefinitions = make(map[pgsql.Identifier]*BoundIdentifier, len(s.definitions))
+	)
+
+	for _, protectedIdentifier := range protectedIdentifiers.Slice() {
+		if definition, hasDefinition := s.definitions[protectedIdentifier]; !hasDefinition {
+			return fmt.Errorf("unable to find definition for protected identifier: %s", protectedIdentifier)
+		} else {
+			prunedDefinitions[protectedIdentifier] = definition
+		}
+
+		for alias, identifier := range s.aliases {
+			if identifier == protectedIdentifier {
+				prunedAliases[alias] = protectedIdentifier
+				break
+			}
+		}
+	}
+
+	s.definitions = prunedDefinitions
+	s.aliases = prunedAliases
+
+	// Prune scope to only what's being exported by the with statement
+	currentFrame := s.CurrentFrame()
+
+	currentFrame.Visible = protectedIdentifiers.Copy()
+	currentFrame.Exported = protectedIdentifiers.Copy()
+
+	return nil
+}
+
+func (s *Scope) Snapshot() *Scope {
+	stackCopy := make([]*Frame, len(s.stack))
+	copy(stackCopy, s.stack)
+
+	aliasesCopy := make(map[pgsql.Identifier]pgsql.Identifier)
+	for k, v := range s.aliases {
+		aliasesCopy[k] = v
+	}
+
+	definitionsCopy := make(map[pgsql.Identifier]*BoundIdentifier)
+	for k, v := range s.definitions {
+		definitionsCopy[k] = v.Copy()
+	}
+
+	return &Scope{
+		nextFrameID: s.nextFrameID,
+		stack:       stackCopy,
+		generator:   s.generator,
+		aliases:     aliasesCopy,
+		definitions: definitionsCopy,
 	}
 }
 
@@ -291,15 +414,42 @@ func (s *Scope) ReferenceFrame() *Frame {
 	return s.CurrentFrame()
 }
 
-func (s *Scope) PopFrame() *Frame {
-	frame := s.stack[len(s.stack)-1]
-	s.stack = s.stack[:len(s.stack)-1]
+func (s *Scope) PopFrame() error {
+	if len(s.stack) <= 0 {
+		return fmt.Errorf("no frame to pop")
+	}
 
-	return frame
+	s.stack = s.stack[:len(s.stack)-1]
+	return nil
+}
+
+func (s *Scope) UnwindToFrame(frame *Frame) error {
+	found := false
+
+	for idx := len(s.stack) - 1; idx >= 0; idx-- {
+		if found = s.stack[idx].id == frame.id; found {
+			s.stack = s.stack[:idx+1]
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("unable to pop frame with ID %d", frame.id)
+	}
+
+	return nil
 }
 
 func (s *Scope) PushFrame() (*Frame, error) {
-	newFrame := &Frame{}
+	newFrame := &Frame{
+		id:              s.nextFrameID,
+		Visible:         pgsql.NewIdentifierSet(),
+		stashedVisible:  pgsql.NewIdentifierSet(),
+		Exported:        pgsql.NewIdentifierSet(),
+		stashedExported: pgsql.NewIdentifierSet(),
+	}
+
+	s.nextFrameID += 1
 
 	if nextScopeBinding, err := s.DefineNew(pgsql.Scope); err != nil {
 		return nil, err
@@ -312,7 +462,8 @@ func (s *Scope) PushFrame() (*Frame, error) {
 			newFrame.Previous = s.stack[len(s.stack)-1]
 		}
 
-		newFrame.Visible = currentFrame.Visible.Copy()
+		newFrame.Visible = currentFrame.Exported.Copy()
+		newFrame.Exported = currentFrame.Exported.Copy()
 	} else {
 		newFrame.Visible = pgsql.NewIdentifierSet()
 	}
@@ -329,8 +480,12 @@ func (s *Scope) CurrentFrameBinding() *BoundIdentifier {
 	return nil
 }
 
-func (s *Scope) IsVisible(identifier pgsql.Identifier) bool {
-	return s.CurrentFrame().Visible.Contains(identifier)
+func (s *Scope) IsMaterialized(identifier pgsql.Identifier) bool {
+	if binding, isBound := s.definitions[identifier]; isBound {
+		return binding.LastProjection != nil
+	}
+
+	return false
 }
 
 func (s *Scope) Visible() *pgsql.IdentifierSet {
@@ -406,11 +561,31 @@ func (s *Scope) Define(identifier pgsql.Identifier, dataType pgsql.DataType) *Bo
 // will eagerly bind anonymous identifiers for traversal steps and rebind existing identifiers and their
 // aliases to prevent naming collisions.
 type BoundIdentifier struct {
-	Identifier   pgsql.Identifier
-	Alias        models.Optional[pgsql.Identifier]
-	Parameter    models.Optional[*pgsql.Parameter]
-	Dependencies []*BoundIdentifier
-	DataType     pgsql.DataType
+	Identifier     pgsql.Identifier
+	Alias          models.Optional[pgsql.Identifier]
+	Parameter      models.Optional[*pgsql.Parameter]
+	LastProjection *Frame
+	Dependencies   []*BoundIdentifier
+	DataType       pgsql.DataType
+}
+
+func (s *BoundIdentifier) Copy() *BoundIdentifier {
+	dependenciesCopy := make([]*BoundIdentifier, len(s.Dependencies))
+	copy(dependenciesCopy, s.Dependencies)
+
+	return &BoundIdentifier{
+		Identifier:     s.Identifier,
+		Alias:          s.Alias,
+		Parameter:      s.Parameter,
+		LastProjection: s.LastProjection,
+		Dependencies:   dependenciesCopy,
+		DataType:       s.DataType,
+	}
+}
+
+func (s *BoundIdentifier) DetachFromFrame() {
+	s.LastProjection = nil
+	s.Dependencies = nil
 }
 
 func (s *BoundIdentifier) Aliased() pgsql.Identifier {

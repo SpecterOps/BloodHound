@@ -44,3 +44,13 @@ const (
 	FunctionEdgesToPath            Identifier = "edges_to_path"
 	FunctionExtract                Identifier = "extract"
 )
+
+func IsAggregateFunction(function Identifier) bool {
+	switch function {
+	case FunctionCount, FunctionArrayAggregate:
+		return true
+
+	default:
+		return false
+	}
+}

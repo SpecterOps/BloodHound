@@ -482,17 +482,11 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 		case pgsql.Variadic:
 			exprStack = append(exprStack, typedNextExpr.Expression, pgsql.FormattingLiteral("variadic "))
 
-		case pgsql.CompoundExpression:
-			for idx := len(typedNextExpr) - 1; idx >= 0; idx-- {
-				exprStack = append(exprStack, typedNextExpr[idx])
-
-				if idx > 0 {
-					exprStack = append(exprStack, pgsql.FormattingLiteral("."))
-				}
-			}
+		case pgsql.RowColumnReference:
+			exprStack = append(exprStack, typedNextExpr.Column, pgsql.FormattingLiteral(")."), typedNextExpr.Identifier, pgsql.FormattingLiteral("("))
 
 		case pgsql.ExistsExpression:
-			exprStack = append(exprStack, pgsql.FormattingLiteral(")"), typedNextExpr.Subquery, pgsql.FormattingLiteral("exists ("))
+			exprStack = append(exprStack, typedNextExpr.Subquery, pgsql.FormattingLiteral("exists "))
 
 			if typedNextExpr.Negated {
 				exprStack = append(exprStack, pgsql.FormattingLiteral("not "))
@@ -516,6 +510,12 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 					return err
 				}
 			}
+
+		case pgsql.Subquery:
+			exprStack = append(exprStack, pgsql.FormattingLiteral(")"), typedNextExpr.Query, pgsql.FormattingLiteral("("))
+
+		case pgsql.SyntaxNodeFuture:
+			exprStack = append(exprStack, typedNextExpr.Unwrap())
 
 		default:
 			return fmt.Errorf("unable to format pgsql node type: %T", nextExpr)
@@ -1094,7 +1094,9 @@ func Statement(statement pgsql.Statement, builder *OutputBuilder) (string, error
 	return builder.Build(), nil
 }
 
-func SyntaxNode(node pgsql.SyntaxNode, builder *OutputBuilder) (string, error) {
+func SyntaxNode(node pgsql.SyntaxNode) (string, error) {
+	builder := NewOutputBuilder()
+
 	switch typedNode := node.(type) {
 	case pgsql.Statement:
 		return Statement(typedNode, builder)

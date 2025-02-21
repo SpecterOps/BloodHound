@@ -168,6 +168,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 
 		adminUser  = model.User{Unique: model.Unique{ID: must.NewUUIDv4()}}
 		goodRoles  = []int32{0}
+		badRoles   = []int32{1}
 		goodUserID = must.NewUUIDv4()
 		badUserID  = must.NewUUIDv4()
 
@@ -180,6 +181,8 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 				Serial:        model.Serial{ID: 1234},
 				SSOProviderID: null.Int32From(ssoProviderID),
 			},
+			Config: model.SSOProviderConfig{
+				AutoProvision: model.SSOProviderAutoProvisionConfig{Enabled: true, RoleProvision: true}},
 		}
 	)
 
@@ -226,6 +229,24 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 			OnHandlerFunc(resources.UpdateUser).
 			Require().
 			ResponseStatusCode(http.StatusOK)
+	})
+
+	t.Run("Fails if roles set", func(t *testing.T) {
+		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Eq(badRoles)).Return(model.Roles{model.Role{Serial: model.Serial{ID: 1}}}, nil)
+		mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{SSOProviderID: null.Int32From(ssoProviderID), SSOProvider: &ssoProvider, Roles: model.Roles{model.Role{Serial: model.Serial{ID: 0}}}}, nil)
+		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), ssoProvider.ID).Return(ssoProvider, nil)
+
+		test.Request(t).
+			WithContext(bhCtx).
+			WithURLPathVars(map[string]string{"user_id": goodUserID.String()}).
+			WithBody(v2.UpdateUserRequest{
+				Principal:     "tester",
+				Roles:         badRoles,
+				SSOProviderID: null.Int32From(ssoProviderID),
+			}).
+			OnHandlerFunc(resources.UpdateUser).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest)
 	})
 
 	t.Run("Successful user update with sso provider-saml", func(t *testing.T) {
@@ -1146,6 +1167,50 @@ func TestCreateUser_Failure(t *testing.T) {
 	}
 }
 
+func TestCreateUser_FailureDuplicateEmail(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/auth/users"
+
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+		Key: appcfg.PasswordExpirationWindow,
+		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
+			Duration: appcfg.DefaultPasswordExpirationWindow,
+		}),
+	}, nil)
+	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(model.User{}, database.ErrDuplicateEmail)
+
+	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	input := v2.CreateUserRequest{
+		UpdateUserRequest: v2.UpdateUserRequest{
+			Principal: "good user",
+		},
+		SetUserSecretRequest: v2.SetUserSecretRequest{
+			Secret:             "abcDEF123456$$",
+			NeedsPasswordReset: true,
+		},
+	}
+
+	if payload, err := json.Marshal(input); err != nil {
+		t.Fatal(err)
+	} else if req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(payload)); err != nil {
+		t.Fatal(err)
+	} else {
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		router := mux.NewRouter()
+		router.HandleFunc(endpoint, resources.CreateUser).Methods("POST")
+
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+
+		require.Equal(t, rr.Code, http.StatusConflict)
+		require.Contains(t, rr.Body.String(), "email must be unique")
+	}
+}
+
 func TestCreateUser_Success(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -1455,16 +1520,49 @@ func TestManagementResource_UpdateUser_GetRolesError(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, response.Code)
 }
 
+func TestManagementResource_UpdateUser_DuplicateEmailError(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	goodUserID, err := uuid.NewV4()
+	require.Nil(t, err)
+
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
+	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{EmailAddress: null.StringFrom("")}, nil)
+	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(database.ErrDuplicateEmail)
+
+	reqCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+
+	payload, err := json.Marshal(v2.UpdateUserRequest{EmailAddress: "different"})
+	require.Nil(t, err)
+
+	endpoint := fmt.Sprintf("/api/v2/bloodhound-users/%v", goodUserID)
+	req, err := http.NewRequestWithContext(reqCtx, "PATCH", endpoint, bytes.NewReader(payload))
+	require.Nil(t, err)
+
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: goodUserID.String()})
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.UpdateUser)
+	handler.ServeHTTP(response, req)
+	require.Equal(t, http.StatusConflict, response.Code)
+	require.Contains(t, response.Body.String(), "email must be unique")
+}
+
 func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/auth/users"
-	// logged in user has ID 00000000-0000-0000-0000-000000000000
-	// leaving ID blank here will make goodUser have the same ID, so this should fail
-	goodUser := model.User{PrincipalName: "good user"}
+	var (
+		endpoint = "/api/v2/auth/users"
+		// logged in user has ID 00000000-0000-0000-0000-000000000000
+		// leaving ID blank here will make goodUser have the same ID, so this should fail
+		goodUser          = model.User{PrincipalName: "good user"}
+		isDisabled        = true
+		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+	)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
@@ -1511,7 +1609,7 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 	require.Nil(t, err)
 
 	payload, err = json.Marshal(v2.UpdateUserRequest{
-		IsDisabled: true,
+		IsDisabled: &isDisabled,
 	})
 	require.Nil(t, err)
 
@@ -1557,6 +1655,7 @@ func TestManagementResource_UpdateUser_UserSelfModify(t *testing.T) {
 		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{adminRole}, nil)
 		mockDB.EXPECT().GetUser(gomock.Any(), adminUser.ID).Return(adminUser, nil)
 		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(model.SSOProvider{}, nil)
+
 		test.Request(t).
 			WithContext(bhCtx).
 			WithURLPathVars(map[string]string{"user_id": adminUser.ID.String()}).
@@ -1602,6 +1701,8 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 			ID: goodUserID,
 		},
 	}
+
+	isDisabled := true
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
@@ -1651,7 +1752,7 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 	require.Nil(t, err)
 
 	payload, err = json.Marshal(v2.UpdateUserRequest{
-		IsDisabled: true,
+		IsDisabled: &isDisabled,
 	})
 	require.Nil(t, err)
 
@@ -1909,6 +2010,8 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 		},
 	}
 
+	isDisabled := true
+
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
@@ -1961,7 +2064,7 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 	userID, err := uuid.NewV4()
 	require.Nil(t, err)
 	updateUserRequest := v2.UpdateUserRequest{
-		IsDisabled: true,
+		IsDisabled: &isDisabled,
 	}
 
 	payload, err = json.Marshal(updateUserRequest)

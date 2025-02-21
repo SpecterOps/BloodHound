@@ -24,20 +24,8 @@ import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups, setDomain } from 'src/ducks/global/actions';
-import * as routes from 'src/ducks/global/routes';
+import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
-
-const Login = React.lazy(() => import('src/views/Login'));
-const DisabledUser = React.lazy(() => import('src/views/DisabledUser'));
-const ExpiredPassword = React.lazy(() => import('src/views/ExpiredPassword'));
-const Home = React.lazy(() => import('src/views/Home/Home'));
-const NotFound = React.lazy(() => import('src/views/NotFound'));
-const ExploreGraphView = React.lazy(() => import('./Explore/GraphView'));
-const UserProfile = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.UserProfile })));
-const DownloadCollectors = React.lazy(() => import('./DownloadCollectors'));
-const Administration = React.lazy(() => import('./Administration'));
-const ApiExplorer = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.ApiExplorer })));
-const GroupManagement = React.lazy(() => import('./GroupManagement/GroupManagement'));
 
 const useStyles = makeStyles({
     content: {
@@ -61,7 +49,6 @@ const Content: React.FC = () => {
         }
     }, [authState, isFullyAuthenticated, dispatch]);
 
-    // set inital domain/tenant once user is authenticated
     useEffect(() => {
         if (isFullyAuthenticated) {
             const ctrl = new AbortController();
@@ -86,66 +73,6 @@ const Content: React.FC = () => {
         }
     }, [isFullyAuthenticated, dispatch]);
 
-    const ROUTES = [
-        {
-            path: routes.ROUTE_USER_DISABLED,
-            component: DisabledUser,
-            authenticationRequired: false,
-        },
-        {
-            path: routes.ROUTE_LOGIN,
-            component: Login,
-            authenticationRequired: false,
-        },
-        {
-            path: routes.ROUTE_EXPIRED_PASSWORD,
-            component: ExpiredPassword,
-            authenticationRequired: true,
-        },
-        {
-            path: routes.ROUTE_HOME,
-            component: Home,
-            authenticationRequired: true,
-        },
-        {
-            path: routes.ROUTE_EXPLORE,
-            component: ExploreGraphView,
-            authenticationRequired: true,
-        },
-        {
-            path: routes.ROUTE_GROUP_MANAGEMENT,
-            component: GroupManagement,
-            authenticationRequired: true,
-        },
-        {
-            path: routes.ROUTE_MY_PROFILE,
-            component: UserProfile,
-            authenticationRequired: true,
-        },
-        {
-            path: routes.ROUTE_DOWNLOAD_COLLECTORS,
-            component: DownloadCollectors,
-            authenticationRequired: true,
-        },
-        {
-            path: routes.ROUTE_ADMINISTRATION_ROOT,
-            component: Administration,
-            authenticationRequired: true,
-        },
-        {
-            exact: true,
-            path: routes.ROUTE_API_EXPLORER,
-            component: ApiExplorer,
-            authenticationRequired: true,
-        },
-        {
-            exact: false,
-            path: '*',
-            component: NotFound,
-            authenticationRequired: false,
-        },
-    ];
-
     return (
         <Box className={classes.content}>
             <Suspense
@@ -169,9 +96,12 @@ const Content: React.FC = () => {
                             <Route
                                 path={route.path}
                                 element={
+                                    // Note: We add a left padding value to account for pages that have nav bar, h-full is because when adding the div it collapsed the views
                                     <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                                         <AuthenticatedRoute>
-                                            <route.component />
+                                            <div className={`h-full ${route.navigation && 'pl-nav-width'} `}>
+                                                <route.component />
+                                            </div>
                                         </AuthenticatedRoute>
                                     </ErrorBoundary>
                                 }

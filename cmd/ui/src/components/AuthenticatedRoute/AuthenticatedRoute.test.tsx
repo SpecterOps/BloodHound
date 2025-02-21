@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { createMemoryHistory } from 'history';
-import { ROUTE_EXPIRED_PASSWORD, ROUTE_HOME, ROUTE_LOGIN } from 'src/ducks/global/routes';
+import { ROUTE_EXPIRED_PASSWORD, ROUTE_HOME, ROUTE_LOGIN } from 'src/routes/constants';
 import { render, screen } from 'src/test-utils';
 import AuthenticatedRoute from './AuthenticatedRoute';
 

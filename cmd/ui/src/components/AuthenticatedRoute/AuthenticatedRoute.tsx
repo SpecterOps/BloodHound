@@ -16,7 +16,7 @@
 
 import { Navigate, useLocation } from 'react-router-dom';
 import { authExpiredSelector } from 'src/ducks/auth/authSlice';
-import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN } from 'src/ducks/global/routes';
+import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN } from 'src/routes/constants';
 import { useAppSelector } from 'src/store';
 
 const AuthenticatedRoute: React.FC<{ children: any }> = ({ children }): React.ReactElement => {

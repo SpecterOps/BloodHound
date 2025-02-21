@@ -29,7 +29,7 @@ const (
 )
 
 var reservedIdentifiers = []Identifier{
-	EpochIdentifier,
+	EpochIdentifier, WildcardIdentifier,
 }
 
 func IsReservedIdentifier(identifier Identifier) bool {
@@ -71,6 +71,10 @@ func AsIdentifierSet(identifiers ...Identifier) *IdentifierSet {
 	}
 
 	return newSet
+}
+
+func (s *IdentifierSet) Clear() {
+	clear(s.identifiers)
 }
 
 func (s *IdentifierSet) Len() int {

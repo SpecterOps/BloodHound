@@ -24,30 +24,17 @@ import (
 )
 
 type BoundProjections struct {
-	Items pgsql.Projection
+	Items    pgsql.Projection
+	Bindings []*BoundIdentifier
 }
 
-func rewriteIdentifierReferences(frame *Frame, expressions []pgsql.Expression) error {
-	if frame.Previous == nil {
-		return nil
-	}
-
-	for _, expression := range expressions {
-		if err := RewriteExpressionIdentifiers(expression, frame.Previous.Binding.Identifier, frame.Previous.Visible); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func rewriteConstraintIdentifierReferences(frame *Frame, constraints []*Constraint) error {
+func rewriteConstraintIdentifierReferences(scope *Scope, frame *Frame, constraints []*Constraint) error {
 	if frame.Previous == nil {
 		return nil
 	}
 
 	for _, constraint := range constraints {
-		if err := RewriteExpressionIdentifiers(constraint.Expression, frame.Previous.Binding.Identifier, frame.Previous.Visible); err != nil {
+		if err := RewriteFrameBindings(scope, constraint.Expression); err != nil {
 			return err
 		}
 	}
@@ -70,7 +57,7 @@ func buildExternalProjection(scope *Scope, projections []*Projection) (pgsql.Pro
 					alias = projectedBinding.Alias.Value
 				}
 
-				if builtProjection, err := buildProjection(alias, projectedBinding, scope); err != nil {
+				if builtProjection, err := buildProjection(alias, projectedBinding, scope, projectedBinding.LastProjection); err != nil {
 					return nil, err
 				} else {
 					for _, buildProjectionItem := range builtProjection {
@@ -93,7 +80,7 @@ func buildExternalProjection(scope *Scope, projections []*Projection) (pgsql.Pro
 		}
 	}
 
-	if err := RewriteExpressionIdentifiers(sqlProjection, scope.CurrentFrameBinding().Identifier, nil); err != nil {
+	if err := RewriteFrameBindings(scope, sqlProjection); err != nil {
 		return nil, err
 	}
 
@@ -103,8 +90,10 @@ func buildExternalProjection(scope *Scope, projections []*Projection) (pgsql.Pro
 
 func buildInternalProjection(scope *Scope, projectedBindings []*BoundIdentifier) (BoundProjections, error) {
 	var (
-		boundProjections BoundProjections
-		projected        = map[pgsql.Identifier]struct{}{}
+		boundProjections = BoundProjections{
+			Bindings: projectedBindings,
+		}
+		projected = map[pgsql.Identifier]struct{}{}
 	)
 
 	for _, projectedBinding := range projectedBindings {
@@ -115,7 +104,7 @@ func buildInternalProjection(scope *Scope, projectedBindings []*BoundIdentifier)
 		projected[projectedBinding.Identifier] = struct{}{}
 
 		// Build the identifier's projection
-		if newSelectItems, err := buildProjection(projectedBinding.Identifier, projectedBinding, scope); err != nil {
+		if newSelectItems, err := buildProjection(projectedBinding.Identifier, projectedBinding, scope, projectedBinding.LastProjection); err != nil {
 			return BoundProjections{}, err
 		} else {
 			boundProjections.Items = append(boundProjections.Items, newSelectItems...)
@@ -126,26 +115,20 @@ func buildInternalProjection(scope *Scope, projectedBindings []*BoundIdentifier)
 	return boundProjections, nil
 }
 
-func buildVisibleScopeProjections(scope *Scope, boundIdentifiers []*BoundIdentifier) (BoundProjections, error) {
-	if visibleBindings, err := scope.LookupBindings(scope.Visible().Slice()...); err != nil {
-		return BoundProjections{}, err
-	} else if projection, err := buildInternalProjection(scope, append(visibleBindings, boundIdentifiers...)); err != nil {
+func buildVisibleScopeProjections(scope *Scope) (BoundProjections, error) {
+	currentFrame := scope.CurrentFrame()
+
+	if knownBindings, err := scope.LookupBindings(currentFrame.Known().Slice()...); err != nil {
 		return BoundProjections{}, err
 	} else {
-		for _, boundIdentifier := range boundIdentifiers {
-			scope.Declare(boundIdentifier.Identifier)
-		}
-
-		return projection, nil
+		return buildInternalProjection(scope, knownBindings)
 	}
 }
 
-func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *Scope) ([]pgsql.SelectItem, error) {
-	referenceFrame := scope.ReferenceFrame()
-
+func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *Scope, referenceFrame *Frame) ([]pgsql.SelectItem, error) {
 	switch projected.DataType {
 	case pgsql.ExpansionPath:
-		if scope.IsVisible(projected.Identifier) {
+		if projected.LastProjection != nil {
 			return []pgsql.SelectItem{
 				&pgsql.AliasedExpression{
 					Expression: pgsql.CompoundIdentifier{referenceFrame.Binding.Identifier, projected.Identifier},
@@ -154,16 +137,12 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 			}, nil
 		}
 
-		if expansionBinding, found := projected.FirstDependencyByType(pgsql.ExpansionPattern); !found {
-			return nil, fmt.Errorf("expected expansion link from path array projection")
-		} else {
-			return []pgsql.SelectItem{
-				&pgsql.AliasedExpression{
-					Expression: pgsql.CompoundIdentifier{expansionBinding.Identifier, pgsql.ColumnPath},
-					Alias:      models.ValueOptional(alias),
-				},
-			}, nil
-		}
+		return []pgsql.SelectItem{
+			&pgsql.AliasedExpression{
+				Expression: pgsql.CompoundIdentifier{scope.CurrentFrame().Binding.Identifier, pgsql.ColumnPath},
+				Alias:      models.ValueOptional(alias),
+			},
+		}, nil
 
 	case pgsql.PathComposite:
 		var (
@@ -218,7 +197,7 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 		}, nil
 
 	case pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
-		if scope.IsVisible(projected.Identifier) {
+		if projected.LastProjection != nil {
 			return []pgsql.SelectItem{
 				&pgsql.AliasedExpression{
 					Expression: pgsql.CompoundIdentifier{referenceFrame.Binding.Identifier, projected.Identifier},
@@ -247,7 +226,7 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 		}, nil
 
 	case pgsql.NodeComposite:
-		if scope.IsVisible(projected.Identifier) {
+		if projected.LastProjection != nil {
 			return []pgsql.SelectItem{
 				&pgsql.AliasedExpression{
 					Expression: pgsql.CompoundIdentifier{referenceFrame.Binding.Identifier, projected.Identifier},
@@ -284,44 +263,39 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 		// Change the type to the node composite now that this is projected
 		projected.DataType = pgsql.EdgeComposite
 
-		// Find the expansion's binding
-		if expansion, hasExpansion := projected.FirstDependencyByType(pgsql.ExpansionPattern); !hasExpansion {
-			return nil, fmt.Errorf("no expansion dependency for expansion edge: %s", projected.Identifier)
-		} else {
-			// Create a new final projection that's aliased to the visible binding's identifier
-			return []pgsql.SelectItem{
-				&pgsql.AliasedExpression{
-					Expression: pgsql.Parenthetical{
-						Expression: pgsql.Select{
-							Projection: []pgsql.SelectItem{
-								pgsql.FunctionCall{
-									Function:   pgsql.FunctionArrayAggregate,
-									Parameters: []pgsql.Expression{value},
-								},
+		// Create a new final projection that's aliased to the visible binding's identifier
+		return []pgsql.SelectItem{
+			&pgsql.AliasedExpression{
+				Expression: pgsql.Parenthetical{
+					Expression: pgsql.Select{
+						Projection: []pgsql.SelectItem{
+							pgsql.FunctionCall{
+								Function:   pgsql.FunctionArrayAggregate,
+								Parameters: []pgsql.Expression{value},
 							},
-							From: []pgsql.FromClause{{
-								Source: pgsql.TableReference{
-									Name:    pgsql.CompoundIdentifier{pgsql.TableEdge},
-									Binding: models.ValueOptional(projected.Identifier),
-								},
-								Joins: nil,
-							}},
-							Where: pgsql.NewBinaryExpression(
-								pgsql.CompoundIdentifier{projected.Identifier, pgsql.ColumnID},
-								pgsql.OperatorEquals,
-								pgsql.NewAnyExpression(
-									pgsql.CompoundIdentifier{expansion.Identifier, pgsql.ColumnPath},
-								),
-							),
 						},
+						From: []pgsql.FromClause{{
+							Source: pgsql.TableReference{
+								Name:    pgsql.CompoundIdentifier{pgsql.TableEdge},
+								Binding: models.ValueOptional(projected.Identifier),
+							},
+							Joins: nil,
+						}},
+						Where: pgsql.NewBinaryExpression(
+							pgsql.CompoundIdentifier{projected.Identifier, pgsql.ColumnID},
+							pgsql.OperatorEquals,
+							pgsql.NewAnyExpression(
+								pgsql.CompoundIdentifier{scope.CurrentFrame().Binding.Identifier, pgsql.ColumnPath},
+							),
+						),
 					},
-					Alias: pgsql.AsOptionalIdentifier(alias),
 				},
-			}, nil
-		}
+				Alias: pgsql.AsOptionalIdentifier(alias),
+			},
+		}, nil
 
 	case pgsql.EdgeComposite:
-		if scope.IsVisible(projected.Identifier) {
+		if projected.LastProjection != nil {
 			return []pgsql.SelectItem{
 				&pgsql.AliasedExpression{
 					Expression: pgsql.CompoundIdentifier{referenceFrame.Binding.Identifier, projected.Identifier},
@@ -347,5 +321,11 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 		}, nil
 	}
 
-	return nil, fmt.Errorf("unsupported projection type: %s", projected.DataType.String())
+	// If this isn't a type that requires a unique projection, reflect the identifier as-is with its alias
+	return []pgsql.SelectItem{
+		&pgsql.AliasedExpression{
+			Expression: pgsql.CompoundIdentifier{referenceFrame.Binding.Identifier, projected.Identifier},
+			Alias:      pgsql.AsOptionalIdentifier(alias),
+		},
+	}, nil
 }

@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, CircularProgress, Container } from '@mui/material';
-import { GenericErrorBoundaryFallback, Permission } from 'bh-shared-ui';
+import { GenericErrorBoundaryFallback, Permission, SubNav } from 'bh-shared-ui';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import LeftNav from 'src/components/LeftNav';
+import usePermissions from 'src/hooks/usePermissions/usePermissions';
 import {
     ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
     ROUTE_ADMINISTRATION_DATA_QUALITY,
@@ -28,8 +28,7 @@ import {
     ROUTE_ADMINISTRATION_FILE_INGEST,
     ROUTE_ADMINISTRATION_MANAGE_USERS,
     ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
-} from 'src/ducks/global/routes';
-import usePermissions from 'src/hooks/usePermissions/usePermissions';
+} from 'src/routes/constants';
 
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const QA = React.lazy(() => import('src/views/QA'));
@@ -132,8 +131,8 @@ const Administration: React.FC = () => {
         .filter((section) => section.items.length !== 0);
 
     return (
-        <Box display='flex' minHeight='100%'>
-            <LeftNav sections={adminFilteredSections} />
+        <Box className='flex h-full pl-subnav-width'>
+            <SubNav sections={adminFilteredSections} />
             <Box flexGrow={1} position='relative' minWidth={0}>
                 <main>
                     <Container maxWidth='xl'>

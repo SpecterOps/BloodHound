@@ -20,6 +20,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import {
     AppNotifications,
     GenericErrorBoundaryFallback,
+    MainNav,
     NotificationsProvider,
     components,
     darkPalette,
@@ -27,18 +28,23 @@ import {
     setRootClass,
     typography,
     useFeatureFlags,
+    useShowNavBar,
 } from 'bh-shared-ui';
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useQueryClient } from 'react-query';
-import { unstable_HistoryRouter as BrowserRouter, useLocation } from 'react-router-dom';
-import Header from 'src/components/Header';
+import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
 import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice';
-import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN, ROUTE_USER_DISABLED } from 'src/ducks/global/routes';
+import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import Content from 'src/views/Content';
+import {
+    MainNavPrimaryListData,
+    useMainNavLogoData,
+    useMainNavSecondaryListData,
+} from './components/MainNav/MainNavData';
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
 
@@ -46,9 +52,14 @@ export const Inner: React.FC = () => {
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const queryClient = useQueryClient();
-    const location = useLocation();
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const featureFlagsRes = useFeatureFlags({ retry: false, enabled: !!authState.isInitialized && fullyAuthenticated });
+    const mainNavData = {
+        logo: useMainNavLogoData(),
+        primaryList: MainNavPrimaryListData,
+        secondaryList: useMainNavSecondaryListData(),
+    };
+    const showNavBar = useShowNavBar(ROUTES);
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
@@ -168,15 +179,9 @@ export const Inner: React.FC = () => {
         return null;
     }
 
-    const showHeader = !['', '/', ROUTE_LOGIN, ROUTE_EXPIRED_PASSWORD, ROUTE_USER_DISABLED].includes(location.pathname);
-
     return (
         <Box className={`${classes.applicationContainer}`} id='app-root'>
-            {showHeader && (
-                <Box className={classes.applicationHeader}>
-                    <Header />
-                </Box>
-            )}
+            {showNavBar && <MainNav mainNavData={mainNavData} />}
             <Box className={classes.applicationContent}>
                 <Content />
             </Box>

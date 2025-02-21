@@ -24,18 +24,20 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
-func (s *Translator) translatePatternPredicate(scope *Scope) error {
-	// Set the pattern frame
-	s.pattern.Frame = scope.CurrentFrame()
+func (s *Translator) preparePatternPredicate() error {
+	currentQueryPart := s.query.CurrentPart()
+
+	// Stash the match pattern
+	currentQueryPart.StashCurrentPattern()
 
 	// All pattern predicates must be relationship patterns
-	newPatternPart := s.pattern.NewPart()
+	newPatternPart := currentQueryPart.currentPattern.NewPart()
 	newPatternPart.IsTraversal = true
 
 	return nil
 }
 
-func (s *Translator) buildOptimizedRelationshipExistPredicate(part *PatternPart, traversalStep *PatternSegment) error {
+func (s *Translator) buildOptimizedRelationshipExistPredicate(part *PatternPart, traversalStep *PatternSegment) (pgsql.Expression, error) {
 	whereClause := pgsql.NewBinaryExpression(
 		pgsql.NewBinaryExpression(
 			pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnStartID},
@@ -48,123 +50,150 @@ func (s *Translator) buildOptimizedRelationshipExistPredicate(part *PatternPart,
 			pgsql.CompoundIdentifier{traversalStep.LeftNode.Identifier, pgsql.ColumnID}),
 	)
 
-	if err := rewriteIdentifierReferences(traversalStep.Frame, []pgsql.Expression{whereClause}); err != nil {
-		return err
+	if err := RewriteFrameBindings(s.query.Scope, whereClause); err != nil {
+		return nil, err
 	}
 
 	// explain analyze select * from node n0 where not exists(select 1 from edge e0 where e0.start_id = n0.id or e0.end_id = n0.id);
-	s.treeTranslator.Push(pgsql.ExistsExpression{
-		Subquery: pgsql.Query{
-			Body: pgsql.Select{
-				Projection: []pgsql.SelectItem{
-					pgsql.NewLiteral(1, pgsql.Int),
+	return pgsql.ExistsExpression{
+		Subquery: pgsql.Subquery{
+			Query: pgsql.Query{
+				Body: pgsql.Select{
+					Projection: []pgsql.SelectItem{
+						pgsql.NewLiteral(1, pgsql.Int),
+					},
+					From: []pgsql.FromClause{{
+						Source: pgsql.TableReference{
+							Name:    pgsql.CompoundIdentifier{pgsql.TableEdge},
+							Binding: models.ValueOptional(traversalStep.Edge.Identifier),
+						}},
+					},
+					Where: whereClause,
 				},
-				From: []pgsql.FromClause{{
-					Source: pgsql.TableReference{
-						Name:    pgsql.CompoundIdentifier{pgsql.TableEdge},
-						Binding: models.ValueOptional(traversalStep.Edge.Identifier),
-					}},
-				},
-				Where: whereClause,
 			},
 		},
-	})
-
-	return nil
+	}, nil
 }
 
-func (s *Translator) buildPatternPredicate() error {
-	if numPatternParts := len(s.pattern.Parts); numPatternParts < 1 || numPatternParts > 1 {
+func (s *Translator) translatePatternPredicate() error {
+	var (
+		currentQueryPart = s.query.CurrentPart()
+		patternPredicate = currentQueryPart.ConsumeCurrentPattern()
+		predicateFuture  = pgsql.NewFuture[*Pattern](patternPredicate, pgsql.Boolean)
+	)
+
+	// Restore the previous match pattern as the current match pattern
+	currentQueryPart.RestoreStashedPattern()
+
+	if numPatternParts := len(patternPredicate.Parts); numPatternParts < 1 || numPatternParts > 1 {
 		return fmt.Errorf("expected exactly one pattern part for pattern predicate but found: %d", numPatternParts)
 	}
 
-	var (
-		lastFrame *Frame
+	// Push this as an expression for rendering constraints
+	s.treeTranslator.Push(predicateFuture)
 
-		patternPart = s.pattern.Parts[0]
-		subQuery    = pgsql.Query{
-			CommonTableExpressions: &pgsql.With{},
-		}
-	)
+	// Track this as a predicate to revisit while rendering the patterns
+	currentQueryPart.AddPatternPredicateFuture(predicateFuture)
+	return nil
+}
 
-	if len(patternPart.TraversalSteps) == 1 {
+func (s *Translator) buildPatternPredicates() error {
+	for _, predicateFuture := range s.query.CurrentPart().patternPredicates {
 		var (
-			traversalStep        = patternPart.TraversalSteps[0]
-			hasGlobalConstraints = s.treeTranslator.IdentifierConstraints.HasConstraints(
-				pgsql.AsIdentifierSet(
-					traversalStep.LeftNode.Identifier,
-					traversalStep.Edge.Identifier,
-					traversalStep.RightNode.Identifier,
-				),
-			)
-			hasPredicateConstraints = patternPart.Constraints.HasConstraints(
-				pgsql.AsIdentifierSet(
-					traversalStep.LeftNode.Identifier,
-					traversalStep.Edge.Identifier,
-					traversalStep.RightNode.Identifier,
-				),
-			)
+			lastFrame *Frame
+
+			patternPart = predicateFuture.Data.Parts[0]
+			subQuery    = pgsql.Query{
+				CommonTableExpressions: &pgsql.With{},
+			}
 		)
 
-		if traversalStep.Direction == graph.DirectionBoth && !hasPredicateConstraints && !hasGlobalConstraints {
-			return s.buildOptimizedRelationshipExistPredicate(patternPart, traversalStep)
-		}
-	}
+		if len(patternPart.TraversalSteps) == 1 {
+			var (
+				traversalStep            = patternPart.TraversalSteps[0]
+				traversalStepIdentifiers = pgsql.AsIdentifierSet(
+					traversalStep.LeftNode.Identifier,
+					traversalStep.Edge.Identifier,
+					traversalStep.RightNode.Identifier,
+				)
+			)
 
-	for idx, traversalStep := range patternPart.TraversalSteps {
-		if traversalStep.Expansion.Set {
-			return fmt.Errorf("expansion in pattern predicate not supported")
-		}
+			if traversalStep.Direction == graph.DirectionBoth {
+				if hasGlobalConstraints, err := s.treeTranslator.IdentifierConstraints.HasConstraints(traversalStepIdentifiers); err != nil {
+					return err
+				} else if hasPredicateConstraints, err := patternPart.Constraints.HasConstraints(traversalStepIdentifiers); err != nil {
+					return err
+				} else if !hasPredicateConstraints && !hasGlobalConstraints {
+					if predicateExpression, err := s.buildOptimizedRelationshipExistPredicate(patternPart, traversalStep); err != nil {
+						return err
+					} else {
+						predicateFuture.SyntaxNode = predicateExpression
+					}
 
-		if idx > 0 {
-			if traversalStepQuery, err := s.buildTraversalPatternStep(patternPart, traversalStep); err != nil {
-				return err
-			} else {
-				subQuery.AddCTE(pgsql.CommonTableExpression{
-					Alias: pgsql.TableAlias{
-						Name: traversalStep.Frame.Binding.Identifier,
-					},
-					Query: traversalStepQuery,
-				})
-			}
-		} else {
-			if traversalStepQuery, err := s.buildTraversalPatternRoot(patternPart, traversalStep); err != nil {
-				return err
-			} else {
-				subQuery.AddCTE(pgsql.CommonTableExpression{
-					Alias: pgsql.TableAlias{
-						Name: traversalStep.Frame.Binding.Identifier,
-					},
-					Query: traversalStepQuery,
-				})
+					return nil
+				}
 			}
 		}
 
-		lastFrame = traversalStep.Frame
-	}
+		if err := s.translateTraversalPatternPart(patternPart, true); err != nil {
+			return err
+		}
 
-	subQuery.Body = pgsql.Select{
-		Projection: pgsql.Projection{
-			pgsql.NewBinaryExpression(
-				pgsql.FunctionCall{
-					Function:   pgsql.FunctionCount,
-					Parameters: []pgsql.Expression{pgsql.WildcardIdentifier},
-				},
-				pgsql.OperatorGreaterThan,
-				pgsql.NewLiteral(0, pgsql.Int),
-			),
-		},
+		for idx, traversalStep := range patternPart.TraversalSteps {
+			if traversalStep.Expansion.Set {
+				return fmt.Errorf("expansion in pattern predicate not supported")
+			}
 
-		From: []pgsql.FromClause{{
-			Source: pgsql.TableReference{
-				Name: pgsql.CompoundIdentifier{lastFrame.Binding.Identifier},
+			if idx > 0 {
+				if traversalStepQuery, err := s.buildTraversalPatternStep(traversalStep.Frame, patternPart, traversalStep); err != nil {
+					return err
+				} else {
+					subQuery.AddCTE(pgsql.CommonTableExpression{
+						Alias: pgsql.TableAlias{
+							Name: traversalStep.Frame.Binding.Identifier,
+						},
+						Query: traversalStepQuery,
+					})
+				}
+			} else {
+				if traversalStepQuery, err := s.buildTraversalPatternRoot(traversalStep.Frame, patternPart, traversalStep); err != nil {
+					return err
+				} else {
+					subQuery.AddCTE(pgsql.CommonTableExpression{
+						Alias: pgsql.TableAlias{
+							Name: traversalStep.Frame.Binding.Identifier,
+						},
+						Query: traversalStepQuery,
+					})
+				}
+			}
+
+			lastFrame = traversalStep.Frame
+		}
+
+		subQuery.Body = pgsql.Select{
+			Projection: pgsql.Projection{
+				pgsql.NewBinaryExpression(
+					pgsql.FunctionCall{
+						Function:   pgsql.FunctionCount,
+						Parameters: []pgsql.Expression{pgsql.WildcardIdentifier},
+					},
+					pgsql.OperatorGreaterThan,
+					pgsql.NewLiteral(0, pgsql.Int),
+				),
 			},
-		}},
-	}
 
-	s.treeTranslator.Push(pgsql.Parenthetical{
-		Expression: subQuery,
-	})
+			From: []pgsql.FromClause{{
+				Source: pgsql.TableReference{
+					Name: pgsql.CompoundIdentifier{lastFrame.Binding.Identifier},
+				},
+			}},
+		}
+
+		predicateFuture.SyntaxNode = pgsql.Subquery{
+			Query: subQuery,
+		}
+	}
 
 	return nil
 }

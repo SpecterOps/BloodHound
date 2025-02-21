@@ -81,6 +81,21 @@ func ParseLimitQueryParameter(params url.Values, defaultValue int) (int, error) 
 	}
 }
 
+// ParseOptionalLimitQueryParameter should only be used if the endpoint is safe to return all results for a given query
+// This will allow the user to submit an API call with `limit=-1` which will in turn allow the database to return unlimited
+// results.
+func ParseOptionalLimitQueryParameter(params url.Values, defaultValue int) (int, error) {
+	if param := params.Get(model.PaginationQueryParameterLimit); param == "" {
+		return defaultValue, nil
+	} else if limit, err := strconv.Atoi(param); err != nil {
+		return 0, fmt.Errorf("error converting limit value %v to int: %v", param, err)
+	} else if limit < -1 {
+		return 0, fmt.Errorf(utils.ErrorInvalidLimit, limit)
+	} else {
+		return limit, nil
+	}
+}
+
 func ParseTimeQueryParameter(params url.Values, key string, defaultValue time.Time) (time.Time, error) {
 	if param := params.Get(key); param != "" {
 		return time.Parse(time.RFC3339Nano, param)

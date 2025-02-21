@@ -658,6 +658,21 @@ func (mr *MockDatabaseMockRecorder) GetADDataQualityStats(arg0, arg1, arg2, arg3
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetADDataQualityStats), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
+// GetAggregateADDataQualityStats mocks base method.
+func (m *MockDatabase) GetAggregateADDataQualityStats(arg0 context.Context, arg1 []string, arg2, arg3 time.Time) (model.ADDataQualityStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAggregateADDataQualityStats", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(model.ADDataQualityStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAggregateADDataQualityStats indicates an expected call of GetAggregateADDataQualityStats.
+func (mr *MockDatabaseMockRecorder) GetAggregateADDataQualityStats(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregateADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetAggregateADDataQualityStats), arg0, arg1, arg2, arg3)
+}
+
 // GetAllAssetGroups mocks base method.
 func (m *MockDatabase) GetAllAssetGroups(arg0 context.Context, arg1 string, arg2 model.SQLFilter) (model.AssetGroups, error) {
 	m.ctrl.T.Helper()

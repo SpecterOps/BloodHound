@@ -140,8 +140,13 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC13 = 'ADCSESC13',
     SyncedToEntraUser = 'SyncedToEntraUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
+    CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
+    WriteOwnerLimitedRights = 'WriteOwnerLimitedRights',
+    WriteOwnerRaw = 'WriteOwnerRaw',
+    OwnsLimitedRights = 'OwnsLimitedRights',
+    OwnsRaw = 'OwnsRaw',
     CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
-    CoerceAndRelayNTLMToLDAPs = 'CoerceAndRelayNTLMToLDAPs',
+    CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -283,9 +288,20 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'SyncedToEntraUser';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB:
             return 'CoerceAndRelayNTLMToSMB';
-        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPs:
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS:
+            return 'CoerceAndRelayNTLMToADCS';
+        case ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights:
+            return 'WriteOwnerLimitedRights';
+        case ActiveDirectoryRelationshipKind.WriteOwnerRaw:
+            return 'WriteOwnerRaw';
+        case ActiveDirectoryRelationshipKind.OwnsLimitedRights:
+            return 'OwnsLimitedRights';
+        case ActiveDirectoryRelationshipKind.OwnsRaw:
+            return 'OwnsRaw';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP:
             return 'CoerceAndRelayNTLMToLDAP';
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS:
+            return 'CoerceAndRelayNTLMToLDAPS';
         default:
             return undefined;
     }
@@ -304,7 +320,9 @@ export const EdgeCompositionRelationships = [
     'ADCSESC10b',
     'ADCSESC13',
     'CoerceAndRelayNTLMToSMB',
+    'CoerceAndRelayNTLMToADCS',
     'CoerceAndRelayNTLMToLDAP',
+    'CoerceAndRelayNTLMToLDAPS',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -329,7 +347,6 @@ export enum ActiveDirectoryKindProperties {
     DomainFQDN = 'domain',
     DomainSID = 'domainsid',
     Sensitive = 'sensitive',
-    HighValue = 'highvalue',
     BlocksInheritance = 'blocksinheritance',
     IsACL = 'isacl',
     IsACLProtected = 'isaclprotected',
@@ -408,15 +425,23 @@ export enum ActiveDirectoryKindProperties {
     MaxPwdAge = 'maxpwdage',
     LockoutDuration = 'lockoutduration',
     LockoutObservationWindow = 'lockoutobservationwindow',
+    OwnerSid = 'ownersid',
     SMBSigning = 'smbsigning',
-    RestrictOutboundNTLM = 'restrictoutboundntlm',
     WebClientRunning = 'webclientrunning',
+    RestrictOutboundNTLM = 'restrictoutboundntlm',
+    GMSA = 'gmsa',
+    MSA = 'msa',
+    DoesAnyAceGrantOwnerRights = 'doesanyacegrantownerrights',
+    DoesAnyInheritedAceGrantOwnerRights = 'doesanyinheritedacegrantownerrights',
+    ADCSWebEnrollmentHTTP = 'adcswebenrollmenthttp',
+    ADCSWebEnrollmentHTTPS = 'adcswebenrollmenthttps',
+    ADCSWebEnrollmentHTTPSEPA = 'adcswebenrollmenthttpsepa',
     LDAPSigning = 'ldapsigning',
-    LDAPs = 'ldaps',
-    LDAPsEPA = 'ldapsepa',
-    LDAPsAvailable = 'ldapavailable',
-
-
+    LDAPSAvailable = 'ldasavailable',
+    LDAPSEPA = 'ldapsepa',
+    RelayableToDCLDAP = 'replayabletodcldap',
+    RelayableToDCLDAPS = 'replayabletodcldaps',
+    IsDC = 'isdc',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -464,8 +489,6 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Domain SID';
         case ActiveDirectoryKindProperties.Sensitive:
             return 'Marked Sensitive';
-        case ActiveDirectoryKindProperties.HighValue:
-            return 'High Value';
         case ActiveDirectoryKindProperties.BlocksInheritance:
             return 'Blocks GPO Inheritance';
         case ActiveDirectoryKindProperties.IsACL:
@@ -622,20 +645,40 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Lockout Duration';
         case ActiveDirectoryKindProperties.LockoutObservationWindow:
             return 'Lockout Observation Window';
+        case ActiveDirectoryKindProperties.OwnerSid:
+            return 'Owner SID';
         case ActiveDirectoryKindProperties.SMBSigning:
             return 'SMB Signing';
+        case ActiveDirectoryKindProperties.WebClientRunning:
+            return 'WebClient Running';
         case ActiveDirectoryKindProperties.RestrictOutboundNTLM:
             return 'Restrict Outbound NTLM';
-        case ActiveDirectoryKindProperties.WebClientRunning:
-            return 'Web Client Running';
+        case ActiveDirectoryKindProperties.GMSA:
+            return 'GMSA';
+        case ActiveDirectoryKindProperties.MSA:
+            return 'MSA';
+        case ActiveDirectoryKindProperties.DoesAnyAceGrantOwnerRights:
+            return 'Does Any ACE Grant Owner Rights';
+        case ActiveDirectoryKindProperties.DoesAnyInheritedAceGrantOwnerRights:
+            return 'Does Any Inherited ACE Grant Owner Rights';
+        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTP:
+            return 'ADCS Web Enrollment HTTP';
+        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPS:
+            return 'ADCS Web Enrollment HTTPS';
+        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPSEPA:
+            return 'ADCS Web Enrollment HTTPS EPA';
         case ActiveDirectoryKindProperties.LDAPSigning:
             return 'LDAP Signing';
-        case ActiveDirectoryKindProperties.LDAPs:
-            return 'LDAPs';
-        case ActiveDirectoryKindProperties.LDAPsEPA:
-            return 'LDAPs EPA';
-        case ActiveDirectoryKindProperties.LDAPsAvailable:
-            return 'LDAPs Available';
+        case ActiveDirectoryKindProperties.LDAPSAvailable:
+            return 'LDAPS Available';
+        case ActiveDirectoryKindProperties.LDAPSEPA:
+            return 'LDAPS EPA';
+        case ActiveDirectoryKindProperties.RelayableToDCLDAP:
+            return 'Relayable To DC LDAP';
+        case ActiveDirectoryKindProperties.RelayableToDCLDAPS:
+            return 'Relayable To DC LDAPS';
+        case ActiveDirectoryKindProperties.IsDC:
+            return 'Is Domain Controller';
         default:
             return undefined;
     }
@@ -686,7 +729,11 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC13,
         ActiveDirectoryRelationshipKind.SyncedToEntraUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+        ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
+        ActiveDirectoryRelationshipKind.OwnsLimitedRights,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.TrustedBy,

@@ -42,7 +42,7 @@ func (s *Translator) translateRemoveItem(removeItem *cypher.RemoveItem) error {
 		} else if binding, resolved := s.query.Scope.LookupString(variable.Symbol); !resolved {
 			return fmt.Errorf("unable to find identifier %s", variable.Symbol)
 		} else {
-			return s.mutations.AddKindRemoval(s.query.Scope, binding.Identifier, removeItem.KindMatcher.Kinds)
+			return s.query.CurrentPart().mutations.AddKindRemoval(s.query.Scope, binding.Identifier, removeItem.KindMatcher.Kinds)
 		}
 	}
 
@@ -52,7 +52,7 @@ func (s *Translator) translateRemoveItem(removeItem *cypher.RemoveItem) error {
 		} else if propertyLookup, err := decomposePropertyLookup(propertyLookupExpression); err != nil {
 			return err
 		} else {
-			return s.mutations.AddPropertyRemoval(s.query.Scope, propertyLookup)
+			return s.query.CurrentPart().mutations.AddPropertyRemoval(s.query.Scope, propertyLookup)
 		}
 	}
 
@@ -142,7 +142,7 @@ func (s *Translator) translateSetItem(setItem *cypher.SetItem) error {
 			} else if leftPropertyLookup, err := decomposePropertyLookup(leftOperand); err != nil {
 				return err
 			} else {
-				return s.mutations.AddPropertyAssignment(s.query.Scope, leftPropertyLookup, operator, rightOperand)
+				return s.query.CurrentPart().mutations.AddPropertyAssignment(s.query.Scope, leftPropertyLookup, operator, rightOperand)
 			}
 
 		case pgsql.OperatorKindAssignment:
@@ -155,7 +155,7 @@ func (s *Translator) translateSetItem(setItem *cypher.SetItem) error {
 			} else if kindList, isKindListLiteral := rightOperand.(pgsql.KindListLiteral); !isKindListLiteral {
 				return fmt.Errorf("expected an identifier for kind list right operand but got: %T", rightOperand)
 			} else {
-				return s.mutations.AddKindAssignment(s.query.Scope, targetIdentifier, kindList.Values)
+				return s.query.CurrentPart().mutations.AddKindAssignment(s.query.Scope, targetIdentifier, kindList.Values)
 			}
 
 		default:
@@ -297,7 +297,7 @@ func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error
 		return err
 	} else {
 		switch binding.DataType {
-		case pgsql.NodeComposite:
+		case pgsql.NodeComposite, pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
 			s.treeTranslator.Push(pgsql.CompoundIdentifier{binding.Identifier, pgsql.ColumnKindIDs})
 			s.treeTranslator.Push(kindIDsLiteral)
 
@@ -305,7 +305,7 @@ func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error
 				s.SetError(err)
 			}
 
-		case pgsql.EdgeComposite:
+		case pgsql.EdgeComposite, pgsql.ExpansionEdge:
 			s.treeTranslator.Push(pgsql.CompoundIdentifier{binding.Identifier, pgsql.ColumnKindID})
 			s.treeTranslator.Push(pgsql.NewAnyExpression(kindIDsLiteral))
 
@@ -321,6 +321,22 @@ func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error
 	return nil
 }
 
+func unwrapParenthetical(parenthetical pgsql.Expression) pgsql.Expression {
+	next := parenthetical
+
+	for next != nil {
+		switch typedNext := next.(type) {
+		case pgsql.Parenthetical:
+			next = typedNext.Expression
+
+		default:
+			return next
+		}
+	}
+
+	return parenthetical
+}
+
 func (s *Translator) translateProjectionItem(scope *Scope, projectionItem *cypher.ProjectionItem) error {
 	if alias, hasAlias, err := extractIdentifierFromCypherExpression(projectionItem); err != nil {
 		return err
@@ -329,11 +345,14 @@ func (s *Translator) translateProjectionItem(scope *Scope, projectionItem *cyphe
 	} else if selectItem, isProjection := nextExpression.(pgsql.SelectItem); !isProjection {
 		s.SetErrorf("invalid type for select item: %T", nextExpression)
 	} else {
-		if hasAlias {
-			s.projections.CurrentProjection().SetAlias(alias)
+		if identifiers, err := ExtractSyntaxNodeReferences(selectItem); err != nil {
+			return err
+		} else if identifiers.Len() > 0 {
+			// Identifier lookups will require a scope reference
+			s.query.CurrentPart().projections.Frame = s.query.Scope.CurrentFrame()
 		}
 
-		switch typedSelectItem := selectItem.(type) {
+		switch typedSelectItem := unwrapParenthetical(selectItem).(type) {
 		case pgsql.Identifier:
 			// If this is an identifier then assume the identifier as the projection alias since the translator
 			// rewrites all identifiers
@@ -341,26 +360,46 @@ func (s *Translator) translateProjectionItem(scope *Scope, projectionItem *cyphe
 				if boundSelectItem, bound := scope.Lookup(typedSelectItem); !bound {
 					return fmt.Errorf("invalid identifier: %s", typedSelectItem)
 				} else {
-					s.projections.CurrentProjection().SetAlias(boundSelectItem.Aliased())
+					s.query.CurrentPart().CurrentProjection().SetAlias(boundSelectItem.Aliased())
 				}
 			}
 
 		case *pgsql.BinaryExpression:
+			// Binary expressions are used when properties are returned from a result projection
+			// e.g. match (n) return n.prop
 			if propertyLookup, isPropertyLookup := asPropertyLookup(typedSelectItem); isPropertyLookup {
 				// Ensure that projections maintain the raw JSONB type of the field
 				propertyLookup.Operator = pgsql.OperatorJSONField
 			}
+
+		default:
+			if hasAlias {
+				if inferredType, err := InferExpressionType(typedSelectItem); err != nil {
+					return err
+				} else if _, isBound := s.query.Scope.AliasedLookup(alias); !isBound {
+					if newBinding, err := s.query.Scope.DefineNew(inferredType); err != nil {
+						return err
+					} else {
+						// This binding is its own alias
+						s.query.Scope.Alias(alias, newBinding)
+					}
+				}
+			}
 		}
 
-		s.projections.CurrentProjection().SelectItem = selectItem
+		if hasAlias {
+			s.query.CurrentPart().CurrentProjection().SetAlias(alias)
+		}
+
+		s.query.CurrentPart().CurrentProjection().SelectItem = selectItem
 	}
 
 	return nil
 }
 
-func (s *Translator) translateProjection(projection *cypher.Projection) error {
-	s.projections = NewProjectionClause()
-	s.projections.Distinct = projection.Distinct
+func (s *Translator) prepareProjection(projection *cypher.Projection) error {
+	currentPart := s.query.CurrentPart()
+	currentPart.PrepareProjections(projection.Distinct)
 
 	if projection.Skip != nil {
 		if cypherLiteral, isLiteral := projection.Skip.Value.(*cypher.Literal); !isLiteral {
@@ -368,7 +407,7 @@ func (s *Translator) translateProjection(projection *cypher.Projection) error {
 		} else if pgLiteral, err := pgsql.AsLiteral(cypherLiteral.Value); err != nil {
 			return err
 		} else {
-			s.query.Skip = models.ValueOptional[pgsql.Expression](pgLiteral)
+			currentPart.Skip = models.ValueOptional[pgsql.Expression](pgLiteral)
 		}
 	}
 
@@ -378,7 +417,7 @@ func (s *Translator) translateProjection(projection *cypher.Projection) error {
 		} else if pgLiteral, err := pgsql.AsLiteral(cypherLiteral.Value); err != nil {
 			return err
 		} else {
-			s.query.Limit = models.ValueOptional[pgsql.Expression](pgLiteral)
+			currentPart.Limit = models.ValueOptional[pgsql.Expression](pgLiteral)
 		}
 	}
 

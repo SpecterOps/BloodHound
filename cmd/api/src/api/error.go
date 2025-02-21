@@ -62,16 +62,19 @@ const (
 	ErrorResponseUserSelfDisable                    = "user attempted to disable themselves"
 	ErrorResponseUserSelfRoleChange                 = "user attempted to change own role"
 	ErrorResponseUserSelfSSOProviderChange          = "user attempted to change own SSO Provider"
+	ErrorResponseUserSSOProviderRoleProvisionChange = "user attempted to change a role for a SSO Provider with role provision enabled"
 	ErrorResponseAGTagWhiteSpace                    = "asset group tags must not contain whitespace"
 	ErrorResponseAGNameTagEmpty                     = "asset group name or tag must not be empty"
 	ErrorResponseAGDuplicateName                    = "asset group name must be unique"
 	ErrorResponseAGDuplicateTag                     = "asset group tag must be unique"
 	ErrorResponseSSOProviderDuplicateName           = "sso provider name must be unique"
 	ErrorResponseUserDuplicatePrincipal             = "principal name must be unique"
+	ErrorResponseUserDuplicateEmail                 = "email must be unique"
 	ErrorResponseDetailsUniqueViolation             = "unique constraint was violated"
 	ErrorResponseDetailsNotImplemented              = "All good things to those who wait. Not implemented."
 
-	FmtErrorResponseDetailsBadQueryParameters = "there are errors in the query parameters: %v"
+	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
+	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"
 )
 
 func IsErrorResponse(response *http.Response) bool {

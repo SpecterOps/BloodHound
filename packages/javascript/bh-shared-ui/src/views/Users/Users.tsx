@@ -191,7 +191,7 @@ const Users = () => {
         return <span>Username / Password</span>;
     };
 
-    const usersTableRows = listUsersQuery.data?.map((user: any, index: number) => [
+    const usersTableRows = listUsersQuery.data?.map((user, index) => [
         // This linting rule is disabled because the elements in this array do not require a key prop.
         /* eslint-disable react/jsx-key */
         user.principal_name,

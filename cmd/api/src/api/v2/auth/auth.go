@@ -358,6 +358,8 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		if newUser, err := s.db.CreateUser(request.Context(), userTemplate); err != nil {
 			if errors.Is(err, database.ErrDuplicateUserPrincipal) {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicatePrincipal, request), response)
+			} else if errors.Is(err, database.ErrDuplicateEmail) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicateEmail, request), response)
 			} else {
 				api.HandleDatabaseError(request, response, err)
 			}
@@ -387,12 +389,26 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 	} else if roles, err := s.db.GetRoles(request.Context(), updateUserRequest.Roles); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		user.Roles = roles
-		user.FirstName = null.StringFrom(updateUserRequest.FirstName)
-		user.LastName = null.StringFrom(updateUserRequest.LastName)
-		user.EmailAddress = null.StringFrom(updateUserRequest.EmailAddress)
-		user.PrincipalName = updateUserRequest.Principal
-		user.IsDisabled = updateUserRequest.IsDisabled
+		// PATCH requests may not contain every field, only conditionally update if fields exist
+		if updateUserRequest.FirstName != "" {
+			user.FirstName = null.StringFrom(updateUserRequest.FirstName)
+		}
+
+		if updateUserRequest.LastName != "" {
+			user.LastName = null.StringFrom(updateUserRequest.LastName)
+		}
+
+		if updateUserRequest.EmailAddress != "" {
+			user.EmailAddress = null.StringFrom(updateUserRequest.EmailAddress)
+		}
+
+		if updateUserRequest.Principal != "" {
+			user.PrincipalName = updateUserRequest.Principal
+		}
+
+		if updateUserRequest.IsDisabled != nil {
+			user.IsDisabled = *updateUserRequest.IsDisabled
+		}
 
 		loggedInUser, _ := auth.GetUserFromAuthCtx(authCtx.AuthCtx)
 
@@ -453,9 +469,19 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			}
 		}
 
+		// We have to wait until after SSOProvider updates are handled above to validate roles can be safely updated.
+		if user.SSOProviderHasRoleProvisionEnabled() && !slices.Equal(roles.IDs(), user.Roles.IDs()) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseUserSSOProviderRoleProvisionChange, request), response)
+			return
+		} else if updateUserRequest.Roles != nil {
+			user.Roles = roles
+		}
+
 		if err := s.db.UpdateUser(request.Context(), user); err != nil {
 			if errors.Is(err, database.ErrDuplicateUserPrincipal) {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicatePrincipal, request), response)
+			} else if errors.Is(err, database.ErrDuplicateEmail) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicateEmail, request), response)
 			} else {
 				api.HandleDatabaseError(request, response, err)
 			}

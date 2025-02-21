@@ -88,6 +88,26 @@ func (mr *MockGraphMockRecorder) FetchNodesByObjectIDs(arg0 interface{}, arg1 ..
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNodesByObjectIDs", reflect.TypeOf((*MockGraph)(nil).FetchNodesByObjectIDs), varargs...)
 }
 
+// FetchNodesByObjectIDsAndKinds mocks base method.
+func (m *MockGraph) FetchNodesByObjectIDsAndKinds(arg0 context.Context, arg1 graph.Kinds, arg2 ...string) (graph.NodeSet, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "FetchNodesByObjectIDsAndKinds", varargs...)
+	ret0, _ := ret[0].(graph.NodeSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FetchNodesByObjectIDsAndKinds indicates an expected call of FetchNodesByObjectIDsAndKinds.
+func (mr *MockGraphMockRecorder) FetchNodesByObjectIDsAndKinds(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNodesByObjectIDsAndKinds", reflect.TypeOf((*MockGraph)(nil).FetchNodesByObjectIDsAndKinds), varargs...)
+}
+
 // GetADEntityQueryResult mocks base method.
 func (m *MockGraph) GetADEntityQueryResult(arg0 context.Context, arg1 queries.EntityQueryParameters, arg2 bool) (interface{}, int, error) {
 	m.ctrl.T.Helper()

@@ -18,8 +18,6 @@ package translate
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/cypher"
@@ -28,57 +26,13 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
-type State int
-
-const (
-	StateTranslatingStart State = iota
-	StateTranslatingPatternPart
-	StateTranslatingMatch
-	StateTranslatingCreate
-	StateTranslatingWhere
-	StateTranslatingProjection
-	StateTranslatingOrderBy
-	StateTranslatingUpdateClause
-	StateTranslatingPatternPredicate
-	StateTranslatingNestedExpression
-)
-
-func (s State) String() string {
-	switch s {
-	case StateTranslatingStart:
-		return "start"
-	case StateTranslatingPatternPart:
-		return "pattern part"
-	case StateTranslatingMatch:
-		return "match clause"
-	case StateTranslatingWhere:
-		return "where clause"
-	case StateTranslatingProjection:
-		return "projection"
-	case StateTranslatingOrderBy:
-		return "order by"
-	case StateTranslatingPatternPredicate:
-		return "pattern predicate"
-	case StateTranslatingNestedExpression:
-		return "nested expression"
-	default:
-		return ""
-	}
-}
-
 type Translator struct {
 	walk.HierarchicalVisitor[cypher.SyntaxNode]
 
 	ctx            context.Context
 	kindMapper     pgsql.KindMapper
 	translation    Result
-	state          []State
 	treeTranslator *ExpressionTreeTranslator
-	properties     map[string]pgsql.Expression
-	pattern        *Pattern
-	match          *Match
-	projections    *ProjectionClause
-	mutations      *Mutations
 	query          *Query
 }
 
@@ -95,68 +49,40 @@ func NewTranslator(ctx context.Context, kindMapper pgsql.KindMapper, parameters 
 		ctx:            ctx,
 		kindMapper:     kindMapper,
 		treeTranslator: NewExpressionTreeTranslator(),
-		properties:     map[string]pgsql.Expression{},
-		pattern:        &Pattern{},
-	}
-}
-
-func (s *Translator) currentState() State {
-	return s.state[len(s.state)-1]
-}
-
-func (s *Translator) pushState(state State) {
-	s.state = append(s.state, state)
-}
-
-func (s *Translator) exitState(expectedState State) {
-	if currentState := s.currentState(); currentState != expectedState {
-		s.SetErrorf("expected state %s but found %s", expectedState, currentState)
-	} else {
-		s.state = s.state[:len(s.state)-1]
+		query: &Query{
+			Scope: NewScope(),
+		},
 	}
 }
 
 func (s *Translator) Enter(expression cypher.SyntaxNode) {
 	switch typedExpression := expression.(type) {
-	case *cypher.RegularQuery, *cypher.SingleQuery, *cypher.PatternElement, *cypher.Return,
+	case *cypher.RegularQuery, *cypher.SingleQuery, *cypher.PatternElement,
 		*cypher.Comparison, *cypher.Skip, *cypher.Limit, cypher.Operator, *cypher.ArithmeticExpression,
 		*cypher.NodePattern, *cypher.RelationshipPattern, *cypher.Remove, *cypher.Set,
-		*cypher.ReadingClause, *cypher.UnaryAddOrSubtractExpression, *cypher.PropertyLookup:
+		*cypher.ReadingClause, *cypher.UnaryAddOrSubtractExpression, *cypher.PropertyLookup,
+		*cypher.Negation, *cypher.Create, *cypher.Where, *cypher.ListLiteral,
+		*cypher.FunctionInvocation, *cypher.Order, *cypher.RemoveItem, *cypher.SetItem,
+		*cypher.MapItem, *cypher.UpdatingClause, *cypher.Delete:
 	// No operation for these syntax nodes
 
-	case *cypher.Negation:
-		s.pushState(StateTranslatingNestedExpression)
+	case *cypher.Return:
+	case *cypher.MultiPartQuery:
+	case *cypher.MultiPartQueryPart:
+		if err := s.query.PreparePart(len(typedExpression.ReadingClauses), len(typedExpression.UpdatingClauses), true); err != nil {
+			s.SetError(err)
+		}
+
+	case *cypher.With:
+		s.SetError(nil)
 
 	case *cypher.SinglePartQuery:
-		s.query = &Query{
-			Scope: NewScope(),
-			Model: &pgsql.Query{
-				CommonTableExpressions: &pgsql.With{},
-			},
+		if err := s.query.PreparePart(len(typedExpression.ReadingClauses), len(typedExpression.UpdatingClauses), false); err != nil {
+			s.SetError(err)
 		}
-
-		s.mutations = NewMutations()
-
-	case *cypher.Create:
-		s.pushState(StateTranslatingCreate)
 
 	case *cypher.Match:
-		s.pushState(StateTranslatingMatch)
-
-		// Start with a fresh match and where clause. Instantiation of the where clause here is necessary since
-		// cypher will store identifier constraints in the query pattern which precedes the query where clause.
-		s.pattern = &Pattern{}
-		s.match = &Match{
-			Scope:   s.query.Scope,
-			Pattern: s.pattern,
-		}
-
-	case *cypher.Where:
-		// Track that we're in a where clause first
-		s.pushState(StateTranslatingWhere)
-
-		// If there's a where AST node present in the cypher model we likely have an expression to translate
-		s.pushState(StateTranslatingNestedExpression)
+		s.query.CurrentPart().currentPattern = &Pattern{}
 
 	case graph.Kinds:
 		s.treeTranslator.Push(pgsql.KindListLiteral{
@@ -199,29 +125,16 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 			}
 		}
 
-		switch currentState := s.currentState(); currentState {
-		case StateTranslatingNestedExpression:
-			s.treeTranslator.Push(binding.Parameter.Value)
-
-		default:
-			s.SetErrorf("invalid state \"%s\" for cypher AST node %T", s.currentState(), expression)
-		}
+		s.treeTranslator.Push(binding.Parameter.Value)
 
 	case *cypher.Variable:
-		switch currentState := s.currentState(); currentState {
-		case StateTranslatingNestedExpression:
-			if binding, resolved := s.query.Scope.LookupString(typedExpression.Symbol); !resolved {
-				s.SetErrorf("unable to find identifier %s", typedExpression.Symbol)
-			} else {
-				s.treeTranslator.Push(binding.Identifier)
-			}
+		identifier := pgsql.Identifier(typedExpression.Symbol)
 
-		default:
-			s.SetErrorf("invalid state \"%s\" for cypher AST node %T", s.currentState(), expression)
+		if binding, resolved := s.query.Scope.AliasedLookup(identifier); !resolved {
+			s.SetErrorf("unable to resolve or otherwise lookup identifer %s", identifier)
+		} else {
+			s.treeTranslator.Push(binding.Identifier)
 		}
-
-	case *cypher.ListLiteral:
-		s.pushState(StateTranslatingNestedExpression)
 
 	case *cypher.Literal:
 		literalValue := typedExpression.Value
@@ -235,57 +148,32 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 			s.SetError(err)
 		} else {
 			newLiteral.Null = typedExpression.Null
-
-			switch currentState := s.currentState(); currentState {
-			case StateTranslatingNestedExpression:
-				s.treeTranslator.Push(newLiteral)
-
-			default:
-				s.SetErrorf("invalid state \"%s\" for cypher AST node %T", s.currentState(), expression)
-			}
+			s.treeTranslator.Push(newLiteral)
 		}
 
 	case *cypher.Parenthetical:
-		s.pushState(StateTranslatingNestedExpression)
 		s.treeTranslator.PushParenthetical()
 
-	case *cypher.FunctionInvocation:
-		s.pushState(StateTranslatingNestedExpression)
-
-	case *cypher.Order:
-		s.pushState(StateTranslatingOrderBy)
-
 	case *cypher.SortItem:
-		s.pushState(StateTranslatingNestedExpression)
-
-		s.query.OrderBy = append(s.query.OrderBy, pgsql.OrderBy{
+		s.query.CurrentPart().OrderBy = append(s.query.CurrentPart().OrderBy, pgsql.OrderBy{
 			Ascending: typedExpression.Ascending,
 		})
 
 	case *cypher.Projection:
-		s.pushState(StateTranslatingProjection)
-
-		if err := s.translateProjection(typedExpression); err != nil {
+		if err := s.prepareProjection(typedExpression); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.ProjectionItem:
-		s.pushState(StateTranslatingNestedExpression)
-		s.projections.PushProjection()
+		s.query.CurrentPart().PrepareProjection()
 
 	case *cypher.PatternPredicate:
-		s.pushState(StateTranslatingPatternPredicate)
-
-		s.pattern = &Pattern{}
-
-		if err := s.translatePatternPredicate(s.query.Scope); err != nil {
+		if err := s.preparePatternPredicate(); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.PatternPart:
-		s.pushState(StateTranslatingPatternPart)
-
-		if err := s.translatePatternPart(s.query.Scope, typedExpression); err != nil {
+		if err := s.translatePatternPart(typedExpression); err != nil {
 			s.SetError(err)
 		}
 
@@ -305,24 +193,7 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 			s.treeTranslator.PushOperator(pgsql.OperatorAnd)
 		}
 
-	case *cypher.UpdatingClause:
-		s.pushState(StateTranslatingUpdateClause)
-
-	case *cypher.RemoveItem:
-		s.pushState(StateTranslatingNestedExpression)
-
-	case *cypher.Delete:
-		s.pushState(StateTranslatingNestedExpression)
-
-	case *cypher.SetItem:
-		s.pushState(StateTranslatingNestedExpression)
-
 	case *cypher.Properties:
-		clear(s.properties)
-
-	case *cypher.MapItem:
-		s.pushState(StateTranslatingNestedExpression)
-
 	default:
 		s.SetErrorf("unable to translate cypher type: %T", expression)
 	}
@@ -331,63 +202,48 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 func (s *Translator) Exit(expression cypher.SyntaxNode) {
 	switch typedExpression := expression.(type) {
 	case *cypher.NodePattern:
-		if err := s.translateNodePattern(s.query.Scope, typedExpression, s.pattern.CurrentPart()); err != nil {
+		if err := s.translateNodePattern(typedExpression); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.RelationshipPattern:
-		if err := s.translateRelationshipPattern(s.query.Scope, typedExpression, s.pattern.CurrentPart()); err != nil {
+		if err := s.translateRelationshipPattern(typedExpression); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.MapItem:
-		s.exitState(StateTranslatingNestedExpression)
-
 		if value, err := s.treeTranslator.Pop(); err != nil {
 			s.SetError(err)
 		} else {
-			s.properties[typedExpression.Key] = value
+			s.query.CurrentPart().AddProperty(typedExpression.Key, value)
 		}
 
 	case *cypher.PatternPredicate:
-		s.exitState(StateTranslatingPatternPredicate)
-
-		// Retire the predicate scope frames and build the predicate
-		for range s.pattern.CurrentPart().TraversalSteps {
-			s.query.Scope.PopFrame()
-		}
-
-		if err := s.buildPatternPredicate(); err != nil {
+		if err := s.translatePatternPredicate(); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.RemoveItem:
-		s.exitState(StateTranslatingNestedExpression)
-
 		if err := s.translateRemoveItem(typedExpression); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.Delete:
-		s.exitState(StateTranslatingNestedExpression)
-
 		if err := s.translateDelete(s.query.Scope, typedExpression); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.SetItem:
-		s.exitState(StateTranslatingNestedExpression)
-
 		if err := s.translateSetItem(typedExpression); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.UpdatingClause:
-		s.exitState(StateTranslatingUpdateClause)
+		if err := s.translateUpdates(); err != nil {
+			s.SetError(err)
+		}
 
 	case *cypher.ListLiteral:
-		s.exitState(StateTranslatingNestedExpression)
-
 		var (
 			numExpressions = len(typedExpression.Expressions())
 			literal        = pgsql.ArrayLiteral{
@@ -420,16 +276,11 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 			s.treeTranslator.Push(literal)
 		}
 
-	case *cypher.Order:
-		s.exitState(StateTranslatingOrderBy)
-
 	case *cypher.SortItem:
-		s.exitState(StateTranslatingNestedExpression)
-
 		// Rewrite the order by constraints
 		if lookupExpression, err := s.treeTranslator.Pop(); err != nil {
 			s.SetError(err)
-		} else if err := RewriteExpressionIdentifiers(lookupExpression, s.query.Scope.CurrentFrameBinding().Identifier, s.query.Scope.Visible()); err != nil {
+		} else if err := RewriteFrameBindings(s.query.Scope, lookupExpression); err != nil {
 			s.SetError(err)
 		} else {
 			if propertyLookup, isPropertyLookup := asPropertyLookup(lookupExpression); isPropertyLookup {
@@ -437,25 +288,17 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 				propertyLookup.Operator = pgsql.OperatorJSONField
 			}
 
-			s.query.CurrentOrderBy().Expression = lookupExpression
+			s.query.CurrentPart().CurrentOrderBy().Expression = lookupExpression
 		}
 
 	case *cypher.KindMatcher:
-		switch currentState := s.currentState(); currentState {
-		case StateTranslatingNestedExpression:
-			if matcher, err := s.treeTranslator.Pop(); err != nil {
-				s.SetError(err)
-			} else {
-				s.treeTranslator.Push(matcher)
-			}
-
-		default:
-			s.SetErrorf("invalid state \"%s\" for cypher AST node %T", s.currentState(), expression)
+		if matcher, err := s.treeTranslator.Pop(); err != nil {
+			s.SetError(err)
+		} else {
+			s.treeTranslator.Push(matcher)
 		}
 
 	case *cypher.Parenthetical:
-		s.exitState(StateTranslatingNestedExpression)
-
 		// Pull the sub-expression we wrap
 		if wrappedExpression, err := s.treeTranslator.Pop(); err != nil {
 			s.SetError(err)
@@ -463,204 +306,11 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 			s.SetError(err)
 		} else {
 			parenthetical.Expression = wrappedExpression
-
-			switch currentState := s.currentState(); currentState {
-			case StateTranslatingNestedExpression:
-				s.treeTranslator.Push(*parenthetical)
-
-			default:
-				s.SetErrorf("invalid state \"%s\" for cypher AST node %T", s.currentState(), expression)
-			}
+			s.treeTranslator.Push(*parenthetical)
 		}
 
 	case *cypher.FunctionInvocation:
-		s.exitState(StateTranslatingNestedExpression)
-
-		formattedName := strings.ToLower(typedExpression.Name)
-
-		switch formattedName {
-		case cypher.IdentityFunction:
-			if typedExpression.NumArguments() != 1 {
-				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-			} else if referenceArgument, err := PopFromBuilderAs[pgsql.Identifier](s.treeTranslator); err != nil {
-				s.SetError(err)
-			} else {
-				s.treeTranslator.Push(pgsql.CompoundIdentifier{referenceArgument, pgsql.ColumnID})
-			}
-
-		case cypher.LocalTimeFunction:
-			if err := s.translateDateTimeFunctionCall(typedExpression, pgsql.TimeWithoutTimeZone); err != nil {
-				s.SetError(err)
-			}
-
-		case cypher.LocalDateTimeFunction:
-			if err := s.translateDateTimeFunctionCall(typedExpression, pgsql.TimestampWithoutTimeZone); err != nil {
-				s.SetError(err)
-			}
-
-		case cypher.DateFunction:
-			if err := s.translateDateTimeFunctionCall(typedExpression, pgsql.Date); err != nil {
-				s.SetError(err)
-			}
-
-		case cypher.DateTimeFunction:
-			if err := s.translateDateTimeFunctionCall(typedExpression, pgsql.TimestampWithTimeZone); err != nil {
-				s.SetError(err)
-			}
-
-		case cypher.EdgeTypeFunction:
-			if typedExpression.NumArguments() != 1 {
-				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-			} else if argument, err := s.treeTranslator.Pop(); err != nil {
-				s.SetError(err)
-			} else if identifier, isIdentifier := argument.(pgsql.Identifier); !isIdentifier {
-				s.SetErrorf("expected an identifier for the cypher function: %s but received %T", typedExpression.Name, argument)
-			} else {
-				s.treeTranslator.Push(pgsql.CompoundIdentifier{identifier, pgsql.ColumnKindID})
-			}
-
-		case cypher.NodeLabelsFunction:
-			if typedExpression.NumArguments() != 1 {
-				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-			} else if argument, err := s.treeTranslator.Pop(); err != nil {
-				s.SetError(err)
-			} else if identifier, isIdentifier := argument.(pgsql.Identifier); !isIdentifier {
-				s.SetErrorf("expected an identifier for the cypher function: %s but received %T", typedExpression.Name, argument)
-			} else {
-				s.treeTranslator.Push(pgsql.CompoundIdentifier{identifier, pgsql.ColumnKindIDs})
-			}
-
-		case cypher.CountFunction:
-			if typedExpression.NumArguments() != 1 {
-				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-			} else if argument, err := s.treeTranslator.Pop(); err != nil {
-				s.SetError(err)
-			} else {
-				s.treeTranslator.Push(pgsql.FunctionCall{
-					Function:   pgsql.FunctionCount,
-					Parameters: []pgsql.Expression{argument},
-					CastType:   pgsql.Int8,
-				})
-			}
-
-		case cypher.StringSplitToArrayFunction:
-			if typedExpression.NumArguments() != 2 {
-				s.SetError(fmt.Errorf("expected two arguments for cypher function %s", typedExpression.Name))
-			} else if delimiter, err := s.treeTranslator.Pop(); err != nil {
-				s.SetError(err)
-			} else if splitReference, err := s.treeTranslator.Pop(); err != nil {
-				s.SetError(err)
-			} else {
-				if _, hasHint := GetTypeHint(splitReference); !hasHint {
-					// Do our best to coerce the type into text
-					if typedSplitRef, err := TypeCastExpression(splitReference, pgsql.Text); err != nil {
-						s.SetError(err)
-					} else {
-						s.treeTranslator.Push(pgsql.FunctionCall{
-							Function:   pgsql.FunctionStringToArray,
-							Parameters: []pgsql.Expression{typedSplitRef, delimiter},
-							CastType:   pgsql.TextArray,
-						})
-					}
-				} else {
-					s.treeTranslator.Push(pgsql.FunctionCall{
-						Function:   pgsql.FunctionStringToArray,
-						Parameters: []pgsql.Expression{splitReference, delimiter},
-						CastType:   pgsql.TextArray,
-					})
-				}
-			}
-
-		case cypher.ToLowerFunction:
-			if typedExpression.NumArguments() != 1 {
-				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-			} else if argument, err := s.treeTranslator.Pop(); err != nil {
-				s.SetError(err)
-			} else {
-				if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
-					// Rewrite the property lookup operator with a JSON text field lookup
-					propertyLookup.Operator = pgsql.OperatorJSONTextField
-				}
-
-				s.treeTranslator.Push(pgsql.FunctionCall{
-					Function:   pgsql.FunctionToLower,
-					Parameters: []pgsql.Expression{argument},
-					CastType:   pgsql.Text,
-				})
-			}
-
-		case cypher.ListSizeFunction:
-			if typedExpression.NumArguments() != 1 {
-				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-			} else if argument, err := s.treeTranslator.Pop(); err != nil {
-				s.SetError(err)
-			} else {
-				var functionCall pgsql.FunctionCall
-
-				if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
-					// Ensure that the JSONB array length function receives the JSONB type
-					propertyLookup.Operator = pgsql.OperatorJSONField
-
-					functionCall = pgsql.FunctionCall{
-						Function:   pgsql.FunctionJSONBArrayLength,
-						Parameters: []pgsql.Expression{argument},
-						CastType:   pgsql.Int,
-					}
-				} else {
-					functionCall = pgsql.FunctionCall{
-						Function:   pgsql.FunctionArrayLength,
-						Parameters: []pgsql.Expression{argument, pgsql.NewLiteral(1, pgsql.Int)},
-						CastType:   pgsql.Int,
-					}
-				}
-
-				s.treeTranslator.Push(functionCall)
-			}
-
-		case cypher.ToUpperFunction:
-			if typedExpression.NumArguments() != 1 {
-				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-			} else if argument, err := s.treeTranslator.Pop(); err != nil {
-				s.SetError(err)
-			} else {
-				if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
-					// Rewrite the property lookup operator with a JSON text field lookup
-					propertyLookup.Operator = pgsql.OperatorJSONTextField
-				}
-
-				s.treeTranslator.Push(pgsql.FunctionCall{
-					Function:   pgsql.FunctionToUpper,
-					Parameters: []pgsql.Expression{argument},
-					CastType:   pgsql.Text,
-				})
-			}
-
-		case cypher.ToStringFunction:
-			if typedExpression.NumArguments() != 1 {
-				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-			} else if argument, err := s.treeTranslator.Pop(); err != nil {
-				s.SetError(err)
-			} else {
-				s.treeTranslator.Push(pgsql.NewTypeCast(argument, pgsql.Text))
-			}
-
-		case cypher.ToIntegerFunction:
-			if typedExpression.NumArguments() != 1 {
-				s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-			} else if argument, err := s.treeTranslator.Pop(); err != nil {
-				s.SetError(err)
-			} else {
-				s.treeTranslator.Push(pgsql.NewTypeCast(argument, pgsql.Int8))
-			}
-
-		case cypher.CoalesceFunction:
-			if err := s.translateCoalesceFunction(typedExpression); err != nil {
-				s.SetError(err)
-			}
-
-		default:
-			s.SetErrorf("unknown cypher function: %s", typedExpression.Name)
-		}
+		s.translateFunction(typedExpression)
 
 	case *cypher.UnaryAddOrSubtractExpression:
 		if operand, err := s.treeTranslator.Pop(); err != nil {
@@ -673,72 +323,57 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		}
 
 	case *cypher.Negation:
-		s.exitState(StateTranslatingNestedExpression)
+		if operand, err := s.treeTranslator.Pop(); err != nil {
+			s.SetError(err)
+		} else {
+			for cursor := operand; cursor != nil; {
+				switch typedCursor := cursor.(type) {
+				case pgsql.Parenthetical:
+					// Unwrap parentheticals
+					cursor = typedCursor.Expression
+					continue
 
-		switch currentState := s.currentState(); currentState {
-		case StateTranslatingNestedExpression:
-			if operand, err := s.treeTranslator.Pop(); err != nil {
-				s.SetError(err)
-			} else {
-				for cursor := operand; cursor != nil; {
-					switch typedCursor := cursor.(type) {
-					case pgsql.Parenthetical:
-						// Unwrap parentheticals
-						cursor = typedCursor.Expression
-						continue
+				case *pgsql.BinaryExpression:
+					switch typedCursor.Operator {
+					case pgsql.OperatorLike, pgsql.OperatorILike:
+						// If this is a string comparison operation then the negation requires wrapping the
+						// operand references in coalesce functions. While this will kick out index acceleration
+						// the negation will already damage the query planner's ability to utilize an index lookup.
 
-					case *pgsql.BinaryExpression:
-						switch typedCursor.Operator {
-						case pgsql.OperatorLike, pgsql.OperatorILike:
-							// If this is a string comparison operation then the negation requires wrapping the
-							// operand references in coalesce functions. While this will kick out index acceleration
-							// the negation will already damage the query planner's ability to utilize an index lookup.
-
-							if leftPropertyLookup, isPropertyLookup := asPropertyLookup(typedCursor.LOperand); isPropertyLookup {
-								typedCursor.LOperand = pgsql.FunctionCall{
-									Function: pgsql.FunctionCoalesce,
-									Parameters: []pgsql.Expression{
-										leftPropertyLookup,
-										pgsql.NewLiteral("", pgsql.Text),
-									},
-									CastType: pgsql.Text,
-								}
+						if leftPropertyLookup, isPropertyLookup := asPropertyLookup(typedCursor.LOperand); isPropertyLookup {
+							typedCursor.LOperand = pgsql.FunctionCall{
+								Function: pgsql.FunctionCoalesce,
+								Parameters: []pgsql.Expression{
+									leftPropertyLookup,
+									pgsql.NewLiteral("", pgsql.Text),
+								},
+								CastType: pgsql.Text,
 							}
+						}
 
-							if rightPropertyLookup, isPropertyLookup := asPropertyLookup(typedCursor.ROperand); isPropertyLookup {
-								typedCursor.ROperand = pgsql.FunctionCall{
-									Function: pgsql.FunctionCoalesce,
-									Parameters: []pgsql.Expression{
-										rightPropertyLookup,
-										pgsql.NewLiteral("", pgsql.Text),
-									},
-									CastType: pgsql.Text,
-								}
+						if rightPropertyLookup, isPropertyLookup := asPropertyLookup(typedCursor.ROperand); isPropertyLookup {
+							typedCursor.ROperand = pgsql.FunctionCall{
+								Function: pgsql.FunctionCoalesce,
+								Parameters: []pgsql.Expression{
+									rightPropertyLookup,
+									pgsql.NewLiteral("", pgsql.Text),
+								},
+								CastType: pgsql.Text,
 							}
 						}
 					}
-
-					break
 				}
 
-				s.treeTranslator.Push(&pgsql.UnaryExpression{
-					Operator: pgsql.OperatorNot,
-					Operand:  operand,
-				})
+				break
 			}
 
-		default:
-			s.SetErrorf("invalid state \"%s\" for cypher AST node %T", s.currentState(), expression)
+			s.treeTranslator.Push(&pgsql.UnaryExpression{
+				Operator: pgsql.OperatorNot,
+				Operand:  operand,
+			})
 		}
 
-	case *cypher.PatternPart:
-		s.exitState(StateTranslatingPatternPart)
-
 	case *cypher.Where:
-		// Validate state transitions
-		s.exitState(StateTranslatingNestedExpression)
-		s.exitState(StateTranslatingWhere)
-
 		// Assign the last operands as identifier set constraints
 		if err := s.treeTranslator.PopRemainingExpressionsAsConstraints(); err != nil {
 			s.SetError(err)
@@ -748,106 +383,61 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		s.translatePropertyLookup(typedExpression)
 
 	case *cypher.PartialComparison:
-		switch currentState := s.currentState(); currentState {
-		case StateTranslatingNestedExpression:
-			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.Operator(typedExpression.Operator)); err != nil {
-				s.SetError(err)
-			}
-
-		default:
-			s.SetErrorf("invalid state \"%s\" for cypher AST node %T", s.currentState(), expression)
+		if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.Operator(typedExpression.Operator)); err != nil {
+			s.SetError(err)
 		}
 
 	case *cypher.PartialArithmeticExpression:
-		switch currentState := s.currentState(); currentState {
-		case StateTranslatingNestedExpression:
-			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.Operator(typedExpression.Operator)); err != nil {
-				s.SetError(err)
-			}
-
-		default:
-			s.SetErrorf("invalid state \"%s\" for cypher AST node %T", s.currentState(), expression)
+		if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.Operator(typedExpression.Operator)); err != nil {
+			s.SetError(err)
 		}
 
 	case *cypher.Disjunction:
-		switch currentState := s.currentState(); currentState {
-		case StateTranslatingNestedExpression:
-			for idx := 0; idx < typedExpression.Len()-1; idx++ {
-				if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorOr); err != nil {
-					s.SetError(err)
-				}
+		for idx := 0; idx < typedExpression.Len()-1; idx++ {
+			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorOr); err != nil {
+				s.SetError(err)
 			}
-
-		default:
-			s.SetErrorf("invalid state \"%s\" for cypher AST node %T", s.currentState(), expression)
 		}
 
 	case *cypher.Conjunction:
-		switch currentState := s.currentState(); currentState {
-		case StateTranslatingNestedExpression:
-			for idx := 0; idx < typedExpression.Len()-1; idx++ {
-				if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorAnd); err != nil {
-					s.SetError(err)
-				}
+		for idx := 0; idx < typedExpression.Len()-1; idx++ {
+			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorAnd); err != nil {
+				s.SetError(err)
 			}
-
-		default:
-			s.SetErrorf("invalid state \"%s\" for cypher AST node %T", s.currentState(), expression)
 		}
 
+	case *cypher.Projection:
 	case *cypher.ProjectionItem:
-		s.exitState(StateTranslatingNestedExpression)
-
 		if err := s.translateProjectionItem(s.query.Scope, typedExpression); err != nil {
 			s.SetError(err)
 		}
 
-	case *cypher.Projection:
-		s.exitState(StateTranslatingProjection)
-
-	case *cypher.Return:
-
-	case *cypher.Create:
-		s.exitState(StateTranslatingCreate)
-
 	case *cypher.Match:
-		s.exitState(StateTranslatingMatch)
+		if err := s.translateMatch(); err != nil {
+			s.SetError(err)
+		}
 
-		if err := s.buildMatch(s.match.Scope); err != nil {
+	case *cypher.With:
+		if err := s.translateWith(); err != nil {
+			s.SetError(err)
+		}
+
+	case *cypher.MultiPartQueryPart:
+		if err := s.translateMultiPartQueryPart(s.query.Scope, typedExpression); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.SinglePartQuery:
-		if s.mutations.Assignments.Len() > 0 {
-			if err := s.translateUpdates(s.query.Scope); err != nil {
-				s.SetError(err)
-			}
-
-			if err := s.buildUpdates(s.query.Scope); err != nil {
-				s.SetError(err)
-			}
-		}
-
-		if s.mutations.Deletions.Len() > 0 {
-			if err := s.buildDeletions(s.query.Scope); err != nil {
-				s.SetError(err)
-			}
-		}
-
-		// If there was no return specified end the CTE chain with a bare select
-		if typedExpression.Return == nil {
-			if literalReturn, err := pgsql.AsLiteral(1); err != nil {
-				s.SetError(err)
-			} else {
-				s.query.Model.Body = pgsql.Select{
-					Projection: []pgsql.SelectItem{literalReturn},
-				}
-			}
-		} else if err := s.buildProjection(s.query.Scope); err != nil {
+		if err := s.buildSinglePartQuery(typedExpression); err != nil {
 			s.SetError(err)
 		}
 
-		s.translation.Statement = *s.query.Model
+		s.translation.Statement = *s.query.CurrentPart().Model
+
+	case *cypher.MultiPartQuery:
+		if err := s.buildMultiPartQuery(typedExpression.SinglePartQuery); err != nil {
+			s.SetError(err)
+		}
 	}
 }
 
