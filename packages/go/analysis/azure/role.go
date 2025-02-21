@@ -150,7 +150,9 @@ func (s RoleAssignments) UsersWithRoleAssignableGroupMembership() cardinality.Du
 	for groupID, groupMemberIDBitmap := range s.GroupMembership {
 		group := s.Principals.Get(azure.Group)[groupID]
 		// if that group is role assignable, set the bits
-		if isRoleAssignable, err := group.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err == nil && isRoleAssignable {
+		if isRoleAssignable, err := group.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil {
+			slog.Warn(fmt.Sprintf("Unable to convert property azure.IsAssignableToRole to Boolean for group %s: %v", group.Properties.Map["name"], err))
+		} else if isRoleAssignable {
 			members.Or(groupMemberIDBitmap)
 		}
 
