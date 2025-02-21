@@ -39,7 +39,6 @@ import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
-import Content from 'src/views/Content';
 import {
     MainNavPrimaryListData,
     useMainNavLogoData,
@@ -47,6 +46,7 @@ import {
 } from './components/MainNav/MainNavData';
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
+import ContentFeatureToggle from './views/ContentFeatureToggle';
 
 export const Inner: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -183,7 +183,7 @@ export const Inner: React.FC = () => {
         <Box className={`${classes.applicationContainer}`} id='app-root'>
             {showNavBar && <MainNav mainNavData={mainNavData} />}
             <Box className={classes.applicationContent}>
-                <Content />
+                <ContentFeatureToggle />
             </Box>
             <AppNotifications />
             <Notifier />

@@ -24,7 +24,7 @@ import {
     isWebGLEnabled,
     setEdgeInfoOpen,
     setSelectedEdge,
-    useAvailableDomains,
+    useAvailableEnvironments,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -76,7 +76,7 @@ const GraphViewV2: FC = () => {
 
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
-    const { data, isLoading, isError } = useAvailableDomains();
+    const { data, isLoading, isError } = useAvailableEnvironments();
 
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 

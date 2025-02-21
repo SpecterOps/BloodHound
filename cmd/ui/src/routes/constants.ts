@@ -33,3 +33,5 @@ export const ROUTE_ADMINISTRATION_SSO_CONFIGURATION = '/administration/sso-confi
 export const ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES = '/administration/early-access-features';
 export const ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION = '/administration/bloodhound-configuration';
 export const ROUTE_API_EXPLORER = '/api-explorer';
+
+export const ENVIRONMENT_SUPPORTED_ROUTES = [ROUTE_GROUP_MANAGEMENT, ROUTE_ADMINISTRATION_DATA_QUALITY];

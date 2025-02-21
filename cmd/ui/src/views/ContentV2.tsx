@@ -16,15 +16,22 @@
 
 import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { GenericErrorBoundaryFallback, apiClient } from 'bh-shared-ui';
+import {
+    GenericErrorBoundaryFallback,
+    useAvailableEnvironments,
+    useEnvironmentParams,
+    useMatchingPaths,
+} from 'bh-shared-ui';
+import { Domain } from 'js-client-library';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
-import { fetchAssetGroups, setDomain } from 'src/ducks/global/actions';
+import { fetchAssetGroups } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
+import { ENVIRONMENT_SUPPORTED_ROUTES } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const useStyles = makeStyles({
@@ -36,11 +43,33 @@ const useStyles = makeStyles({
     },
 });
 
-const Content: React.FC = () => {
+const ContentV2: React.FC = () => {
     const classes = useStyles();
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const { environmentId, setEnvironmentParams } = useEnvironmentParams();
+    const environmentSupportedRoute = useMatchingPaths(ENVIRONMENT_SUPPORTED_ROUTES);
+
+    useAvailableEnvironments({
+        appendQueryKey: ['initial-environment'],
+        enabled: isFullyAuthenticated && environmentSupportedRoute,
+        onError: () => setEnvironmentParams({ environmentId: undefined }),
+        // set initial environment/tenant once user is authenticated
+        onSuccess: (availableEnvironments) => {
+            if (!availableEnvironments.length || environmentId) return;
+
+            const collectedEnvironments = availableEnvironments
+                ?.filter((environment: Domain) => environment.collected) // omit uncollected environments
+                .sort((a: Domain, b: Domain) => b.impactValue - a.impactValue); // sort by impactValue descending
+
+            if (collectedEnvironments?.length) {
+                setEnvironmentParams({ environmentId: collectedEnvironments[0].id });
+            } else {
+                setEnvironmentParams({ environmentId: undefined });
+            }
+        },
+    });
 
     useEffect(() => {
         if (isFullyAuthenticated) {
@@ -48,30 +77,6 @@ const Content: React.FC = () => {
             dispatch(ListAssetGroups());
         }
     }, [authState, isFullyAuthenticated, dispatch]);
-
-    useEffect(() => {
-        if (isFullyAuthenticated) {
-            const ctrl = new AbortController();
-            apiClient
-                .getAvailableEnvironments({ signal: ctrl.signal })
-                .then((result) => {
-                    const collectedDomains = result.data.data
-                        // omit uncollected domains
-                        .filter((domain: any) => domain.collected)
-                        // sort by impactValue descending
-                        .sort((a: any, b: any) => b.impactValue - a.impactValue);
-                    if (collectedDomains.length > 0) {
-                        dispatch(setDomain(collectedDomains[0]));
-                    } else {
-                        dispatch(setDomain(null));
-                    }
-                })
-                .catch(() => {
-                    dispatch(setDomain(null));
-                });
-            return () => ctrl.abort();
-        }
-    }, [isFullyAuthenticated, dispatch]);
 
     return (
         <Box className={classes.content}>
@@ -125,4 +130,4 @@ const Content: React.FC = () => {
     );
 };
 
-export default Content;
+export default ContentV2;
