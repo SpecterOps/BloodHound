@@ -247,6 +247,7 @@ const EdgeInfoComponents = {
     SyncedToADUser: SyncedToADUser,
     SyncedToEntraUser: SyncedToEntraUser,
     CoerceAndRelayNTLMToSMB: CoerceAndRelayNTLMToSMB,
+    // Both CoerceAndRelayNTLMToLDAP and CoerceAndRelayNTLMToLDAPS share the same abuse text
     CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAP,
 };
