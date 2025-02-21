@@ -240,7 +240,7 @@ const GraphView: FC = () => {
                         width: '90%',
                         zIndex: 1,
                     }}>
-                    <div className='pointer-events-none' data-testid='explore_graph-controls'>
+                    <div className='pointer-events-auto' data-testid='explore_graph-controls'>
                         <SearchCurrentNodes
                             sx={{ padding: 1, marginBottom: 1 }}
                             currentNodes={currentNodes || {}}
