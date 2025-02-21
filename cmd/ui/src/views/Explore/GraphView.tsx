@@ -236,10 +236,7 @@ const GraphView: FC = () => {
                     anchorEl={currentSearchAnchorElement.current}
                     placement='top'
                     disablePortal
-                    sx={{
-                        width: '90%',
-                        zIndex: 1,
-                    }}>
+                    className='w-[90%] z-[1]'>
                     <div className='pointer-events-auto' data-testid='explore_graph-controls'>
                         <SearchCurrentNodes
                             sx={{ padding: 1, marginBottom: 1 }}
