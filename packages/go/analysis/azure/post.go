@@ -749,7 +749,7 @@ func resetPassword(operation analysis.StatTrackedOperation[analysis.CreatePostRe
 							Kind:   azure.ResetPassword,
 						}
 
-						return !channels.Submit(ctx, outC, nextJob)
+						return channels.Submit(ctx, outC, nextJob)
 					})
 				}
 			}
@@ -804,7 +804,7 @@ func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation
 				Kind:   azure.GlobalAdmin,
 			}
 
-			return !channels.Submit(ctx, outC, nextJob)
+			return channels.Submit(ctx, outC, nextJob)
 		})
 
 		return nil
@@ -822,7 +822,7 @@ func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 				Kind:   azure.PrivilegedRoleAdmin,
 			}
 
-			return !channels.Submit(ctx, outC, nextJob)
+			return channels.Submit(ctx, outC, nextJob)
 		})
 
 		return nil
@@ -840,7 +840,7 @@ func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 				Kind:   azure.PrivilegedAuthAdmin,
 			}
 
-			return !channels.Submit(ctx, outC, nextJob)
+			return channels.Submit(ctx, outC, nextJob)
 		})
 
 		return nil
@@ -864,7 +864,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 					Kind:   azure.AddMembers,
 				}
 
-				return !channels.Submit(ctx, outC, nextJob)
+				return channels.Submit(ctx, outC, nextJob)
 			})
 
 			return nil
@@ -887,7 +887,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 						Kind:   azure.AddMembers,
 					}
 
-					return !channels.Submit(ctx, outC, nextJob)
+					return channels.Submit(ctx, outC, nextJob)
 				})
 			}
 
