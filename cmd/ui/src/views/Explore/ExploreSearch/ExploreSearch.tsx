@@ -88,7 +88,7 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
 
     return (
         <div
-            className={cn('h-full min-h-0 w-[410px] flex gap-2 flex-col rounded-lg shadow-[1px solid white]', {
+            className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded-lg shadow-[1px solid white]', {
                 'w-[600px]': activeTab === tabNameMap.cypher && showSearchWidget,
             })}>
             <div className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-neutral-light-2 dark:bg-neutral-dark-2'>
@@ -113,12 +113,9 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
             </div>
 
             <div
-                className={cn(
-                    'hidden min-h-0 p-2 rounded-lg pointer-events-auto bg-neutral-light-2 dark:bg-neutral-dark-2',
-                    {
-                        block: showSearchWidget,
-                    }
-                )}>
+                className={cn('hidden min-h-0 p-2 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]', {
+                    block: showSearchWidget,
+                })}>
                 <TabPanels
                     tabs={[
                         // This linting rule is disabled because the elements in this array do not require a key prop.
