@@ -19,7 +19,9 @@ package registration
 import (
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/openapi"
 	"github.com/specterops/bloodhound/params"
 	"github.com/specterops/bloodhound/src/api"
@@ -29,6 +31,8 @@ import (
 	authapi "github.com/specterops/bloodhound/src/api/v2/auth"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/ulule/limiter/v3"
+	"github.com/ulule/limiter/v3/drivers/store/memory"
 )
 
 func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissions auth.PermissionSet) {
@@ -37,7 +41,20 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		managementResource = authapi.NewManagementResource(resources.Config, resources.DB, resources.Authorizer, resources.Authenticator)
 	)
 
-	routerInst.POST("/api/v2/login", loginResource.Login).Use(middleware.DefaultRateLimitMiddleware(), middleware.LoginTimer())
+	router.With(func() mux.MiddlewareFunc {
+		rate := limiter.Rate{
+			Period: 1 * time.Second,
+			Limit:  1,
+		}
+
+		store := memory.NewStore()
+
+		instance := limiter.New(store, rate, limiter.WithTrustForwardHeader(false))
+		return middleware.RateLimitMiddleware(instance)
+	},
+		// Login resource
+		routerInst.POST("/api/v2/login", loginResource.Login),
+	)
 
 	router.With(middleware.DefaultRateLimitMiddleware,
 		// Login resources
