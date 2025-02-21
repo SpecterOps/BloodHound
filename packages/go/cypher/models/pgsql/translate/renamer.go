@@ -21,76 +21,63 @@ import (
 	"github.com/specterops/bloodhound/cypher/models/walk"
 )
 
-func rewriteCompositeTypeReference(scopeIdentifier pgsql.Identifier, compositeReference pgsql.Identifier) pgsql.CompoundIdentifier {
-	return pgsql.CompoundIdentifier{scopeIdentifier, compositeReference}
-}
-
-func rewriteCompositeTypeReferenceRoot(scopeIdentifier pgsql.Identifier, compositeReference pgsql.CompoundIdentifier) pgsql.CompoundIdentifier {
-	rewritten := make(pgsql.CompoundIdentifier, 0, len(compositeReference))
-	rewritten = append(rewritten, scopeIdentifier)
-
-	return append(rewritten, compositeReference[1:]...)
-}
-
-func rewriteCompositeTypeFieldReference(scopeIdentifier pgsql.Identifier, compositeReference pgsql.CompoundIdentifier) pgsql.CompoundExpression {
-	return pgsql.CompoundExpression{
-		&pgsql.Parenthetical{
-			Expression: pgsql.CompoundIdentifier{scopeIdentifier, compositeReference.Root()},
-		},
-
-		compositeReference[1:],
+func rewriteCompositeTypeFieldReference(scopeIdentifier pgsql.Identifier, compositeReference pgsql.CompoundIdentifier) pgsql.RowColumnReference {
+	return pgsql.RowColumnReference{
+		Identifier: pgsql.CompoundIdentifier{scopeIdentifier, compositeReference.Root()},
+		Column:     compositeReference[1],
 	}
 }
 
-// IdentifierRewriter is a PgSQL AST visitor that finds any matching identifier within the given target
-// identifier set. Once a match is found, the matching identifiers are rewritten as a compound
-// identifier leading with the current frame's identifier (scopeIdentifier) such that an identifier
-// 'a' with scopeIdentifier 's0' becomes pgsql.CompoundIdentifier{scopeIdentifier, 'a'}.
-//
-// For field references of an identifier represented as compound identifiers, the compound identifier
-// is wrapped in a parenthetical:
-//
-// // a.properties with scopeIdentifier 's0' becomes -> (s0.a).properties
-//
-//	pgsql.CompoundExpression{
-//			&pgsql.Parenthetical{
-//				Expression: pgsql.CompoundIdentifier{scopeIdentifier, fieldReference.Root()},
-//			},
-//
-//			fieldReference[1:],
-//		}
-type IdentifierRewriter struct {
+type FrameBindingRewriter struct {
 	walk.HierarchicalVisitor[pgsql.SyntaxNode]
 
-	scopeIdentifier pgsql.Identifier
-	targets         *pgsql.IdentifierSet
-	skipDepth       int
+	scope *Scope
 }
 
-func (s *IdentifierRewriter) enter(node pgsql.SyntaxNode) error {
-	// Quick check to compensate for unwanted rewriting of sub-query expressions. Since these
-	// can be nested we track depth instead a boolean for skipping AST elements.
-	switch node.(type) {
-	case pgsql.Subquery:
-		s.skipDepth += 1
+func rewriteIdentifierScopeReference(scope *Scope, identifier pgsql.Identifier) (pgsql.SelectItem, error) {
+	if !pgsql.IsReservedIdentifier(identifier) {
+		if binding, bound := scope.Lookup(identifier); bound {
+			if binding.LastProjection != nil {
+				return pgsql.CompoundIdentifier{binding.LastProjection.Binding.Identifier, identifier}, nil
+			}
+		}
 	}
 
-	if s.skipDepth > 0 {
-		return nil
+	// Return the original identifier if no rewrite is needed
+	return identifier, nil
+}
+
+func rewriteCompoundIdentifierScopeReference(scope *Scope, identifier pgsql.CompoundIdentifier) (pgsql.SelectItem, error) {
+	if binding, bound := scope.Lookup(identifier[0]); bound {
+		if binding.LastProjection != nil {
+			return pgsql.RowColumnReference{
+				Identifier: pgsql.CompoundIdentifier{binding.LastProjection.Binding.Identifier, binding.Identifier},
+				Column:     identifier[1],
+			}, nil
+		}
 	}
 
+	// Return the original identifier if no rewrite is needed
+	return identifier, nil
+}
+
+func (s *FrameBindingRewriter) enter(node pgsql.SyntaxNode) error {
 	switch typedExpression := node.(type) {
 	case pgsql.Projection:
 		for idx, projection := range typedExpression {
 			switch typedProjection := projection.(type) {
 			case pgsql.Identifier:
-				if s.targets == nil || s.targets.Contains(typedProjection) {
-					typedExpression[idx] = rewriteCompositeTypeReferenceRoot(s.scopeIdentifier, pgsql.CompoundIdentifier{typedProjection})
+				if rewritten, err := rewriteIdentifierScopeReference(s.scope, typedProjection); err != nil {
+					return err
+				} else {
+					typedExpression[idx] = rewritten
 				}
 
 			case pgsql.CompoundIdentifier:
-				if s.targets == nil || s.targets.Contains(typedProjection.Root()) {
-					typedExpression[idx] = rewriteCompositeTypeFieldReference(s.scopeIdentifier, typedProjection)
+				if rewritten, err := rewriteCompoundIdentifierScopeReference(s.scope, typedProjection); err != nil {
+					return err
+				} else {
+					typedExpression[idx] = rewritten
 				}
 			}
 		}
@@ -99,13 +86,17 @@ func (s *IdentifierRewriter) enter(node pgsql.SyntaxNode) error {
 		for idx, value := range typedExpression.Values {
 			switch typedValue := value.(type) {
 			case pgsql.Identifier:
-				if s.targets == nil || s.targets.Contains(typedValue) {
-					typedExpression.Values[idx] = rewriteCompositeTypeReference(s.scopeIdentifier, typedValue)
+				if rewritten, err := rewriteIdentifierScopeReference(s.scope, typedValue); err != nil {
+					return err
+				} else {
+					typedExpression.Values[idx] = rewritten
 				}
 
 			case pgsql.CompoundIdentifier:
-				if s.targets == nil || s.targets.Contains(typedValue.Root()) {
-					typedExpression.Values[idx] = rewriteCompositeTypeReferenceRoot(s.scopeIdentifier, typedValue)
+				if rewritten, err := rewriteCompoundIdentifierScopeReference(s.scope, typedValue); err != nil {
+					return err
+				} else {
+					typedExpression.Values[idx] = rewritten
 				}
 			}
 		}
@@ -114,92 +105,122 @@ func (s *IdentifierRewriter) enter(node pgsql.SyntaxNode) error {
 		for idx, parameter := range typedExpression.Parameters {
 			switch typedParameter := parameter.(type) {
 			case pgsql.Identifier:
-				if s.targets == nil || s.targets.Contains(typedParameter) {
-					typedExpression.Parameters[idx] = rewriteCompositeTypeReference(s.scopeIdentifier, typedParameter)
+				if rewritten, err := rewriteIdentifierScopeReference(s.scope, typedParameter); err != nil {
+					return err
+				} else {
+					// This is being done in case the top-level parameter is a value-type
+					typedExpression.Parameters[idx] = rewritten
 				}
 
 			case pgsql.CompoundIdentifier:
-				if s.targets == nil || s.targets.Contains(typedParameter.Root()) {
-					typedExpression.Parameters[idx] = rewriteCompositeTypeReferenceRoot(s.scopeIdentifier, typedParameter)
+				if rewritten, err := rewriteCompoundIdentifierScopeReference(s.scope, typedParameter); err != nil {
+					return err
+				} else {
+					// This is being done in case the top-level parameter is a value-type
+					typedExpression.Parameters[idx] = rewritten
 				}
 			}
 		}
 
 	case *pgsql.ArrayIndex:
-		switch typedArrayIndexExpression := typedExpression.Expression.(type) {
+		switch typedArrayIndexInnerExpression := typedExpression.Expression.(type) {
 		case pgsql.Identifier:
-			if s.targets == nil || s.targets.Contains(typedArrayIndexExpression) {
-				typedExpression.Expression = rewriteCompositeTypeReference(s.scopeIdentifier, typedArrayIndexExpression)
+			if rewritten, err := rewriteIdentifierScopeReference(s.scope, typedArrayIndexInnerExpression); err != nil {
+				return err
+			} else {
+				typedExpression.Expression = rewritten
 			}
 
 		case pgsql.CompoundIdentifier:
-			if s.targets == nil || s.targets.Contains(typedArrayIndexExpression.Root()) {
-				typedExpression.Expression = rewriteCompositeTypeReferenceRoot(s.scopeIdentifier, typedArrayIndexExpression)
+			if rewritten, err := rewriteCompoundIdentifierScopeReference(s.scope, typedArrayIndexInnerExpression); err != nil {
+				return err
+			} else {
+				typedExpression.Expression = rewritten
 			}
 		}
 
 		for idx, indexExpression := range typedExpression.Indexes {
 			switch typedIndexExpression := indexExpression.(type) {
 			case pgsql.Identifier:
-				if s.targets == nil || s.targets.Contains(typedIndexExpression) {
-					typedExpression.Indexes[idx] = rewriteCompositeTypeReference(s.scopeIdentifier, typedIndexExpression)
+				if rewritten, err := rewriteIdentifierScopeReference(s.scope, typedIndexExpression); err != nil {
+					return err
+				} else {
+					typedExpression.Indexes[idx] = rewritten
 				}
 
 			case pgsql.CompoundIdentifier:
-				if s.targets == nil || s.targets.Contains(typedIndexExpression.Root()) {
-					typedExpression.Indexes[idx] = rewriteCompositeTypeReferenceRoot(s.scopeIdentifier, typedIndexExpression)
+				if rewritten, err := rewriteCompoundIdentifierScopeReference(s.scope, typedIndexExpression); err != nil {
+					return err
+				} else {
+					typedExpression.Indexes[idx] = rewritten
 				}
 			}
 		}
 
 	case *pgsql.Parenthetical:
-		switch typedParentheticalExpression := typedExpression.Expression.(type) {
+		switch typedInnerExpression := typedExpression.Expression.(type) {
 		case pgsql.Identifier:
-			if s.targets == nil || s.targets.Contains(typedParentheticalExpression) {
-				typedExpression.Expression = rewriteCompositeTypeReference(s.scopeIdentifier, typedParentheticalExpression)
+			if rewritten, err := rewriteIdentifierScopeReference(s.scope, typedInnerExpression); err != nil {
+				return err
+			} else {
+				typedExpression.Expression = rewritten
 			}
 
 		case pgsql.CompoundIdentifier:
-			if s.targets == nil || s.targets.Contains(typedParentheticalExpression.Root()) {
-				typedExpression.Expression = rewriteCompositeTypeReferenceRoot(s.scopeIdentifier, typedParentheticalExpression)
+			if rewritten, err := rewriteCompoundIdentifierScopeReference(s.scope, typedInnerExpression); err != nil {
+				return err
+			} else {
+				typedExpression.Expression = rewritten
 			}
 		}
 
 	case *pgsql.AliasedExpression:
-		switch typedAliasedExpression := typedExpression.Expression.(type) {
+		switch typedInnerExpression := typedExpression.Expression.(type) {
 		case pgsql.Identifier:
-			if s.targets == nil || s.targets.Contains(typedAliasedExpression) {
-				typedExpression.Expression = rewriteCompositeTypeReference(s.scopeIdentifier, typedAliasedExpression)
+			if rewritten, err := rewriteIdentifierScopeReference(s.scope, typedInnerExpression); err != nil {
+				return err
+			} else {
+				typedExpression.Expression = rewritten
 			}
 
 		case pgsql.CompoundIdentifier:
-			if s.targets == nil || s.targets.Contains(typedAliasedExpression.Root()) {
-				typedExpression.Expression = rewriteCompositeTypeReferenceRoot(s.scopeIdentifier, typedAliasedExpression)
+			if rewritten, err := rewriteCompoundIdentifierScopeReference(s.scope, typedInnerExpression); err != nil {
+				return err
+			} else {
+				typedExpression.Expression = rewritten
 			}
 		}
 
 	case *pgsql.BinaryExpression:
 		switch typedLOperand := typedExpression.LOperand.(type) {
 		case pgsql.Identifier:
-			if s.targets == nil || s.targets.Contains(typedLOperand) {
-				typedExpression.LOperand = rewriteCompositeTypeReference(s.scopeIdentifier, typedLOperand)
+			if rewritten, err := rewriteIdentifierScopeReference(s.scope, typedLOperand); err != nil {
+				return err
+			} else {
+				typedExpression.LOperand = rewritten
 			}
 
 		case pgsql.CompoundIdentifier:
-			if s.targets == nil || s.targets.Contains(typedLOperand.Root()) {
-				typedExpression.LOperand = rewriteCompositeTypeFieldReference(s.scopeIdentifier, typedLOperand)
+			if rewritten, err := rewriteCompoundIdentifierScopeReference(s.scope, typedLOperand); err != nil {
+				return err
+			} else {
+				typedExpression.LOperand = rewritten
 			}
 		}
 
 		switch typedROperand := typedExpression.ROperand.(type) {
 		case pgsql.Identifier:
-			if s.targets == nil || s.targets.Contains(typedROperand) {
-				typedExpression.ROperand = rewriteCompositeTypeReference(s.scopeIdentifier, typedROperand)
+			if rewritten, err := rewriteIdentifierScopeReference(s.scope, typedROperand); err != nil {
+				return err
+			} else {
+				typedExpression.ROperand = rewritten
 			}
 
 		case pgsql.CompoundIdentifier:
-			if s.targets == nil || s.targets.Contains(typedROperand.Root()) {
-				typedExpression.ROperand = rewriteCompositeTypeFieldReference(s.scopeIdentifier, typedROperand)
+			if rewritten, err := rewriteCompoundIdentifierScopeReference(s.scope, typedROperand); err != nil {
+				return err
+			} else {
+				typedExpression.ROperand = rewritten
 			}
 		}
 	}
@@ -207,43 +228,31 @@ func (s *IdentifierRewriter) enter(node pgsql.SyntaxNode) error {
 	return nil
 }
 
-func (s *IdentifierRewriter) Enter(node pgsql.SyntaxNode) {
+func (s *FrameBindingRewriter) Enter(node pgsql.SyntaxNode) {
 	if err := s.enter(node); err != nil {
 		s.SetError(err)
 	}
 }
 
-func (s *IdentifierRewriter) exit(node pgsql.SyntaxNode) error {
+func (s *FrameBindingRewriter) exit(node pgsql.SyntaxNode) error {
 	switch node.(type) {
-	case pgsql.Subquery:
-		s.skipDepth -= 1
 	}
+
 	return nil
 }
-
-func (s *IdentifierRewriter) Exit(node pgsql.SyntaxNode) {
+func (s *FrameBindingRewriter) Exit(node pgsql.SyntaxNode) {
 	if err := s.exit(node); err != nil {
 		s.SetError(err)
 	}
 }
 
-func NewIdentifierRewriter(scopeIdentifier pgsql.Identifier, targets *pgsql.IdentifierSet) walk.HierarchicalVisitor[pgsql.SyntaxNode] {
-	return &IdentifierRewriter{
-		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[pgsql.SyntaxNode](),
-		scopeIdentifier:     scopeIdentifier,
-		targets:             targets,
-		skipDepth:           0,
-	}
-}
-
-func RewriteExpressionIdentifiers(expression pgsql.Expression, scopeIdentifier pgsql.Identifier, targets *pgsql.IdentifierSet) error {
+func RewriteFrameBindings(scope *Scope, expression pgsql.Expression) error {
 	if expression == nil {
 		return nil
 	}
 
-	return walk.WalkPgSQL(expression, NewIdentifierRewriter(scopeIdentifier, targets))
-}
-
-func RewriteExpressionCompoundIdentifier(expression pgsql.Expression, scopeIdentifier pgsql.Identifier, root pgsql.Identifier) error {
-	return RewriteExpressionIdentifiers(expression, scopeIdentifier, pgsql.AsIdentifierSet(root))
+	return walk.WalkPgSQL(expression, &FrameBindingRewriter{
+		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[pgsql.SyntaxNode](),
+		scope:               scope,
+	})
 }

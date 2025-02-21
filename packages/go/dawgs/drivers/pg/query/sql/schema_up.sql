@@ -325,9 +325,15 @@ create or replace function public.jsonb_to_text_array(target jsonb)
   returns text[]
 as
 $$
-select array(select jsonb_array_elements_text(target));
+begin
+  if target != 'null'::jsonb then
+    return array(select jsonb_array_elements_text(target));
+  else
+    return null;
+  end if;
+end
 $$
-  language sql
+  language plpgsql
   immutable
   parallel safe
   strict;
