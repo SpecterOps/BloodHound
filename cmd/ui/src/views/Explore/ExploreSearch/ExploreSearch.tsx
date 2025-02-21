@@ -91,7 +91,7 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
             className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded-lg shadow-[1px solid white]', {
                 'w-[600px]': activeTab === tabNameMap.cypher && showSearchWidget,
             })}>
-            <div className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-neutral-light-2 dark:bg-neutral-dark-2'>
+            <div className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'>
                 <Icon
                     className={classes.icon}
                     click={() => {
