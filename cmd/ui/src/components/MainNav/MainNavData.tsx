@@ -21,6 +21,8 @@ import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
+const GloballySupportedSearchParams = ['environmentId', 'environmentAggregation'];
+
 export const useMainNavLogoData = () => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const bhceImageUrlDarkMode = '/img/banner-ce-dark-mode.png';
@@ -45,6 +47,7 @@ export const useMainNavLogoData = () => {
                 altText: 'SpecterOps Text Logo',
             },
         },
+        persistentSearchParams: GloballySupportedSearchParams,
     };
 };
 
@@ -54,12 +57,14 @@ export const MainNavPrimaryListData = [
         icon: <AppIcon.LineChart size={24} />,
         route: routes.ROUTE_EXPLORE,
         testId: 'global_nav-explore',
+        persistentSearchParams: GloballySupportedSearchParams,
     },
     {
         label: 'Group Management',
         icon: <AppIcon.Diamond size={24} />,
         route: routes.ROUTE_GROUP_MANAGEMENT,
         testId: 'global_nav-group-management',
+        persistentSearchParams: GloballySupportedSearchParams,
     },
 ];
 
@@ -85,30 +90,35 @@ export const useMainNavSecondaryListData = () => {
             icon: <AppIcon.User size={24} />,
             route: routes.ROUTE_MY_PROFILE,
             testId: 'global_nav-my-profile',
+            persistentSearchParams: GloballySupportedSearchParams,
         },
         {
             label: 'Download Collectors',
             icon: <AppIcon.Download size={24} />,
             route: routes.ROUTE_DOWNLOAD_COLLECTORS,
             testId: 'global_nav-download-collectors',
+            persistentSearchParams: GloballySupportedSearchParams,
         },
         {
             label: 'Administration',
             icon: <AppIcon.UserCog size={24} />,
             route: routes.ROUTE_ADMINISTRATION_ROOT,
             testId: 'global_nav-administration',
+            persistentSearchParams: GloballySupportedSearchParams,
         },
         {
             label: 'API Explorer',
             icon: <AppIcon.Compass size={24} />,
             route: routes.ROUTE_API_EXPLORER,
             testId: 'global_nav-api-explorer',
+            persistentSearchParams: GloballySupportedSearchParams,
         },
         {
             label: 'Docs and Support',
             icon: <AppIcon.FileMagnifyingGlass size={24} />,
             functionHandler: handleGoToSupport,
             testId: 'global_nav-support',
+            persistentSearchParams: GloballySupportedSearchParams,
         },
         {
             label: (
@@ -120,12 +130,14 @@ export const useMainNavSecondaryListData = () => {
             icon: <AppIcon.EclipseCircle size={24} />,
             functionHandler: handleToggleDarkMode,
             testId: 'global_nav-dark-mode',
+            persistentSearchParams: GloballySupportedSearchParams,
         },
         {
             label: 'Log Out',
             icon: <AppIcon.Logout size={24} />,
             functionHandler: handleLogout,
             testId: 'global_nav-logout',
+            persistentSearchParams: GloballySupportedSearchParams,
         },
     ];
 };

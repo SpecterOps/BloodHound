@@ -66,3 +66,15 @@ export const setParamsFactory = <T>(setSearchParams: SetURLSearchParams, availab
         });
     };
 };
+
+export const persistSearchParams = (persistentSearchParams: string[]) => {
+    const prevParams = new URLSearchParams(location.search);
+    const newParams = new URLSearchParams();
+
+    persistentSearchParams.forEach((param) => {
+        const prevParam = prevParams.get(param);
+        if (prevParam) newParams.set(param, prevParam);
+    });
+
+    return newParams;
+};
