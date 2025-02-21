@@ -33,3 +33,14 @@ VALUES (current_timestamp,
         false,
         false)
 ON CONFLICT DO NOTHING;
+
+-- Add `tier_management_engine` feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'tier_management_engine',
+        'Tier Management Engine',
+        'Updates the managed assets selector engine and the asset management page.',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
