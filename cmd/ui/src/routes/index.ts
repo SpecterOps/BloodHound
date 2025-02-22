@@ -27,7 +27,7 @@ const UserProfile = React.lazy(() => import('bh-shared-ui').then((module) => ({ 
 const DownloadCollectors = React.lazy(() => import('src/views/DownloadCollectors'));
 const Administration = React.lazy(() => import('src/views/Administration'));
 const ApiExplorer = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.ApiExplorer })));
-const GroupManagement = React.lazy(() => import('src/views/GroupManagement/GroupManagement'));
+const GroupManagementFeatureToggle = React.lazy(() => import('src/views/GroupManagement/GroupManagementFeatureToggle'));
 
 export const ROUTES = [
     {
@@ -62,7 +62,7 @@ export const ROUTES = [
     },
     {
         path: routes.ROUTE_GROUP_MANAGEMENT,
-        component: GroupManagement,
+        component: GroupManagementFeatureToggle,
         authenticationRequired: true,
         navigation: true,
     },

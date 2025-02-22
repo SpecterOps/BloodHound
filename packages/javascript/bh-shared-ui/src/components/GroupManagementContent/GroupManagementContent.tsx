@@ -32,7 +32,7 @@ import { SelectedDomain } from './types';
 
 // Top level layout and shared logic for the Group Management page
 const GroupManagementContent: FC<{
-    globalDomain: SelectedDomain | null;
+    globalEnvironment: SelectedDomain | null;
     showExplorePageLink: boolean;
     tierZeroLabel: string;
     tierZeroTag: string;
@@ -43,7 +43,7 @@ const GroupManagementContent: FC<{
     mapAssetGroups: (assetGroups: AssetGroup[]) => DropdownOption[];
     userHasEditPermissions: boolean;
 }> = ({
-    globalDomain,
+    globalEnvironment,
     showExplorePageLink,
     tierZeroLabel,
     tierZeroTag,
@@ -119,7 +119,7 @@ const GroupManagementContent: FC<{
 
     // Start building a filter query for members that gets passed down to AssetGroupMemberList to make the request
     useEffect(() => {
-        const filterDomain = selectedDomain || globalDomain;
+        const filterDomain = selectedDomain || globalEnvironment;
         const filter: AssetGroupMemberParams = {};
         if (filterDomain?.type === 'active-directory-platform') {
             filter.environment_kind = 'eq:Domain';
@@ -129,7 +129,7 @@ const GroupManagementContent: FC<{
             filter.environment_id = `eq:${filterDomain?.id}`;
         }
         setFilterParams(filter);
-    }, [selectedDomain, globalDomain, selectedAssetGroupId]);
+    }, [selectedDomain, globalEnvironment, selectedAssetGroupId]);
 
     const selectorLabelStyles = { display: { xs: 'none', xl: 'flex' } };
 
@@ -155,7 +155,7 @@ const GroupManagementContent: FC<{
                             </Grid>
                             <Grid item xs={12} xl={8}>
                                 <DataSelector
-                                    value={selectedDomain || globalDomain || { type: null, id: null }}
+                                    value={selectedDomain || globalEnvironment || { type: null, id: null }}
                                     errorMessage={domainSelectorErrorMessage}
                                     onChange={(selection: SelectedDomain) => setSelectedDomain({ ...selection })}
                                     fullWidth={true}

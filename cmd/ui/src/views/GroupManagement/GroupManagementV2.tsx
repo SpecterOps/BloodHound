@@ -23,6 +23,7 @@ import {
     searchbarActions,
     TIER_ZERO_LABEL,
     TIER_ZERO_TAG,
+    useEnvironment,
 } from 'bh-shared-ui';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { useState } from 'react';
@@ -31,15 +32,15 @@ import { setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import usePermissions from 'src/hooks/usePermissions/usePermissions';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { useAppDispatch } from 'src/store';
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
 import { dataCollectionMessage } from '../QA/utils';
 
-const GroupManagement = () => {
+const GroupManagementV2 = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
-    const globalDomain = useAppSelector((state) => state.global.options.domain);
+    const { data: environment } = useEnvironment();
 
     // Kept out of the shared UI due to diff between GraphNodeTypes across apps
     const [openNode, setOpenNode] = useState<SelectedNode | null>(null);
@@ -82,7 +83,7 @@ const GroupManagement = () => {
 
     return (
         <GroupManagementContent
-            globalEnvironment={globalDomain}
+            globalEnvironment={environment ?? null}
             showExplorePageLink={!!openNode}
             tierZeroLabel={TIER_ZERO_LABEL}
             tierZeroTag={TIER_ZERO_TAG}
@@ -97,4 +98,4 @@ const GroupManagement = () => {
     );
 };
 
-export default GroupManagement;
+export default GroupManagementV2;
