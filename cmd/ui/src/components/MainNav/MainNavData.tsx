@@ -15,13 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Switch } from '@bloodhoundenterprise/doodleui';
-import { AppIcon } from 'bh-shared-ui';
+import { AppIcon, GloballySupportedSearchParams } from 'bh-shared-ui';
 import { logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
-
-const GloballySupportedSearchParams = ['environmentId', 'environmentAggregation'];
 
 export const useMainNavLogoData = () => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);

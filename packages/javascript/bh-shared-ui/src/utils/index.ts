@@ -25,6 +25,7 @@ export * from './exportGraphData';
 export * from './icons';
 export * from './passwd';
 export * from './permissions';
+export * from './searchParams';
 export * from './theme';
 export * from './types';
 export * from './user';

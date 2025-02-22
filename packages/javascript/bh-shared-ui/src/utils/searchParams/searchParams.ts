@@ -16,6 +16,8 @@
 
 import { SetURLSearchParams } from 'react-router-dom';
 
+export const GloballySupportedSearchParams = ['environmentId', 'environmentAggregation'];
+
 type EmptyParam = undefined | null | '';
 
 export const isEmptyParam = <T>(value: T | EmptyParam): value is EmptyParam => {
