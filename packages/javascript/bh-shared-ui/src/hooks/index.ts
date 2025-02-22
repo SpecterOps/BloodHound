@@ -14,8 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as useAvailableEnvironments } from './useAvailableEnvironments';
-
 export { default as useOnClickOutside } from './useOnClickOutside';
 
 export { default as useDebouncedValue } from './useDebouncedValue';
@@ -23,6 +21,8 @@ export { default as useDebouncedValue } from './useDebouncedValue';
 export { default as useToggle } from './useToggle';
 
 export { default as useApiVersion } from './useApiVersion';
+
+export * from './useAvailableEnvironments';
 
 export * from './useConfiguration';
 

@@ -17,20 +17,41 @@
 import { Domain } from 'js-client-library';
 import { useQuery, UseQueryOptions } from 'react-query';
 import { apiClient } from '../utils/api';
+import { useEnvironmentParams } from './useEnvironmentParams';
 
-export const availableDomainKeys = {
+export const availableEnvironmentKeys = {
     all: ['available-domains'],
-} as const;
+    getKey: (customKey?: string[]) =>
+        customKey?.length ? [...availableEnvironmentKeys.all, ...customKey] : availableEnvironmentKeys.all,
+};
 
-interface QueryOptions extends Omit<UseQueryOptions<unknown, unknown, Domain[], string[]>, 'queryKey' | 'queryFn'> {
+type QueryOptions<T = Domain[]> = Omit<
+    UseQueryOptions<Domain[], unknown, T | undefined, string[]>,
+    'queryKey' | 'queryFn'
+> & {
     appendQueryKey?: string[];
-}
+};
 
-const useAvailableEnvironments = (options?: QueryOptions) =>
-    useQuery({
-        queryKey: [...availableDomainKeys.all, ...(options?.appendQueryKey ?? [])],
+export function useAvailableEnvironments<T = Domain[]>(options?: QueryOptions<T>) {
+    return useQuery({
+        queryKey: availableEnvironmentKeys.getKey(options?.appendQueryKey),
         queryFn: ({ signal }) => apiClient.getAvailableEnvironments({ signal }).then((response) => response.data.data),
         ...options,
     });
+}
 
-export default useAvailableEnvironments;
+export const selectEnvironment = (environmentId: Domain['id']): QueryOptions<Domain>['select'] => {
+    return (data) => data.find((domain) => domain.id === environmentId);
+};
+
+export const useEnvironment = (environmentId?: Domain['id'], options?: Omit<QueryOptions<Domain>, 'select'>) => {
+    const { environmentId: environmentIdParam } = useEnvironmentParams();
+    const selectedEnvironment = environmentId ?? environmentIdParam;
+
+    return useAvailableEnvironments({
+        select: selectEnvironment(selectedEnvironment!),
+        ...options,
+        refetchOnWindowFocus: false,
+        enabled: !!selectedEnvironment,
+    });
+};

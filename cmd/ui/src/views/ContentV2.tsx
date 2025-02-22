@@ -57,7 +57,7 @@ const ContentV2: React.FC = () => {
         onError: () => setEnvironmentParams({ environmentId: undefined }),
         // set initial environment/tenant once user is authenticated
         onSuccess: (availableEnvironments) => {
-            if (!availableEnvironments.length || environmentId) return;
+            if (!availableEnvironments?.length || environmentId) return;
 
             const collectedEnvironments = availableEnvironments
                 ?.filter((environment: Domain) => environment.collected) // omit uncollected environments
