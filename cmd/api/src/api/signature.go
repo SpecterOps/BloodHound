@@ -34,48 +34,6 @@ import (
 
 const ErrTemplateHMACSignature string = "unable to compute hmac signature: %w"
 
-// tee takes a source reader and two writers. The function reads from the source until exhaustion. Each read is written
-// serially to both writers.
-func tee(ctx context.Context, reader io.Reader, outA, outB io.Writer) error {
-	// Ignore readers that are nil to begin with. This covers the case where a request is being signed but contains
-	// no body.
-	if reader == nil {
-		return nil
-	}
-
-	// Internal read buffer for splitting out to the other writers
-	buffer := make([]byte, 4096)
-	outputs := io.MultiWriter(outA, outB)
-
-	for {
-		read, err := reader.Read(buffer)
-
-		// check context after read
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-
-		if read > 0 {
-			if _, err := outputs.Write(buffer[:read]); err != nil {
-				return err
-			}
-		}
-
-		if err != nil {
-			if err != io.EOF {
-				return err
-			}
-
-			return nil
-		}
-
-		// check context after writes before next read
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-	}
-}
-
 func NewSelfDestructingTempFile(dir, prefix string) (*SelfDestructingTempFile, error) {
 	if file, err := os.CreateTemp(dir, prefix); err != nil {
 		return nil, err

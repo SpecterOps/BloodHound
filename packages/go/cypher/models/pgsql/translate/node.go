@@ -17,7 +17,6 @@
 package translate
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/specterops/bloodhound/cypher/models"
@@ -28,82 +27,19 @@ import (
 func (s *Translator) translateNodePattern(nodePattern *cypher.NodePattern) error {
 	var (
 		queryPart   = s.query.CurrentPart()
-		patternPart = queryPart.pattern.CurrentPart()
+		patternPart = queryPart.currentPattern.CurrentPart()
 	)
 
 	if bindingResult, err := s.bindPatternExpression(nodePattern, pgsql.NodeComposite); err != nil {
 		return err
-	} else if err := s.translateNodePatternToStep(patternPart, bindingResult); err != nil {
+	} else if err := s.translateNodePatternToStep(nodePattern, patternPart, bindingResult); err != nil {
 		return err
-	} else {
-		if len(queryPart.properties) > 0 {
-			var propertyConstraints pgsql.Expression
-
-			for key, value := range queryPart.properties {
-				s.treeTranslator.Push(pgsql.NewPropertyLookup(pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnProperties}, pgsql.NewLiteral(key, pgsql.Text)))
-				s.treeTranslator.Push(value)
-
-				if newConstraint, err := s.treeTranslator.PopBinaryExpression(pgsql.OperatorEquals); err != nil {
-					return err
-				} else {
-					propertyConstraints = pgsql.OptionalAnd(propertyConstraints, newConstraint)
-				}
-			}
-
-			if err := patternPart.Constraints.Constrain(pgsql.AsIdentifierSet(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
-				return err
-			}
-		}
-
-		if len(nodePattern.Kinds) > 0 {
-			if kindIDs, err := s.kindMapper.MapKinds(s.ctx, nodePattern.Kinds); err != nil {
-				s.SetError(fmt.Errorf("failed to translate kinds: %w", err))
-			} else if kindIDsLiteral, err := pgsql.AsLiteral(kindIDs); err != nil {
-				s.SetError(err)
-			} else {
-				expression := pgsql.NewBinaryExpression(
-					pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnKindIDs},
-					pgsql.OperatorPGArrayOverlap,
-					kindIDsLiteral,
-				)
-
-				if err := patternPart.Constraints.Constrain(pgsql.AsIdentifierSet(bindingResult.Binding.Identifier), expression); err != nil {
-					return err
-				}
-			}
-		}
 	}
 
 	return nil
 }
 
-func (s *Translator) translateNodePatternSegment(part *PatternPart, bindingResult BindingResult) error {
-	// If this isn't a traversal
-	if nodeFrame, err := s.query.Scope.PushFrame(); err != nil {
-		return err
-	} else {
-		part.NodeSelect.Frame = nodeFrame
-	}
-
-	// Track if the node select is introducing a new variable into scope
-	if bindingResult.AlreadyBound {
-		part.NodeSelect.IsDefinition = false
-
-		if boundProjections, err := buildVisibleScopeProjections(s.query.Scope, nil); err != nil {
-			return err
-		} else {
-			part.NodeSelect.Select.Projection = boundProjections.Items
-		}
-	} else {
-		part.NodeSelect.IsDefinition = true
-
-		if boundProjections, err := buildVisibleScopeProjections(s.query.Scope, []*BoundIdentifier{bindingResult.Binding}); err != nil {
-			return err
-		} else {
-			part.NodeSelect.Select.Projection = boundProjections.Items
-		}
-	}
-
+func (s *Translator) translateNodePatternSegment(nodePattern *cypher.NodePattern, part *PatternPart, bindingResult BindingResult) error {
 	// Make this the node select of the pattern part
 	part.NodeSelect.Binding = bindingResult.Binding
 	return nil
@@ -132,54 +68,52 @@ func (s *Translator) translateNodePatternSegmentWithTraversal(currentSegment *Pa
 	}
 
 	if currentSegment.Expansion.Set {
-		// This segment is part of a variable expansion
-
-		if expansionFrame, err := s.query.Scope.PushFrame(); err != nil {
-			return err
-		} else {
-			if currentSegment.LeftNodeBound {
-				// If the left node is bound, this expansion will rebind it
-				currentSegment.LeftNode.DetachFromFrame()
-			}
-
-			// Assign the new scope frame to the expansion
-			currentSegment.Expansion.Value.Frame = expansionFrame
-		}
-
-		if boundProjections, err := buildVisibleScopeProjections(s.query.Scope, currentSegment.Definitions); err != nil {
-			return err
-		} else {
-			currentSegment.Expansion.Value.Projection = boundProjections.Items
-		}
-
 		// Update the data type of the right node so that it reflects that it is now the terminal node of
 		// an expansion
 		currentSegment.RightNode.DataType = pgsql.ExpansionTerminalNode
-
-		// If the edge is an expansion link the node as the right terminal node to the expansion
-		if expansionBinding, found := currentSegment.Edge.FirstDependencyByType(pgsql.ExpansionPattern); !found {
-			return errors.New("unable to find expansion context")
-		} else {
-			currentSegment.RightNode.Link(expansionBinding)
-		}
-	} else {
-		if stepFrame, err := s.query.Scope.PushFrame(); err != nil {
-			return err
-		} else {
-			currentSegment.Frame = stepFrame
-		}
-
-		if boundProjections, err := buildVisibleScopeProjections(s.query.Scope, currentSegment.Definitions); err != nil {
-			return err
-		} else {
-			currentSegment.Projection = boundProjections.Items
-		}
 	}
 
 	return nil
 }
 
-func (s *Translator) translateNodePatternToStep(part *PatternPart, bindingResult BindingResult) error {
+func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern, part *PatternPart, bindingResult BindingResult) error {
+	currentQueryPart := s.query.CurrentPart()
+
+	// Check the IR for any collected properties
+	if currentQueryPart.HasProperties() {
+		var propertyConstraints pgsql.Expression
+
+		for key, value := range currentQueryPart.ConsumeProperties() {
+			s.treeTranslator.Push(pgsql.NewPropertyLookup(pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnProperties}, pgsql.NewLiteral(key, pgsql.Text)))
+			s.treeTranslator.Push(value)
+
+			if newConstraint, err := s.treeTranslator.PopBinaryExpression(pgsql.OperatorEquals); err != nil {
+				return err
+			} else {
+				propertyConstraints = pgsql.OptionalAnd(propertyConstraints, newConstraint)
+			}
+		}
+
+		if err := s.treeTranslator.Constrain(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
+			return err
+		}
+	}
+
+	// Check for kind constraints
+	if len(nodePattern.Kinds) > 0 {
+		if kindIDs, err := s.kindMapper.MapKinds(s.ctx, nodePattern.Kinds); err != nil {
+			return fmt.Errorf("failed to translate kinds: %w", err)
+		} else if kindIDsLiteral, err := pgsql.AsLiteral(kindIDs); err != nil {
+			return err
+		} else if err := s.treeTranslator.Constrain(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), pgsql.NewBinaryExpression(
+			pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnKindIDs},
+			pgsql.OperatorPGArrayOverlap,
+			kindIDsLiteral,
+		)); err != nil {
+			return err
+		}
+	}
+
 	if part.IsTraversal {
 		if numSteps := len(part.TraversalSteps); numSteps == 0 {
 			// This is the traversal step's left node
@@ -198,7 +132,7 @@ func (s *Translator) translateNodePatternToStep(part *PatternPart, bindingResult
 			return s.translateNodePatternSegmentWithTraversal(currentStep)
 		}
 	} else {
-		return s.translateNodePatternSegment(part, bindingResult)
+		return s.translateNodePatternSegment(nodePattern, part, bindingResult)
 	}
 
 	return nil
@@ -222,45 +156,41 @@ func consumeConstraintsFrom(visible *pgsql.IdentifierSet, trackers ...*Constrain
 
 func (s *Translator) buildNodePattern(part *PatternPart) error {
 	var (
+		partFrame  = part.NodeSelect.Frame
 		nextSelect pgsql.Select
 	)
 
-	if part.NodeSelect.Frame.Previous != nil && (s.query.CurrentPart().frame == nil || part.NodeSelect.Frame.Previous.Binding.Identifier != s.query.CurrentPart().frame.Binding.Identifier) {
+	// The current query part may not have a frame associated with it if is a single part query component
+	if partFrame.Previous != nil && (s.query.CurrentPart().Frame == nil || partFrame.Previous.Binding.Identifier != s.query.CurrentPart().Frame.Binding.Identifier) {
 		nextSelect.From = append(nextSelect.From, pgsql.FromClause{
 			Source: pgsql.TableReference{
-				Name: pgsql.CompoundIdentifier{part.NodeSelect.Frame.Previous.Binding.Identifier},
+				Name: pgsql.CompoundIdentifier{partFrame.Previous.Binding.Identifier},
 			},
 		})
 	}
 
 	nextSelect.Projection = part.NodeSelect.Select.Projection
 
-	if constraints, err := consumeConstraintsFrom(part.NodeSelect.Frame.Visible, s.treeTranslator.IdentifierConstraints, part.Constraints); err != nil {
-		return err
-	} else {
-		if err := rewriteConstraintIdentifierReferences(part.NodeSelect.Frame, []*Constraint{constraints}); err != nil {
-			return err
-		}
-
-		nextSelect.Where = constraints.Expression
-
-		nextSelect.From = append(nextSelect.From, pgsql.FromClause{
-			Source: pgsql.TableReference{
-				Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
-				Binding: models.ValueOptional(part.NodeSelect.Binding.Identifier),
-			},
-		})
-
-		// Prepare the next select statement
-		s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
-			Alias: pgsql.TableAlias{
-				Name: part.NodeSelect.Frame.Binding.Identifier,
-			},
-			Query: pgsql.Query{
-				Body: nextSelect,
-			},
-		})
+	if part.NodeSelect.Constraint != nil {
+		nextSelect.Where = part.NodeSelect.Constraint.Expression
 	}
+
+	nextSelect.From = append(nextSelect.From, pgsql.FromClause{
+		Source: pgsql.TableReference{
+			Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
+			Binding: models.ValueOptional(part.NodeSelect.Binding.Identifier),
+		},
+	})
+
+	// Prepare the next select statement
+	s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
+		Alias: pgsql.TableAlias{
+			Name: partFrame.Binding.Identifier,
+		},
+		Query: pgsql.Query{
+			Body: nextSelect,
+		},
+	})
 
 	return nil
 }
