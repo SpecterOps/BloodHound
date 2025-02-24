@@ -58,3 +58,15 @@ export const useEnvironmentParams = (): UseEnvironmentParamsReturn => {
         ),
     };
 };
+
+/* TODO:
+ *   BHE to use GroupManagementContent globalEnvironment
+ *   plumb useEnvironment to everything BHCE looking for domain in redux
+ *   should persist in admin pages /administration/* wtf
+ *   Data Quality
+ *   how much of this should be in bhe?
+ *   test
+ *     useEnvParam
+ *     useEnvironment
+ *     ??
+ * */
