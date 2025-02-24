@@ -168,6 +168,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 
 		adminUser  = model.User{Unique: model.Unique{ID: must.NewUUIDv4()}}
 		goodRoles  = []int32{0}
+		badRoles   = []int32{1}
 		goodUserID = must.NewUUIDv4()
 		badUserID  = must.NewUUIDv4()
 
@@ -180,6 +181,8 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 				Serial:        model.Serial{ID: 1234},
 				SSOProviderID: null.Int32From(ssoProviderID),
 			},
+			Config: model.SSOProviderConfig{
+				AutoProvision: model.SSOProviderAutoProvisionConfig{Enabled: true, RoleProvision: true}},
 		}
 	)
 
@@ -226,6 +229,24 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 			OnHandlerFunc(resources.UpdateUser).
 			Require().
 			ResponseStatusCode(http.StatusOK)
+	})
+
+	t.Run("Fails if roles set", func(t *testing.T) {
+		mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Eq(badRoles)).Return(model.Roles{model.Role{Serial: model.Serial{ID: 1}}}, nil)
+		mockDB.EXPECT().GetUser(gomock.Any(), goodUserID).Return(model.User{SSOProviderID: null.Int32From(ssoProviderID), SSOProvider: &ssoProvider, Roles: model.Roles{model.Role{Serial: model.Serial{ID: 0}}}}, nil)
+		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), ssoProvider.ID).Return(ssoProvider, nil)
+
+		test.Request(t).
+			WithContext(bhCtx).
+			WithURLPathVars(map[string]string{"user_id": goodUserID.String()}).
+			WithBody(v2.UpdateUserRequest{
+				Principal:     "tester",
+				Roles:         badRoles,
+				SSOProviderID: null.Int32From(ssoProviderID),
+			}).
+			OnHandlerFunc(resources.UpdateUser).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest)
 	})
 
 	t.Run("Successful user update with sso provider-saml", func(t *testing.T) {
@@ -1533,12 +1554,15 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	endpoint := "/api/v2/auth/users"
-	// logged in user has ID 00000000-0000-0000-0000-000000000000
-	// leaving ID blank here will make goodUser have the same ID, so this should fail
-	goodUser := model.User{PrincipalName: "good user"}
+	var (
+		endpoint = "/api/v2/auth/users"
+		// logged in user has ID 00000000-0000-0000-0000-000000000000
+		// leaving ID blank here will make goodUser have the same ID, so this should fail
+		goodUser          = model.User{PrincipalName: "good user"}
+		isDisabled        = true
+		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+	)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
@@ -1585,7 +1609,7 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 	require.Nil(t, err)
 
 	payload, err = json.Marshal(v2.UpdateUserRequest{
-		IsDisabled: true,
+		IsDisabled: &isDisabled,
 	})
 	require.Nil(t, err)
 
@@ -1678,6 +1702,8 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 		},
 	}
 
+	isDisabled := true
+
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
@@ -1726,7 +1752,7 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 	require.Nil(t, err)
 
 	payload, err = json.Marshal(v2.UpdateUserRequest{
-		IsDisabled: true,
+		IsDisabled: &isDisabled,
 	})
 	require.Nil(t, err)
 
@@ -1984,6 +2010,8 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 		},
 	}
 
+	isDisabled := true
+
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
@@ -2036,7 +2064,7 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 	userID, err := uuid.NewV4()
 	require.Nil(t, err)
 	updateUserRequest := v2.UpdateUserRequest{
-		IsDisabled: true,
+		IsDisabled: &isDisabled,
 	}
 
 	payload, err = json.Marshal(updateUserRequest)

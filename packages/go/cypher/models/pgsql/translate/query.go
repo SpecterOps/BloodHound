@@ -32,16 +32,6 @@ func (s *Translator) buildMultiPartSinglePartQuery(singlePartQuery *cypher.Singl
 }
 
 func (s *Translator) buildSinglePartQuery(singlePartQuery *cypher.SinglePartQuery) error {
-	if s.query.CurrentPart().HasMutations() {
-		if err := s.translateUpdates(s.query.Scope); err != nil {
-			s.SetError(err)
-		}
-
-		if err := s.buildUpdates(s.query.Scope); err != nil {
-			s.SetError(err)
-		}
-	}
-
 	if s.query.CurrentPart().HasDeletions() {
 		if err := s.buildDeletions(s.query.Scope); err != nil {
 			s.SetError(err)
@@ -79,9 +69,9 @@ func (s *Translator) buildMultiPartQuery(singlePartQuery *cypher.SinglePartQuery
 			Query: *part.Model,
 		}
 
-		if part.frame != nil {
+		if part.Frame != nil {
 			nextCTE.Alias = pgsql.TableAlias{
-				Name: part.frame.Binding.Identifier,
+				Name: part.Frame.Binding.Identifier,
 			}
 		}
 
@@ -106,7 +96,7 @@ func (s *Translator) translateWith() error {
 	currentPart := s.query.CurrentPart()
 
 	if !currentPart.HasProjections() {
-		currentPart.frame.Exported.Clear()
+		currentPart.Frame.Exported.Clear()
 	} else {
 		var (
 			projectedItems  = pgsql.NewIdentifierSet()
@@ -124,12 +114,16 @@ func (s *Translator) translateWith() error {
 		}
 
 		for idx, projectionItem := range currentPart.projections.Items {
+			if err := RewriteFrameBindings(s.query.Scope, projectionItem.SelectItem); err != nil {
+				return err
+			}
+
 			switch typedSelectItem := projectionItem.SelectItem.(type) {
 			case *pgsql.BinaryExpression:
-				return fmt.Errorf("unhandled case for with statement")
+				return fmt.Errorf("binary expression not supported in with statement")
 
 			case pgsql.CompoundIdentifier:
-				return fmt.Errorf("unhandled case for with statement")
+				return fmt.Errorf("compound identifier not supported in with statement")
 
 			case pgsql.Identifier:
 				if !aggregatedItems.IsEmpty() && !aggregatedItems.Contains(typedSelectItem) {
@@ -151,11 +145,11 @@ func (s *Translator) translateWith() error {
 					}
 
 					// Assign the frame to the binding's last projection backref
-					binding.LastProjection = currentPart.frame
+					binding.LastProjection = currentPart.Frame
 
 					// Reveal and export the identifier in the current multipart query part's frame
-					currentPart.frame.Reveal(binding.Identifier)
-					currentPart.frame.Export(binding.Identifier)
+					currentPart.Frame.Reveal(binding.Identifier)
+					currentPart.Frame.Export(binding.Identifier)
 				}
 
 			default:
@@ -170,22 +164,26 @@ func (s *Translator) translateWith() error {
 						projectedItems.Add(binding.Identifier)
 
 						// Assign the frame to the binding's last projection backref
-						binding.LastProjection = currentPart.frame
+						binding.LastProjection = currentPart.Frame
 
 						// Reveal and export the identifier in the current multipart query part's frame
-						currentPart.frame.Reveal(binding.Identifier)
-						currentPart.frame.Export(binding.Identifier)
+						currentPart.Frame.Reveal(binding.Identifier)
+						currentPart.Frame.Export(binding.Identifier)
 
 						// Rewrite this projection's alias to use the internal binding
 						projectionItem.Alias.Value = binding.Identifier
 					}
 				}
 			}
-
-			// Prune scope to only what's being exported by the with statement
-			currentPart.frame.Visible = projectedItems.Copy()
-			currentPart.frame.Exported = projectedItems.Copy()
 		}
+
+		if err := s.query.Scope.PruneDefinitions(projectedItems); err != nil {
+			return err
+		}
+
+		// Prune scope to only what's being exported by the with statement
+		currentPart.Frame.Visible = projectedItems.Copy()
+		currentPart.Frame.Exported = projectedItems.Copy()
 	}
 
 	return nil
@@ -195,5 +193,5 @@ func (s *Translator) translateMultiPartQueryPart(scope *Scope, part *cypher.Mult
 	queryPart := s.query.CurrentPart()
 
 	// Unwind nested frames
-	return scope.UnwindToFrame(queryPart.frame)
+	return scope.UnwindToFrame(queryPart.Frame)
 }
