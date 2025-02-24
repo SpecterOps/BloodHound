@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { setupWorker } from 'msw';
-// import handlers from './handlers';
-
-// This configures a Service Worker with the given request handlers.
-export const worker = setupWorker();
+export * from './searchParams';
