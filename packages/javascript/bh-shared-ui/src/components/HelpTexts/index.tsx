@@ -76,6 +76,7 @@ import AllowedToAct from './AllowedToAct/AllowedToAct';
 import AllowedToDelegate from './AllowedToDelegate/AllowedToDelegate';
 import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
+import CoerceAndRelayNTLMToLDAP from './CoerceAndRelayNTLMToLDAP/CoerceAndRelayNTLMToLDAP';
 import CoerceAndRelayNTLMToSMB from './CoerceAndRelayNTLMToSMB/CoerceAndRelayNTLMToSMB';
 import CoerceToTGT from './CoerceToTGT/CoerceToTGT';
 import Contains from './Contains/Contains';
@@ -246,6 +247,9 @@ const EdgeInfoComponents = {
     SyncedToADUser: SyncedToADUser,
     SyncedToEntraUser: SyncedToEntraUser,
     CoerceAndRelayNTLMToSMB: CoerceAndRelayNTLMToSMB,
+    // Both CoerceAndRelayNTLMToLDAP and CoerceAndRelayNTLMToLDAPS share the same abuse text
+    CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
+    CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAP,
 };
 
 export default EdgeInfoComponents;

@@ -17,11 +17,9 @@
 package api
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"errors"
-	"io"
 	"strings"
 	"testing"
 	"testing/iotest"
@@ -29,49 +27,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 )
-
-func TestTeeNilBody(t *testing.T) {
-	reader := io.Reader(nil)
-	outA, outB := &bytes.Buffer{}, &bytes.Buffer{}
-
-	err := tee(context.Background(), reader, outA, outB)
-	require.Nil(t, err)
-	require.Nil(t, outA.Bytes())
-	require.Nil(t, outB.Bytes())
-}
-
-func TestTeeReadError(t *testing.T) {
-	reader := iotest.ErrReader(errors.New("custom error"))
-	outA, outB := &bytes.Buffer{}, &bytes.Buffer{}
-
-	err := tee(context.Background(), reader, outA, outB)
-	require.Error(t, err)
-}
-
-func TestTeeContextTimeout(t *testing.T) {
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Microsecond))
-	defer cancel()
-	time.Sleep(2 * time.Microsecond)
-
-	reader := strings.NewReader("Hello world")
-	outA, outB := &bytes.Buffer{}, &bytes.Buffer{}
-
-	err := tee(ctx, reader, outA, outB)
-	require.Error(t, err)
-	require.Equal(t, err.Error(), "context deadline exceeded")
-}
-
-func TestTeeSuccess(t *testing.T) {
-	reader := strings.NewReader("Hello world")
-	outA, outB := &bytes.Buffer{}, &bytes.Buffer{}
-
-	err := tee(context.Background(), reader, outA, outB)
-	require.Nil(t, err)
-
-	expected := "Hello world"
-	require.Equal(t, expected, outA.String())
-	require.Equal(t, expected, outB.String())
-}
 
 func TestSignRequestValuesUnsupportedHMACMethod(t *testing.T) {
 	datetime := time.Now().Format(time.RFC3339)

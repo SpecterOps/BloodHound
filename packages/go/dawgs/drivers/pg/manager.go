@@ -37,6 +37,15 @@ type KindMapper interface {
 	AssertKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error)
 }
 
+func KindMapperFromGraphDatabase(graphDB graph.Database) (KindMapper, error) {
+	switch typedGraphDB := graphDB.(type) {
+	case *Driver:
+		return typedGraphDB.schemaManager, nil
+	default:
+		return nil, fmt.Errorf("unsupported graph database type: %T", typedGraphDB)
+	}
+}
+
 type SchemaManager struct {
 	defaultGraph    model.Graph
 	database        graph.Database
