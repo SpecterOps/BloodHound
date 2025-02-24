@@ -60,11 +60,7 @@ const getInitialTab = (searchType: ExploreQueryParams['searchType']) => {
     return 'node';
 };
 
-interface ExploreSearchProps {
-    onTabChange?: (tab: string) => void;
-}
-
-const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
+const ExploreSearchV2: React.FC = () => {
     /* Hooks */
     const classes = useStyles();
 
@@ -82,17 +78,14 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
     const handleTabChange = (newTabIndex: number) => {
         switch (newTabIndex) {
             case 0:
-                onTabChange('search');
                 setActiveTab('node');
                 setExploreParams({ searchType: 'node' });
                 break;
             case 1:
-                onTabChange('pathfinding');
                 setActiveTab('pathfinding');
                 setExploreParams({ searchType: 'pathfinding' });
                 break;
             case 2:
-                onTabChange('cypher');
                 setActiveTab('cypher');
                 setExploreParams({ searchType: 'cypher' });
                 break;
@@ -229,4 +222,4 @@ const TabPanels = ({ tabs, activeTab }: TabPanelsProps) => {
     );
 };
 
-export default ExploreSearch;
+export default ExploreSearchV2;

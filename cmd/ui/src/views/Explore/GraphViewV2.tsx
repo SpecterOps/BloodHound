@@ -25,6 +25,7 @@ import {
     setEdgeInfoOpen,
     setSelectedEdge,
     useAvailableDomains,
+    useExploreParams,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -63,38 +64,27 @@ const GraphViewV2: FC = () => {
     const dispatch = useAppDispatch();
 
     const graphState: GraphState = useAppSelector((state) => state.explore);
-
     const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
-
     const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
-
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-
-    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
-
-    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-
-    const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
-
-    const { data, isLoading, isError } = useAvailableDomains();
-
-    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-
     const exportableGraphState = useAppSelector((state) => state.explore.export);
-
-    const sigmaChartRef = useRef<any>(null);
-
-    const currentSearchAnchorElement = useRef(null);
-
     const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
-
     const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
 
-    const [columns, setColumns] = useState(columnsDefault);
+    const { data, isLoading, isError } = useAvailableDomains();
+    const { searchType } = useExploreParams();
 
+    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
+    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
     const [showNodeLabels, setShowNodeLabels] = useState(true);
-
     const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+    const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
+
+    const sigmaChartRef = useRef<any>(null);
+    const currentSearchAnchorElement = useRef(null);
+
+    const columns = searchType === 'cypher' ? cypherSearchColumns : columnsDefault;
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;
@@ -175,10 +165,6 @@ const GraphViewV2: FC = () => {
         setContextMenu(null);
     };
 
-    const handleCypherTab = (tab: string) => {
-        tab === 'cypher' ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
-    };
-
     return (
         <Box
             sx={{
@@ -220,7 +206,7 @@ const GraphViewV2: FC = () => {
                         gap: 2,
                     }}
                     key={'exploreSearch'}>
-                    <ExploreSearchV2 onTabChange={handleCypherTab} />
+                    <ExploreSearchV2 />
                     <Box
                         sx={{
                             pointerEvents: 'auto',
