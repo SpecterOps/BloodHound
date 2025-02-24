@@ -88,11 +88,12 @@ const MainNavItemLink: FC<{
     testId: string;
     persistentSearchParams: MainNavDataListItem['persistentSearchParams'];
 }> = ({ route, children, hoverActive, testId, persistentSearchParams }) => {
-    const search = persistSearchParams(persistentSearchParams);
+    const search = persistentSearchParams ? persistSearchParams(persistentSearchParams).toString() : undefined;
+
     return (
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed
         <RouterLink
-            to={{ pathname: route, search: search.toString() }}
+            to={{ pathname: route, search }}
             className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline cursor-default', {
                 'group-hover:w-full cursor-pointer': hoverActive,
             })}
