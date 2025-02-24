@@ -16,9 +16,9 @@
 
 import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Paper, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
+import { Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { CYPHER_SEARCH, Icon, PATHFINDING_SEARCH, PRIMARY_SEARCH, searchbarActions } from 'bh-shared-ui';
+import { CYPHER_SEARCH, Icon, PATHFINDING_SEARCH, PRIMARY_SEARCH, cn, searchbarActions } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import CypherSearch from './CypherSearch';
@@ -38,15 +38,6 @@ const useStyles = makeStyles((theme) => ({
         padding: theme.spacing(2),
         fontSize: theme.typography.fontSize,
         color: theme.palette.color.primary,
-    },
-    tab: {
-        height: '40px',
-        minHeight: '40px',
-        color: theme.palette.primary.main,
-        opacity: 1,
-        padding: 0,
-        flexGrow: 1,
-        minWidth: theme.spacing(2),
     },
 }));
 
@@ -96,25 +87,11 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
     };
 
     return (
-        <Box
-            sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: 0,
-                gap: 1,
-            }}>
-            <Paper
-                sx={{
-                    height: '40px',
-                    display: 'flex',
-                    flexShrink: 0,
-                    gap: 1,
-                    backgroundColor: theme.palette.neutral.secondary,
-                    borderRadius: '8px',
-                    pointerEvents: 'auto',
-                }}
-                elevation={0}>
+        <div
+            className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded-lg shadow-[1px solid white]', {
+                'w-[600px]': activeTab === tabNameMap.cypher && showSearchWidget,
+            })}>
+            <div className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'>
                 <Icon
                     className={classes.icon}
                     click={() => {
@@ -127,54 +104,35 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
                     value={activeTab}
                     onChange={(e, newTabIdx) => handleTabChange(newTabIdx)}
                     onClick={() => setShowSearchWidget(true)}
-                    sx={{
-                        height: '40px',
-                        minHeight: '40px',
-                        display: 'flex',
-                        justifyContent: 'space-around',
-                        width: '100%',
-                    }}
+                    className='h-10 min-h-10 w-full'
                     TabIndicatorProps={{
-                        sx: { height: 3, backgroundColor: '#6798B9' },
+                        className: 'h-[3px]',
                     }}>
-                    {getTabsContent(classes.tab, matches)}
+                    {getTabsContent(matches)}
                 </Tabs>
-            </Paper>
+            </div>
 
-            <Box
-                display={showSearchWidget ? 'flex' : 'none'}
-                sx={{
-                    minHeight: 0,
-                    flexDirection: 'column',
-                }}>
-                <Paper
-                    sx={{
-                        p: 1,
-                        backgroundColor: theme.palette.neutral.secondary,
-                        borderRadius: '8px',
-                        boxSizing: 'border-box',
-                        height: '100%',
-                        pointerEvents: 'auto',
-                    }}
-                    elevation={0}>
-                    <TabPanels
-                        tabs={[
-                            // This linting rule is disabled because the elements in this array do not require a key prop.
-                            /* eslint-disable react/jsx-key */
-                            <NodeSearch />,
-                            <PathfindingSearch />,
-                            <CypherSearch />,
-                            /* eslint-enable react/jsx-key */
-                        ]}
-                        activeTab={activeTab}
-                    />
-                </Paper>
-            </Box>
-        </Box>
+            <div
+                className={cn('hidden min-h-0 p-2 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]', {
+                    block: showSearchWidget,
+                })}>
+                <TabPanels
+                    tabs={[
+                        // This linting rule is disabled because the elements in this array do not require a key prop.
+                        /* eslint-disable react/jsx-key */
+                        <NodeSearch />,
+                        <PathfindingSearch />,
+                        <CypherSearch />,
+                        /* eslint-enable react/jsx-key */
+                    ]}
+                    activeTab={activeTab}
+                />
+            </div>
+        </div>
     );
 };
 
-const getTabsContent = (className: string, matches: boolean) => {
+const getTabsContent = (matches: boolean) => {
     const tabs = [
         {
             label: 'Search',
@@ -197,7 +155,7 @@ const getTabsContent = (className: string, matches: boolean) => {
             icon={<FontAwesomeIcon icon={icon} />}
             iconPosition='start'
             title={label}
-            className={className}
+            className='h-10 min-h-10'
         />
     ));
 };
@@ -213,9 +171,9 @@ const TabPanels = ({ tabs, activeTab }: TabPanelsProps) => {
             {tabs.map((tab, index) => {
                 if (activeTab === index) {
                     return (
-                        <Box role='tabpanel' key={index} height='100%'>
+                        <div role='tabpanel' key={index} className='h-full'>
                             {tab}
-                        </Box>
+                        </div>
                     );
                 } else {
                     return null;
