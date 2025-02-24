@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import GroupManagementContent from './GroupManagementContent';
+import GroupManagementContentFeatureToggle from './GroupManagementContentFeatureToggle';
 
-export default GroupManagementContent;
+export default GroupManagementContentFeatureToggle;
 export * from './types';
