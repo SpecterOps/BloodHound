@@ -18,6 +18,7 @@ package translate_test
 
 import (
 	"fmt"
+	"runtime/debug"
 	"testing"
 
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/pgutil"
@@ -57,6 +58,13 @@ func TestTranslate(t *testing.T) {
 	} else {
 		for _, testCase := range testCases {
 			t.Run(testCase.Name, func(t *testing.T) {
+				defer func() {
+					if err := recover(); err != nil {
+						debug.PrintStack()
+						t.Error(err)
+					}
+				}()
+
 				testCase.Assert(t, testCase.PgSQL, kindMapper)
 			})
 

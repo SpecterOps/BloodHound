@@ -129,6 +129,7 @@ services:
       bhe_graph_query_memory_limit: ${bhe_graph_query_memory_limit:-2}
       bhe_enable_text_logger: ${bhe_enable_text_logger:-true}
       bhe_recreate_default_admin: ${bhe_recreate_default_admin:-false}
+      bhe_graph_driver: ${bhe_graph_driver:-neo4j}
     ports:
       - ${BH_API_PORT:-127.0.0.1:8080}:8080
       - ${TOOLAPI_PORT:-127.0.0.1:2112}:2112

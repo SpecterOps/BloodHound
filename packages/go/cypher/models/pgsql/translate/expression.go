@@ -202,7 +202,7 @@ func inferBinaryExpressionType(expression *pgsql.BinaryExpression) (pgsql.DataTy
 
 func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 	switch typedExpression := expression.(type) {
-	case pgsql.Identifier, pgsql.CompoundExpression:
+	case pgsql.Identifier, pgsql.RowColumnReference:
 		return pgsql.UnknownDataType, nil
 
 	case pgsql.CompoundIdentifier:
@@ -410,11 +410,14 @@ func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
 		} else {
 			// In an any-expression where the type of the any-expression is unknown, attempt to infer it
 			if !typedROperand.CastType.IsKnown() {
-				if rOperandArrayTypeHint, err := lOperandTypeHint.ToArrayType(); err != nil {
+				if !lOperandTypeHint.IsKnown() {
+					// If the left operand has no type information then assume this is a castable any array
+					typedROperand.CastType = pgsql.AnyArray
+				} else if rOperandArrayTypeHint, err := lOperandTypeHint.ToArrayType(); err != nil {
 					return err
 				} else {
 					typedROperand.CastType = rOperandArrayTypeHint
-					expression.LOperand = typedROperand
+					expression.ROperand = typedROperand
 				}
 			} else if !lOperandTypeHint.IsKnown() {
 				expression.LOperand = pgsql.NewTypeCast(expression.LOperand, typedROperand.CastType.ArrayBaseType())
@@ -422,7 +425,7 @@ func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
 				// Validate against the array base type of the any-expression
 				rOperandBaseType := typedROperand.CastType.ArrayBaseType()
 
-				if !rOperandBaseType.IsComparable(lOperandTypeHint, expression.Operator) {
+				if !typedROperand.CastType.IsComparable(lOperandTypeHint, expression.Operator) && !rOperandBaseType.IsComparable(lOperandTypeHint, expression.Operator) {
 					return fmt.Errorf("function call has return signature of type %s but is being compared using operator %s against type %s", typedROperand.CastType, expression.Operator, lOperandTypeHint)
 				}
 			}
@@ -435,13 +438,12 @@ func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
 			if !typedROperand.CastType.IsKnown() {
 				typedROperand.CastType = lOperandTypeHint
 				expression.ROperand = typedROperand
-			}
-
-			if pgsql.OperatorIsComparator(expression.Operator) && !typedROperand.CastType.IsComparable(lOperandTypeHint, expression.Operator) {
+			} else if !lOperandTypeHint.IsKnown() {
+				expression.LOperand = pgsql.NewTypeCast(expression.LOperand, typedROperand.CastType.ArrayBaseType())
+			} else if pgsql.OperatorIsComparator(expression.Operator) && !typedROperand.CastType.IsComparable(lOperandTypeHint, expression.Operator) {
 				return newFunctionCallComparatorError(typedROperand, expression.Operator, lOperandTypeHint)
 			}
 		}
-
 	}
 
 	return nil
@@ -700,382 +702,402 @@ func (s *ExpressionTreeTranslator) PopBinaryExpression(operator pgsql.Operator) 
 	}
 }
 
-func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operator pgsql.Operator) error {
-	if newExpression, err := s.PopBinaryExpression(operator); err != nil {
-		return err
-	} else {
-		// Switch to handle entity type references
-		switch typedLOperand := newExpression.LOperand.(type) {
-		case pgsql.Identifier:
-			// If the left side is an identifier we need to inspect the type of the identifier bound in our scope
-			if boundLOperand, bound := scope.Lookup(typedLOperand); !bound {
-				return fmt.Errorf("unknown identifier %s", typedLOperand)
-			} else {
-				switch typedROperand := newExpression.ROperand.(type) {
-				case pgsql.Identifier:
-					// If the right side is an identifier, inspect to see if the identifiers are an entity comparison.
-					// For example: match (n1)-[]->(n2) where n1 <> n2 return n2
-					if boundROperand, bound := scope.Lookup(typedROperand); !bound {
-						return fmt.Errorf("unknown identifier %s", typedROperand)
-					} else {
-						switch boundLOperand.DataType {
-						case pgsql.NodeComposite, pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
-							switch boundROperand.DataType {
-							case pgsql.NodeComposite, pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
-							default:
-								return fmt.Errorf("invalid comparison between types %s and %s", boundLOperand.DataType, boundROperand.DataType)
-							}
+func rewriteIdentityOperands(scope *Scope, newExpression *pgsql.BinaryExpression) error {
+	switch typedLOperand := newExpression.LOperand.(type) {
+	case pgsql.Identifier:
+		// If the left side is an identifier we need to inspect the type of the identifier bound in our scope
+		if boundLOperand, bound := scope.Lookup(typedLOperand); !bound {
+			return fmt.Errorf("unknown identifier %s", typedLOperand)
+		} else {
+			switch typedROperand := newExpression.ROperand.(type) {
+			case pgsql.Identifier:
+				// If the right side is an identifier, inspect to see if the identifiers are an entity comparison.
+				// For example: match (n1)-[]->(n2) where n1 <> n2 return n2
+				if boundROperand, bound := scope.Lookup(typedROperand); !bound {
+					return fmt.Errorf("unknown identifier %s", typedROperand)
+				} else {
+					switch boundLOperand.DataType {
+					case pgsql.NodeCompositeArray:
+						return fmt.Errorf("unsupported pgsql.NodeCompositeArray")
 
+					case pgsql.NodeComposite, pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
+						switch boundROperand.DataType {
+						case pgsql.NodeComposite, pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
 							// If this is a node entity comparison of some kind then the AST must be rewritten to use identity properties
 							newExpression.LOperand = pgsql.CompoundIdentifier{typedLOperand, pgsql.ColumnID}
 							newExpression.ROperand = pgsql.CompoundIdentifier{typedROperand, pgsql.ColumnID}
 
-						case pgsql.EdgeComposite, pgsql.ExpansionEdge:
-							switch boundROperand.DataType {
-							case pgsql.EdgeComposite, pgsql.ExpansionEdge:
-							default:
-								return fmt.Errorf("invalid comparison between types %s and %s", boundLOperand.DataType, boundROperand.DataType)
-							}
+						case pgsql.NodeCompositeArray:
+							newExpression.LOperand = pgsql.CompoundIdentifier{typedLOperand, pgsql.ColumnID}
+							newExpression.ROperand = pgsql.CompoundIdentifier{typedROperand, pgsql.ColumnID}
 
+						default:
+							return fmt.Errorf("invalid comparison between types %s and %s", boundLOperand.DataType, boundROperand.DataType)
+						}
+
+					case pgsql.EdgeCompositeArray:
+						return fmt.Errorf("unsupported pgsql.EdgeCompositeArray")
+
+					case pgsql.EdgeComposite, pgsql.ExpansionEdge:
+						switch boundROperand.DataType {
+						case pgsql.EdgeComposite, pgsql.ExpansionEdge:
 							// If this is an edge entity comparison of some kind then the AST must be rewritten to use identity properties
 							newExpression.LOperand = pgsql.CompoundIdentifier{typedLOperand, pgsql.ColumnID}
 							newExpression.ROperand = pgsql.CompoundIdentifier{typedROperand, pgsql.ColumnID}
 
-						case pgsql.PathComposite:
-							return fmt.Errorf("comparison for path identifiers is unsupported")
+						case pgsql.EdgeCompositeArray:
+							newExpression.LOperand = pgsql.CompoundIdentifier{typedLOperand, pgsql.ColumnID}
+							newExpression.ROperand = pgsql.CompoundIdentifier{typedROperand, pgsql.ColumnID}
+
+						default:
+							return fmt.Errorf("invalid comparison between types %s and %s", boundLOperand.DataType, boundROperand.DataType)
 						}
+
+					case pgsql.PathComposite:
+						return fmt.Errorf("comparison for path identifiers is unsupported")
 					}
 				}
 			}
 		}
+	}
 
-		switch operator {
-		case pgsql.OperatorCypherAdd:
-			isConcatenationOperation := func(lOperandType, rOperandType pgsql.DataType) bool {
-				// Any use of an array type automatically assumes concatenation
-				if lOperandType.IsArrayType() || rOperandType.IsArrayType() {
+	return nil
+}
+
+func (s *ExpressionTreeTranslator) rewriteBinaryExpression(newExpression *pgsql.BinaryExpression) error {
+	switch newExpression.Operator {
+	case pgsql.OperatorCypherAdd:
+		isConcatenationOperation := func(lOperandType, rOperandType pgsql.DataType) bool {
+			// Any use of an array type automatically assumes concatenation
+			if lOperandType.IsArrayType() || rOperandType.IsArrayType() {
+				return true
+			}
+
+			switch lOperandType {
+			case pgsql.Text:
+				switch rOperandType {
+				case pgsql.Text:
 					return true
 				}
-
-				switch lOperandType {
-				case pgsql.Text:
-					switch rOperandType {
-					case pgsql.Text:
-						return true
-					}
-				}
-
-				return false
 			}
 
-			// In the case of the use of the cypher `+` operator we must attempt to disambiguate if the intent
-			// is to concatenate or to perform an addition
-			if lOperandType, err := InferExpressionType(newExpression.LOperand); err != nil {
+			return false
+		}
+
+		// In the case of the use of the cypher `+` operator we must attempt to disambiguate if the intent
+		// is to concatenate or to perform an addition
+		if lOperandType, err := InferExpressionType(newExpression.LOperand); err != nil {
+			return err
+		} else if rOperandType, err := InferExpressionType(newExpression.ROperand); err != nil {
+			return err
+		} else if isConcatenationOperation(lOperandType, rOperandType) {
+			newExpression.Operator = pgsql.OperatorConcatenate
+		}
+
+		s.Push(newExpression)
+
+	case pgsql.OperatorCypherContains:
+		newExpression.Operator = pgsql.OperatorLike
+
+		switch typedLOperand := newExpression.LOperand.(type) {
+		case *pgsql.BinaryExpression:
+			switch typedLOperand.Operator {
+			case pgsql.OperatorPropertyLookup, pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
+			default:
+				return fmt.Errorf("unexpected operator %s for binary expression \"%s\" left operand", typedLOperand.Operator, newExpression.Operator)
+			}
+		}
+
+		switch typedROperand := newExpression.ROperand.(type) {
+		case pgsql.Literal:
+			if rOperandDataType := typedROperand.TypeHint(); rOperandDataType != pgsql.Text {
+				return fmt.Errorf("expected %s data type but found %s as right operand for operator %s", pgsql.Text, rOperandDataType, newExpression.Operator)
+			} else if stringValue, isString := typedROperand.Value.(string); !isString {
+				return fmt.Errorf("expected string but found %T as right operand for operator %s", typedROperand.Value, newExpression.Operator)
+			} else {
+				newExpression.ROperand = pgsql.NewLiteral("%"+stringValue+"%", rOperandDataType)
+			}
+
+		case pgsql.Parenthetical:
+			if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
 				return err
-			} else if rOperandType, err := InferExpressionType(newExpression.ROperand); err != nil {
-				return err
-			} else if isConcatenationOperation(lOperandType, rOperandType) {
-				newExpression.Operator = pgsql.OperatorConcatenate
-			}
-
-			s.Push(newExpression)
-
-		case pgsql.OperatorCypherContains:
-			newExpression.Operator = pgsql.OperatorLike
-
-			switch typedLOperand := newExpression.LOperand.(type) {
-			case *pgsql.BinaryExpression:
-				switch typedLOperand.Operator {
-				case pgsql.OperatorPropertyLookup, pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
-				default:
-					return fmt.Errorf("unexpected operator %s for binary expression \"%s\" left operand", typedLOperand.Operator, operator)
-				}
-			}
-
-			switch typedROperand := newExpression.ROperand.(type) {
-			case *pgsql.Parameter:
+			} else {
 				newExpression.ROperand = pgsql.NewBinaryExpression(
 					pgsql.NewLiteral("%", pgsql.Text),
 					pgsql.OperatorConcatenate,
 					pgsql.NewBinaryExpression(
-						typedROperand,
+						typeCastedROperand,
 						pgsql.OperatorConcatenate,
 						pgsql.NewLiteral("%", pgsql.Text),
 					),
 				)
-
-			case pgsql.Literal:
-				if rOperandDataType := typedROperand.TypeHint(); rOperandDataType != pgsql.Text {
-					return fmt.Errorf("expected %s data type but found %s as right operand for operator %s", pgsql.Text, rOperandDataType, operator)
-				} else if stringValue, isString := typedROperand.Value.(string); !isString {
-					return fmt.Errorf("expected string but found %T as right operand for operator %s", typedROperand.Value, operator)
-				} else {
-					newExpression.ROperand = pgsql.NewLiteral("%"+stringValue+"%", rOperandDataType)
-				}
-
-			case pgsql.Parenthetical:
-				if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
-					return err
-				} else {
-					newExpression.ROperand = pgsql.NewBinaryExpression(
-						pgsql.NewLiteral("%", pgsql.Text),
-						pgsql.OperatorConcatenate,
-						pgsql.NewBinaryExpression(
-							typeCastedROperand,
-							pgsql.OperatorConcatenate,
-							pgsql.NewLiteral("%", pgsql.Text),
-						),
-					)
-				}
-
-			case *pgsql.BinaryExpression:
-				if stringLiteral, err := pgsql.AsLiteral("%"); err != nil {
-					return err
-				} else {
-					if pgsql.OperatorIsPropertyLookup(typedROperand.Operator) {
-						typedROperand.Operator = pgsql.OperatorJSONTextField
-					}
-
-					newExpression.ROperand = pgsql.NewTypeCast(pgsql.NewBinaryExpression(
-						stringLiteral,
-						pgsql.OperatorConcatenate,
-						pgsql.NewBinaryExpression(
-							&pgsql.Parenthetical{
-								Expression: typedROperand,
-							},
-							pgsql.OperatorConcatenate,
-							stringLiteral,
-						),
-					), pgsql.Text)
-				}
-
-			default:
-				return fmt.Errorf("unexpected right operand %T for operator %s", newExpression.ROperand, operator)
 			}
 
-			s.Push(newExpression)
-
-		case pgsql.OperatorCypherRegexMatch:
-			newExpression.Operator = pgsql.OperatorRegexMatch
-			s.Push(newExpression)
-
-		case pgsql.OperatorCypherStartsWith:
-			newExpression.Operator = pgsql.OperatorLike
-
-			switch typedLOperand := newExpression.LOperand.(type) {
-			case *pgsql.BinaryExpression:
-				switch typedLOperand.Operator {
-				case pgsql.OperatorPropertyLookup, pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
-				default:
-					return fmt.Errorf("unexpected operator %s for binary expression \"%s\" left operand", typedLOperand.Operator, operator)
+		case *pgsql.BinaryExpression:
+			if stringLiteral, err := pgsql.AsLiteral("%"); err != nil {
+				return err
+			} else {
+				if pgsql.OperatorIsPropertyLookup(typedROperand.Operator) {
+					typedROperand.Operator = pgsql.OperatorJSONTextField
 				}
 
-				switch typedROperand := newExpression.ROperand.(type) {
-				case *pgsql.Parameter:
-					newExpression.ROperand = pgsql.NewBinaryExpression(
-						typedROperand,
-						pgsql.OperatorConcatenate,
-						pgsql.NewLiteral("%", pgsql.Text),
-					)
-
-				case pgsql.Literal:
-					if rOperandDataType := typedROperand.TypeHint(); rOperandDataType != pgsql.Text {
-						return fmt.Errorf("expected %s data type but found %s as right operand for operator %s", pgsql.Text, rOperandDataType, operator)
-					} else if stringValue, isString := typedROperand.Value.(string); !isString {
-						return fmt.Errorf("expected string but found %T as right operand for operator %s", typedROperand.Value, operator)
-					} else {
-						newExpression.ROperand = pgsql.NewLiteral(stringValue+"%", rOperandDataType)
-					}
-
-				case pgsql.Parenthetical:
-					if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
-						return err
-					} else {
-						newExpression.ROperand = pgsql.NewBinaryExpression(
-							typeCastedROperand,
-							pgsql.OperatorConcatenate,
-							pgsql.NewLiteral("%", pgsql.Text),
-						)
-					}
-
-				case *pgsql.BinaryExpression:
-					if stringLiteral, err := pgsql.AsLiteral("%"); err != nil {
-						return err
-					} else {
-						if pgsql.OperatorIsPropertyLookup(typedROperand.Operator) {
-							typedROperand.Operator = pgsql.OperatorJSONTextField
-						}
-
-						newExpression.ROperand = pgsql.NewTypeCast(pgsql.NewBinaryExpression(
-							&pgsql.Parenthetical{
-								Expression: typedROperand,
-							},
-							pgsql.OperatorConcatenate,
-							stringLiteral,
-						), pgsql.Text)
-					}
-
-				default:
-					return fmt.Errorf("unexpected right operand %T for operator %s", newExpression.ROperand, operator)
-				}
-			}
-
-			s.Push(newExpression)
-
-		case pgsql.OperatorCypherEndsWith:
-			newExpression.Operator = pgsql.OperatorLike
-
-			switch typedLOperand := newExpression.LOperand.(type) {
-			case *pgsql.BinaryExpression:
-				switch typedLOperand.Operator {
-				case pgsql.OperatorPropertyLookup, pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
-				default:
-					return fmt.Errorf("unexpected operator %s for binary expression \"%s\" left operand", typedLOperand.Operator, operator)
-				}
-
-				switch typedROperand := newExpression.ROperand.(type) {
-				case *pgsql.Parameter:
-					newExpression.ROperand = pgsql.NewBinaryExpression(
-						pgsql.NewLiteral("%", pgsql.Text),
-						pgsql.OperatorConcatenate,
-						typedROperand,
-					)
-
-				case pgsql.Literal:
-					if rOperandDataType := typedROperand.TypeHint(); rOperandDataType != pgsql.Text {
-						return fmt.Errorf("expected %s data type but found %s as right operand for operator %s", pgsql.Text, rOperandDataType, operator)
-					} else if stringValue, isString := typedROperand.Value.(string); !isString {
-						return fmt.Errorf("expected string but found %T as right operand for operator %s", typedROperand.Value, operator)
-					} else {
-						newExpression.ROperand = pgsql.NewLiteral("%"+stringValue, rOperandDataType)
-					}
-
-				case pgsql.Parenthetical:
-					if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
-						return err
-					} else {
-						newExpression.ROperand = pgsql.NewBinaryExpression(
-							pgsql.NewLiteral("%", pgsql.Text),
-							pgsql.OperatorConcatenate,
-							typeCastedROperand,
-						)
-					}
-
-				case *pgsql.BinaryExpression:
-					if pgsql.OperatorIsPropertyLookup(typedROperand.Operator) {
-						typedROperand.Operator = pgsql.OperatorJSONTextField
-					}
-
-					newExpression.ROperand = pgsql.NewTypeCast(pgsql.NewBinaryExpression(
-						pgsql.NewLiteral("%", pgsql.Text),
-						pgsql.OperatorConcatenate,
+				newExpression.ROperand = pgsql.NewTypeCast(pgsql.NewBinaryExpression(
+					stringLiteral,
+					pgsql.OperatorConcatenate,
+					pgsql.NewBinaryExpression(
 						&pgsql.Parenthetical{
 							Expression: typedROperand,
 						},
-					), pgsql.Text)
-
-				default:
-					return fmt.Errorf("unexpected right operand %T for operator %s", newExpression.ROperand, operator)
-				}
+						pgsql.OperatorConcatenate,
+						stringLiteral,
+					),
+				), pgsql.Text)
 			}
 
-			s.Push(newExpression)
+		default:
+			newExpression.ROperand = pgsql.NewBinaryExpression(
+				pgsql.NewLiteral("%", pgsql.Text),
+				pgsql.OperatorConcatenate,
+				pgsql.NewBinaryExpression(
+					typedROperand,
+					pgsql.OperatorConcatenate,
+					pgsql.NewLiteral("%", pgsql.Text),
+				),
+			)
+		}
 
-		case pgsql.OperatorIs:
-			switch typedLOperand := newExpression.LOperand.(type) {
+		s.Push(newExpression)
+
+	case pgsql.OperatorCypherRegexMatch:
+		newExpression.Operator = pgsql.OperatorRegexMatch
+		s.Push(newExpression)
+
+	case pgsql.OperatorCypherStartsWith:
+		newExpression.Operator = pgsql.OperatorLike
+
+		switch typedLOperand := newExpression.LOperand.(type) {
+		case *pgsql.BinaryExpression:
+			switch typedLOperand.Operator {
+			case pgsql.OperatorPropertyLookup, pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
+			default:
+				return fmt.Errorf("unexpected operator %s for binary expression \"%s\" left operand", typedLOperand.Operator, newExpression.Operator)
+			}
+		}
+
+		switch typedROperand := newExpression.ROperand.(type) {
+		case pgsql.Literal:
+			if rOperandDataType := typedROperand.TypeHint(); rOperandDataType != pgsql.Text {
+				return fmt.Errorf("expected %s data type but found %s as right operand for operator %s", pgsql.Text, rOperandDataType, newExpression.Operator)
+			} else if stringValue, isString := typedROperand.Value.(string); !isString {
+				return fmt.Errorf("expected string but found %T as right operand for operator %s", typedROperand.Value, newExpression.Operator)
+			} else {
+				newExpression.ROperand = pgsql.NewLiteral(stringValue+"%", rOperandDataType)
+			}
+
+		case pgsql.Parenthetical:
+			if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
+				return err
+			} else {
+				newExpression.ROperand = pgsql.NewBinaryExpression(
+					typeCastedROperand,
+					pgsql.OperatorConcatenate,
+					pgsql.NewLiteral("%", pgsql.Text),
+				)
+			}
+
+		case *pgsql.BinaryExpression:
+			if stringLiteral, err := pgsql.AsLiteral("%"); err != nil {
+				return err
+			} else {
+				if pgsql.OperatorIsPropertyLookup(typedROperand.Operator) {
+					typedROperand.Operator = pgsql.OperatorJSONTextField
+				}
+
+				newExpression.ROperand = pgsql.NewTypeCast(pgsql.NewBinaryExpression(
+					&pgsql.Parenthetical{
+						Expression: typedROperand,
+					},
+					pgsql.OperatorConcatenate,
+					stringLiteral,
+				), pgsql.Text)
+			}
+
+		default:
+			newExpression.ROperand = pgsql.NewBinaryExpression(
+				typedROperand,
+				pgsql.OperatorConcatenate,
+				pgsql.NewLiteral("%", pgsql.Text),
+			)
+		}
+
+		s.Push(newExpression)
+
+	case pgsql.OperatorCypherEndsWith:
+		newExpression.Operator = pgsql.OperatorLike
+
+		switch typedLOperand := newExpression.LOperand.(type) {
+		case *pgsql.BinaryExpression:
+			switch typedLOperand.Operator {
+			case pgsql.OperatorPropertyLookup, pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
+			default:
+				return fmt.Errorf("unexpected operator %s for binary expression \"%s\" left operand", typedLOperand.Operator, newExpression.Operator)
+			}
+		}
+
+		switch typedROperand := newExpression.ROperand.(type) {
+		case pgsql.Literal:
+			if rOperandDataType := typedROperand.TypeHint(); rOperandDataType != pgsql.Text {
+				return fmt.Errorf("expected %s data type but found %s as right operand for operator %s", pgsql.Text, rOperandDataType, newExpression.Operator)
+			} else if stringValue, isString := typedROperand.Value.(string); !isString {
+				return fmt.Errorf("expected string but found %T as right operand for operator %s", typedROperand.Value, newExpression.Operator)
+			} else {
+				newExpression.ROperand = pgsql.NewLiteral("%"+stringValue, rOperandDataType)
+			}
+
+		case pgsql.Parenthetical:
+			if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
+				return err
+			} else {
+				newExpression.ROperand = pgsql.NewBinaryExpression(
+					pgsql.NewLiteral("%", pgsql.Text),
+					pgsql.OperatorConcatenate,
+					typeCastedROperand,
+				)
+			}
+
+		case *pgsql.BinaryExpression:
+			if pgsql.OperatorIsPropertyLookup(typedROperand.Operator) {
+				typedROperand.Operator = pgsql.OperatorJSONTextField
+			}
+
+			newExpression.ROperand = pgsql.NewTypeCast(pgsql.NewBinaryExpression(
+				pgsql.NewLiteral("%", pgsql.Text),
+				pgsql.OperatorConcatenate,
+				&pgsql.Parenthetical{
+					Expression: typedROperand,
+				},
+			), pgsql.Text)
+
+		default:
+			newExpression.ROperand = pgsql.NewBinaryExpression(
+				pgsql.NewLiteral("%", pgsql.Text),
+				pgsql.OperatorConcatenate,
+				typedROperand,
+			)
+		}
+
+		s.Push(newExpression)
+
+	case pgsql.OperatorIs:
+		switch typedLOperand := newExpression.LOperand.(type) {
+		case *pgsql.BinaryExpression:
+			switch typedLOperand.Operator {
+			case pgsql.OperatorPropertyLookup, pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
+				// This is a null-check against a property. This should be rewritten using the JSON field exists
+				// operator instead. It can be
+				switch typedROperand := newExpression.ROperand.(type) {
+				case pgsql.Literal:
+					if typedROperand.Null {
+						newExpression.Operator = pgsql.OperatorJSONBFieldExists
+						newExpression.LOperand = typedLOperand.LOperand
+						newExpression.ROperand = typedLOperand.ROperand
+					}
+
+					s.Push(pgsql.NewUnaryExpression(pgsql.OperatorNot, newExpression))
+				}
+			}
+		}
+
+	case pgsql.OperatorIsNot:
+		switch typedLOperand := newExpression.LOperand.(type) {
+		case *pgsql.BinaryExpression:
+			switch typedLOperand.Operator {
+			case pgsql.OperatorPropertyLookup, pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
+				// This is a null-check against a property. This should be rewritten using the JSON field exists
+				// operator instead. It can be
+				switch typedROperand := newExpression.ROperand.(type) {
+				case pgsql.Literal:
+					if typedROperand.Null {
+						newExpression.Operator = pgsql.OperatorJSONBFieldExists
+						newExpression.LOperand = typedLOperand.LOperand
+						newExpression.ROperand = typedLOperand.ROperand
+					}
+
+					s.Push(newExpression)
+				}
+			}
+		}
+
+	case pgsql.OperatorIn:
+		newExpression.Operator = pgsql.OperatorEquals
+
+		switch typedROperand := newExpression.ROperand.(type) {
+		case pgsql.TypeCast:
+			switch typedInnerOperand := typedROperand.Expression.(type) {
 			case *pgsql.BinaryExpression:
-				switch typedLOperand.Operator {
-				case pgsql.OperatorPropertyLookup, pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
-					// This is a null-check against a property. This should be rewritten using the JSON field exists
-					// operator instead. It can be
-					switch typedROperand := newExpression.ROperand.(type) {
-					case pgsql.Literal:
-						if typedROperand.Null {
-							newExpression.Operator = pgsql.OperatorJSONBFieldExists
-							newExpression.LOperand = typedLOperand.LOperand
-							newExpression.ROperand = typedLOperand.ROperand
-						}
+				if propertyLookup, isPropertyLookup := asPropertyLookup(typedInnerOperand); isPropertyLookup {
+					// Attempt to figure out the cast by looking at the left operand
+					if leftHint, err := InferExpressionType(newExpression.LOperand); err != nil {
+						return err
+					} else if leftArrayHint, err := leftHint.ToArrayType(); err != nil {
+						return err
+					} else {
+						// Ensure the lookup uses the JSONB type
+						propertyLookup.Operator = pgsql.OperatorJSONField
 
-						s.Push(pgsql.NewUnaryExpression(pgsql.OperatorNot, newExpression))
+						newExpression.ROperand = pgsql.NewAnyExpression(
+							pgsql.FunctionCall{
+								Function:   pgsql.FunctionJSONBToTextArray,
+								Parameters: []pgsql.Expression{propertyLookup},
+								CastType:   leftArrayHint,
+							},
+						)
 					}
 				}
 			}
 
-		case pgsql.OperatorIsNot:
-			switch typedLOperand := newExpression.LOperand.(type) {
-			case *pgsql.BinaryExpression:
-				switch typedLOperand.Operator {
-				case pgsql.OperatorPropertyLookup, pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
-					// This is a null-check against a property. This should be rewritten using the JSON field exists
-					// operator instead. It can be
-					switch typedROperand := newExpression.ROperand.(type) {
-					case pgsql.Literal:
-						if typedROperand.Null {
-							newExpression.Operator = pgsql.OperatorJSONBFieldExists
-							newExpression.LOperand = typedLOperand.LOperand
-							newExpression.ROperand = typedLOperand.ROperand
-						}
-
-						s.Push(newExpression)
-					}
-				}
-			}
-
-		case pgsql.OperatorIn:
-			newExpression.Operator = pgsql.OperatorEquals
-
-			switch typedROperand := newExpression.ROperand.(type) {
-			case pgsql.TypeCast:
-				switch typedInnerOperand := typedROperand.Expression.(type) {
-				case *pgsql.BinaryExpression:
-					if propertyLookup, isPropertyLookup := asPropertyLookup(typedInnerOperand); isPropertyLookup {
-						// Attempt to figure out the cast by looking at the left operand
-						if leftHint, err := InferExpressionType(newExpression.LOperand); err != nil {
-							return err
-						} else if leftArrayHint, err := leftHint.ToArrayType(); err != nil {
-							return err
-						} else {
-							// Ensure the lookup uses the JSONB type
-							propertyLookup.Operator = pgsql.OperatorJSONField
-
-							newExpression.ROperand = pgsql.NewAnyExpression(
-								pgsql.FunctionCall{
-									Function:   pgsql.FunctionJSONBToTextArray,
-									Parameters: []pgsql.Expression{propertyLookup},
-									CastType:   leftArrayHint,
-								},
-							)
-						}
-					}
-				}
-
-			case pgsql.TypeHinted:
+		case pgsql.TypeHinted:
+			if lOperandTypeHint, err := InferExpressionType(newExpression.LOperand); err != nil {
+				return err
+			} else if lOperandTypeHint.IsArrayType() {
+				newExpression.Operator = pgsql.OperatorPGArrayOverlap
+			} else {
 				newExpression.Operator = pgsql.OperatorEquals
 				newExpression.ROperand = pgsql.AnyExpression{
 					Expression: newExpression.ROperand,
 					CastType:   typedROperand.TypeHint(),
 				}
-
-			default:
-				// Attempt to figure out the cast by looking at the left operand
-				if leftHint, err := InferExpressionType(newExpression.LOperand); err != nil {
-					return err
-				} else {
-					newExpression.ROperand = pgsql.AnyExpression{
-						Expression: newExpression.ROperand,
-						CastType:   leftHint,
-					}
-				}
-
 			}
 
-			s.Push(newExpression)
-
 		default:
-			s.Push(newExpression)
+			// Attempt to figure out the cast by looking at the left operand
+			if leftHint, err := InferExpressionType(newExpression.LOperand); err != nil {
+				return err
+			} else {
+				newExpression.ROperand = pgsql.AnyExpression{
+					Expression: newExpression.ROperand,
+					CastType:   leftHint,
+				}
+			}
+
 		}
 
-		return nil
+		s.Push(newExpression)
+
+	default:
+		s.Push(newExpression)
+	}
+
+	return nil
+}
+
+func (s *ExpressionTreeTranslator) PopPushBinaryExpression(scope *Scope, operator pgsql.Operator) error {
+	if newExpression, err := s.PopBinaryExpression(operator); err != nil {
+		return err
+	} else if err := rewriteIdentityOperands(scope, newExpression); err != nil {
+		return err
+	} else {
+		return s.rewriteBinaryExpression(newExpression)
 	}
 }
 

@@ -226,8 +226,16 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 					})
 				}
 
+			case *pgsql.BinaryExpression:
+				s.treeTranslator.Push(pgsql.FunctionCall{
+					Function:   pgsql.FunctionArrayAggregate,
+					Parameters: []pgsql.Expression{argument},
+					Distinct:   typedExpression.Distinct,
+					CastType:   pgsql.AnyArray,
+				})
+
 			default:
-				s.SetError(fmt.Errorf("expected identifier for cypher function: %s", typedExpression.Name))
+				s.SetError(fmt.Errorf("unexpected argument type %T for cypher function: %s", typedArgument, typedExpression.Name))
 			}
 		}
 

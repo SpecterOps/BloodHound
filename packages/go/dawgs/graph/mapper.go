@@ -404,6 +404,10 @@ func NewValueMapper(values []any, mappers ...MapFunc) ValueMapper {
 	}
 }
 
+func (s *valueMapper) Count() int {
+	return len(s.values)
+}
+
 func (s *valueMapper) Next() (any, error) {
 	if s.idx >= len(s.values) {
 		return nil, fmt.Errorf("attempting to get more values than returned - saw %d but wanted %d", len(s.values), s.idx+1)

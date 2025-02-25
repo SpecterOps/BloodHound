@@ -117,7 +117,12 @@ export const AllEdgeTypes: Category[] = [
             },
             {
                 name: 'NTLM Relay',
-                edgeTypes: [ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB],
+                edgeTypes: [
+                    ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
+                    ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+                    ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
+                    ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
+                ],
             },
         ],
     },

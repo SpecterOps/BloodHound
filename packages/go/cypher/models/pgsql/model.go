@@ -18,6 +18,7 @@ package pgsql
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -222,6 +223,43 @@ func AsLiteral(value any) (Literal, error) {
 
 func (s Literal) NodeType() string {
 	return "literal"
+}
+
+type Future[U any] struct {
+	SyntaxNode SyntaxNode
+	Data       U
+	DataType   DataType
+}
+
+func NewFuture[U any](data U, dataType DataType) *Future[U] {
+	return &Future[U]{
+		Data:     data,
+		DataType: dataType,
+	}
+}
+
+func (s Future[U]) Satisfied() bool {
+	return s.SyntaxNode != nil
+}
+
+func (s Future[U]) Unwrap() SyntaxNode {
+	return s.SyntaxNode
+}
+
+func (s Future[U]) TypeHint() DataType {
+	return s.DataType
+}
+
+func (s Future[U]) NodeType() string {
+	var (
+		emptyU U
+	)
+
+	return fmt.Sprintf("syntax_node_future[%T]", emptyU)
+}
+
+func (s Future[U]) AsExpression() Expression {
+	return s
 }
 
 type Subquery struct {
@@ -572,21 +610,20 @@ func (s ArrayIndex) AsExpression() Expression {
 	return s
 }
 
-type CompoundExpression []Expression
-
-func (s CompoundExpression) NodeType() string {
-	return "compound_expression"
+type RowColumnReference struct {
+	Identifier Expression
+	Column     Identifier
 }
 
-func (s CompoundExpression) AsExpression() Expression {
+func (s RowColumnReference) NodeType() string {
+	return "row_member_reference"
+}
+
+func (s RowColumnReference) AsExpression() Expression {
 	return s
 }
 
-func (s CompoundExpression) AsSlice() []Expression {
-	return s
-}
-
-func (s CompoundExpression) AsSelectItem() SelectItem {
+func (s RowColumnReference) AsSelectItem() SelectItem {
 	return s
 }
 

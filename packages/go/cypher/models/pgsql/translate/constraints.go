@@ -92,8 +92,8 @@ func rightEdgeConstraint(segment *PatternSegment, terminalEdge pgsql.Identifier,
 		switch direction {
 		case graph.DirectionOutbound:
 			return pgsql.NewBinaryExpression(
-				pgsql.CompoundExpression{
-					&pgsql.ArrayIndex{
+				pgsql.RowColumnReference{
+					Identifier: &pgsql.ArrayIndex{
 						Expression: segment.Edge.Identifier,
 						Indexes: []pgsql.Expression{
 							pgsql.FunctionCall{
@@ -106,7 +106,7 @@ func rightEdgeConstraint(segment *PatternSegment, terminalEdge pgsql.Identifier,
 							},
 						},
 					},
-					pgsql.ColumnEndID,
+					Column: pgsql.ColumnEndID,
 				},
 				pgsql.OperatorEquals,
 				pgsql.CompoundIdentifier{terminalEdge, pgsql.ColumnStartID},
@@ -128,7 +128,7 @@ func rightEdgeConstraint(segment *PatternSegment, terminalEdge pgsql.Identifier,
 	}
 }
 
-func rightNodeConstraint(edgeIdentifier, nodeIdentifier pgsql.Identifier, direction graph.Direction) (pgsql.Expression, error) {
+func terminalNodeConstraint(edgeIdentifier, nodeIdentifier pgsql.Identifier, direction graph.Direction) (pgsql.Expression, error) {
 	switch direction {
 	case graph.DirectionOutbound:
 		return &pgsql.BinaryExpression{
@@ -165,7 +165,7 @@ func rightNodeConstraint(edgeIdentifier, nodeIdentifier pgsql.Identifier, direct
 }
 
 func rightNodeTraversalStepConstraint(traversalStep *PatternSegment) (pgsql.Expression, error) {
-	return rightNodeConstraint(
+	return terminalNodeConstraint(
 		traversalStep.Edge.Identifier,
 		traversalStep.RightNode.Identifier,
 		traversalStep.Direction)

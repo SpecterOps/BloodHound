@@ -144,7 +144,7 @@ type TraversalContext struct {
 }
 
 func Traversal(tx graph.Transaction, plan TraversalPlan, pathVisitor PathVisitor) error {
-	defer measure.Measure(slog.LevelInfo, "Node %d Traversal", plan.Root.ID)()
+	defer measure.Measure(slog.LevelInfo, "Node Traversal", "root_id", plan.Root.ID)()
 
 	var (
 		requireTraversalOrder = plan.Limit > 0 || plan.Skip > 0

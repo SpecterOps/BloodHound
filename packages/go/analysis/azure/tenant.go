@@ -103,7 +103,7 @@ func FetchTenants(ctx context.Context, db graph.Database) (graph.NodeSet, error)
 
 // TenantRoles returns the NodeSet of roles for a given tenant that match one of the given role template IDs. If no role template ID is provided, then all of the tenant role nodes are returned in the NodeSet.
 func TenantRoles(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...string) (graph.NodeSet, error) {
-	defer measure.Measure(slog.LevelInfo, "TenantRoles - Tenant %d", tenant.ID)()
+	defer measure.Measure(slog.LevelInfo, "TenantRoles completed", "tenant", tenant.ID)()
 
 	if !IsTenantNode(tenant) {
 		return nil, fmt.Errorf("cannot fetch tenant roles - node %d must be of kind %s", tenant.ID, azure.Tenant)

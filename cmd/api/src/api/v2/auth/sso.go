@@ -66,11 +66,12 @@ type getAllRoler interface {
 	GetAllRoles(ctx context.Context, order string, filter model.SQLFilter) (model.Roles, error)
 }
 
-type jitUserCreator interface {
+type jitUserUpserter interface {
 	getAllRoler
 
 	LookupUser(ctx context.Context, principalNameOrEmail string) (model.User, error)
 	CreateUser(ctx context.Context, user model.User) (model.User, error)
+	UpdateUser(ctx context.Context, user model.User) error
 }
 
 // ListAuthProviders lists all available SSO providers (SAML and OIDC) with sorting and filtering

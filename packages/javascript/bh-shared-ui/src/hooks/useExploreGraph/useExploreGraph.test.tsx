@@ -1,0 +1,40 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import * as modes from './search-modes';
+import { getExploreGraphQuery } from './useExploreGraph';
+
+const nodeSearchGraphQuerySpy = vi.spyOn(modes, 'nodeSearchGraphQuery');
+
+describe('useExploreGraph', () => {
+    describe('getExploreGraphQuery', () => {
+        it('returns {enabled: false} if there is not a match on the switch statement', () => {
+            const mockAddNotification = vi.fn();
+            const actual = getExploreGraphQuery(mockAddNotification, {
+                searchType: 'noMatch',
+            } as any);
+
+            expect(actual).toStrictEqual({ enabled: false });
+        });
+        it('runs nodeSearchGraphQuery when search type is node', () => {
+            const mockAddNotification = vi.fn();
+            const paramOptions = { searchType: 'node', primarySearch: 'test1' } as any;
+            getExploreGraphQuery(mockAddNotification, paramOptions);
+
+            expect(nodeSearchGraphQuerySpy).toBeCalledWith(mockAddNotification, paramOptions, undefined);
+        });
+    });
+});

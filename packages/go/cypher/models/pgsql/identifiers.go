@@ -29,7 +29,7 @@ const (
 )
 
 var reservedIdentifiers = []Identifier{
-	EpochIdentifier,
+	EpochIdentifier, WildcardIdentifier,
 }
 
 func IsReservedIdentifier(identifier Identifier) bool {

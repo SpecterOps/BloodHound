@@ -17,6 +17,7 @@
 package middleware
 
 import (
+	"compress/gzip"
 	"context"
 	"fmt"
 	"log/slog"
@@ -273,6 +274,28 @@ func FeatureFlagMiddleware(db database.Database, flagKey string) mux.MiddlewareF
 				next.ServeHTTP(response, request)
 			} else {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+			}
+		})
+	}
+}
+
+func EnsureRequestBodyClosed() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			next.ServeHTTP(response, request)
+
+			// This type cast is required because of the way that Go interfaces work. It is possible to have an
+			// interface pointed at a pointer that points at nil. This would result in the interface not being nil
+			// but still cause a panic while acting on the interface. https://go.dev/doc/faq#nil_error
+			switch b := request.Body.(type) {
+			case *gzip.Reader:
+				if b != nil {
+					b.Close()
+				}
+			default:
+				if b != nil {
+					b.Close()
+				}
 			}
 		})
 	}

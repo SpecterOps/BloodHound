@@ -19,7 +19,6 @@ package v2
 import (
 	"github.com/gorilla/schema"
 	"github.com/specterops/bloodhound/cache"
-	_ "github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
@@ -68,7 +67,7 @@ type UpdateUserRequest struct {
 	Roles          []int32    `json:"roles"`
 	SAMLProviderID string     `json:"saml_provider_id"`
 	SSOProviderID  null.Int32 `json:"sso_provider_id"`
-	IsDisabled     bool       `json:"is_disabled"`
+	IsDisabled     *bool      `json:"is_disabled,omitempty"`
 }
 
 type CreateUserRequest struct {

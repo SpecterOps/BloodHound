@@ -297,7 +297,7 @@ func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error
 		return err
 	} else {
 		switch binding.DataType {
-		case pgsql.NodeComposite:
+		case pgsql.NodeComposite, pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
 			s.treeTranslator.Push(pgsql.CompoundIdentifier{binding.Identifier, pgsql.ColumnKindIDs})
 			s.treeTranslator.Push(kindIDsLiteral)
 
@@ -305,7 +305,7 @@ func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error
 				s.SetError(err)
 			}
 
-		case pgsql.EdgeComposite:
+		case pgsql.EdgeComposite, pgsql.ExpansionEdge:
 			s.treeTranslator.Push(pgsql.CompoundIdentifier{binding.Identifier, pgsql.ColumnKindID})
 			s.treeTranslator.Push(pgsql.NewAnyExpression(kindIDsLiteral))
 
@@ -345,11 +345,15 @@ func (s *Translator) translateProjectionItem(scope *Scope, projectionItem *cyphe
 	} else if selectItem, isProjection := nextExpression.(pgsql.SelectItem); !isProjection {
 		s.SetErrorf("invalid type for select item: %T", nextExpression)
 	} else {
+		if identifiers, err := ExtractSyntaxNodeReferences(selectItem); err != nil {
+			return err
+		} else if identifiers.Len() > 0 {
+			// Identifier lookups will require a scope reference
+			s.query.CurrentPart().projections.Frame = s.query.Scope.CurrentFrame()
+		}
+
 		switch typedSelectItem := unwrapParenthetical(selectItem).(type) {
 		case pgsql.Identifier:
-			// Identifier lookups will require a projection
-			s.query.CurrentPart().projections.Frame = s.query.Scope.CurrentFrame()
-
 			// If this is an identifier then assume the identifier as the projection alias since the translator
 			// rewrites all identifiers
 			if !hasAlias {
@@ -364,17 +368,16 @@ func (s *Translator) translateProjectionItem(scope *Scope, projectionItem *cyphe
 			// Binary expressions are used when properties are returned from a result projection
 			// e.g. match (n) return n.prop
 			if propertyLookup, isPropertyLookup := asPropertyLookup(typedSelectItem); isPropertyLookup {
-				// Property lookups will require a scope reference
-				s.query.CurrentPart().projections.Frame = s.query.Scope.CurrentFrame()
-
 				// Ensure that projections maintain the raw JSONB type of the field
 				propertyLookup.Operator = pgsql.OperatorJSONField
 			}
 
 		default:
 			if hasAlias {
-				if _, isBound := s.query.Scope.AliasedLookup(alias); !isBound {
-					if newBinding, err := s.query.Scope.DefineNew(pgsql.InlineProjection); err != nil {
+				if inferredType, err := InferExpressionType(typedSelectItem); err != nil {
+					return err
+				} else if _, isBound := s.query.Scope.AliasedLookup(alias); !isBound {
+					if newBinding, err := s.query.Scope.DefineNew(inferredType); err != nil {
 						return err
 					} else {
 						// This binding is its own alias

@@ -23,6 +23,21 @@ type SyntaxNode interface {
 	NodeType() string
 }
 
+// WrappedNode is an interface that allows for an expression to be wrapped to allow for side effects like futures.
+type WrappedNode interface {
+	SyntaxNode
+}
+
+// SyntaxNodeFuture is a SyntaxNode that can be satisfied out-of-tree and communicate if it has been satisfied to
+// upstream consumers. This is useful when a SyntaxNode is required to be embedded in a built syntax tree but
+// can not be formally built itself due to ordering or missing dependency information (in the case of an
+// existential subquery).
+type SyntaxNodeFuture interface {
+	SyntaxNode
+	Unwrap() SyntaxNode
+	Satisfied() bool
+}
+
 // Statement is a syntax node that does not evaluate to a value.
 type Statement interface {
 	SyntaxNode

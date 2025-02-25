@@ -6,6 +6,7 @@
   "work_dir": "/opt/bloodhound/work",
   "log_level": "INFO",
   "log_path": "bloodhound.log",
+  "graph_driver": "neo4j",
   "tls": {
     "cert_file": "",
     "key_file": ""
