@@ -11,13 +11,17 @@ export const useNodeSearch = () => {
     const selectSourceNode = (selected?: SearchValue) => {
         setSelectedItem(selected);
         setSearchTerm(selected?.name || '');
+
         setExploreParams({
             searchType: 'node',
             primarySearch: selected?.objectid,
         });
     };
 
-    const editSourceNode = (edit: string) => setSearchTerm(edit);
+    const editSourceNode = (edit: string) => {
+        setSelectedItem(undefined);
+        setSearchTerm(edit);
+    };
 
     return {
         searchTerm,
