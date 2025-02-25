@@ -16,8 +16,10 @@
 
 import userEvent from '@testing-library/user-event';
 import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import { Permission, SortOrder, createAuthStateWithPermissions } from '../../';
 import { render, screen } from '../../test-utils';
-import { SortOrder } from '../../utils';
 import SSOProviderTable from './SSOProviderTable';
 
 const samlProvider: SSOProvider = {
@@ -47,6 +49,20 @@ const oidcProvider: SSOProvider = {
 };
 
 const ssoProviders = [samlProvider, oidcProvider];
+
+const server = setupServer(
+    rest.get('/api/v2/self', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: createAuthStateWithPermissions([Permission.AUTH_MANAGE_PROVIDERS]).user,
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('SSOProviderTable', () => {
     const onClickSSOProvider = vi.fn();

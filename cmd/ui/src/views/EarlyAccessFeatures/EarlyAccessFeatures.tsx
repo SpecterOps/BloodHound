@@ -30,8 +30,17 @@ import {
     Skeleton,
     Typography,
 } from '@mui/material';
-import { Flag, PageWithTitle, useFeatureFlags, useToggleFeatureFlag } from 'bh-shared-ui';
-import { useState } from 'react';
+import {
+    Flag,
+    PageWithTitle,
+    Permission,
+    useFeatureFlags,
+    useMountEffect,
+    useNotifications,
+    usePermissions,
+    useToggleFeatureFlag,
+} from 'bh-shared-ui';
+import { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setDarkMode } from 'src/ducks/global/actions';
 import { useAppDispatch } from 'src/store';
@@ -53,8 +62,7 @@ export const EarlyAccessFeatureToggle: React.FC<{
                     <Typography variant='body1'>{flag.description}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {/* TODO: replace style prop with TW classes once TW is added */}
-                    <Button disabled={disabled} onClick={handleOnClick} style={{ width: '132px' }}>
+                    <Button disabled={disabled} onClick={handleOnClick} className='w-32'>
                         <Box display={'flex'} alignItems={'center'}>
                             {flag.enabled ? (
                                 <FontAwesomeIcon style={{ marginRight: '8px' }} icon={faCheckCircle} fixedWidth />
@@ -105,12 +113,35 @@ export const EarlyAccessFeaturesWarningDialog: React.FC<{
     );
 };
 
-const EarlyAccessFeatures: React.FC = () => {
+const EarlyAccessFeatures: FC = () => {
+    const [showWarningDialog, setShowWarningDialog] = useState(true);
+    const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const { data, isLoading, isError } = useFeatureFlags();
     const toggleFeatureFlag = useToggleFeatureFlag();
-    const [showWarningDialog, setShowWarningDialog] = useState(true);
-    const dispatch = useAppDispatch();
+
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.APP_WRITE_APPLICATION_CONFIGURATION);
+
+    const { addNotification, dismissNotification } = useNotifications();
+    const notificationKey = 'manage-feature-flags-permission';
+
+    const effect: React.EffectCallback = () => {
+        if (!hasPermission) {
+            addNotification(
+                `Your role does not grant permission to manage feature flags. Please contact your administrator for details.`,
+                notificationKey,
+                {
+                    persist: true,
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
+        }
+
+        return () => dismissNotification(notificationKey);
+    };
+
+    useMountEffect(effect);
 
     return (
         <>
@@ -167,7 +198,7 @@ const EarlyAccessFeatures: React.FC = () => {
                                             }
                                             toggleFeatureFlag.mutate(flagId);
                                         }}
-                                        disabled={showWarningDialog}
+                                        disabled={showWarningDialog || !hasPermission}
                                     />
                                 </Box>
                             ))
