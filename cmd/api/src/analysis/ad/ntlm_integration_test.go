@@ -317,7 +317,6 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 				require.Equal(t, 2, len(nodes))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToSMB.Computer1))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToSMB.Computer2))
-				// Question: No mapping to Group4 for the protected users requirement?
 			}
 			return nil
 		})
