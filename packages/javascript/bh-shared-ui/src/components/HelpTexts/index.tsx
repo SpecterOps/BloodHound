@@ -125,6 +125,7 @@ import WriteOwnerLimitedRights from './WriteOwnerLimitedRights/WriteOwnerLimited
 import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
 import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WriteSPN from './WriteSPN/WriteSPN';
+import CoerceAndRelayNTLMToADCS from "./CoerceAndRelayNTLMToADCS/CoerceAndRelayNTLMToADCS";
 
 export type EdgeInfoProps = {
     edgeName?: string;
@@ -250,6 +251,7 @@ const EdgeInfoComponents = {
     // Both CoerceAndRelayNTLMToLDAP and CoerceAndRelayNTLMToLDAPS share the same abuse text
     CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAP,
+    CoerceAndRelayNTLMToADCS: CoerceAndRelayNTLMToADCS,
 };
 
 export default EdgeInfoComponents;
