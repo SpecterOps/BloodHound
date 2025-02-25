@@ -148,6 +148,15 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			//	}
 			//}
 
+			if rootCaForNodes, err := FetchEnterpriseCAsRootCAForPathToDomain(tx, domain); err != nil {
+				slog.ErrorContext(ctx, fmt.Sprintf("Error getting cas via rootcafor for domain %d: %v", domain.ID, err))
+			} else if authStoreForNodes, err := FetchEnterpriseCAsTrustedForNTAuthToDomain(tx, domain); err != nil {
+				slog.ErrorContext(ctx, fmt.Sprintf("Error getting cas via authstorefor for domain %d: %v", domain.ID, err))
+			} else {
+				s.authStoreForChainValid[domain.ID] = graph.NodeSetToDuplex(authStoreForNodes)
+				s.rootCAForChainValid[domain.ID] = graph.NodeSetToDuplex(rootCaForNodes)
+			}
+
 			// Check for weak cert config on DCs
 			if upnMapping, err := hasUPNCertMappingInForest(tx, domain); err != nil {
 				slog.WarnContext(ctx, fmt.Sprintf("Error checking hasUPNCertMappingInForest for domain %d: %v", domain.ID, err))
