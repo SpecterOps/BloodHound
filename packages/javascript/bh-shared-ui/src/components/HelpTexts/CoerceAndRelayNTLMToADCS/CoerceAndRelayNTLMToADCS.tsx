@@ -20,7 +20,7 @@ import LinuxAbuse from "./LinuxAbuse";
 import Opsec from "./Opsec";
 import References from "./References";
 
-const CoerceAndRelayNTLMToLDAP = {
+const CoerceAndRelayNTLMToADCS = {
     general: General,
     windowsabuse: WindowsAbuse,
     linuxabuse: LinuxAbuse,
@@ -28,4 +28,4 @@ const CoerceAndRelayNTLMToLDAP = {
     references: References
 };
 
-export default CoerceAndRelayNTLMToLDAP;
+export default CoerceAndRelayNTLMToADCS;
