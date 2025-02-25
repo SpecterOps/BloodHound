@@ -39,12 +39,15 @@ const ExploreSearchCombobox: React.FC<{
     const { keyword, type } = getKeywordAndTypeValues(inputValue);
     const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
 
+    console.log('rerendering due to prop change', selectedItem);
+
     const { isOpen, getMenuProps, getInputProps, getComboboxProps, highlightedIndex, getItemProps, openMenu } =
         useCombobox({
             items: data || [],
             inputValue,
             selectedItem,
             onSelectedItemChange: ({ selectedItem }) => {
+                console.log(selectedItem);
                 if (selectedItem) {
                     handleNodeSelected(selectedItem);
                 }
