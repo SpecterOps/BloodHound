@@ -47,12 +47,12 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		adcsComputerCache       = make(map[string]cardinality.Duplex[uint64])
 		operation               = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
 		authenticatedUsersCache = make(map[string]graph.ID)
-		//compositionChannel      = make(chan analysis.CompositionInfo)
+		// compositionChannel      = make(chan analysis.CompositionInfo)
 		protectedUsersCache = make(map[string]cardinality.Duplex[uint64])
 	)
 
-	//This is a POC on how to pipe composition info up through the operations
-	//go func() {
+	// This is a POC on how to pipe composition info up through the operations
+	// go func() {
 	//	count := 0
 	//	edgeBuffer := make([]model.EdgeCompositionEdge, 0)
 	//	nodeBuffer := make([]model.EdgeCompositionNode, 0)
@@ -73,7 +73,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 	//			break
 	//		}
 	//	}
-	//}()
+	// }()
 
 	// TODO: after adding all of our new NTLM edges, benchmark performance between submitting multiple readers per computer or single reader per computer
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -448,7 +448,7 @@ func GetCoerceAndRelayNTLMtoSMBComposition(ctx context.Context, db graph.Databas
 	return paths, nil
 }
 
-// PostCoerceAndRelayNTLMtoSMB creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
+// PostCoerceAndRelayNTLMToSMB creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
 // Comprised solely of adminTo and memberOf edges
 func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, computer *graph.Node, authenticatedUserID graph.ID, compositionCounter *analysis.CompositionCounter) error {
 	if smbSigningEnabled, err := computer.Properties.Get(ad.SMBSigning.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
@@ -464,19 +464,19 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 		if firstDegreeAdmins, err := fetchFirstDegreeNodes(tx, computer, ad.AdminTo); err != nil {
 			return err
 		} else if firstDegreeAdmins.ContainingNodeKinds(ad.Computer).Len() > 0 {
-			//compositionID := compositionCounter.Get()
+			// compositionID := compositionCounter.Get()
 			outC <- analysis.CreatePostRelationshipJob{
 				FromID: authenticatedUserID,
 				ToID:   computer.ID,
 				Kind:   ad.CoerceAndRelayNTLMToSMB,
-				//RelProperties: map[string]any{common.CompositionID.String(): compositionID},
+				// RelProperties: map[string]any{common.CompositionID.String(): compositionID},
 			}
 			// This is an example of how you would use the composition counter
-			//compositionC <- analysis.CompositionInfo{
+			// compositionC <- analysis.CompositionInfo{
 			//	CompositionID: compositionID,
 			//	EdgeIDs:       nil,
 			//	NodeIDs:       nil,
-			//}
+			// }
 		} else {
 			allAdminGroups := cardinality.NewBitmap64()
 			for group := range firstDegreeAdmins.ContainingNodeKinds(ad.Group) {
@@ -496,7 +496,7 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 					FromID: authenticatedUserID,
 					ToID:   computer.ID,
 					Kind:   ad.CoerceAndRelayNTLMToSMB,
-					//RelProperties: map[string]any{common.CompositionID.String(): compositionCounter.Get()},
+					// RelProperties: map[string]any{common.CompositionID.String(): compositionCounter.Get()},
 				}
 			}
 		}
