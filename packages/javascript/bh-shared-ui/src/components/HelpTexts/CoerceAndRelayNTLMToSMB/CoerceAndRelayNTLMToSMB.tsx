@@ -19,6 +19,7 @@ import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
 import WindowsAbuse from './WindowsAbuse';
+import Composition from "./Composition";
 
 const CoerceAndRelayNTLMToSMB = {
     general: General,
@@ -26,6 +27,7 @@ const CoerceAndRelayNTLMToSMB = {
     linuxabuse: LinuxAbuse,
     opsec: Opsec,
     references: References,
+    composition: Composition
 };
 
 export default CoerceAndRelayNTLMToSMB;

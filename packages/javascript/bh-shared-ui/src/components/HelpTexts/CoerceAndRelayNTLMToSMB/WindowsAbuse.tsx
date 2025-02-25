@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import { Typography } from '@mui/material';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
 
-const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
+const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
             <Typography variant='body2'>
