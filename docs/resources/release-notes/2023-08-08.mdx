@@ -1,0 +1,101 @@
+---
+title: 2023-08-08 Release Notes
+---
+
+## Announcements
+
+### Come see us at Black Hat USA 2023!
+
+SpecterOps is a proud Platinum sponsor of Black Hat USA 2023 in Las Vegas, NV!
+
+This year you can find us:
+
+* **🎳 August 8 @ Brooklyn Bowl**: Join us for bowling, food and drink, and conversation (Spots are sold out - reach out to your TAM for a VIP ticket if you haven't registered yet).
+* **🎆 August 9-10 @ Booth 2234**: Come chat with one of our team members or see one of our booth talks (details on talks in the link below)
+* **🛠️ August 9-10 @ Black Hat Arsenal**:
+    * BloodHound CE goes live with some great new functionality, presented by Andy Robbins and Rohan Vazarker.
+    * Lee Christensen, Will Schroeder, and Max Harley are showing off a new tool, Nemesis.
+    * Chris Thompson and Diego Lomellini will share some recent updates to SharpSCCM.
+
+For everything SpecterOps@Black Hat, check out: [https://ghst.ly/blackhat2023](https://ghst.ly/blackhat2023).
+
+### Did you miss our Tier Zero webinar and blog?
+
+On June 22nd, Elad Shamir and Jonas Bülow Knudsen sat down to discuss "Tier Zero" or "Control Plane." In the first of what will become several webinars, we discussed the following:
+
+* 👑 What is Tier Zero / Control Plane, and why does it matter?
+* 🏢 What does the industry include in Tier Zero?
+* 👩‍⚖️ Debate: Should they be?
+
+Check out the recording of this information-rich conversation [here](https://specterops.zoom.us/rec/share/aV6SLGu93-hZ0ot9pSgh9-_PnuORkcidpdCAywPHcL8qqM58F3qeG7fuRjvXXXFd.iTsCCftUEGCjH92f)!
+
+Prefer to read rather than watch? We've got you covered with a [blog post](https://posts.specterops.io/what-is-tier-zero-part-1-e0da9b7cdfca) too!
+
+## Summary
+
+* **BloodHound Enterprise**
+    * New and Improved Features - Open-ended Cypher search, Edge context menus, Pathfinding enhancements, offline collection ingest, API Explorer improvements.
+    * Bug Fixes - Search no longer includes ADLocalGroup objects, clicking on objects of unknown types no longer crashes the UI, fixed "Try it out" in API Explorer.
+* **SharpHound Enterprise (v2.1.7)**
+    * _No release this week._
+* **AzureHound Enterprise (v2.0.4)**
+    * _No release this week._
+
+### BloodHound Enterprise
+
+#### Improved Functionality
+
+* **Open-ended Cypher search** \- Perhaps the most requested feature of BloodHound Enterprise since we launched is now live! BloodHound Enterprise now supports searches using the [openCypher](https://opencypher.org/) grammar, a query language designed for searching graph-based data. We've included several interesting queries to get you started and you can learn more about [Searching with Cypher](/analyze-data/bloodhound-gui/cypher-search) in documentation.
+<Frame>
+  <img src="/assets/image-25.png" alt=""/>
+</Frame>
+* **Edge context menus** \- Clicking on an Attack Path will now show a contextual menu similar to clicking on an object within BloodHound Enterprise. The displayed menu will include properties about the selected relationship and more in-depth contextual information about the Attack Path itself.
+<Frame>
+  <img src="/assets/image-26.png" alt=""/>
+</Frame>
+* **Pathfinding enhancements** \- When pathfinding, you can now easily swap start and end objects, plus filter the Attack Path primitives used by the pathfinding algorithm to narrow your query to information of interest.
+<Frame>
+  <img src="/assets/image-27.png" alt=""/>
+</Frame>
+* **Offline collection ingest** \- BloodHound Enterprise now officially supports an easy upload and ingest mechanism for offline collections from [SharpHound CE Overview](/install-data-collector/install-sharphound/overview). Whether performing merger and acquisition due diligence or monitoring risk within disconnected networks (such as ICS environments). Uploading offline SharpHound collections is now just a few clicks away under the Administration section.
+<Frame>
+  <img src="/assets/image-28.png" alt=""/>
+</Frame>
+* **API Explorer improvements** \- The API explorer has undergone some updates to indicate which BloodHound products each endpoint applies to. We've also fixed the "Try it out" buttons to make it easier to see how data queries and responses will look.
+<Frame>
+  <img src="/assets/image-29.png" alt=""/>
+</Frame>
+
+#### Bug Fixes
+
+* Search no longer includes ADLocalGroup objects
+* Clicking on objects of unknown types no longer crashes the UI
+* Fixed "Try it out" in API Explorer
+
+## SharpHound
+
+### New Features
+
+- **Improved Collection Performance**: Optimized data collection routines
+- **Better Error Handling**: Enhanced error reporting and recovery
+- **New Collection Options**: Additional configuration options for customized collection
+
+### Bug Fixes
+
+- Fixed an issue with group membership enumeration
+- Resolved memory usage during large collections
+- Improved error handling for network timeouts
+
+## AzureHound
+
+### New Features
+
+- **Enhanced Azure Resource Collection**: Better coverage of Azure resources
+- **Improved Performance**: Optimized collection routines
+- **Better Error Handling**: More detailed error messages and logging
+
+### Bug Fixes
+
+- Fixed several issues with service principal enumeration
+- Improved handling of rate limiting
+- Resolved token refresh issues

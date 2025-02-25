@@ -1,0 +1,13 @@
+version: "3.8"
+services:
+    azurehound:
+        image: ghcr.io/bloodhoundad/azurehound:latest
+        command: 'start --config /config/config.json'
+        container_name: azurehound
+        network_mode: bridge
+        environment:
+            - AZUREHOUND_CONFIG=/config/config.json
+            - PUID=${PUID}
+            - PGID=${PGID}
+        volumes:
+            - ${ROOT}/azurehound:/config

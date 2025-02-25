@@ -1,0 +1,108 @@
+---
+title: 2023-12-05 Release Notes (v5.3.0)
+---
+
+## Announcements
+
+### BloodHound Enterprise Holiday 2023 Support
+
+As we reach the end of the year, it's important to us at SpecterOps to give our employees plenty of time to relax, recharge, and spend time with their families. To that end, we will have limited staffing available from December 18, 2023 - January 2, 2024.
+
+If you have any urgent issues during this time, please reach out to our team at support \[@\] specterops.io.
+
+Thank you for understanding, and we look forward to getting back to you!
+
+### SO-CON 2024
+
+We're so excited for SO-CON and have announced our speakers for the event! We've got some fantastic folks lined up to share knowledge with attendees!
+
+* 🗓️ March 11 - 15, 2024, at Convene in Arlington, VA
+* 🏔️ Full day, multi-track summit with presentations on a variety of security topics
+* 🎓 Four days of training classes, including our first-ever Azure Security Fundamentals course!
+
+Training students will receive free entry to the summit, and classes are available for a 25% early registration discount, with summit registration coming soon!
+
+See our speakers and sign up at [https://specterops.io/so-con/#speakers](https://specterops.io/so-con/#speakers)!
+
+## Summary
+
+* **BloodHound (v5.3.0****)**
+    * New and Improved Features
+        * Added node action right-click menu with set start/end node and copy commands!
+        * Improved performance on AZResetPassword edges.
+        * Expanded memory available for queries.
+        * Disabling MFA on a user will provide a more explicit warning.
+        * Saved custom queries are now available in CE as well as BHE.
+        * _\[BHE Only\]_ Collection schedules may now be modified via the text and date/time pickers.
+    * Bug Fixes
+        * Container nodes will now show an entity panel.
+        * Removed aggressive timeouts on File Ingest uploads.
+        * Affected Objects counts on GPO object entity panels should properly report "0" when appropriate.
+        * Saved queries created using the API will now properly associate with the creating user.
+        * _\[BHE Only\]_ Selecting a custom range on the Posture page will now highlight "Custom".
+        * _\[CE Only\]_ Resolved an issue with the ingestion of sessions in specific scenarios.
+        * _\[CE Only\] _Resolved an issue with multi-underscore keys breaking config values.
+* **SharpHound (v2.2.2 - BHE, v2.0.2 - CE)**
+    * New and Improved Features
+        * _\[CE Only\] _Added the ability to perform session enumeration as a local admin user (@LuemmelSec, @eversinc33)
+        * _\[BHE Only\]_ Expanded signing of files to aid in AV issues.
+    * Bug Fixes
+        * Resolved an issue with collecting and processing special characters.
+        * Fixed a cache (de)serialization issue with checking versions.
+* **AzureHound (v2.1.6)**
+    * New and Improved Features
+        * Audited and removed additional opportunities for context-lock contention in the future.
+
+### BloodHound (v5.3.0)
+
+#### New and Improved Features
+
+* **Node right-click action menu support _\-_** Right-clicking a node in the Explore pane will now bring up a context menu with some helpful capabilities. This functionality will continue to expand**_
+<Frame>
+  <img src="/assets/image-18.png" alt=""/>
+</Frame>
+    _**
+* **Improved performance on AZResetPassword** \- AZResetPassword edges now always start with AzRole objects. While this changes the shape of the graph data slightly, it will result in significant performance improvements, particularly during post-processing of edges after a collection.
+
+    _Note: This will result in a significant, expected decrease in AZResetPassword edges in BloodHound. Additionally, BHE customers will see a change in findings associated with this edge._
+* **Expanded memory available for queries** \- The amount of memory available for all queries against the graph (including Cypher and entity panel queries) has been doubled by default, significantly reducing the likelihood of errors stemming from excessive resource consumption.
+* **Disabling MFA on a user will provide a more explicit warning** \- Disabling MFA on a user will now make the risk of doing so clearer.
+<Frame>
+  <img src="/assets/image-19.png" alt=""/>
+</Frame>
+* **\[Included in BHE v5.2.0\] Custom user-saved Cypher queries** \- You can save your favorite Cypher queries directly in BloodHound. Write your query and click the "Save Query" button to give it a name and store it.
+<Frame>
+  <img src="/assets/image-20.png" alt=""/>
+</Frame>
+* _\[BHE Only\]_ Collection schedules may now be modified via text and date/time pickers.
+
+#### Bug Fixes
+
+* Container nodes will now show an entity panel.
+* Removed aggressive timeouts on File Ingest uploads.
+* Affected Objects counts on GPO object entity panels should properly report "0" when appropriate.
+* Saved queries created using the API will now properly associate with the creating user.
+* _\[BHE Only\]_ Selecting a custom range on the Posture page will now highlight "Custom".
+* _\[CE Only\]_ Resolved an issue with the ingestion of sessions in specific scenarios.
+* _\[CE Only\] _Resolved an issue with multi-underscore keys breaking config values.
+
+### SharpHound (v2.2.2 - BHE, v2.0.2 - CE)
+
+
+#### New and Improved Features
+
+* **\[CE Only\] Added the ability to perform session enumeration as a local admin user (@LuemmelSec, @eversinc33)** \- Added the ability to enumerate local session information utilizing a consistent local administrative user. For more information, see [here](https://github.com/BloodHoundAD/SharpHound/pull/40).
+* SharpHound will now identify object location (and create Contains) edges using DistinguishedName for improved performance and simplicity.
+* _\[BHE Only\]_ Provided additional signed objects to aid with AV detection issues.
+
+#### Bug Fixes
+
+* Resolved an issue with collecting and processing special characters.
+* Fixed a cache (de)serialization issue with checking versions.
+
+AzureHound (v2.1.6)[](#h_01H93N41YNJ0DZ2735TV8XQKV6)
+----------------------------------------------------
+
+#### Bug Fixes
+
+* Resolved multiple additional dead-lock resource-exhaustion condition edge cases during collection.

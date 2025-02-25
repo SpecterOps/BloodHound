@@ -1,0 +1,126 @@
+---
+title: 2024-09-10 Release Notes (v5.15.0)
+---
+
+## Announcements
+
+### BloodHound Enterprise-ServiceNow Community Integration
+
+
+One of our BloodHound Enterprise customers has written and open-sourced a ServiceNow integration for BloodHound Enterprise! This integration will automatically create tickets in ServiceNow for the Attack Paths identified by BloodHound Enterprise, including all information necessary for your administrators to remove the risk.
+
+Thank you so much to [@Eli4m](https://github.com/Eli4m) for their effort - you can check out the integration on [GitHub](https://github.com/Eli4m/ServiceHound)!
+
+### Attackers Follow Security Principles Too
+It's a common misconception that only defenders need to follow security principles. However, attackers can equally benefit from understanding and applying these concepts. Our new training course, Adversary Tactics: Identity-Driven Offensive Tradecraft (IDOT), provides students with a practical framework for discovering Attack Paths through the analysis of Clean Source Principle violations.
+
+Join Elad Shamir, Director of Research at SpecterOps, on September 26, 2024 for an insightful webinar where we introduce this framework, argue the importance of the Clean Source Principle, and explain why identity-driven tradecraft is at the heart of Attack Path abuse.
+
+Register for the webinar [here](https://specterops.zoom.us/webinar/register/WN_RbtxSPsFTWKmLgJ0xA06nQ#/registration)!
+
+## Summary
+
+* **BloodHound (v5.15.0****)**
+    * New and Improved Features
+        * New Attack Path: WriteGPLink (Thank you, [@q-roland](https://github.com/q-roland), for your contribution! _Requires SharpHound v2.5.6+_).
+        * Added 22 additional AD properties, including information about authentication, passwords, and extra domain/trust information with supporting saved queries _(Requires SharpHound v2.5.6+)._
+        * Added support for GenericWrite Attack Paths targetting OUs and Domain objects (Thank you, [@q-roland](https://github.com/q-roland), for your contribution! _Requires SharpHound v2.5.6+_).
+        * Updated ESC6a logic to no longer require weak certificate mapping after confirming that it no longer prevents the escalation.
+        * OUs that contain Tier Zero / High Value objects will now be automatically tagged as Tier Zero objects, too.
+        * ESC6/9/10 analysis logic will now include domain controllers from child domains as well.
+        * Added a Login URL property to Entra Users to show the user's SSO URL.
+        * Removed all "CanAbuse" non-transitive edges from the graph schema and updated ESC logic accordingly.
+        * _\[CE Only\]_ Owned objects will now show an associated glyph icon in Explore (Thank you, [@palt](https://github.com/palt), for your contribution!).
+    * Bug Fixes
+        * Fixed abuse info on multiple Attack Paths that grant the ability to abuse LAPS settings.
+        * Improved JSON error handling for file uploads.
+        * File uploads should no longer get stuck on "Analyzing."
+        * _\[BHE Only\]_ Fixed an issue where specific collection jobs would trigger twice.
+        * _\[BHE Only\]_ Attack Path titles may now easily be copied again.
+* **SharpHound (v2.5.8 - BHE, v2.5.6 - CE)**
+    * New and Improved Features
+        * Complete re-write of LDAP connection and collection logic, resulting in improved consistency and performance.
+        * Add support for the collection of 22 additional properties and for GenericWrite Attack Paths targeting OU and Domain objects.
+        * _\[BHE Only\]_ Moved auth.json and settings.json to the service user's APPDATA directory.
+    * Bug Fixes
+        * _\[BHE Only\]_ Resolved several cross-trust collection issues.
+* **AzureHound (v2.2.1)**
+    * New and Improved Features
+        * Reduced default number of concurrent connections opened with Entra/Azure APIs (Thank you, [@olafhartong,](https://github.com/olafhartong) for your support in identifying the cause of these issues)
+        * Added several optional performance-tuning settings
+        * Reduced volume of data output by pruning empty or unnecessary fields (Thank you, [@malacupa](https://github.com/malacupa), for your support in identifying the cause of these issues)
+        * _\[BHE Only\]_ Reduced default batch size for upload of data to BloodHound Enterprise
+
+### BloodHound (v5.15.0)
+
+#### New and Improved Features
+
+* **New Attack Path: WriteGPLink** \- First, a huge thank you, [@q-roland](https://github.com/q-roland), for their contribution of this edge to BloodHound! The WriteGPLink Attack Path indicates the ability to alter the gPLink attribute, which may allow an attacker to apply a malicious Group Policy Object (GPO) to all child user and computer objects (including those in nested OUs). This can be
+    exploited to make said child objects execute arbitrary commands through an immediate scheduled task, thus compromising them.
+<Frame>
+  <img src="/assets/image-4.png" alt=""/>
+</Frame>
+* **22 additional AD properties** \- _(Requires SharpHound v2.5.6+)_ We've added a bunch of new properties to the AD schema, including information around authentication, passwords, and extra domain/trust information with supporting saved queries_._ These new attributes will enable BloodHound users to find additional risks within their environments. The attributes added include:
+    * Expire Passwords on Smart Card only Accounts
+    * Machine Account Quota
+    * Supported Kerberos Encryption Types
+    * TGT Delegation Enabled
+    * Password Stored Using Reversible Encryption
+    * Smartcard Required
+    * Use DES Key Only
+    * Logon Script Enabled
+    * Locked Out
+    * Lockout Duration
+    * Lockout Threshold
+    * Lockout Observation Window
+    * User Cannot Change Password
+    * Password Expired
+    * Minimum Password Age
+    * Maximum Password Age
+    * Password History Length
+    * Password Properties
+    * Minimum password length
+    * DSHeuristics
+    * User Account Control
+    * Trust Attributes
+<Frame>
+  <img src="/assets/image-5.png" alt=""/>
+</Frame>
+* **ESC6a is worse than we thought** \- Through additional research, we've confirmed that ESC6a does _not_ require weak certificate mapping to be enabled for execution. The logic for this Attack Path has been updated accordingly.
+
+* **ESC6/9/10 improved coverage** \- ESC6/9/10 analysis logic will now include domain controllers from child domains and parents for improved accuracy and coverage.
+* **OUs containing Tier Zero / High Value objects are Tier Zero** \- Because GPOs applied to OUs containing Tier Zero objects may inherit to the Tier Zero objects contained within them, BloodHound will now mark those OUs as Tier Zero as well. This option is configurable in the Early Access features portion of the application.
+* **Entra Login URL property** \- We added a Login URL property to Entra Users to show the user's SSO URL.
+* **Simplify the graph** \- When we initially wrote the ADCS Attack Paths into BloodHound, we used a series of non-transit edges starting with "CanAbuse." These edges were only used to create the final ADCSESC Attack Paths and were not valuable on their own. In this release, we've moved all of the logic previously contained within those edges directly to the analysis for ADCS Attack Paths.
+* **_\[CE Only\]_ Owned glyphs on objects** \- First off, a huge thank you [@palt](https://github.com/palt) for their contribution of this feature to BloodHound! Owned objects will now show an associated glyph icon in Explore.
+<Frame>
+  <img src="/assets/image-6.png" alt=""/>
+</Frame>
+#### Bug Fixes
+
+* Fixed abuse info on multiple Attack Paths that grant the ability to abuse LAPS settings.
+* Improved JSON error handling for file uploads.
+* File uploads should no longer get stuck on "Analyzing."
+* _\[BHE Only\]_ Fixed an issue where specific collection jobs would trigger twice.
+* _\[BHE Only\]_ Attack Path titles may now easily be copied again.
+
+### SharpHound (v2.5.8 - BHE, v2.5.6 - CE)
+
+#### New and Improved Features
+
+* **New LDAP library** \- We've completely rewritten how SharpHound performs LDAP connections and collection, resulting in improved consistency and performance.
+* **More data** \- Added support for collecting the 22 additional properties mentioned in these release notes. Additionally, SharpHound will now collect GenericWrite Attack Paths targeting OUs and Domains.
+* **_\[BHE Only\] More secure configurations_** \- The two main configuration files for SharpHound Enterprise, auth.json and settings.json, have been relocated to the service user's APPDATA directory. Previously, these files were located within the SharpHound installation directory, defaulting to Program Files (x86). By default, files in this directory are readable by all users, granting them visibility to the authentication material within. This change limits the visibility of that information to only the service user and local system administrators.
+
+#### Bug Fixes
+
+* _\[BHE Only\]_ Resolved several cross-trust collection issues.
+
+### AzureHound (v2.2.1)
+
+#### New and Improved Features
+
+* **Fewer concurrent connections** \- In large environments, we frequently witnessed API rate limits and backoff requests. We've reduced the default number of concurrent connections opened with Entra/Azure APIs to 20 (previously 200) and introduced an optional config parameter to tune active and idle connections for your own environment and performance needs. A huge thank you to [@olafhartong](https://github.com/olafhartong) for your support in identifying the cause of these issues.
+* **Don't store empty fields** \- AzureHound now more accurately selects the fields of interest for use within BloodHound and will more aggressively prune empty fields from AzureHound outputs to reduce the data volume output by the tool significantly. Thank you so much, [@malacupa](https://github.com/malacupa), for your support in identifying the cause of these issues)
+* **_\[BHE Only\]_** **Smaller, more frequent uploads** \- AzureHound uploads data to BloodHound Enterprise APIs in batches. AzureHound will now batch 100 objects (previously 256) of any given type by default before uploading them, reducing the overall memory load of AzureHound during collection. We have also introduced an optional config parameter to tune both active and idle connections for your environment and performance needs.
+

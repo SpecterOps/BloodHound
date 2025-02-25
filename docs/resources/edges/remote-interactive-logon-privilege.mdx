@@ -1,0 +1,27 @@
+---
+title: RemoteInteractiveLogonPrivilege
+---
+
+<Frame>
+  <img src="/assets/image-2-1.png"/>
+</Frame>
+
+From Principal to Computer: Principal has the SeRemoteInteractiveLogonPrivilege on the Computer.
+
+For RDP access the principal also needs membership in the computer's local Remote Desktop Users group, which related to the edge [MemberOfLocalGroup](/resources/edges/member-of-local-group). When RDP access is possible, the prinicpal will have the edge [CanRDP](/resources/edges/can-rdp).
+
+Abuse Info[](#heading-1)
+------------------------
+
+This edge alone does not enable abuse.
+
+Opsec Considerations[](#heading-2)
+----------------------------------
+
+No opsec considerations apply to this edge.
+
+References[](#heading-3)
+------------------------
+
+* [https://blog.cptjesus.com/posts/userrightsassignment/](https://blog.cptjesus.com/posts/userrightsassignment/) 
+* [https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/user-rights-assignment](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/user-rights-assignment)

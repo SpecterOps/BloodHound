@@ -1,0 +1,92 @@
+---
+title: 2024-03-27 Release Notes (v5.8.0)
+---
+
+## Announcements
+
+### Pwned by the Mail Carrier
+
+
+Microsoft Exchange has been a thorn in the side of any organization that has ever attempted to remove attack Attack Paths to total domain control, as a compromise of Exchange almost certainly grants this ability. In this post:
+
+* ❓ What permissions does your Exchange deployment hold?
+* ⚖️ What options does Exchange give you..?
+* 🔎 ...and are they really options?
+* ✅ How to reduce those privileges the right way!
+
+Check out the blog [here](https://posts.specterops.io/pwned-by-the-mail-carrier-0750edfad43b)!
+
+### Defining Tier Zero Webinar
+Andy and Jonas are back for part three of our "Defining the Undefined: What is Tier Zero" webinar series (Part One: [watch](https://youtu.be/5Ho83R9Jy68) or [read](https://posts.specterops.io/what-is-tier-zero-part-1-e0da9b7cdfca), Part Two: [watch](https://youtu.be/SAI3mXQgy_I) or [read](https://posts.specterops.io/what-is-tier-zero-part-2-6e1d14fddcaf))! In this webinar:
+
+* 🎁 Welcome special guest [Thomas Naunheim](https://twitter.com/Thomas_Live) of glueckkanja will join the discussion
+* ☁️ The first of the series focused on EntraID!
+* 📚 Lots of knowledge to be shared and fun to be had
+
+Register for the webinar [here](https://specterops.zoom.us/webinar/register/WN_0It_u8csQnmTHE_GYO7aYQ#/registration)!
+
+## Summary
+
+* **BloodHound (v5.8.0****)**
+    * New and Improved Features
+        * File Ingest now supports .ZIP format and large files!
+        * Option to clear database from within Administration!
+        * Support for ADCS ESC4 Attack Path
+        * _\[BHE Only\]_ BUILTIN\\Users group will now appear within Large Default Groups findings
+        * Improved accuracy on several ADCS components
+        * Several API performance consistency improvements
+        * Various minor UI improvements
+    * Bug Fixes
+        * Custom asset groups will no longer allow whitespace in tag property
+        * _\[CE Only\]_ Improved alignment of arrows and edges on graph canvas
+        * Various minor UI bug fixes
+        * _\[BHE Only\]_ Added finding documentation for the "Add Secret to Tier Zero Service Principal" finding
+* **SharpHound (v2.3.7 - BHE, v2.3.3 - CE)**
+    * * New and Improved Features
+            * _\[BHE Only\]_ SharpHound Enterprise will now properly throw an error if SharpHoundRPC.dll is missing
+        * Bug Fixes
+            * Failure to resolve SIDs from hostname will no longer result in errant object creation in BloodHound
+            * _\[BHE Only\]_ Resolved an issue where attempting to collect from uncollectible domains would result in SharpHound service restart.
+* **AzureHound (v2.1.8)**
+    * * New and Improved Features
+            * Improved logging outputs on application panic
+
+### BloodHound (v5.8.0)
+
+#### New and Improved Features
+
+* **File Ingest now supports .ZIP format and large files** \- by popular demand, BloodHound can now directly ingest .zip archives in the File Ingest feature, and the size limits have been removed from the UI. With this change, your browser's ability to package the uploaded file will remain the limiting factor in uploading large datasets directly through the UI.
+* **Clear database option -** Did you accidentally upload bad data or need to start fresh?BloodHound has you covered with the built-in ability to clear various data! As the warning below shows, changes in this section are irreversible. These options are available to users with the Administrator role under the Administration -> Database Management section.
+<Frame>
+  <img src="/assets/image-10.png" alt=""/>
+</Frame>
+* **ADCS ESC4 Attack Path** \- ADCS is the gift that keeps giving, and this release includes coverage for ADCS ESC4. For BloodHound Enterprise customers, this will include additional findings for ESC4 paths from those who should not have full control of your environment.
+* _\[BHE Only\]_ BUILTIN\\Users group will now appear within Large Default Groups findings
+* Improved accuracy on several ADCS components
+* Several API performance consistency improvements
+* Various minor UI improvements
+
+### Bug Fixes
+
+* Custom asset groups will no longer allow whitespace in tag property
+* _\[CE Only\]_ Improved alignment of arrows and edges on graph canvas
+* Various minor UI bug fixes
+* _\[BHE Only\]_ Added finding documentation for the "Add Secret to Tier Zero Service Principal" finding
+
+### SharpHound (v2.3.7 - BHE, v2.3.3 - CE)
+
+#### New and Improved Features
+
+* _\[BHE Only\]_ SharpHound Enterprise will now properly throw an error if SharpHoundRPC.dll is missing
+
+#### Bug Fixes
+
+* Failure to resolve SIDs from hostname will no longer result in errant object creation in BloodHound
+* _\[BHE Only\]_ Resolved an issue where attempting to collect from uncollectible domains would result in SharpHound service restart.
+
+### AzureHound (v2.1.8)
+
+#### New and Improved Features
+
+* Improved logging outputs on application panic
+
