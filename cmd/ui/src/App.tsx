@@ -40,8 +40,8 @@ import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import {
-    MainNavPrimaryListData,
     useMainNavLogoData,
+    useMainNavPrimaryListData,
     useMainNavSecondaryListData,
 } from './components/MainNav/MainNavData';
 import Notifier from './components/Notifier';
@@ -56,7 +56,7 @@ export const Inner: React.FC = () => {
     const featureFlagsRes = useFeatureFlags({ retry: false, enabled: !!authState.isInitialized && fullyAuthenticated });
     const mainNavData = {
         logo: useMainNavLogoData(),
-        primaryList: MainNavPrimaryListData,
+        primaryList: useMainNavPrimaryListData(),
         secondaryList: useMainNavSecondaryListData(),
     };
     const showNavBar = useShowNavBar(ROUTES);

@@ -9,7 +9,7 @@ const ContentFeatureToggle: React.FC = () => {
     const authState = useAppSelector((state) => state.auth);
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
 
-    const { data: flag } = useFeatureFlag('enable_back_button', {
+    const { data: flag } = useFeatureFlag('back_button_support', {
         // block this feature flag check from running on login page
         enabled: !!authState.isInitialized && fullyAuthenticated,
     });
