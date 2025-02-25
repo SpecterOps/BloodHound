@@ -19,15 +19,13 @@ import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
 import WindowsAbuse from './WindowsAbuse';
-import Composition from "./Composition";
 
-const CoerceAndRelayNTLMToSMB = {
+const CoerceAndRelayNTLMToLDAPS = {
     general: General,
     windowsabuse: WindowsAbuse,
     linuxabuse: LinuxAbuse,
     opsec: Opsec,
     references: References,
-    composition: Composition
 };
 
-export default CoerceAndRelayNTLMToSMB;
+export default CoerceAndRelayNTLMToLDAPS;

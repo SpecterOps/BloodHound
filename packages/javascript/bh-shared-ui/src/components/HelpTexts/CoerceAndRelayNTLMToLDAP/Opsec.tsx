@@ -14,20 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import General from './General';
-import LinuxAbuse from './LinuxAbuse';
-import Opsec from './Opsec';
-import References from './References';
-import WindowsAbuse from './WindowsAbuse';
-import Composition from "./Composition";
+import { Typography } from '@mui/material';
+import { FC } from 'react';
 
-const CoerceAndRelayNTLMToSMB = {
-    general: General,
-    windowsabuse: WindowsAbuse,
-    linuxabuse: LinuxAbuse,
-    opsec: Opsec,
-    references: References,
-    composition: Composition
+const Opsec: FC = () => {
+    return (
+        <Typography variant='body2'>
+            NTLM relayed authentications can be detected by login events where the IP address does not match the
+            computer’s actual IP address. This detection technique is described in the blog post:{' '}
+            <a href={'https://posts.bluraven.io/detecting-ntlm-relay-attacks-d92e99e68fb9'}>
+                Detecting NTLM Relay Attacks
+            </a>
+            .
+        </Typography>
+    );
 };
 
-export default CoerceAndRelayNTLMToSMB;
+export default Opsec;

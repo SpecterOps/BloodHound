@@ -14,17 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
-import { FC } from 'react';
+import General from './General';
+import LinuxAbuse from './LinuxAbuse';
+import Opsec from './Opsec';
+import References from './References';
+import WindowsAbuse from './WindowsAbuse';
+import Composition from "./Composition";
 
-const Abuse: FC = () => {
-    return (
-        <Typography variant='body2'>
-            An attacker who is a member of "Authenticated Users" triggers a traditional SMB based coercion from the
-            target computer to their attacker host. The attacker relays this authentication attempt to the target system
-            the inbound account has admin access to.
-        </Typography>
-    );
+const CoerceAndRelayNTLMToADCS = {
+    general: General,
+    windowsabuse: WindowsAbuse,
+    linuxabuse: LinuxAbuse,
+    opsec: Opsec,
+    references: References,
+    composition: Composition
 };
 
-export default Abuse;
+export default CoerceAndRelayNTLMToADCS;
