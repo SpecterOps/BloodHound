@@ -20,6 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -30,7 +32,6 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/services/dataquality"
-	"log/slog"
 )
 
 var (

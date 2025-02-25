@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"

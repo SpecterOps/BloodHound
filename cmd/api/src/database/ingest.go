@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+
 	"gorm.io/gorm"
 
 	"github.com/specterops/bloodhound/src/model"

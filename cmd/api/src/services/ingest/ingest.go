@@ -25,7 +25,7 @@ import (
 
 type IngestData interface {
 	CreateIngestTask(ctx context.Context, task model.IngestTask) (model.IngestTask, error)
-	CreateCompositionInfo(ctx context.Context, db IngestData, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error)
+	CreateCompositionInfo(ctx context.Context, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error)
 }
 
 func CreateIngestTask(ctx context.Context, db IngestData, filename string, fileType model.FileType, requestID string, jobID int64) (model.IngestTask, error) {
@@ -40,5 +40,5 @@ func CreateIngestTask(ctx context.Context, db IngestData, filename string, fileT
 }
 
 func CreateCompositionInfo(ctx context.Context, db IngestData, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error) {
-	return db.CreateCompositionInfo(ctx, db, nodes, edges)
+	return db.CreateCompositionInfo(ctx, nodes, edges)
 }

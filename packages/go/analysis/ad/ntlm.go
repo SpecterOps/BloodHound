@@ -20,10 +20,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/traversal"
 	"log/slog"
 	"slices"
 	"sync"
+
+	"github.com/specterops/bloodhound/dawgs/traversal"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
