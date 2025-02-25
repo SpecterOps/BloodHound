@@ -14,37 +14,33 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {Typography} from '@mui/material';
-import {FC} from 'react';
-import {EdgeInfoProps} from '../index';
+import { Typography } from '@mui/material';
+import { FC } from 'react';
+import { EdgeInfoProps } from '../index';
 
-const WindowsAbuse: FC<EdgeInfoProps> = ({sourceName, sourceType}) => {
+const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
     return (
         <>
             <Typography variant='body2'>
-                1: Take Over the SMB Port on the Attacker Host
-
-                To avoid a conflict with SMB running on the attacker-controlled Windows computer, it is necessary to
-                takeover the SMB port. This can be achieved with smbtakeover.
+                1: Take Over the SMB Port on the Attacker Host To avoid a conflict with SMB running on the
+                attacker-controlled Windows computer, it is necessary to takeover the SMB port. This can be achieved
+                with smbtakeover.
             </Typography>
             <Typography variant='body2'>
-                2: Start the Relay Server
-
-                The NTLM relay can be executed with <a href={"https://github.com/Kevin-Robertson/Inveigh"}>Inveigh</a>.
+                2: Start the Relay Server The NTLM relay can be executed with{' '}
+                <a href={'https://github.com/Kevin-Robertson/Inveigh'}>Inveigh</a>.
             </Typography>
             <Typography>
-                3: Coerce the Target Computer
-
-                Several coercion methods are documented here: <a
-                href={"https://github.com/p0dalirius/windows-coerced-authentication-methods"}>Windows Coerced
-                Authentication Methods</a>.
-
-                Examples of tools include:
-
-                <a href={"https://github.com/leechristensen/SpoolSample"}>SpoolSample</a>
-                <a href={"https://github.com/topotam/PetitPotam"}>PetitPotam</a>
+                3: Coerce the Target Computer Several coercion methods are documented here:{' '}
+                <a href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
+                    Windows Coerced Authentication Methods
+                </a>
+                . Examples of tools include:
+                <a href={'https://github.com/leechristensen/SpoolSample'}>SpoolSample</a>
+                <a href={'https://github.com/topotam/PetitPotam'}>PetitPotam</a>
             </Typography>
-        </>)
+        </>
+    );
 };
 
 export default WindowsAbuse;

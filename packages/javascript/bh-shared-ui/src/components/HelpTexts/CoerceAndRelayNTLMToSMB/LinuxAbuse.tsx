@@ -21,20 +21,18 @@ const LinuxAbuse: FC = () => {
     return (
         <>
             <Typography variant={'body2'}>
-                1. Start the Relay Server
-
-                The NTLM relay can be executed with <a href={"https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py"}>ntlmrelayx.py</a>.
+                1. Start the Relay Server The NTLM relay can be executed with{' '}
+                <a href={'https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'}>ntlmrelayx.py</a>.
             </Typography>
 
             <Typography variant={'body2'}>
-                2. Coerce the Target Computer
-
-                Several coercion methods are documented here: <a href={"https://github.com/p0dalirius/windows-coerced-authentication-methods"}>Windows Coerced Authentication Methods</a>.
-
-                Examples of tools include:
-
-                <a href={"https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py"}>printerbug.py</a>
-                <a href={"https://github.com/topotam/PetitPotam"}>PetitPotam</a>
+                2. Coerce the Target Computer Several coercion methods are documented here:{' '}
+                <a href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
+                    Windows Coerced Authentication Methods
+                </a>
+                . Examples of tools include:
+                <a href={'https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'}>printerbug.py</a>
+                <a href={'https://github.com/topotam/PetitPotam'}>PetitPotam</a>
             </Typography>
         </>
     );

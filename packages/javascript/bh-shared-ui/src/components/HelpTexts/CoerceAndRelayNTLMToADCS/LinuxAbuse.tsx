@@ -16,41 +16,38 @@
 
 import { Typography } from '@mui/material';
 import { FC } from 'react';
-import CodeController from "../CodeController/CodeController";
+import CodeController from '../CodeController/CodeController';
 
 const LinuxAbuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
                 Examples of this attack are detailed in the following blog post:
-                <li><a
-                    href={"https://trustedsec.com/blog/a-comprehensive-guide-on-relaying-anno-2022"}>I’m bringing relaying back: A comprehensive guide on relaying anno 2022</a></li>
+                <li>
+                    <a href={'https://trustedsec.com/blog/a-comprehensive-guide-on-relaying-anno-2022'}>
+                        I’m bringing relaying back: A comprehensive guide on relaying anno 2022
+                    </a>
+                </li>
             </Typography>
 
             <Typography variant={'body2'}>
-                1. Start the Relay Server
-
-                The NTLM relay can be executed with <a href={"https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py"}>ntlmrelayx.py</a>.
-
-                To relay to the enterprise CA and enroll a certificate, specify the HTTP(S) endpoint as the target and use the arguments
-
-                <CodeController>
-                    {'--adcs --template <TEMPLATE_NAME>.'}
-                </CodeController>
+                1. Start the Relay Server The NTLM relay can be executed with{' '}
+                <a href={'https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'}>ntlmrelayx.py</a>. To
+                relay to the enterprise CA and enroll a certificate, specify the HTTP(S) endpoint as the target and use
+                the arguments
+                <CodeController>{'--adcs --template <TEMPLATE_NAME>.'}</CodeController>
             </Typography>
 
             <Typography variant={'body2'}>
-                2. Coerce the Target Computer
-
-                Several coercion methods are documented here: <a href={"https://github.com/p0dalirius/windows-coerced-authentication-methods"}>Windows Coerced Authentication Methods</a>.
-
-                Examples of tools include:
-
-                <a href={"https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py"}>printerbug.py</a>
-                <a href={"https://github.com/topotam/PetitPotam"}>PetitPotam</a>
-
-                To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV Connection String format:
-                \\SERVER_NETBIOS@PORT/PATH/TO/FILE.
+                2. Coerce the Target Computer Several coercion methods are documented here:{' '}
+                <a href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
+                    Windows Coerced Authentication Methods
+                </a>
+                . Examples of tools include:
+                <a href={'https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'}>printerbug.py</a>
+                <a href={'https://github.com/topotam/PetitPotam'}>PetitPotam</a>
+                To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
+                Connection String format: \\SERVER_NETBIOS@PORT/PATH/TO/FILE.
             </Typography>
         </>
     );
