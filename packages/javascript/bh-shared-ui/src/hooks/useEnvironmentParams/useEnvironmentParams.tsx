@@ -60,11 +60,9 @@ export const useEnvironmentParams = (): UseEnvironmentParamsReturn => {
 };
 
 /* TODO:
- *   plumb useEnvironment to everything BHCE looking for domain in redux
- *   should persist in admin pages /administration/* wtf
- *   Data Quality
  *   test
  *     useEnvParam
  *     useEnvironment
  *     ??
+ *   clean up history
  * */

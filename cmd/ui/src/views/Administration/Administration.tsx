@@ -15,12 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, CircularProgress, Container } from '@mui/material';
-import { GenericErrorBoundaryFallback, Permission, SubNav } from 'bh-shared-ui';
+import { GenericErrorBoundaryFallback, GloballySupportedSearchParams, SubNav, useFeatureFlag } from 'bh-shared-ui';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import usePermissions from 'src/hooks/usePermissions/usePermissions';
 import {
+    DEFAULT_ADMINISTRATION_ROUTE,
     ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
     ROUTE_ADMINISTRATION_DATA_QUALITY,
     ROUTE_ADMINISTRATION_DB_MANAGEMENT,
@@ -29,6 +30,7 @@ import {
     ROUTE_ADMINISTRATION_MANAGE_USERS,
     ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
 } from 'src/routes/constants';
+import { Section, getAdminFilteredSections, getAdminSubRoute } from './utils';
 
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const QA = React.lazy(() => import('src/views/QA'));
@@ -41,7 +43,8 @@ const SSOConfiguration = React.lazy(() =>
 );
 
 const Administration: React.FC = () => {
-    const sections = [
+    const { data: flag } = useFeatureFlag('back_button_support');
+    const sections: Section[] = [
         {
             title: 'Data Collection',
             items: [
@@ -50,18 +53,21 @@ const Administration: React.FC = () => {
                     path: ROUTE_ADMINISTRATION_FILE_INGEST,
                     component: FileIngest,
                     adminOnly: false,
+                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
                 },
                 {
                     label: 'Data Quality',
                     path: ROUTE_ADMINISTRATION_DATA_QUALITY,
                     component: QA,
                     adminOnly: false,
+                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
                 },
                 {
                     label: 'Database Management',
                     path: ROUTE_ADMINISTRATION_DB_MANAGEMENT,
                     component: DatabaseManagement,
                     adminOnly: false,
+                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
                 },
             ],
             order: 0,
@@ -74,6 +80,7 @@ const Administration: React.FC = () => {
                     path: ROUTE_ADMINISTRATION_MANAGE_USERS,
                     component: Users,
                     adminOnly: false,
+                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
                 },
             ],
             order: 0,
@@ -86,6 +93,7 @@ const Administration: React.FC = () => {
                     path: ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
                     component: SSOConfiguration,
                     adminOnly: false,
+                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
                 },
             ],
             order: 0,
@@ -98,12 +106,14 @@ const Administration: React.FC = () => {
                     path: ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
                     component: BloodHoundConfiguration,
                     adminOnly: true,
+                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
                 },
                 {
                     label: 'Early Access Features',
                     path: ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
                     component: EarlyAccessFeatures,
                     adminOnly: false,
+                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
                 },
             ],
             order: 1,
@@ -112,23 +122,8 @@ const Administration: React.FC = () => {
 
     const { checkAllPermissions } = usePermissions();
 
-    // Checking these for now because the only route we are currently hiding is to the configuration page.
-    // In practice, this will permit Administrators and Power User roles only.
-    const hasAdminPermissions = checkAllPermissions([
-        Permission.APP_READ_APPLICATION_CONFIGURATION,
-        Permission.APP_WRITE_APPLICATION_CONFIGURATION,
-    ]);
-
     // Filter adminOnly links from the data we pass to the sidebar if a user does not have the correct permissions
-    const adminFilteredSections = sections
-        .map((section) => {
-            const filteredItems = section.items.filter((item) => !item.adminOnly || hasAdminPermissions);
-            return {
-                ...section,
-                items: filteredItems,
-            };
-        })
-        .filter((section) => section.items.length !== 0);
+    const adminFilteredSections = getAdminFilteredSections(sections, checkAllPermissions);
 
     return (
         <Box className='flex h-full pl-subnav-width'>
@@ -159,7 +154,7 @@ const Administration: React.FC = () => {
                                         .reduce((acc, val) => acc.concat(val), [])
                                         .map((item) => (
                                             <Route
-                                                path={item.path.slice(16)}
+                                                path={getAdminSubRoute(item.path)}
                                                 key={item.path}
                                                 element={
                                                     <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
@@ -168,7 +163,12 @@ const Administration: React.FC = () => {
                                                 }
                                             />
                                         ))}
-                                    <Route path='*' element={<Navigate to='file-ingest' replace />} />
+                                    <Route
+                                        path='*'
+                                        element={
+                                            <Navigate to={getAdminSubRoute(DEFAULT_ADMINISTRATION_ROUTE)} replace />
+                                        }
+                                    />
                                 </Routes>
                             </Suspense>
                         </Box>

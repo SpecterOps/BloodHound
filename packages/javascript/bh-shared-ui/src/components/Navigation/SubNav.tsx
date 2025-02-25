@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { FC, ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { cn } from '../../utils';
+import { cn, persistSearchParams } from '../../utils';
 
 const SubNavListTitle: FC<{ children: ReactNode }> = ({ children }) => {
     return (
@@ -41,10 +41,15 @@ const SubNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children,
     );
 };
 
-const SubNavListItemLink: FC<{ route: string; children: ReactNode }> = ({ route, children }) => {
+const SubNavListItemLink: FC<{ route: string; persistentSearchParams?: string[]; children: ReactNode }> = ({
+    route,
+    children,
+    persistentSearchParams,
+}) => {
+    const search = persistentSearchParams ? persistSearchParams(persistentSearchParams).toString() : undefined;
     return (
         <RouterLink
-            to={route as string}
+            to={{ pathname: route, search }}
             className={`h-7 min-h-7 w-full flex items-center gap-x-2 text-sm whitespace-nowrap`}>
             {children}
         </RouterLink>
@@ -57,6 +62,7 @@ const SubNav: React.FC<{
         items: {
             path: string;
             label: string;
+            persistentSearchParams?: string[];
         }[];
     }[];
 }> = ({ sections }) => {
@@ -69,7 +75,7 @@ const SubNav: React.FC<{
                     </SubNavListTitle>
                     {section.items.map((item, itemIndex) => (
                         <SubNavListItem key={itemIndex} route={item.path}>
-                            <SubNavListItemLink route={item.path}>
+                            <SubNavListItemLink route={item.path} persistentSearchParams={item.persistentSearchParams}>
                                 <span>{item.label}</span>
                             </SubNavListItemLink>
                         </SubNavListItem>

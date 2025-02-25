@@ -105,7 +105,7 @@ export const EarlyAccessFeaturesWarningDialog: React.FC<{
     );
 };
 
-const EarlyAccessFeatures: React.FC = () => {
+const EarlyAccessFeatures = () => {
     const navigate = useNavigate();
     const { data, isLoading, isError } = useFeatureFlags();
     const toggleFeatureFlag = useToggleFeatureFlag();
