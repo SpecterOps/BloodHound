@@ -50,8 +50,8 @@ export const useEnvironment = (environmentId?: Domain['id'], options?: Omit<Quer
 
     return useAvailableEnvironments({
         select: selectEnvironment(selectedEnvironment!),
-        ...options,
         refetchOnWindowFocus: false,
         enabled: !!selectedEnvironment,
+        ...options,
     });
 };

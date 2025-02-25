@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { RequestOptions } from 'js-client-library';
-import { UseQueryOptions, UseQueryResult, useMutation, useQuery, useQueryClient } from 'react-query';
+import { UseQueryOptions, useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils';
 
 export type Flag = {
@@ -28,7 +28,9 @@ export type Flag = {
 };
 
 export const featureFlagKeys = {
-    all: ['featureFlags'] as const,
+    all: ['featureFlags'],
+    getKey: (customKey?: string[]) =>
+        customKey?.length ? [...featureFlagKeys.all, ...customKey] : featureFlagKeys.all,
 };
 
 export const getFeatureFlags = (options?: RequestOptions): Promise<Flag[]> => {
@@ -39,16 +41,18 @@ export const toggleFeatureFlag = (flagId: string | number, options?: RequestOpti
     return apiClient.toggleFeatureFlag(flagId, options).then((response) => response.data);
 };
 
-type QueryOptions = Omit<UseQueryOptions<unknown, unknown, Flag[], readonly ['featureFlags']>, 'queryKey' | 'queryFn'>;
-export const useFeatureFlags = (queryOptions?: QueryOptions): UseQueryResult<Flag[], unknown> =>
-    useQuery(featureFlagKeys.all, ({ signal }) => getFeatureFlags({ signal }), queryOptions);
+type QueryOptions<T> = Omit<UseQueryOptions<Flag[], unknown, T | undefined, string[]>, 'queryFn'>;
 
-export const useFeatureFlag = (flagKey: string) =>
-    useQuery(featureFlagKeys.all, ({ signal }) => getFeatureFlags({ signal }), {
-        select: (data) => data.find((flag) => flag.key === flagKey),
-    });
+export function useFeatureFlags<T = Flag[]>(queryOptions?: QueryOptions<T>) {
+    const queryKey = queryOptions?.queryKey ? featureFlagKeys.getKey(queryOptions.queryKey) : featureFlagKeys.all;
+    return useQuery(queryKey, ({ signal }) => getFeatureFlags({ signal }), queryOptions);
+}
 
-export const useToggleFeatureFlag = () => {
+export function useFeatureFlag(flagKey: string, options?: Omit<QueryOptions<Flag | undefined>, 'select'>) {
+    return useFeatureFlags({ select: (data) => data.find((flag) => flag.key === flagKey), ...options });
+}
+
+export function useToggleFeatureFlag() {
     const queryClient = useQueryClient();
 
     return useMutation(toggleFeatureFlag, {
@@ -56,4 +60,4 @@ export const useToggleFeatureFlag = () => {
             queryClient.invalidateQueries(featureFlagKeys.all);
         },
     });
-};
+}
