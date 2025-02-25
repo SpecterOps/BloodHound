@@ -23,10 +23,9 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
 )
 
-func Post(ctx context.Context, db graph.Database, adcsEnabled bool, citrixEnabled bool, compositionCounter *datapipe.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database, adcsEnabled bool, citrixEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
 	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, adAnalysis.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err

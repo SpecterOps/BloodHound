@@ -20,9 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
-	"sync/atomic"
-
+	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/analysis/ad"
@@ -32,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/services/dataquality"
+	"log/slog"
 )
 
 var (
@@ -39,22 +38,10 @@ var (
 	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
-type CompositionCounter struct {
-	counter atomic.Int64
-}
-
-func (c *CompositionCounter) Get() int64 {
-	ret := c.counter.Load()
-	c.counter.Add(1)
-	return ret
-}
-
 func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
 	var (
 		collectedErrors      []error
-		compositionIdCounter = &CompositionCounter{
-			counter: atomic.Int64{},
-		}
+		compositionIdCounter = analysis.NewCompositionCounter()
 	)
 
 	if err := adAnalysis.FixWellKnownNodeTypes(ctx, graphDB); err != nil {
@@ -91,7 +78,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 	// TODO: Cleanup #ADCSFeatureFlag after full launch.
 	if adcsFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving ADCS feature flag: %w", err))
-	} else if stats, err := ad.Post(ctx, graphDB, adcsFlag.Enabled, appcfg.GetCitrixRDPSupport(ctx, db), compositionIdCounter); err != nil {
+	} else if stats, err := ad.Post(ctx, graphDB, adcsFlag.Enabled, appcfg.GetCitrixRDPSupport(ctx, db), &compositionIdCounter); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
 		adFailed = true
 	} else {

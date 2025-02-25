@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/specterops/bloodhound/dawgs/traversal"
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"log/slog"
 	"slices"
 	"sync"
@@ -37,13 +36,13 @@ import (
 )
 
 // PostNTLM is the initial function used to execute our NTLM analysis
-func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, adcsCache ADCSCache, compositionCounter *datapipe.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
+func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, adcsCache ADCSCache, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
 	var (
 		adcsComputerCache       = make(map[string]cardinality.Duplex[uint64])
 		operation               = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
 		authenticatedUsersCache = make(map[string]graph.ID)
 		//compositionChannel      = make(chan analysis.CompositionInfo)
-		protectedUsersCache     = make(map[string]cardinality.Duplex[uint64])
+		protectedUsersCache = make(map[string]cardinality.Duplex[uint64])
 	)
 
 	//This is a POC on how to pipe composition info up through the operations
@@ -445,7 +444,7 @@ func GetCoerceAndRelayNTLMtoSMBComposition(ctx context.Context, db graph.Databas
 
 // PostCoerceAndRelayNTLMtoSMB creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
 // Comprised solely of adminTo and memberOf edges
-func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, computer *graph.Node, authenticatedUserID graph.ID, compositionCounter *datapipe.CompositionCounter) error {
+func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, computer *graph.Node, authenticatedUserID graph.ID, compositionCounter *analysis.CompositionCounter) error {
 	if smbSigningEnabled, err := computer.Properties.Get(ad.SMBSigning.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
 		return nil
 	} else if err != nil {
