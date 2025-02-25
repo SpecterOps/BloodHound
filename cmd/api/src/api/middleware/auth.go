@@ -18,6 +18,7 @@ package middleware
 
 import (
 	"fmt"
+	"math/rand/v2"
 	"net/http"
 	"strings"
 	"time"
@@ -194,6 +195,24 @@ func AuthorizeAuthManagementAccess(permissions auth.PermissionSet, authorizer au
 				} else {
 					next.ServeHTTP(response, request)
 				}
+			}
+		})
+	}
+}
+
+const loginMinimum = time.Second + 500*time.Millisecond
+const loginVariation = 500 * time.Millisecond
+
+func LoginTimer() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			timer := time.NewTimer(loginMinimum + time.Duration(rand.Int64N(loginVariation.Nanoseconds())))
+
+			next.ServeHTTP(response, request)
+
+			select {
+			case <-timer.C:
+			case <-request.Context().Done():
 			}
 		})
 	}

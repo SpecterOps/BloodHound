@@ -60,8 +60,9 @@ func (s *Route) Methods(methods ...string) *Route {
 	return s
 }
 
-func (s *Route) Use(middleware ...mux.MiddlewareFunc) {
+func (s *Route) Use(middleware ...mux.MiddlewareFunc) *Route {
 	s.handler.Use(middleware...)
+	return s
 }
 
 func (s *Route) RequireAuth() *Route {

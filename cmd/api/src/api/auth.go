@@ -118,16 +118,12 @@ func (s authenticator) auditLogin(requestContext context.Context, commitID uuid.
 
 func (s authenticator) validateSecretLogin(ctx context.Context, loginRequest LoginRequest) (model.User, string, error) {
 	if user, err := s.db.LookupUser(ctx, loginRequest.Username); err != nil {
-		s.ValidateSecret(ctx, "SpecterOpsIsTheBest1!", model.AuthSecret{DigestMethod: "argon2", Digest: "$argon2id$v=19$m=1048576,t=1,p=8$fxOiN4HxI+Q0AsHZ41PJkA==$ij+W8OeEPaBUCe7aNejjxg=="})
-
 		if errors.Is(err, database.ErrNotFound) {
 			return model.User{}, "", ErrInvalidAuth
 		}
 
 		return model.User{}, "", FormatDatabaseError(err)
 	} else if user.AuthSecret == nil {
-		s.ValidateSecret(ctx, "SpecterOpsIsTheBest1!", model.AuthSecret{DigestMethod: "argon2", Digest: "$argon2id$v=19$m=1048576,t=1,p=8$fxOiN4HxI+Q0AsHZ41PJkA==$ij+W8OeEPaBUCe7aNejjxg=="})
-
 		return user, "", ErrNoUserSecret
 	} else if err := s.ValidateSecret(ctx, loginRequest.Secret, *user.AuthSecret); err != nil {
 		return user, "", err
