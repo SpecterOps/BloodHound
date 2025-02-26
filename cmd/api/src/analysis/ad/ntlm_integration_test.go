@@ -403,13 +403,19 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 						start, end, err := ops.FetchRelationshipNodes(tx, result)
 						require.NoError(t, err)
 
+						dcSet, err := ad2.GetVulnerableDomainControllersForRelayNTLMtoLDAP(context.Background(), db, result)
+						require.NoError(t, err)
+
 						if start.ID == harness.NTLMCoerceAndRelayNTLMToLDAP.Group1.ID {
 							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAP.Computer2.ID)
+							assert.True(t, dcSet.ContainsID(harness.NTLMCoerceAndRelayNTLMToLDAP.Computer1.ID))
 						} else if start.ID == harness.NTLMCoerceAndRelayNTLMToLDAP.Group5.ID {
 							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAP.Computer7.ID)
+							assert.True(t, dcSet.ContainsID(harness.NTLMCoerceAndRelayNTLMToLDAP.Computer6.ID))
 						} else {
 							require.FailNow(t, "unrecognized start node id")
 						}
+
 					}
 				}
 				return nil
@@ -470,12 +476,17 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 						start, end, err := ops.FetchRelationshipNodes(tx, result)
 						require.NoError(t, err)
 
+						dcSet, err := ad2.GetVulnerableDomainControllersForRelayNTLMtoLDAPS(context.Background(), db, result)
+						require.NoError(t, err)
+
 						if start.ID == harness.NTLMCoerceAndRelayNTLMToLDAPS.Group1.ID {
 							if end.ID != harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer2.ID && end.ID != harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer5.ID {
 								require.FailNow(t, "unrecognized end node associated with Group1")
 							}
+							assert.True(t, dcSet.ContainsID(harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer1.ID))
 						} else if start.ID == harness.NTLMCoerceAndRelayNTLMToLDAPS.Group5.ID {
 							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer7.ID)
+							assert.True(t, dcSet.ContainsID(harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer6.ID))
 						} else {
 							require.FailNow(t, "unrecognized start node id")
 						}
