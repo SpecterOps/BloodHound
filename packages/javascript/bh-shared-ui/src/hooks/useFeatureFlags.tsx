@@ -44,7 +44,7 @@ export const toggleFeatureFlag = (flagId: string | number, options?: RequestOpti
 type QueryOptions<T> = Omit<UseQueryOptions<Flag[], unknown, T | undefined, string[]>, 'queryFn'>;
 
 export function useFeatureFlags<T = Flag[]>(queryOptions?: QueryOptions<T>) {
-    const queryKey = queryOptions?.queryKey ? featureFlagKeys.getKey(queryOptions.queryKey) : featureFlagKeys.all;
+    const queryKey = featureFlagKeys.getKey(queryOptions?.queryKey);
     return useQuery(queryKey, ({ signal }) => getFeatureFlags({ signal }), queryOptions);
 }
 

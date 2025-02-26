@@ -30,7 +30,7 @@ import {
     ROUTE_ADMINISTRATION_MANAGE_USERS,
     ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
 } from 'src/routes/constants';
-import { Section, getAdminFilteredSections, getAdminSubRoute } from './utils';
+import { AdminSection, getAdminFilteredSections, getAdminSubRoute } from './utils';
 
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const QA = React.lazy(() => import('src/views/QA'));
@@ -44,7 +44,7 @@ const SSOConfiguration = React.lazy(() =>
 
 const Administration: React.FC = () => {
     const { data: flag } = useFeatureFlag('back_button_support');
-    const sections: Section[] = [
+    const sections: AdminSection[] = [
         {
             title: 'Data Collection',
             items: [
