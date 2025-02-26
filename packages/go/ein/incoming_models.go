@@ -285,7 +285,7 @@ type SMBSigningAPIResult struct {
 
 type RegistryDataAPIResult struct {
 	APIResult
-	RestrictSendingNTLMTraffic uint
+	RestrictSendingNtlmTraffic uint
 }
 
 type Computer struct {

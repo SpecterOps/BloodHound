@@ -145,7 +145,7 @@ func TestConvertComputerToNode(t *testing.T) {
 			APIResult: ein.APIResult{
 				Collected: true,
 			},
-			RestrictSendingNTLMTraffic: 1,
+			RestrictSendingNtlmTraffic: 1,
 		},
 		IsWebClientRunning: ein.BoolAPIResult{
 			APIResult: ein.APIResult{

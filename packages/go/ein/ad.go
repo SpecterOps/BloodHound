@@ -74,13 +74,13 @@ func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
 
 	if item.RegistryData.Collected {
 		/*
-			RestrictSendingNTLMTraffic is sent to us as an uint
+			RestrictSendingNtlmTraffic is sent to us as an uint
 			The possible values are
 				0: Allow All
 				1: Audit All
 				2: Deny All
 		*/
-		if item.RegistryData.RestrictSendingNTLMTraffic == 0 {
+		if item.RegistryData.RestrictSendingNtlmTraffic == 0 {
 			itemProps[ad.RestrictOutboundNTLM.String()] = false
 		} else {
 			itemProps[ad.RestrictOutboundNTLM.String()] = true
