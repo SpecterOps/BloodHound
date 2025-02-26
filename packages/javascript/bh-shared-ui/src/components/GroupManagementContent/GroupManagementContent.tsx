@@ -21,8 +21,6 @@ import { Box, Grid, Paper, Typography, useTheme } from '@mui/material';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { FC, ReactNode, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
-import { useEnvironment } from '../../hooks/useAvailableEnvironments';
-import { useFeatureFlag } from '../../hooks/useFeatureFlags';
 import { apiClient } from '../../utils';
 import { DataSelector } from '../../views/DataQuality/DataSelector';
 import AssetGroupEdit from '../AssetGroupEdit';
@@ -60,12 +58,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
 }) => {
     const theme = useTheme();
 
-    const { data: flag } = useFeatureFlag('back_button_support');
-    const { data: environmentFromParam } = useEnvironment();
-
-    const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedDomain | null>(
-        flag?.enabled ? environmentFromParam ?? null : null
-    );
+    const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedDomain | null>(null);
     const [selectedAssetGroupId, setSelectedAssetGroupId] = useState<number | null>(null);
     const [filterParams, setFilterParams] = useState<AssetGroupMemberParams>({});
 

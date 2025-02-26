@@ -31,15 +31,16 @@ import { setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import usePermissions from 'src/hooks/usePermissions/usePermissions';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { useAppDispatch } from 'src/store';
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
 import { dataCollectionMessage } from '../QA/utils';
+import useGroupManagementStateSwitch from './useGroupManagementStateSwitch';
 
 const GroupManagement = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
-    const globalDomain = useAppSelector((state) => state.global.options.domain);
+    const environment = useGroupManagementStateSwitch();
 
     // Kept out of the shared UI due to diff between GraphNodeTypes across apps
     const [openNode, setOpenNode] = useState<SelectedNode | null>(null);
@@ -82,7 +83,7 @@ const GroupManagement = () => {
 
     return (
         <GroupManagementContent
-            globalEnvironment={globalDomain}
+            globalEnvironment={environment}
             showExplorePageLink={!!openNode}
             tierZeroLabel={TIER_ZERO_LABEL}
             tierZeroTag={TIER_ZERO_TAG}

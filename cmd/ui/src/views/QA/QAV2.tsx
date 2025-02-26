@@ -42,8 +42,6 @@ const QualityAssuranceV2: React.FC = () => {
     const { data: globalEnvironment, isLoading } = useEnvironment();
 
     const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedDomain | null>(globalEnvironment ?? null);
-    console.log('selectedEnvironment', selectedEnvironment);
-
     const [dataError, setDataError] = useState(false);
     const classes = useStyles();
 
