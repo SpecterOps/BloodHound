@@ -227,7 +227,7 @@ func CreateGPOAffectedIntermediariesListDelegate(candidateFilter ops.NodeFilter)
 			for _, rel := range gpLinks {
 				enforced, err := rel.Properties.Get(ad.Enforced.String()).Bool()
 				if err != nil {
-					//Its possible the property isn't here, so lets set enforced to false and let it roll
+					// Its possible the property isn't here, so lets set enforced to false and let it roll
 					enforced = false
 				}
 
@@ -270,7 +270,7 @@ func FetchGPOAffectedTierZeroPathDelegate(tx graph.Transaction, node *graph.Node
 		for _, rel := range gpLinks {
 			enforced, err := rel.Properties.Get(ad.Enforced.String()).Bool()
 			if err != nil {
-				//Its possible the property isn't here, so lets set enforced to false and let it roll
+				// Its possible the property isn't here, so lets set enforced to false and let it roll
 				enforced = false
 			}
 
@@ -329,7 +329,7 @@ func FetchGPOAffectedContainerPaths(tx graph.Transaction, node *graph.Node) (gra
 		for _, rel := range gpLinks {
 			enforced, err := rel.Properties.Get(ad.Enforced.String()).Bool()
 			if err != nil {
-				//Its possible the property isn't here, so lets set enforced to false and let it roll
+				// Its possible the property isn't here, so lets set enforced to false and let it roll
 				enforced = false
 			}
 
@@ -456,7 +456,7 @@ func FetchEnforcedGPOs(tx graph.Transaction, target *graph.Node, skip, limit int
 						// inheritance blocking
 						return false
 					} else if lastNodeBlocks && start.Kinds.ContainsOneOf(ad.OU) {
-						//If the previous node blocks inheritance, and we've hit an OU, then the GPO is not enforced on this path, and we don't need to check any further
+						// If the previous node blocks inheritance, and we've hit an OU, then the GPO is not enforced on this path, and we don't need to check any further
 						isGPOEnforced = false
 						return false
 					}
@@ -532,7 +532,7 @@ func FetchEnforcedGPOsPaths(ctx context.Context, db graph.Database, target *grap
 							// inheritance blocking
 							return false
 						} else if lastNodeBlocks && start.Kinds.ContainsOneOf(ad.OU) {
-							//If the previous node blocks inheritance, and we've hit an OU, then the GPO is not enforced on this path, and we don't need to check any further
+							// If the previous node blocks inheritance, and we've hit an OU, then the GPO is not enforced on this path, and we don't need to check any further
 							isGPOEnforced = false
 							return false
 						}
@@ -1398,7 +1398,7 @@ func FetchLinkedGroup(ctx context.Context, db graph.Database, node *graph.Node) 
 			}
 			return err
 		} else {
-			//Pick is safe because there should only ever be one node here
+			// Pick is safe because there should only ever be one node here
 			linkedNode = endNodes.Pick()
 			return nil
 		}
@@ -1764,6 +1764,7 @@ func FetchCertTemplatePathToDomain(tx graph.Transaction, certTemplate, domain *g
 	})
 }
 
+// fetchFirstDegreeNodes fetches all entities that are connected to the provided targetNode with a relationship kind that matches any of the provided relKinds
 func fetchFirstDegreeNodes(tx graph.Transaction, targetNode *graph.Node, relKinds ...graph.Kind) (graph.NodeSet, error) {
 	return ops.FetchStartNodes(tx.Relationships().Filter(
 		query.And(
@@ -1798,11 +1799,10 @@ func FetchCertTemplateCAs(tx graph.Transaction, certTemplate *graph.Node) (graph
 	))
 }
 
-func FetchAuthUsersAndEveryoneGroups(tx graph.Transaction, domainSID string) (graph.NodeSet, error) {
+func FetchAuthUsersAndEveryoneGroups(tx graph.Transaction) (graph.NodeSet, error) {
 	return ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Kind(query.Node(), ad.Group),
-			query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
 			query.Or(
 				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), AuthenticatedUsersSuffix),
 				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), EveryoneSuffix),

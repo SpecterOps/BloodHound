@@ -107,6 +107,7 @@ bloodhound:
       bhe_disable_cypher_complexity_limit: "false"
       bhe_enable_cypher_mutations: "false"
       bhe_graph_query_memory_limit: "2"
+      bhe_graph_driver: "neo4j"
     ports:
       - containerPort: 8080
       - containerPort: 2112

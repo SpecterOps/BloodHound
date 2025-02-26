@@ -285,15 +285,11 @@ func newSQLWalkCursor(node pgsql.SyntaxNode) (*Cursor[pgsql.SyntaxNode], error) 
 			Branches: []pgsql.SyntaxNode{typedNode.Constraint},
 		}, nil
 
-	case pgsql.CompoundExpression:
-		if branches, err := pgsqlSyntaxNodeSliceTypeConvert(typedNode.AsSlice()); err != nil {
-			return nil, err
-		} else {
-			return &Cursor[pgsql.SyntaxNode]{
-				Node:     node,
-				Branches: branches,
-			}, nil
-		}
+	case pgsql.RowColumnReference:
+		return &Cursor[pgsql.SyntaxNode]{
+			Node:     node,
+			Branches: []pgsql.SyntaxNode{typedNode.Identifier, typedNode.Column},
+		}, nil
 
 	case pgsql.ArrayIndex:
 		if branches, err := pgsqlSyntaxNodeSliceTypeConvert(typedNode.Indexes); err != nil {
@@ -336,6 +332,17 @@ func newSQLWalkCursor(node pgsql.SyntaxNode) (*Cursor[pgsql.SyntaxNode], error) 
 			Node:     node,
 			Branches: []pgsql.SyntaxNode{typedNode.Query},
 		}, nil
+
+	case pgsql.SyntaxNodeFuture:
+		cursor := &Cursor[pgsql.SyntaxNode]{
+			Node: typedNode,
+		}
+
+		if unwrapped := typedNode.Unwrap(); unwrapped != nil {
+			cursor.Branches = append(cursor.Branches, unwrapped)
+		}
+
+		return cursor, nil
 
 	default:
 		return nil, fmt.Errorf("unable to negotiate sql type %T into a translation cursor", node)

@@ -69,18 +69,21 @@ func (s LoginResource) loginSecret(loginRequest api.LoginRequest, response http.
 
 func (s LoginResource) Login(response http.ResponseWriter, request *http.Request) {
 	var loginRequest api.LoginRequest
-
 	if err := api.ReadJSONRequestPayloadLimited(&loginRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if err = s.patchEULAAcceptance(request.Context(), loginRequest.Username); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else {
-		switch strings.ToLower(loginRequest.LoginMethod) {
-		case auth.ProviderTypeSecret:
-			s.loginSecret(loginRequest, response, request)
+		// Trim leading and trailing spaces from the username
+		loginRequest.Username = strings.TrimSpace(loginRequest.Username)
 
-		default:
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Login method %s is not supported.", loginRequest.LoginMethod), request), response)
+		if err = s.patchEULAAcceptance(request.Context(), loginRequest.Username); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			switch strings.ToLower(loginRequest.LoginMethod) {
+			case auth.ProviderTypeSecret:
+				s.loginSecret(loginRequest, response, request)
+			default:
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Login method %s is not supported.", loginRequest.LoginMethod), request), response)
+			}
 		}
 	}
 }

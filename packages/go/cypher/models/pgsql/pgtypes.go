@@ -89,7 +89,7 @@ const (
 	JSONB         DataType = "jsonb"
 	Numeric       DataType = "numeric"
 
-	AnyArray           DataType = "any[]"
+	AnyArray           DataType = "anyarray"
 	NodeCompositeArray DataType = "nodecomposite[]"
 	EdgeCompositeArray DataType = "edgecomposite[]"
 	IntArray           DataType = "int[]"
@@ -110,7 +110,6 @@ const (
 	TimestampWithoutTimeZone DataType = "timestamp without time zone"
 
 	Scope                 DataType = "scope"
-	InlineProjection      DataType = "inline_projection"
 	ParameterIdentifier   DataType = "parameter_identifier"
 	ExpansionPattern      DataType = "expansion_pattern"
 	ExpansionPath         DataType = "expansion_path"

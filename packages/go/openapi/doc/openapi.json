@@ -10049,7 +10049,7 @@
           "$ref": "#/components/parameters/header.prefer"
         }
       ],
-      "get": {
+      "put": {
         "operationId": "AcceptEula",
         "summary": "Accept EULA",
         "description": "Accept BloodHound Enterprise EULA for logged in user (EULA applies to BHE customers only).",

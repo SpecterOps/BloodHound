@@ -55,6 +55,7 @@ const (
 	BackupOperatorsGroupSIDSuffix             = "-551"
 	AuthenticatedUsersSuffix                  = "-S-1-5-11"
 	EveryoneSuffix                            = "-S-1-1-0"
+	ProtectedUsersSuffix                      = "-525"
 	AdminSDHolderDNPrefix                     = "CN=ADMINSDHOLDER,CN=SYSTEM,"
 )
 
@@ -186,7 +187,7 @@ func RunDomainAssociations(ctx context.Context, db graph.Database) error {
 			}
 		}
 
-		//TODO: Reimplement unassociated node pruning if we decide that FOSS needs unassociated node pruning
+		// TODO: Reimplement unassociated node pruning if we decide that FOSS needs unassociated node pruning
 		return nil
 	})
 
@@ -317,36 +318,36 @@ func createOrUpdateWellKnownLink(tx graph.Transaction, startNode *graph.Node, en
 
 // CalculateCrossProductNodeSets finds the intersection of the given sets of nodes.
 // See CalculateCrossProductNodeSetsDoc.md for explaination of the specialGroups (Authenticated Users and Everyone) and why we treat them the way we do
-func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, groupExpansions impact.PathAggregator, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
+func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.PathAggregator, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
 	if len(nodeSlices) < 2 {
 		slog.Error("Cross products require at least 2 nodesets")
 		return cardinality.NewBitmap64()
 	}
 
-	//The intention is that the node sets being passed into this function contain all the first degree principals for control
+	// The intention is that the node sets being passed into this function contain all the first degree principals for control
 	var (
-		//Temporary storage for first degree and unrolled sets without auth users/everyone
+		// Temporary storage for first degree and unrolled sets without auth users/everyone
 		firstDegreeSets []cardinality.Duplex[uint64]
 		unrolledSets    []cardinality.Duplex[uint64]
 
-		//This is the set we use as a reference set to check against checkset
+		// This is the set we use as a reference set to check against checkset
 		unrolledRefSet = cardinality.NewBitmap64()
 
-		//This is the set we use to aggregate multiple sets together it should have all the valid principals from all other sets at this point
+		// This is the set we use to aggregate multiple sets together it should have all the valid principals from all other sets at this point
 		checkSet = cardinality.NewBitmap64()
 
-		//This is our set of entities that have the complete cross product of permissions
+		// This is our set of entities that have the complete cross product of permissions
 		resultEntities = cardinality.NewBitmap64()
 	)
 
-	//Get the IDs of the Auth. Users and Everyone groups
-	specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid)
+	// Get the IDs of the Auth. Users and Everyone groups
+	specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx)
 
 	if err != nil {
 		slog.Error(fmt.Sprintf("Could not fetch groups: %s", err.Error()))
 	}
 
-	//Unroll all nodesets
+	// Unroll all nodesets
 	for _, nodeSlice := range nodeSlices {
 		var (
 			firstDegreeSet = cardinality.NewBitmap64()
@@ -364,7 +365,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 			}
 		}
 
-		//Skip sets containing Auth. Users or Everyone
+		// Skip sets containing Auth. Users or Everyone
 		hasSpecialGroup := false
 
 		for _, specialGroup := range specialGroups {
@@ -380,7 +381,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 		}
 	}
 
-	//If every nodeset (unrolled) includes Auth. Users/Everyone then return all nodesets (first degree)
+	// If every nodeset (unrolled) includes Auth. Users/Everyone then return all nodesets (first degree)
 	if len(firstDegreeSets) == 0 {
 		for _, nodeSet := range nodeSlices {
 			for _, entity := range nodeSet {
@@ -389,7 +390,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 		}
 
 		return resultEntities
-	} else if len(firstDegreeSets) == 1 { //If every nodeset (unrolled) except one includes Auth. Users/Everyone then return that one nodeset (first degree)
+	} else if len(firstDegreeSets) == 1 { // If every nodeset (unrolled) except one includes Auth. Users/Everyone then return that one nodeset (first degree)
 		return firstDegreeSets[0]
 	} else {
 		// This means that len(firstDegreeSets) must be greater than or equal to 2 i.e. we have at least two nodesets (unrolled) without Auth. Users/Everyone
@@ -400,7 +401,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 		}
 	}
 
-	//Check first degree principals in our reference set (firstDegreeSets[0]) first
+	// Check first degree principals in our reference set (firstDegreeSets[0]) first
 	firstDegreeSets[0].Each(func(id uint64) bool {
 		if checkSet.Contains(id) {
 			resultEntities.Add(id)
@@ -411,11 +412,11 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 		return true
 	})
 
-	//Find all the groups in our secondary targets and map them to their cardinality in our expansions
-	//Saving off to a map to prevent multiple lookups on the expansions
+	// Find all the groups in our secondary targets and map them to their cardinality in our expansions
+	// Saving off to a map to prevent multiple lookups on the expansions
 	tempMap := map[uint64]uint64{}
 	unrolledRefSet.Each(func(id uint64) bool {
-		//If group expansions contains this ID and its cardinality is > 0, it's a group/localgroup
+		// If group expansions contains this ID and its cardinality is > 0, it's a group/localgroup
 		idCardinality := groupExpansions.Cardinality(id).Cardinality()
 		if idCardinality > 0 {
 			tempMap[id] = idCardinality
@@ -424,32 +425,32 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 		return true
 	})
 
-	//Save the map keys to a new slice, this represents our list of groups in the expansion
+	// Save the map keys to a new slice, this represents our list of groups in the expansion
 	keys := make([]uint64, 0, len(tempMap))
 
 	for key := range tempMap {
 		keys = append(keys, key)
 	}
 
-	//Sort by cardinality we saved in the map, which will give us all the groups sorted by their number of members
+	// Sort by cardinality we saved in the map, which will give us all the groups sorted by their number of members
 	sort.Slice(keys, func(i, j int) bool {
 		return tempMap[keys[i]] < tempMap[keys[j]]
 	})
 
 	for _, groupId := range keys {
-		//If the set doesn't contain our key, it means that we've already encapsulated this group in a previous shortcut so skip it
+		// If the set doesn't contain our key, it means that we've already encapsulated this group in a previous shortcut so skip it
 		if !unrolledRefSet.Contains(groupId) {
 			continue
 		}
 
 		if checkSet.Contains(groupId) {
-			//If this entity is a cross product, add it to result entities, remove the group id from the second set and xor the group's membership with the result set
+			// If this entity is a cross product, add it to result entities, remove the group id from the second set and xor the group's membership with the result set
 			resultEntities.Add(groupId)
 
 			unrolledRefSet.Remove(groupId)
 			unrolledRefSet.Xor(groupExpansions.Cardinality(groupId))
 		} else {
-			//If this isn't a match, remove it from the second set to ensure we don't check it again, but leave its membership
+			// If this isn't a match, remove it from the second set to ensure we don't check it again, but leave its membership
 			unrolledRefSet.Remove(groupId)
 		}
 	}

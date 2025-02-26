@@ -23,33 +23,60 @@ import (
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
 
-func (s *Translator) translateUpdates(scope *Scope) error {
-	for _, identifierMutation := range s.query.CurrentPart().mutations.Assignments.Values() {
+func (s *Translator) translateUpdates() error {
+	currentQueryPart := s.query.CurrentPart()
+
+	// Do not translate the update statements until all are collected
+	currentQueryPart.numUpdatingClauses -= 1
+
+	if currentQueryPart.numUpdatingClauses > 0 {
+		return nil
+	}
+
+	for _, updateClause := range currentQueryPart.mutations.Updates.Values() {
 		if stepFrame, err := s.query.Scope.PushFrame(); err != nil {
 			return err
 		} else {
-			identifierMutation.Frame = stepFrame
+			updateClause.Frame = stepFrame
 
-			if boundProjections, err := buildVisibleScopeProjections(scope, nil); err != nil {
+			joinConstraint := &Constraint{
+				Dependencies: pgsql.AsIdentifierSet(updateClause.TargetBinding.Identifier, updateClause.UpdateBinding.Identifier),
+				Expression: pgsql.NewBinaryExpression(
+					pgsql.CompoundIdentifier{updateClause.TargetBinding.Identifier, pgsql.ColumnID},
+					pgsql.OperatorEquals,
+					pgsql.CompoundIdentifier{updateClause.UpdateBinding.Identifier, pgsql.ColumnID},
+				),
+			}
+
+			if err := RewriteFrameBindings(s.query.Scope, joinConstraint.Expression); err != nil {
+				return err
+			}
+
+			updateClause.JoinConstraint = joinConstraint.Expression
+
+			if boundProjections, err := buildVisibleScopeProjections(s.query.Scope); err != nil {
 				return err
 			} else {
+				// Zip through all projected identifiers and update their last projected frame
+				for _, binding := range boundProjections.Bindings {
+					binding.LastProjection = stepFrame
+				}
+
 				for _, selectItem := range boundProjections.Items {
 					switch typedProjection := selectItem.(type) {
 					case *pgsql.AliasedExpression:
 						if !typedProjection.Alias.Set {
 							return fmt.Errorf("expected aliased expression to have an alias set")
-						} else if typedProjection.Alias.Value == identifierMutation.TargetBinding.Identifier {
+						} else if typedProjection.Alias.Value == updateClause.TargetBinding.Identifier {
 							// This is the projection being replaced by the assignment
-							if rewrittenProjections, err := buildProjection(identifierMutation.TargetBinding.Identifier, identifierMutation.UpdateBinding, scope, scope.ReferenceFrame()); err != nil {
+							if rewrittenProjections, err := buildProjection(updateClause.TargetBinding.Identifier, updateClause.UpdateBinding, s.query.Scope, s.query.Scope.ReferenceFrame()); err != nil {
 								return err
 							} else {
-								identifierMutation.Projection = append(identifierMutation.Projection, rewrittenProjections...)
+								updateClause.Projection = append(updateClause.Projection, rewrittenProjections...)
 							}
-
-							continue
+						} else {
+							updateClause.Projection = append(updateClause.Projection, typedProjection)
 						}
-
-						identifierMutation.Projection = append(identifierMutation.Projection, typedProjection)
 
 					default:
 						return fmt.Errorf("expected aliased expression as projection but got: %T", selectItem)
@@ -60,11 +87,11 @@ func (s *Translator) translateUpdates(scope *Scope) error {
 		}
 	}
 
-	return nil
+	return s.buildUpdates()
 }
 
-func (s *Translator) buildUpdates(scope *Scope) error {
-	for _, identifierMutation := range s.query.CurrentPart().mutations.Assignments.Values() {
+func (s *Translator) buildUpdates() error {
+	for _, identifierMutation := range s.query.CurrentPart().mutations.Updates.Values() {
 		sqlUpdate := pgsql.Update{
 			From: []pgsql.FromClause{{
 				Source: pgsql.TableReference{
@@ -143,6 +170,10 @@ func (s *Translator) buildUpdates(scope *Scope) error {
 			}
 
 			for _, propertyAssignment := range identifierMutation.PropertyAssignments.Values() {
+				if err := RewriteFrameBindings(s.query.Scope, propertyAssignment.ValueExpression); err != nil {
+					return err
+				}
+
 				if propertyLookup, isPropertyLookup := asPropertyLookup(propertyAssignment.ValueExpression); isPropertyLookup {
 					// Ensure that property lookups in JSONB build functions use the JSONB field type
 					propertyLookup.Operator = pgsql.OperatorJSONField
@@ -170,7 +201,7 @@ func (s *Translator) buildUpdates(scope *Scope) error {
 		}
 
 		if kindAssignments.Set {
-			if err := RewriteExpressionIdentifiers(kindAssignments.Value, identifierMutation.Frame.Previous.Binding.Identifier, scope.Visible()); err != nil {
+			if err := RewriteFrameBindings(s.query.Scope, kindAssignments.Value); err != nil {
 				return err
 			}
 
@@ -240,7 +271,7 @@ func (s *Translator) buildUpdates(scope *Scope) error {
 		}
 
 		if propertyAssignments.Set {
-			if err := RewriteExpressionIdentifiers(propertyAssignments.Value, identifierMutation.Frame.Previous.Binding.Identifier, scope.Visible()); err != nil {
+			if err := RewriteFrameBindings(s.query.Scope, propertyAssignments.Value); err != nil {
 				return err
 			}
 
@@ -281,21 +312,8 @@ func (s *Translator) buildUpdates(scope *Scope) error {
 			)}
 		}
 
-		joinConstraint := &Constraint{
-			Dependencies: pgsql.AsIdentifierSet(identifierMutation.TargetBinding.Identifier, identifierMutation.UpdateBinding.Identifier),
-			Expression: pgsql.NewBinaryExpression(
-				pgsql.CompoundIdentifier{identifierMutation.TargetBinding.Identifier, pgsql.ColumnID},
-				pgsql.OperatorEquals,
-				pgsql.CompoundIdentifier{identifierMutation.UpdateBinding.Identifier, pgsql.ColumnID},
-			),
-		}
-
-		if err := rewriteConstraintIdentifierReferences(identifierMutation.Frame, []*Constraint{joinConstraint}); err != nil {
-			return err
-		}
-
 		sqlUpdate.Returning = identifierMutation.Projection
-		sqlUpdate.Where = models.ValueOptional(joinConstraint.Expression)
+		sqlUpdate.Where = models.ValueOptional(identifierMutation.JoinConstraint)
 
 		s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
 			Alias: pgsql.TableAlias{
