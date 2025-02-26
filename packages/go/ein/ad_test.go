@@ -133,3 +133,30 @@ func TestParseDomainTrusts_TrustAttributesFix(t *testing.T) {
 	assert.Contains(t, rel.RelProps, "trustattributes")
 	assert.Equal(t, rel.RelProps["trustattributes"], 12345)
 }
+
+func TestConvertComputerToNode(t *testing.T) {
+	computer := ein.Computer{
+		IngestBase: ein.IngestBase{
+			Properties: map[string]any{
+				"isdc": true,
+			},
+		},
+		RegistryData: ein.RegistryDataAPIResult{
+			APIResult: ein.APIResult{
+				Collected: true,
+			},
+			RestrictSendingNTLMTraffic: 1,
+		},
+		IsWebClientRunning: ein.BoolAPIResult{
+			APIResult: ein.APIResult{
+				Collected: true,
+			},
+			Result: true,
+		},
+	}
+
+	result := ein.ConvertComputerToNode(computer, ad.Computer)
+	assert.Equal(t, true, result.PropertyMap[ad.IsDC.String()])
+	assert.Equal(t, true, result.PropertyMap[ad.WebClientRunning.String()])
+	assert.Equal(t, true, result.PropertyMap[ad.RestrictOutboundNTLM.String()])
+}
