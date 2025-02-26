@@ -22,7 +22,7 @@ import References from './References';
 import WindowsAbuse from './WindowsAbuse';
 
 const CoerceAndRelayNTLMToSMB = {
-    general: General, e
+    general: General,
     windowsabuse: WindowsAbuse,
     linuxabuse: LinuxAbuse,
     opsec: Opsec,
@@ -30,4 +30,4 @@ const CoerceAndRelayNTLMToSMB = {
     composition: Composition,
 };
 
-export default CoerceAndRel ayNTLMToSMB;
+export default CoerceAndRelayNTLMToSMB;
