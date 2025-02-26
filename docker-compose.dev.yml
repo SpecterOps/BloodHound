@@ -15,6 +15,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
 services:
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - ${BH_DOZZLE_PORT:-127.0.0.1:18080}:8080
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dozzle.rule=Host(`${BH_DOZZLE_HOSTNAME:-dozzle.localhost}`)
+      - traefik.http.routers.dozzle.service=dozzle
+      - traefik.http.services.dozzle.loadbalancer.server.port=8080
+
   proxy:
     image: docker.io/library/traefik:latest
     command:
