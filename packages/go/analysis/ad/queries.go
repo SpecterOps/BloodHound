@@ -1839,11 +1839,10 @@ func FetchCertTemplateCAs(tx graph.Transaction, certTemplate *graph.Node) (graph
 	))
 }
 
-func FetchAuthUsersAndEveryoneGroups(tx graph.Transaction, domainSID string) (graph.NodeSet, error) {
+func FetchAuthUsersAndEveryoneGroups(tx graph.Transaction) (graph.NodeSet, error) {
 	return ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Kind(query.Node(), ad.Group),
-			query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
 			query.Or(
 				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), AuthenticatedUsersSuffix),
 				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), EveryoneSuffix),

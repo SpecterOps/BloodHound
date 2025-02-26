@@ -88,9 +88,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				s.certTemplateEnrollers[ct.ID] = firstDegreePrincipals.Slice()
 
 				// Check if Auth. Users or Everyone has enroll
-				if domainsid, err := ct.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-					slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for certtemplate %d: %v", ct.ID, err))
-				} else if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, firstDegreePrincipals.Slice(), domainsid); err != nil {
+				if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, firstDegreePrincipals.Slice()); err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf("Error fetching if auth. users or everyone has enroll on certtemplate %d: %v", ct.ID, err))
 				} else {
 					s.certTemplateHasSpecialEnrollers[ct.ID] = authUsersOrEveryoneHasEnroll
@@ -113,9 +111,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				s.enterpriseCAEnrollers[eca.ID] = firstDegreeEnrollers.Slice()
 
 				// Check if Auth. Users or Everyone has enroll
-				if domainsid, err := eca.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-					slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for eca %d: %v", eca.ID, err))
-				} else if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, firstDegreeEnrollers.Slice(), domainsid); err != nil {
+				if authUsersOrEveryoneHasEnroll, err := containsAuthUsersOrEveryone(tx, firstDegreeEnrollers.Slice()); err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf("Error fetching if auth. users or everyone has enroll on enterprise ca %d: %v", eca.ID, err))
 				} else {
 					s.enterpriseCAHasSpecialEnrollers[eca.ID] = authUsersOrEveryoneHasEnroll
