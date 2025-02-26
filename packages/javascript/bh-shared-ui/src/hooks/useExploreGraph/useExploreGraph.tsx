@@ -17,16 +17,15 @@
 import { useQuery } from 'react-query';
 import { useNotifications } from '../../providers/NotificationProvider/hooks';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams/useExploreParams';
-import { ExploreGraphQueryOptions, GraphItemMutationFn, nodeSearchGraphQuery } from './search-modes';
+import { ExploreGraphQueryOptions, nodeSearchGraphQuery } from './search-modes';
 
 export function getExploreGraphQuery(
     addNotification: ReturnType<typeof useNotifications>['addNotification'],
-    paramOptions: Partial<ExploreQueryParams>,
-    mutateResponse?: GraphItemMutationFn
+    paramOptions: Partial<ExploreQueryParams>
 ): ExploreGraphQueryOptions {
     switch (paramOptions.searchType) {
         case 'node':
-            return nodeSearchGraphQuery(addNotification, paramOptions, mutateResponse);
+            return nodeSearchGraphQuery(addNotification, paramOptions);
         case 'pathfinding':
             return {};
         case 'cypher':
@@ -42,21 +41,12 @@ export function getExploreGraphQuery(
 }
 
 // Consumer of query params example
-export const useExploreGraph = <T,>(mutateResponse?: GraphItemMutationFn) => {
+export const useExploreGraph = <T,>() => {
     const { addNotification } = useNotifications();
 
-    const { primarySearch, secondarySearch, cypherSearch, searchType } = useExploreParams();
+    const params = useExploreParams();
 
-    const queryConfig = getExploreGraphQuery(
-        addNotification,
-        {
-            primarySearch,
-            secondarySearch,
-            cypherSearch,
-            searchType,
-        },
-        mutateResponse
-    );
+    const queryConfig = getExploreGraphQuery(addNotification, params);
 
     const { data, isLoading, isError } = useQuery(queryConfig);
 
