@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import Composition from './Composition';
 import General from './General';
 import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
 import WindowsAbuse from './WindowsAbuse';
-import Composition from "./Composition";
 
 const CoerceAndRelayNTLMToADCS = {
     general: General,
@@ -27,7 +27,7 @@ const CoerceAndRelayNTLMToADCS = {
     linuxabuse: LinuxAbuse,
     opsec: Opsec,
     references: References,
-    composition: Composition
+    composition: Composition,
 };
 
 export default CoerceAndRelayNTLMToADCS;
