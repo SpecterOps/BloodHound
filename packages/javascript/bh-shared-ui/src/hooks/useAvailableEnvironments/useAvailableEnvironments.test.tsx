@@ -17,8 +17,9 @@
 import { createMemoryHistory } from 'history';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import * as ReactQuery from 'react-query';
 import { renderHook, waitFor } from '../../test-utils';
-import { useEnvironment } from './useAvailableEnvironments';
+import { useAvailableEnvironments, useEnvironment } from './useAvailableEnvironments';
 
 const fakeDomainA = {
     type: 'active-directory',
@@ -47,6 +48,17 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('useAvailableEnvironments', () => {
+    describe('useAvailableEnvironments', () => {
+        const useQuerySpy = vi.spyOn(ReactQuery, 'useQuery');
+        it('takes the param appendQueryKey and will append that value to the existing queryKey', async () => {
+            const testKey = 'test-key';
+            renderHook(() => useAvailableEnvironments({ appendQueryKey: [testKey] }));
+            expect(useQuerySpy).toBeCalledWith(
+                expect.objectContaining({ queryKey: ['available-environments', testKey] })
+            );
+        });
+    });
+
     describe('useEnvironment', () => {
         it('returns the full environment for the environmentid passed', async () => {
             const actual = renderHook(() => useEnvironment(fakeDomainA.id));

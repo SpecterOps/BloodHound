@@ -20,7 +20,7 @@ import { apiClient } from '../../utils/api';
 import { useEnvironmentParams } from '../useEnvironmentParams';
 
 export const availableEnvironmentKeys = {
-    all: ['available-domains'],
+    all: ['available-environments'],
     getKey: (customKey?: string[]) =>
         customKey?.length ? [...availableEnvironmentKeys.all, ...customKey] : availableEnvironmentKeys.all,
 };
@@ -33,10 +33,12 @@ type QueryOptions<T = Domain[]> = Omit<
 };
 
 export function useAvailableEnvironments<T = Domain[]>(options?: QueryOptions<T>) {
+    const { appendQueryKey, ...rest } = options ?? {};
+
     return useQuery({
-        queryKey: availableEnvironmentKeys.getKey(options?.appendQueryKey),
+        queryKey: availableEnvironmentKeys.getKey(appendQueryKey),
         queryFn: ({ signal }) => apiClient.getAvailableEnvironments({ signal }).then((response) => response.data.data),
-        ...options,
+        ...rest,
     });
 }
 
