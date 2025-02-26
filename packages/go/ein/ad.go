@@ -68,8 +68,8 @@ func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
 		itemProps[ad.WebClientRunning.String()] = item.IsWebClientRunning.Result
 	}
 
-	if item.SMBInfo.Collected {
-		itemProps[ad.SMBSigning.String()] = item.SMBInfo.SigningEnabled
+	if item.SmbInfo.Collected {
+		itemProps[ad.SMBSigning.String()] = item.SmbInfo.SigningEnabled
 	}
 
 	if item.RegistryData.Collected {

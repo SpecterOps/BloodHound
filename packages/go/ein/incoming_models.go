@@ -305,7 +305,7 @@ type Computer struct {
 	IsDC                    bool
 	DomainSID               string
 	UnconstrainedDelegation bool
-	SMBInfo                 SMBSigningAPIResult
+	SmbInfo                 SMBSigningAPIResult
 	IsWebClientRunning      BoolAPIResult
 	RegistryData            RegistryDataAPIResult
 }

@@ -153,7 +153,7 @@ func TestConvertComputerToNode(t *testing.T) {
 			},
 			Result: true,
 		},
-		SMBInfo: ein.SMBSigningAPIResult{
+		SmbInfo: ein.SMBSigningAPIResult{
 			APIResult: ein.APIResult{
 				Collected: true,
 			},
