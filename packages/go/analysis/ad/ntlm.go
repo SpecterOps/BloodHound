@@ -572,7 +572,6 @@ func GetVulnerableDomainControllersForRelayNTLMtoLDAPS(ctx context.Context, db g
 				query.Kind(query.Node(), ad.Computer),
 				query.Equals(query.NodeProperty(ad.IsDC.String()), true),
 				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainsid),
-				query.Equals(query.NodeProperty(ad.LDAPSigning.String()), true),
 				query.Equals(query.NodeProperty(ad.LDAPSEPA.String()), false),
 				query.Equals(query.NodeProperty(ad.LDAPSAvailable.String()), true),
 			),
@@ -715,7 +714,7 @@ func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]L
 						query.Equals(
 							query.NodeProperty(ad.DomainSID.String()), domainSid,
 						),
-						// IsDC is a property for computers that are Domain Controllers for a Domain
+						// IsDC is a property for computers that are Domain Controllers
 						// This allows us to ensure the computer has a DCFor relationship to the currently iterated domain
 						query.Equals(
 							query.NodeProperty(ad.IsDC.String()), true,
