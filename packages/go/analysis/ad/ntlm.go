@@ -505,6 +505,87 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 	return nil
 }
 
+func GetVulnerableDomainControllersForRelayNTLMtoLDAP(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
+	var (
+		startNode *graph.Node
+		nodes     graph.NodeSet
+	)
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	}
+
+	if domainsid, err := startNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", startNode.ID, err))
+		return nil, err
+	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var ierr error
+		nodes, ierr = ops.FetchNodeSet(tx.Nodes().Filter(
+			query.And(
+				query.Kind(query.Node(), ad.Computer),
+				query.Equals(query.NodeProperty(ad.IsDC.String()), true),
+				query.Equals(query.NodeProperty(ad.LDAPAvailable.String()), true),
+				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainsid),
+				query.Equals(query.NodeProperty(ad.LDAPSigning.String()), false),
+			),
+		))
+
+		return ierr
+	}); err != nil {
+		return nil, err
+	} else {
+		return nodes, nil
+	}
+}
+
+func GetVulnerableDomainControllersForRelayNTLMtoLDAPS(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
+	var (
+		startNode *graph.Node
+		nodes     graph.NodeSet
+	)
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	}
+
+	if domainsid, err := startNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", startNode.ID, err))
+		return nil, err
+	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var ierr error
+		nodes, ierr = ops.FetchNodeSet(tx.Nodes().Filter(
+			query.And(
+				query.Kind(query.Node(), ad.Computer),
+				query.Equals(query.NodeProperty(ad.IsDC.String()), true),
+				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainsid),
+				query.Equals(query.NodeProperty(ad.LDAPSigning.String()), true),
+				query.Equals(query.NodeProperty(ad.LDAPSEPA.String()), false),
+				query.Equals(query.NodeProperty(ad.LDAPSAvailable.String()), true),
+			),
+		))
+
+		return ierr
+	}); err != nil {
+		return nil, err
+	} else {
+		return nodes, nil
+	}
+}
+
 // PostCoerceAndRelayNTLMToLDAP creates edges where an authenticated user group, for a given domain, is able to target the provided computer.
 // This will create either a CoerceAndRelayNTLMToLDAP or CoerceAndRelayNTLMToLDAPS edges, depending on the ldapSigning property of the domain
 func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob, computer *graph.Node, authenticatedUserID graph.ID, ldapSigningCache map[string]LDAPSigningCache) error {
@@ -641,6 +722,9 @@ func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]L
 						),
 						query.Equals(
 							query.NodeProperty(ad.LDAPSigning.String()), false,
+						),
+						query.Equals(
+							query.NodeProperty(ad.LDAPAvailable.String()), true,
 						),
 					),
 				)); err != nil {
