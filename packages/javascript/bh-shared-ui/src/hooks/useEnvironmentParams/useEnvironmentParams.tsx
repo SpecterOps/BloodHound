@@ -61,9 +61,5 @@ export const useEnvironmentParams = (): UseEnvironmentParamsReturn => {
 };
 
 /* TODO:
- *   test
- *     useEnvParam
- *     useEnvironment
- *     ??
  *   clean up history
  * */

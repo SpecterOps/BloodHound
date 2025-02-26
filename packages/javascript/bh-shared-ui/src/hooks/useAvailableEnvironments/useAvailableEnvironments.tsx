@@ -16,8 +16,8 @@
 
 import { Domain } from 'js-client-library';
 import { useQuery, UseQueryOptions } from 'react-query';
-import { apiClient } from '../utils/api';
-import { useEnvironmentParams } from './useEnvironmentParams';
+import { apiClient } from '../../utils/api';
+import { useEnvironmentParams } from '../useEnvironmentParams';
 
 export const availableEnvironmentKeys = {
     all: ['available-domains'],
