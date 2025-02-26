@@ -37,9 +37,10 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		managementResource = authapi.NewManagementResource(resources.Config, resources.DB, resources.Authorizer, resources.Authenticator)
 	)
 
+	routerInst.POST("/api/v2/login", loginResource.Login).Use(middleware.DefaultRateLimitMiddleware(), middleware.LoginTimer())
+
 	router.With(middleware.DefaultRateLimitMiddleware,
 		// Login resources
-		routerInst.POST("/api/v2/login", loginResource.Login),
 		routerInst.GET("/api/v2/self", managementResource.GetSelf),
 		routerInst.POST("/api/v2/logout", loginResource.Logout),
 
