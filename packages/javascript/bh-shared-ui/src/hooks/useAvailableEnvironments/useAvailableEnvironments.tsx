@@ -46,7 +46,7 @@ export const selectEnvironment = (environmentId: Domain['id']): QueryOptions<Dom
     return (data) => data.find((domain) => domain.id === environmentId);
 };
 
-export const useEnvironment = (environmentId?: Domain['id'], options?: Omit<QueryOptions<Domain>, 'select'>) => {
+export const useEnvironment = (environmentId?: Domain['id'] | null, options?: Omit<QueryOptions<Domain>, 'select'>) => {
     const { environmentId: environmentIdParam } = useEnvironmentParams();
     const selectedEnvironment = environmentId ?? environmentIdParam;
 
