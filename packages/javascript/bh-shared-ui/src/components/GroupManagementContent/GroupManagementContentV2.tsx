@@ -21,6 +21,7 @@ import { Box, Grid, Paper, Typography, useTheme } from '@mui/material';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { FC, ReactNode, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
+import { useEnvironment } from '../../hooks/useAvailableEnvironments';
 import { apiClient } from '../../utils';
 import { DataSelector } from '../../views/DataQuality/DataSelector';
 import AssetGroupEdit from '../AssetGroupEdit';
@@ -30,8 +31,7 @@ import AssetGroupMemberList from '../AssetGroupMemberList';
 import DropdownSelector, { DropdownOption } from '../DropdownSelector';
 import { SelectedDomain } from './types';
 
-// Top level layout and shared logic for the Group Management page
-const GroupManagementContent: FC<{
+export interface GroupManagementContentV2Props {
     globalEnvironment: SelectedDomain | null;
     showExplorePageLink: boolean;
     tierZeroLabel: string;
@@ -42,7 +42,10 @@ const GroupManagementContent: FC<{
     onClickMember: (member: AssetGroupMember) => void;
     mapAssetGroups: (assetGroups: AssetGroup[]) => DropdownOption[];
     userHasEditPermissions: boolean;
-}> = ({
+}
+
+// Top level layout and shared logic for the Group Management page
+const GroupManagementContentV2: FC<GroupManagementContentV2Props> = ({
     globalEnvironment,
     showExplorePageLink,
     tierZeroLabel,
@@ -56,7 +59,9 @@ const GroupManagementContent: FC<{
 }) => {
     const theme = useTheme();
 
-    const [selectedDomain, setSelectedDomain] = useState<SelectedDomain | null>(null);
+    const { data: environment } = useEnvironment();
+
+    const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedDomain | null>(environment ?? null);
     const [selectedAssetGroupId, setSelectedAssetGroupId] = useState<number | null>(null);
     const [filterParams, setFilterParams] = useState<AssetGroupMemberParams>({});
 
@@ -119,7 +124,7 @@ const GroupManagementContent: FC<{
 
     // Start building a filter query for members that gets passed down to AssetGroupMemberList to make the request
     useEffect(() => {
-        const filterDomain = selectedDomain || globalEnvironment;
+        const filterDomain = selectedEnvironment || globalEnvironment;
         const filter: AssetGroupMemberParams = {};
         if (filterDomain?.type === 'active-directory-platform') {
             filter.environment_kind = 'eq:Domain';
@@ -129,7 +134,7 @@ const GroupManagementContent: FC<{
             filter.environment_id = `eq:${filterDomain?.id}`;
         }
         setFilterParams(filter);
-    }, [selectedDomain, globalEnvironment, selectedAssetGroupId]);
+    }, [selectedEnvironment, globalEnvironment, selectedAssetGroupId]);
 
     const selectorLabelStyles = { display: { xs: 'none', xl: 'flex' } };
 
@@ -155,9 +160,9 @@ const GroupManagementContent: FC<{
                             </Grid>
                             <Grid item xs={12} xl={8}>
                                 <DataSelector
-                                    value={selectedDomain || globalEnvironment || { type: null, id: null }}
+                                    value={selectedEnvironment || globalEnvironment || { type: null, id: null }}
                                     errorMessage={domainSelectorErrorMessage}
-                                    onChange={(selection: SelectedDomain) => setSelectedDomain({ ...selection })}
+                                    onChange={(selection: SelectedDomain) => setSelectedEnvironment({ ...selection })}
                                     fullWidth={true}
                                 />
                             </Grid>
@@ -203,4 +208,4 @@ const GroupManagementContent: FC<{
     );
 };
 
-export default GroupManagementContent;
+export default GroupManagementContentV2;

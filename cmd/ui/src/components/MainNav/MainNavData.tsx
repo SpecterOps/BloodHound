@@ -15,14 +15,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Switch } from '@bloodhoundenterprise/doodleui';
-import { AppIcon } from 'bh-shared-ui';
-import { logout } from 'src/ducks/auth/authSlice';
+import { AppIcon, GloballySupportedSearchParams, useFeatureFlag } from 'bh-shared-ui';
+import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 export const useMainNavLogoData = () => {
+    const authState = useAppSelector((state) => state.auth);
+    const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const { data: flag } = useFeatureFlag('back_button_support', {
+        enabled: !!authState.isInitialized && fullyAuthenticated,
+    });
+
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
+
     const bhceImageUrlDarkMode = '/img/banner-ce-dark-mode.png';
     const bhceImageUrlLightMode = '/img/banner-ce-light-mode.png';
     const soImageUrlDarkMode = '/img/banner-so-dark-mode.png';
@@ -45,25 +52,41 @@ export const useMainNavLogoData = () => {
                 altText: 'SpecterOps Text Logo',
             },
         },
+        persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
     };
 };
 
-export const MainNavPrimaryListData = [
-    {
-        label: 'Explore',
-        icon: <AppIcon.LineChart size={24} />,
-        route: routes.ROUTE_EXPLORE,
-        testId: 'global_nav-explore',
-    },
-    {
-        label: 'Group Management',
-        icon: <AppIcon.Diamond size={24} />,
-        route: routes.ROUTE_GROUP_MANAGEMENT,
-        testId: 'global_nav-group-management',
-    },
-];
+export const useMainNavPrimaryListData = () => {
+    const authState = useAppSelector((state) => state.auth);
+    const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const { data: flag } = useFeatureFlag('back_button_support', {
+        enabled: !!authState.isInitialized && fullyAuthenticated,
+    });
+    return [
+        {
+            label: 'Explore',
+            icon: <AppIcon.LineChart size={24} />,
+            route: routes.ROUTE_EXPLORE,
+            testId: 'global_nav-explore',
+            persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
+        },
+        {
+            label: 'Group Management',
+            icon: <AppIcon.Diamond size={24} />,
+            route: routes.ROUTE_GROUP_MANAGEMENT,
+            testId: 'global_nav-group-management',
+            persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
+        },
+    ];
+};
 
 export const useMainNavSecondaryListData = () => {
+    const authState = useAppSelector((state) => state.auth);
+    const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const { data: flag } = useFeatureFlag('back_button_support', {
+        enabled: !!authState.isInitialized && fullyAuthenticated,
+    });
+
     const dispatch = useAppDispatch();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
@@ -85,30 +108,35 @@ export const useMainNavSecondaryListData = () => {
             icon: <AppIcon.User size={24} />,
             route: routes.ROUTE_MY_PROFILE,
             testId: 'global_nav-my-profile',
+            persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
         },
         {
             label: 'Download Collectors',
             icon: <AppIcon.Download size={24} />,
             route: routes.ROUTE_DOWNLOAD_COLLECTORS,
             testId: 'global_nav-download-collectors',
+            persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
         },
         {
             label: 'Administration',
             icon: <AppIcon.UserCog size={24} />,
             route: routes.ROUTE_ADMINISTRATION_ROOT,
             testId: 'global_nav-administration',
+            persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
         },
         {
             label: 'API Explorer',
             icon: <AppIcon.Compass size={24} />,
             route: routes.ROUTE_API_EXPLORER,
             testId: 'global_nav-api-explorer',
+            persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
         },
         {
             label: 'Docs and Support',
             icon: <AppIcon.FileMagnifyingGlass size={24} />,
             functionHandler: handleGoToSupport,
             testId: 'global_nav-support',
+            persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
         },
         {
             label: (
@@ -120,12 +148,14 @@ export const useMainNavSecondaryListData = () => {
             icon: <AppIcon.EclipseCircle size={24} />,
             functionHandler: handleToggleDarkMode,
             testId: 'global_nav-dark-mode',
+            persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
         },
         {
             label: 'Log Out',
             icon: <AppIcon.Logout size={24} />,
             functionHandler: handleLogout,
             testId: 'global_nav-logout',
+            persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
         },
     ];
 };

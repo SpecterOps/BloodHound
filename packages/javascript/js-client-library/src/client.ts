@@ -107,7 +107,7 @@ class BHEAPIClient {
         return this.baseClient.post('/api/v2/clear-database', payload, options);
     };
 
-    getAvailableDomains = (options?: types.RequestOptions) =>
+    getAvailableEnvironments = (options?: types.RequestOptions) =>
         this.baseClient.get<BasicResponse<Domain[]>>('/api/v2/available-domains', options);
 
     /* audit */
