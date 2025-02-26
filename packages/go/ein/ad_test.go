@@ -153,10 +153,17 @@ func TestConvertComputerToNode(t *testing.T) {
 			},
 			Result: true,
 		},
+		SMBInfo: ein.SMBSigningAPIResult{
+			APIResult: ein.APIResult{
+				Collected: true,
+			},
+			SigningEnabled: true,
+		},
 	}
 
 	result := ein.ConvertComputerToNode(computer, ad.Computer)
 	assert.Equal(t, true, result.PropertyMap[ad.IsDC.String()])
 	assert.Equal(t, true, result.PropertyMap[ad.WebClientRunning.String()])
 	assert.Equal(t, true, result.PropertyMap[ad.RestrictOutboundNTLM.String()])
+	assert.Equal(t, true, result.PropertyMap[ad.SMBSigning.String()])
 }
