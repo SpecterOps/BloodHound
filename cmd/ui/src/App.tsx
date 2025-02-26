@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
+import { DefaultTheme } from '@mui/styles';
 import makeStyles from '@mui/styles/makeStyles';
 import {
     AppNotifications,
@@ -51,9 +51,16 @@ import { setDarkMode } from './ducks/global/actions';
 export const Inner: React.FC = () => {
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
-    const queryClient = useQueryClient();
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
-    const featureFlagsRes = useFeatureFlags({ retry: false, enabled: !!authState.isInitialized && fullyAuthenticated });
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+
+    const queryClient = useQueryClient();
+
+    const featureFlagsRes = useFeatureFlags({
+        retry: false,
+        enabled: !!(authState.isInitialized && fullyAuthenticated),
+    });
+
     const mainNavData = {
         logo: useMainNavLogoData(),
         primaryList: MainNavPrimaryListData,
@@ -61,9 +68,7 @@ export const Inner: React.FC = () => {
     };
     const showNavBar = useShowNavBar(ROUTES);
 
-    const darkMode = useAppSelector((state) => state.global.view.darkMode);
-
-    const useStyles = makeStyles((theme) => ({
+    const useStyles = makeStyles((theme: DefaultTheme) => ({
         applicationContainer: {
             display: 'flex',
             position: 'relative',
@@ -73,22 +78,22 @@ export const Inner: React.FC = () => {
             '@global': {
                 '.api-explorer .swagger-ui': {
                     [`& a.nostyle,
-                        & div.renderedMarkdown > p,
-                        & .response-col_status,
-                        & .col_header,
-                        & div.parameter__name,
-                        & .parameter__in,
-                        & div.opblock-summary-description,
-                        & div > small,
-                        & li.tabitem,
-                        & .response-col_links,
-                        & .opblock-description-wrapper > p,
-                        & .btn-group > button,
-                        & textarea,
-                        & select,
-                        & .parameter__type,
-                        & .prop-format,
-                        `]: {
+                    & div.renderedMarkdown > p,
+                    & .response-col_status,
+                    & .col_header,
+                    & div.parameter__name,
+                    & .parameter__in,
+                    & div.opblock-summary-description,
+                    & div > small,
+                    & li.tabitem,
+                    & .response-col_links,
+                    & .opblock-description-wrapper > p,
+                    & .btn-group > button,
+                    & textarea,
+                    & select,
+                    & .parameter__type,
+                    & .prop-format,
+                    `]: {
                         color: theme.palette.color.primary,
                     },
                     ['& input, & textarea, & select, & .models, & .filter-container .operation-filter-input']: {

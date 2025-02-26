@@ -18,7 +18,9 @@ import userEvent from '@testing-library/user-event';
 import { ListRolesResponse, ListSSOProvidersResponse, Role, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { createAuthStateWithPermissions } from '../../mocks';
 import { render, screen } from '../../test-utils';
+import { Permission } from '../../utils';
 import SSOConfiguration from './SSOConfiguration';
 
 const testRoles = [
@@ -97,6 +99,13 @@ interface CreateSAMLProviderResponse {
 }
 
 const server = setupServer(
+    rest.get('/api/v2/self', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: createAuthStateWithPermissions([Permission.AUTH_MANAGE_PROVIDERS]).user,
+            })
+        );
+    }),
     rest.get<any, any, ListRolesResponse>(`/api/v2/roles`, (req, res, ctx) => {
         return res(
             ctx.json({
@@ -199,5 +208,13 @@ describe('SSOConfiguration', async () => {
         expect(await screen.findByText(newSAMLDetails.sp_sso_uri)).toBeInTheDocument();
         expect(await screen.findByText(newSAMLDetails.sp_acs_uri)).toBeInTheDocument();
         expect(await screen.findByText(newSAMLDetails.sp_metadata_uri)).toBeInTheDocument();
+    });
+
+    it('should disable the create provider button and not display providers if the user lacks permission', async () => {
+        render(<SSOConfiguration />);
+
+        expect(screen.getByRole('button', { name: /create provider/i })).toBeDisabled();
+
+        expect(screen.queryByText(newSAMLProvider.name)).toBeNull();
     });
 });

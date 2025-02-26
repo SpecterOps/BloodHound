@@ -9463,7 +9463,7 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
 	s.Computer1.Properties.Set(ad.LDAPSigning.String(), false)
-	s.Computer1.Properties.Set(ad.IsDC.String(), domain1Sid)
+	s.Computer1.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer1)
 
 	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
@@ -9483,7 +9483,7 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.Computer5)
 
 	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domain2Sid)
-	s.Computer6.Properties.Set(ad.IsDC.String(), domain2Sid)
+	s.Computer6.Properties.Set(ad.IsDC.String(), true)
 	s.Computer6.Properties.Set(ad.LDAPSigning.String(), false)
 	graphTestContext.UpdateNode(s.Computer6)
 
@@ -9494,11 +9494,11 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domain3Sid)
 	s.Computer8.Properties.Set(ad.LDAPSigning.String(), true)
 	s.Computer8.Properties.Set(ad.LDAPSAvailable.String(), true)
-	s.Computer8.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer8.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer8)
 
 	s.Computer9 = graphTestContext.NewActiveDirectoryComputer("Computer9", domain3Sid)
-	s.Computer9.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer9.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer9)
 
 	s.Computer10 = graphTestContext.NewActiveDirectoryComputer("Computer10", domain1Sid)
@@ -9578,7 +9578,7 @@ func (s *CoerceAndRelayNTLMToLDAPS) Setup(graphTestContext *GraphTestContext) {
 	domain3Sid := RandomDomainSID()
 
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
-	s.Computer1.Properties.Set(ad.IsDC.String(), domain1Sid)
+	s.Computer1.Properties.Set(ad.IsDC.String(), true)
 	s.Computer1.Properties.Set(ad.LDAPSEPA.String(), false)
 	s.Computer1.Properties.Set(ad.LDAPSAvailable.String(), true)
 	graphTestContext.UpdateNode(s.Computer1)
@@ -9602,7 +9602,7 @@ func (s *CoerceAndRelayNTLMToLDAPS) Setup(graphTestContext *GraphTestContext) {
 	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domain2Sid)
 	s.Computer6.Properties.Set(ad.LDAPSEPA.String(), false)
 	s.Computer6.Properties.Set(ad.LDAPSAvailable.String(), true)
-	s.Computer6.Properties.Set(ad.IsDC.String(), domain2Sid)
+	s.Computer6.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer6)
 
 	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domain2Sid)
@@ -9611,30 +9611,30 @@ func (s *CoerceAndRelayNTLMToLDAPS) Setup(graphTestContext *GraphTestContext) {
 
 	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domain3Sid)
 	s.Computer8.Properties.Set(ad.LDAPSEPA.String(), false)
-	s.Computer8.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer8.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer8)
 
 	s.Computer9 = graphTestContext.NewActiveDirectoryComputer("Computer9", domain3Sid)
 	s.Computer9.Properties.Set(ad.LDAPSEPA.String(), true)
 	s.Computer9.Properties.Set(ad.LDAPSAvailable.String(), true)
-	s.Computer9.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer9.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer9)
 
 	s.Computer10 = graphTestContext.NewActiveDirectoryComputer("Computer10", domain3Sid)
 	s.Computer10.Properties.Set(ad.LDAPSEPA.String(), false)
 	s.Computer10.Properties.Set(ad.LDAPSAvailable.String(), false)
-	s.Computer10.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer10.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer10)
 
 	s.Computer11 = graphTestContext.NewActiveDirectoryComputer("Computer11", domain3Sid)
 	s.Computer11.Properties.Set(ad.LDAPSEPA.String(), true)
 	s.Computer11.Properties.Set(ad.LDAPSAvailable.String(), false)
-	s.Computer11.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer11.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer11)
 
 	s.Computer12 = graphTestContext.NewActiveDirectoryComputer("Computer12", domain3Sid)
 	s.Computer12.Properties.Set(ad.LDAPSAvailable.String(), true)
-	s.Computer12.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer12.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer12)
 
 	s.Computer13 = graphTestContext.NewActiveDirectoryComputer("Computer13", domain1Sid)

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DeepPartial, apiClient } from 'bh-shared-ui';
+import { DeepPartial, apiClient, createAuthStateWithPermissions } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import App, { Inner } from 'src/App';
@@ -47,7 +47,7 @@ const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
         return res(
             ctx.json({
-                data: [],
+                data: createAuthStateWithPermissions(Object.values(Permissions)).user,
             })
         );
     })
@@ -75,7 +75,6 @@ describe('app', () => {
                         isInitialized: true,
                     },
                 };
-
                 render(<Inner />, { initialState });
             });
         };
@@ -83,6 +82,7 @@ describe('app', () => {
         it('does not make feature-flag request if user is not fully authenticated', async () => {
             const featureFlagSpy = vi.spyOn(apiClient, 'getFeatureFlags');
             const fullyAuthenticatedSelectorSpy = vi.spyOn(authSlice, 'fullyAuthenticatedSelector');
+
             // hard code user as not authenticated
             fullyAuthenticatedSelectorSpy.mockReturnValue(false);
 
