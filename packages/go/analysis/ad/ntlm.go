@@ -403,7 +403,7 @@ func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]L
 						// IsDC is a property for computers that are Domain Controllers for a Domain
 						// This allows us to ensure the computer has a DCFor relationship to the currently iterated domain
 						query.Equals(
-							query.NodeProperty(ad.IsDC.String()), domainSid,
+							query.NodeProperty(ad.IsDC.String()), true,
 						),
 						query.Equals(
 							query.NodeProperty(ad.LDAPSigning.String()), false,
@@ -417,7 +417,7 @@ func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]L
 							query.NodeProperty(ad.DomainSID.String()), domainSid,
 						),
 						query.Equals(
-							query.NodeProperty(ad.IsDC.String()), domainSid,
+							query.NodeProperty(ad.IsDC.String()), true,
 						),
 						query.Equals(
 							query.NodeProperty(ad.LDAPSAvailable.String()), true,

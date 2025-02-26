@@ -17,15 +17,19 @@
 import { Typography } from '@mui/material';
 import { FC } from 'react';
 
-const Abuse: FC = () => {
+const Opsec: FC = () => {
     return (
-        <Typography variant='body2'>
-            An attacker who is a member of "Authenticated Users" triggers a webclient based coercion from the target
-            computer to their attacker host. Since the connection originates from the webclient instead of SMB, the
-            attacker can relay the inbound auth attempt to LDAP(S) if the LDAP(S) signing/EPA settings allow it. The
-            relay to LDAP(S) is used to abuse RBCD or Shadow Credentials against the victim computer account.
-        </Typography>
+        <>
+            <Typography variant='body2'>
+                NTLM relayed authentications can be detected by login events where the IP address does not match the
+                computer’s actual IP address. This detection technique is described in the blog post:{' '}
+                <a href={'https://posts.bluraven.io/detecting-ntlm-relay-attacks-d92e99e68fb9'}>
+                    Detecting NTLM Relay Attacks
+                </a>
+                .
+            </Typography>
+        </>
     );
 };
 
-export default Abuse;
+export default Opsec;
