@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {FC} from "react";
-import {EdgeInfoProps} from "../index";
-import {useQuery} from "react-query";
-import {apiClient} from "../../../utils";
-import VirtualizedNodeList, {VirtualizedNodeListItem} from "../../VirtualizedNodeList";
-import {Alert, Box, Skeleton, Typography} from "@mui/material";
+import { Alert, Box, Skeleton, Typography } from '@mui/material';
+import { FC } from 'react';
+import { useQuery } from 'react-query';
+import { apiClient } from '../../../utils';
+import VirtualizedNodeList, { VirtualizedNodeListItem } from '../../VirtualizedNodeList';
+import { EdgeInfoProps } from '../index';
 
 const RelayTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
     const { data, isLoading, isError } = useQuery(['relayTargets', sourceDBId, targetDBId, edgeName], () =>
@@ -34,9 +34,7 @@ const RelayTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) =
 
     return (
         <>
-            <Typography variant='body2'>
-                The nodes in this list are valid relay targets for this attack
-            </Typography>
+            <Typography variant='body2'>The nodes in this list are valid relay targets for this attack</Typography>
             <Box py={1}>
                 {isLoading ? (
                     <Skeleton variant='rounded' />
