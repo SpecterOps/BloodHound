@@ -126,6 +126,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 		}
 
 		for _, domain := range s.domains {
+			//TODO: This code is necessary for ADCS composition during post, but we have scrapped that as part of this initiative. Leaving this code for later use
 			//if rootCaPaths, err := FetchEnterpriseCAsRootCAForPathToDomainFull(tx, domain); err != nil {
 			//	slog.ErrorContext(ctx, fmt.Sprintf("Error getting cas via rootcafor for domain %d: %v", domain.ID, err))
 			//} else {
