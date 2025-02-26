@@ -2333,7 +2333,7 @@ class BHEAPIClient {
         );
 
     getRelayTargets = (sourceNode: number, targetNode: number, edgeType: string, options?: types.RequestOptions) =>
-        this.baseClient.get(
+        this.baseClient.get<types.GraphResponse>(
             '/api/v2/graphs/relay-targets',
             Object.assign(
                 {

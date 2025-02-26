@@ -26,7 +26,7 @@ const RelayTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) =
         apiClient.getRelayTargets(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
     );
 
-    const nodesArray: VirtualizedNodeListItem[] = Object.values(data?.data || {}).map((node:any) => ({
+    const nodesArray: VirtualizedNodeListItem[] = Object.values(data?.data.nodes || {}).map((node) => ({
         name: node.label,
         objectId: node.objectId,
         kind: node.kind,

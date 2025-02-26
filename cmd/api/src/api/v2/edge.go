@@ -63,7 +63,11 @@ func (s *Resources) GetEdgeRelayTargets(response http.ResponseWriter, request *h
 	} else if nodeSet, err := ad.GetRelayTargets(request.Context(), s.Graph, edge); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting composition for edge: %v", err), request), response)
 	} else {
-		api.WriteJSONResponse(request.Context(), nodeSet.Slice(), http.StatusOK, response)
+		unifiedGraph := model.NewUnifiedGraph()
+		for _, node := range nodeSet {
+			unifiedGraph.AddNode(node, true)
+		}
+		api.WriteBasicResponse(request.Context(), unifiedGraph, http.StatusOK, response)
 	}
 }
 
