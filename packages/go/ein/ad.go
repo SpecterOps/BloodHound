@@ -83,7 +83,6 @@ func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
 		if item.RegistryData.RestrictSendingNTLMTraffic == 0 {
 			itemProps[ad.RestrictOutboundNTLM.String()] = false
 		} else {
-
 			itemProps[ad.RestrictOutboundNTLM.String()] = true
 		}
 	}
