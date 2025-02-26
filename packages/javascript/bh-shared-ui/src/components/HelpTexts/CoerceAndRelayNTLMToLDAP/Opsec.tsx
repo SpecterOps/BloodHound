@@ -17,14 +17,17 @@
 import { Typography } from '@mui/material';
 import { FC } from 'react';
 
-const Abuse: FC = () => {
+const Opsec: FC = () => {
     return (
         <Typography variant='body2'>
-            An attacker who is a member of "Authenticated Users" triggers a traditional SMB based coercion from the
-            target computer to their attacker host. The attacker relays this authentication attempt to the target system
-            the inbound account has admin access to.
+            NTLM relayed authentications can be detected by login events where the IP address does not match the
+            computer’s actual IP address. This detection technique is described in the blog post:{' '}
+            <a href={'https://posts.bluraven.io/detecting-ntlm-relay-attacks-d92e99e68fb9'}>
+                Detecting NTLM Relay Attacks
+            </a>
+            .
         </Typography>
     );
 };
 
-export default Abuse;
+export default Opsec;

@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// recursively applies Partial<T> to nested object types
-export type DeepPartial<T> = T extends object
-    ? {
-          [P in keyof T]?: DeepPartial<T[P]>;
-      }
-    : T;
+import { useEffect } from 'react';
 
-export type SortOrder = 'asc' | 'desc' | undefined;
-
-export type ValueOf<T> = T[keyof T];
-
-// [key in <string literal>] forces all options in string literal type to be in this map and nothing else
-export type MappedStringLiteral<T extends string | number, V = ''> = {
-    [key in T]: V;
-};
+// eslint-disable-next-line react-hooks/exhaustive-deps
+export const useMountEffect = (cb: React.EffectCallback) => useEffect(cb, []);

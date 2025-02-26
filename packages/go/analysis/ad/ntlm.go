@@ -34,7 +34,12 @@ import (
 )
 
 // PostNTLM is the initial function used to execute our NTLM analysis
-func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, adcsCache ADCSCache) (*analysis.AtomicPostProcessingStats, error) {
+func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, adcsCache ADCSCache, ntlmEnabled bool) (*analysis.AtomicPostProcessingStats, error) {
+	// NTLM must be enabled through the feature flag
+	if !ntlmEnabled {
+		return nil, nil
+	}
+
 	var (
 		adcsComputerCache       = make(map[string]cardinality.Duplex[uint64])
 		operation               = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
@@ -398,7 +403,7 @@ func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]L
 						// IsDC is a property for computers that are Domain Controllers for a Domain
 						// This allows us to ensure the computer has a DCFor relationship to the currently iterated domain
 						query.Equals(
-							query.NodeProperty(ad.IsDC.String()), domainSid,
+							query.NodeProperty(ad.IsDC.String()), true,
 						),
 						query.Equals(
 							query.NodeProperty(ad.LDAPSigning.String()), false,
@@ -412,7 +417,7 @@ func FetchLDAPSigningCache(ctx context.Context, db graph.Database) (map[string]L
 							query.NodeProperty(ad.DomainSID.String()), domainSid,
 						),
 						query.Equals(
-							query.NodeProperty(ad.IsDC.String()), domainSid,
+							query.NodeProperty(ad.IsDC.String()), true,
 						),
 						query.Equals(
 							query.NodeProperty(ad.LDAPSAvailable.String()), true,

@@ -29,16 +29,13 @@ import {
     SSOProviderTable,
 } from '../../components';
 import { UpsertOIDCProviderDialog, UpsertSAMLProviderDialog } from '../../components/UpsertSSOProviders';
-import { useFeatureFlag } from '../../hooks';
+import { useFeatureFlag, useMountEffect, usePermissions } from '../../hooks';
 import { useNotifications } from '../../providers';
-import { SortOrder, apiClient } from '../../utils';
+import { SortOrder } from '../../types';
+import { Permission, apiClient } from '../../utils';
 
 const SSOConfiguration: FC = () => {
     /* Hooks */
-    const theme = useTheme();
-    const { addNotification } = useNotifications();
-    const { data: flag } = useFeatureFlag('oidc_support');
-
     const [selectedSSOProviderId, setSelectedSSOProviderId] = useState<SSOProvider['id'] | undefined>();
     const [ssoProviderIdToDeleteOrUpdate, setSSOProviderIdToDeleteOrUpdate] = useState<SSOProvider['id'] | undefined>();
     const [dialogOpen, setDialogOpen] = useState<'SAML' | 'OIDC' | 'DELETE' | ''>('');
@@ -46,12 +43,40 @@ const SSOConfiguration: FC = () => {
     const [upsertProviderError, setUpsertProviderError] = useState<any>();
     const [typeSortOrder, setTypeSortOrder] = useState<SortOrder>();
 
+    const { data: flag } = useFeatureFlag('oidc_support');
+    const theme = useTheme();
+
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_PROVIDERS);
+
+    const { addNotification, dismissNotification } = useNotifications();
+    const notificationKey = 'manage-sso-providers-permission';
+
+    const effect: React.EffectCallback = () => {
+        if (!hasPermission) {
+            addNotification(
+                `Your user role does not grant permission to manage SSO providers. Please contact your administrator for details.`,
+                notificationKey,
+                {
+                    persist: true,
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
+        }
+
+        return () => dismissNotification(notificationKey);
+    };
+
+    useMountEffect(effect);
+
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
         apiClient.getRoles({ signal }).then((res) => res.data.data.roles)
     );
 
-    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
-        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
+    const listSSOProvidersQuery = useQuery(
+        ['listSSOProviders'],
+        ({ signal }) => apiClient.listSSOProviders({ signal }).then((res) => res.data.data),
+        { enabled: hasPermission }
     );
 
     const deleteSSOProviderMutation = useMutation(
@@ -244,6 +269,7 @@ const SSOConfiguration: FC = () => {
                 <Grid container spacing={theme.spacing(2)}>
                     <Grid item display='flex' alignItems='center' justifyContent='end' minHeight='24px' mb={2} xs={12}>
                         <CreateMenu
+                            disabled={!hasPermission}
                             createMenuTitle={`Create ${flag?.enabled ? '' : 'SAML '}Provider`}
                             featureFlag='oidc_support'
                             featureFlagEnabledMenuItems={[
@@ -296,6 +322,8 @@ const SSOConfiguration: FC = () => {
                     )}
                 </Grid>
             </PageWithTitle>
+
+            {/* Dialogs */}
             <UpsertSAMLProviderDialog
                 open={dialogOpen === 'SAML'}
                 oldSSOProvider={selectedSSOProviderToUpdate}
