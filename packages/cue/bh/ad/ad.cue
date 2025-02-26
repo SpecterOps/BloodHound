@@ -817,11 +817,18 @@ LDAPSigning: types.#StringEnum & {
 	representation: "ldapsigning"
 }
 
+LDAPAvailable: types.#StringEnum & {
+	symbol: "LDAPAvailable"
+	schema: "ad"
+	name: "LDAP Available"
+	representation: "ldapavailable"
+}
+
 LDAPSAvailable: types.#StringEnum & {
 	symbol: "LDAPSAvailable"
 	schema: "ad"
 	name: "LDAPS Available"
-	representation: "ldasavailable"
+	representation: "ldapsavailable"
 }
 
 LDAPSEPA: types.#StringEnum & {
@@ -973,10 +980,9 @@ Properties: [
 	ADCSWebEnrollmentHTTPS,
 	ADCSWebEnrollmentHTTPSEPA,
 	LDAPSigning,
+	LDAPAvailable,
 	LDAPSAvailable,
 	LDAPSEPA,
-	RelayableToDCLDAP,
-	RelayableToDCLDAPS,
 	IsDC
 ]
 

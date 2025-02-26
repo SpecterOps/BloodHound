@@ -19,6 +19,8 @@ package database
 import (
 	"context"
 
+	"gorm.io/gorm"
+
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -56,4 +58,16 @@ func (s *BloodhoundDB) GetIngestTasksForJob(ctx context.Context, jobID int64) (m
 	result := s.db.WithContext(ctx).Where("task_id=?", jobID).Find(&ingestTasks)
 
 	return ingestTasks, CheckError(result)
+}
+
+func (s *BloodhoundDB) CreateCompositionInfo(ctx context.Context, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error) {
+	return nodes, edges, s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&nodes).Error; err != nil {
+			return err
+		} else if err := tx.Create(&edges).Error; err != nil {
+			return err
+		}
+		tx.Commit()
+		return nil
+	})
 }

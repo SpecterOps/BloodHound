@@ -270,6 +270,19 @@ type UserRightsAssignmentAPIResult struct {
 	Privilege  string
 }
 
+type BoolApiResult struct {
+	APIResult
+	Result bool
+}
+
+type SmbSigningApiResult struct {
+	APIResult
+	SigningEnabled  bool
+	OSVersion       string
+	OSBuild         string
+	DnsComputerName string
+}
+
 type Computer struct {
 	IngestBase
 	PrimaryGroupSID         string

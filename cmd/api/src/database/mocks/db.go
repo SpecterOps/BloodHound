@@ -243,6 +243,22 @@ func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityStats(arg0, arg1 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateAzureDataQualityStats), arg0, arg1)
 }
 
+// CreateCompositionInfo mocks base method.
+func (m *MockDatabase) CreateCompositionInfo(arg0 context.Context, arg1 model.EdgeCompositionNodes, arg2 model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateCompositionInfo", arg0, arg1, arg2)
+	ret0, _ := ret[0].(model.EdgeCompositionNodes)
+	ret1, _ := ret[1].(model.EdgeCompositionEdges)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// CreateCompositionInfo indicates an expected call of CreateCompositionInfo.
+func (mr *MockDatabaseMockRecorder) CreateCompositionInfo(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCompositionInfo", reflect.TypeOf((*MockDatabase)(nil).CreateCompositionInfo), arg0, arg1, arg2)
+}
+
 // CreateFileUploadJob mocks base method.
 func (m *MockDatabase) CreateFileUploadJob(arg0 context.Context, arg1 model.FileUploadJob) (model.FileUploadJob, error) {
 	m.ctrl.T.Helper()
