@@ -17,7 +17,6 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { BrowserRouter } from 'react-router-dom';
 import { render, screen, within } from '../../test-utils';
 import { GloballySupportedSearchParams } from '../../utils/searchParams';
 import { AppIcon } from '../AppIcon';
@@ -98,11 +97,7 @@ describe('MainNav', () => {
     const user = userEvent.setup();
 
     beforeEach(() => {
-        render(
-            <BrowserRouter>
-                <MainNav mainNavData={mainNavData} />
-            </BrowserRouter>
-        );
+        render(<MainNav mainNavData={mainNavData} />);
     });
     it('should render a nav element with logo, two lists, a version number and a powered by', () => {
         expect(screen.getByRole('navigation')).toBeInTheDocument();
