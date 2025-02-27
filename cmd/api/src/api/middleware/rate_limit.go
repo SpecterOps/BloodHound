@@ -71,13 +71,18 @@ func RateLimitMiddleware(cfg config.Configuration, limiter *limiter.Limiter) mux
 	middleware := stdlib.NewMiddleware(limiter, ipGetter)
 
 	return func(next http.Handler) http.Handler {
-		return middleware.Handler(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			response.Header().Del("X-RateLimit-Limit")
-			response.Header().Del("X-RateLimit-Remaining")
-			response.Header().Del("X-RateLimit-Reset")
-			next.ServeHTTP(response, request)
-		}))
+		return middleware.Handler(RemoveRateLimitHeadersMiddleware(next))
 	}
+}
+
+// RemoveRateLimitHeadersMiddleware removes rate limit headers that we do not want appearing in our responses
+func RemoveRateLimitHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		response.Header().Del("X-RateLimit-Limit")
+		response.Header().Del("X-RateLimit-Remaining")
+		response.Header().Del("X-RateLimit-Reset")
+		next.ServeHTTP(response, request)
+	})
 }
 
 // DefaultRateLimitMiddleware is a convenience function for creating the default rate limiting middleware
