@@ -17,7 +17,7 @@
 import { useQuery } from 'react-query';
 import { useNotifications } from '../../providers/NotificationProvider/hooks';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams/useExploreParams';
-import { ExploreGraphQueryOptions, nodeSearchGraphQuery } from './search-modes';
+import { ExploreGraphQueryOptions, nodeSearchGraphQuery } from './queries';
 
 export function getExploreGraphQuery(
     addNotification: ReturnType<typeof useNotifications>['addNotification'],
