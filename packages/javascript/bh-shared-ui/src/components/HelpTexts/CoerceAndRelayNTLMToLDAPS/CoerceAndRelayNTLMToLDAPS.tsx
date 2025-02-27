@@ -18,6 +18,7 @@ import General from './General';
 import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
+import RelayTargets from './RelayTargets';
 import WindowsAbuse from './WindowsAbuse';
 
 const CoerceAndRelayNTLMToLDAPS = {
@@ -26,6 +27,7 @@ const CoerceAndRelayNTLMToLDAPS = {
     linuxabuse: LinuxAbuse,
     opsec: Opsec,
     references: References,
+    relaytargets: RelayTargets,
 };
 
 export default CoerceAndRelayNTLMToLDAPS;
