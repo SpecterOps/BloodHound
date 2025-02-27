@@ -23,11 +23,12 @@ import WindowsAbuse from './WindowsAbuse';
 
 const CoerceAndRelayNTLMToSMB = {
     general: General,
-    windowsabuse: WindowsAbuse,
-    linuxabuse: LinuxAbuse,
+    composition: Composition,
+    windowsAbuse: WindowsAbuse,
+    linuxAbuse: LinuxAbuse,
     opsec: Opsec,
     references: References,
-    composition: Composition,
+
 };
 
 export default CoerceAndRelayNTLMToSMB;
