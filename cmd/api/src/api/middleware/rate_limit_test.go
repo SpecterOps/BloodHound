@@ -24,6 +24,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api/middleware"
+	"github.com/specterops/bloodhound/src/config"
+	"github.com/stretchr/testify/require"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
 )
@@ -37,11 +39,14 @@ func TestRateLimitMiddleware(t *testing.T) {
 
 	store := memory.NewStore()
 
-	instance := limiter.New(store, rate, limiter.WithTrustForwardHeader(false))
+	instance := limiter.New(store, rate)
+
+	cfg, err := config.NewDefaultConfiguration()
+	require.Nil(t, err)
 
 	testHandler := &CountingHandler{}
 	router := mux.NewRouter()
-	router.Use(middleware.RateLimitMiddleware(instance))
+	router.Use(middleware.RateLimitMiddleware(cfg, instance))
 	router.Handle("/teapot", testHandler)
 
 	if req, err := http.NewRequest("GET", "/teapot", nil); err != nil {

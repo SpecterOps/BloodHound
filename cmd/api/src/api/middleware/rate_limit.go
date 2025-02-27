@@ -17,12 +17,15 @@
 package middleware
 
 import (
+	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/src/config"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/middleware/stdlib"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
@@ -34,25 +37,47 @@ const DefaultRateLimit = 55
 // RateLimitMiddleware is a convenience function for creating rate limiting middleware
 //
 //	router.Use(RateLimitMiddleware(limiter))
-func RateLimitMiddleware(limiter *limiter.Limiter) mux.MiddlewareFunc {
+func RateLimitMiddleware(cfg config.Configuration, limiter *limiter.Limiter) mux.MiddlewareFunc {
 	ipGetter := stdlib.WithKeyGetter(
 		func(r *http.Request) string {
-			if xff := r.Header.Get("X-Forwarded-For"); xff == "" {
-				slog.DebugContext(r.Context(), "No data found in X-Forwarded-For header")
-				return r.RemoteAddr
+			var remoteIP string
+
+			if host, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
+				slog.WarnContext(r.Context(), fmt.Sprintf("Error parsing remoteAddress '%s': %s", r.RemoteAddr, err))
+				remoteIP = r.RemoteAddr
+			} else {
+				remoteIP = host
+			}
+
+			if cfg.TrustedProxies == 0 {
+				return remoteIP
+			} else if xff := r.Header.Get("X-Forwarded-For"); xff == "" {
+				slog.WarnContext(r.Context(), "Expected data in X-Forwarded-For header")
+				return remoteIP
 			} else {
 				ips := strings.Split(xff, ",")
-				rightMostIP := strings.TrimSpace(ips[len(ips)-1])
 
-				return rightMostIP
+				idxIP := len(ips) - cfg.TrustedProxies
+				if idxIP < 0 {
+					slog.WarnContext(r.Context(), "Not enough IPs in X-Forwarded-For, defaulting to first IP")
+					idxIP = 0
+				}
+
+				return strings.TrimSpace(ips[idxIP])
 			}
 		},
 	)
 
 	middleware := stdlib.NewMiddleware(limiter, ipGetter)
 
-	return middleware.Handler
-
+	return func(next http.Handler) http.Handler {
+		return middleware.Handler(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			response.Header().Del("X-RateLimit-Limit")
+			response.Header().Del("X-RateLimit-Remaining")
+			response.Header().Del("X-RateLimit-Reset")
+			next.ServeHTTP(response, request)
+		}))
+	}
 }
 
 // DefaultRateLimitMiddleware is a convenience function for creating the default rate limiting middleware
@@ -69,7 +94,12 @@ func DefaultRateLimitMiddleware() mux.MiddlewareFunc {
 
 	store := memory.NewStore()
 
-	instance := limiter.New(store, rate, limiter.WithTrustForwardHeader(false))
+	instance := limiter.New(store, rate)
 
-	return RateLimitMiddleware(instance)
+	cfg, err := config.NewDefaultConfiguration()
+	if err != nil {
+		slog.Error(fmt.Sprintf("Failed to create default configuration: %v", err))
+	}
+
+	return RateLimitMiddleware(cfg, instance)
 }
