@@ -16,13 +16,7 @@
 
 import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import {
-    GenericErrorBoundaryFallback,
-    useAvailableEnvironments,
-    useEnvironmentParams,
-    useMatchingPaths,
-} from 'bh-shared-ui';
-import { Domain } from 'js-client-library';
+import { GenericErrorBoundaryFallback } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
@@ -30,6 +24,7 @@ import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups } from 'src/ducks/global/actions';
+import useInitialEnvironment from 'src/hooks/useInitialEnvironment';
 import { ROUTES } from 'src/routes';
 import { ENVIRONMENT_SUPPORTED_ROUTES } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
@@ -48,28 +43,8 @@ const ContentV2: React.FC = () => {
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
-    const { environmentId, setEnvironmentParams } = useEnvironmentParams();
-    const environmentSupportedRoute = useMatchingPaths(ENVIRONMENT_SUPPORTED_ROUTES);
 
-    useAvailableEnvironments({
-        appendQueryKey: ['initial-environment'],
-        enabled: isFullyAuthenticated && environmentSupportedRoute,
-        onError: () => setEnvironmentParams({ environmentId: undefined }),
-        // set initial environment/tenant once user is authenticated
-        onSuccess: (availableEnvironments) => {
-            if (!availableEnvironments?.length || environmentId) return;
-
-            const collectedEnvironments = availableEnvironments
-                ?.filter((environment: Domain) => environment.collected) // omit uncollected environments
-                .sort((a: Domain, b: Domain) => b.impactValue - a.impactValue); // sort by impactValue descending
-
-            if (collectedEnvironments?.length) {
-                setEnvironmentParams({ environmentId: collectedEnvironments[0].id });
-            } else {
-                setEnvironmentParams({ environmentId: undefined });
-            }
-        },
-    });
+    useInitialEnvironment(ENVIRONMENT_SUPPORTED_ROUTES);
 
     useEffect(() => {
         if (isFullyAuthenticated) {
