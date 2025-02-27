@@ -26,7 +26,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 )
 
-func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool) (*analysis.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
 	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, adAnalysis.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
@@ -42,7 +42,7 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, nt
 		return &aggregateStats, err
 	} else if ownsStats, err := adAnalysis.PostOwnsAndWriteOwner(ctx, db, groupExpansions); err != nil {
 		return &aggregateStats, err
-	} else if ntlmStats, err := adAnalysis.PostNTLM(ctx, db, groupExpansions, adcsCache, ntlmEnabled); err != nil {
+	} else if ntlmStats, err := adAnalysis.PostNTLM(ctx, db, groupExpansions, adcsCache, ntlmEnabled, compositionCounter); err != nil {
 		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(stats)

@@ -1724,6 +1724,31 @@ func FetchEnterpriseCAsTrustedForNTAuthToDomain(tx graph.Transaction, domain *gr
 	})
 }
 
+// This was created to aid in the new post composition methodology, but was ultimately scrapped.
+// Leaving the code here for future use as full paths are necessary for post based composition
+func FetchEnterpriseCAsTrustedForNTAuthToDomainFull(tx graph.Transaction, domain *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      domain,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.TrustedForNTAuth, ad.NTAuthStoreFor)
+		},
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			depth := segment.Depth()
+			if depth == 1 && !segment.Edge.Kind.Is(ad.NTAuthStoreFor) {
+				return false
+			} else if depth == 2 && !segment.Edge.Kind.Is(ad.TrustedForNTAuth) {
+				return false
+			} else {
+				return true
+			}
+		},
+		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+		},
+	})
+}
+
 func FetchEnterpriseCAsRootCAForPathToDomain(tx graph.Transaction, domain *graph.Node) (graph.NodeSet, error) {
 	return ops.AcyclicTraverseNodes(tx, ops.TraversalPlan{
 		Root:      domain,
@@ -1733,6 +1758,21 @@ func FetchEnterpriseCAsRootCAForPathToDomain(tx graph.Transaction, domain *graph
 		},
 	}, func(node *graph.Node) bool {
 		return node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+	})
+}
+
+// This was created to aid in the new post composition methodology, but was ultimately scrapped.
+// Leaving the code here for future use as full paths are necessary for post based composition
+func FetchEnterpriseCAsRootCAForPathToDomainFull(tx graph.Transaction, domain *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      domain,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor)
+		},
+		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+		},
 	})
 }
 

@@ -4675,6 +4675,86 @@
         }
       }
     },
+      "/api/v2/graphs/relay-targets": {
+          "parameters": [
+              {
+                  "$ref": "#/components/parameters/header.prefer"
+              }
+          ],
+          "get": {
+              "operationId": "GetRelayTargets",
+              "summary": "Get relay targets",
+              "description": "Returns a list of nodes representing the valid relay targets for relay edges",
+              "tags": [
+                  "Graph",
+                  "Community",
+                  "Enterprise"
+              ],
+              "parameters": [
+                  {
+                      "name": "source_node",
+                      "description": "The ID of the starting node.",
+                      "in": "query",
+                      "required": true,
+                      "schema": {
+                          "type": "integer",
+                          "format": "int32"
+                      }
+                  },
+                  {
+                      "name": "target_node",
+                      "description": "The ID of the ending node.",
+                      "in": "query",
+                      "required": true,
+                      "schema": {
+                          "type": "integer",
+                          "format": "int32"
+                      }
+                  },
+                  {
+                      "name": "edge_type",
+                      "description": "The type of edge to show the composition for.",
+                      "in": "query",
+                      "required": true,
+                      "schema": {
+                          "type": "string"
+                      }
+                  }
+              ],
+              "responses": {
+                  "200": {
+                      "description": "Returns a list of nodes that are valid relay targets for this attack",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "type": "object",
+                                  "properties": {
+                                      "data": {
+                                          "$ref": "#/components/schemas/model.unified-graph.graph"
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  },
+                  "400": {
+                      "$ref": "#/components/responses/bad-request"
+                  },
+                  "401": {
+                      "$ref": "#/components/responses/unauthorized"
+                  },
+                  "403": {
+                      "$ref": "#/components/responses/forbidden"
+                  },
+                  "429": {
+                      "$ref": "#/components/responses/too-many-requests"
+                  },
+                  "500": {
+                      "$ref": "#/components/responses/internal-server-error"
+                  }
+              }
+          }
+      },
     "/api/v2/saved-queries": {
       "parameters": [
         {

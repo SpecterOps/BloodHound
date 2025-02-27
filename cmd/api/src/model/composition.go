@@ -14,20 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import General from './General';
-import LinuxAbuse from './LinuxAbuse';
-import Opsec from './Opsec';
-import References from './References';
-import RelayTargets from './RelayTargets';
-import WindowsAbuse from './WindowsAbuse';
+package model
 
-const CoerceAndRelayNTLMToLDAP = {
-    general: General,
-    windowsabuse: WindowsAbuse,
-    linuxabuse: LinuxAbuse,
-    opsec: Opsec,
-    references: References,
-    relaytargets: RelayTargets,
-};
+// These structs were created for the new edge composition model, but are being saved for later use, since it doesn't work with our current post implementation
+type EdgeCompositionEdge struct {
+	PostProcessedEdgeID int64
+	CompositionEdgeID   int64
 
-export default CoerceAndRelayNTLMToLDAP;
+	BigSerial
+}
+
+type EdgeCompositionEdges []EdgeCompositionEdge
+
+type EdgeCompositionNode struct {
+	PostProcessedEdgeID int64
+	CompositionNodeID   int64
+
+	BigSerial
+}
+
+type EdgeCompositionNodes []EdgeCompositionNode
