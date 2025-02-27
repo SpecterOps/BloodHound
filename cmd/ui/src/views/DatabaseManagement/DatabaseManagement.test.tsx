@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen } from 'src/test-utils';
+import { render, screen, waitFor } from 'src/test-utils';
 import DatabaseManagement from '.';
 
 describe('DatabaseManagement', () => {
@@ -89,6 +89,7 @@ describe('DatabaseManagement', () => {
         const user = userEvent.setup();
 
         const button = screen.getByRole('button', { name: /proceed/i });
+        await waitFor(() => expect(button).not.toBeDisabled());
         await user.click(button);
 
         const errorMsg = screen.getByText(/please make a selection/i);
@@ -101,6 +102,7 @@ describe('DatabaseManagement', () => {
         const user = userEvent.setup();
 
         const button = screen.getByRole('button', { name: /proceed/i });
+        await waitFor(() => expect(button).not.toBeDisabled());
         await user.click(button);
 
         const errorMsg = await screen.findByText(/please make a selection/i);
@@ -118,6 +120,7 @@ describe('DatabaseManagement', () => {
         const user = userEvent.setup();
 
         const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
+        await waitFor(() => expect(checkbox).not.toBeDisabled());
         await user.click(checkbox);
 
         const button = screen.getByRole('button', { name: /proceed/i });
@@ -138,6 +141,7 @@ describe('DatabaseManagement', () => {
         const user = userEvent.setup();
 
         const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
+        await waitFor(() => expect(checkbox).not.toBeDisabled());
         await user.click(checkbox);
 
         const proceedButton = screen.getByRole('button', { name: /proceed/i });

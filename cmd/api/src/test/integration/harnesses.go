@@ -9462,6 +9462,7 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 	domain3Sid := RandomDomainSID()
 
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set(ad.LDAPAvailable.String(), true)
 	s.Computer1.Properties.Set(ad.LDAPSigning.String(), false)
 	s.Computer1.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer1)
@@ -9485,6 +9486,7 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domain2Sid)
 	s.Computer6.Properties.Set(ad.IsDC.String(), true)
 	s.Computer6.Properties.Set(ad.LDAPSigning.String(), false)
+	s.Computer6.Properties.Set(ad.LDAPAvailable.String(), true)
 	graphTestContext.UpdateNode(s.Computer6)
 
 	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domain2Sid)

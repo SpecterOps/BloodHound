@@ -330,6 +330,8 @@ paths:
     $ref: './paths/graph.graphs.shortest-path.yaml'
   /api/v2/graphs/edge-composition:
     $ref: './paths/graph.graphs.edge-composition.yaml'
+  /api/v2/graphs/relay-targets:
+    $ref: './paths/graph.graphs.relay-targets.yaml'
 
   # cypher
   /api/v2/saved-queries:
