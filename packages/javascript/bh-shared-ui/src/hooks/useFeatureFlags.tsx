@@ -48,8 +48,8 @@ export function useFeatureFlags<T = Flag[]>(queryOptions?: QueryOptions<T>) {
     return useQuery(queryKey, ({ signal }) => getFeatureFlags({ signal }), queryOptions);
 }
 
-export function useFeatureFlag(flagKey: string, options?: Omit<QueryOptions<Flag | undefined>, 'select'>) {
-    return useFeatureFlags({ select: (data) => data.find((flag) => flag.key === flagKey), ...options });
+export function useFeatureFlag(flagKey: string, queryOptions?: Omit<QueryOptions<Flag | undefined>, 'select'>) {
+    return useFeatureFlags({ select: (data) => data.find((flag) => flag.key === flagKey), ...queryOptions });
 }
 
 export function useToggleFeatureFlag() {
