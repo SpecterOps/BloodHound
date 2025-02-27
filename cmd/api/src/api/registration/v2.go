@@ -18,6 +18,7 @@ package registration
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	authapi "github.com/specterops/bloodhound/src/api/v2/auth"
 	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
@@ -49,8 +51,14 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 
 		store := memory.NewStore()
 
-		instance := limiter.New(store, rate, limiter.WithTrustForwardHeader(false))
-		return middleware.RateLimitMiddleware(instance)
+		instance := limiter.New(store, rate)
+
+		cfg, err := config.NewDefaultConfiguration()
+		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to create default configuration: %v", err))
+		}
+
+		return middleware.RateLimitMiddleware(cfg, instance)
 	},
 		// Login resource
 		routerInst.POST("/api/v2/login", loginResource.Login),
