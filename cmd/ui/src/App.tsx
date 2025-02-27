@@ -46,7 +46,7 @@ import {
 } from './components/MainNav/MainNavData';
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
-import ContentFeatureToggle from './views/ContentFeatureToggle';
+import Content from './views/Content';
 
 export const Inner: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -183,7 +183,7 @@ export const Inner: React.FC = () => {
         <Box className={`${classes.applicationContainer}`} id='app-root'>
             {showNavBar && <MainNav mainNavData={mainNavData} />}
             <Box className={classes.applicationContent}>
-                <ContentFeatureToggle />
+                <Content />
             </Box>
             <AppNotifications />
             <Notifier />
