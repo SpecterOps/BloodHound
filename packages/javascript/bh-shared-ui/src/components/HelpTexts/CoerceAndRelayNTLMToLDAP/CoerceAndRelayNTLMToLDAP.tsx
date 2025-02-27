@@ -23,11 +23,12 @@ import WindowsAbuse from './WindowsAbuse';
 
 const CoerceAndRelayNTLMToLDAP = {
     general: General,
-    windowsabuse: WindowsAbuse,
-    linuxabuse: LinuxAbuse,
+    relaytargets: RelayTargets,
+    windowsAbuse: WindowsAbuse,
+    linuxAbuse: LinuxAbuse,
     opsec: Opsec,
     references: References,
-    relaytargets: RelayTargets,
+
 };
 
 export default CoerceAndRelayNTLMToLDAP;
