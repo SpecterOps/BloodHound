@@ -56,6 +56,44 @@ func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
 	}
 }
 
+func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
+	itemProps := item.Properties
+	if itemProps == nil {
+		itemProps = make(map[string]any)
+	}
+
+	convertOwnsEdgeToProperty(item.IngestBase, itemProps)
+
+	if item.IsWebClientRunning.Collected {
+		itemProps[ad.WebClientRunning.String()] = item.IsWebClientRunning.Result
+	}
+
+	if item.SmbInfo.Collected {
+		itemProps[ad.SMBSigning.String()] = item.SmbInfo.SigningEnabled
+	}
+
+	if item.RegistryData.Collected {
+		/*
+			RestrictSendingNtlmTraffic is sent to us as an uint
+			The possible values are
+				0: Allow All
+				1: Audit All
+				2: Deny All
+		*/
+		if item.RegistryData.RestrictSendingNtlmTraffic == 0 {
+			itemProps[ad.RestrictOutboundNTLM.String()] = false
+		} else {
+			itemProps[ad.RestrictOutboundNTLM.String()] = true
+		}
+	}
+
+	return IngestibleNode{
+		ObjectID:    item.ObjectIdentifier,
+		PropertyMap: itemProps,
+		Label:       itemType,
+	}
+}
+
 // This function is to support our new method of doing Owns edges and makes older data sets backwards compatible
 func convertOwnsEdgeToProperty(item IngestBase, itemProps map[string]any) {
 	for _, ace := range item.Aces {
@@ -91,7 +129,7 @@ func stringToBool(itemProps map[string]any, keyName string) {
 				itemProps[keyName] = final
 			}
 		case bool:
-		//pass
+		// pass
 		default:
 			slog.Debug(fmt.Sprintf("Removing %s with type %T", converted, converted))
 			delete(itemProps, keyName)
@@ -109,7 +147,7 @@ func stringToInt(itemProps map[string]any, keyName string) {
 				itemProps[keyName] = final
 			}
 		case int:
-		//pass
+		// pass
 		default:
 			slog.Debug(fmt.Sprintf("Removing %s with type %T", keyName, converted))
 			delete(itemProps, keyName)
@@ -288,7 +326,7 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 		}
 	}
 
-	//TODO: When inheritance hashes are added, add them to these aces
+	// TODO: When inheritance hashes are added, add them to these aces
 
 	// Process abusable permissions granted to the OWNER RIGHTS SID if any were found
 	if len(ownerLimitedPrivs) > 0 {

@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
+	"sync/atomic"
 
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -36,6 +37,22 @@ const (
 	NodeKindUnknown                = "Unknown"
 	MaximumDatabaseParallelWorkers = 6
 )
+
+type CompositionCounter struct {
+	counter atomic.Int64
+}
+
+func (c *CompositionCounter) Get() int64 {
+	ret := c.counter.Load()
+	c.counter.Add(1)
+	return ret
+}
+
+func NewCompositionCounter() CompositionCounter {
+	return CompositionCounter{
+		counter: atomic.Int64{},
+	}
+}
 
 var (
 	metaKind       = graph.StringKind("Meta")

@@ -15,11 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, CircularProgress, Container } from '@mui/material';
-import { GenericErrorBoundaryFallback, GloballySupportedSearchParams, SubNav, useFeatureFlag } from 'bh-shared-ui';
+import {
+    AdministrationSection,
+    GenericErrorBoundaryFallback,
+    GloballySupportedSearchParams,
+    SubNav,
+    useFeatureFlag,
+    usePermissions,
+} from 'bh-shared-ui';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import usePermissions from 'src/hooks/usePermissions/usePermissions';
 import {
     DEFAULT_ADMINISTRATION_ROUTE,
     ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
@@ -30,7 +36,7 @@ import {
     ROUTE_ADMINISTRATION_MANAGE_USERS,
     ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
 } from 'src/routes/constants';
-import { AdminSection, getAdminFilteredSections, getAdminSubRoute } from './utils';
+import { getAdminFilteredSections, getAdminSubRoute } from './utils';
 
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
 const QA = React.lazy(() => import('src/views/QA'));
@@ -42,83 +48,85 @@ const SSOConfiguration = React.lazy(() =>
     import('bh-shared-ui').then((module) => ({ default: module.SSOConfiguration }))
 );
 
+const getSections = (enableDeepLinking: boolean): AdministrationSection[] => [
+    {
+        title: 'Data Collection',
+        items: [
+            {
+                label: 'File Ingest',
+                path: ROUTE_ADMINISTRATION_FILE_INGEST,
+                component: FileIngest,
+                adminOnly: false,
+                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+            },
+            {
+                label: 'Data Quality',
+                path: ROUTE_ADMINISTRATION_DATA_QUALITY,
+                component: QA,
+                adminOnly: false,
+                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+            },
+            {
+                label: 'Database Management',
+                path: ROUTE_ADMINISTRATION_DB_MANAGEMENT,
+                component: DatabaseManagement,
+                adminOnly: false,
+                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+            },
+        ],
+        order: 0,
+    },
+    {
+        title: 'Users',
+        items: [
+            {
+                label: 'Manage Users',
+                path: ROUTE_ADMINISTRATION_MANAGE_USERS,
+                component: Users,
+                adminOnly: false,
+                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+            },
+        ],
+        order: 0,
+    },
+    {
+        title: 'Authentication',
+        items: [
+            {
+                label: 'SSO Configuration',
+                path: ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
+                component: SSOConfiguration,
+                adminOnly: false,
+                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+            },
+        ],
+        order: 0,
+    },
+    {
+        title: 'Configuration',
+        items: [
+            {
+                label: 'BloodHound Configuration',
+                path: ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
+                component: BloodHoundConfiguration,
+                adminOnly: true,
+                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+            },
+            {
+                label: 'Early Access Features',
+                path: ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
+                component: EarlyAccessFeatures,
+                adminOnly: false,
+                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+            },
+        ],
+        order: 1,
+    },
+];
+
 const Administration: React.FC = () => {
     const { data: flag } = useFeatureFlag('back_button_support');
-    const sections: AdminSection[] = [
-        {
-            title: 'Data Collection',
-            items: [
-                {
-                    label: 'File Ingest',
-                    path: ROUTE_ADMINISTRATION_FILE_INGEST,
-                    component: FileIngest,
-                    adminOnly: false,
-                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
-                },
-                {
-                    label: 'Data Quality',
-                    path: ROUTE_ADMINISTRATION_DATA_QUALITY,
-                    component: QA,
-                    adminOnly: false,
-                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
-                },
-                {
-                    label: 'Database Management',
-                    path: ROUTE_ADMINISTRATION_DB_MANAGEMENT,
-                    component: DatabaseManagement,
-                    adminOnly: false,
-                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
-                },
-            ],
-            order: 0,
-        },
-        {
-            title: 'Users',
-            items: [
-                {
-                    label: 'Manage Users',
-                    path: ROUTE_ADMINISTRATION_MANAGE_USERS,
-                    component: Users,
-                    adminOnly: false,
-                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
-                },
-            ],
-            order: 0,
-        },
-        {
-            title: 'Authentication',
-            items: [
-                {
-                    label: 'SSO Configuration',
-                    path: ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
-                    component: SSOConfiguration,
-                    adminOnly: false,
-                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
-                },
-            ],
-            order: 0,
-        },
-        {
-            title: 'Configuration',
-            items: [
-                {
-                    label: 'BloodHound Configuration',
-                    path: ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
-                    component: BloodHoundConfiguration,
-                    adminOnly: true,
-                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
-                },
-                {
-                    label: 'Early Access Features',
-                    path: ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
-                    component: EarlyAccessFeatures,
-                    adminOnly: false,
-                    persistentSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
-                },
-            ],
-            order: 1,
-        },
-    ];
+    const sections = getSections(!!flag?.enabled);
 
     const { checkAllPermissions } = usePermissions();
 

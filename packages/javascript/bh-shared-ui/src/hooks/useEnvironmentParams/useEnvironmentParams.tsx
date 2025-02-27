@@ -17,8 +17,8 @@
 import { Domain } from 'js-client-library';
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { MappedStringLiteral } from '../../types';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
-import { MappedStringLiteral } from '../../utils/types';
 
 export type EnvironmentAggregation = Domain['type'] | 'all';
 

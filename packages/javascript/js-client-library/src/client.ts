@@ -2332,6 +2332,21 @@ class BHEAPIClient {
             )
         );
 
+    getRelayTargets = (sourceNode: number, targetNode: number, edgeType: string, options?: types.RequestOptions) =>
+        this.baseClient.get<types.GraphResponse>(
+            '/api/v2/graphs/relay-targets',
+            Object.assign(
+                {
+                    params: {
+                        source_node: sourceNode,
+                        target_node: targetNode,
+                        edge_type: edgeType,
+                    },
+                },
+                options
+            )
+        );
+
     /* remote assets */
     getRemoteAsset = (assetPath: string, options?: types.RequestOptions) =>
         this.baseClient.get(`/api/v2/assets/${assetPath}`, options);

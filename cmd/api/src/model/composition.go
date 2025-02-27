@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default } from './UserActionsMenu';
+package model
 
-export * from './UserActionsMenu';
+// These structs were created for the new edge composition model, but are being saved for later use, since it doesn't work with our current post implementation
+type EdgeCompositionEdge struct {
+	PostProcessedEdgeID int64
+	CompositionEdgeID   int64
+
+	BigSerial
+}
+
+type EdgeCompositionEdges []EdgeCompositionEdge
+
+type EdgeCompositionNode struct {
+	PostProcessedEdgeID int64
+	CompositionNodeID   int64
+
+	BigSerial
+}
+
+type EdgeCompositionNodes []EdgeCompositionNode

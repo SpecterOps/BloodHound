@@ -14,7 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SetURLSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+
+// FUTURE DEV: SetURLSearchParams is in both v6 and v7, but v6 uses this type internally and v7 exports it.
+// When we upgrade to v7, we can import SetURLSearchParams from react-router-dom
+type SetURLSearchParams = ReturnType<typeof useSearchParams>[1];
 
 export const GloballySupportedSearchParams = ['environmentId', 'environmentAggregation'];
 

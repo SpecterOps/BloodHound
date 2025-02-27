@@ -23,13 +23,13 @@ import {
     searchbarActions,
     TIER_ZERO_LABEL,
     TIER_ZERO_TAG,
+    usePermissions,
 } from 'bh-shared-ui';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
-import usePermissions from 'src/hooks/usePermissions/usePermissions';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
 import { useAppDispatch } from 'src/store';
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';

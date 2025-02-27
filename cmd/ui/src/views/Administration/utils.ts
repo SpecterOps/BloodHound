@@ -14,30 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Permission } from 'bh-shared-ui';
-import { FC, LazyExoticComponent } from 'react';
+import { AdministrationSection, Permission } from 'bh-shared-ui';
 
 export const getAdminSubRoute = (route: string) => {
     const administrationRoute = '/administration/';
     return route.slice(administrationRoute.length);
 };
 
-interface AdminSectionItem {
-    label: string;
-    path: string;
-    component: LazyExoticComponent<FC>;
-    adminOnly: boolean;
-    persistentSearchParams?: string[];
-}
-
-export interface AdminSection {
-    title: string;
-    items: AdminSectionItem[];
-    order: number;
-}
-
 export const getAdminFilteredSections = (
-    sections: AdminSection[],
+    sections: AdministrationSection[],
     checkAllPermissions: (permissions: Permission[]) => boolean
 ) => {
     // Checking these for now because the only route we are currently hiding is to the configuration page.

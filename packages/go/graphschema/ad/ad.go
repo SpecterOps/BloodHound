@@ -21,6 +21,7 @@ package ad
 
 import (
 	"errors"
+
 	graph "github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -234,15 +235,14 @@ const (
 	ADCSWebEnrollmentHTTPS                  Property = "adcswebenrollmenthttps"
 	ADCSWebEnrollmentHTTPSEPA               Property = "adcswebenrollmenthttpsepa"
 	LDAPSigning                             Property = "ldapsigning"
-	LDAPSAvailable                          Property = "ldasavailable"
+	LDAPAvailable                           Property = "ldapavailable"
+	LDAPSAvailable                          Property = "ldapsavailable"
 	LDAPSEPA                                Property = "ldapsepa"
-	RelayableToDCLDAP                       Property = "replayabletodcldap"
-	RelayableToDCLDAPS                      Property = "replayabletodcldaps"
 	IsDC                                    Property = "isdc"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationEnabled, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributes, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, OwnerSid, SMBSigning, WebClientRunning, RestrictOutboundNTLM, GMSA, MSA, DoesAnyAceGrantOwnerRights, DoesAnyInheritedAceGrantOwnerRights, ADCSWebEnrollmentHTTP, ADCSWebEnrollmentHTTPS, ADCSWebEnrollmentHTTPSEPA, LDAPSigning, LDAPSAvailable, LDAPSEPA, RelayableToDCLDAP, RelayableToDCLDAPS, IsDC}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationEnabled, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributes, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, OwnerSid, SMBSigning, WebClientRunning, RestrictOutboundNTLM, GMSA, MSA, DoesAnyAceGrantOwnerRights, DoesAnyInheritedAceGrantOwnerRights, ADCSWebEnrollmentHTTP, ADCSWebEnrollmentHTTPS, ADCSWebEnrollmentHTTPSEPA, LDAPSigning, LDAPAvailable, LDAPSAvailable, LDAPSEPA, IsDC}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -470,14 +470,12 @@ func ParseProperty(source string) (Property, error) {
 		return ADCSWebEnrollmentHTTPSEPA, nil
 	case "ldapsigning":
 		return LDAPSigning, nil
-	case "ldasavailable":
+	case "ldapavailable":
+		return LDAPAvailable, nil
+	case "ldapsavailable":
 		return LDAPSAvailable, nil
 	case "ldapsepa":
 		return LDAPSEPA, nil
-	case "replayabletodcldap":
-		return RelayableToDCLDAP, nil
-	case "replayabletodcldaps":
-		return RelayableToDCLDAPS, nil
 	case "isdc":
 		return IsDC, nil
 	default:
@@ -710,14 +708,12 @@ func (s Property) String() string {
 		return string(ADCSWebEnrollmentHTTPSEPA)
 	case LDAPSigning:
 		return string(LDAPSigning)
+	case LDAPAvailable:
+		return string(LDAPAvailable)
 	case LDAPSAvailable:
 		return string(LDAPSAvailable)
 	case LDAPSEPA:
 		return string(LDAPSEPA)
-	case RelayableToDCLDAP:
-		return string(RelayableToDCLDAP)
-	case RelayableToDCLDAPS:
-		return string(RelayableToDCLDAPS)
 	case IsDC:
 		return string(IsDC)
 	default:
@@ -950,14 +946,12 @@ func (s Property) Name() string {
 		return "ADCS Web Enrollment HTTPS EPA"
 	case LDAPSigning:
 		return "LDAP Signing"
+	case LDAPAvailable:
+		return "LDAP Available"
 	case LDAPSAvailable:
 		return "LDAPS Available"
 	case LDAPSEPA:
 		return "LDAPS EPA"
-	case RelayableToDCLDAP:
-		return "Relayable To DC LDAP"
-	case RelayableToDCLDAPS:
-		return "Relayable To DC LDAPS"
 	case IsDC:
 		return "Is Domain Controller"
 	default:
