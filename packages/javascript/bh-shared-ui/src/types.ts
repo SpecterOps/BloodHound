@@ -36,7 +36,7 @@ type AdministrationItem = {
     path: string;
     component: React.LazyExoticComponent<React.FC>;
     adminOnly: boolean;
-    persistentSearchParams: string[];
+    persistentSearchParams?: string[];
 };
 
 export type AdministrationSection = {
