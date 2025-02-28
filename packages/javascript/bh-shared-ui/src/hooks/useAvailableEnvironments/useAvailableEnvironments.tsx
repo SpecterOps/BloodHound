@@ -25,18 +25,13 @@ export const availableEnvironmentKeys = {
         customKey?.length ? [...availableEnvironmentKeys.all, ...customKey] : availableEnvironmentKeys.all,
 };
 
-type QueryOptions<T = Domain[]> = Omit<
-    UseQueryOptions<Domain[], unknown, T | undefined, string[]>,
-    'queryKey' | 'queryFn'
-> & {
-    appendQueryKey?: string[];
-};
+type QueryOptions<T = Domain[]> = Omit<UseQueryOptions<Domain[], unknown, T | undefined, string[]>, 'queryFn'>;
 
 export function useAvailableEnvironments<T = Domain[]>(options?: QueryOptions<T>) {
-    const { appendQueryKey, ...rest } = options ?? {};
+    const { queryKey, ...rest } = options ?? {};
 
     return useQuery({
-        queryKey: availableEnvironmentKeys.getKey(appendQueryKey),
+        queryKey: availableEnvironmentKeys.getKey(queryKey),
         queryFn: ({ signal }) => apiClient.getAvailableEnvironments({ signal }).then((response) => response.data.data),
         ...rest,
     });
