@@ -14,20 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import General from './General';
-import LinuxAbuse from './LinuxAbuse';
-import Opsec from './Opsec';
-import References from './References';
-import RelayTargets from './RelayTargets';
-import WindowsAbuse from './WindowsAbuse';
+import { matchPath, useLocation } from 'react-router-dom';
 
-const CoerceAndRelayNTLMToLDAP = {
-    general: General,
-    relaytargets: RelayTargets,
-    windowsAbuse: WindowsAbuse,
-    linuxAbuse: LinuxAbuse,
-    opsec: Opsec,
-    references: References,
+export const useMatchingPaths = (pattern: string | string[]) => {
+    const { pathname } = useLocation();
+    if (typeof pattern === 'string') {
+        const match = matchPath({ path: pattern }, pathname);
+        return !!match?.pathname;
+    } else {
+        return pattern.reduce(
+            (match: boolean, current) => (match ? match : !!matchPath(pathname, current)?.pathname),
+            false
+        );
+    }
 };
-
-export default CoerceAndRelayNTLMToLDAP;

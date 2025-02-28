@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { MappedStringLiteral } from '../..';
+import { MappedStringLiteral } from '../../types';
 import { EntityInfoDataTableProps } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 

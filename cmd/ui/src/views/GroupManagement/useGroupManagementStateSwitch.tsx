@@ -14,20 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import General from './General';
-import LinuxAbuse from './LinuxAbuse';
-import Opsec from './Opsec';
-import References from './References';
-import RelayTargets from './RelayTargets';
-import WindowsAbuse from './WindowsAbuse';
+import { useEnvironment, useEnvironmentParams, useFeatureFlag } from 'bh-shared-ui';
+import { useAppSelector } from 'src/store';
 
-const CoerceAndRelayNTLMToLDAP = {
-    general: General,
-    relaytargets: RelayTargets,
-    windowsAbuse: WindowsAbuse,
-    linuxAbuse: LinuxAbuse,
-    opsec: Opsec,
-    references: References,
+const useGroupManagementStateSwitch = () => {
+    const { data: flag } = useFeatureFlag('back_button_support');
+    const { environmentId } = useEnvironmentParams();
+    const { data: environmentFromParams } = useEnvironment(environmentId, { enabled: flag?.enabled });
+
+    const globalDomain = useAppSelector((state) => state.global.options.domain);
+
+    return flag?.enabled ? environmentFromParams ?? null : globalDomain;
 };
 
-export default CoerceAndRelayNTLMToLDAP;
+export default useGroupManagementStateSwitch;

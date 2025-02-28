@@ -20,6 +20,8 @@ import { useSearchParams } from 'react-router-dom';
 // When we upgrade to v7, we can import SetURLSearchParams from react-router-dom
 type SetURLSearchParams = ReturnType<typeof useSearchParams>[1];
 
+export const GloballySupportedSearchParams = ['environmentId', 'environmentAggregation'];
+
 type EmptyParam = undefined | null | '';
 
 export const isEmptyParam = <T>(value: T | EmptyParam): value is EmptyParam => {
@@ -69,4 +71,16 @@ export const setParamsFactory = <T>(setSearchParams: SetURLSearchParams, availab
             return params;
         });
     };
+};
+
+export const persistSearchParams = (persistentSearchParams: string[]) => {
+    const prevParams = new URLSearchParams(location.search);
+    const newParams = new URLSearchParams();
+
+    persistentSearchParams.forEach((param) => {
+        const prevParam = prevParams.get(param);
+        if (prevParam) newParams.set(param, prevParam);
+    });
+
+    return newParams;
 };

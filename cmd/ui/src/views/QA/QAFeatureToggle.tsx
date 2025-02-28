@@ -14,20 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import General from './General';
-import LinuxAbuse from './LinuxAbuse';
-import Opsec from './Opsec';
-import References from './References';
-import RelayTargets from './RelayTargets';
-import WindowsAbuse from './WindowsAbuse';
+import { useFeatureFlag } from 'bh-shared-ui';
+import QualityAssurance from './QA';
+import QualityAssuranceV2 from './QAV2';
 
-const CoerceAndRelayNTLMToLDAP = {
-    general: General,
-    relaytargets: RelayTargets,
-    windowsAbuse: WindowsAbuse,
-    linuxAbuse: LinuxAbuse,
-    opsec: Opsec,
-    references: References,
+const QAFeatureToggle = () => {
+    const { data: flag } = useFeatureFlag('back_button_support');
+    return flag?.enabled ? <QualityAssuranceV2 /> : <QualityAssurance />;
 };
 
-export default CoerceAndRelayNTLMToLDAP;
+export default QAFeatureToggle;

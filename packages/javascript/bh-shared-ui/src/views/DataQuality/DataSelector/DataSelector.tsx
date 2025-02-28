@@ -20,7 +20,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert, Box, Divider, MenuItem, Popover, Skeleton, TextField, Tooltip, Typography } from '@mui/material';
 import { Domain } from 'js-client-library';
 import React, { ReactNode, useState } from 'react';
-import { useAvailableDomains } from '../../../hooks';
+import { useAvailableEnvironments } from '../../../hooks';
 import { DataSelectorValueTypes } from './types';
 
 const DataSelector: React.FC<{
@@ -31,7 +31,7 @@ const DataSelector: React.FC<{
 }> = ({ value, errorMessage, onChange = () => {}, fullWidth = false }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [searchInput, setSearchInput] = useState<string>('');
-    const { data, isLoading, isError } = useAvailableDomains();
+    const { data, isLoading, isError } = useAvailableEnvironments();
 
     if (isLoading) return <Skeleton variant='rounded' height={36} width={256} />;
 

@@ -14,20 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import General from './General';
-import LinuxAbuse from './LinuxAbuse';
-import Opsec from './Opsec';
-import References from './References';
-import RelayTargets from './RelayTargets';
-import WindowsAbuse from './WindowsAbuse';
-
-const CoerceAndRelayNTLMToLDAP = {
-    general: General,
-    relaytargets: RelayTargets,
-    windowsAbuse: WindowsAbuse,
-    linuxAbuse: LinuxAbuse,
-    opsec: Opsec,
-    references: References,
-};
-
-export default CoerceAndRelayNTLMToLDAP;
+export * from './useAvailableEnvironments';
