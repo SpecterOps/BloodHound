@@ -48,7 +48,7 @@ const SSOConfiguration = React.lazy(() =>
     import('bh-shared-ui').then((module) => ({ default: module.SSOConfiguration }))
 );
 
-const getSections = (enableDeepLinking: boolean): AdministrationSection[] => [
+const getSections = (deepLinkingEnabled: boolean): AdministrationSection[] => [
     {
         title: 'Data Collection',
         items: [
@@ -57,21 +57,21 @@ const getSections = (enableDeepLinking: boolean): AdministrationSection[] => [
                 path: ROUTE_ADMINISTRATION_FILE_INGEST,
                 component: FileIngest,
                 adminOnly: false,
-                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+                supportedSearchParams: deepLinkingEnabled ? GloballySupportedSearchParams : undefined,
             },
             {
                 label: 'Data Quality',
                 path: ROUTE_ADMINISTRATION_DATA_QUALITY,
                 component: QA,
                 adminOnly: false,
-                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+                supportedSearchParams: deepLinkingEnabled ? GloballySupportedSearchParams : undefined,
             },
             {
                 label: 'Database Management',
                 path: ROUTE_ADMINISTRATION_DB_MANAGEMENT,
                 component: DatabaseManagement,
                 adminOnly: false,
-                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+                supportedSearchParams: deepLinkingEnabled ? GloballySupportedSearchParams : undefined,
             },
         ],
         order: 0,
@@ -84,7 +84,7 @@ const getSections = (enableDeepLinking: boolean): AdministrationSection[] => [
                 path: ROUTE_ADMINISTRATION_MANAGE_USERS,
                 component: Users,
                 adminOnly: false,
-                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+                supportedSearchParams: deepLinkingEnabled ? GloballySupportedSearchParams : undefined,
             },
         ],
         order: 0,
@@ -97,7 +97,7 @@ const getSections = (enableDeepLinking: boolean): AdministrationSection[] => [
                 path: ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
                 component: SSOConfiguration,
                 adminOnly: false,
-                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+                supportedSearchParams: deepLinkingEnabled ? GloballySupportedSearchParams : undefined,
             },
         ],
         order: 0,
@@ -110,14 +110,14 @@ const getSections = (enableDeepLinking: boolean): AdministrationSection[] => [
                 path: ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
                 component: BloodHoundConfiguration,
                 adminOnly: true,
-                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+                supportedSearchParams: deepLinkingEnabled ? GloballySupportedSearchParams : undefined,
             },
             {
                 label: 'Early Access Features',
                 path: ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
                 component: EarlyAccessFeatures,
                 adminOnly: false,
-                persistentSearchParams: enableDeepLinking ? GloballySupportedSearchParams : undefined,
+                supportedSearchParams: deepLinkingEnabled ? GloballySupportedSearchParams : undefined,
             },
         ],
         order: 1,

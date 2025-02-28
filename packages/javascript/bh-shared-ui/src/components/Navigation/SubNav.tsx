@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { FC, ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { AdministrationSection } from '../..';
 import { cn, persistSearchParams } from '../../utils';
 
 const SubNavListTitle: FC<{ children: ReactNode }> = ({ children }) => {
@@ -41,12 +42,12 @@ const SubNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children,
     );
 };
 
-const SubNavListItemLink: FC<{ route: string; persistentSearchParams?: string[]; children: ReactNode }> = ({
+const SubNavListItemLink: FC<{ route: string; supportedSearchParams?: string[]; children: ReactNode }> = ({
     route,
     children,
-    persistentSearchParams,
+    supportedSearchParams,
 }) => {
-    const search = persistentSearchParams ? persistSearchParams(persistentSearchParams).toString() : undefined;
+    const search = supportedSearchParams ? persistSearchParams(supportedSearchParams).toString() : undefined;
     return (
         <RouterLink
             to={{ pathname: route, search }}
@@ -56,16 +57,14 @@ const SubNavListItemLink: FC<{ route: string; persistentSearchParams?: string[];
     );
 };
 
-const SubNav: React.FC<{
-    sections: {
-        title: string;
-        items: {
-            path: string;
-            label: string;
-            persistentSearchParams?: string[];
-        }[];
-    }[];
-}> = ({ sections }) => {
+type SubNavSections = Omit<AdministrationSection, 'order' | 'items'> & {
+    items: Pick<AdministrationSection['items'][number], 'label' | 'path' | 'supportedSearchParams'>[];
+};
+interface SubNavProps {
+    sections: SubNavSections[];
+}
+
+const SubNav: React.FC<SubNavProps> = ({ sections }) => {
     return (
         <nav className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 pt-6 border-x border-solid border-neutral-light-5 dark:bg-neutral-dark-2 overflow-x-hidden overflow-y-auto'>
             {sections.map((section, sectionIndex) => (
@@ -75,7 +74,7 @@ const SubNav: React.FC<{
                     </SubNavListTitle>
                     {section.items.map((item, itemIndex) => (
                         <SubNavListItem key={itemIndex} route={item.path}>
-                            <SubNavListItemLink route={item.path} persistentSearchParams={item.persistentSearchParams}>
+                            <SubNavListItemLink route={item.path} supportedSearchParams={item.supportedSearchParams}>
                                 <span>{item.label}</span>
                             </SubNavListItemLink>
                         </SubNavListItem>
