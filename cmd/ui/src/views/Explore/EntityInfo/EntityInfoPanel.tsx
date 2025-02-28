@@ -17,7 +17,6 @@
 import { Box, Paper, SxProps, Typography } from '@mui/material';
 import { NoEntitySelectedHeader, NoEntitySelectedMessage, usePaneStyles } from 'bh-shared-ui';
 import React, { useEffect, useState } from 'react';
-import { SelectedNode } from 'src/ducks/entityinfo/types';
 import usePreviousValue from 'src/hooks/usePreviousValue';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
@@ -25,7 +24,7 @@ import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 interface EntityInfoPanelProps {
-    selectedNode: SelectedNode | null;
+    selectedNode?: any; // To do: type it
     sx?: SxProps;
 }
 
@@ -33,6 +32,22 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
     const { setExpandedSections } = useEntityInfoPanelContext();
+    // const { panelSelection } = useExploreParams();
+    // const nodeQueryParam = panelSelection || '';
+    // const { data: nodeInfoResponse } = useSearch(nodeQueryParam, undefined);
+    // const nodeInfoObject = nodeInfoResponse?.length && nodeInfoResponse?.at(0);
+    // const selectedNode = useMemo(
+    //     () =>
+    //         nodeInfoObject
+    //             ? {
+    //                   id: nodeInfoObject.objectid,
+    //                   name: nodeInfoObject.name,
+    //                   type: nodeInfoObject.type as EntityKinds,
+    //                   graphId: '',
+    //               } // To do: Type this
+    //             : null,
+    //     [nodeInfoObject]
+    // );
     const previousSelectedNode = usePreviousValue(selectedNode);
 
     useEffect(() => {

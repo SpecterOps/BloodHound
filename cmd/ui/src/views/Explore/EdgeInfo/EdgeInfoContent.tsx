@@ -36,7 +36,6 @@ const getOnChange = (dispatch: Dispatch<any>, sourceNodeId: number, targetNodeId
     return async (label: string, isOpen: boolean) => {
         if (isOpen) {
             dispatch(setGraphLoading(true));
-
             await apiClient
                 .getEdgeComposition(sourceNodeId, targetNodeId, selectedEdgeName)
                 .then((result) => {

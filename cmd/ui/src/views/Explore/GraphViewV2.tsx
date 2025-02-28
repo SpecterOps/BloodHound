@@ -16,22 +16,26 @@
 
 import { Box, Grid, Popper, useTheme } from '@mui/material';
 import {
-    EdgeInfoState,
+    EntityKinds,
     GraphProgress,
     SearchCurrentNodes,
     WebGLDisabledAlert,
+    apiClient,
     exportToJson,
     isWebGLEnabled,
     setEdgeInfoOpen,
     setSelectedEdge,
     useAvailableDomains,
+    useExploreParams,
+    useSearch,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery } from 'react-query';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
@@ -86,9 +90,69 @@ const GraphViewV2: FC = () => {
 
     const currentSearchAnchorElement = useRef(null);
 
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
+    // To do: Maybe create a hook for this ? also to check if its empty and if so not do this
+    const { panelSelection } = useExploreParams();
+    const queryParamComposition = panelSelection ? (panelSelection as string).split('_') : [];
+    const isEdge = queryParamComposition.length === 3;
 
-    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
+    const nodeQueryParam = panelSelection && !isEdge ? panelSelection : '';
+    const { data: nodeInfoResponse } = useSearch(nodeQueryParam, undefined);
+    const nodeInfoObject = nodeInfoResponse?.length && nodeInfoResponse?.at(0);
+    const selectedNode = useMemo(
+        () =>
+            nodeInfoObject
+                ? {
+                      id: nodeInfoObject.objectid,
+                      name: nodeInfoObject.name,
+                      type: nodeInfoObject.type as EntityKinds,
+                      graphId: '',
+                  } // To do: Type this
+                : null,
+        [nodeInfoObject]
+    );
+
+    const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | number, edgeKind: string): string =>
+        `MATCH p= (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN p`;
+
+    const { data: cypherResponse } = useQuery(['edge-info-get', panelSelection], ({ signal }) => {
+        return apiClient
+            .cypherSearch(
+                selectedEdgeCypherQuery(queryParamComposition[0], queryParamComposition[2], queryParamComposition[1]),
+                { signal },
+                true
+            )
+            .then((result: any) => {
+                if (!result.data.data) return { nodes: {}, edges: [] };
+                return result.data.data;
+            });
+    });
+
+    const selectedEdgeResponseObject = cypherResponse?.edges[0];
+    const selectedEdgeNodes = cypherResponse?.nodes;
+
+    const selectedEdge =
+        selectedEdgeResponseObject && selectedEdgeNodes
+            ? {
+                  id: panelSelection,
+                  name: selectedEdgeResponseObject.label || '',
+                  data: selectedEdgeResponseObject.properties || {},
+                  sourceNode: {
+                      id: selectedEdgeResponseObject.source,
+                      objectId: selectedEdgeNodes[selectedEdgeResponseObject.source]?.objectId,
+                      name: selectedEdgeNodes[selectedEdgeResponseObject.source]?.label,
+                      type: selectedEdgeNodes[selectedEdgeResponseObject.source]?.kind,
+                  },
+                  targetNode: {
+                      id: selectedEdgeResponseObject.target,
+                      objectId: selectedEdgeNodes[selectedEdgeResponseObject.target]?.objectId,
+                      name: selectedEdgeNodes[selectedEdgeResponseObject.target]?.label,
+                      type: selectedEdgeNodes[selectedEdgeResponseObject.target]?.kind,
+                  },
+              }
+            : null;
+    console.log('selectedNode', selectedNode);
+    console.log('selectedEdge', selectedEdge);
+    //
 
     const [columns, setColumns] = useState(columnsDefault);
 
@@ -285,8 +349,9 @@ const GraphViewV2: FC = () => {
                     </Box>
                 </Grid>
                 <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
-                    {edgeInfoState.open ? (
-                        <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} />
+                    {/* To do: this conditional wont work because we could have a case of no param */}
+                    {isEdge ? (
+                        <EdgeInfoPane selectedEdge={selectedEdge} />
                     ) : (
                         <EntityInfoPanel selectedNode={selectedNode} />
                     )}
