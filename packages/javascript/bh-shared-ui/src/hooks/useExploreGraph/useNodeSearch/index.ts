@@ -14,5 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './node-search';
-export * from './utils';
+export * from './useNodeSearch';

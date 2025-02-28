@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import * as modes from './search-modes';
+import * as modes from './queries';
 import { getExploreGraphQuery } from './useExploreGraph';
 
 const nodeSearchGraphQuerySpy = vi.spyOn(modes, 'nodeSearchGraphQuery');
@@ -34,7 +34,7 @@ describe('useExploreGraph', () => {
             const paramOptions = { searchType: 'node', primarySearch: 'test1' } as any;
             getExploreGraphQuery(mockAddNotification, paramOptions);
 
-            expect(nodeSearchGraphQuerySpy).toBeCalledWith(mockAddNotification, paramOptions, undefined);
+            expect(nodeSearchGraphQuerySpy).toBeCalledWith(mockAddNotification, paramOptions);
         });
     });
 });
