@@ -32,7 +32,7 @@ const General: FC<EdgeInfoProps> = () => {
             </Typography>
 
             <Typography variant='body2'>
-                Click on Composition to view the domain controllers in the domain that do not require LDAPS channel
+                Click on Relay Targets to view the domain controllers in the domain that do not require LDAPS channel
                 binding.
             </Typography>
         </>
