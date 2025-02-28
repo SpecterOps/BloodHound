@@ -16,10 +16,9 @@
 
 import { Menu, MenuItem } from '@mui/material';
 
-import { Permission, searchbarActions } from 'bh-shared-ui';
+import { Permission, searchbarActions, usePermissions } from 'bh-shared-ui';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import usePermissions from 'src/hooks/usePermissions/usePermissions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
