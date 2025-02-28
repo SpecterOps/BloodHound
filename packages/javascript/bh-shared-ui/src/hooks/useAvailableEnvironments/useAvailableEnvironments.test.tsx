@@ -52,7 +52,7 @@ describe('useAvailableEnvironments', () => {
         const useQuerySpy = vi.spyOn(ReactQuery, 'useQuery');
         it('takes the param appendQueryKey and will append that value to the existing queryKey', async () => {
             const testKey = 'test-key';
-            renderHook(() => useAvailableEnvironments({ appendQueryKey: [testKey] }));
+            renderHook(() => useAvailableEnvironments({ queryKey: [testKey] }));
             expect(useQuerySpy).toBeCalledWith(
                 expect.objectContaining({ queryKey: ['available-environments', testKey] })
             );

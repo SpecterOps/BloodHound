@@ -48,11 +48,7 @@ export const useInitialEnvironment = (envSupportedRoutes: string[]) => {
     );
 
     useAvailableEnvironments({
-        appendQueryKey: [
-            'initial-environment',
-            `back_button_support-${flag?.enabled ?? false}`,
-            currentEnvironmentId ?? '',
-        ],
+        queryKey: ['initial-environment', `current-environment-${currentEnvironmentId}`],
         // set initial environment/tenant once user is authenticated
         enabled: isFullyAuthenticated && environmentSupportedRoute,
         onError: () => stateUpdater(null),
