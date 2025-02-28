@@ -86,9 +86,9 @@ const MainNavItemLink: FC<{
     children: ReactNode;
     hoverActive: boolean;
     testId: string;
-    persistentSearchParams: MainNavDataListItem['persistentSearchParams'];
-}> = ({ route, children, hoverActive, testId, persistentSearchParams }) => {
-    const search = persistentSearchParams ? persistSearchParams(persistentSearchParams).toString() : undefined;
+    supportedSearchParams: MainNavDataListItem['supportedSearchParams'];
+}> = ({ route, children, hoverActive, testId, supportedSearchParams }) => {
+    const search = supportedSearchParams ? persistSearchParams(supportedSearchParams).toString() : undefined;
 
     return (
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed
@@ -192,7 +192,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             )}>
             <MainNavItemLink
                 route={mainNavData.logo.project.route}
-                persistentSearchParams={mainNavData.logo.persistentSearchParams}
+                supportedSearchParams={mainNavData.logo.supportedSearchParams}
                 testId='global_nav-home'
                 hoverActive={!isMouseDragging}>
                 <MainNavItemLabel
@@ -213,7 +213,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                                 route={listDataItem.route as string}
                                 hoverActive={!isMouseDragging}
                                 testId={listDataItem.testId}
-                                persistentSearchParams={listDataItem.persistentSearchParams}>
+                                supportedSearchParams={listDataItem.supportedSearchParams}>
                                 <MainNavItemLabel
                                     icon={listDataItem.icon}
                                     label={listDataItem.label}
@@ -234,7 +234,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                                     route={listDataItem.route as string}
                                     hoverActive={!isMouseDragging}
                                     testId={listDataItem.testId}
-                                    persistentSearchParams={listDataItem.persistentSearchParams}>
+                                    supportedSearchParams={listDataItem.supportedSearchParams}>
                                     <MainNavItemLabel
                                         icon={listDataItem.icon}
                                         label={listDataItem.label}

@@ -42,7 +42,7 @@ const MainNavLogoData: MainNavLogoDataObject = {
             altText: 'BHE Text Logo',
         },
     },
-    persistentSearchParams: GloballySupportedSearchParams,
+    supportedSearchParams: GloballySupportedSearchParams,
 };
 const MainNavPrimaryListData: MainNavDataListItem[] = [
     {
@@ -50,7 +50,7 @@ const MainNavPrimaryListData: MainNavDataListItem[] = [
         icon: <AppIcon.LineChart size={24} />,
         route: '/test',
         testId: 'global_nav-test-link',
-        persistentSearchParams: GloballySupportedSearchParams,
+        supportedSearchParams: GloballySupportedSearchParams,
     },
 ];
 
@@ -62,7 +62,7 @@ const MainNavSecondaryListData: MainNavDataListItem[] = [
         icon: <AppIcon.LineChart size={24} />,
         functionHandler: handleClick,
         testId: 'global_nav-test-action',
-        persistentSearchParams: GloballySupportedSearchParams,
+        supportedSearchParams: GloballySupportedSearchParams,
     },
 ];
 

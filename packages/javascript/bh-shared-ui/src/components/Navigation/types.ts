@@ -32,14 +32,14 @@ export type MainNavLogoDataObject = {
     specterOps: {
         image: MainNavLogoImage;
     };
-    persistentSearchParams?: string[];
+    supportedSearchParams?: string[];
 };
 
 export type MainNavDataListItem = {
     label: string | ReactNode;
     icon: ReactNode;
     route?: string;
-    persistentSearchParams?: string[];
+    supportedSearchParams?: string[];
     functionHandler?: () => void;
     testId: string;
 };
