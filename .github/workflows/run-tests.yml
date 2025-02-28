@@ -37,7 +37,6 @@ jobs:
           docker-compose version
 
       - name: Start PostgreSQL and Neo4j Containers
-        environment:
         run: |
           BH_POSTGRES_CONFIG=$(pwd)/.github/config/postgresql.conf docker-compose -f docker-compose.testing.yml up -d
 
