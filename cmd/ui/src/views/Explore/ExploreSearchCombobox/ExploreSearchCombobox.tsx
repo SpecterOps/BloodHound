@@ -39,6 +39,8 @@ const ExploreSearchCombobox: React.FC<{
     const { keyword, type } = getKeywordAndTypeValues(inputValue);
     const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
 
+    console.log(data);
+
     const { isOpen, getMenuProps, getInputProps, getComboboxProps, highlightedIndex, getItemProps, openMenu } =
         useCombobox({
             items: data || [],
