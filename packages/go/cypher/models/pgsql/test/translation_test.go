@@ -14,17 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package translate_test
+package test
 
 import (
 	"fmt"
+	"os"
 	"runtime/debug"
+	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/pgutil"
 
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
-	"github.com/specterops/bloodhound/cypher/models/pgsql/test"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -53,7 +54,14 @@ func TestTranslate(t *testing.T) {
 		kindMapper = newKindMapper()
 	)
 
-	if testCases, err := test.ReadTranslationTestCases(); err != nil {
+	if updateCases, varSet := os.LookupEnv("CYSQL_UPDATE_CASES"); varSet && strings.ToLower(strings.TrimSpace(updateCases)) == "true" {
+		if err := UpdateTranslationTestCases(kindMapper); err  != nil {
+			fmt.Printf("Error updating cases: %v\n", err)
+		}
+	}
+
+
+	if testCases, err := ReadTranslationTestCases(); err != nil {
 		t.Fatal(err)
 	} else {
 		for _, testCase := range testCases {

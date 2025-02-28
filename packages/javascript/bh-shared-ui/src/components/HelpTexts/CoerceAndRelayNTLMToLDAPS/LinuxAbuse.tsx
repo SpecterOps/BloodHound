@@ -23,19 +23,21 @@ const LinuxAbuse: FC = () => {
         <>
             <Typography variant='body2'>
                 Examples of this attack are detailed in the following blog posts:
-                <li>
-                    <a
-                        href={
-                            'https://www.guidepointsecurity.com/blog/beyond-the-basics-exploring-uncommon-ntlm-relay-attack-techniques/'
-                        }>
-                        Beyond the Basics: Exploring Uncommon NTLM Relay Attack Techniques
-                    </a>
-                </li>
-                <li>
-                    <a href={'https://trustedsec.com/blog/a-comprehensive-guide-on-relaying-anno-2022'}>
-                        I’m bringing relaying back: A comprehensive guide on relaying anno 2022
-                    </a>
-                </li>
+                <ul>
+                    <li>
+                        <a
+                            href={
+                                'https://www.guidepointsecurity.com/blog/beyond-the-basics-exploring-uncommon-ntlm-relay-attack-techniques/'
+                            }>
+                            Beyond the Basics: Exploring Uncommon NTLM Relay Attack Techniques
+                        </a>
+                    </li>
+                    <li>
+                        <a href={'https://trustedsec.com/blog/a-comprehensive-guide-on-relaying-anno-2022'}>
+                            I’m bringing relaying back: A comprehensive guide on relaying anno 2022
+                        </a>
+                    </li>
+                </ul>
             </Typography>
 
             <Typography variant={'body2'}>

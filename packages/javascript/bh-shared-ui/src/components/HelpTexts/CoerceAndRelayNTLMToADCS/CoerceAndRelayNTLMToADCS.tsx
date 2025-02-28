@@ -23,8 +23,8 @@ import WindowsAbuse from './WindowsAbuse';
 
 const CoerceAndRelayNTLMToADCS = {
     general: General,
-    windowsabuse: WindowsAbuse,
-    linuxabuse: LinuxAbuse,
+    windowsAbuse: WindowsAbuse,
+    linuxAbuse: LinuxAbuse,
     opsec: Opsec,
     references: References,
     composition: Composition,

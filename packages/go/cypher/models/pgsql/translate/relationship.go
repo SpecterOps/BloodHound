@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/specterops/bloodhound/cypher/models"
-	cypher "github.com/specterops/bloodhound/cypher/models/cypher"
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
 
@@ -92,7 +92,10 @@ func (s *Translator) translateRelationshipPatternToStep(bindingResult BindingRes
 				Direction: relationshipPattern.Direction,
 			}
 
+			// Mark the left node as already bound as it's part of the previous step's continuation
 			nextStep.LeftNode = currentStep.RightNode
+			nextStep.LeftNodeBound = true
+
 			part.TraversalSteps = append(part.TraversalSteps, nextStep)
 		} else {
 			// Carry over the left node identifier if the edge identifier for the preceding step isn't set
@@ -139,21 +142,13 @@ func (s *Translator) translateRelationshipPatternToStep(bindingResult BindingRes
 	if isContinuation {
 		// This is a traversal continuation so copy the right node identifier of the preceding step and then
 		// add the new step
-		nextStep := &PatternSegment{
-			Edge:      bindingResult.Binding,
-			Direction: relationshipPattern.Direction,
-			LeftNode:  currentStep.RightNode,
-			Expansion: expansion,
-		}
-
-		part.TraversalSteps = append(part.TraversalSteps, nextStep)
-
-		// The edge needs a constraint that ties it to the preceding edge
-		if edgeConstraint, err := rightEdgeConstraint(currentStep, bindingResult.Binding.Identifier, nextStep.Direction); err != nil {
-			return err
-		} else if err := s.treeTranslator.ConstrainIdentifier(nextStep.Edge.Identifier, edgeConstraint); err != nil {
-			return err
-		}
+		part.TraversalSteps = append(part.TraversalSteps, &PatternSegment{
+			Edge:          bindingResult.Binding,
+			Direction:     relationshipPattern.Direction,
+			LeftNode:      currentStep.RightNode,
+			LeftNodeBound: true,
+			Expansion:     expansion,
+		})
 	} else {
 		// Carry over the left node identifier if the edge identifier for the preceding step isn't set
 		currentStep.Edge = bindingResult.Binding

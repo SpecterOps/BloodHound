@@ -123,6 +123,9 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					} else if restrictOutboundNtlm, err := innerComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
 						slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", innerComputer.ID))
 					} else if webclientRunning && !restrictOutboundNtlm {
+						if _, ok := adcsComputerCache[domain]; !ok {
+							adcsComputerCache[domain] = cardinality.NewBitmap64()
+						}
 						adcsComputerCache[domain].Add(innerComputer.ID.Uint64())
 					}
 				}
