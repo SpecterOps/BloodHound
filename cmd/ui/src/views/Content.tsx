@@ -24,7 +24,7 @@ import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups } from 'src/ducks/global/actions';
-import useInitialEnvironment from 'src/hooks/useInitialEnvironment';
+import { useInitialEnvironment } from 'src/hooks/useInitialEnvironment';
 import { ROUTES } from 'src/routes';
 import { ENVIRONMENT_SUPPORTED_ROUTES } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';

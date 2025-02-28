@@ -16,37 +16,43 @@
 
 import { useAvailableEnvironments, useEnvironmentParams, useFeatureFlag, useMatchingPaths } from 'bh-shared-ui';
 import { Domain } from 'js-client-library';
+import { useCallback } from 'react';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { setDomain } from 'src/ducks/global/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 // Future Dev: when we implement deep linking support for selected domain in BHE, move this to shared-ui and rip out the reducer logic (including stateUpdater)
-const useInitialEnvironment = (envSupportedRoutes: string[]) => {
+export const useInitialEnvironment = (envSupportedRoutes: string[]) => {
     const authState = useAppSelector((state) => state.auth);
-    const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
-    const { data: flag } = useFeatureFlag('back_button_support', {
-        enabled: !!authState.isInitialized && fullyAuthenticated,
-    });
-
-    const reduxEnvironment = useAppSelector((state) => state.global.options.domain);
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const reduxEnvironment = useAppSelector((state) => state.global.options.domain);
+
+    const { data: flag } = useFeatureFlag('back_button_support', {
+        enabled: !!authState.isInitialized && isFullyAuthenticated,
+    });
     const dispatch = useAppDispatch();
 
     const { environmentId, setEnvironmentParams } = useEnvironmentParams();
     const environmentSupportedRoute = useMatchingPaths(envSupportedRoutes);
-
     const currentEnvironmentId = flag?.enabled ? environmentId : reduxEnvironment?.id;
 
-    const stateUpdater = (environment: Domain | null) => {
-        if (flag?.enabled) {
-            setEnvironmentParams({ environmentId: environment?.id });
-        } else {
-            dispatch(setDomain(environment));
-        }
-    };
+    const stateUpdater = useCallback(
+        (environment: Domain | null) => {
+            if (flag?.enabled) {
+                setEnvironmentParams({ environmentId: environment?.id });
+            } else {
+                dispatch(setDomain(environment));
+            }
+        },
+        [dispatch, flag, setEnvironmentParams]
+    );
 
     useAvailableEnvironments({
-        appendQueryKey: ['initial-environment'],
+        appendQueryKey: [
+            'initial-environment',
+            `back_button_support-${flag?.enabled ?? false}`,
+            currentEnvironmentId ?? '',
+        ],
         // set initial environment/tenant once user is authenticated
         enabled: isFullyAuthenticated && environmentSupportedRoute,
         onError: () => stateUpdater(null),
@@ -65,5 +71,3 @@ const useInitialEnvironment = (envSupportedRoutes: string[]) => {
         },
     });
 };
-
-export default useInitialEnvironment;
