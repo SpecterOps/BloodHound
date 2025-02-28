@@ -21,6 +21,7 @@ import {
     AppNotifications,
     GenericErrorBoundaryFallback,
     MainNav,
+    MainNavData,
     NotificationsProvider,
     components,
     darkPalette,
@@ -61,7 +62,7 @@ export const Inner: React.FC = () => {
         enabled: !!(authState.isInitialized && fullyAuthenticated),
     });
 
-    const mainNavData = {
+    const mainNavData: MainNavData = {
         logo: useMainNavLogoData(),
         primaryList: useMainNavPrimaryListData(),
         secondaryList: useMainNavSecondaryListData(),
