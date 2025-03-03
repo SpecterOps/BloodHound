@@ -14,16 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Domain } from 'js-client-library';
+import { Environment } from 'js-client-library';
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MappedStringLiteral } from '../../types';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
-export type EnvironmentAggregation = Domain['type'] | 'all';
+export type EnvironmentAggregation = Environment['type'] | 'all';
 
 export type EnvironmentQueryParams = {
-    environmentId: Domain['id'] | null;
+    environmentId: Environment['id'] | null;
     environmentAggregation: EnvironmentAggregation | null;
 };
 

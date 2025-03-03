@@ -18,7 +18,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { faCloud, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert, Box, Divider, MenuItem, Popover, Skeleton, TextField, Tooltip, Typography } from '@mui/material';
-import { Domain } from 'js-client-library';
+import { Environment } from 'js-client-library';
 import React, { ReactNode, useState } from 'react';
 import { useAvailableEnvironments } from '../../../hooks';
 import { DataSelectorValueTypes } from './types';
@@ -45,7 +45,7 @@ const DataSelector: React.FC<{
     };
     const open = Boolean(anchorEl);
 
-    const filteredDomains = data?.filter((domain: Domain) =>
+    const filteredDomains = data?.filter((domain: Environment) =>
         domain.name.toLowerCase().includes(searchInput.toLowerCase())
     );
 
@@ -56,7 +56,7 @@ const DataSelector: React.FC<{
     } else if (value.type === 'azure-platform') {
         selectedDomainName = 'All Azure Tenants';
     } else {
-        const selectedDomain: Domain | undefined = data?.find((domain: Domain) => domain.id === value.id);
+        const selectedDomain: Environment | undefined = data?.find((domain: Environment) => domain.id === value.id);
         if (selectedDomain) {
             selectedDomainName = selectedDomain.name;
         } else {
@@ -106,10 +106,10 @@ const DataSelector: React.FC<{
                 </Box>
                 {filteredDomains &&
                     filteredDomains
-                        .sort((a: Domain, b: Domain) => {
+                        .sort((a: Environment, b: Environment) => {
                             return a.name.localeCompare(b.name);
                         })
-                        .map((item: Domain) => {
+                        .map((item: Environment) => {
                             return item.collected ? (
                                 <MenuItem
                                     style={{

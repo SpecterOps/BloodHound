@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Domain } from 'js-client-library';
+import { Environment } from 'js-client-library';
 import { useQuery, UseQueryOptions } from 'react-query';
 import { apiClient } from '../../utils/api';
 import { useEnvironmentParams } from '../useEnvironmentParams';
@@ -25,9 +25,12 @@ export const availableEnvironmentKeys = {
         customKey?.length ? [...availableEnvironmentKeys.all, ...customKey] : availableEnvironmentKeys.all,
 };
 
-type QueryOptions<T = Domain[]> = Omit<UseQueryOptions<Domain[], unknown, T | undefined, string[]>, 'queryFn'>;
+type QueryOptions<T = Environment[]> = Omit<
+    UseQueryOptions<Environment[], unknown, T | undefined, string[]>,
+    'queryFn'
+>;
 
-export function useAvailableEnvironments<T = Domain[]>(options?: QueryOptions<T>) {
+export function useAvailableEnvironments<T = Environment[]>(options?: QueryOptions<T>) {
     const { queryKey, ...rest } = options ?? {};
 
     return useQuery({
@@ -37,11 +40,14 @@ export function useAvailableEnvironments<T = Domain[]>(options?: QueryOptions<T>
     });
 }
 
-export const selectEnvironment = (environmentId: Domain['id']): QueryOptions<Domain>['select'] => {
+export const selectEnvironment = (environmentId: Environment['id']): QueryOptions<Environment>['select'] => {
     return (data) => data.find((domain) => domain.id === environmentId);
 };
 
-export const useEnvironment = (environmentId?: Domain['id'] | null, options?: Omit<QueryOptions<Domain>, 'select'>) => {
+export const useEnvironment = (
+    environmentId?: Environment['id'] | null,
+    options?: Omit<QueryOptions<Environment>, 'select'>
+) => {
     const { environmentId: environmentIdParam } = useEnvironmentParams();
     const selectedEnvironment = environmentId ?? environmentIdParam;
 
