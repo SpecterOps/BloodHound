@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useAvailableEnvironments, useEnvironmentParams, useFeatureFlag, useMatchingPaths } from 'bh-shared-ui';
-import { Domain } from 'js-client-library';
+import { Environment } from 'js-client-library';
 import { useCallback } from 'react';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { setDomain } from 'src/ducks/global/actions';
@@ -37,7 +37,7 @@ export const useInitialEnvironment = (envSupportedRoutes: string[]) => {
     const currentEnvironmentId = flag?.enabled ? environmentId : reduxEnvironment?.id;
 
     const stateUpdater = useCallback(
-        (environment: Domain | null) => {
+        (environment: Environment | null) => {
             if (flag?.enabled) {
                 setEnvironmentParams({ environmentId: environment?.id });
             } else {
@@ -56,8 +56,8 @@ export const useInitialEnvironment = (envSupportedRoutes: string[]) => {
             if (!availableEnvironments?.length || currentEnvironmentId) return;
 
             const collectedEnvironments = availableEnvironments
-                ?.filter((environment: Domain) => environment.collected) // omit uncollected environments
-                .sort((a: Domain, b: Domain) => b.impactValue - a.impactValue); // sort by impactValue descending
+                ?.filter((environment: Environment) => environment.collected) // omit uncollected environments
+                .sort((a: Environment, b: Environment) => b.impactValue - a.impactValue); // sort by impactValue descending
 
             if (collectedEnvironments?.length) {
                 stateUpdater(collectedEnvironments[0]);

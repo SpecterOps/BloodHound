@@ -16,7 +16,7 @@
 
 import { DeepPartial } from 'bh-shared-ui';
 import { createMemoryHistory } from 'history';
-import { Domain } from 'js-client-library';
+import { Environment } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import * as authSlice from 'src/ducks/auth/authSlice';
@@ -114,7 +114,7 @@ describe('useInitialEnvironment', async () => {
         await waitFor(() => expect(history.location.search).toContain(`environmentId=${fakeEnvironmentB.id}`));
     });
     it('not attempt setting a default environment if domain.id is set already', async () => {
-        setup(envSupportedPage, { global: { options: { domain: fakeEnvironmentB as Domain } } });
+        setup(envSupportedPage, { global: { options: { domain: fakeEnvironmentB as Environment } } });
 
         await waitFor(() => expect(setDomainSpy).not.toBeCalledWith(fakeEnvironmentA));
     });
