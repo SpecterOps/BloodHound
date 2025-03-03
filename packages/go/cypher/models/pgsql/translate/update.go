@@ -59,7 +59,7 @@ func (s *Translator) translateUpdates() error {
 			} else {
 				// Zip through all projected identifiers and update their last projected frame
 				for _, binding := range boundProjections.Bindings {
-					binding.LastProjection = stepFrame
+					binding.MaterializedBy(stepFrame)
 				}
 
 				for _, selectItem := range boundProjections.Items {

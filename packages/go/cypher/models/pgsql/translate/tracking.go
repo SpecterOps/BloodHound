@@ -20,8 +20,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/specterops/bloodhound/cypher/models/walk"
-
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
@@ -29,6 +27,29 @@ import (
 type IdentifierGenerator map[pgsql.DataType]int
 
 func (s IdentifierGenerator) NewIdentifier(dataType pgsql.DataType) (pgsql.Identifier, error) {
+	var prefixStr string
+
+	switch dataType {
+	case pgsql.ExpansionPattern:
+		prefixStr = "ex"
+	case pgsql.ExpansionPath:
+		prefixStr = "ep"
+	case pgsql.PathComposite:
+		prefixStr = "pc"
+	case pgsql.NodeComposite:
+		prefixStr = "n"
+	case pgsql.EdgeComposite:
+		prefixStr = "e"
+	case pgsql.Scope:
+		prefixStr = "s"
+	case pgsql.ParameterIdentifier:
+		prefixStr = "pi"
+	default:
+		// Make this data type the unknown generic
+		dataType = pgsql.UnknownDataType
+		prefixStr = "i"
+	}
+
 	var (
 		nextID    = s[dataType]
 		nextIDStr = strconv.Itoa(nextID)
@@ -37,242 +58,38 @@ func (s IdentifierGenerator) NewIdentifier(dataType pgsql.DataType) (pgsql.Ident
 	// Increment the ID
 	s[dataType] = nextID + 1
 
-	switch dataType {
-	case pgsql.ExpansionPattern:
-		return pgsql.Identifier("ex" + nextIDStr), nil
-	case pgsql.ExpansionPath:
-		return pgsql.Identifier("ep" + nextIDStr), nil
-	case pgsql.PathComposite:
-		return pgsql.Identifier("pc" + nextIDStr), nil
-	case pgsql.NodeComposite:
-		return pgsql.Identifier("n" + nextIDStr), nil
-	case pgsql.EdgeComposite:
-		return pgsql.Identifier("e" + nextIDStr), nil
-	case pgsql.Scope:
-		return pgsql.Identifier("s" + nextIDStr), nil
-	case pgsql.ParameterIdentifier:
-		return pgsql.Identifier("pi" + nextIDStr), nil
-	default:
-		return pgsql.Identifier("i" + nextIDStr), nil
-	}
+	return pgsql.Identifier(prefixStr + nextIDStr), nil
 }
 
 func NewIdentifierGenerator() IdentifierGenerator {
 	return IdentifierGenerator{}
 }
 
-type Constraint struct {
-	Dependencies *pgsql.IdentifierSet
-	Expression   pgsql.Expression
-}
-
-func (s *Constraint) Merge(other *Constraint) error {
-	if other.Dependencies != nil && other.Expression != nil {
-		newExpression := pgsql.OptionalAnd(s.Expression, other.Expression)
-
-		switch typedNewExpression := newExpression.(type) {
-		case *pgsql.UnaryExpression:
-			if err := applyUnaryExpressionTypeHints(typedNewExpression); err != nil {
-				return err
-			}
-
-		case *pgsql.BinaryExpression:
-			if err := applyBinaryExpressionTypeHints(typedNewExpression); err != nil {
-				return err
-			}
-		}
-
-		s.Dependencies.MergeSet(other.Dependencies)
-		s.Expression = newExpression
+func previousValidFrame(query *Query, partFrame *Frame) (*Frame, bool) {
+	if partFrame.Previous == nil {
+		return nil, false
 	}
 
-	return nil
-}
-
-// ConstraintTracker is a tool for associating constraints (e.g. binary or unary expressions
-// that constrain a set of identifiers) with the identifier set they constrain.
-//
-// This is useful for rewriting a where-clause so that conjoined components can be isolated:
-//
-// Where Clause:
-//
-// where a.name = 'a' and b.name = 'b' and c.name = 'c' and a.num_a > 1 and a.ef = b.ef + c.ef
-//
-// Isolated Constraints:
-//
-//	"a":           a.name = 'a' and a.num_a > 1
-//	"b":           b.name = 'b'
-//	"c":           c.name = 'c'
-//	"a", "b", "c": a.ef = b.ef + c.ef
-type ConstraintTracker struct {
-	Constraints []*Constraint
-}
-
-func NewConstraintTracker() *ConstraintTracker {
-	return &ConstraintTracker{}
-}
-
-func (s *ConstraintTracker) HasConstraints(scope *pgsql.IdentifierSet) (bool, error) {
-	for idx := 0; idx < len(s.Constraints); idx++ {
-		nextConstraint := s.Constraints[idx]
-
-		if syntaxNodeSatisfied, err := isSyntaxNodeSatisfied(nextConstraint.Expression); err != nil {
-			return false, err
-		} else if syntaxNodeSatisfied && scope.Satisfies(nextConstraint.Dependencies) {
-			return true, nil
-		}
+	if currentQueryPart := query.CurrentPart(); currentQueryPart.Frame != nil && partFrame.Previous.Binding.Identifier == currentQueryPart.Frame.Binding.Identifier {
+		// If the part's previous frame matches the query part's frame identifier then it's possible that
+		// this current part is a multipart query part. In this case there still may be a valid frame
+		// to source references from
+		return currentQueryPart.Frame.Previous, currentQueryPart.Frame.Previous != nil
 	}
 
-	return false, nil
-}
-
-func (s *ConstraintTracker) ConsumeAll() (*Constraint, error) {
-	var (
-		constraintExpressions = make([]pgsql.Expression, len(s.Constraints))
-		matchedDependencies   = pgsql.NewIdentifierSet()
-	)
-
-	for idx, constraint := range s.Constraints {
-		constraintExpressions[idx] = constraint.Expression
-		matchedDependencies.MergeSet(constraint.Dependencies)
-	}
-
-	// Clear the internal constraint slice
-	s.Constraints = s.Constraints[:0]
-
-	if conjoined, err := ConjoinExpressions(constraintExpressions); err != nil {
-		return nil, err
-	} else {
-		return &Constraint{
-			Dependencies: matchedDependencies,
-			Expression:   conjoined,
-		}, nil
-	}
-}
-
-func isSyntaxNodeSatisfied(syntaxNode pgsql.SyntaxNode) (bool, error) {
-	var (
-		satisfied = true
-		err       = walk.WalkPgSQL(syntaxNode, walk.NewSimpleVisitor[pgsql.SyntaxNode](
-			func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
-				switch typedNode := node.(type) {
-				case pgsql.SyntaxNodeFuture:
-					satisfied = typedNode.Satisfied()
-
-					if !satisfied {
-						errorHandler.SetDone()
-					}
-				}
-			},
-		))
-	)
-
-	return satisfied, err
-}
-
-/*
-ConsumeSet takes a given scope (a set of identifiers considered in-scope) and locates all constraints that can
-be satisfied by the scope's identifiers.
-
-```
-
-	scope := pgsql.IdentifierSet{
-		"a": struct{}{},
-		"b": struct{}{},
-	}
-
-	tracker := ConstraintTracker{
-		Constraints: []*Constraint{{
-			Dependencies: pgsql.IdentifierSet{
-				"a": struct{}{},
-			},
-			Expression: &pgsql.BinaryExpression{
-				Operator: pgsql.OperatorEquals,
-				LOperand: pgsql.CompoundIdentifier{"a", "name"},
-				ROperand: pgsql.Literal{
-					Value: "a",
-				},
-			},
-		}},
-	}
-
-	satisfiedScope, expression := tracker.ConsumeSet(scope)
-
-```
-*/
-func (s *ConstraintTracker) ConsumeSet(scope *pgsql.IdentifierSet) (*Constraint, error) {
-	var (
-		matchedDependencies   = pgsql.NewIdentifierSet()
-		constraintExpressions []pgsql.Expression
-	)
-
-	for idx := 0; idx < len(s.Constraints); {
-		nextConstraint := s.Constraints[idx]
-
-		// If this is a syntax node that has not been realized do not allow the constraint it represents
-		// to be consumed even if the dependencies are satisfied
-		if syntaxNodeSatisfied, err := isSyntaxNodeSatisfied(nextConstraint.Expression); err != nil {
-			return nil, err
-		} else if !syntaxNodeSatisfied || !scope.Satisfies(nextConstraint.Dependencies) {
-			// This constraint isn't satisfied, move to the next one
-			idx += 1
-		} else {
-			// Remove this constraint
-			s.Constraints = append(s.Constraints[:idx], s.Constraints[idx+1:]...)
-
-			// Append the constraint as a conjoined expression
-			constraintExpressions = append(constraintExpressions, nextConstraint.Expression)
-
-			// Track which identifiers were satisfied
-			matchedDependencies.MergeSet(nextConstraint.Dependencies)
-		}
-	}
-
-	if conjoined, err := ConjoinExpressions(constraintExpressions); err != nil {
-		return nil, err
-	} else {
-		return &Constraint{
-			Dependencies: matchedDependencies,
-			Expression:   conjoined,
-		}, nil
-	}
-}
-
-func (s *ConstraintTracker) Constrain(dependencies *pgsql.IdentifierSet, constraintExpression pgsql.Expression) error {
-	for _, constraint := range s.Constraints {
-		if constraint.Dependencies.Matches(dependencies) {
-			joinedExpression := pgsql.NewBinaryExpression(
-				constraintExpression,
-				pgsql.OperatorAnd,
-				constraint.Expression,
-			)
-
-			if err := applyBinaryExpressionTypeHints(joinedExpression); err != nil {
-				return err
-			}
-
-			constraint.Expression = joinedExpression
-			return nil
-		}
-	}
-
-	s.Constraints = append(s.Constraints, &Constraint{
-		Dependencies: dependencies,
-		Expression:   constraintExpression,
-	})
-
-	return nil
+	return partFrame.Previous, true
 }
 
 // Frame represents a snapshot of all identifiers defined and visible in a given scope
 type Frame struct {
-	id              int
-	Previous        *Frame
-	Binding         *BoundIdentifier
-	Visible         *pgsql.IdentifierSet
-	stashedVisible  *pgsql.IdentifierSet
-	Exported        *pgsql.IdentifierSet
-	stashedExported *pgsql.IdentifierSet
+	id               int
+	Previous         *Frame
+	IsContainerFrame bool
+	Binding          *BoundIdentifier
+	Visible          *pgsql.IdentifierSet
+	stashedVisible   *pgsql.IdentifierSet
+	Exported         *pgsql.IdentifierSet
+	stashedExported  *pgsql.IdentifierSet
 }
 
 func (s *Frame) RestoreStashed() {
@@ -332,6 +149,38 @@ func NewScope() *Scope {
 		aliases:     map[pgsql.Identifier]pgsql.Identifier{},
 		definitions: map[pgsql.Identifier]*BoundIdentifier{},
 	}
+}
+
+func (s *Scope) LastProjectedFrameFrom(from *Frame) *Frame {
+	// Declare idx here to track where this walk is in the stack
+	idx := len(s.stack) - 1
+
+	// Search backwards for the target frame
+	for ; idx >= 0; idx-- {
+		if nextFrame := s.stack[idx]; nextFrame == from {
+			// Don't revisit this frame
+			idx -= 1
+			break
+		}
+	}
+
+	// Unable to find the frame passed in
+	if idx < 0 {
+		return nil
+	}
+
+	// Unwind further if the nearest frame is a multipart container and take the most
+	// recent ancestor
+	if s.stack[idx].IsContainerFrame {
+		idx -= 1
+	}
+
+	// Unable to find a multipart container frame with an ancestor
+	if idx <= 0 {
+		return nil
+	}
+
+	return s.stack[idx-1]
 }
 
 func (s *Scope) PruneDefinitions(protectedIdentifiers *pgsql.IdentifierSet) error {
@@ -440,13 +289,23 @@ func (s *Scope) UnwindToFrame(frame *Frame) error {
 	return nil
 }
 
+func (s *Scope) PushContainerFrame() (*Frame, error) {
+	if frame, err := s.PushFrame(); err != nil {
+		return nil, err
+	} else {
+		frame.IsContainerFrame = true
+		return frame, nil
+	}
+}
+
 func (s *Scope) PushFrame() (*Frame, error) {
 	newFrame := &Frame{
-		id:              s.nextFrameID,
-		Visible:         pgsql.NewIdentifierSet(),
-		stashedVisible:  pgsql.NewIdentifierSet(),
-		Exported:        pgsql.NewIdentifierSet(),
-		stashedExported: pgsql.NewIdentifierSet(),
+		id:               s.nextFrameID,
+		IsContainerFrame: false,
+		Visible:          pgsql.NewIdentifierSet(),
+		stashedVisible:   pgsql.NewIdentifierSet(),
+		Exported:         pgsql.NewIdentifierSet(),
+		stashedExported:  pgsql.NewIdentifierSet(),
 	}
 
 	s.nextFrameID += 1
@@ -569,6 +428,10 @@ type BoundIdentifier struct {
 	DataType       pgsql.DataType
 }
 
+func (s *BoundIdentifier) MaterializedBy(frame *Frame) {
+	s.LastProjection = frame
+}
+
 func (s *BoundIdentifier) Copy() *BoundIdentifier {
 	dependenciesCopy := make([]*BoundIdentifier, len(s.Dependencies))
 	copy(dependenciesCopy, s.Dependencies)
@@ -583,7 +446,7 @@ func (s *BoundIdentifier) Copy() *BoundIdentifier {
 	}
 }
 
-func (s *BoundIdentifier) DetachFromFrame() {
+func (s *BoundIdentifier) Dematerialize() {
 	s.LastProjection = nil
 	s.Dependencies = nil
 }

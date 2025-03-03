@@ -60,7 +60,6 @@ func TestTranslate(t *testing.T) {
 		}
 	}
 
-
 	if testCases, err := ReadTranslationTestCases(); err != nil {
 		t.Fatal(err)
 	} else {

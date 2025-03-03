@@ -18,7 +18,6 @@ package translate
 
 import (
 	"fmt"
-
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
@@ -99,25 +98,55 @@ func (s *Translator) translateWith() error {
 		currentPart.Frame.Exported.Clear()
 	} else {
 		var (
-			projectedItems  = pgsql.NewIdentifierSet()
-			aggregatedItems = pgsql.NewIdentifierSet()
+			projectedItems = pgsql.NewIdentifierSet()
+
+			// aggregatedItems contains a set of symbols of projected aggregate functions.
+			aggregatedItems = NewSymbols()
+
+			// groupByItems is a set of symbols (identifiers and compound identifiers) that the query is expected to
+			// group by. This is built by exclusion of all aggregated items.
+			groupByItems = NewSymbols()
 		)
+
+		for _, projectionItem := range currentPart.projections.Items {
+			if err := RewriteFrameBindings(s.query.Scope, projectionItem.SelectItem); err != nil {
+				return err
+			}
+		}
 
 		// If an aggregation function is being used this invokes an implicit group by of non-function projections
 		for _, projectionItem := range currentPart.projections.Items {
 			switch typedSelectItem := projectionItem.SelectItem.(type) {
 			case pgsql.FunctionCall:
 				if pgsql.IsAggregateFunction(typedSelectItem.Function) {
-					aggregatedItems.Add(typedSelectItem.Function)
+					for _, parameter := range typedSelectItem.Parameters {
+						if symbols, err := SymbolsFor(parameter); err != nil {
+							return err
+						} else {
+							aggregatedItems.AddSymbols(symbols)
+						}
+					}
+
+					continue
 				}
+			}
+
+			if selectItemSymbols, err := SymbolsFor(projectionItem.SelectItem); err != nil {
+				return err
+			} else {
+				groupByItems.Add(selectItemSymbols.NotIn(aggregatedItems))
 			}
 		}
 
-		for idx, projectionItem := range currentPart.projections.Items {
-			if err := RewriteFrameBindings(s.query.Scope, projectionItem.SelectItem); err != nil {
-				return err
-			}
+		if projectionConstraint, err := s.treeTranslator.ConsumeSet(s.query.Scope.CurrentFrame().Known().RemoveSet(aggregatedItems.RootIdentifiers())); err != nil {
+			return err
+		} else if err := RewriteFrameBindings(s.query.Scope, projectionConstraint.Expression); err != nil {
+			return err
+		} else {
+			currentPart.projections.Constraints = projectionConstraint.Expression
+		}
 
+		for idx, projectionItem := range currentPart.projections.Items {
 			switch typedSelectItem := projectionItem.SelectItem.(type) {
 			case *pgsql.BinaryExpression:
 				return fmt.Errorf("binary expression not supported in with statement")
@@ -126,10 +155,6 @@ func (s *Translator) translateWith() error {
 				return fmt.Errorf("compound identifier not supported in with statement")
 
 			case pgsql.Identifier:
-				if !aggregatedItems.IsEmpty() && !aggregatedItems.Contains(typedSelectItem) {
-					currentPart.projections.GroupBy = append(currentPart.projections.GroupBy, typedSelectItem)
-				}
-
 				if binding, isBound := s.query.Scope.Lookup(typedSelectItem); !isBound {
 					return fmt.Errorf("unable to lookup identifer %s for with statement", typedSelectItem)
 				} else {
@@ -145,7 +170,7 @@ func (s *Translator) translateWith() error {
 					}
 
 					// Assign the frame to the binding's last projection backref
-					binding.LastProjection = currentPart.Frame
+					binding.MaterializedBy(currentPart.Frame)
 
 					// Reveal and export the identifier in the current multipart query part's frame
 					currentPart.Frame.Reveal(binding.Identifier)
@@ -177,6 +202,18 @@ func (s *Translator) translateWith() error {
 			}
 		}
 
+		if !aggregatedItems.IsEmpty() {
+			groupByItems.EachIdentifier(func(next pgsql.Identifier) bool {
+				currentPart.projections.GroupBy = append(currentPart.projections.GroupBy, next)
+				return true
+			})
+
+			groupByItems.EachCompoundIdentifier(func(next pgsql.CompoundIdentifier) bool {
+				currentPart.projections.GroupBy = append(currentPart.projections.GroupBy, next)
+				return true
+			})
+		}
+
 		if err := s.query.Scope.PruneDefinitions(projectedItems); err != nil {
 			return err
 		}
@@ -189,9 +226,9 @@ func (s *Translator) translateWith() error {
 	return nil
 }
 
-func (s *Translator) translateMultiPartQueryPart(scope *Scope, part *cypher.MultiPartQueryPart) error {
+func (s *Translator) translateMultiPartQueryPart() error {
 	queryPart := s.query.CurrentPart()
 
 	// Unwind nested frames
-	return scope.UnwindToFrame(queryPart.Frame)
+	return s.query.Scope.UnwindToFrame(queryPart.Frame)
 }

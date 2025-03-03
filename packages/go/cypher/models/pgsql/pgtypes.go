@@ -43,6 +43,17 @@ const (
 )
 
 var (
+	Columns = []Identifier{
+		ColumnID,
+		ColumnPath,
+		ColumnProperties,
+		ColumnKindIDs,
+		ColumnKindID,
+		ColumnGraphID,
+		ColumnStartID,
+		ColumnEndID,
+	}
+
 	NodeTableColumns = []Identifier{
 		ColumnID,
 		ColumnKindIDs,

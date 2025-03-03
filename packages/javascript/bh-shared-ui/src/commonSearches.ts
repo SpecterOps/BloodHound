@@ -140,7 +140,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Shortest paths from Domain Users to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((s:Group)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(s.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s.objectid ENDS WITH '-513' AND s<>t\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:Group)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s.objectid ENDS WITH '-513' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths to Domain Admins',

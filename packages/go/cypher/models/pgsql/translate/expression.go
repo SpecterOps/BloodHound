@@ -357,9 +357,9 @@ func newFunctionCallComparatorError(functionCall pgsql.FunctionCall, operator pg
 		// type conversion semantics in Cypher. As such, exposing the type specificity of coalesce to the
 		// user as a distinct error will help reduce the surprise of running on a non-Neo4j substrate.
 		return fmt.Errorf("coalesce has type %s but is being compared against type %s - ensure that all arguments in the coalesce function match the type of the other side of the comparison", functionCall.CastType, comparisonType)
-	default:
-		return fmt.Errorf("function call has return signature of type %s but is being compared using operator %s against type %s", functionCall.CastType, operator, comparisonType)
 	}
+
+	return nil
 }
 
 func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {

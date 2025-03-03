@@ -18,6 +18,7 @@ package translate
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/cypher/models/walk"
 
 	"github.com/specterops/bloodhound/cypher/models"
 	cypher "github.com/specterops/bloodhound/cypher/models/cypher"
@@ -81,6 +82,7 @@ type Expansion struct {
 
 type PatternSegment struct {
 	Frame                  *Frame
+	PreviousFrame          *Frame
 	Direction              graph.Direction
 	Expansion              models.Optional[Expansion]
 	LeftNode               *BoundIdentifier
@@ -206,7 +208,7 @@ func (s *Query) PreparePart(numReadingClauses, numUpdatingClauses int, allocateF
 	}
 
 	if allocateFrame {
-		if frame, err := s.Scope.PushFrame(); err != nil {
+		if frame, err := s.Scope.PushContainerFrame(); err != nil {
 			return err
 		} else {
 			newPart.Frame = frame
@@ -238,6 +240,10 @@ type QueryPart struct {
 	projections       *Projections
 	mutations         *Mutations
 	fromClauses       []pgsql.FromClause
+}
+
+func (s *QueryPart) CurrentPattern() *Pattern {
+	return s.currentPattern
 }
 
 func (s *QueryPart) AddFromClause(clause pgsql.FromClause) {
@@ -473,10 +479,11 @@ func (s *Mutations) AddKindRemoval(scope *Scope, targetIdentifier pgsql.Identifi
 }
 
 type Projections struct {
-	Distinct bool
-	Frame    *Frame
-	Items    []*Projection
-	GroupBy  []pgsql.SelectItem
+	Distinct    bool
+	Frame       *Frame
+	Constraints pgsql.Expression
+	Items       []*Projection
+	GroupBy     []pgsql.SelectItem
 }
 
 func (s *Projections) Add(projection *Projection) {
@@ -524,5 +531,149 @@ func extractIdentifierFromCypherExpression(expression cypher.Expression) (pgsql.
 
 	default:
 		return "", false, fmt.Errorf("unknown variable expression type: %T", variableExpression)
+	}
+}
+
+// TODO: Better name
+type Symbols struct {
+	table map[string]any
+}
+
+func NewSymbols() *Symbols {
+	return &Symbols{
+		table: map[string]any{},
+	}
+}
+
+func SymbolsFor(node pgsql.SyntaxNode) (*Symbols, error) {
+	instance := &Symbols{
+		table: map[string]any{},
+	}
+
+	return instance, walk.WalkPgSQL(node, walk.NewSimpleVisitor[pgsql.SyntaxNode](func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+		switch typedNode := node.(type) {
+		case pgsql.Identifier:
+			instance.AddIdentifier(typedNode)
+
+		case pgsql.CompoundIdentifier:
+			instance.AddCompoundIdentifier(typedNode)
+		}
+	}))
+}
+
+func (s *Symbols) Filter() {
+	for _, filtered := range pgsql.Columns {
+		delete(s.table, filtered.String())
+	}
+}
+
+func (s *Symbols) IsEmpty() bool {
+	return len(s.table) == 0
+}
+
+func (s *Symbols) NotIn(exclusions *Symbols) *Symbols {
+	notIn := NewSymbols()
+
+	for symbol, value := range s.table {
+		if _, in := exclusions.table[symbol]; !in {
+			notIn.Add(value)
+		}
+	}
+
+	return notIn
+}
+
+func (s *Symbols) Add(symbol any) {
+	switch typedSymbol := symbol.(type) {
+	case pgsql.Identifier:
+		s.AddIdentifier(typedSymbol)
+
+	case pgsql.CompoundIdentifier:
+		s.AddCompoundIdentifier(typedSymbol)
+
+	case *Symbols:
+		for _, symbol := range typedSymbol.table {
+			switch typedInnerSymbol := symbol.(type) {
+			case pgsql.Identifier:
+				s.AddIdentifier(typedInnerSymbol)
+
+			case pgsql.CompoundIdentifier:
+				s.AddCompoundIdentifier(typedInnerSymbol)
+			}
+		}
+	}
+}
+
+func (s *Symbols) Contains(symbol any) bool {
+	found := false
+
+	switch typedSymbol := symbol.(type) {
+	case pgsql.Identifier:
+		_, found = s.table[typedSymbol.String()]
+
+	case pgsql.CompoundIdentifier:
+		_, found = s.table[typedSymbol.String()]
+
+	case *Symbols:
+		for symbol := range typedSymbol.table {
+			_, found = s.table[symbol]
+
+			if !found {
+				return false
+			}
+		}
+	}
+
+	return found
+}
+
+func (s *Symbols) AddSymbols(symbols *Symbols) {
+	for key, value := range symbols.table {
+		s.table[key] = value
+	}
+}
+
+func (s *Symbols) AddIdentifier(identifier pgsql.Identifier) {
+	s.table[identifier.String()] = identifier
+}
+
+func (s *Symbols) AddCompoundIdentifier(identifier pgsql.CompoundIdentifier) {
+	s.table[identifier.String()] = identifier
+}
+
+func (s *Symbols) RootIdentifiers() *pgsql.IdentifierSet {
+	identifiers := pgsql.NewIdentifierSet()
+
+	for _, identifier := range s.table {
+		switch typedIdentifier := identifier.(type) {
+		case pgsql.Identifier:
+			identifiers.Add(typedIdentifier)
+		case pgsql.CompoundIdentifier:
+			identifiers.Add(typedIdentifier[0])
+		}
+	}
+
+	return identifiers
+}
+
+func (s *Symbols) EachIdentifier(each func(next pgsql.Identifier) bool) {
+	for _, untypedIdentifier := range s.table {
+		switch typedIdentifier := untypedIdentifier.(type) {
+		case pgsql.Identifier:
+			if !each(typedIdentifier) {
+				return
+			}
+		}
+	}
+}
+
+func (s *Symbols) EachCompoundIdentifier(each func(next pgsql.CompoundIdentifier) bool) {
+	for _, untypedIdentifier := range s.table {
+		switch typedIdentifier := untypedIdentifier.(type) {
+		case pgsql.CompoundIdentifier:
+			if !each(typedIdentifier) {
+				return
+			}
+		}
 	}
 }

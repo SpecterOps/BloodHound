@@ -18,6 +18,7 @@ package translate
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/cypher/models/walk"
 
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -184,4 +185,297 @@ func rightNodeTraversalStepConstraint(traversalStep *PatternSegment) (pgsql.Expr
 		traversalStep.Edge.Identifier,
 		traversalStep.RightNode.Identifier,
 		traversalStep.Direction)
+}
+
+func isSyntaxNodeSatisfied(syntaxNode pgsql.SyntaxNode) (bool, error) {
+	var (
+		satisfied = true
+		err       = walk.WalkPgSQL(syntaxNode, walk.NewSimpleVisitor[pgsql.SyntaxNode](
+			func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+				switch typedNode := node.(type) {
+				case pgsql.SyntaxNodeFuture:
+					satisfied = typedNode.Satisfied()
+
+					if !satisfied {
+						errorHandler.SetDone()
+					}
+				}
+			},
+		))
+	)
+
+	return satisfied, err
+}
+
+// Constraint is an extracted expression that contains an identifier set of symbols required to be
+// in scope for this constraint to be solvable.
+type Constraint struct {
+	Dependencies *pgsql.IdentifierSet
+	Expression   pgsql.Expression
+}
+
+func (s *Constraint) Merge(other *Constraint) error {
+	if other.Dependencies != nil && other.Expression != nil {
+		newExpression := pgsql.OptionalAnd(s.Expression, other.Expression)
+
+		switch typedNewExpression := newExpression.(type) {
+		case *pgsql.UnaryExpression:
+			if err := applyUnaryExpressionTypeHints(typedNewExpression); err != nil {
+				return err
+			}
+
+		case *pgsql.BinaryExpression:
+			if err := applyBinaryExpressionTypeHints(typedNewExpression); err != nil {
+				return err
+			}
+		}
+
+		s.Dependencies.MergeSet(other.Dependencies)
+		s.Expression = newExpression
+	}
+
+	return nil
+}
+
+// ConstraintTracker is a tool for associating constraints (e.g. binary or unary expressions
+// that constrain a set of identifiers) with the identifier set they constrain.
+//
+// This is useful for rewriting a where-clause so that conjoined components can be isolated:
+//
+// Where Clause:
+//
+// where a.name = 'a' and b.name = 'b' and c.name = 'c' and a.num_a > 1 and a.ef = b.ef + c.ef
+//
+// Isolated Constraints:
+//
+//	"a":           a.name = 'a' and a.num_a > 1
+//	"b":           b.name = 'b'
+//	"c":           c.name = 'c'
+//	"a", "b", "c": a.ef = b.ef + c.ef
+type ConstraintTracker struct {
+	Constraints []*Constraint
+}
+
+func NewConstraintTracker() *ConstraintTracker {
+	return &ConstraintTracker{}
+}
+
+func (s *ConstraintTracker) HasConstraints(scope *pgsql.IdentifierSet) (bool, error) {
+	for idx := 0; idx < len(s.Constraints); idx++ {
+		nextConstraint := s.Constraints[idx]
+
+		if syntaxNodeSatisfied, err := isSyntaxNodeSatisfied(nextConstraint.Expression); err != nil {
+			return false, err
+		} else if syntaxNodeSatisfied && scope.Satisfies(nextConstraint.Dependencies) {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (s *ConstraintTracker) ConsumeAll() (*Constraint, error) {
+	var (
+		constraintExpressions = make([]pgsql.Expression, len(s.Constraints))
+		matchedDependencies   = pgsql.NewIdentifierSet()
+	)
+
+	for idx, constraint := range s.Constraints {
+		constraintExpressions[idx] = constraint.Expression
+		matchedDependencies.MergeSet(constraint.Dependencies)
+	}
+
+	// Clear the internal constraint slice
+	s.Constraints = s.Constraints[:0]
+
+	if conjoined, err := ConjoinExpressions(constraintExpressions); err != nil {
+		return nil, err
+	} else {
+		return &Constraint{
+			Dependencies: matchedDependencies,
+			Expression:   conjoined,
+		}, nil
+	}
+}
+
+/*
+ConsumeSet takes a given scope (a set of identifiers considered in-scope) and locates all constraints that can
+be satisfied by the scope's identifiers.
+
+```
+
+	scope := pgsql.IdentifierSet{
+		"a": struct{}{},
+		"b": struct{}{},
+	}
+
+	tracker := ConstraintTracker{
+		Constraints: []*Constraint{{
+			Dependencies: pgsql.IdentifierSet{
+				"a": struct{}{},
+			},
+			Expression: &pgsql.BinaryExpression{
+				Operator: pgsql.OperatorEquals,
+				LOperand: pgsql.CompoundIdentifier{"a", "name"},
+				ROperand: pgsql.Literal{
+					Value: "a",
+				},
+			},
+		}},
+	}
+
+	satisfiedScope, expression := tracker.ConsumeSet(scope)
+
+```
+*/
+func (s *ConstraintTracker) ConsumeSet(scope *pgsql.IdentifierSet) (*Constraint, error) {
+	var (
+		matchedDependencies   = pgsql.NewIdentifierSet()
+		constraintExpressions []pgsql.Expression
+	)
+
+	for idx := 0; idx < len(s.Constraints); {
+		nextConstraint := s.Constraints[idx]
+
+		// If this is a syntax node that has not been realized do not allow the constraint it represents
+		// to be consumed even if the dependencies are satisfied
+		if syntaxNodeSatisfied, err := isSyntaxNodeSatisfied(nextConstraint.Expression); err != nil {
+			return nil, err
+		} else if !syntaxNodeSatisfied || !scope.Satisfies(nextConstraint.Dependencies) {
+			// This constraint isn't satisfied, move to the next one
+			idx += 1
+		} else {
+			// Remove this constraint
+			s.Constraints = append(s.Constraints[:idx], s.Constraints[idx+1:]...)
+
+			// Append the constraint as a conjoined expression
+			constraintExpressions = append(constraintExpressions, nextConstraint.Expression)
+
+			// Track which identifiers were satisfied
+			matchedDependencies.MergeSet(nextConstraint.Dependencies)
+		}
+	}
+
+	if conjoined, err := ConjoinExpressions(constraintExpressions); err != nil {
+		return nil, err
+	} else {
+		return &Constraint{
+			Dependencies: matchedDependencies,
+			Expression:   conjoined,
+		}, nil
+	}
+}
+
+func (s *ConstraintTracker) Constrain(dependencies *pgsql.IdentifierSet, constraintExpression pgsql.Expression) error {
+	for _, constraint := range s.Constraints {
+		if constraint.Dependencies.Matches(dependencies) {
+			joinedExpression := pgsql.NewBinaryExpression(
+				constraintExpression,
+				pgsql.OperatorAnd,
+				constraint.Expression,
+			)
+
+			if err := applyBinaryExpressionTypeHints(joinedExpression); err != nil {
+				return err
+			}
+
+			constraint.Expression = joinedExpression
+			return nil
+		}
+	}
+
+	s.Constraints = append(s.Constraints, &Constraint{
+		Dependencies: dependencies,
+		Expression:   constraintExpression,
+	})
+
+	return nil
+}
+
+// PatternConstraints is a struct that represents all constraints that can be solved during a traversal step
+// pattern: `()-[]->()`.
+type PatternConstraints struct {
+	LeftNode  *Constraint
+	Edge      *Constraint
+	RightNode *Constraint
+}
+
+// OptimizePatternConstraintBalance considers the constraints that apply to a pattern segment's bound identifiers.
+//
+// If only the right side of the pattern segment is constrained, this could result in an imbalanced expansion where one side
+// of the traversal has an extreme disparity in search space.
+//
+// In cases that match this heuristic, it's beneficial to begin the traversal with the most tightly constrained set
+// of nodes. To accomplish this we flip the order of the traversal step.
+func (s *PatternConstraints) OptimizePatternConstraintBalance(traversalStep *PatternSegment) {
+	var (
+		// If the left node is previously bound (query knows a set of IDs) the left node is considered to sill be constrained
+		leftNodeHasConstraints  = traversalStep.LeftNodeBound || s.LeftNode.Expression != nil
+		rightNodeHasConstraints = s.RightNode.Expression != nil
+	)
+
+	// (a)-[*..]->(b:Constraint)
+	// (a)<-[*..]-(b:Constraint)
+	if !leftNodeHasConstraints && rightNodeHasConstraints {
+		traversalStep.FlipNodes()
+		s.FlipNodes()
+	}
+}
+
+func (s *PatternConstraints) FlipNodes() {
+	oldLeftNode := s.LeftNode
+	s.LeftNode = s.RightNode
+	s.RightNode = oldLeftNode
+}
+
+const (
+	recursivePattern    = true
+	nonRecursivePattern = false
+)
+
+func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, traversalStep *PatternSegment, tracker *ConstraintTracker) (PatternConstraints, error) {
+	var (
+		constraints PatternConstraints
+		err         error
+	)
+
+	// Even if this isn't the first traversal and the node may be already bound, this should result in an empty
+	// constraint instead of a nil value for `leftNode`
+	if constraints.LeftNode, err = tracker.ConsumeSet(pgsql.AsIdentifierSet(traversalStep.LeftNode.Identifier)); err != nil {
+		return constraints, err
+	}
+
+	if isFirstTraversalStep {
+		// If this is the first traversal step then the left node is just coming into scope
+		traversalStep.Frame.Export(traversalStep.LeftNode.Identifier)
+	}
+
+	// Track the identifiers visible at this frame to correctly assign the remaining constraints
+	knownBindings := traversalStep.Frame.Known()
+
+	if isRecursivePattern {
+		// The exclusion below is done at this step in the process since the recursive descent portion of an expansion
+		// will no longer have a reference to the root node; any dependent interaction between the root and terminal
+		// nodes would require an additional join. By not consuming the remaining constraints for the root and terminal
+		// nodes, they become visible up in the outer select of the recursive CTE.
+		knownBindings.Remove(traversalStep.LeftNode.Identifier)
+	}
+
+	// Export the edge identifier first
+	traversalStep.Frame.Export(traversalStep.Edge.Identifier)
+	knownBindings.Add(traversalStep.Edge.Identifier)
+
+	if constraints.Edge, err = tracker.ConsumeSet(knownBindings); err != nil {
+		return constraints, err
+	}
+
+	// Export the right node identifier last
+	traversalStep.Frame.Export(traversalStep.RightNode.Identifier)
+	knownBindings.Add(traversalStep.RightNode.Identifier)
+
+	if constraints.RightNode, err = tracker.ConsumeSet(knownBindings); err != nil {
+		return constraints, err
+	}
+
+	return constraints, nil
 }

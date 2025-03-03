@@ -268,7 +268,7 @@ func (s *Translator) buildAllShortestPathsExpansionRoot(part *PatternPart, trave
 
 			// Constraints that target the terminal node may crop up here where it's finally in scope. Additionally,
 			// only accept paths that are marked satisfied from the recursive descent CTE
-			if constraints, err := consumeConstraintsFrom(traversalStep.Expansion.Value.Frame.Visible, s.treeTranslator.IdentifierConstraints); err != nil {
+			if constraints, err := s.treeTranslator.IdentifierConstraints.ConsumeSet(traversalStep.Expansion.Value.Frame.Visible); err != nil {
 				return pgsql.Query{}, err
 			} else if projectionConstraints, err := ConjoinExpressions([]pgsql.Expression{pgsql.CompoundIdentifier{traversalStep.Expansion.Value.Frame.Binding.Identifier, expansionSatisfied}, constraints.Expression}); err != nil {
 				return pgsql.Query{}, err
@@ -634,7 +634,7 @@ func (s *Translator) buildExpansionPatternRoot(part *PatternPart, traversalStep 
 
 			// Constraints that target the terminal node may crop up here where it's finally in scope. Additionally,
 			// only accept paths that are marked satisfied from the recursive descent CTE
-			if constraints, err := consumeConstraintsFrom(traversalStep.Expansion.Value.Frame.Visible, s.treeTranslator.IdentifierConstraints); err != nil {
+			if constraints, err := s.treeTranslator.IdentifierConstraints.ConsumeSet(traversalStep.Expansion.Value.Frame.Visible); err != nil {
 				return pgsql.Query{}, err
 			} else if projectionConstraints, err := ConjoinExpressions([]pgsql.Expression{pgsql.CompoundIdentifier{traversalStep.Expansion.Value.Frame.Binding.Identifier, expansionSatisfied}, constraints.Expression}); err != nil {
 				return pgsql.Query{}, err
