@@ -30,7 +30,7 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
                 2: Start the Relay Server The NTLM relay can be executed with{' '}
                 <a href={'https://github.com/Kevin-Robertson/Inveigh'}>Inveigh</a>.
             </Typography>
-            <Typography>
+            <Typography variant='body2'>
                 3: Coerce the Target Computer Several coercion methods are documented here:{' '}
                 <a href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
                     Windows Coerced Authentication Methods

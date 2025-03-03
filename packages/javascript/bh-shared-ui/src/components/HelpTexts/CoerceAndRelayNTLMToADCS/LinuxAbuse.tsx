@@ -23,11 +23,13 @@ const LinuxAbuse: FC = () => {
         <>
             <Typography variant='body2'>
                 Examples of this attack are detailed in the following blog post:
-                <li>
-                    <a href={'https://trustedsec.com/blog/a-comprehensive-guide-on-relaying-anno-2022'}>
-                        I’m bringing relaying back: A comprehensive guide on relaying anno 2022
-                    </a>
-                </li>
+                <ul>
+                    <li>
+                        <a href={'https://trustedsec.com/blog/a-comprehensive-guide-on-relaying-anno-2022'}>
+                            I’m bringing relaying back: A comprehensive guide on relaying anno 2022
+                        </a>
+                    </li>
+                </ul>
             </Typography>
 
             <Typography variant={'body2'}>
