@@ -115,7 +115,7 @@ func buildInternalProjection(scope *Scope, projectedBindings []*BoundIdentifier)
 	return boundProjections, nil
 }
 
-func buildVisibleScopeProjections(scope *Scope) (BoundProjections, error) {
+func buildVisibleProjections(scope *Scope) (BoundProjections, error) {
 	currentFrame := scope.CurrentFrame()
 
 	if knownBindings, err := scope.LookupBindings(currentFrame.Known().Slice()...); err != nil {
@@ -153,7 +153,7 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 		for _, dependency := range projected.Dependencies {
 			switch dependency.DataType {
 			case pgsql.ExpansionPath:
-				parameterExpression = pgsql.BinaryExpressionJoin(
+				parameterExpression = pgsql.OptionalBinaryExpressionJoin(
 					parameterExpression,
 					pgsql.OperatorConcatenate,
 					dependency.Identifier,
@@ -171,7 +171,7 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 		}
 
 		if len(edgeReferences) > 0 {
-			parameterExpression = pgsql.BinaryExpressionJoin(
+			parameterExpression = pgsql.OptionalBinaryExpressionJoin(
 				parameterExpression,
 				pgsql.OperatorConcatenate,
 				pgsql.ArrayLiteral{

@@ -33,3 +33,25 @@ VALUES (current_timestamp,
         false,
         false)
 ON CONFLICT DO NOTHING;
+
+-- Add `tier_management_engine` feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'tier_management_engine',
+        'Tier Management Engine',
+        'Updates the managed assets selector engine and the asset management page.',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
+-- Add `NTLM Post Processing` feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'ntlm_post_processing',
+        'NTLM Post Processing Support',
+        'Enable the post processing of NTLM relay attack paths, this will enable the creation of CoerceAndRelayNTLMTo[LDAP, LDAPS, ADCS, SMB] edges.',
+        true,
+        true)
+ON CONFLICT DO NOTHING;

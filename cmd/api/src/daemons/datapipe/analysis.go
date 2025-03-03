@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/analysis/ad"
@@ -40,7 +41,8 @@ var (
 
 func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
 	var (
-		collectedErrors []error
+		collectedErrors      []error
+		compositionIdCounter = analysis.NewCompositionCounter()
 	)
 
 	if err := adAnalysis.FixWellKnownNodeTypes(ctx, graphDB); err != nil {
@@ -77,7 +79,9 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 	// TODO: Cleanup #ADCSFeatureFlag after full launch.
 	if adcsFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving ADCS feature flag: %w", err))
-	} else if stats, err := ad.Post(ctx, graphDB, adcsFlag.Enabled, appcfg.GetCitrixRDPSupport(ctx, db)); err != nil {
+	} else if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
+	} else if stats, err := ad.Post(ctx, graphDB, adcsFlag.Enabled, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled, &compositionIdCounter); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
 		adFailed = true
 	} else {

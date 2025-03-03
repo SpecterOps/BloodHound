@@ -29,51 +29,58 @@ import { AppState } from 'src/store';
 import { render, screen, waitFor } from 'src/test-utils';
 import ContextMenu from './ContextMenu';
 
-describe('ContextMenu', async () => {
-    const server = setupServer(
-        rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: {
-                        members: [],
-                    },
-                })
-            );
-        })
-    );
-
-    beforeAll(() => server.listen());
-    afterEach(() => server.resetHandlers());
-    afterAll(() => server.close());
-
-    const setup = async (permissions?: Permission[]) => {
-        const initialState: DeepPartial<AppState> = {
-            entityinfo: {
-                selectedNode: {
-                    name: 'foo',
-                    id: '1234',
-                    type: 'User' as EntityKinds,
+const server = setupServer(
+    rest.get('/api/v2/self', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: createAuthStateWithPermissions([Permission.GRAPH_DB_WRITE]).user,
+            })
+        );
+    }),
+    rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    members: [],
                 },
-            },
-            assetgroups: {
-                assetGroups: [
-                    { tag: 'owned', id: 1 },
-                    { tag: 'admin_tier_0', id: 2 },
-                ],
-            },
-        };
+            })
+        );
+    })
+);
 
-        if (permissions) {
-            initialState.auth = createAuthStateWithPermissions(permissions);
-        }
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
-        return await act(async () => {
-            render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} handleClose={vi.fn()} />, {
-                initialState,
-            });
-        });
+const setup = async (permissions?: Permission[]) => {
+    const initialState: DeepPartial<AppState> = {
+        entityinfo: {
+            selectedNode: {
+                name: 'foo',
+                id: '1234',
+                type: 'User' as EntityKinds,
+            },
+        },
+        assetgroups: {
+            assetGroups: [
+                { tag: 'owned', id: 1 },
+                { tag: 'admin_tier_0', id: 2 },
+            ],
+        },
     };
 
+    if (permissions) {
+        initialState.auth = createAuthStateWithPermissions(permissions);
+    }
+
+    return await act(async () => {
+        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} handleClose={vi.fn()} />, {
+            initialState,
+        });
+    });
+};
+
+describe('ContextMenu', async () => {
     it('renders asset group edit options with graph write permissions', async () => {
         await setup([Permission.GRAPH_DB_WRITE]);
 
