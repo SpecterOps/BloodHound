@@ -404,7 +404,7 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: 'MATCH (n:EnterpriseCA)\nWHERE n.adcswebenrollmenthttp = True\nOR (n.adcswebenrollmenthttps = True AND n.adcswebenrollmenthttpsepa = False)\nRETURN n',
             },
             {
-                description: 'Computers with the outgoing NTLM setting set to _Deny all_',
+                description: 'Computers with the outgoing NTLM setting set to Deny all',
                 cypher: 'MATCH (c:Computer)\nWHERE c.restrictoutboundntlm = True\nRETURN c LIMIT 1000',
             },
             {
