@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { BrowserRouter } from 'react-router-dom';
 import { render, screen } from '../../test-utils';
 import SubNav from './SubNav';
 
@@ -26,11 +25,7 @@ describe('SubNav', () => {
             path: '/administration/test-nav-item-path',
         };
 
-        render(
-            <BrowserRouter>
-                <SubNav sections={[{ title: testSectionTitle, items: [testNavItem] }]} />
-            </BrowserRouter>
-        );
+        render(<SubNav sections={[{ title: testSectionTitle, items: [testNavItem] }]} />);
         expect(screen.getByRole('navigation')).toBeInTheDocument();
         expect(screen.getByText(testSectionTitle)).toBeInTheDocument();
         expect(screen.getByText(testNavItem.label)).toBeInTheDocument();
@@ -66,11 +61,7 @@ describe('SubNav', () => {
             },
         ];
 
-        render(
-            <BrowserRouter>
-                <SubNav sections={testSections} />
-            </BrowserRouter>
-        );
+        render(<SubNav sections={testSections} />);
         expect(screen.getByRole('navigation')).toBeInTheDocument();
         expect(screen.getAllByRole('link')).toHaveLength(9);
         for (const section of testSections) {

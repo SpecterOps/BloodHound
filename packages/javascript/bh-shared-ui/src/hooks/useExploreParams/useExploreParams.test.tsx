@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { acceptedSearchTypes, parseSearchType } from '..';
+import { acceptedSearchTypes, parseSearchType } from '../useExploreParams';
 
 describe('useExploreParams', () => {
     describe('parseSearchType', () => {
