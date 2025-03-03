@@ -40,6 +40,7 @@ import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
+import Content from 'src/views/Content';
 import {
     useMainNavLogoData,
     useMainNavPrimaryListData,
@@ -47,7 +48,6 @@ import {
 } from './components/MainNav/MainNavData';
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
-import Content from './views/Content';
 
 export const Inner: React.FC = () => {
     const dispatch = useAppDispatch();

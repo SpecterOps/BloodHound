@@ -14,13 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEnvironment, useEnvironmentParams, useFeatureFlag } from 'bh-shared-ui';
+import { useEnvironment, useFeatureFlag } from 'bh-shared-ui';
 import { useAppSelector } from 'src/store';
 
 const useGroupManagementStateSwitch = () => {
     const { data: flag } = useFeatureFlag('back_button_support');
-    const { environmentId } = useEnvironmentParams();
-    const { data: environmentFromParams } = useEnvironment(environmentId, { enabled: flag?.enabled });
+    const { data: environmentFromParams } = useEnvironment();
 
     const globalDomain = useAppSelector((state) => state.global.options.domain);
 
