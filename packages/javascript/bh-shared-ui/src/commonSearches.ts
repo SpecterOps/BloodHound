@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {OWNED_OBJECT_TAG, TIER_ZERO_TAG} from './constants';
-import {ActiveDirectoryPathfindingEdges, AzurePathfindingEdges} from './graphSchema';
+import { OWNED_OBJECT_TAG, TIER_ZERO_TAG } from './constants';
+import { ActiveDirectoryPathfindingEdges, AzurePathfindingEdges } from './graphSchema';
 
 const categoryAD = 'Active Directory';
 const categoryAzure = 'Azure';
