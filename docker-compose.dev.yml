@@ -15,15 +15,67 @@
 # SPDX-License-Identifier: Apache-2.0
 
 services:
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    profiles: ["core", "all"]
+    networks:
+      socket_proxy:
+        ipv4_address: 167.99.1.1:2376
+    ports:
+      - 2375:2375
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - LOG_LEVEL=info # debug,info,notice,warning,err,crit,alert,emerg
+      ## Variables match the URL prefix (i.e. AUTH blocks access to /auth/* parts of the API, etc.).
+      # 0 to revoke access.
+      # 1 to grant access.
+      ## Granted by Default
+      - EVENTS=1
+      - PING=1
+      - VERSION=1
+      ## Revoked by Default
+      # Security critical
+      - AUTH=0
+      - SECRETS=0
+      - POST=0
+      # Not always needed
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - CONTAINERS=1 # reading container state
+      - DISTRIBUTION=0
+      - EXEC=0
+      - IMAGES=1 # reading images
+      - INFO=1 # info/log
+      - NETWORKS=1 # to attach to same network
+      - NODES=0
+      - PLUGINS=0
+      - SERVICES=1 # services info
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - TASKS=0
+      - VOLUMES=0
+
   dozzle:
     container_name: dozzle
     image: amir20/dozzle:latest
+    security_opt:
+      - no-new-privileges:true
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: true  # Adding read-only for better security
     ports:
       - ${BH_DOZZLE_PORT:-127.0.0.1:18080}:8080
     environment:
       DOZZLE_NO_ANALYTICS: true
+      DOZZLE_REMOTE_HOST: tcp://167.99.1.1:2376
     labels:
       - traefik.enable=true
       - traefik.http.routers.dozzle.rule=Host(`${BH_DOZZLE_HOSTNAME:-dozzle.localhost}`)
