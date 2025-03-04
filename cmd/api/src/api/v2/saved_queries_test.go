@@ -17,6 +17,7 @@
 package v2_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -37,6 +38,7 @@ import (
 	"github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/must"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -86,7 +88,9 @@ func getTestArgs() []TestData {
 	}
 }
 
-// Matrix testing experiment
+// // Matrix testing experiment
+// Pro:  Unify test logic - later maintenance requires only one test modification, or splitting off new tests when necessary
+// Con:  Poor IDE integration, added complexity, test writer must determine when tests should and shouldn't be consolidated
 func TestResources_ListSavedQueries_SortingError(t *testing.T) {
 	testData := getTestArgs()
 	for _, testArgs := range testData {
@@ -121,7 +125,7 @@ func TestResources_ListSavedQueries_SortingError(t *testing.T) {
 		// Assert
 		responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 		require.NoError(t, err, fmt.Sprintf("Test: %s", testArgs.testName))
-		require.Equal(t, testArgs.expectedResponseCode, response.Code, fmt.Sprintf("Test: %s", testArgs.testName))
+		assert.Equal(t, testArgs.expectedResponseCode, response.Code, fmt.Sprintf("Test: %s", testArgs.testName))
 		require.JSONEq(t, testArgs.expectedResponseBody, responseBodyWithDefaultTimestamp, fmt.Sprintf("Test: %s", testArgs.testName))
 	}
 }
@@ -154,10 +158,10 @@ func TestResources_ListSavedQueries_InvalidFilterColumn(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"the specified column cannot be filtered: foo"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"the specified column cannot be filtered: foo"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_ListSavedQueries_NotAUserAuth(t *testing.T) {
@@ -192,10 +196,10 @@ func TestResources_ListSavedQueries_NotAUserAuth(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"errors":[{"context":"","message":"No associated user found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"errors":[{"context":"","message":"No associated user found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_ListSavedQueries_InvalidQueryParameterFilters(t *testing.T) {
@@ -226,10 +230,10 @@ func TestResources_ListSavedQueries_InvalidQueryParameterFilters(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_ListSavedQueries_InvalidFilterPredicate(t *testing.T) {
@@ -260,10 +264,10 @@ func TestResources_ListSavedQueries_InvalidFilterPredicate(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"the specified filter predicate is not supported for this column: name gt"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"the specified filter predicate is not supported for this column: name gt"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_ListSavedQueries_InvalidSkip(t *testing.T) {
@@ -294,10 +298,10 @@ func TestResources_ListSavedQueries_InvalidSkip(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query parameter \"skip\" is malformed: invalid skip: -1"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query parameter \"skip\" is malformed: invalid skip: -1"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_ListSavedQueries_InvalidLimit(t *testing.T) {
@@ -328,10 +332,10 @@ func TestResources_ListSavedQueries_InvalidLimit(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query parameter \"limit\" is malformed: invalid limit: -1"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query parameter \"limit\" is malformed: invalid limit: -1"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_ListSavedQueries_DBError(t *testing.T) {
@@ -362,10 +366,10 @@ func TestResources_ListSavedQueries_DBError(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusInternalServerError, response.Code)
-	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusInternalServerError, response.Code)
+	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_ListSavedQueries(t *testing.T) {
@@ -409,7 +413,7 @@ func TestResources_ListSavedQueries(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	require.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, http.StatusOK, response.Code)
 	require.JSONEq(t, `{"count":1,"limit":10,"skip":1,"data":[{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"myQuery","query":"Match(n) return n;","description":"","id":0,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}]}`, response.Body.String())
 }
 
@@ -456,7 +460,7 @@ func TestResources_ListSavedQueries_OwnedQueries(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	require.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, http.StatusOK, response.Code)
 	require.JSONEq(t, `{"count":1,"limit":10,"skip":1,"data":[{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"myQuery","query":"Match(n) return n;","description":"Public query description","id":0,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"scope":"owned"}]}`, response.Body.String())
 }
 
@@ -501,7 +505,7 @@ func TestResources_ListSavedQueries_PublicQueries(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	require.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, http.StatusOK, response.Code)
 	require.JSONEq(t, `{"count":1,"limit":10000,"skip":0,"data":[{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"myQuery","query":"Match(n) return n","description":"Public query description","id":0,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"scope":"public"}]}`, response.Body.String())
 }
 
@@ -546,7 +550,7 @@ func TestResources_ListSavedQueries_SharedQueries(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	require.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, http.StatusOK, response.Code)
 	require.JSONEq(t, `{"count":1,"limit":10000,"skip":0,"data":[{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"myQuery","query":"Match(n) return n","description":"Shared query description","id":0,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"scope":"shared"}]}`, response.Body.String())
 }
 
@@ -600,7 +604,7 @@ func TestResources_ListSavedQueries_MulitpleScopeQueries(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	require.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, http.StatusOK, response.Code)
 	require.JSONEq(t, `{"count":2,"limit":10000,"skip":0,"data":[{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"myQuery","query":"Match(n) return n","description":"Shared query description","id":0,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"scope":"shared"},{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"myQuery","query":"Match(n) return n","description":"Public query description","id":0,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"scope":"public"}]}`, response.Body.String())
 }
 
@@ -636,10 +640,10 @@ func TestResources_ListSavedQueries_ScopeDBError(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusInternalServerError, response.Code)
-	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusInternalServerError, response.Code)
+	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`, responseBodyWithDefaultTimestamp)
 
 }
 
@@ -672,10 +676,10 @@ func TestResources_ListSavedQueries_InvalidScope(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"invalid scope param"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"invalid scope param"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_CreateSavedQuery_NotAUserAuth(t *testing.T) {
@@ -712,10 +716,10 @@ func TestResources_CreateSavedQuery_NotAUserAuth(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"errors":[{"context":"","message":"No associated user found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"errors":[{"context":"","message":"No associated user found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_CreateSavedQuery_InvalidBody(t *testing.T) {
@@ -746,10 +750,10 @@ func TestResources_CreateSavedQuery_InvalidBody(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"could not decode limited payload request into value: json: cannot unmarshal string into Go value of type v2.CreateSavedQueryRequest"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"could not decode limited payload request into value: json: cannot unmarshal string into Go value of type v2.CreateSavedQueryRequest"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_CreateSavedQuery_EmptyBody(t *testing.T) {
@@ -765,9 +769,15 @@ func TestResources_CreateSavedQuery_EmptyBody(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.NoError(t, err)
 
-	payload := v2.CreateSavedQueryRequest{}
+	payload := map[string]any{
+		"query": "",
+		"name":  "",
+	}
 
-	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
+	marshalledPayload, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, bytes.NewReader(marshalledPayload))
 	require.NoError(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -780,10 +790,10 @@ func TestResources_CreateSavedQuery_EmptyBody(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"the name and/or query field is empty"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"the name and/or query field is empty"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
@@ -799,17 +809,20 @@ func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.NoError(t, err)
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
-
-	payload := v2.CreateSavedQueryRequest{
-		Query: "Match(n) return n",
-		Name:  "myQuery",
+	payload := map[string]any{
+		"query": "Match(n) return n",
+		"name":  "myQuery",
 	}
 
-	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
+	marshalledPayload, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, bytes.NewReader(marshalledPayload))
 	require.NoError(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
 
 	router := mux.NewRouter()
 	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
@@ -819,10 +832,10 @@ func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"duplicate name for saved query: please choose a different name"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"duplicate name for saved query: please choose a different name"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
@@ -838,18 +851,21 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.NoError(t, err)
 
-	payload := v2.CreateSavedQueryRequest{
-		Query:       "Match(n) return n",
-		Name:        "myCustomQuery1",
-		Description: "An example description",
+	payload := map[string]any{
+		"query":       "Match(n) return n",
+		"name":        "myCustomQuery1",
+		"description": "An example description",
 	}
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload.Name, payload.Query, payload.Description).Return(model.SavedQuery{}, fmt.Errorf("foo"))
+	marshalledPayload, err := json.Marshal(payload)
+	require.NoError(t, err)
 
-	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, bytes.NewReader(marshalledPayload))
 	require.NoError(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"]).Return(model.SavedQuery{}, fmt.Errorf("foo"))
 
 	router := mux.NewRouter()
 	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
@@ -859,10 +875,10 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusInternalServerError, response.Code)
-	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"foo"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusInternalServerError, response.Code)
+	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"foo"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_CreateSavedQuery(t *testing.T) {
@@ -878,23 +894,26 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 	userId, err := uuid2.FromString("ac83d188-cb30-430b-953a-9e0ecab45e2c")
 	require.NoError(t, err)
 
-	payload := v2.CreateSavedQueryRequest{
-		Query:       "Match(n) return n",
-		Name:        "myCustomQuery1",
-		Description: "An example description",
+	payload := map[string]any{
+		"query":       "Match(n) return n",
+		"name":        "myCustomQuery1",
+		"description": "An example description",
 	}
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload.Name, payload.Query, payload.Description).Return(model.SavedQuery{
-		UserID:      userId.String(),
-		Name:        payload.Name,
-		Query:       payload.Query,
-		Description: "An example description",
-	}, nil)
+	marshalledPayload, err := json.Marshal(payload)
+	require.NoError(t, err)
 
-	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, bytes.NewReader(marshalledPayload))
 	require.NoError(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"]).Return(model.SavedQuery{
+		UserID:      userId.String(),
+		Name:        fmt.Sprintf("%v", payload["name"]),
+		Query:       fmt.Sprintf("%v", payload["query"]),
+		Description: fmt.Sprintf("%v", payload["description"]),
+	}, nil)
 
 	router := mux.NewRouter()
 	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
@@ -904,7 +923,7 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	require.Equal(t, http.StatusCreated, response.Code)
+	assert.Equal(t, http.StatusCreated, response.Code)
 	require.JSONEq(t, `{"data":{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"myCustomQuery1","query":"Match(n) return n","description":"An example description","id":0,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`, response.Body.String())
 }
 
@@ -942,10 +961,10 @@ func TestResources_UpdateSavedQuery_NotAUserAuth(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"errors":[{"context":"","message":"No associated user found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"errors":[{"context":"","message":"No associated user found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_UpdateSavedQuery_InvalidBody(t *testing.T) {
@@ -976,10 +995,10 @@ func TestResources_UpdateSavedQuery_InvalidBody(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"could not decode limited payload request into value: json: cannot unmarshal string into Go value of type v2.CreateSavedQueryRequest"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"could not decode limited payload request into value: json: cannot unmarshal string into Go value of type v2.CreateSavedQueryRequest"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_UpdateSavedQuery_InvalidID(t *testing.T) {
@@ -995,7 +1014,7 @@ func TestResources_UpdateSavedQuery_InvalidID(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.NoError(t, err)
 
-	payload := v2.CreateSavedQueryRequest{}
+	var payload any
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "NotAValidUUID"), must.MarshalJSONReader(payload))
 	require.NoError(t, err)
@@ -1010,10 +1029,10 @@ func TestResources_UpdateSavedQuery_InvalidID(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_UpdateSavedQuery_GetSavedQueryError(t *testing.T) {
@@ -1034,7 +1053,7 @@ func TestResources_UpdateSavedQuery_GetSavedQueryError(t *testing.T) {
 	// query belongs to another user
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("foo"))
 
-	payload := v2.CreateSavedQueryRequest{}
+	var payload any
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
 	require.NoError(t, err)
 
@@ -1048,10 +1067,10 @@ func TestResources_UpdateSavedQuery_GetSavedQueryError(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusInternalServerError, response.Code)
-	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"foo"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusInternalServerError, response.Code)
+	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"foo"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_UpdateSavedQuery_QueryBelongsToAnotherUser(t *testing.T) {
@@ -1072,7 +1091,7 @@ func TestResources_UpdateSavedQuery_QueryBelongsToAnotherUser(t *testing.T) {
 	// query belongs to another user
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "notThisUser"}, nil)
 
-	payload := v2.CreateSavedQueryRequest{}
+	var payload any
 
 	// context owner is not an admin
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
@@ -1088,10 +1107,10 @@ func TestResources_UpdateSavedQuery_QueryBelongsToAnotherUser(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusNotFound, response.Code)
-	require.JSONEq(t, `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query does not exist"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusNotFound, response.Code)
+	require.JSONEq(t, `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query does not exist"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_UpdateSavedQuery_Admin_NonPublicQuery(t *testing.T) {
@@ -1115,7 +1134,7 @@ func TestResources_UpdateSavedQuery_Admin_NonPublicQuery(t *testing.T) {
 	// query is not public
 	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(false, nil)
 
-	payload := v2.CreateSavedQueryRequest{}
+	var payload any
 
 	// context owner is an admin
 	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
@@ -1131,10 +1150,10 @@ func TestResources_UpdateSavedQuery_Admin_NonPublicQuery(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusNotFound, response.Code)
-	require.JSONEq(t, `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query does not exist"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusNotFound, response.Code)
+	require.JSONEq(t, `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query does not exist"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_UpdateSavedQuery_NoQueryMatch(t *testing.T) {
@@ -1154,7 +1173,7 @@ func TestResources_UpdateSavedQuery_NoQueryMatch(t *testing.T) {
 	userId, err := uuid2.NewV4()
 	require.NoError(t, err)
 
-	payload := v2.CreateSavedQueryRequest{}
+	var payload any
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
 	require.NoError(t, err)
@@ -1169,10 +1188,10 @@ func TestResources_UpdateSavedQuery_NoQueryMatch(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusNotFound, response.Code)
-	require.JSONEq(t, `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query does not exist"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusNotFound, response.Code)
+	require.JSONEq(t, `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query does not exist"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_UpdateSavedQuery_ErrorFetchingPublicStatus(t *testing.T) {
@@ -1196,7 +1215,7 @@ func TestResources_UpdateSavedQuery_ErrorFetchingPublicStatus(t *testing.T) {
 	// query is public
 	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(false, fmt.Errorf("foo"))
 
-	payload := v2.CreateSavedQueryRequest{}
+	var payload any
 
 	// context owner is an admin
 	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
@@ -1212,10 +1231,10 @@ func TestResources_UpdateSavedQuery_ErrorFetchingPublicStatus(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusInternalServerError, response.Code)
-	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"foo"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusInternalServerError, response.Code)
+	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"foo"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_UpdateSavedQuery_UpdateFailed(t *testing.T) {
@@ -1246,9 +1265,16 @@ func TestResources_UpdateSavedQuery_UpdateFailed(t *testing.T) {
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("random error"))
 
-	payload := v2.CreateSavedQueryRequest{Name: "notFoo", Query: "notBar", Description: "notBaz"}
+	payload := map[string]any{
+		"query":       "notFoo",
+		"name":        "notBar",
+		"description": "notBaz",
+	}
 
-	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
+	marshalledPayload, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), bytes.NewReader(marshalledPayload))
 	require.NoError(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -1261,10 +1287,10 @@ func TestResources_UpdateSavedQuery_UpdateFailed(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusInternalServerError, response.Code)
-	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusInternalServerError, response.Code)
+	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_UpdateSavedQuery_OwnPrivateQuery_Success(t *testing.T) {
@@ -1295,9 +1321,16 @@ func TestResources_UpdateSavedQuery_OwnPrivateQuery_Success(t *testing.T) {
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 
-	payload := v2.CreateSavedQueryRequest{Name: "notFoo", Query: "notBar", Description: "notBaz"}
+	payload := map[string]any{
+		"query":       "notFoo",
+		"name":        "notBar",
+		"description": "notBaz",
+	}
 
-	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
+	marshalledPayload, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), bytes.NewReader(marshalledPayload))
 	require.NoError(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -1310,7 +1343,7 @@ func TestResources_UpdateSavedQuery_OwnPrivateQuery_Success(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	require.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, http.StatusOK, response.Code)
 	require.JSONEq(t, `{"data":{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"foo","query":"bar","description":"baz","id":1,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`, response.Body.String())
 }
 
@@ -1341,10 +1374,17 @@ func TestResources_UpdateSavedQuery_AdminPrivateQuery_Success(t *testing.T) {
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 
-	payload := v2.CreateSavedQueryRequest{Name: "notFoo", Query: "notBar", Description: "notBaz"}
+	payload := map[string]any{
+		"query":       "notFoo",
+		"name":        "notBar",
+		"description": "notBaz",
+	}
+
+	marshalledPayload, err := json.Marshal(payload)
+	require.NoError(t, err)
 
 	// user is an admin
-	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), bytes.NewReader(marshalledPayload))
 	require.NoError(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -1357,7 +1397,7 @@ func TestResources_UpdateSavedQuery_AdminPrivateQuery_Success(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	require.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, http.StatusOK, response.Code)
 	require.JSONEq(t, `{"data":{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"foo","query":"bar","description":"baz","id":1,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`, response.Body.String())
 }
 
@@ -1389,9 +1429,16 @@ func TestResources_UpdateSavedQuery_OwnPublicQuery_Success(t *testing.T) {
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 
-	payload := v2.CreateSavedQueryRequest{Name: "notFoo", Query: "notBar", Description: "notBaz"}
+	payload := map[string]any{
+		"query":       "notFoo",
+		"name":        "notBar",
+		"description": "notBaz",
+	}
 
-	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
+	marshalledPayload, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), bytes.NewReader(marshalledPayload))
 	require.NoError(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -1404,7 +1451,7 @@ func TestResources_UpdateSavedQuery_OwnPublicQuery_Success(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	require.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, http.StatusOK, response.Code)
 	require.JSONEq(t, `{"data":{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"foo","query":"bar","description":"baz","id":1,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`, response.Body.String())
 }
 
@@ -1441,10 +1488,17 @@ func TestResources_UpdateSavedQuery_AdminPublicQuery_Success(t *testing.T) {
 
 	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 
-	payload := v2.CreateSavedQueryRequest{Name: "notFoo", Query: "notBar", Description: "notBaz"}
+	payload := map[string]any{
+		"query":       "notFoo",
+		"name":        "notBar",
+		"description": "notBaz",
+	}
+
+	marshalledPayload, err := json.Marshal(payload)
+	require.NoError(t, err)
 
 	// context owner is an admin
-	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
+	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), bytes.NewReader(marshalledPayload))
 	require.NoError(t, err)
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -1457,7 +1511,7 @@ func TestResources_UpdateSavedQuery_AdminPublicQuery_Success(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	require.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, http.StatusOK, response.Code)
 	require.JSONEq(t, `{"data":{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"foo","query":"bar","description":"baz","id":1,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`, response.Body.String())
 }
 
@@ -1495,10 +1549,10 @@ func TestResources_DeleteSavedQuery_NotAUserAuth(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"errors":[{"context":"","message":"No associated user found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"errors":[{"context":"","message":"No associated user found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_DeleteSavedQuery_IDMalformed(t *testing.T) {
@@ -1526,10 +1580,10 @@ func TestResources_DeleteSavedQuery_IDMalformed(t *testing.T) {
 	router.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusBadRequest, response.Code)
-	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_DeleteSavedQuery_DBError(t *testing.T) {
@@ -1562,10 +1616,10 @@ func TestResources_DeleteSavedQuery_DBError(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusInternalServerError, response.Code)
-	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusInternalServerError, response.Code)
+	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_DeleteSavedQuery_UserNotAdmin(t *testing.T) {
@@ -1598,10 +1652,10 @@ func TestResources_DeleteSavedQuery_UserNotAdmin(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusForbidden, response.Code)
-	require.JSONEq(t, `{"http_status":403,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"User does not have permission to delete this query"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusForbidden, response.Code)
+	require.JSONEq(t, `{"http_status":403,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"User does not have permission to delete this query"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_DeleteSavedQuery_IsPublicSavedQueryDBError(t *testing.T) {
@@ -1635,10 +1689,10 @@ func TestResources_DeleteSavedQuery_IsPublicSavedQueryDBError(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusInternalServerError, response.Code)
-	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusInternalServerError, response.Code)
+	require.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_DeleteSavedQuery_NotPublicQueryAndUserIsAdmin(t *testing.T) {
@@ -1672,10 +1726,10 @@ func TestResources_DeleteSavedQuery_NotPublicQueryAndUserIsAdmin(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusForbidden, response.Code)
-	require.JSONEq(t, `{"http_status":403,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"User does not have permission to delete this query"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusForbidden, response.Code)
+	require.JSONEq(t, `{"http_status":403,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"User does not have permission to delete this query"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_DeleteSavedQuery_RecordNotFound(t *testing.T) {
@@ -1708,10 +1762,10 @@ func TestResources_DeleteSavedQuery_RecordNotFound(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusNotFound, response.Code)
-	require.JSONEq(t, `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query does not exist"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusNotFound, response.Code)
+	require.JSONEq(t, `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query does not exist"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_DeleteSavedQuery_RecordNotFound_EdgeCase(t *testing.T) {
@@ -1745,10 +1799,10 @@ func TestResources_DeleteSavedQuery_RecordNotFound_EdgeCase(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusNotFound, response.Code)
-	require.JSONEq(t, `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query does not exist"}]}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusNotFound, response.Code)
+	require.JSONEq(t, `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"query does not exist"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_DeleteSavedQuery_DeleteError(t *testing.T) {
@@ -1782,10 +1836,10 @@ func TestResources_DeleteSavedQuery_DeleteError(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	require.Equal(t, http.StatusInternalServerError, response.Code)
-	require.JSONEq(t, `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":""}`, actualWithDefaultTimestamp)
+	assert.Equal(t, http.StatusInternalServerError, response.Code)
+	require.JSONEq(t, `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":""}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_DeleteSavedQuery_PublicQueryAndUserIsAdmin(t *testing.T) {
@@ -1820,7 +1874,7 @@ func TestResources_DeleteSavedQuery_PublicQueryAndUserIsAdmin(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	require.Equal(t, http.StatusNoContent, response.Code)
+	assert.Equal(t, http.StatusNoContent, response.Code)
 	require.Equal(t, "", response.Body.String())
 }
 
@@ -1855,7 +1909,7 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 	handler.ServeHTTP(response, req)
 
 	// Assert
-	require.Equal(t, http.StatusNoContent, response.Code)
+	assert.Equal(t, http.StatusNoContent, response.Code)
 	require.Equal(t, "", response.Body.String())
 }
 
