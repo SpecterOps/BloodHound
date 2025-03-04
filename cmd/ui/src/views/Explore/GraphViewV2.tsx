@@ -34,7 +34,7 @@ import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
@@ -60,57 +60,29 @@ const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
 
 const columnStyles = { height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' };
 
-const GraphViewV2: FC = () => {
-    /* Hooks */
-    const theme = useTheme();
+// To do: move the below to shared ui maybe as we need to use them in both bhe bhce
 
-    const dispatch = useAppDispatch();
-
-    const graphState: GraphState = useAppSelector((state) => state.explore);
-
-    const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
-
-    const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
-
-    const darkMode = useAppSelector((state) => state.global.view.darkMode);
-
-    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
-
-    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-
-    const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
-
-    const { data, isLoading, isError } = useAvailableDomains();
-
-    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-
-    const exportableGraphState = useAppSelector((state) => state.explore.export);
-
-    const sigmaChartRef = useRef<any>(null);
-
-    const currentSearchAnchorElement = useRef(null);
-
-    // To do: Maybe create a hook for this ? also to check if its empty and if so not do this
-    const { panelSelection } = useExploreParams();
-    const queryParamComposition = panelSelection ? (panelSelection as string).split('_') : [];
-    const isEdge = queryParamComposition.length === 3;
-
-    const nodeQueryParam = panelSelection && !isEdge ? panelSelection : '';
+const NodeDataFetcher: FC<{ panelSelection: string; children: any }> = ({ panelSelection, children }) => {
+    const nodeQueryParam = panelSelection || '';
     const { data: nodeInfoResponse } = useSearch(nodeQueryParam, undefined);
     const nodeInfoObject = nodeInfoResponse?.length && nodeInfoResponse?.at(0);
-    const selectedNode = useMemo(
-        () =>
-            nodeInfoObject
-                ? {
-                      id: nodeInfoObject.objectid,
-                      name: nodeInfoObject.name,
-                      type: nodeInfoObject.type as EntityKinds,
-                      graphId: '',
-                  } // To do: Type this
-                : null,
-        [nodeInfoObject]
-    );
+    const selectedNode = nodeInfoObject
+        ? {
+              id: nodeInfoObject.objectid,
+              name: nodeInfoObject.name,
+              type: nodeInfoObject.type as EntityKinds,
+              graphId: '',
+          } // To do: Type this
+        : null;
 
+    return children(selectedNode as any);
+};
+
+const EdgeDataFetcher: FC<{ panelSelection: string; queryParamComposition: string[]; children: any }> = ({
+    panelSelection,
+    queryParamComposition,
+    children,
+}) => {
     const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | number, edgeKind: string): string =>
         `MATCH p= (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN p`;
 
@@ -150,8 +122,45 @@ const GraphViewV2: FC = () => {
                   },
               }
             : null;
-    console.log('selectedNode', selectedNode);
-    console.log('selectedEdge', selectedEdge);
+    return children(selectedEdge);
+};
+
+//
+
+const GraphViewV2: FC = () => {
+    /* Hooks */
+    const theme = useTheme();
+
+    const dispatch = useAppDispatch();
+
+    const graphState: GraphState = useAppSelector((state) => state.explore);
+
+    const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
+
+    const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
+
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+
+    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+
+    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
+
+    const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
+
+    const { data, isLoading, isError } = useAvailableDomains();
+
+    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+
+    const exportableGraphState = useAppSelector((state) => state.explore.export);
+
+    const sigmaChartRef = useRef<any>(null);
+
+    const currentSearchAnchorElement = useRef(null);
+
+    // To do: Maybe create a hook for this ?
+    const { panelSelection } = useExploreParams();
+    const queryParamComposition = panelSelection ? (panelSelection as string).split('_') : [];
+    const isEdge = queryParamComposition.length === 3;
     //
 
     const [columns, setColumns] = useState(columnsDefault);
@@ -351,9 +360,15 @@ const GraphViewV2: FC = () => {
                 <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
                     {/* To do: this conditional wont work because we could have a case of no param */}
                     {isEdge ? (
-                        <EdgeInfoPane selectedEdge={selectedEdge} />
+                        <EdgeDataFetcher
+                            panelSelection={panelSelection as string}
+                            queryParamComposition={queryParamComposition}>
+                            {(selectedEdge: any) => <EdgeInfoPane selectedEdge={selectedEdge} />}
+                        </EdgeDataFetcher>
                     ) : (
-                        <EntityInfoPanel selectedNode={selectedNode} />
+                        <NodeDataFetcher panelSelection={panelSelection as string}>
+                            {(selectedNode: any) => <EntityInfoPanel selectedNode={selectedNode} />}
+                        </NodeDataFetcher>
                     )}
                 </Grid>
             </Grid>
