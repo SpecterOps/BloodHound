@@ -41,8 +41,6 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		managementResource = authapi.NewManagementResource(resources.Config, resources.DB, resources.Authorizer, resources.Authenticator)
 	)
 
-	routerInst.POST("/api/v2/login", loginResource.Login).Use(middleware.DefaultRateLimitMiddleware(), middleware.LoginTimer())
-
 	router.With(func() mux.MiddlewareFunc {
 		rate := limiter.Rate{
 			Period: 1 * time.Second,
@@ -56,7 +54,9 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		return middleware.RateLimitMiddleware(resources.Config, instance)
 	},
 		// Login resource
-		routerInst.POST("/api/v2/login", loginResource.Login),
+		routerInst.POST("/api/v2/login", func(response http.ResponseWriter, request *http.Request) {
+			middleware.LoginTimer()(http.HandlerFunc(loginResource.Login)).ServeHTTP(response, request)
+		}),
 	)
 
 	router.With(func() mux.MiddlewareFunc {
