@@ -83,7 +83,6 @@ type Expansion struct {
 
 type PatternSegment struct {
 	Frame                  *Frame
-	PreviousFrame          *Frame
 	Direction              graph.Direction
 	Expansion              models.Optional[Expansion]
 	LeftNode               *BoundIdentifier
@@ -209,7 +208,7 @@ func (s *Query) PreparePart(numReadingClauses, numUpdatingClauses int, allocateF
 	}
 
 	if allocateFrame {
-		if frame, err := s.Scope.PushContainerFrame(); err != nil {
+		if frame, err := s.Scope.PushFrame(); err != nil {
 			return err
 		} else {
 			newPart.Frame = frame
@@ -241,10 +240,6 @@ type QueryPart struct {
 	projections       *Projections
 	mutations         *Mutations
 	fromClauses       []pgsql.FromClause
-}
-
-func (s *QueryPart) CurrentPattern() *Pattern {
-	return s.currentPattern
 }
 
 func (s *QueryPart) AddFromClause(clause pgsql.FromClause) {
@@ -535,7 +530,8 @@ func extractIdentifierFromCypherExpression(expression cypher.Expression) (pgsql.
 	}
 }
 
-// TODO: Better name
+// Symbols is a symbol table that has some generic functions for negotiating unique symbols from identifiers,
+// compound identifiers and other PgSQL AST elements.
 type Symbols struct {
 	table map[string]any
 }
@@ -560,12 +556,6 @@ func SymbolsFor(node pgsql.SyntaxNode) (*Symbols, error) {
 			instance.AddCompoundIdentifier(typedNode)
 		}
 	}))
-}
-
-func (s *Symbols) Filter() {
-	for _, filtered := range pgsql.Columns {
-		delete(s.table, filtered.String())
-	}
 }
 
 func (s *Symbols) IsEmpty() bool {

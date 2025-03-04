@@ -24,6 +24,8 @@ import (
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
 
+// IdentifierGenerator is a map that creates a unique identifier for each call with a given
+// data type. This ensures that renamed identifiers in queries do not conflict with each other.
 type IdentifierGenerator map[pgsql.DataType]int
 
 func (s IdentifierGenerator) NewIdentifier(dataType pgsql.DataType) (pgsql.Identifier, error) {
@@ -82,14 +84,13 @@ func previousValidFrame(query *Query, partFrame *Frame) (*Frame, bool) {
 
 // Frame represents a snapshot of all identifiers defined and visible in a given scope
 type Frame struct {
-	id               int
-	Previous         *Frame
-	IsContainerFrame bool
-	Binding          *BoundIdentifier
-	Visible          *pgsql.IdentifierSet
-	stashedVisible   *pgsql.IdentifierSet
-	Exported         *pgsql.IdentifierSet
-	stashedExported  *pgsql.IdentifierSet
+	id              int
+	Previous        *Frame
+	Binding         *BoundIdentifier
+	Visible         *pgsql.IdentifierSet
+	stashedVisible  *pgsql.IdentifierSet
+	Exported        *pgsql.IdentifierSet
+	stashedExported *pgsql.IdentifierSet
 }
 
 func (s *Frame) RestoreStashed() {
@@ -149,38 +150,6 @@ func NewScope() *Scope {
 		aliases:     map[pgsql.Identifier]pgsql.Identifier{},
 		definitions: map[pgsql.Identifier]*BoundIdentifier{},
 	}
-}
-
-func (s *Scope) LastProjectedFrameFrom(from *Frame) *Frame {
-	// Declare idx here to track where this walk is in the stack
-	idx := len(s.stack) - 1
-
-	// Search backwards for the target frame
-	for ; idx >= 0; idx-- {
-		if nextFrame := s.stack[idx]; nextFrame == from {
-			// Don't revisit this frame
-			idx -= 1
-			break
-		}
-	}
-
-	// Unable to find the frame passed in
-	if idx < 0 {
-		return nil
-	}
-
-	// Unwind further if the nearest frame is a multipart container and take the most
-	// recent ancestor
-	if s.stack[idx].IsContainerFrame {
-		idx -= 1
-	}
-
-	// Unable to find a multipart container frame with an ancestor
-	if idx <= 0 {
-		return nil
-	}
-
-	return s.stack[idx-1]
 }
 
 func (s *Scope) PruneDefinitions(protectedIdentifiers *pgsql.IdentifierSet) error {
@@ -289,23 +258,13 @@ func (s *Scope) UnwindToFrame(frame *Frame) error {
 	return nil
 }
 
-func (s *Scope) PushContainerFrame() (*Frame, error) {
-	if frame, err := s.PushFrame(); err != nil {
-		return nil, err
-	} else {
-		frame.IsContainerFrame = true
-		return frame, nil
-	}
-}
-
 func (s *Scope) PushFrame() (*Frame, error) {
 	newFrame := &Frame{
-		id:               s.nextFrameID,
-		IsContainerFrame: false,
-		Visible:          pgsql.NewIdentifierSet(),
-		stashedVisible:   pgsql.NewIdentifierSet(),
-		Exported:         pgsql.NewIdentifierSet(),
-		stashedExported:  pgsql.NewIdentifierSet(),
+		id:              s.nextFrameID,
+		Visible:         pgsql.NewIdentifierSet(),
+		stashedVisible:  pgsql.NewIdentifierSet(),
+		Exported:        pgsql.NewIdentifierSet(),
+		stashedExported: pgsql.NewIdentifierSet(),
 	}
 
 	s.nextFrameID += 1
