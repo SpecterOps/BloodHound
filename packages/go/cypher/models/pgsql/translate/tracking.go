@@ -67,21 +67,6 @@ func NewIdentifierGenerator() IdentifierGenerator {
 	return IdentifierGenerator{}
 }
 
-func previousValidFrame(query *Query, partFrame *Frame) (*Frame, bool) {
-	if partFrame.Previous == nil {
-		return nil, false
-	}
-
-	if currentQueryPart := query.CurrentPart(); currentQueryPart.Frame != nil && partFrame.Previous.Binding.Identifier == currentQueryPart.Frame.Binding.Identifier {
-		// If the part's previous frame matches the query part's frame identifier then it's possible that
-		// this current part is a multipart query part. In this case there still may be a valid frame
-		// to source references from
-		return currentQueryPart.Frame.Previous, currentQueryPart.Frame.Previous != nil
-	}
-
-	return partFrame.Previous, true
-}
-
 // Frame represents a snapshot of all identifiers defined and visible in a given scope
 type Frame struct {
 	id              int

@@ -145,7 +145,7 @@ func (s *Translator) buildNodePattern(part *PatternPart) error {
 	)
 
 	// The current query part may not have a frame associated with it if is a single part query component
-	if previousFrame, hasPrevious := previousValidFrame(s.query, partFrame); hasPrevious {
+	if previousFrame, hasPrevious := s.previousValidFrame(partFrame); hasPrevious {
 		nextSelect.From = append(nextSelect.From, pgsql.FromClause{
 			Source: pgsql.TableReference{
 				Name: pgsql.CompoundIdentifier{previousFrame.Binding.Identifier},
