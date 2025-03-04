@@ -160,6 +160,78 @@ func TestResources_ListSavedQueries_InvalidFilterColumn(t *testing.T) {
 	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"the specified column cannot be filtered: foo"}]}`, actualWithDefaultTimestamp)
 }
 
+func TestResources_ListSavedQueries_NotAUserAuth(t *testing.T) {
+	// Setup
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Owner: model.Role{},
+		},
+		Host: nil,
+	}
+	notAUserCtx := bhCtx.ConstructGoContext()
+
+	var (
+		mockCtrl  = gomock.NewController(t)
+		resources = v2.Resources{}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+
+	req, err := http.NewRequestWithContext(notAUserCtx, "GET", endpoint, nil)
+	require.NoError(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+
+	// Act
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+
+	// Assert
+	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	require.NoError(t, err)
+	require.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"errors":[{"context":"","message":"No associated user found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, actualWithDefaultTimestamp)
+}
+
+func TestResources_ListSavedQueries_InvalidQueryParameterFilters(t *testing.T) {
+	// Setup
+	var (
+		mockCtrl  = gomock.NewController(t)
+		resources = v2.Resources{}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.NewV4()
+	require.NoError(t, err)
+
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil)
+	require.NoError(t, err)
+	q := url.Values{}
+	q.Add("name", "notAnOperator:0")
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req.URL.RawQuery = q.Encode()
+
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+
+	// Act
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+
+	// Assert
+	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	require.NoError(t, err)
+	require.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, actualWithDefaultTimestamp)
+}
+
 func TestResources_ListSavedQueries_InvalidFilterPredicate(t *testing.T) {
 	// Setup
 	var (
@@ -321,7 +393,7 @@ func TestResources_ListSavedQueries(t *testing.T) {
 	require.NoError(t, err)
 
 	q := url.Values{}
-	q.Add("sort_by", "-name")
+	q.Add("sort_by", "name")
 	q.Add("name", "eq:myQuery")
 	q.Add("skip", "1")
 	q.Add("limit", "10")
@@ -606,6 +678,46 @@ func TestResources_ListSavedQueries_InvalidScope(t *testing.T) {
 	require.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"invalid scope param"}]}`, actualWithDefaultTimestamp)
 }
 
+func TestResources_CreateSavedQuery_NotAUserAuth(t *testing.T) {
+	// Setup
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Owner: model.Role{},
+		},
+		Host: nil,
+	}
+	notAUserCtx := bhCtx.ConstructGoContext()
+
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	payload := "foobar"
+
+	req, err := http.NewRequestWithContext(notAUserCtx, "POST", endpoint, must.MarshalJSONReader(payload))
+	require.NoError(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
+
+	// Act
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+
+	// Assert
+	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	require.NoError(t, err)
+	require.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"errors":[{"context":"","message":"No associated user found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, actualWithDefaultTimestamp)
+}
+
 func TestResources_CreateSavedQuery_InvalidBody(t *testing.T) {
 	// Setup
 	var (
@@ -794,6 +906,46 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 	// Assert
 	require.Equal(t, http.StatusCreated, response.Code)
 	require.JSONEq(t, `{"data":{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"myCustomQuery1","query":"Match(n) return n","description":"An example description","id":0,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`, response.Body.String())
+}
+
+func TestResources_UpdateSavedQuery_NotAUserAuth(t *testing.T) {
+	// Setup
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Owner: model.Role{},
+		},
+		Host: nil,
+	}
+	notAUserCtx := bhCtx.ConstructGoContext()
+
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries/{%s}"
+	payload := "foobar"
+
+	req, err := http.NewRequestWithContext(notAUserCtx, "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
+	require.NoError(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.UpdateSavedQuery).Methods("PUT")
+
+	// Act
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+
+	// Assert
+	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	require.NoError(t, err)
+	require.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"errors":[{"context":"","message":"No associated user found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, actualWithDefaultTimestamp)
 }
 
 func TestResources_UpdateSavedQuery_InvalidBody(t *testing.T) {
@@ -1307,6 +1459,46 @@ func TestResources_UpdateSavedQuery_AdminPublicQuery_Success(t *testing.T) {
 	// Assert
 	require.Equal(t, http.StatusOK, response.Code)
 	require.JSONEq(t, `{"data":{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"foo","query":"bar","description":"baz","id":1,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`, response.Body.String())
+}
+
+func TestResources_DeleteSavedQuery_NotAUserAuth(t *testing.T) {
+	// Setup
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Owner: model.Role{},
+		},
+		Host: nil,
+	}
+	notAUserCtx := bhCtx.ConstructGoContext()
+
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries/{%s}"
+	savedQueryId := "1"
+
+	req, err := http.NewRequestWithContext(notAUserCtx, "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	require.NoError(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	handler := http.HandlerFunc(resources.DeleteSavedQuery)
+
+	// Act
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, req)
+
+	// Assert
+	actualWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	require.NoError(t, err)
+	require.Equal(t, http.StatusBadRequest, response.Code)
+	require.JSONEq(t, `{"errors":[{"context":"","message":"No associated user found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`, actualWithDefaultTimestamp)
 }
 
 func TestResources_DeleteSavedQuery_IDMalformed(t *testing.T) {
