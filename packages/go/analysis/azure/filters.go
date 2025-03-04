@@ -73,10 +73,11 @@ func FilterGroupMembers() graph.Criteria {
 	)
 }
 
-func FilterGroupMembersUsers() graph.Criteria {
+func FilterRoleAssignableGroupMembersUsers() graph.Criteria {
 	return query.And(
 		query.Kind(query.Relationship(), azure.MemberOf),
 		query.Kind(query.Start(), azure.User),
+		query.Equals(query.EndProperty(azure.IsAssignableToRole.String()), "true"),
 	)
 }
 

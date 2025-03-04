@@ -88,9 +88,9 @@ func (s RoleAssignmentMap) HasRole(id graph.ID, roleTemplateIDs ...string) bool 
 }
 
 type RoleAssignments struct {
-	Principals      graph.NodeKindSet
-	RoleMap         map[string]cardinality.Duplex[uint64]
-	GroupMembership map[graph.ID]cardinality.Duplex[uint64]
+	Principals                    graph.NodeKindSet
+	RoleMap                       map[string]cardinality.Duplex[uint64]
+	RoleAssignableGroupMembership cardinality.Duplex[uint64]
 }
 
 func (s RoleAssignments) GetNodeKindSet(bm cardinality.Duplex[uint64]) graph.NodeKindSet {
@@ -144,20 +144,8 @@ func (s RoleAssignments) UsersWithRolesExclusive(roleTemplateIDs ...string) card
 }
 
 func (s RoleAssignments) UsersWithRoleAssignableGroupMembership() cardinality.Duplex[uint64] {
-	members := cardinality.NewBitmap64()
-
-	// loop through all the groups
-	for groupID, groupMemberIDBitmap := range s.GroupMembership {
-		group := s.Principals.Get(azure.Group)[groupID]
-		// if that group is role assignable, set the bits
-		if isRoleAssignable, err := group.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil {
-			slog.Warn(fmt.Sprintf("Unable to convert property azure.IsAssignableToRole to Boolean for group %s: %v", group.Properties.Map["name"], err))
-		} else if isRoleAssignable {
-			members.Or(groupMemberIDBitmap)
-		}
-
-	}
-	return members
+	// this field is a bitmap of all user IDs who are members of role assignable groups.
+	return s.RoleAssignableGroupMembership
 }
 
 // PrincipalsWithRole returns a roaring bitmap of principals that have been assigned one or more of the matching roles from list of role template IDs
@@ -212,9 +200,9 @@ func initTenantRoleAssignments(tx graph.Transaction, tenant *graph.Node) (RoleAs
 		return RoleAssignments{}, err
 	} else {
 		return RoleAssignments{
-			Principals:      roleMembers.KindSet(),
-			RoleMap:         make(map[string]cardinality.Duplex[uint64]),
-			GroupMembership: make(map[graph.ID]cardinality.Duplex[uint64]),
+			Principals:                    roleMembers.KindSet(),
+			RoleMap:                       make(map[string]cardinality.Duplex[uint64]),
+			RoleAssignableGroupMembership: cardinality.NewBitmap64(),
 		}, nil
 	}
 }
@@ -227,12 +215,13 @@ func TenantRoleAssignments(ctx context.Context, db graph.Database, tenant *graph
 		} else if roles, err := TenantRoles(tx, tenant); err != nil {
 			return err
 		} else {
-			//fetch the users who are members for each of the groups returned
+			// for each of the role assignable groups returned, fetch the users who are members
 			for _, group := range fetchedRoleAssignments.Principals.Get(azure.Group) {
-				if members, err := FetchGroupMembersUsers(tx, group, 0, 0); err != nil {
+				if members, err := FetchRoleAssignableGroupMembersUsers(tx, group, 0, 0); err != nil {
 					return err
 				} else {
-					fetchedRoleAssignments.GroupMembership[group.ID] = members.IDBitmap()
+					// set all users who have role assignable group membership
+					fetchedRoleAssignments.RoleAssignableGroupMembership.Or(members.IDBitmap())
 				}
 			}
 			return roles.KindSet().EachNode(func(node *graph.Node) error {

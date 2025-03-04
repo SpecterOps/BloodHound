@@ -451,7 +451,7 @@ func FetchGroupMembers(tx graph.Transaction, node *graph.Node, skip, limit int) 
 	})
 }
 
-func FetchGroupMembersUsers(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+func FetchRoleAssignableGroupMembersUsers(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 		Root:      node,
 		Direction: graph.DirectionInbound,
@@ -460,7 +460,7 @@ func FetchGroupMembersUsers(tx graph.Transaction, node *graph.Node, skip, limit 
 		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
 			return segment.Depth() <= 1
 		},
-		BranchQuery: FilterGroupMembersUsers,
+		BranchQuery: FilterRoleAssignableGroupMembersUsers,
 	})
 }
 
