@@ -18,10 +18,13 @@
 import React from 'react';
 import { createTheme } from '@mui/material/styles';
 import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
-import { render } from '@testing-library/react';
+import { render, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { NotificationsProvider } from '.';
-import { darkPalette } from '.';
+import { Router } from 'react-router-dom';
+import { createMemoryHistory } from 'history';
+import { NotificationsProvider } from './providers';
+import { darkPalette } from './constants';
+import { SnackbarProvider } from 'notistack';
 
 const theme = createTheme(darkPalette);
 const defaultTheme = {
@@ -33,35 +36,57 @@ const defaultTheme = {
         tertiary: { ...darkPalette.tertiary },
     },
 };
-const customRender = (
-    ui,
-    queryClient = new QueryClient({
+
+const createDefaultQueryClient = () => {
+    return new QueryClient({
         defaultOptions: {
             queries: {
                 retry: false,
             },
         },
-    }),
-    { theme = defaultTheme, ...renderOptions } = {}
+    });
+};
+
+const createProviders = ({ queryClient, history, theme, children }) => {
+    return (
+        <QueryClientProvider client={queryClient}>
+            <StyledEngineProvider injectFirst>
+                <ThemeProvider theme={theme}>
+                    <NotificationsProvider>
+                        <CssBaseline />
+                        <Router location={history.location} navigator={history}>
+                            <SnackbarProvider>{children}</SnackbarProvider>
+                        </Router>
+                    </NotificationsProvider>
+                </ThemeProvider>
+            </StyledEngineProvider>
+        </QueryClientProvider>
+    );
+};
+
+const customRender = (
+    ui,
+    queryClient = createDefaultQueryClient(),
+    { theme = defaultTheme, history = createMemoryHistory(), ...renderOptions } = {}
 ) => {
-    const AllTheProviders = ({ children }) => {
-        return (
-            <QueryClientProvider client={queryClient}>
-                <StyledEngineProvider injectFirst>
-                    <ThemeProvider theme={theme}>
-                        <NotificationsProvider>
-                            <CssBaseline />
-                            {children}
-                        </NotificationsProvider>
-                    </ThemeProvider>
-                </StyledEngineProvider>
-            </QueryClientProvider>
-        );
-    };
+    const AllTheProviders = ({ children }) => createProviders({ queryClient, history, theme, children });
     return render(ui, { wrapper: AllTheProviders, ...renderOptions });
+};
+
+const customRenderHook = (
+    hook,
+    {
+        queryClient = createDefaultQueryClient(),
+        theme = defaultTheme,
+        history = createMemoryHistory(),
+        ...renderOptions
+    } = {}
+) => {
+    const AllTheProviders = ({ children }) => createProviders({ queryClient, history, theme, children });
+    return renderHook(hook, { wrapper: AllTheProviders, ...renderOptions });
 };
 
 // re-export everything
 export * from '@testing-library/react';
-// override render method
-export { customRender as render };
+// override render and renderHook methods
+export { customRender as render, customRenderHook as renderHook };

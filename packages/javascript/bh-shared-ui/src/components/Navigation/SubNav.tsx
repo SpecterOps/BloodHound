@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { FC, ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { cn } from '../../utils';
+import { AdministrationSection } from '../..';
+import { cn, persistSearchParams } from '../../utils';
 
 const SubNavListTitle: FC<{ children: ReactNode }> = ({ children }) => {
     return (
@@ -41,25 +42,29 @@ const SubNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children,
     );
 };
 
-const SubNavListItemLink: FC<{ route: string; children: ReactNode }> = ({ route, children }) => {
+const SubNavListItemLink: FC<{ route: string; supportedSearchParams?: string[]; children: ReactNode }> = ({
+    route,
+    children,
+    supportedSearchParams,
+}) => {
+    const search = supportedSearchParams ? persistSearchParams(supportedSearchParams).toString() : undefined;
     return (
         <RouterLink
-            to={route as string}
+            to={{ pathname: route, search }}
             className={`h-7 min-h-7 w-full flex items-center gap-x-2 text-sm whitespace-nowrap`}>
             {children}
         </RouterLink>
     );
 };
 
-const SubNav: React.FC<{
-    sections: {
-        title: string;
-        items: {
-            path: string;
-            label: string;
-        }[];
-    }[];
-}> = ({ sections }) => {
+type SubNavSections = Omit<AdministrationSection, 'order' | 'items'> & {
+    items: Pick<AdministrationSection['items'][number], 'label' | 'path' | 'supportedSearchParams'>[];
+};
+interface SubNavProps {
+    sections: SubNavSections[];
+}
+
+const SubNav: React.FC<SubNavProps> = ({ sections }) => {
     return (
         <nav className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 pt-6 border-x border-solid border-neutral-light-5 dark:bg-neutral-dark-2 overflow-x-hidden overflow-y-auto'>
             {sections.map((section, sectionIndex) => (
@@ -69,7 +74,7 @@ const SubNav: React.FC<{
                     </SubNavListTitle>
                     {section.items.map((item, itemIndex) => (
                         <SubNavListItem key={itemIndex} route={item.path}>
-                            <SubNavListItemLink route={item.path}>
+                            <SubNavListItemLink route={item.path} supportedSearchParams={item.supportedSearchParams}>
                                 <span>{item.label}</span>
                             </SubNavListItemLink>
                         </SubNavListItem>

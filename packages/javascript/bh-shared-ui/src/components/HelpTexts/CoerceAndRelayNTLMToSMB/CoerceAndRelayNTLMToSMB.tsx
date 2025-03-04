@@ -28,7 +28,6 @@ const CoerceAndRelayNTLMToSMB = {
     linuxAbuse: LinuxAbuse,
     opsec: Opsec,
     references: References,
-
 };
 
 export default CoerceAndRelayNTLMToSMB;

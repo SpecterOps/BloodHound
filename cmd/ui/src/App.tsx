@@ -21,6 +21,7 @@ import {
     AppNotifications,
     GenericErrorBoundaryFallback,
     MainNav,
+    MainNavData,
     NotificationsProvider,
     components,
     darkPalette,
@@ -39,14 +40,14 @@ import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
-import Content from 'src/views/Content';
 import {
-    MainNavPrimaryListData,
     useMainNavLogoData,
+    useMainNavPrimaryListData,
     useMainNavSecondaryListData,
 } from './components/MainNav/MainNavData';
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
+import Content from './views/Content';
 
 export const Inner: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -61,9 +62,9 @@ export const Inner: React.FC = () => {
         enabled: !!(authState.isInitialized && fullyAuthenticated),
     });
 
-    const mainNavData = {
+    const mainNavData: MainNavData = {
         logo: useMainNavLogoData(),
-        primaryList: MainNavPrimaryListData,
+        primaryList: useMainNavPrimaryListData(),
         secondaryList: useMainNavSecondaryListData(),
     };
     const showNavBar = useShowNavBar(ROUTES);
