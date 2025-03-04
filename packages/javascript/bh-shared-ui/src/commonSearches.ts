@@ -387,4 +387,42 @@ export const CommonSearches: CommonSearchType[] = [
             },
         ],
     },
+    {
+        subheader: 'NTLM Relay Attacks',
+        category: categoryAD,
+        queries: [
+            {
+                description: 'All coerce and NTLM relay edges',
+                cypher: 'MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToSMB]->(:Base)\nRETURN p LIMIT 500',
+            },
+            {
+                description: 'All NTLM session-based relay edges',
+                cypher: 'MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToSMB]->(:Base)\nRETURN p LIMIT 500',
+            },
+            {
+                description: 'ESC8-vulnerable Enterprise CAs',
+                cypher: 'MATCH (n:EnterpriseCA)\nWHERE n.adcswebenrollmenthttp = True\nOR (n.adcswebenrollmenthttps = True AND n.adcswebenrollmenthttpsepa = False)\nRETURN n',
+            },
+            {
+                description: 'Computers with the outgoing NTLM setting set to Deny all',
+                cypher: 'MATCH (c:Computer)\nWHERE c.restrictoutboundntlm = True\nRETURN c LIMIT 1000',
+            },
+            {
+                description: 'Computers with membership in Protected Users',
+                cypher: 'MATCH p = (:Base)-[:MemberOf*1..]->(g:Group)\nWHERE g.objectid ENDS WITH "-525"\nRETURN p LIMIT 1000',
+            },
+            {
+                description: 'DCs vulnerable to NTLM relay to LDAP attacks',
+                cypher: 'MATCH p = (dc:Computer)-[:DCFor]->(:Domain)\nWHERE NOT dc.ldapsigning = True\nOR (dc.ldapsavailable = True AND NOT dc.ldapsepa = True)\nRETURN p',
+            },
+            {
+                description: 'Computers with the WebClient running',
+                cypher: 'MATCH (c:Computer)\nWHERE c.webclientrunning = True\nRETURN c LIMIT 1000',
+            },
+            {
+                description: 'Computers not requiring inbound SMB signing',
+                cypher: 'MATCH (n:Computer)\nWHERE n.smbsigning = False\nRETURN n',
+            },
+        ],
+    },
 ];
