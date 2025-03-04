@@ -1,0 +1,49 @@
+---
+title: Configure SAML with Google
+description: Configure SAML authentication with Google Workspace
+---
+
+# Configure SAML with Google
+
+For general information about SAML in BloodHound Enterprise, see [SAML in BloodHound Enterprise](/manage-bloodhound/auth/saml).
+
+See [SAML Order of Operations and Quick Reference](/manage-bloodhound/auth/saml) before starting.
+
+## Configure Google Workspace
+
+1.  Log in to your Google Admin console.
+
+2.  Navigate to **Apps** > **Web and mobile apps**.
+
+3.  Click **Add app** > **Add custom SAML app**.
+
+4.  Enter the following information:
+    * **App name**: BloodHound Enterprise
+    * **App icon**: Optional
+
+5.  Click **Continue**.
+
+6.  Download the IDP metadata by clicking **Download metadata**.
+
+7.  Enter the following information:
+    * **ACS URL**: `https://<your-bloodhound-url>/api/v2/saml/acs`
+    * **Entity ID**: `https://<your-bloodhound-url>/api/v2/saml/metadata`
+    * **Start URL**: `https://<your-bloodhound-url>`
+
+8.  Under **Name ID**, select:
+    * **Name ID format**: EMAIL
+    * **Name ID**: Basic Information > Primary email
+
+9.  Under **Attributes**, add:
+    * **Primary email** mapped to **email**
+    * **Groups** mapped to **groups**
+
+10. Click **Continue**.
+
+11. Under **Google Directory attributes**, select:
+    * **Primary email**
+    * **Groups**
+
+12. Click **Finish**.
+
+13. Follow the instructions at [SAML in BloodHound Enterprise](/manage-bloodhound/auth/saml) to create the SAML provider in BloodHound Enterprise.

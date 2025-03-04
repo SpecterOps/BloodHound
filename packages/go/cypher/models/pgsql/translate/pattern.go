@@ -96,7 +96,7 @@ func (s *Translator) buildTraversalPattern(part *PatternPart) error {
 					})
 				}
 			} else {
-				if traversalStepQuery, err := s.buildExpansionPatternStep(part, traversalStep); err != nil {
+				if traversalStepQuery, err := s.buildExpansionPatternStep(traversalStep); err != nil {
 					return err
 				} else {
 					s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{

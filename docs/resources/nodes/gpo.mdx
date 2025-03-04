@@ -1,0 +1,31 @@
+---
+title: GPO
+---
+
+<Frame>
+  <img src="/assets/18246479746331.png"/>
+</Frame>
+
+## Node properties
+
+The node supports the properties of the table below.
+
+<Note>
+Properties which are blank/null will not be shown in the Entity Panel.
+</Note>
+
+|     |     |
+| --- | --- |
+| **Entity Panel name** | **Description** |
+| Tier Zero / High Value | BloodHound Enterprise: Whether the object is part of Tier Zero of the Microsoft's Active Directory Tier Model, or the Control Plane of Microsoft's Enterprise Access Model.  <br/>  <br/>BloodHound CE: Whether the object is currently marked as High Value. By default any object that belongs to Tier Zero is marked as High Value. |
+| Display Name | The display name for the object. |
+| Object ID | The object's GUID, a unique identifier in the directory. |
+| ACL Inheritance Denied | Identifies whether an object is allowing ACL inheritance to itself. |
+| Created | The time when the object was created in the directory. |
+| Description | The contents of the description field for the object. |
+| GPO Path | The location where the Group Policy files for this Group Policy Object (GPO) are located. Particularly relevant for when you are doing group policy-based attacks, or for pillaging group policy files for juicy information such as clear text passwords. For more info about GPO-based attacks, see [https://wald0.com/?p=179](https://wald0.com/?p=179) |
+
+## References
+
+* [https://learn.microsoft.com/en-us/windows/win32/adschema/c-grouppolicycontainer](https://learn.microsoft.com/en-us/windows/win32/adschema/c-computer)
+

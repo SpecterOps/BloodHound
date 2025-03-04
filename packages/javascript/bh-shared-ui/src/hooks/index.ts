@@ -34,6 +34,10 @@ export * from './useFetchEntityProperties';
 
 export * from './useFileIngest';
 
+export * from './useMountEffect';
+
+export * from './usePermissions';
+
 export * from './useSavedQueries';
 
 export * from './useSearch';

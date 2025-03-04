@@ -18,7 +18,8 @@ services:
   testdb:
     restart: unless-stopped
     image: docker.io/library/postgres:16
-    command: "-c log_statement=all"
+    command: -c config_file=/etc/postgresql.conf
+    shm_size: 1gb
     environment:
       - POSTGRES_USER=bloodhound
       - POSTGRES_PASSWORD=bloodhoundcommunityedition
@@ -27,6 +28,7 @@ services:
       - 127.0.0.1:65432:5432
     volumes:
       - test-postgres-data:/var/lib/postgresql/data
+      - ${BH_POSTGRES_CONFIG:-./local-harnesses/postgresql.conf}:/etc/postgresql.conf
 
   testgraph:
     restart: unless-stopped

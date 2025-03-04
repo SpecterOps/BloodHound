@@ -34,7 +34,7 @@ const appReducer = combineReducers({
     search,
 });
 
-type RootState = ReturnType<typeof appReducer>;
+export type RootState = ReturnType<typeof appReducer>;
 
 export const rootReducer = (state: any, action: any): RootState => {
     // If the user logs out, clear the redux store to prevent data leakage

@@ -292,7 +292,7 @@ func (s *Frame) Export(identifier pgsql.Identifier) {
 	s.Exported.Add(identifier)
 }
 
-func (s *Frame) Veil(identifier pgsql.Identifier) {
+func (s *Frame) Stash(identifier pgsql.Identifier) {
 	if s.Exported.Contains(identifier) {
 		s.stashedExported.Add(identifier)
 		s.Exported.Remove(identifier)

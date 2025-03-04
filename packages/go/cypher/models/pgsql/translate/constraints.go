@@ -66,30 +66,45 @@ func leftNodeTraversalStepConstraint(traversalStep *PatternSegment) (pgsql.Expre
 		traversalStep.Direction)
 }
 
-func rightEdgeConstraint(segment *PatternSegment, terminalEdge pgsql.Identifier, direction graph.Direction) (pgsql.Expression, error) {
+func rightEdgeConstraint(segment *PatternSegment) (pgsql.Expression, error) {
 	switch segment.Edge.DataType {
 	case pgsql.EdgeComposite:
-		switch direction {
+		switch segment.Direction {
 		case graph.DirectionOutbound:
 			return &pgsql.BinaryExpression{
 				Operator: pgsql.OperatorEquals,
-				LOperand: pgsql.CompoundIdentifier{segment.RightNode.Identifier, pgsql.ColumnID},
-				ROperand: pgsql.CompoundIdentifier{terminalEdge, pgsql.ColumnStartID},
+				LOperand: pgsql.CompoundIdentifier{segment.LeftNode.Identifier, pgsql.ColumnID},
+				ROperand: pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnStartID},
 			}, nil
 
 		case graph.DirectionInbound:
 			return &pgsql.BinaryExpression{
 				Operator: pgsql.OperatorEquals,
-				LOperand: pgsql.CompoundIdentifier{segment.RightNode.Identifier, pgsql.ColumnID},
-				ROperand: pgsql.CompoundIdentifier{terminalEdge, pgsql.ColumnEndID},
+				LOperand: pgsql.CompoundIdentifier{segment.LeftNode.Identifier, pgsql.ColumnID},
+				ROperand: pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnEndID},
 			}, nil
 
+		case graph.DirectionBoth:
+			return pgsql.NewBinaryExpression(
+				pgsql.NewBinaryExpression(
+					pgsql.CompoundIdentifier{segment.LeftNode.Identifier, pgsql.ColumnID},
+					pgsql.OperatorEquals,
+					pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnStartID},
+				),
+				pgsql.OperatorOr,
+				pgsql.NewBinaryExpression(
+					pgsql.CompoundIdentifier{segment.LeftNode.Identifier, pgsql.ColumnID},
+					pgsql.OperatorEquals,
+					pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnEndID},
+				),
+			), nil
+
 		default:
-			return nil, fmt.Errorf("unsupported direction: %d", direction)
+			return nil, fmt.Errorf("unsupported direction: %d", segment.Direction)
 		}
 
 	case pgsql.ExpansionEdge:
-		switch direction {
+		switch segment.Direction {
 		case graph.DirectionOutbound:
 			return pgsql.NewBinaryExpression(
 				pgsql.RowColumnReference{
@@ -109,18 +124,18 @@ func rightEdgeConstraint(segment *PatternSegment, terminalEdge pgsql.Identifier,
 					Column: pgsql.ColumnEndID,
 				},
 				pgsql.OperatorEquals,
-				pgsql.CompoundIdentifier{terminalEdge, pgsql.ColumnStartID},
+				pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnStartID},
 			), nil
 
 		case graph.DirectionInbound:
 			return &pgsql.BinaryExpression{
 				Operator: pgsql.OperatorEquals,
 				LOperand: pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnStartID},
-				ROperand: pgsql.CompoundIdentifier{terminalEdge, pgsql.ColumnEndID},
+				ROperand: pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnEndID},
 			}, nil
 
 		default:
-			return nil, fmt.Errorf("unsupported direction: %d", direction)
+			return nil, fmt.Errorf("unsupported direction: %d", segment.Direction)
 		}
 
 	default:

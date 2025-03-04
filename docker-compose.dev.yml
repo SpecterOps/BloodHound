@@ -36,6 +36,8 @@ services:
       - pg-only
       - sso
     image: docker.io/library/postgres:16
+    command: -c config_file=/etc/postgresql.conf
+    shm_size: 1gb
     environment:
       - PGUSER=${BH_POSTGRES_USER:-bloodhound}
       - POSTGRES_USER=${BH_POSTGRES_USER:-bloodhound}
@@ -45,6 +47,7 @@ services:
       - ${BH_POSTGRES_PORT:-127.0.0.1:5432}:5432
     volumes:
       - ${BH_POSTGRES_VOLUME:-postgres-data}:/var/lib/postgresql/data
+      - ${BH_POSTGRES_CONFIG:-./local-harnesses/postgresql.conf}:/etc/postgresql.conf
     healthcheck:
       test:
         [

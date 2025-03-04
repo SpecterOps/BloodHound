@@ -1,0 +1,174 @@
+---
+title: ADCSESC9a
+description: "The principal has control over a victim principal with permission to enroll on one or more certificate templates, configured to: 1) enable certificate authentication, 2) require the `userPrincipalName` (UPN) of the enrollee included in the Subject Alternative Name (SAN), and 3) do not have the security extension enabled."
+---
+
+<Frame>
+  <img src="/assets/image-2-1.png"/>
+</Frame>
+
+The victim also has enrollment permission for an enterprise CA with the necessary templates published. This enterprise CA is trusted for NT authentication in the forest, and chains up to a root CA for the forest. There is an affected Domain Controller (DC) configured to allow weak certificate binding enforcement. This setup lets the principal impersonate any AD forest principal (user or computer) without their credentials. The attacker principal can abuse their control over the victim principal to modify the victim's UPN to match the `sAMAccountName` of a targeted principal. Example: If the targeted principal is Administrator@corp.local user, the victim's UPN will be populated with "Administrator" (without the @corp.local ending). The attacker principal will then abuse their control over the victim principal to obtain the credentials of the victim principal, or a session as the victim principal, and enroll a certificate as the victim in one of the affected certificate templates. The UPN of the victim ("Administrator") will be included in the issued certificate under the SAN. As the certificate template does not have the security extension, it will NOT include the SID of the victim user in the issued certificate. Next, the attacker principal will again set the UPN of the victim, this time to an arbitrary string (e.g. the original value). The issued certificate can now be used for authentication against an affected DC. The weak certificate binding configuration on the DC will make the DC accept that the SID of the victim user is not present in the issued certificate when performing Kerberos authentication, and it will use the SAN value to map the certificate to a principal. The DC will attempt to find a principal with a UPN matching the SAN value ("Administrator") but as the victim's UPN has been changed after the enrollment, there will be no principals with this UPN. The DC will then attempt to find a principal with a `sAMAccountName` matching the SAN value and find the targeted user. At last, the DC issues a Kerberos TGT as the targeted user to the attacker, which means the attacker now has a session as the targeted user. In case the target is a computer, the DC will find it as well as the DC will attempt `sAMAccountName` matching with a $ at the end of the SAN value as last resort.
+
+## Abuse Info
+
+### Windows
+
+Step 1: Set UPN of victim to targeted principal's `sAMAccountName`. Set the UPN of the victim principal using PowerView:
+
+```bash
+Set-DomainObject -Identity VICTIM -Set @{'userprincipalname'='Target'}
+```
+Step 2: Check if the 'mail' attribute of victim must be set and set it if required.
+
+If the certificate template is of schema version 2 or above, and its attribute 'msPKI-CertificateNameFlag' contains the flag SUBJECT\_REQUIRE\_EMAIL and/or SUBJECT\_ALT\_REQUIRE_EMAIL, then the victim principal must have their mail attribute set for the certificate enrollment. The CertTemplate BloodHound node will have "Subject Require Email" or "Subject Alternative Name Require Email" set to true if any of the flags are present.
+
+If the certificate template is of schema version 1 or does not have any of the email flags, then
+continue to Step 3.
+
+If any of the two flags are present, you will need the victim's mail attribute to be set. The value of
+the attribute will be included in the issues certificate but it is not used to identify the target
+principal why it can be set to any arbitrary string.
+
+Check if the victim has the mail attribute set using PowerView:
+
+```bash
+Get-DomainObject -Identity VICTIM -Properties mail
+```
+If the victim has the mail attribute set, continue to Step 3.
+
+If the victim does not has the mail attribute set, set it to a dummy mail using PowerView:
+
+```bash
+Set-DomainObject -Identity VICTIM -Set @{'mail'='dummy@mail.com'}
+```
+Step 3: Obtain a session as victim. There are several options for this step.
+
+If the victim is a computer, you can obtain the credentials of the computer account using the Shadow
+Credentials attack (see [AddKeyCredentialLink edge](/resources/edges/add-key-credential-link) documentation).
+
+Alternatively, you can obtain a session as SYSTEM on the host, which allows you to interact with AD as the computer account, by abusing control over the computer AD object (see [GenericAll edge](/resources/edges/generic-all) documentation).
+
+If the victim is a user, you have the following options for obtaining the credentials:
+
+* Shadow Credentials attack (see [AddKeyCredentialLink edge](/resources/edges/add-key-credential-link) documentation).
+* Password reset (see [ForceChangePassword edge](/resources/edges/force-change-password) documentation).
+* Targeted Kerberoasting (see [WriteSPN edge](/resources/edges/write-spn) documentation).
+
+Step 4: Enroll certificate as victim.
+
+Use Certify as the victim principal to request enrollment in the affected template, specifying the affected EnterpriseCA:
+
+```bash
+Certify.exe request /ca:SERVER\CA-NAME /template:TEMPLATE
+```
+Save the certificate as `cert.pem` and the private key as `cert.key`.
+
+Step 5: Convert the emitted certificate to PFX format:
+
+```bash
+certutil.exe -MergePFX .\cert.pem .\cert.pfx
+```
+Step 6: Set UPN of victim to arbitrary value.
+
+Set the UPN of the victim principal using PowerView:
+
+```bash
+Set-DomainObject -Identity VICTIM -Set @{'userprincipalname'='victim@corp.local'}
+```
+
+Step 7: Perform Kerberos authentication as targeted principal against affected DC using certificate.
+
+Use Rubeus to request a ticket granting ticket (TGT) from the domain, specifying the
+target identity to impersonate and the PFX-formatted certificate created in Step 5:
+
+```bash
+.\Rubeus.exe asktgt /certificate:cert.pfx /user:forestrootda /domain:forestroot.com /ptt
+```
+
+### Linux
+
+Step 1: Set UPN of victim to targeted principal's `sAMAccountName`. Set the UPN of the victim principal using Certipy:
+
+```bash
+certipy account update -username ATTACKER@CORP.LOCAL -password PWD -user VICTIM -upn Target
+```
+Step 2: Check if the 'mail' attribute of victim must be set and set it if required.
+
+If the certificate template is of schema version 2 or above, and its attribute 'msPKI-CertificateNameFlag' contains the flag SUBJECT\_REQUIRE\_EMAIL and/or SUBJECT\_ALT\_REQUIRE_EMAIL, then the victim principal must have their mail attribute set for the certificate enrollment. The CertTemplate BloodHound node will have "Subject Require Email" or "Subject Alternative Name Require Email" set to true if any of the flags are present.
+
+If the certificate template is of schema version 1 or does not have any of the email flags, then
+continue to Step 3.
+
+If any of the two flags are present, you will need the victim's mail attribute to be set. The value of
+the attribute will be included in the issues certificate but it is not used to identify the target
+principal why it can be set to any arbitrary string.
+
+Check if the victim has the mail attribute set using ldapsearch:
+
+```bash
+ldapsearch -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME -b "VICTIM-DN" mail
+```
+
+If the victim has the mail attribute set, continue to Step 3.
+
+If the victim does not has the mail attribute set, set it to a dummy mail using ldapmodify:
+
+```bash
+echo -e "dn: VICTIM-DN\nchangetype: modify\nreplace: mail\nmail: test@mail.com" | ldapmodify -x -D "ATTACKER-DN" -w 'PWD' -h DOMAIN-DNS-NAME
+```
+Step 3: Obtain a session as victim. There are several options for this step.
+
+If the victim is a computer, you can obtain the credentials of the computer account using the Shadow
+Credentials attack (see [AddKeyCredentialLink edge](/resources/edges/add-key-credential-link) documentation).
+
+Alternatively, you can obtain a session as SYSTEM on the host, which allows you to interact with AD as the computer account, by abusing control over the computer AD object (see [GenericAll edge](/resources/edges/generic-all) documentation).
+
+If the victim is a user, you have the following options for obtaining the credentials:
+
+* Shadow Credentials attack (see [AddKeyCredentialLink edge](/resources/edges/add-key-credential-link) documentation).
+* Password reset (see [ForceChangePassword edge](/resources/edges/force-change-password) documentation).
+* Targeted Kerberoasting (see [WriteSPN edge](/resources/edges/write-spn) documentation).
+
+Step 4: Enroll certificate as victim.
+
+Use Certipy as the victim principal to request enrollment in the affected template, specifying the affected EnterpriseCA:
+
+```bash
+certipy req -u VICTIM@CORP.LOCAL -p PWD -ca CA-NAME -target SERVER -template TEMPLATE
+```
+
+Step 5: Set UPN of victim to arbitrary value.
+
+Set the UPN of the victim principal using Certipy:
+
+```bash
+certipy account update -username ATTACKER@CORP.LOCAL -password PWD -user VICTIM -upn victim@corp.local
+```
+Step 6: Perform Kerberos authentication as targeted principal against affected DC using certificate.
+
+Request a ticket granting ticket (TGT) from the domain, specifying the certificate created in Step 4 and the IP of an affected DC:
+```bash
+ certipy auth -pfx TARGET.pfx -dc-ip IP
+```
+
+## Opsec Considerations
+
+When the affected certificate authority issues the certificate to the attacker, it will retain a local copy of that certificate in its issued certificates store. Defenders may analyze those issued certificates to identify illegitimately issued certificates and identify the principal that requested the certificate, as well as the target identity the attacker is attempting to impersonate.
+
+## References
+
+This edge is related to the following MITRE ATT&CK tactic and techniques:
+
+* https://attack.mitre.org/techniques/T1649/
+
+### Abuse and Opsec references
+
+* Certipy 4.0
+* [Certipy](https://github.com/ly4k/Certipy)
+* [GhostPack Certipy](https://github.com/GhostPack/Certify)
+* [GhostPack Rubeus](https://github.com/GhostPack/Rubeus)
+* [Set-DomainObject](https://powersploit.readthedocs.io/en/latest/Recon/Set-DomainObject)
+* [CertUtil.exe](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/certutil)
+* [LDAPSearch](https://linux.die.net/man/1/ldapsearch)
+* [LDAPModify](https://linux.die.net/man/1/ldapmodify)
+* [https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf](https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf)

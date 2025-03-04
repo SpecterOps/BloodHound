@@ -38,6 +38,13 @@ const assetGroupMembers = createMockAssetGroupMembers();
 const memberCounts = createMockMemberCounts();
 
 const server = setupServer(
+    rest.get('/api/v2/self', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: createAuthStateWithPermissions([Permission.GRAPH_DB_WRITE]).user,
+            })
+        );
+    }),
     rest.get('/api/v2/available-domains', (req, res, ctx) => {
         return res(ctx.json({ data: [domain] }));
     }),
@@ -65,7 +72,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('GroupManagement', () => {
-    const setup = async (permissions?: Permission[]) =>
+    const setup = async () =>
         await act(async () => {
             const user = userEvent.setup();
 
@@ -74,10 +81,6 @@ describe('GroupManagement', () => {
                     options: { domain: null },
                 },
             };
-
-            if (permissions) {
-                initialState.auth = createAuthStateWithPermissions(permissions);
-            }
 
             const screen = render(<GroupManagement />, { initialState });
             return { user, screen };
@@ -101,12 +104,21 @@ describe('GroupManagement', () => {
     });
 
     it('renders an edit form for the selected asset group when a user has graph write permissions', async () => {
-        const { screen } = await setup([Permission.GRAPH_DB_WRITE]);
+        const { screen } = await setup();
         const input = screen.getByRole('combobox');
         expect(input).toBeInTheDocument();
     });
 
     it('does not render an edit form for the selected asset group when a user does not have graph write permissions', async () => {
+        server.use(
+            rest.get('/api/v2/self', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: { roles: [] },
+                    })
+                );
+            })
+        );
         const { screen } = await setup();
         const input = screen.queryByRole('combobox');
         expect(input).toBeNull();

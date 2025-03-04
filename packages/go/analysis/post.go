@@ -112,11 +112,48 @@ func (s PostProcessingStats) LogStats() {
 	}
 }
 
+//These were created for the new composition method. It was scrapped for the current initiative, but will be useful later
+//type CompositionInfo struct {
+//	CompositionID int64
+//	EdgeIDs       []graph.ID
+//	NodeIDs       []graph.ID
+//}
+//
+//func (s CompositionInfo) HasComposition() bool {
+//	return len(s.EdgeIDs) > 0 || len(s.NodeIDs) > 0
+//}
+
+//
+//func (s CompositionInfo) GetCompositionEdges() model.EdgeCompositionEdges {
+//	edges := make(model.EdgeCompositionEdges, len(s.EdgeIDs))
+//	for i, edgeID := range s.EdgeIDs {
+//		edges[i] = model.EdgeCompositionEdge{
+//			PostProcessedEdgeID: s.CompositionID,
+//			CompositionEdgeID:   edgeID.Int64(),
+//		}
+//	}
+//
+//	return edges
+//}
+
+//func (s CompositionInfo) GetCompositionNodes() model.EdgeCompositionNodes {
+//	edges := make(model.EdgeCompositionNodes, len(s.EdgeIDs))
+//	for i, nodeID := range s.NodeIDs {
+//		edges[i] = model.EdgeCompositionNode{
+//			PostProcessedEdgeID: s.CompositionID,
+//			CompositionNodeID:   nodeID.Int64(),
+//		}
+//	}
+//
+//	return edges
+//}
+
 type CreatePostRelationshipJob struct {
 	FromID        graph.ID
 	ToID          graph.ID
 	Kind          graph.Kind
 	RelProperties map[string]any
+	//CompositionInfo CompositionInfo
 }
 
 type DeleteRelationshipJob struct {

@@ -65,7 +65,8 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 
 	router.Put("/graph-db/switch/pg", pgMigrator.SwitchPostgreSQL)
 	router.Put("/graph-db/switch/neo4j", pgMigrator.SwitchNeo4j)
-	router.Put("/pg-migration/start", pgMigrator.MigrationStart)
+	router.Put("/pg-migration/pg-to-neo", pgMigrator.MigrationStartPGToNeo)
+	router.Put("/pg-migration/neo-to-pg", pgMigrator.MigrationStartNeoToPG)
 	router.Get("/pg-migration/status", pgMigrator.MigrationStatus)
 	router.Put("/pg-migration/cancel", pgMigrator.MigrationCancel)
 

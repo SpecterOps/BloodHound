@@ -216,6 +216,20 @@ init wipe="":
     cp ./local-harnesses/integration.config.json.template ./local-harnesses/integration.config.json
   fi
 
+    if [[ -f "./local-harnesses/postgresql.conf" ]] && [[ "{{wipe}}" != "clean" ]]; then
+    echo "Not copying postgresql.conf since it already exists"
+  elif [[ -f "./local-harnesses/postgresql.conf" ]]; then
+    echo "Backing up postgresql.conf and resetting"
+    mv ./local-harnesses/postgresql.conf ./local-harnesses/postgresql.conf.bak
+    cp ./local-harnesses/postgresql.conf.template ./local-harnesses/postgresql.conf
+  elif [[ -d "./local-harnesses/postgresql.conf" ]]; then
+    echo "Removing junk directory and resetting postgresql.conf"
+    rm -r ./local-harnesses/postgresql.conf
+    cp ./local-harnesses/postgresql.conf.template ./local-harnesses/postgresql.conf
+  else
+    cp ./local-harnesses/postgresql.conf.template ./local-harnesses/postgresql.conf
+  fi
+
   if [[ -f "./.env" ]] && [[ "{{wipe}}" == "clean" ]]; then
     echo "Backing up existing environment file"
     mv ./.env ./.env.bak

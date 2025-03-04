@@ -16,9 +16,17 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, Box, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
-import { FeatureFlag, PageWithTitle, apiClient } from 'bh-shared-ui';
+import {
+    FeatureFlag,
+    PageWithTitle,
+    Permission,
+    apiClient,
+    useMountEffect,
+    useNotifications,
+    usePermissions,
+} from 'bh-shared-ui';
 import { ClearDatabaseRequest } from 'js-client-library';
-import { useReducer } from 'react';
+import { FC, useReducer } from 'react';
 import { useMutation } from 'react-query';
 import { useSelector } from 'react-redux';
 import { selectAllAssetGroupIds, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
@@ -200,8 +208,30 @@ const useDatabaseManagement = () => {
     return { handleMutation, state, dispatch };
 };
 
-const DatabaseManagement = () => {
+const DatabaseManagement: FC = () => {
     const { handleMutation, state, dispatch } = useDatabaseManagement();
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
+
+    const { addNotification, dismissNotification } = useNotifications();
+    const notificationKey = 'database-management-permission';
+
+    const effect: React.EffectCallback = () => {
+        if (!hasPermission) {
+            addNotification(
+                `Your user role does not allow managing the database. Please contact your administrator for details.`,
+                notificationKey,
+                {
+                    persist: true,
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
+        }
+
+        return () => dismissNotification(notificationKey);
+    };
+
+    useMountEffect(effect);
 
     const {
         deleteCollectedGraphData,
@@ -264,6 +294,7 @@ const DatabaseManagement = () => {
                                                 checked={deleteCollectedGraphData}
                                                 onChange={handleCheckbox}
                                                 name='deleteCollectedGraphData'
+                                                disabled={!hasPermission}
                                             />
                                         }
                                     />
@@ -276,6 +307,7 @@ const DatabaseManagement = () => {
                                         checked={deleteCustomHighValueSelectors}
                                         onChange={handleCheckbox}
                                         name='deleteCustomHighValueSelectors'
+                                        disabled={!hasPermission}
                                     />
                                 }
                             />
@@ -286,6 +318,7 @@ const DatabaseManagement = () => {
                                         checked={deleteAllAssetGroupSelectors}
                                         onChange={handleCheckbox}
                                         name='deleteAllAssetGroupSelectors'
+                                        disabled={!hasPermission}
                                     />
                                 }
                             />
@@ -296,6 +329,7 @@ const DatabaseManagement = () => {
                                         checked={deleteFileIngestHistory}
                                         onChange={handleCheckbox}
                                         name='deleteFileIngestHistory'
+                                        disabled={!hasPermission}
                                     />
                                 }
                             />
@@ -306,13 +340,16 @@ const DatabaseManagement = () => {
                                         checked={deleteDataQualityHistory}
                                         onChange={handleCheckbox}
                                         name='deleteDataQualityHistory'
+                                        disabled={!hasPermission}
                                     />
                                 }
                             />
                         </FormGroup>
                     </FormControl>
 
-                    <Button onClick={() => dispatch({ type: 'open_dialog' })}>Proceed</Button>
+                    <Button disabled={!hasPermission} onClick={() => dispatch({ type: 'open_dialog' })}>
+                        Proceed
+                    </Button>
                 </Box>
             </Box>
 

@@ -54,7 +54,7 @@ func (s *Translator) translateUpdates() error {
 
 			updateClause.JoinConstraint = joinConstraint.Expression
 
-			if boundProjections, err := buildVisibleScopeProjections(s.query.Scope); err != nil {
+			if boundProjections, err := buildVisibleProjections(s.query.Scope); err != nil {
 				return err
 			} else {
 				// Zip through all projected identifiers and update their last projected frame

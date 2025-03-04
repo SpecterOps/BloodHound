@@ -623,10 +623,12 @@ func formatFromClauses(builder *OutputBuilder, fromClauses []pgsql.FromClause) e
 				return err
 			}
 
-			builder.Write(" on ")
+			if join.JoinOperator.Constraint != nil {
+				builder.Write(" on ")
 
-			if err := formatNode(builder, join.JoinOperator.Constraint); err != nil {
-				return err
+				if err := formatNode(builder, join.JoinOperator.Constraint); err != nil {
+					return err
+				}
 			}
 		}
 	}

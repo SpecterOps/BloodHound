@@ -120,7 +120,7 @@ func OutboundControlDescentFilter(ctx *ops.TraversalContext, segment *graph.Path
 				return false
 			}
 		} else if relationship.Kind.Is(ad.MemberOf) && sawControlRel {
-			//If we've already seen a control rel, and we get to a MemberOf, we need to prevent a descent as well
+			// If we've already seen a control rel, and we get to a MemberOf, we need to prevent a descent as well
 			shouldDescend = false
 			return false
 		}
@@ -139,13 +139,13 @@ func BlocksInheritanceDescentFilter(ctx *ops.TraversalContext, segment *graph.Pa
 	if !segment.Node.Kinds.ContainsOneOf(ad.OU) {
 		return true
 	} else if previousNode := segment.Trunk.Node; !previousNode.Kinds.ContainsOneOf(ad.OU) {
-		//If our previous node is not an OU, continue descent
+		// If our previous node is not an OU, continue descent
 		return true
 	} else if blocksInheritance, err := previousNode.Properties.Get(ad.BlocksInheritance.String()).Bool(); err != nil {
-		//If we get an error, we'll just default to unenforced
+		// If we get an error, we'll just default to unenforced
 		return true
 	} else if blocksInheritance {
-		//If our previous node blocks inheritance, we don't want to descend further, but we still want this node
+		// If our previous node blocks inheritance, we don't want to descend further, but we still want this node
 		return false
 	} else {
 		return true

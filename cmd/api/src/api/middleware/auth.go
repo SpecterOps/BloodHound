@@ -18,6 +18,7 @@ package middleware
 
 import (
 	"fmt"
+	"math/rand/v2"
 	"net/http"
 	"strings"
 	"time"
@@ -194,6 +195,27 @@ func AuthorizeAuthManagementAccess(permissions auth.PermissionSet, authorizer au
 				} else {
 					next.ServeHTTP(response, request)
 				}
+			}
+		})
+	}
+}
+
+const loginMinimum = time.Second + 500*time.Millisecond
+const loginVariation = 500 * time.Millisecond
+
+// LoginTimer is a middleware to protect against time-based user enumeration on the Login route. It does this by
+// starting a timer before the actual login procedure to normalize the duration of this procedure to be within 1.5s and
+// 2s.
+func LoginTimer() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			timer := time.NewTimer(loginMinimum + time.Duration(rand.Int64N(loginVariation.Nanoseconds())))
+
+			next.ServeHTTP(response, request)
+
+			select {
+			case <-timer.C:
+			case <-request.Context().Done():
 			}
 		})
 	}

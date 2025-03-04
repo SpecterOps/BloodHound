@@ -22,7 +22,10 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cache"
+	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/bootstrap"
+	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/migration"
 	"github.com/specterops/bloodhound/src/test/integration/utils"
@@ -69,6 +72,15 @@ func Prepare(ctx context.Context, db database.Database) error {
 	return nil
 }
 
+func bootstrapGraphDb(ctx context.Context, cfg config.Configuration) error {
+	if graphDB, err := bootstrap.ConnectGraph(ctx, cfg); err != nil {
+		return fmt.Errorf("failed to connect graph database: %v", err)
+	} else {
+		defer graphDB.Close(ctx)
+		return bootstrap.MigrateGraph(ctx, graphDB, schema.DefaultGraphSchema())
+	}
+}
+
 func SetupTestMigrator(sources ...migration.Source) (*gorm.DB, *migration.Migrator, error) {
 	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {
 		return nil, nil, fmt.Errorf("failed to load integration test config: %w", err)
@@ -76,6 +88,8 @@ func SetupTestMigrator(sources ...migration.Source) (*gorm.DB, *migration.Migrat
 		return nil, nil, fmt.Errorf("failed to open postgres connection: %w", err)
 	} else if err = wipeGormDB(db); err != nil {
 		return nil, nil, fmt.Errorf("failed to wipe database: %w", err)
+	} else if err := bootstrapGraphDb(context.Background(), cfg); err != nil {
+		return nil, nil, fmt.Errorf("failed to bootstrap graph db database: %w", err)
 	} else {
 		return db, &migration.Migrator{
 			Sources: sources,

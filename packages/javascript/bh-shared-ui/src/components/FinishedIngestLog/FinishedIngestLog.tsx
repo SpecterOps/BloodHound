@@ -16,11 +16,13 @@
 
 import { Paper } from '@mui/material';
 import { DateTime } from 'luxon';
+import { useEffect, useState } from 'react';
+import { ZERO_VALUE_API_DATE } from '../../constants';
+import { useListFileIngestJobs, usePermissions } from '../../hooks';
+import { Permission } from '../../utils';
 import { LuxonFormat, calculateJobDuration } from '../../utils/datetime';
 import DataTable from '../DataTable';
 import { FileUploadJob, FileUploadJobStatusToString } from './types';
-
-const ZERO_VALUE_API_DATE = '0001-01-01T00:00:00Z';
 
 const ingestTableHeaders = [
     { label: 'User' },
@@ -31,28 +33,43 @@ const ingestTableHeaders = [
     { label: 'Status Message' },
 ];
 
-const FinishedIngestLog: React.FC<{
-    ingestJobs: FileUploadJob[];
-    paginationProps?: {
-        page: number;
-        rowsPerPage: number;
-        count: number;
-        onPageChange: (event: React.MouseEvent<HTMLButtonElement, MouseEvent> | null, page: number) => void;
-        onRowsPerPageChange: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>;
+const FinishedIngestLog: React.FC = () => {
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [totalCount, setTotalCount] = useState(0);
+
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
+
+    const { data: listFileIngestJobsData } = useListFileIngestJobs(page, rowsPerPage, hasPermission);
+
+    useEffect(() => setTotalCount(listFileIngestJobsData?.count || 0), [listFileIngestJobsData]);
+
+    const handlePageChange: (event: React.MouseEvent<HTMLButtonElement> | null, page: number) => void = (
+        _event,
+        newPage
+    ) => {
+        setPage(newPage);
     };
-}> = ({ ingestJobs, paginationProps }) => {
-    const ingestRows = ingestJobs
-        .sort((a, b) => b.id - a.id)
-        .map((job: FileUploadJob) => [
-            job.user_email_address,
-            DateTime.fromISO(job.start_time).toFormat(LuxonFormat.DATETIME_WITH_LINEBREAKS),
-            job.end_time === ZERO_VALUE_API_DATE
-                ? ''
-                : DateTime.fromISO(job.end_time).toFormat(LuxonFormat.DATETIME_WITH_LINEBREAKS),
-            job.end_time === ZERO_VALUE_API_DATE ? '' : calculateJobDuration(job.start_time, job.end_time),
-            FileUploadJobStatusToString[job.status],
-            job.status_message,
-        ]);
+
+    const handleRowsPerPageChange: React.ChangeEventHandler<HTMLTextAreaElement | HTMLInputElement> = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    const ingestRows =
+        listFileIngestJobsData?.data
+            ?.sort((a, b) => b.id - a.id)
+            .map((job: FileUploadJob) => [
+                job.user_email_address,
+                DateTime.fromISO(job.start_time).toFormat(LuxonFormat.DATETIME_WITH_LINEBREAKS),
+                job.end_time === ZERO_VALUE_API_DATE
+                    ? ''
+                    : DateTime.fromISO(job.end_time).toFormat(LuxonFormat.DATETIME_WITH_LINEBREAKS),
+                job.end_time === ZERO_VALUE_API_DATE ? '' : calculateJobDuration(job.start_time, job.end_time),
+                FileUploadJobStatusToString[job.status],
+                job.status_message,
+            ]) || [];
 
     return (
         <Paper>
@@ -60,7 +77,13 @@ const FinishedIngestLog: React.FC<{
                 headers={ingestTableHeaders}
                 data={ingestRows}
                 showPaginationControls={true}
-                paginationProps={paginationProps}
+                paginationProps={{
+                    page,
+                    rowsPerPage,
+                    count: totalCount,
+                    onPageChange: handlePageChange,
+                    onRowsPerPageChange: handleRowsPerPageChange,
+                }}
             />
         </Paper>
     );

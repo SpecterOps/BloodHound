@@ -270,6 +270,24 @@ type UserRightsAssignmentAPIResult struct {
 	Privilege  string
 }
 
+type BoolAPIResult struct {
+	APIResult
+	Result bool
+}
+
+type SMBSigningAPIResult struct {
+	APIResult
+	SigningEnabled  bool
+	OSVersion       string
+	OSBuild         string
+	DnsComputerName string
+}
+
+type RegistryDataAPIResult struct {
+	APIResult
+	RestrictSendingNtlmTraffic uint
+}
+
 type Computer struct {
 	IngestBase
 	PrimaryGroupSID         string
@@ -287,6 +305,9 @@ type Computer struct {
 	IsDC                    bool
 	DomainSID               string
 	UnconstrainedDelegation bool
+	SmbInfo                 SMBSigningAPIResult
+	IsWebClientRunning      BoolAPIResult
+	RegistryData            RegistryDataAPIResult
 }
 
 type OU struct {

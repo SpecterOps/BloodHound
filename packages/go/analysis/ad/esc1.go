@@ -33,7 +33,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 )
 
-func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, enterpriseCA, domain *graph.Node, cache ADCSCache) error {
+func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	results := cardinality.NewBitmap64()
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
@@ -45,21 +45,20 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 				continue
 			} else if !valid {
 				continue
-			} else if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", certTemplate.ID, err))
-				continue
 			} else {
-				results.Or(CalculateCrossProductNodeSets(tx, domainsid, expandedGroups, cache.GetCertTemplateEnrollers(certTemplate.ID), ecaEnrollers))
+				results.Or(CalculateCrossProductNodeSets(tx, expandedGroups, cache.GetCertTemplateEnrollers(certTemplate.ID), ecaEnrollers))
 			}
 		}
 	}
 
 	results.Each(func(value uint64) bool {
-		channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-			FromID: graph.ID(value),
-			ToID:   domain.ID,
-			Kind:   ad.ADCSESC1,
-		})
+		for _, domain := range targetDomains.Slice() {
+			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+				FromID: graph.ID(value),
+				ToID:   domain.ID,
+				Kind:   ad.ADCSESC1,
+			})
+		}
 		return true
 	})
 	return nil
@@ -176,7 +175,6 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	*/
 	var (
 		startNode  *graph.Node
-		endNode    *graph.Node
 		startNodes = graph.NodeSet{}
 
 		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
@@ -191,8 +189,6 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		var err error
 		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
 			return err
-		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
-			return err
 		} else {
 			return nil
 		}
@@ -201,11 +197,8 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 
 	// Add startnode, Auth. Users, and Everyone to start nodes
-	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", endNode.ID, err))
-		return nil, err
-	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
 			return err
 		} else {
 			startNodes.AddSet(nodeSet)

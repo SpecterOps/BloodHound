@@ -176,16 +176,18 @@ func PostEnterpriseCAFor(operation analysis.StatTrackedOperation[analysis.Create
 	return nil
 }
 
-func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, domain, enterpriseCA *graph.Node) error {
+func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, enterpriseCA *graph.Node, targetDomains *graph.NodeSet) error {
 	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, enterpriseCA); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error fetching host ca computer for enterprise ca %d: %v", enterpriseCA.ID, err))
 	} else {
 		for _, computer := range hostCAServiceComputers {
-			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-				FromID: computer.ID,
-				ToID:   domain.ID,
-				Kind:   ad.GoldenCert,
-			})
+			for _, domain := range targetDomains.Slice() {
+				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+					FromID: computer.ID,
+					ToID:   domain.ID,
+					Kind:   ad.GoldenCert,
+				})
+			}
 		}
 	}
 	return nil
@@ -318,8 +320,8 @@ func expandNodeSliceToBitmapWithoutGroups(nodes []*graph.Node, groupExpansions i
 	return bitmap
 }
 
-func containsAuthUsersOrEveryone(tx graph.Transaction, nodes []*graph.Node, domainsid string) (bool, error) {
-	if specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid); err != nil {
+func containsAuthUsersOrEveryone(tx graph.Transaction, nodes []*graph.Node) (bool, error) {
+	if specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
 		return false, err
 	} else {
 		for _, node := range nodes {
