@@ -1,0 +1,593 @@
+---
+title: BloodHound Enterprise NIST SP 800-171 Compliance Resource
+description: "The Following information is meant to provide a more detailed and in-depth view of compliance items that BloodHound Enterprise can assist in providing coverage for."
+---
+
+## 3.1 - ACCESS CONTROL
+
+
+### 3.1.1
+
+#### Basic Requirement
+
+Limit system access to authorized users, processes acting on behalf of authorized users, and
+devices (including other systems).
+
+**3.1.1 Discussion**
+
+Access control policies (e.g., identity- or role-based policies, control matrices, and cryptography)
+control access between active entities or subjects (i.e., users or processes acting on behalf of users)
+and passive entities or objects (e.g., devices, files, records, and domains) in systems. Access
+enforcement mechanisms can be employed at the application and service level to provide
+increased information security. Other systems include systems internal and external to the
+organization. This requirement focuses on account management for systems and applications. The
+definition of and enforcement of access authorizations, other than those determined by account
+type (e.g., privileged verses non-privileged) are addressed in requirement 3.1.2.
+
+#### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access levels and validate access permissions.
+
+### 3.1.2
+
+#### Basic Requirement
+
+Limit system access to the types of transactions and functions that authorized users are
+permitted to execute.
+
+**3.1.2 Discussion**
+
+Organizations may choose to define access privileges or other attributes by account, by type of
+account, or a combination of both. System account types include individual, shared, group, system,
+anonymous, guest, emergency, developer, manufacturer, vendor, and temporary. Other attributes
+required for authorizing access include restrictions on time-of-day, day-of-week, and point-of-
+origin. In defining other account attributes, organizations consider system-related requirements
+(e.g., system upgrades scheduled maintenance,) and mission or business requirements, (e.g., time
+zone differences, customer requirements, remote access to support travel requirements).
+
+#### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access levels and validate access permissions.
+
+### 3.1.5
+
+#### Basic Requirement
+
+Employ the principle of least privilege, including for specific security functions and privileged
+accounts.
+
+**3.1.5 Discussion**
+
+Organizations employ the principle of least privilege for specific duties and authorized accesses for
+users and processes. The principle of least privilege is applied with the goal of authorized privileges
+no higher than necessary to accomplish required organizational missions or business functions.
+Organizations consider the creation of additional processes, roles, and system accounts as
+necessary, to achieve least privilege. Organizations also apply least privilege to the development,
+implementation, and operation of organizational systems. Security functions include establishing
+system accounts, setting events to be logged, setting intrusion detection parameters, and
+configuring access authorizations (i.e., permissions, privileges).
+Privileged accounts, including super user accounts, are typically described as system administrator
+for various types of commercial off-the-shelf operating systems. Restricting privileged accounts to
+specific personnel or roles prevents day-to-day users from having access to privileged information
+or functions. Organizations may differentiate in the application of this requirement between
+allowed privileges for local accounts and for domain accounts provided organizations retain the
+ability to control system configurations for key security parameters and as otherwise necessary to
+sufficiently mitigate risk.
+
+#### Solution
+
+BloodHound Enterprise audits and reports the health of organizational privilege access models and identifies potential vulnerable attack paths and misconfigurations within the privilege access architecture scheme.
+
+### 3.1.6
+#### Basic Requirement
+
+Use non-privileged accounts or roles when accessing non-security functions.
+
+**3.1.6 Discussion**
+
+This requirement limits exposure when operating from within privileged accounts or roles. The
+inclusion of roles addresses situations where organizations implement access control policies such
+as role-based access control and where a change of role provides the same degree of assurance in
+the change of access authorizations for the user and all processes acting on behalf of the user as
+would be provided by a change between a privileged and non-privileged account.
+
+#### Solution
+
+BloodHound Enterprise audits and reports the health of organizational privilege access models and identifies potential vulnerable attack paths and misconfigurations within the privilege access architecture scheme.
+
+### 3.1.7
+
+#### Basic Requirement
+
+Prevent non-privileged users from executing privileged functions and capture the execution of
+such functions in audit logs.
+
+**3.1.7 Discussion**
+
+Privileged functions include establishing system accounts, performing system integrity checks,
+conducting patching operations, or administering cryptographic key management activities. Non-
+privileged users are individuals that do not possess appropriate authorizations. Circumventing
+intrusion detection and prevention mechanisms or malicious code protection mechanisms are
+examples of privileged functions that require protection from non-privileged users. Note that this
+requirement represents a condition to be achieved by the definition of authorized privileges in
+3.1.2.
+
+#### Solution
+
+BloodHound Enterprise audits and reports the health of organizational privilege access models and identifies potential vulnerable attack paths and misconfigurations within the privilege access architecture scheme when used in conjunction with external logging solutions to satisfy this requirement.
+
+## 3.3 - AUDIT AND ACCOUNTABILITY
+
+
+### 3.3.1
+
+#### Basic Requirement
+
+Create and retain system audit logs and records to the extent needed to enable the
+monitoring, analysis, investigation, and reporting of unlawful or unauthorized system activity.
+
+**3.3.1 Discussion**
+
+An event is any observable occurrence in a system, which includes unlawful or unauthorized
+system activity. Organizations identify event types for which a logging functionality is needed as
+those events which are significant and relevant to the security of systems and the environments
+in which those systems operate to meet specific and ongoing auditing needs. Event types can
+include password changes, failed logons or failed accesses related to systems, administrative
+privilege usage, or third-party credential usage. In determining event types that require logging,
+organizations consider the monitoring and auditing appropriate for each of the CUI security
+requirements. Monitoring and auditing requirements can be balanced with other system needs.
+For example, organizations may determine that systems must have the capability to log every file
+access both successful and unsuccessful, but not activate that capability except for specific
+circumstances due to the potential burden on system performance.
+Audit records can be generated at various levels of abstraction, including at the packet level as
+information traverses the network. Selecting the appropriate level of abstraction is a critical aspect
+of an audit logging capability and can facilitate the identification of root causes to problems.
+Organizations consider in the definition of event types, the logging necessary to cover related
+events such as the steps in distributed, transaction-based processes (e.g., processes that are
+distributed across multiple organizations) and actions that occur in service-oriented or cloud-
+based architectures.
+Audit record content that may be necessary to satisfy this requirement includes time stamps,
+source and destination addresses, user or process identifiers, event descriptions, success or fail
+indications, filenames involved, and access control or flow control rules invoked. Event outcomes
+can include indicators of event success or failure and event-specific results (e.g., the security state
+of the system after the event occurred).
+Detailed information that organizations may consider in audit records includes full text recording
+of privileged commands or the individual identities of group account users. Organizations consider
+limiting the additional audit log information to only that information explicitly needed for specific
+audit requirements. This facilitates the use of audit trails and audit logs by not including
+information that could potentially be misleading or could make it more difficult to locate
+information of interest. Audit logs are reviewed and analyzed as often as needed to provide
+important information to organizations to facilitate risk-based decision making.
+\[SP 800-92\] provides guidance on security log management.
+
+#### Solution
+
+BloodHound Enterprise audits and reports the health of organizational privilege access models and identifies potential vulnerable attack paths and misconfigurations within the privilege access architecture scheme when used in conjunction with external logging solutions to satisfy this requirement.
+
+### 3.3.2
+
+#### Basic Requirement
+
+Ensure that the actions of individual system users can be uniquely traced to those users, so
+they can be held accountable for their actions.
+
+**3.3.2 Discussion**
+
+This requirement ensures that the contents of the audit record include the information needed to
+link the audit event to the actions of an individual to the extent feasible. Organizations consider
+logging for traceability including results from monitoring of account usage, remote access, wireless
+connectivity, mobile device connection, communications at system boundaries, configuration
+settings, physical access, nonlocal maintenance, use of maintenance tools, temperature and
+humidity, equipment delivery and removal, system component inventory, use of mobile code, and
+use of Voice over Internet Protocol (VoIP).
+
+#### Solution
+
+BloodHound Enterprise collects and analyses information on all objects with in the Active Directory/Azure environment. Collected data can be used to examine the scope of access that individual network users are granted. When used with native system logs, BloodHound Enterprise can aid in activity attribution and auditing.
+
+### 3.3.5
+
+#### Basic Requirement
+
+Correlate audit record review, analysis, and reporting processes for investigation and response
+to indications of unlawful, unauthorized, suspicious, or unusual activity
+
+**3.3.5 Discussion**
+
+Correlating audit record review, analysis, and reporting processes helps to ensure that they do not
+operate independently, but rather collectively. Regarding the assessment of a given organizational
+system, the requirement is agnostic as to whether this correlation is applied at the system level or
+at the organization level across all systems.
+
+#### Solution
+
+
+BloodHound Enterprise detects and assigns risk categories based on the percentage of the organizations environment that is exposed to an identity attack path. Risk categories reflect the percentage of assets within the organizational environment that are vulnerable, aiding analysis in determining the impact of an incident. Impact scores, scope of access, and native system logs can be used as compensating controls to satisfy this requirement.
+
+## 3.4 - CONFIGURATION MANAGEMENT
+
+### 3.4.1
+
+#### Basic Requirement
+
+Establish and maintain baseline configurations and inventories of organizational systems
+(including hardware, software, firmware, and documentation) throughout the respective
+system development life cycles
+
+**3.4.1 Discussion**
+
+Baseline configurations are documented, formally reviewed, and agreed-upon specifications for
+systems or configuration items within those systems. Baseline configurations serve as a basis for
+future builds, releases, and changes to systems. Baseline configurations include information about
+system components (e.g., standard software packages installed on workstations, notebook
+computers, servers, network components, or mobile devices; current version numbers and update
+and patch information on operating systems and applications; and configuration settings and
+parameters), network topology, and the logical placement of those components within the system
+architecture. Baseline configurations of systems also reflect the current enterprise architecture.
+Maintaining effective baseline configurations requires creating new baselines as organizational
+systems change over time. Baseline configuration maintenance includes reviewing and updating
+the baseline configuration when changes are made based on security risks and deviations from the
+established baseline configuration
+Organizations can implement centralized system component inventories that include components
+from multiple organizational systems. In such situations, organizations ensure that the resulting
+inventories include system-specific information required for proper component accountability
+(e.g., system association, system owner). Information deemed necessary for effective
+accountability of system components includes hardware inventory specifications, software license
+information, software version numbers, component owners, and for networked components or
+devices, machine names and network addresses. Inventory specifications include manufacturer,
+device type, model, serial number, and physical location.
+\[SP 800-128\] provides guidance on security-focused configuration management.
+
+#### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound Enterprise’s initial collection and scheduled collections can be used to establish and monitor your organizations identity baseline.
+
+### 3.4.5
+
+#### Basic Requirement
+
+Define, document, approve, and enforce physical and logical access restrictions associated with
+changes to organizational systems
+
+**3.4.5 Discussion**
+
+Any changes to the hardware, software, or firmware components of systems can potentially have
+significant effects on the overall security of the systems. Therefore, organizations permit only
+qualified and authorized individuals to access systems for purposes of initiating changes, including
+upgrades and modifications. Access restrictions for change also include software libraries.
+Access restrictions include physical and logical access control requirements, workflow automation,
+media libraries, abstract layers (e.g., changes implemented into external interfaces rather than
+directly into systems), and change windows (e.g., changes occur only during certain specified
+times). In addition to security concerns, commonly-accepted due diligence for configuration
+management includes access restrictions as an essential part in ensuring the ability to effectively
+manage the configuration.
+\[SP 800-128\] provides guidance on configuration change control.
+
+#### Solution
+
+BloodHound Enterprise collects information on all systems, users, and objects in a domain that are connected to the organizations Active Directory/Azure Environment. BloodHound Enterprise monitors the environment for the addition/removal of systems from the organizations environment.
+
+### 3.4.6
+
+#### Basic Requirement
+
+Employ the principle of least functionality by configuring organizational systems to provide
+only essential capabilities
+
+**3.4.6 Discussion**
+
+Systems can provide a wide variety of functions and services. Some of the functions and services
+routinely provided by default, may not be necessary to support essential organizational missions,
+functions, or operations. It is sometimes convenient to provide multiple services from single
+system components. However, doing so increases risk over limiting the services provided by any
+one component. Where feasible, organizations limit component functionality to a single function
+per component.
+Organizations review functions and services provided by systems or components of systems, to
+determine which functions and services are candidates for elimination. Organizations disable
+unused or unnecessary physical and logical ports and protocols to prevent unauthorized
+connection of devices, transfer of information, and tunneling. Organizations can utilize network
+scanning tools, intrusion detection and prevention systems, and end-point protections such as
+firewalls and host-based intrusion detection systems to identify and prevent the use of prohibited
+functions, ports, protocols, and services
+
+#### Solution
+
+BloodHound Enterprise audits and reports the health of organizational privilege access models and identifies potential vulnerable attack paths and misconfigurations within the privilege access architecture scheme.
+
+## 3.6 - INCIDENT RESPONSE
+
+
+### 3.6.1
+
+#### Basic Requirement
+
+Establish an operational incident-handling capability for organizational systems that includes
+preparation, detection, analysis, containment, recovery, and user response activities
+
+**3.6.1 Discussion**
+
+Organizations recognize that incident handling capability is dependent on the capabilities of
+organizational systems and the mission/business processes being supported by those systems.
+Organizations consider incident handling as part of the definition, design, and development of
+mission/business processes and systems. Incident-related information can be obtained from a
+variety of sources including audit monitoring, network monitoring, physical access monitoring,
+user and administrator reports, and reported supply chain events. Effective incident handling
+capability includes coordination among many organizational entities including mission/business
+owners, system owners, authorizing officials, human resources offices, physical and personnel
+security offices, legal departments, operations personnel, procurement offices, and the risk
+executive.
+As part of user response activities, incident response training is provided by organizations and is
+linked directly to the assigned roles and responsibilities of organizational personnel to ensure that
+the appropriate content and level of detail is included in such training. For example, regular users
+may only need to know who to call or how to recognize an incident on the system; system
+administrators may require additional training on how to handle or remediate incidents; and
+incident responders may receive more specific training on forensics, reporting, system recovery,
+and restoration. Incident response training includes user training in the identification/reporting of
+suspicious activities from external and internal sources. User response activities also includes
+incident response assistance which may consist of help desk support, assistance groups, and access
+to forensics services or consumer redress services, when required.
+\[SP 800-61\] provides guidance on incident handling. \[SP 800-86\] and \[SP 800-101\] provide guidance
+on integrating forensic techniques into incident response. \[SP 800-161\] provides guidance on
+supply chain risk managemen
+
+#### Solution
+
+BloodHound Enterprise provides visibility into the logical relationships and access scope for an organizational Active Directory/Azure environments. Proactively monitoring the organizational environment in conjunction with native security tools contributes to satisfying this requirement.
+
+### 3.6.2
+
+#### Basic Requirement
+
+Track, document, and report incidents to designated officials and/or authorities both internal
+and external to the organization.
+
+**3.6.2 Discussion**
+
+Tracking and documenting system security incidents includes maintaining records about each
+incident, the status of the incident, and other pertinent information necessary for forensics,
+evaluating incident details, trends, and handling. Incident information can be obtained from a
+variety of sources including incident reports, incident response teams, audit monitoring, network
+monitoring, physical access monitoring, and user/administrator reports.
+Reporting incidents addresses specific incident reporting requirements within an organization and
+the formal incident reporting requirements for the organization. Suspected security incidents may
+also be reported and include the receipt of suspicious email communications that can potentially
+contain malicious code. The types of security incidents reported, the content and timeliness of the
+reports, and the designated reporting authorities reflect applicable laws, Executive Orders,
+directives, regulations, and policies.
+\[SP 800-61\] provides guidance on incident handling.
+
+#### Solution
+
+BloodHound Enterprise provides visibility into the logical relationships and access scope for an organizational Active Directory/Azure environments. Proactively monitoring the organizational environment in conjunction with native security tools contributes to satisfying this requirement.
+
+## 3.11 - RISK ASSESSMENT
+
+
+### 3.11.1
+
+#### Basic Requirement
+
+Periodically assess the risk to organizational operations (including mission, functions, image, or
+reputation), organizational assets, and individuals, resulting from the operation of
+organizational systems and the associated processing, storage, or transmission of CUI.
+
+**3.11.1 Discussion**
+
+Clearly defined system boundaries are a prerequisite for effective risk assessments. Such risk
+assessments consider threats, vulnerabilities, likelihood, and impact to organizational operations,
+organizational assets, and individuals based on the operation and use of organizational systems.
+Risk assessments also consider risk from external parties (e.g., service providers, contractors
+operating systems on behalf of the organization, individuals accessing organizational systems,
+outsourcing entities). Risk assessments, either formal or informal, can be conducted at the
+organization level, the mission or business process level, or the system level, and at any phase in
+the system development life cycle.
+\[SP 800-30\] provides guidance on conducting risk assessments.
+
+#### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound Enterprise’s scheduled collection feature is designed to continuously monitor your environment for Tier Zero risk exposure.
+
+### 3.11.2
+
+#### Basic Requirement
+
+Scan for vulnerabilities in organizational systems and applications periodically and when new
+vulnerabilities affecting those systems and applications are identified.
+
+**3.11.2 Discussion**
+
+Organizations determine the required vulnerability scanning for all system components, ensuring
+that potential sources of vulnerabilities such as networked printers, scanners, and copiers are not
+overlooked. The vulnerabilities to be scanned are readily updated as new vulnerabilities are
+discovered, announced, and scanning methods developed. This process ensures that potential
+vulnerabilities in the system are identified and addressed as quickly as possible. Vulnerability
+analyses for custom software applications may require additional approaches such as static analysis, dynamic analysis, binary analysis, or a hybrid of the three approaches. Organizations can
+employ these analysis approaches in source code reviews and in a variety of tools (e.g., static
+analysis tools, web-based application scanners, binary analyzers) and in source code reviews.
+Vulnerability scanning includes: scanning for patch levels; scanning for functions, ports, protocols,
+and services that should not be accessible to users or devices; and scanning for improperly
+configured or incorrectly operating information flow control mechanisms.
+To facilitate interoperability, organizations consider using products that are Security Content
+Automated Protocol (SCAP)-validated, scanning tools that express vulnerabilities in the Common
+Vulnerabilities and Exposures (CVE) naming convention, and that employ the Open Vulnerability
+Assessment Language (OVAL) to determine the presence of system vulnerabilities. Sources for
+vulnerability information include the Common Weakness Enumeration (CWE) listing and the
+National Vulnerability Database (NVD).
+Security assessments, such as red team exercises, provide additional sources of potential
+vulnerabilities for which to scan. Organizations also consider using scanning tools that express
+vulnerability impact by the Common Vulnerability Scoring System (CVSS). In certain situations, the
+nature of the vulnerability scanning may be more intrusive or the system component that is the
+subject of the scanning may contain highly sensitive information. Privileged access authorization
+to selected system components facilitates thorough vulnerability scanning and protects the
+sensitive nature of such scanning.
+\[SP 800-40\] provides guidance on vulnerability management.
+
+#### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound Enterprise’s scheduled collection feature is designed to continuously monitor your environment for Tier Zero risk exposure.
+
+### 3.11.3
+
+#### Requirement
+
+Remediate vulnerabilities in accordance with risk assessments.
+
+**3.11.3 Discussion**
+
+Vulnerabilities discovered, for example, via the scanning conducted in response to 3.11.2, are
+remediated with consideration of the related assessment of risk. The consideration of risk
+influences the prioritization of remediation efforts and the level of effort to be expended in the
+remediation for specific vulnerabilities.
+
+#### Solution
+
+BloodHound Enterprise provides remediation guidance related to scan findings to mitigate the impact of organizational identity attack path exposure.
+
+## 3.12 - SECURITY ASSESSMENT
+
+### 3.12.1
+
+#### Basic Requirement
+
+Periodically assess the security controls in organizational systems to determine if the controls
+are effective in their application.
+
+**3.12.1 Discussion**
+
+Organizations assess security controls in organizational systems and the environments in which
+those systems operate as part of the system development life cycle. Security controls are the
+safeguards or countermeasures organizations implement to satisfy security requirements. By
+assessing the implemented security controls, organizations determine if the security safeguards or
+countermeasures are in place and operating as intended. Security control assessments ensure that
+information security is built into organizational systems; identify weaknesses and deficiencies early
+in the development process; provide essential information needed to make risk-based decisions;
+and ensure compliance to vulnerability mitigation procedures. Assessments are conducted on the
+implemented security controls as documented in system security plans.
+Security assessment reports document assessment results in sufficient detail as deemed necessary
+by organizations, to determine the accuracy and completeness of the reports and whether the
+security controls are implemented correctly, operating as intended, and producing the desired
+outcome with respect to meeting security requirements. Security assessment results are provided
+to the individuals or roles appropriate for the types of assessments being conducted.
+
+Organizations ensure that security assessment results are current, relevant to the determination
+of security control effectiveness, and obtained with the appropriate level of assessor
+independence. Organizations can choose to use other types of assessment activities such as
+vulnerability scanning and system monitoring to maintain the security posture of systems during
+the system life cycle.
+\[SP 800-53\] provides guidance on security and privacy controls for systems and organizations. \[SP
+800-53A\] provides guidance on developing security assessment plans and conducting assessments.
+
+#### Solution
+
+BloodHound Enterprise identifies and catalogues all Active Directory/Azure accounts during its collection process. The collected accounts are analyzed and displayed in graph format to illustrate the various relationships and permission profiles in order to easily audit/verify access and authorization levels within the enterprise. BloodHound Enterprise’s scheduled collection feature is designed to continuously monitor your environment for Tier Zero risk exposure. BloodHound Enterprise’s reporting feature can be used to asses the effectiveness identity and access control systems.
+
+### 3.12.2
+
+#### Basic Requirement
+
+Develop and implement plans of action designed to correct deficiencies and reduce or
+eliminate vulnerabilities in organizational systems.
+
+**3.12.2 Discussion**
+
+The plan of action is a key document in the information security program. Organizations develop
+plans of action that describe how any unimplemented security requirements will be met and how
+any planned mitigations will be implemented. Organizations can document the system security
+plan and plan of action as separate or combined documents and in any chosen format.
+Federal agencies may consider the submitted system security plans and plans of action as critical
+inputs to an overall risk management decision to process, store, or transmit CUI on a system hosted
+by a nonfederal organization and whether it is advisable to pursue an agreement or contract with
+the nonfederal organization. \[NIST CUI\] provides supplemental material for Special Publication
+800-171 including templates for plans of action.
+
+#### Solution
+
+BloodHound Enterprise provides remediation guidance related to scan findings to mitigate the impact of organizational identity attack path exposure. Findings are given a criticality rating based on identity exposure contributing to the prioritization of remedial actions when executing a response plan.
+
+### 3.12.3
+
+#### Basic Requirement
+
+Monitor security controls on an ongoing basis to ensure the continued effectiveness of the
+controls.
+
+**3.12.3 Discussion**
+
+Continuous monitoring programs facilitate ongoing awareness of threats, vulnerabilities, and
+information security to support organizational risk management decisions. The terms continuous
+and ongoing imply that organizations assess and analyze security controls and information
+security-related risks at a frequency sufficient to support risk-based decisions. The results of
+continuous monitoring programs generate appropriate risk response actions by organizations.
+Providing access to security information on a continuing basis through reports or dashboards gives
+organizational officials the capability to make effective and timely risk management decisions.
+Automation supports more frequent updates to hardware, software, firmware inventories, and
+other system information. Effectiveness is further enhanced when continuous monitoring outputs
+are formatted to provide information that is specific, measurable, actionable, relevant, and timely.
+Monitoring requirements, including the need for specific monitoring, may also be referenced in
+other requirements.
+\[SP 800-137\] provides guidance on continuous monitoring.
+
+#### Solution
+
+BloodHound Enterprise scheduled and on-demand collection scans will gather information in accordance with organizational security policy and report all identity attack path vulnerabilities and misconfigurations found during scan and data analysis actions
+
+## 3.14 - SYSTEM AND INFORMATION INTEGRITY
+
+
+### 3.14.1
+
+#### Basic Requirement
+
+Identify, report, and correct system flaws in a timely manner.
+
+**3.14.1 Discussion**
+
+Organizations identify systems that are affected by announced software and firmware flaws
+including potential vulnerabilities resulting from those flaws and report this information to
+designated personnel with information security responsibilities. Security-relevant updates include
+patches, service packs, hot fixes, and anti-virus signatures. Organizations address flaws discovered
+during security assessments, continuous monitoring, incident response activities, and system error
+handling. Organizations can take advantage of available resources such as the Common Weakness Enumeration (CWE) database or Common Vulnerabilities and Exposures (CVE) database in
+remediating flaws discovered in organizational systems.
+Organization-defined time periods for updating security-relevant software and firmware may vary
+based on a variety of factors including the criticality of the update (i.e., severity of the vulnerability
+related to the discovered flaw). Some types of flaw remediation may require more testing than
+other types of remediation.
+\[SP 800-40\] provides guidance on patch management technologies.
+
+#### Solution
+
+BloodHound Enterprise scheduled and on-demand collection scans will gather information in accordance with organizational security policy and report all identity attack path vulnerabilities and misconfigurations found during scan and data analysis actions.
+
+### 3.14.2
+
+#### Basic Requirement
+
+Provide protection from malicious code at designated locations within organizational systems.
+
+**3.14.2 Discussion**
+
+Designated locations include system entry and exit points which may include firewalls, remote-
+access servers, workstations, electronic mail servers, web servers, proxy servers, notebook
+computers, and mobile devices. Malicious code includes viruses, worms, Trojan horses, and
+spyware. Malicious code can be encoded in various formats (e.g., UUENCODE, Unicode), contained
+within compressed or hidden files, or hidden in files using techniques such as steganography.
+Malicious code can be inserted into systems in a variety of ways including web accesses, electronic
+mail, electronic mail attachments, and portable storage devices. Malicious code insertions occur
+through the exploitation of system vulnerabilities.
+Malicious code protection mechanisms include anti-virus signature definitions and reputation-
+based technologies. A variety of technologies and methods exist to limit or eliminate the effects of
+malicious code. Pervasive configuration management and comprehensive software integrity
+controls may be effective in preventing execution of unauthorized code. In addition to commercial
+off-the-shelf software, malicious code may also be present in custom-built software. This could
+include logic bombs, back doors, and other types of cyber-attacks that could affect organizational
+missions/business functions. Traditional malicious code protection mechanisms cannot always
+detect such code. In these situations, organizations rely instead on other safeguards including
+secure coding practices, configuration management and control, trusted procurement processes,
+and monitoring practices to help ensure that software does not perform functions other than the
+functions intended.
+\[SP 800-83\] provides guidance on malware incident prevention.
+
+#### Solution
+
+BloodHound Enterprise scheduled and on-demand collection scans will gather information in accordance with organizational security policy and report all identity attack path vulnerabilities and misconfigurations found during scan and data analysis actions. BloodHound Enterprise can be configured to monitor organizational specific assets and provide proactive risk assessment with associated assets as part of scheduled collection scans to satisfy this requirement.
