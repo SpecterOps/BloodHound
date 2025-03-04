@@ -1,0 +1,45 @@
+---
+title: 2022-12-13 Release Notes
+---
+
+## Summary
+
+* BloodHound Enterprise
+    * New and Improved Features - Review and modify Tier Zero assets by domain, and some qualify of life updates to Explore.
+    * Bug Fixes - Jobs no longer appear stuck on "Ingesting", and some updates to API documentation.
+* SharpHound Enterprise (v1.0.25 GA, v2.0.4 Early Access)
+    * _No release this week._
+* AzureHound Enterprise (v1.2.2)
+    * Bug Fixes - Improved backoff-handling during collection
+
+### BloodHound Enterprise
+
+* Improved Functionality
+    * The Modify Tier Zero view now includes a domain selector to filter only the objects within a single domain. For customers with many domains or Tier Zero objects, this will help make reviewing and modifying those objects a more streamlined task.
+<Frame>
+  <img src="/assets/image-32.png" alt=""/>
+</Frame>
+    * The new "Stacked" view in Explore helps visualize many objects on the screen at once in a more widescreen-friendly manner.
+<Frame>
+  <img src="/assets/image-33.gif" alt=""/>
+</Frame>
+* Bug Fixes
+    * Collection jobs queued back-to-back and analyzed together should no longer appear stuck in the "Ingesting" state in the Finished Jobs log. This primarily affects customers with many collectors or who queue multiple collections manually, one after the other.
+    * Small fixes to the API documentation.
+
+### SharpHound Enterprise (v1.0.25 GA, v2.0.4 Early Access)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.0.4_
+
+No release this week.
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the “User Rights Assignment Collection” experimental feature at the same time. Please contact your TAM or respond to this email for assistance.
+
+### AzureHound Enterprise (v1.2.1 GA)
+
+_Minimum version of AzureHound Service to support all current functionality: v1.2.1_
+
+* Bug Fixes
+    * Improved handling of back-off requests from Azure APIs to prevent receiving "The request was throttled" errors.
+
+

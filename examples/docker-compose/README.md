@@ -144,11 +144,11 @@ a single volume is left as an exercise for the reader (you'll need to look at re
 A: By default, we generate a secure random 256-bit key for JWT signing. Because this happens on every server restart,
 any existing sessions will be invalidated. If you need sessions to survive a server restart, there is a configuration
 value available that will allow you to specify your own `base64` encoded 256-bit key. It is recommended that you configure
-this when running Bloodhound on a standalone server, alongside other security configurations.
+this when running BloodHound on a standalone server, alongside other security configurations.
 
 ### Q: "My configuration changes in bloodhound.config.json are being ignored. Why?"
 
 A: A copy of this file is already included within the Docker container by default. The BloodHound instance will continue to use
 that file until you copy your local version into the Docker container. This can be done by uncommenting the lines in the
-`docker-compose.yml` file as specified in [this section](#configuring-bloodhound-community-edition). This requires a restart of 
+`docker-compose.yml` file as specified in [this section](#configuring-bloodhound-community-edition). This requires a restart of
 the Docker environment using the commands `docker compose down` and following with `docker compose up`.

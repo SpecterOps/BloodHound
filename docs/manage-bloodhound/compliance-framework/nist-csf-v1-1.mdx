@@ -1,0 +1,372 @@
+---
+title: BloodHound Enterprise NIST CSF v1.1 Compliance Resource
+description: The Following information is meant to provide a more detailed and in-depth view of compliance items that BloodHound Enterprise can provide coverage for.
+---
+
+## Identify (ID) Asset Management (ID.AM)
+
+The devices and systems that enable the organization to achieve business purposes are identified and managed consistent with their relative importance to the organizational objectives the organization’s risk strategy.
+
+### ID.AM-1
+
+#### Requirement
+
+Physical Devices and systems within the organization are inventoried.
+
+#### Solution
+
+BloodHound Enterprise collects information on all physical systems operating within a Windows Active Directory environment/Azure Environment. BloodHound Enterprise monitors the addition/removal of physical assets connecting to the organizations environment.
+
+###### **References**
+
+CIS CSC 1
+COBIT 5 BAI09.01, BAI09.02
+ISA 62443-2-1:2009 4.2.3.4
+ISA 62443-3-3:2013 SR 7.8
+ISO/IEC 27001:2013 A.8.1.1, A.8.1.2
+NIST SP 800-53 Rev. 4 CM-8, PM-5
+
+### ID.AM-2
+
+#### Requirement
+
+Inventory of Software, Services, and Systems managed by the organization are maintained.
+
+#### Solution
+
+BloodHound Enterprise collects information on all Systems in a domain that are connected to the organizations Active Directory/Azure Environment. BloodHound Enterprise monitors the environment for the addition/removal of systems from the organizations environment.
+
+###### **References**
+
+CIS CSC 2
+COBIT 5 BAI09.01, BAI09.02, BAI09.05
+ISA 62443-2-1:2009 4.2.3.4
+ISA 62443-3-3:2013 SR 7.8
+ISO/IEC 27001:2013 A.8.1.1, A.8.1.2, A.12.5.1
+NIST SP 800-53 Rev. 4 CM-8, PM-5
+
+### ID.AM-5
+
+#### Requirement
+
+Resources are prioritized based on their classification, criticality, and business value.
+
+#### Solution
+
+BloodHound Enterprise allows organizations to assign assets to Tier Zero (T0) based on the organizations classification, criticality, and business value. Prioritized resources are audited and accounted for during BloodHound Enterprise collection scans.
+
+###### **References**
+
+CIS CSC 13, 14
+COBIT 5 APO03.03, APO03.04, APO12.01,
+BAI04.02, BAI09.02
+ISA 62443-2-1:2009 4.2.3.6
+ISO/IEC 27001:2013 A.8.2.1
+NIST SP 800-53 Rev. 4 CP-2, RA-2, SA-14, SC-6
+
+## Identity(ID)Risk Assessment(ID.RA)
+
+
+The organization understands the cybersecurity risk to organizational operations (including mission, functions, image, or reputation), organizational assets, and individuals.
+
+### ID.RA-1
+
+#### Requirement
+
+Asset vulnerabilities are identified and documented.
+
+#### Solution
+
+BloodHound Enterprise analyzes the Active Directory/Azure environment for identity attack paths that potentially impact an organizations security posture. All Identity vulnerabilities are identified during BloodHound collection activities and presented in the reporting dashboard with additional information to support documenting threats.
+
+###### **References**
+
+CIS CSC 4
+COBIT 5 APO12.01, APO12.02, APO12.03, APO12.04, DSS05.01, DSS05.02
+ISA 62443-2-1:2009 4.2.3, 4.2.3.7, 4.2.3.9, 4.2.3.12
+ISO/IEC 27001:2013 A.12.6.1, A.18.2.3
+NIST SP 800-53 Rev. 4 CA-2, CA-7, CA-8, RA-3, RA-5, SA-5, SA-11, SI-2, SI-4, SI-5
+
+### ID.RA-3
+
+#### Requirement
+
+Threats, both internal and external, are identified and documented.
+
+#### Solution
+
+BloodHound Enterprise analyzes the Active Directory/Azure environment for identity attack paths that potentially impact an organizations security posture. All Identity threat vectors are identified during BloodHound collection activities and presented in the reporting dashboard with additional information to support documenting threats.
+
+###### **References**
+
+CIS CSC 4
+COBIT 5 APO12.01, APO12.02, APO12.03, APO12.04
+ISA 62443-2-1:2009 4.2.3, 4.2.3.9, 4.2.3.12
+ISO/IEC 27001:2013 Clause 6.1.2
+NIST SP 800-53 Rev. 4 RA-3, SI-5, PM-12, PM-16
+
+### ID.RA-5
+
+#### Requirement
+
+Threats, vulnerabilities, likelihoods, and impacts are used to determine risk
+
+#### Solution
+
+BloodHound Enterprise analyzes the organizational environment for identity attack path vectors and assigns a quantifiable risk metric and category to each detected identity attack path. The assigned risk metric is calculated by determining what percentage of the environment could be impacted by a specific identity vulnerability which will be quantified as percentage and assigned a criticality rating.
+
+###### **References**
+
+CIS CSC 4
+COBIT 5 APO12.02
+ISO/IEC 27001:2013 A.12.6.1
+NIST SP 800-53 Rev. 4 RA-2, RA-3, PM-16
+
+## Protect(PR) Identity Management, Authentication, and Access Control (PR.AC)
+
+Access to physical and logical assets and associated facilities is limited to authorized users, processes, and devices, and is managed consistent with the assessed risk of unauthorized access to authorized activities and transactions.
+
+### PR.AC-4
+
+#### Requirement
+
+Employ the principal of least privilege, allowing only authorized access for users (or processing on the behalf of users) that necessary to accomplish assigned organizational tasks.
+
+#### Solution
+
+BloodHound Enterprise audits and reports the health of organizational privilege access models and identifies potential vulnerable attack paths and misconfigurations within the privilege access architecture scheme.
+
+###### **References**
+
+CIS CSC, 16
+COBIT 5 DSS05.04, DSS05.05, DSS05.07, DSS06.03
+ISA 62443-2-1:2009 4.3.3.2.2, 4.3.3.5.2, 4.3.3.7.2, 4.3.3.7.4
+ISA 62443-3-3:2013 SR 1.1, SR 1.2, SR 1.4, SR 1.5, SR 1.9, SR 2.1
+ISO/IEC 27001:2013, A.7.1.1, A.9.2.1
+NIST SP 800-53 Rev. 4 AC-1, AC-2, AC-3, AC-16, AC-19, AC-24, IA-1, IA-2, IA-4, IA-5, IA-8, PE-2, PS-3
+
+## Protect(PR) Information Protection, Processes, and Procedures(PR.IP)
+
+Security policies (that address purpose, scope, roles, responsibilities, management commitment, and coordination among organizational entities), processes, and procedures are maintained and used to manage protection of information systems and assets.
+
+### PR.IP-1
+
+#### Requirement
+
+A baseline configuration of information technology/industrial control systems is created and maintained incorporating security principles.
+
+#### Solution
+
+BloodHound Enterprise collects information on all physical systems operating within a Windows Active Directory environment/Azure Environment. BloodHound Enterprise establishes an initial baseline for the environment during setup and maintains that baseline with periodic scheduled and on-demand environment scans.
+
+###### **References**
+
+CIS CSC 3, 9, 11
+COBIT 5 BAI10.01, BAI10.02, BAI10.03,
+BAI10.05
+ISA 62443-2-1:2009 4.3.4.3.2, 4.3.4.3.3
+ISA 62443-3-3:2013 SR 7.6
+ISO/IEC 27001:2013 A.12.1.2, A.12.5.1,
+A.12.6.2, A.14.2.2, A.14.2.3, A.14.2.4
+NIST SP 800-53 Rev. 4 CM-2, CM-3, CM-4, CM-
+5, CM-6, CM-7, CM-9, SA-10
+
+## Detect(DE) Anomalies and Events (DE.AE)
+
+
+Anomalous activity is detected and the potential impact of events is understood.
+
+### DE.AE-1
+
+#### Requirement
+
+A baseline of network operations and expected data flows for users and systems is established and managed.
+
+#### Solution
+
+BloodHound Enterprise collects information on all physical systems and Active Directory/Azure users operating within a Windows Active Directory environment/Azure Environment. BloodHound Enterprises configurable scan options allows organizations to establish and monitor their organizational baseline of systems, users, and groups.
+
+###### **References**
+
+CIS CSC 1, 4, 6, 12, 13, 15, 16
+COBIT 5 DSS03.01
+ISA 62443-2-1:2009 4.4.3.3
+
+ISO/IEC 27001:2013 A.12.1.1, A.12.1.2, A.13.1.1, A.13.1.2
+NIST SP 800-53 Rev. 4 AC-4, CA-3, CM-2, SI-4
+
+### DE.AE-2
+
+#### Requirement
+
+Detected events are analyzed to understand attack targets and methods.
+
+#### Solution
+
+BloodHound Enterprise reports identity attack paths and assigns a risk exposure severity rating to each vector based on the percentage of the organizations environment that is exposed to risk. Additional information pertaining to specific events is included in the BloodHound Enterprise GUI.
+
+###### **References**
+
+CIS CSC 3, 6, 13, 15
+COBIT 5 DSS05.07
+ISA 62443-2-1:2009 4.3.4.5.6, 4.3.4.5.7, 4.3.4.5.8
+ISA 62443-3-3:2013 SR 2.8, SR 2.9, SR 2.10, SR
+2.11, SR 2.12, SR 3.9, SR 6.1, SR 6.2
+ISO/IEC 27001:2013 A.12.4.1, A.16.1.1, A.16.1.4
+NIST SP 800-53 Rev. 4 AU-6, CA-7, IR-4, SI-4
+
+### DE.AE-3
+
+#### Requirement
+
+Event data is collected and correlated from multiple sources and sensors.
+
+#### Solution
+
+BloodHound Enterprise's Identity Attack Path solution provides unique graph based representations of the logical relationships that may be vulnerable to identity attacks. The information provided by BloodHound Enterprise can be used in combination with other defense appliance output and correlated to assist in satisfying this requirement.
+
+###### **References**
+
+CIS CSC 1, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16
+COBIT 5 BAI08.02
+ISA 62443-3-3:2013 SR 6.1
+ISO/IEC 27001:2013 A.12.4.1, A.16.1.7
+NIST SP 800-53 Rev. 4 AU-6, CA-7, IR-4, IR-5, IR-8, SI-4
+
+### DE.AE-4
+
+#### Requirement
+
+Impact of events is determined.
+
+#### Solution
+
+BloodHound Enterprise will assign a severity rating category and exposure percentage for all identified attack paths within an organizations Active Directory/Azure environment.
+
+###### **References**
+
+CIS CSC 4, 6
+COBIT 5 APO12.06, DSS03.01
+ISO/IEC 27001:2013 A.16.1.4
+NIST SP 800-53 Rev. 4 CP-2, IR-4, RA-3, SI-4
+
+### DE.AE-5
+
+#### Requirement
+
+Incident alert thresholds are established.
+
+#### Solution
+
+BloodHound Enterprise allows Tier Zero to be defined per the needs of the organization in order to correctly define the individual organizations Tier Zero asset group. The Analysis feature will enumerate all detectable identity attack paths and assign and risk exposure rating to each vulnerable identity/asset/object allowing for the establishment of organizational incident alert thresholds.
+
+###### **References**
+
+CIS CSC 6, 19
+COBIT 5 APO12.06, DSS03.01
+ISA 62443-2-1:2009 4.2.3.10
+ISO/IEC 27001:2013 A.16.1.4
+NIST SP 800-53 Rev. 4 IR-4, IR-5, IR-8
+
+## Detect(DE) Security Continuous Monitoring(DE.CM)
+
+The information system and assets are monitored to identify cybersecurity events and verify the effectiveness of protective measures.
+
+### DE.CM-1
+
+#### Requirement
+
+The network is monitored to detect potential cybersecurity events
+
+#### Solution
+
+BloodHound Enterprise scheduled and on-demand collection scans will gather information in accordance with organizational security policy and report all identity attack path vulnerabilities and misconfigurations found during scan and data analysis actions.
+
+###### **References**
+
+CIS CSC 1, 7, 8, 12, 13, 15, 16
+COBIT 5 DSS01.03, DSS03.05, DSS05.07
+ISA 62443-3-3:2013 SR 6.2
+NIST SP 800-53 Rev. 4 AC-2, AU-12, CA-7, CM-3, SC-5, SC-7, SI-4
+
+### DE.CM-8
+
+#### Requirement
+
+Vulnerability Scans are performed.
+
+#### Solution
+
+BloodHound Enterprise scheduled and on-demand collection scans will gather information in accordance with organizational security policy and report all identity attack path vulnerabilities found during scan and data analysis actions.
+
+###### **References**
+
+CIS CSC 4, 20
+
+COBIT 5 BAI03.10, DSS05.01
+ISA 62443-2-1:2009 4.2.3.1, 4.2.3.7
+ISO/IEC 27001:2013 A.12.6.1
+NIST SP 800-53 Rev. 4 RA-5
+
+## Respond(RS)Analysis(RS.AN)
+
+Analysis is conducted to ensure effective response and support recovery activities.
+
+### RS.AN-1
+
+#### Requirement
+
+Notifications from detection systems are investigated.
+
+#### Solution
+
+BloodHound Enterprise includes configurable notifications highlight anomalous identity behavior and group relationships within the organizational environment. Notifications in conjunction with information dashboard supports the rapid identification and mitigation of identity attack paths that can contribute to satisfying this control.
+
+###### **References**
+
+CIS CSC 4, 6, 8, 19
+COBIT 5 DSS02.04, DSS02.07
+ISA 62443-2-1:2009 4.3.4.5.6, 4.3.4.5.7, 4.3.4.5.8
+ISA 62443-3-3:2013 SR 6.1
+ISO/IEC 27001:2013 A.12.4.1, A.12.4.3, A.16.1.5
+NIST SP 800-53 Rev. 4 AU-6, CA-7, IR-4, IR-5, PE-6, SI-4
+
+### RS.AN-2
+
+#### Requirement
+
+The impact of the incident is understood.
+
+#### Solution
+
+BloodHound Enterprise detects and assigns risk categories based on the percentage of the organizations environment that is exposed to an identity attack path. Risk categories reflect the percentage of assets within the organizational environment that are vulnerable, aiding analysis in determining the impact of an incident.
+
+###### **References**
+
+COBIT 5 DSS02.02
+ISA 62443-2-1:2009 4.3.4.5.6, 4.3.4.5.7, 4.3.4.5.8
+ISO/IEC 27001:2013 A.16.1.4, A.16.1.6
+NIST SP 800-53 Rev. 4 CP-2, IR-4
+
+## Respond(RS)Mitigations(RS.MI)
+
+
+Activities are performed to prevent expansion of an event, mitigate its effects, and resolve the incident.
+
+### RS.MI-2
+
+#### Requirement
+
+Incidents are mitigated.
+
+#### Solution
+
+BloodHound Enterprise provides remediation guidance related to scan findings to mitigate the impact of organizational identity attack path exposure.
+
+###### **References**
+
+CIS CSC 4, 19
+COBIT 5 APO12.06
+ISA 62443-2-1:2009 4.3.4.5.6, 4.3.4.5.10
+ISO/IEC 27001:2013 A.12.2.1, A.16.1.5
+NIST SP 800-53 Rev. 4 IR-4

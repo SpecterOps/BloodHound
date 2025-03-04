@@ -1,0 +1,82 @@
+---
+title: 2023-03-27 Release Notes
+---
+## Announcements
+
+### SharpHound Upgrades Required
+
+SharpHound v2 is officially generally available. If you have not already done so, please make sure you upgrade your SharpHound collectors to v2.1+. SharpHound v1 will officially be end-of-life on May 1, 2023.
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the "Enable post processing of local groups" early access feature simultaneously.
+
+Instructions to upgrade your collector may be found [here](/install-data-collector/install-sharphound/installation-upgrade). Our Customer Success team will begin reaching out to all customers still running SharpHound v1 and would be happy to help if you require it.
+
+## Summary
+
+* BloodHound Enterprise
+    * New and improved functionality - Azure entity panels performance improvements
+    * Bug fixes - Entity panels properly show all object information values and fixed several bugs, resulting in inaccurate data results.
+* SharpHound Enterprise (v2.1.2)
+    * _No release this week._
+* AzureHound Enterprise (v1.2.4)
+    * _No release this week._
+
+### BloodHound Enterprise
+
+### New Features
+
+- **Enhanced Performance**: Improved database query optimization and caching
+- **UI Improvements**: Better visualization of attack paths and relationships
+- **API Enhancements**: Added new endpoints and improved documentation
+
+For instructions on upgrading your collector, see [Install and Upgrade SharpHound Enterprise](/install-data-collector/install-sharphound/installation-upgrade).
+
+### Bug Fixes
+
+- Fixed several issues with SAML authentication
+- Improved error handling for API requests
+- Resolved UI rendering inconsistencies
+
+### SharpHound Enterprise (v2.1.2)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.1.2_
+
+No release this week.
+
+<Info>
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the "User Rights Assignment Collection" experimental feature at the same time. Please contact your TAM or respond to this email for assistance.
+</Info>
+### AzureHound Enterprise (v1.2.4)
+
+_Minimum version of AzureHound Service to support all current functionality: v1.2.4_
+
+No release this week.
+
+## SharpHound
+
+### New Features
+
+- **Improved Collection Performance**: Optimized data collection routines
+- **Better Error Handling**: Enhanced error reporting and recovery
+- **New Collection Options**: Additional configuration options for customized collection
+
+### Bug Fixes
+
+- Fixed an issue with group membership enumeration
+- Resolved memory usage during large collections
+- Improved error handling for network timeouts
+
+## AzureHound
+
+### New Features
+
+- **Enhanced Azure Resource Collection**: Better coverage of Azure resources
+- **Improved Performance**: Optimized collection routines
+- **Better Error Handling**: More detailed error messages and logging
+
+### Bug Fixes
+
+- Fixed several issues with service principal enumeration
+- Improved handling of rate limiting
+- Resolved token refresh issues
+

@@ -1,0 +1,199 @@
+---
+title: BloodHound Enterprise Security Overview
+---
+
+<Frame>
+  <img src="/assets/18258001080731.png"/>
+</Frame>
+
+_**© 2023 Specter Ops, Inc. ALL RIGHTS RESERVED.**_
+
+_This guide contains proprietary information protected by copyright. The software and services described in this guide are furnished only under a separate master services agreement (a "Master Services Agreement"). This software and documentation may be used or copied only in accordance with the terms of the applicable agreement. No part of this guide may be reproduced or transmitted in any form or by any means, electronic or mechanical, including photocopying and recording for any purpose other than the purchaser's personal use without the written permission of Specter Ops Inc._
+
+_No license, express or implied, by estoppel or otherwise, to any intellectual property right is granted by this document. EXCEPT AS SET FORTH IN AN APPLICABLE MASTER SERVICES AGREEMENT, SPECTER OPS ASSUMES NO LIABILITY WHATSOEVER AND DISCLAIMS ANY EXPRESS, IMPLIED OR STATUTORY WARRANTY RELATING TO ITS PRODUCTS OR SERVICES INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. IN NO EVENT SHALL SPECTER OPS BE LIABLE FOR ANY DIRECT, INDIRECT, CONSEQUENTIAL, PUNITIVE, SPECIAL, OR INCIDENTAL DAMAGES (INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF PROFITS, BUSINESS INTERRUPTION OR LOSS OF INFORMATION) ARISING OUT OF THE USE OR INABILITY TO USE THIS DOCUMENT, EVEN IF SPECTER OPS HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES._
+
+_Specter Ops makes no representations or warranties with respect to the accuracy or completeness of the contents of this document and reserves the right to make changes to specifications and product/service descriptions at any time without notice._
+
+### Introduction and Architecture
+
+Attack Paths are chains of abusable privileges and user behaviors that create direct and indirect connections between computers and users. They exist due to years of misconfigurations and a lack of visibility into how privileges are applied. Attack Paths cannot be patched through traditional methods because they are misconfigurations, not vulnerabilities.
+
+SpecterOps built BloodHound Enterprise following the principles of [Attack Path Management](https://bloodhoundenterprise.io/what-is-attack-path-management/) (APM). The primary goal of APM is to solve the Attack Path problem directly. APM is a fundamentally different, unique methodology designed to help organizations understand, empirically quantify the impact of, and eliminate Attack Path risks.
+
+### Single-Tenant Architecture Diagram
+
+<Frame>
+  <img src="/assets/image-38.svg"/>
+</Frame>
+Customer Data Residency and Subprocessors
+
+Customers may request that their tenant reside within one of the supported AWS regions below. Existing customers may request migration to an alternate region should residency needs demand.
+
+* **United States**: US-EAST-1 (Northern Virginia)
+* **Canada**: CA-CENTRAL-1 (Montreal)
+* **Europe**: EU-CENTRAL-1 (Frankfurt)
+* **United Kingdom**: EU-WEST-2 (London)
+* **Australia**: AP-SOUTHEAST-2 (Sydney)
+
+Additionally, BloodHound Enterprise utilizes [Pendo](https://pendo.io) to provide in-product tours and behavior monitoring. Customer data is not sent to Pendo. More information on Pendo's data privacy, security policies, and certifications is available [here](https://www.pendo.io/data-privacy-security/).
+
+### AWS Datacenter Security
+
+BloodHound Enterprise is hosted within AWS, which touts a litany of security certifications and is subject to regular audits and certifications. Certifications for AWS include ISO 27001, SOC 1 and 2, etc.
+
+* [AWS Cloud Security Overview](https://aws.amazon.com/security/)
+* [AWS Compliance Programs](https://aws.amazon.com/compliance/programs/)
+* Quick links to frequently requested compliance documentation:
+    * [ISO 27001 Certification](https://d1.awsstatic.com/certifications/iso_27001_global_certification.pdf)
+    * [ISO 27017 Certification](https://d1.awsstatic.com/certifications/iso_27017_certification.pdf)
+    * [SOC 1 / 2 /3 Artifacts](https://aws.amazon.com/compliance/soc-faqs/)
+
+### Customer Data Storage and Separation
+
+#### Separation of Customer Data
+
+BloodHound Enterprise is deployed in a single-tenancy model within AWS. Each customer environment is configured with its own database, API, and UI servers, and data is not commingled between customers.
+
+Each tenant has unique authentication keys defined for authentication between services within the overall system.
+
+#### Data Backup and Retention
+
+Data backup occurs via [Amazon EBS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snapshot-lifecycle.html) and [Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_CommonTasks.BackupRestore.html) backup functionality. All backups are encrypted using the methods listed below in the Customer Data Security section.
+
+All backups are retained for seven (7) days.
+
+#### Customer Data Security
+
+BloodHound Enterprise uses available Amazon encryption functionalities to encrypt all data using AES-256 with an Amazon-managed key. This applies to all servers in the BloodHound Enterprise infrastructure. Backup snapshots utilize the same encryption mechanisms.
+
+AWS security groups isolate all BHE installations. They do not have permission to reach other customer assets.
+
+More information on EBS volume encryption [can be found here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html).
+Information specific to RDS volume encryption [can be found here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Encryption.html).
+
+## Network Communications
+
+### Web Browser and SharpHound/AzureHound connections
+
+BloodHound Enterprise uses a shared AWS Application Load Balancer. The load balancer policy has been set to ELBSecurityPolicy-TLS13-1-2-2021-06. With this policy, BloodHound Enterprise:
+
+* Does not support SSL renegotiation for client or target connections.
+* Does not support custom TLS/cipher policies.
+* Enforces TLS v1.2 minimum.
+
+#### Supported protocols
+
+* TLS v1.3
+* TLS v1.2
+
+#### Supported ciphers
+
+* TLS\_AES\_128\_GCM\_SHA256
+* TLS\_AES\_256\_GCM\_SHA384
+* TLS\_CHACHA20\_POLY1305_SHA256
+* ECDHE-ECDSA-AES128-GCM-SHA256
+* ECDHE-RSA-AES128-GCM-SHA256
+* ECDHE-ECDSA-AES128-SHA256
+* ECDHE-RSA-AES128-SHA256
+* ECDHE-ECDSA-AES256-GCM-SHA384
+* ECDHE-RSA-AES256-GCM-SHA384
+* ECDHE-ECDSA-AES256-SHA384
+* ECDHE-RSA-AES256-SHA384
+
+More information on supported TLS policies [can be found here](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html).
+
+### Certificates
+
+The Amazon certificate authority provides customer-facing TLS certificates. This CA is trusted by all major browsers and operating systems and includes:
+
+* RSA 2048 public key.
+* Automatic renewal on an annual basis.
+* Private keys are never exposed to SpecterOps. Amazon retains full control.
+
+More information about the TLS certificates we use [can be found here](https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html).
+
+## Authentication and Role-Based Access
+
+### Authentication Details
+
+BloodHound Enterprise provides built-in authentication via username and password, with the option to enable TOTP-based multi-factor authentication.
+
+Customers may additionally choose to enable SAML 2.0-based Single Sign-On to control authentication through an external, third-party provider such as Azure AD SAML, ADFS, or Okta. User access and role assignment are controlled within the BloodHound Enterprise product, and both SP- and IDP-initiated authentication flows are supported.
+
+### Local Authentication Specifications
+
+#### Password Expiration and Complexity
+
+All passwords configured locally expire every 90 days.
+
+* Passwords configured via local authentication require:
+* At least 12 characters in length
+* At least one lowercase letter
+* At least one uppercase letter
+* At least one number
+* At least one symbol (One of: !@#$%^&*)
+
+#### Brute Force Resistance
+
+Although BloodHound Enterprise does not lock a user out from attempted brute forcing, API calls against the BloodHound Enterprise authentication API are limited to one call per two seconds, making a successful brute force attack impossible before a password rotation occurs.
+
+All other API endpoints are limited to 55 calls per second.
+
+#### Password Hashing
+
+All passwords are hashed utilizing the Argon2id key derivation function with a unique 16-byte salt length per Argon2id recommendations. For more information on Argon2, see [here](https://datatracker.ietf.org/doc/html/rfc9106).
+
+#### Session Expiration
+
+User-interface sessions expire after eight (8) hours.
+
+#### Role-Based Access Control
+
+[BloodHound Enterprise User Roles](/manage-bloodhound/auth/users-and-roles)
+
+## Third-Party Assessments and Certifications
+### Penetration Testing
+
+BloodHound Enterprise undergoes annual penetration tests at a minimum.
+
+Results from these tests can be made available upon request under NDA. All critical-, high-, and medium-risk findings have been remediated.
+
+### Certification
+
+BloodHound Enterprise is included in the scope for the following certifications held by SpecterOps:
+
+* ISO/IEC 27001:2013 – Valid until April 15, 2026
+* ISO/IEC 27017:2015 – Valid until April 15, 2026
+* SOC 2 Type I - Certified June 12, 2023
+* SOC 2 Type II - Certified October 5, 2023
+
+## Patching
+
+Operating system security patches are fetched daily and applied automatically. The rest of the BloodHound Enterprise infrastructure utilizes Amazon-provided services, and Amazon performs security patching automatically.
+
+We follow security mailing lists, RSS feeds, etc., and periodically review for CVEs in supporting software we use in BHE environments.
+
+## Access to Data
+
+Only the BloodHound Enterprise infrastructure engineers maintain persistent access to BHE environments. All SpecterOps employees must pass criminal background checks as a condition of employment.
+
+In some instances, select developers are provided temporary access to systems for debugging purposes. This activity is monitored and logged. Access is revoked at the end of the event.
+
+## Logging and Monitoring
+
+BloodHound Enterprise captures login and administrative actions within an Audit log that includes the following information:
+
+* Who attempted the action (user ID, user name, email)
+* What action was attempted
+* The status of the action (intent/success/failure)
+* When it occurred
+* Source IP(s) associated with the request
+
+This information is available from the API of a running BloodHound Enterprise environment.
+
+## Data Collection Overview
+
+For SharpHound, see [SharpHound Data Collection and Permissions](/collect-data/enterprise-collection/permissions).
+
+For AzureHound, see [AzureHound Enterprise System Requirements and Deployment Process](/install-data-collector/install-azurehound/system-requirements).
+

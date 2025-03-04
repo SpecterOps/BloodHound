@@ -1,0 +1,23 @@
+---
+title: AZGlobalAdmin
+description: "This edge indicates the principal has the Global Admin role active against the target tenant. In other words, the principal is a Global Admin. Global Admins can do almost anything against almost every object type in the tenant, this is the highest privilege role in Azure."
+---
+<Frame>
+  <img src="/assets/image-2-1.png"/>
+</Frame>
+
+## Abuse Info
+
+As a Global Admin, you can change passwords, run commands on VMs, read key vault secrets, activate roles for other users, etc.
+
+For Global Admin to be able to abuse Azure resources, you must first grant yourself the ‘User Access Administrator’ role in Azure RBAC. This is done through a toggle button in the portal, or via the PowerZure function Set-AzureElevatedPrivileges.
+
+Once that role is applied to account, you can then add yourself as an Owner to all subscriptions in the tenant
+
+## Opsec Considerations
+
+This depends on exactly what you do, but in general Azure will log each abuse action.
+
+## References
+
+* [https://blog.netspi.com/attacking-azure-cloud-shell/](https://blog.netspi.com/attacking-azure-cloud-shell/)
