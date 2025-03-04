@@ -14,16 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useNotifications } from '../../../providers/NotificationProvider/hooks';
+import { FlatGraphResponse } from 'js-client-library';
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
 import { ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
 
 // Temporary example code. To be fully implemented in BED-5445
-export const nodeSearchGraphQuery = (
-    addNotification: ReturnType<typeof useNotifications>['addNotification'],
-    paramOptions: Partial<ExploreQueryParams>
-): ExploreGraphQueryOptions => {
+export const nodeSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { searchType, primarySearch } = paramOptions;
     if (!primarySearch || !searchType) {
         return {
@@ -34,8 +31,9 @@ export const nodeSearchGraphQuery = (
     return {
         queryKey: [ExploreGraphQueryKey, searchType, primarySearch],
         queryFn: ({ signal }) =>
-            apiClient.getSearchResult(primarySearch, 'exact', { signal }).then((res) => res.data.data),
-        onError: () => addNotification('Something special', 'someother key'),
+            apiClient
+                .getSearchResult(primarySearch, 'exact', { signal })
+                .then((res) => res.data.data as FlatGraphResponse),
         enabled: !!(searchType && primarySearch),
     };
 };
