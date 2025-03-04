@@ -69,8 +69,11 @@ func TestRateLimitMiddleware(t *testing.T) {
 func TestDefaultRateLimitMiddleware(t *testing.T) {
 	testHandler := &CountingHandler{}
 
+	cfg, err := config.NewDefaultConfiguration()
+	require.Nil(t, err)
+
 	router := mux.NewRouter()
-	router.Use(middleware.DefaultRateLimitMiddleware())
+	router.Use(middleware.DefaultRateLimitMiddleware(cfg))
 	router.Handle("/teapot", testHandler)
 
 	if req, err := http.NewRequest("GET", "/teapot", nil); err != nil {
