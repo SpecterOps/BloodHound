@@ -21,6 +21,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -59,6 +60,33 @@ const (
 	samlProviderPathFmt     = "/api/v2/saml/providers/%d"
 	updateUserSecretPathFmt = "/api/v2/auth/users/%s/secret"
 )
+
+func createAdminUser(t *testing.T) (model.User, context.Context) {
+	admin := model.User{
+		FirstName:     null.String{NullString: sql.NullString{String: "Admin", Valid: true}},
+		LastName:      null.String{NullString: sql.NullString{String: "User", Valid: true}},
+		EmailAddress:  null.String{NullString: sql.NullString{String: "admin@gmail.com", Valid: true}},
+		PrincipalName: "AdminUser",
+		AuthSecret:    defaultDigestAuthSecret(t, "adminpassword"),
+	}
+
+	adminContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	bhCtx := ctx.Get(adminContext)
+	bhCtx.AuthCtx.Owner = admin
+	bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
+		Enabled: true,
+		Permissions: model.Permissions{
+			authz.Permissions().AuthManageUsers,
+		},
+	}
+	return admin, adminContext
+}
+
+func createRouter(endpointUrl string, handlerFunc http.HandlerFunc, methods ...string) *mux.Router {
+	router := mux.NewRouter()
+	router.HandleFunc(endpointUrl, handlerFunc).Methods(methods...)
+	return router
+}
 
 func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 	var (
@@ -3136,4 +3164,65 @@ func TestActivateMFA_Success(t *testing.T) {
 		require.Equal(t, rr.Code, http.StatusOK)
 		require.Contains(t, rr.Body.String(), auth.MFAActivated)
 	}
+}
+
+func TestManagementResource_CreateAuthToken(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	const endpointUrl = "/api/v2/tokens"
+
+	var (
+		resources, mockDB  = apitest.NewAuthManagementResource(mockCtrl)
+		createUserTokenReq = v2.CreateUserToken{
+			TokenName: "",
+			UserID:    "",
+		}
+		_, adminCtx = createAdminUser(t)
+		router      = createRouter(endpointUrl, resources.CreateAuthToken, "POST")
+	)
+
+	t.Run("User not logged in", func(tc *testing.T) {
+		if req, err := http.NewRequest("POST", endpointUrl, bytes.NewReader([]byte("{}"))); err != nil {
+			tc.Fatal(err)
+		} else {
+			rec := httptest.NewRecorder()
+			router.ServeHTTP(rec, req)
+			require.Equal(tc, http.StatusInternalServerError, rec.Code)
+		}
+	})
+
+	t.Run("Request invalid", func(tc *testing.T) {
+		if req, err := http.NewRequestWithContext(adminCtx, "POST", endpointUrl, bytes.NewReader([]byte("{"))); err != nil {
+			tc.Fatal(err)
+		} else {
+			rec := httptest.NewRecorder()
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+			router.ServeHTTP(rec, req)
+			require.Equal(tc, http.StatusBadRequest, rec.Code)
+		}
+	})
+
+	t.Run("User lookup failed", func(tc *testing.T) {
+		if b, err := json.Marshal(createUserTokenReq); err != nil {
+			tc.Fatal(err)
+		} else if req, err := http.NewRequestWithContext(adminCtx, "POST", endpointUrl, bytes.NewReader(b)); err != nil {
+			tc.Fatal(err)
+		} else {
+			rec := httptest.NewRecorder()
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+			mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, errors.New("user not found"))
+
+			router.ServeHTTP(rec, req)
+			require.Equal(tc, http.StatusInternalServerError, rec.Code)
+		}
+	})
+
+	t.Run("User not allowed to create token", func(tc *testing.T) {})
+
+	t.Run("Failed to create token", func(tc *testing.T) {})
+
+	t.Run("Failed to store token", func(tc *testing.T) {})
+
+	t.Run("Success", func(tc *testing.T) {})
 }
