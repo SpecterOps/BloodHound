@@ -17,91 +17,21 @@
 package translate
 
 import (
-	"fmt"
-
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
-func (s *Translator) buildDirectionalTraversalPatternRoot(leftNodeConstraints, edgeConstraints, rightNodeConstraints pgsql.Expression, traversalStep *PatternSegment, direction graph.Direction) (pgsql.Select, error) {
+func (s *Translator) buildDirectionlessTraversalPatternRoot(traversalStep *PatternSegment) (pgsql.Query, error) {
 	nextSelect := pgsql.Select{
 		Projection: traversalStep.Projection,
-	}
-	nextSelect.Where = edgeConstraints
-	nextSelect.From = append(nextSelect.From, pgsql.FromClause{
-		Source: pgsql.TableReference{
-			Name:    pgsql.CompoundIdentifier{pgsql.TableEdge},
-			Binding: models.ValueOptional(traversalStep.Edge.Identifier),
-		},
-		Joins: []pgsql.Join{{
-			Table: pgsql.TableReference{
-				Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
-				Binding: models.ValueOptional(traversalStep.LeftNode.Identifier),
-			},
-			JoinOperator: pgsql.JoinOperator{
-				JoinType:   pgsql.JoinTypeInner,
-				Constraint: leftNodeConstraints,
-			},
-		}, {
-			Table: pgsql.TableReference{
-				Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
-				Binding: models.ValueOptional(traversalStep.RightNode.Identifier),
-			},
-			JoinOperator: pgsql.JoinOperator{
-				JoinType:   pgsql.JoinTypeInner,
-				Constraint: rightNodeConstraints,
-			},
-		}},
-	})
-	return nextSelect, nil
-}
-
-func (s *Translator) buildDirectionlessTraversalPatternRoot(part *PatternPart, traversalStep *PatternSegment) (pgsql.Query, error) {
-	directionalSelect := pgsql.Select{
-		Projection: traversalStep.Projection,
+		Where:      traversalStep.EdgeConstraints.Expression,
 	}
 
-	if traversalStep.Frame.Previous != nil {
-		directionalSelect.From = append(directionalSelect.From, pgsql.FromClause{
-			Source: pgsql.TableReference{
-				Name: pgsql.CompoundIdentifier{traversalStep.Frame.Previous.Binding.Identifier},
-			},
-		})
-	}
-
-	switch traversalStep.Direction {
-	case graph.DirectionInbound, graph.DirectionOutbound:
-		nextSelect, err := s.buildDirectionalTraversalPatternRoot(traversalStep.LeftNodeJoinCondition, traversalStep.EdgeConstraints.Expression, traversalStep.RightNodeJoinCondition, traversalStep, traversalStep.Direction)
-
-		return pgsql.Query{
-			Body: nextSelect,
-		}, err
-
-	case graph.DirectionBoth:
-		nextSelect, err := s.buildDirectionalTraversalPatternRoot(traversalStep.LeftNodeJoinCondition, traversalStep.EdgeConstraints.Expression, traversalStep.RightNodeJoinCondition, traversalStep, graph.DirectionOutbound)
-
-		return pgsql.Query{
-			Body: nextSelect,
-		}, err
-	}
-
-	return pgsql.Query{}, fmt.Errorf("unsupported")
-}
-
-func (s *Translator) buildTraversalPatternRoot(partFrame *Frame, part *PatternPart, traversalStep *PatternSegment) (pgsql.Query, error) {
-	if traversalStep.Direction == graph.DirectionBoth {
-		return s.buildDirectionlessTraversalPatternRoot(part, traversalStep)
-	}
-
-	nextSelect := pgsql.Select{
-		Projection: traversalStep.Projection,
-	}
-
-	if partFrame.Previous != nil {
+	if previousFrame, hasPrevious := previousValidFrame(s.query, traversalStep.Frame); hasPrevious {
 		nextSelect.From = append(nextSelect.From, pgsql.FromClause{
 			Source: pgsql.TableReference{
-				Name: pgsql.CompoundIdentifier{partFrame.Previous.Binding.Identifier},
+				Name: pgsql.CompoundIdentifier{previousFrame.Binding.Identifier},
 			},
 		})
 	}
@@ -131,6 +61,81 @@ func (s *Translator) buildTraversalPatternRoot(partFrame *Frame, part *PatternPa
 			},
 		}},
 	})
+
+	return pgsql.Query{
+		Body: nextSelect,
+	}, nil
+}
+
+func (s *Translator) buildTraversalPatternRoot(partFrame *Frame, part *PatternPart, traversalStep *PatternSegment) (pgsql.Query, error) {
+	if traversalStep.Direction == graph.DirectionBoth {
+		return s.buildDirectionlessTraversalPatternRoot(traversalStep)
+	}
+
+	nextSelect := pgsql.Select{
+		Projection: traversalStep.Projection,
+	}
+
+	if traversalStep.LeftNodeBound {
+		nextSelect.From = append(nextSelect.From, pgsql.FromClause{
+			Source: pgsql.TableReference{
+				Name: pgsql.CompoundIdentifier{partFrame.Previous.Binding.Identifier},
+			},
+			Joins: []pgsql.Join{{
+				Table: pgsql.TableReference{
+					Name:    pgsql.CompoundIdentifier{pgsql.TableEdge},
+					Binding: models.ValueOptional(traversalStep.Edge.Identifier),
+				},
+				JoinOperator: pgsql.JoinOperator{
+					JoinType:   pgsql.JoinTypeInner,
+					Constraint: traversalStep.LeftNodeJoinCondition,
+				},
+			}, {
+				Table: pgsql.TableReference{
+					Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
+					Binding: models.ValueOptional(traversalStep.RightNode.Identifier),
+				},
+				JoinOperator: pgsql.JoinOperator{
+					JoinType:   pgsql.JoinTypeInner,
+					Constraint: traversalStep.RightNodeJoinCondition,
+				},
+			}},
+		})
+	} else {
+		if previousFrame, hasPrevious := previousValidFrame(s.query, traversalStep.Frame); hasPrevious {
+			nextSelect.From = append(nextSelect.From, pgsql.FromClause{
+				Source: pgsql.TableReference{
+					Name: pgsql.CompoundIdentifier{previousFrame.Binding.Identifier},
+				},
+			})
+		}
+
+		nextSelect.From = append(nextSelect.From, pgsql.FromClause{
+			Source: pgsql.TableReference{
+				Name:    pgsql.CompoundIdentifier{pgsql.TableEdge},
+				Binding: models.ValueOptional(traversalStep.Edge.Identifier),
+			},
+			Joins: []pgsql.Join{{
+				Table: pgsql.TableReference{
+					Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
+					Binding: models.ValueOptional(traversalStep.LeftNode.Identifier),
+				},
+				JoinOperator: pgsql.JoinOperator{
+					JoinType:   pgsql.JoinTypeInner,
+					Constraint: traversalStep.LeftNodeJoinCondition,
+				},
+			}, {
+				Table: pgsql.TableReference{
+					Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
+					Binding: models.ValueOptional(traversalStep.RightNode.Identifier),
+				},
+				JoinOperator: pgsql.JoinOperator{
+					JoinType:   pgsql.JoinTypeInner,
+					Constraint: traversalStep.RightNodeJoinCondition,
+				},
+			}},
+		})
+	}
 
 	// Append all constraints to the where clause
 	nextSelect.Where = pgsql.OptionalAnd(traversalStep.LeftNodeConstraints, nextSelect.Where)

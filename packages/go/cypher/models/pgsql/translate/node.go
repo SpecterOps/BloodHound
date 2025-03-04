@@ -138,22 +138,6 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 	return nil
 }
 
-func consumeConstraintsFrom(visible *pgsql.IdentifierSet, trackers ...*ConstraintTracker) (*Constraint, error) {
-	constraint := &Constraint{
-		Dependencies: pgsql.NewIdentifierSet(),
-	}
-
-	for _, constraintTracker := range trackers {
-		if trackedConstraint, err := constraintTracker.ConsumeSet(visible); err != nil {
-			return nil, err
-		} else if err := constraint.Merge(trackedConstraint); err != nil {
-			return nil, err
-		}
-	}
-
-	return constraint, nil
-}
-
 func (s *Translator) buildNodePattern(part *PatternPart) error {
 	var (
 		partFrame  = part.NodeSelect.Frame
@@ -161,10 +145,10 @@ func (s *Translator) buildNodePattern(part *PatternPart) error {
 	)
 
 	// The current query part may not have a frame associated with it if is a single part query component
-	if partFrame.Previous != nil && (s.query.CurrentPart().Frame == nil || partFrame.Previous.Binding.Identifier != s.query.CurrentPart().Frame.Binding.Identifier) {
+	if previousFrame, hasPrevious := previousValidFrame(s.query, partFrame); hasPrevious {
 		nextSelect.From = append(nextSelect.From, pgsql.FromClause{
 			Source: pgsql.TableReference{
-				Name: pgsql.CompoundIdentifier{partFrame.Previous.Binding.Identifier},
+				Name: pgsql.CompoundIdentifier{previousFrame.Binding.Identifier},
 			},
 		})
 	}

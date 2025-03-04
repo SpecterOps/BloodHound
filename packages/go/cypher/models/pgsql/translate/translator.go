@@ -423,7 +423,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		}
 
 	case *cypher.MultiPartQueryPart:
-		if err := s.translateMultiPartQueryPart(s.query.Scope, typedExpression); err != nil {
+		if err := s.translateMultiPartQueryPart(); err != nil {
 			s.SetError(err)
 		}
 
