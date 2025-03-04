@@ -1,0 +1,52 @@
+package internal
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/graphschema/ad"
+)
+
+func errorReadDomainSIDandNameAsString(message string) error {
+	return fmt.Errorf("failed to read domain SID and name: %s", message)
+}
+
+func ReadDomainIDandNameAsString(nodeToRead *graph.Node) (string, string, error) {
+	var domainSIDStr, domainNameStr string
+	var err error
+
+	returnFunc := func(errMsg string) (string, string, error) {
+		return domainSIDStr, domainNameStr, errorReadDomainSIDandNameAsString(errMsg)
+	}
+
+	if nodeToRead == nil {
+		return returnFunc("given nodeToRead is nil")
+	}
+
+	if domainSID := nodeToRead.Properties.Get(ad.DomainSID.String()); domainSID.IsNil() {
+		return returnFunc("read domain SID property value is nil")
+	} else {
+		if domainSIDStr, err = domainSID.String(); err != nil {
+			return returnFunc(err.Error())
+		} else {
+			if len(strings.TrimSpace(domainSIDStr)) == 0 {
+				return returnFunc("read domain SID is empty or blank")
+			}
+		}
+	}
+
+	if domainName := nodeToRead.Properties.Get(ad.DomainSID.String()); domainName.IsNil() {
+		return returnFunc("read domain name property value is nil")
+	} else {
+		if domainNameStr, err = domainName.String(); err != nil {
+			return returnFunc(err.Error())
+		} else {
+			if len(strings.TrimSpace(domainNameStr)) == 0 {
+				return returnFunc("read domain name is empty or blank")
+			}
+		}
+	}
+
+	return domainSIDStr, domainNameStr, nil
+}
