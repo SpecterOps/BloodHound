@@ -15,17 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery } from 'react-query';
-import { useNotifications } from '../../providers/NotificationProvider/hooks';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams/useExploreParams';
 import { ExploreGraphQueryOptions, nodeSearchGraphQuery } from './queries';
 
-export function getExploreGraphQuery(
-    addNotification: ReturnType<typeof useNotifications>['addNotification'],
-    paramOptions: Partial<ExploreQueryParams>
-): ExploreGraphQueryOptions {
+export function getExploreGraphQuery(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions {
     switch (paramOptions.searchType) {
         case 'node':
-            return nodeSearchGraphQuery(addNotification, paramOptions);
+            return nodeSearchGraphQuery(paramOptions);
         case 'pathfinding':
             return {};
         case 'cypher':
@@ -42,11 +38,9 @@ export function getExploreGraphQuery(
 
 // Consumer of query params example
 export const useExploreGraph = <T,>() => {
-    const { addNotification } = useNotifications();
-
     const params = useExploreParams();
 
-    const queryConfig = getExploreGraphQuery(addNotification, params);
+    const queryConfig = getExploreGraphQuery(params);
 
     const { data, isLoading, isError } = useQuery(queryConfig);
 
