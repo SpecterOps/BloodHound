@@ -18,22 +18,32 @@ package translate
 
 import (
 	"errors"
+
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
 
 func (s *Translator) buildInlineProjection(part *QueryPart) (pgsql.Select, error) {
-	var sqlSelect pgsql.Select
-
-	if part.projections.Frame != nil {
-		sqlSelect.From = []pgsql.FromClause{{
-			Source: part.projections.Frame.Binding.Identifier,
-		}}
+	sqlSelect := pgsql.Select{
+		Where: part.projections.Constraints,
 	}
 
-	if projectionConstraint, err := s.treeTranslator.ConsumeAll(); err != nil {
-		return sqlSelect, err
-	} else {
-		sqlSelect.Where = projectionConstraint.Expression
+	// If there's a projection frame set, some additional negotiation is required to identify which frame the
+	// from-statement should be written to. Some of this would be better figured out during the translation
+	// of the projection where query scope and other components are not yet fully translated.
+	if part.projections.Frame != nil {
+		// Look up to see if there are CTE expressions registered. If there are then it is likely
+		// there was a projection between this CTE and the previous multipart query part
+		hasCTEs := part.Model.CommonTableExpressions != nil && len(part.Model.CommonTableExpressions.Expressions) > 0
+
+		if part.Frame.Previous == nil || hasCTEs {
+			sqlSelect.From = []pgsql.FromClause{{
+				Source: part.projections.Frame.Binding.Identifier,
+			}}
+		} else {
+			sqlSelect.From = []pgsql.FromClause{{
+				Source: part.Frame.Previous.Binding.Identifier,
+			}}
+		}
 	}
 
 	for _, projection := range part.projections.Items {
@@ -161,7 +171,7 @@ func (s *Translator) translateTraversalPatternPart(part *PatternPart, isolatedPr
 }
 
 func (s *Translator) translateTraversalPatternPartWithoutExpansion(isFirstTraversalStep bool, traversalStep *PatternSegment) error {
-	if constraints, err := s.patternConstraints(isFirstTraversalStep, nonRecursivePattern, traversalStep); err != nil {
+	if constraints, err := consumePatternConstraints(isFirstTraversalStep, nonRecursivePattern, traversalStep, s.treeTranslator.IdentifierConstraints); err != nil {
 		return err
 	} else {
 		if isFirstTraversalStep {
@@ -237,7 +247,7 @@ func (s *Translator) translateTraversalPatternPartWithoutExpansion(isFirstTraver
 	} else {
 		// Zip through all projected identifiers and update their last projected frame
 		for _, binding := range boundProjections.Bindings {
-			binding.LastProjection = traversalStep.Frame
+			binding.MaterializedBy(traversalStep.Frame)
 		}
 
 		traversalStep.Projection = boundProjections.Items
@@ -246,94 +256,8 @@ func (s *Translator) translateTraversalPatternPartWithoutExpansion(isFirstTraver
 	return nil
 }
 
-type PatternConstraints struct {
-	LeftNode  *Constraint
-	Edge      *Constraint
-	RightNode *Constraint
-}
-
-// OptimizePatternConstraintBalance considers the constraints that apply to a pattern segment's bound identifiers.
-//
-// If only the right side of the pattern segment is constrained, this could result in an imbalanced expansion where one side
-// of the traversal has an extreme disparity in search space.
-//
-// In cases that match this heuristic, it's beneficial to begin the traversal with the most tightly constrained set
-// of nodes. To accomplish this we flip the order of the traversal step.
-func (s *PatternConstraints) OptimizePatternConstraintBalance(traversalStep *PatternSegment) {
-	var (
-		// If the left node is previously bound (query knows a set of IDs) the left node is considered to sill be constrained
-		leftNodeHasConstraints  = traversalStep.LeftNodeBound || s.LeftNode.Expression != nil
-		rightNodeHasConstraints = s.RightNode.Expression != nil
-	)
-
-	// (a)-[*..]->(b:Constraint)
-	// (a)<-[*..]-(b:Constraint)
-	if !leftNodeHasConstraints && rightNodeHasConstraints {
-		traversalStep.FlipNodes()
-		s.FlipNodes()
-	}
-}
-
-func (s *PatternConstraints) FlipNodes() {
-	oldLeftNode := s.LeftNode
-	s.LeftNode = s.RightNode
-	s.RightNode = oldLeftNode
-}
-
-const (
-	recursivePattern    = true
-	nonRecursivePattern = false
-)
-
-func (s *Translator) patternConstraints(isFirstTraversalStep, isRecursivePattern bool, traversalStep *PatternSegment) (PatternConstraints, error) {
-	var (
-		constraints PatternConstraints
-		err         error
-	)
-
-	// Even if this isn't the first traversal and the node may be already bound, this should result in an empty
-	// constraint instead of a nil value for `leftNode`
-	if constraints.LeftNode, err = consumeConstraintsFrom(pgsql.AsIdentifierSet(traversalStep.LeftNode.Identifier), s.treeTranslator.IdentifierConstraints); err != nil {
-		return constraints, err
-	}
-
-	if isFirstTraversalStep {
-		// If this is the first traversal step then the left node is just coming into scope
-		traversalStep.Frame.Export(traversalStep.LeftNode.Identifier)
-	}
-
-	// Track the identifiers visible at this frame to correctly assign the remaining constraints
-	knownBindings := traversalStep.Frame.Known()
-
-	if isRecursivePattern {
-		// The exclusion below is done at this step in the process since the recursive descent portion of an expansion
-		// will no longer have a reference to the root node; any dependent interaction between the root and terminal
-		// nodes would require an additional join. By not consuming the remaining constraints for the root and terminal
-		// nodes, they become visible up in the outer select of the recursive CTE.
-		knownBindings.Remove(traversalStep.LeftNode.Identifier)
-	}
-
-	// Export the edge identifier first
-	traversalStep.Frame.Export(traversalStep.Edge.Identifier)
-	knownBindings.Add(traversalStep.Edge.Identifier)
-
-	if constraints.Edge, err = consumeConstraintsFrom(knownBindings, s.treeTranslator.IdentifierConstraints); err != nil {
-		return constraints, err
-	}
-
-	// Export the right node identifier last
-	traversalStep.Frame.Export(traversalStep.RightNode.Identifier)
-	knownBindings.Add(traversalStep.RightNode.Identifier)
-
-	if constraints.RightNode, err = consumeConstraintsFrom(knownBindings, s.treeTranslator.IdentifierConstraints); err != nil {
-		return constraints, err
-	}
-
-	return constraints, nil
-}
-
 func (s *Translator) translateTraversalPatternPartWithExpansion(isFirstTraversalStep bool, traversalStep *PatternSegment) error {
-	if constraints, err := s.patternConstraints(isFirstTraversalStep, recursivePattern, traversalStep); err != nil {
+	if constraints, err := consumePatternConstraints(isFirstTraversalStep, recursivePattern, traversalStep, s.treeTranslator.IdentifierConstraints); err != nil {
 		return err
 	} else {
 		// If one side of the expansion has constraints but the other does not this may be an opportunity to reorder the traversal
@@ -392,15 +316,15 @@ func (s *Translator) translateTraversalPatternPartWithExpansion(isFirstTraversal
 		traversalStep.Expansion.Value.RecursiveConstraints = pgsql.OptionalAnd(traversalStep.Expansion.Value.ExpansionEdgeConstraints, expansionConstraints(expansionFrame.Binding.Identifier, traversalStep.Expansion.Value.MinDepth, traversalStep.Expansion.Value.MaxDepth))
 
 		// Remove the previous projections of the root and terminal node to reproject them after expansion
-		traversalStep.LeftNode.LastProjection = nil
-		traversalStep.RightNode.LastProjection = nil
+		traversalStep.LeftNode.Dematerialize()
+		traversalStep.RightNode.Dematerialize()
 
 		if boundProjections, err := buildVisibleProjections(s.query.Scope); err != nil {
 			return err
 		} else {
 			// Zip through all projected identifiers and update their last projected frame
 			for _, binding := range boundProjections.Bindings {
-				binding.LastProjection = expansionFrame
+				binding.MaterializedBy(expansionFrame)
 			}
 
 			traversalStep.Expansion.Value.Projection = boundProjections.Items
@@ -416,7 +340,7 @@ func (s *Translator) translateTraversalPatternPartWithExpansion(isFirstTraversal
 	} else {
 		// Zip through all projected identifiers and update their last projected frame
 		for _, binding := range boundProjections.Bindings {
-			binding.LastProjection = traversalStep.Frame
+			binding.MaterializedBy(traversalStep.Frame)
 		}
 
 		traversalStep.Projection = boundProjections.Items
@@ -433,7 +357,7 @@ func (s *Translator) translateNonTraversalPatternPart(part *PatternPart) error {
 
 		nextFrame.Export(part.NodeSelect.Binding.Identifier)
 
-		if constraint, err := consumeConstraintsFrom(nextFrame.Known(), s.treeTranslator.IdentifierConstraints); err != nil {
+		if constraint, err := s.treeTranslator.IdentifierConstraints.ConsumeSet(nextFrame.Known()); err != nil {
 			return err
 		} else if err := RewriteFrameBindings(s.query.Scope, constraint.Expression); err != nil {
 			return err
@@ -446,7 +370,7 @@ func (s *Translator) translateNonTraversalPatternPart(part *PatternPart) error {
 		} else {
 			// Zip through all projected identifiers and update their last projected frame
 			for _, binding := range boundProjections.Bindings {
-				binding.LastProjection = nextFrame
+				binding.MaterializedBy(nextFrame)
 			}
 
 			part.NodeSelect.Select.Projection = boundProjections.Items
