@@ -1180,7 +1180,7 @@ func (s Query) NodeType() string {
 	return "query"
 }
 
-func BinaryExpressionJoin(optional Expression, operator Operator, conjoined Expression) Expression {
+func OptionalBinaryExpressionJoin(optional Expression, operator Operator, conjoined Expression) Expression {
 	if optional == nil {
 		return conjoined
 	}
@@ -1192,6 +1192,12 @@ func BinaryExpressionJoin(optional Expression, operator Operator, conjoined Expr
 	)
 }
 
-func OptionalAnd(optional Expression, conjoined Expression) Expression {
-	return BinaryExpressionJoin(optional, OperatorAnd, conjoined)
+func OptionalAnd(leftOperand Expression, rightOperand Expression) Expression {
+	if leftOperand == nil {
+		return rightOperand
+	} else if rightOperand == nil {
+		return leftOperand
+	}
+
+	return NewBinaryExpression(leftOperand, OperatorAnd, rightOperand)
 }

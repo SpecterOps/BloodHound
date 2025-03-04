@@ -39,7 +39,6 @@ const (
 	ColumnKindID     Identifier = "kind_id"
 	ColumnGraphID    Identifier = "graph_id"
 	ColumnStartID    Identifier = "start_id"
-	ColumnNextID     Identifier = "next_id"
 	ColumnEndID      Identifier = "end_id"
 )
 

@@ -318,7 +318,7 @@ func createOrUpdateWellKnownLink(tx graph.Transaction, startNode *graph.Node, en
 
 // CalculateCrossProductNodeSets finds the intersection of the given sets of nodes.
 // See CalculateCrossProductNodeSetsDoc.md for explaination of the specialGroups (Authenticated Users and Everyone) and why we treat them the way we do
-func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, groupExpansions impact.PathAggregator, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
+func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.PathAggregator, nodeSlices ...[]*graph.Node) cardinality.Duplex[uint64] {
 	if len(nodeSlices) < 2 {
 		slog.Error("Cross products require at least 2 nodesets")
 		return cardinality.NewBitmap64()
@@ -341,7 +341,7 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, domainsid string, group
 	)
 
 	// Get the IDs of the Auth. Users and Everyone groups
-	specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx, domainsid)
+	specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx)
 
 	if err != nil {
 		slog.Error(fmt.Sprintf("Could not fetch groups: %s", err.Error()))
@@ -492,10 +492,34 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 			pathSet, err = GetADCSESC10EdgeComposition(ctx, db, edge)
 		case ad.ADCSESC13:
 			pathSet, err = GetADCSESC13EdgeComposition(ctx, db, edge)
+		case ad.CoerceAndRelayNTLMToSMB:
+			pathSet, err = GetCoerceAndRelayNTLMtoSMBComposition(ctx, db, edge)
+		case ad.CoerceAndRelayNTLMToADCS:
+			pathSet, err = GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, db, edge)
 		}
 		return err
 	}); err != nil {
 		return graph.NewPathSet(), err
 	}
 	return pathSet, nil
+}
+
+func GetRelayTargets(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
+	var (
+		err     error
+		nodeSet = graph.NewNodeSet()
+	)
+
+	if err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		switch edge.Kind {
+		case ad.CoerceAndRelayNTLMToLDAP:
+			nodeSet, err = GetVulnerableDomainControllersForRelayNTLMtoLDAP(ctx, db, edge)
+		case ad.CoerceAndRelayNTLMToLDAPS:
+			nodeSet, err = GetVulnerableDomainControllersForRelayNTLMtoLDAPS(ctx, db, edge)
+		}
+		return err
+	}); err != nil {
+		return graph.NewNodeSet(), err
+	}
+	return nodeSet, nil
 }
