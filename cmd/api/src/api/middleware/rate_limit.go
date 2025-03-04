@@ -52,7 +52,6 @@ func RateLimitMiddleware(cfg config.Configuration, limiter *limiter.Limiter) mux
 			if cfg.TrustedProxies == 0 {
 				return remoteIP
 			} else if xff := r.Header.Get("X-Forwarded-For"); xff == "" {
-				slog.WarnContext(r.Context(), "Expected data in X-Forwarded-For header")
 				return remoteIP
 			} else {
 				ips := strings.Split(xff, ",")
@@ -91,7 +90,7 @@ func RemoveRateLimitHeadersMiddleware(next http.Handler) http.Handler {
 // Usage:
 //
 //	router.Use(DefaultRateLimitMiddleware())
-func DefaultRateLimitMiddleware() mux.MiddlewareFunc {
+func DefaultRateLimitMiddleware(cfg config.Configuration) mux.MiddlewareFunc {
 	rate := limiter.Rate{
 		Period: 1 * time.Second,
 		Limit:  DefaultRateLimit,
@@ -100,11 +99,6 @@ func DefaultRateLimitMiddleware() mux.MiddlewareFunc {
 	store := memory.NewStore()
 
 	instance := limiter.New(store, rate)
-
-	cfg, err := config.NewDefaultConfiguration()
-	if err != nil {
-		slog.Error(fmt.Sprintf("Failed to create default configuration: %v", err))
-	}
 
 	return RateLimitMiddleware(cfg, instance)
 }

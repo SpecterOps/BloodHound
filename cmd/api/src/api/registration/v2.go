@@ -18,7 +18,6 @@ package registration
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 	"time"
 
@@ -31,7 +30,6 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	authapi "github.com/specterops/bloodhound/src/api/v2/auth"
 	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
@@ -53,18 +51,15 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 
 		instance := limiter.New(store, rate)
 
-		cfg, err := config.NewDefaultConfiguration()
-		if err != nil {
-			slog.Error(fmt.Sprintf("Failed to create default configuration: %v", err))
-		}
-
-		return middleware.RateLimitMiddleware(cfg, instance)
+		return middleware.RateLimitMiddleware(resources.Config, instance)
 	},
 		// Login resource
 		routerInst.POST("/api/v2/login", loginResource.Login),
 	)
 
-	router.With(middleware.DefaultRateLimitMiddleware,
+	router.With(func() mux.MiddlewareFunc {
+		return middleware.DefaultRateLimitMiddleware(resources.Config)
+	},
 		// Login resources
 		routerInst.GET("/api/v2/self", managementResource.GetSelf),
 		routerInst.POST("/api/v2/logout", loginResource.Logout),
@@ -143,7 +138,9 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessFileUpload).RequirePermissions(permissions.GraphDBIngest)
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
 
-	router.With(middleware.DefaultRateLimitMiddleware,
+	router.With(func() mux.MiddlewareFunc {
+		return middleware.DefaultRateLimitMiddleware(resources.Config)
+	},
 		// Version API
 		routerInst.GET("/api/version", v2.GetVersion).RequireAuth(),
 
