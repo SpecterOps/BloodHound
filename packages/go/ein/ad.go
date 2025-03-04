@@ -56,7 +56,28 @@ func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
 	}
 }
 
-func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
+func ConvertEnterpriseCAToNode(item EnterpriseCA) IngestibleNode {
+	itemProps := item.Properties
+	if itemProps == nil {
+		itemProps = make(map[string]any)
+	}
+
+	convertOwnsEdgeToProperty(item.IngestBase, itemProps)
+	endpoints := make([]map[string]any, 0)
+
+	for _, endpoint := range item.HttpEnrollmentEndpoints {
+
+	}
+}
+
+type Test struct {
+	url   string
+	https bool
+	http  bool
+	epa   bool
+}
+
+func ConvertComputerToNode(item Computer) IngestibleNode {
 	itemProps := item.Properties
 	if itemProps == nil {
 		itemProps = make(map[string]any)
@@ -72,7 +93,7 @@ func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
 		itemProps[ad.SMBSigning.String()] = item.SmbInfo.SigningEnabled
 	}
 
-	if item.RegistryData.Collected {
+	if item.NTLMRegistryData.Collected {
 		/*
 			RestrictSendingNtlmTraffic is sent to us as an uint
 			The possible values are
@@ -80,7 +101,7 @@ func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
 				1: Audit All
 				2: Deny All
 		*/
-		if item.RegistryData.RestrictSendingNtlmTraffic == 0 {
+		if item.NTLMRegistryData.RestrictSendingNtlmTraffic == 0 {
 			itemProps[ad.RestrictOutboundNTLM.String()] = false
 		} else {
 			itemProps[ad.RestrictOutboundNTLM.String()] = true
@@ -90,7 +111,7 @@ func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
 		PropertyMap: itemProps,
-		Label:       itemType,
+		Label:       ad.Computer,
 	}
 }
 

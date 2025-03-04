@@ -139,7 +139,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		return nil, err
 	}
 
-	if err := PostCoerceAndRelayNTLMToADCS(adcsCache, operation, authenticatedUsersCache, adcsComputerCache); err != nil {
+	if err := PostCoerceAndRelayNTLMToADCS(adcsCache, operation, authenticatedUsersCache, adcsComputerCache, groupExpansions); err != nil {
 		return nil, err
 	}
 
@@ -303,7 +303,7 @@ func coerceAndRelayNTLMtoADCSPath2Pattern(domainID graph.ID, enterpriseCAs cardi
 		))
 }
 
-func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], authUsersCache map[string]graph.ID, adcsComputerCache map[string]cardinality.Duplex[uint64]) error {
+func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], authUsersCache map[string]graph.ID, adcsComputerCache map[string]cardinality.Duplex[uint64], groupExpansions impact.PathAggregator) error {
 	for _, outerDomain := range adcsCache.domains {
 		for _, outerEnterpriseCA := range adcsCache.GetEnterpriseCertAuthorities() {
 			domain := outerDomain
@@ -315,7 +315,7 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 				} else if !adcsCache.DoesCAChainProperlyToDomain(enterpriseCA, domain) {
 					// If the CA doesn't chain up to the domain properly then its invalid
 					return nil
-				} else if ecaValid, err := isEnterpriseCAValidForADCS(enterpriseCA); err != nil {
+				} else if ecaValid, err := isEnterpriseCAValidForADCSRelay(enterpriseCA); err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf("Error validating EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err))
 					return nil
 				} else if !ecaValid {
@@ -329,19 +329,7 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 					slog.WarnContext(ctx, fmt.Sprintf("Unable to find auth users group for domain %s", domainsid))
 					return nil
 				} else {
-					// If auth users doesn't have enroll rights here than it's not valid either. Unroll enrollers into a slice and check if auth users is in it
 					ecaEnrollers := adcsCache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
-					authUsersHasEnrollmentRights := false
-					for _, l := range ecaEnrollers {
-						if l.ID == authUsersGroup {
-							authUsersHasEnrollmentRights = true
-							break
-						}
-					}
-
-					if !authUsersHasEnrollmentRights {
-						return nil
-					}
 
 					for _, certTemplate := range publishedCertTemplates {
 						if valid, err := isCertTemplateValidForADCSRelay(certTemplate); err != nil {
@@ -349,10 +337,41 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 							continue
 						} else if !valid {
 							continue
+						} else if certTemplateEnrollers := adcsCache.GetCertTemplateEnrollers(certTemplate.ID); len(certTemplateEnrollers) == 0 {
+							continue
 						} else if computers, ok := adcsComputerCache[domainsid]; !ok {
 							continue
 						} else {
-							computers.Each(func(value uint64) bool {
+							// Find all enrollers with enrollment rights on the cert template and the enterprise CA (no shortcutting)
+							var (
+								templateBitmap                = expandNodeSliceToBitmapWithoutGroups(certTemplateEnrollers, groupExpansions)
+								ecaBitmap                     = expandNodeSliceToBitmapWithoutGroups(ecaEnrollers, groupExpansions)
+								enrollersBitmap               = cardinality.NewBitmap64()
+								specialGroupHasECAEnroll      = adcsCache.GetEnterpriseCAHasSpecialEnrollers(enterpriseCA.ID)
+								specialGroupHasTemplateEnroll = adcsCache.GetCertTemplateHasSpecialEnrollers(certTemplate.ID)
+							)
+
+							// If no special group has enroll neither the template or enterprise CA then the enrollers are the common nodes
+							if !specialGroupHasTemplateEnroll && !specialGroupHasECAEnroll {
+								// Cross the cert template enrollers and the eca enrollers, this is the resultant list
+								templateBitmap.And(ecaBitmap)
+								enrollersBitmap.Or(templateBitmap)
+							} else {
+								// If a special group has enroll on the template then all enrollers of the enterprise CA are enrollers
+								if specialGroupHasTemplateEnroll {
+									enrollersBitmap.Or(ecaBitmap)
+								}
+
+								// If a special group has enroll on the eca then all enrollers of the template are enrollers
+								if specialGroupHasECAEnroll {
+									enrollersBitmap.Or(templateBitmap)
+								}
+							}
+
+							//Filter our resultant bitmap to any computer that is valid for this relay
+							enrollersBitmap.And(computers)
+
+							enrollersBitmap.Each(func(value uint64) bool {
 								outC <- analysis.CreatePostRelationshipJob{
 									FromID: authUsersGroup,
 									ToID:   graph.ID(value),
@@ -372,7 +391,7 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 	return nil
 }
 
-func isEnterpriseCAValidForADCS(eca *graph.Node) (bool, error) {
+func isEnterpriseCAValidForADCSRelay(eca *graph.Node) (bool, error) {
 	if httpEnrollment, err := eca.Properties.Get(ad.ADCSWebEnrollmentHTTP.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
 		return false, err
 	} else if httpEnrollment {
