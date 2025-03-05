@@ -19,9 +19,11 @@ import { MappedStringLiteral } from '../..';
 import { EntityInfoDataTableProps } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
-type SearchType = 'node' | 'pathfinding' | 'cypher' | 'relationship' | 'composition';
+type SearchTab = 'node' | 'pathfinding' | 'cypher';
+type SearchType = SearchTab | 'relationship' | 'composition';
 
 export type ExploreQueryParams = {
+    searchTab: SearchTab | null;
     primarySearch: string | null;
     secondarySearch: string | null;
     cypherSearch: string | null;
@@ -31,10 +33,21 @@ export type ExploreQueryParams = {
     expandedRelationships: EntityInfoDataTableProps['label'][] | null;
 };
 
-export const acceptedSearchTypes = {
+const acceptedSearchTabs = {
     node: 'node',
     pathfinding: 'pathfinding',
     cypher: 'cypher',
+} satisfies MappedStringLiteral<SearchTab, SearchTab>;
+
+export const parseSearchTab = (paramValue: string | null): SearchTab | null => {
+    if (paramValue && paramValue in acceptedSearchTabs) {
+        return paramValue as SearchTab;
+    }
+    return null;
+};
+
+export const acceptedSearchTypes = {
+    ...acceptedSearchTabs,
     relationship: 'relationship',
     composition: 'composition',
 } satisfies MappedStringLiteral<SearchType, SearchType>;
@@ -54,6 +67,7 @@ export const useExploreParams = (): UseExploreParamsReturn => {
     const [searchParams, setSearchParams] = useSearchParams();
 
     return {
+        searchTab: parseSearchTab(searchParams.get('searchTab')),
         primarySearch: searchParams.get('primarySearch'),
         secondarySearch: searchParams.get('secondarySearch'),
         cypherSearch: searchParams.get('cypherSearch'),
@@ -66,6 +80,7 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         setExploreParams: useCallback(
             setParamsFactory(setSearchParams, [
+                'searchTab',
                 'primarySearch',
                 'secondarySearch',
                 'cypherSearch',
