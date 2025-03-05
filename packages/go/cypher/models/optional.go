@@ -24,6 +24,14 @@ type Optional[T any] struct {
 	Set   bool
 }
 
+func (s Optional[T]) GetOr(defaultValue T) T {
+	if s.Set {
+		return s.Value
+	}
+
+	return defaultValue
+}
+
 func ValueOptional[T any](value T) Optional[T] {
 	return Optional[T]{
 		Value: value,

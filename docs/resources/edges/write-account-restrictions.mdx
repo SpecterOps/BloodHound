@@ -1,0 +1,30 @@
+---
+title: WriteAccountRestrictions
+---
+
+<Frame>
+  <img src="/assets/image-2-1.png"/>
+</Frame>
+
+This edge indicates the principal has the ability to modify several properties on the target principal, most notably the msDS-AllowedToActOnBehalfOfOtherIdentity attribute. The ability to modify the msDS-AllowedToActOnBehalfOfOtherIdentity property allows an attacker to abuse resource-based constrained delegation to compromise the remote computer system. This property is a binary DACL that controls what security principals can pretend to be any domain user to the particular computer object.
+
+This clip demonstrates how to abuse this edge:
+
+<iframe id="youtube-4952" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Player for 2 11 BloodHound Head to Tail Andy Robbins Rohan Vazarkar" width="100%" height="420" src="https://www.youtube.com/embed/fqYoOoghqdE?autoplay=0&amp;controls=0&amp;disablekb=1&amp;playsinline=1&amp;cc_load_policy=0&amp;cc_lang_pref=auto&amp;widget_referrer=https%3A%2F%2Fsupport.bloodhoundenterprise.io%2Fhc%2Fen-us%2Farticles%2FWriteAccountRestrictions&amp;rel=0&amp;showinfo=0&amp;iv_load_policy=3&amp;modestbranding=1&amp;customControls=true&amp;noCookie=false&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fsupport.bloodhoundenterprise.io&amp;widgetid=1" data-gtm-yt-inspected-6="true"></iframe>
+
+Abuse Info[](#h_01HETHXTS5T30JA6XYAKPMW08G)
+-------------------------------------------
+
+See the AllowedToAct edge section for abuse info
+
+Opsec Considerations[](#h_01HETHXTS59KV2D82SX61Z7ADG)
+-----------------------------------------------------
+
+See the AllowedToAct edge section for opsec considerations
+
+References[](#h_01HETHXTS5DGQJEB1BMGESNZSZ)
+-------------------------------------------
+
+* [https://attack.mitre.org/techniques/T1098/](https://attack.mitre.org/techniques/T1098/)
+* [https://dirkjanm.io/abusing-forgotten-permissions-on-precreated-computer-objects-in-active-directory/](https://dirkjanm.io/abusing-forgotten-permissions-on-precreated-computer-objects-in-active-directory/)
+* [https://docs.microsoft.com/en-us/windows/win32/adschema/r-user-account-restrictions](https://docs.microsoft.com/en-us/windows/win32/adschema/r-user-account-restrictions)

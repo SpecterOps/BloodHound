@@ -1,0 +1,35 @@
+---
+title: IssuedSignedBy
+---
+
+<Frame>
+  <img src="/assets/image-2-1.png"/>
+</Frame>
+
+
+When Windows assesses the validity and trustworthiness of a certificate it verifies the certificate chain up to a trusted root certificate. The IssuedSignedBy edge represent a link within the certificate chain.
+
+Abuse Info[](#h_01HPHZJSTFS46D4BFVYAB25KTE)
+-------------------------------------------
+
+An attacker may perform several attacks that rely on the certificate chain, such as ESC1. This relationship alone is not enough to escalate rights or impersonate other principals. This relationship may contribute to other relationships and attributes, from which an escalation opportunity may emerge.
+
+Opsec Considerations[](#heading-2)
+----------------------------------
+
+When an attacker abuses a privilege escalation or impersonation primitive that relies on this relationship, it will necessarily result in the issuance of a certificate. A copy of the issued certificate will be saved on the host that issued the certificate.
+
+References[](#heading-3)
+------------------------
+
+This edge is related to the following MITRE ATT&CK tactic and techniques:
+
+* https://attack.mitre.org/techniques/T1649/
+
+### Abuse and Opsec references
+
+* [https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf](https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf)
+* [https://learn.microsoft.com/en-us/windows-server/security/windows-authentication/credentials-processes-in-windows-authentication#BKMK_CertificatesInWindowsAuthentication](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-crtd/ec71fd43-61c2-407b-83c9-b52272dec8a1)
+* [https://www.pkisolutions.com/understanding-active-directory-certificate-services-containers-in-active-directory/](https://www.pkisolutions.com/understanding-active-directory-certificate-services-containers-in-active-directory/)
+* [https://www.ravenswoodtechnology.com/components-of-a-pki-part-2/](https://www.ravenswoodtechnology.com/components-of-a-pki-part-2/)
+
