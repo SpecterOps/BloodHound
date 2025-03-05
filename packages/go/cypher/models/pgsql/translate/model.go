@@ -49,15 +49,11 @@ func expansionColumns() pgsql.RecordShape {
 	}
 }
 
-type Match struct {
-	Pattern *Pattern
-}
-
 type NodeSelect struct {
-	Frame      *Frame
-	Binding    *BoundIdentifier
-	Select     pgsql.Select
-	Constraint *Constraint
+	Frame       *Frame
+	Binding     *BoundIdentifier
+	Select      pgsql.Select
+	Constraints pgsql.Expression
 }
 
 type Expansion struct {
@@ -66,10 +62,7 @@ type Expansion struct {
 	MinDepth    models.Optional[int64]
 	MaxDepth    models.Optional[int64]
 
-	PrimerProjection  []pgsql.SelectItem
-	PrimerConstraints pgsql.Expression
-
-	RecursiveProjection  []pgsql.SelectItem
+	PrimerConstraints    pgsql.Expression
 	RecursiveConstraints pgsql.Expression
 
 	LeftNodeJoinCondition    pgsql.Expression
@@ -77,8 +70,7 @@ type Expansion struct {
 	ExpansionNodeConstraints pgsql.Expression
 	TerminalNodeConstraints  pgsql.Expression
 
-	Projection  []pgsql.SelectItem
-	Constraints pgsql.Expression
+	Projection []pgsql.SelectItem
 }
 
 type PatternSegment struct {
@@ -96,7 +88,6 @@ type PatternSegment struct {
 	RightNodeBound         bool
 	RightNodeConstraints   pgsql.Expression
 	RightNodeJoinCondition pgsql.Expression
-	Definitions            []*BoundIdentifier
 	Projection             []pgsql.SelectItem
 }
 

@@ -433,7 +433,7 @@ func (s *Translator) translateNonTraversalPatternPart(part *PatternPart) error {
 		} else if err := RewriteFrameBindings(s.scope, constraint.Expression); err != nil {
 			return err
 		} else {
-			part.NodeSelect.Constraint = constraint
+			part.NodeSelect.Constraints = constraint.Expression
 		}
 
 		if boundProjections, err := buildVisibleProjections(s.scope); err != nil {
