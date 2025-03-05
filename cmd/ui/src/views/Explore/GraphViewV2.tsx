@@ -64,25 +64,37 @@ const GraphViewV2: FC = () => {
     const dispatch = useAppDispatch();
 
     const graphState: GraphState = useAppSelector((state) => state.explore);
+
     const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
+
     const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
+
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const exportableGraphState = useAppSelector((state) => state.explore.export);
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
-    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
+
+    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+
+    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
+
+    const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
     const { data, isLoading, isError } = useAvailableDomains();
     const { exploreSearchTab } = useExploreParams();
 
-    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
-    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-    const [showNodeLabels, setShowNodeLabels] = useState(true);
-    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
-    const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
+
+    const exportableGraphState = useAppSelector((state) => state.explore.export);
 
     const sigmaChartRef = useRef<any>(null);
+
     const currentSearchAnchorElement = useRef(null);
+
+    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
+
+    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
+
+    const [showNodeLabels, setShowNodeLabels] = useState(true);
+
+    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
 
     const columns = exploreSearchTab === 'cypher' ? cypherSearchColumns : columnsDefault;
 
