@@ -17,6 +17,8 @@
 package translate
 
 import (
+	"errors"
+
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -28,7 +30,7 @@ func (s *Translator) buildDirectionlessTraversalPatternRoot(traversalStep *Patte
 		Where:      traversalStep.EdgeConstraints.Expression,
 	}
 
-	if previousFrame, hasPrevious := previousValidFrame(s.query, traversalStep.Frame); hasPrevious {
+	if previousFrame, hasPrevious := s.previousValidFrame(traversalStep.Frame); hasPrevious {
 		nextSelect.From = append(nextSelect.From, pgsql.FromClause{
 			Source: pgsql.TableReference{
 				Name: pgsql.CompoundIdentifier{previousFrame.Binding.Identifier},
@@ -102,7 +104,7 @@ func (s *Translator) buildTraversalPatternRoot(partFrame *Frame, part *PatternPa
 			}},
 		})
 	} else {
-		if previousFrame, hasPrevious := previousValidFrame(s.query, traversalStep.Frame); hasPrevious {
+		if previousFrame, hasPrevious := s.previousValidFrame(traversalStep.Frame); hasPrevious {
 			nextSelect.From = append(nextSelect.From, pgsql.FromClause{
 				Source: pgsql.TableReference{
 					Name: pgsql.CompoundIdentifier{previousFrame.Binding.Identifier},
@@ -204,4 +206,247 @@ func (s *Translator) buildTraversalPatternStep(partFrame *Frame, part *PatternPa
 	return pgsql.Query{
 		Body: nextSelect,
 	}, nil
+}
+
+func (s *Translator) translateTraversalPatternPart(part *PatternPart, isolatedProjection bool) error {
+	var scopeSnapshot *Scope
+
+	if isolatedProjection {
+		scopeSnapshot = s.scope.Snapshot()
+	}
+
+	for idx, traversalStep := range part.TraversalSteps {
+		if traversalStepFrame, err := s.scope.PushFrame(); err != nil {
+			return err
+		} else {
+			// Assign the new scope frame to the traversal step
+			traversalStep.Frame = traversalStepFrame
+		}
+
+		if traversalStep.Expansion.Set {
+			if err := s.translateTraversalPatternPartWithExpansion(idx == 0, traversalStep); err != nil {
+				return err
+			}
+		} else {
+			if err := s.translateTraversalPatternPartWithoutExpansion(idx == 0, traversalStep); err != nil {
+				return err
+			}
+		}
+	}
+
+	if isolatedProjection {
+		s.scope = scopeSnapshot
+	}
+
+	return nil
+}
+
+func (s *Translator) translateTraversalPatternPartWithoutExpansion(isFirstTraversalStep bool, traversalStep *PatternSegment) error {
+	if constraints, err := consumePatternConstraints(isFirstTraversalStep, nonRecursivePattern, traversalStep, s.treeTranslator.IdentifierConstraints); err != nil {
+		return err
+	} else {
+		if isFirstTraversalStep {
+			hasPreviousFrame := traversalStep.Frame.Previous != nil
+
+			if hasPreviousFrame {
+				// Pull the implicitly joined result set's visibility to avoid violating SQL expectation on explicit vs
+				// implicit join order
+				for _, knownIdentifier := range traversalStep.Frame.Known().Slice() {
+					if binding, bound := s.scope.Lookup(knownIdentifier); !bound {
+						return errors.New("unknown traversal step identifier: " + knownIdentifier.String())
+					} else if binding.LastProjection == traversalStep.Frame.Previous {
+						traversalStep.Frame.Stash(binding.Identifier)
+					}
+				}
+			}
+
+			//
+			if err := RewriteFrameBindings(s.scope, constraints.LeftNode.Expression); err != nil {
+				return err
+			} else {
+				traversalStep.LeftNodeConstraints = constraints.LeftNode.Expression
+			}
+
+			if leftNodeJoinCondition, err := leftNodeTraversalStepConstraint(traversalStep); err != nil {
+				return err
+			} else if err := RewriteFrameBindings(s.scope, leftNodeJoinCondition); err != nil {
+				return err
+			} else {
+				traversalStep.LeftNodeJoinCondition = leftNodeJoinCondition
+			}
+
+			if hasPreviousFrame {
+				traversalStep.Frame.RestoreStashed()
+			}
+		}
+
+		traversalStep.Frame.Export(traversalStep.Edge.Identifier)
+
+		if edgeJoinCondition, err := rightEdgeConstraint(traversalStep); err != nil {
+			return err
+		} else if err := RewriteFrameBindings(s.scope, edgeJoinCondition); err != nil {
+			return err
+		} else {
+			traversalStep.EdgeJoinCondition = edgeJoinCondition
+		}
+
+		if err := RewriteFrameBindings(s.scope, constraints.Edge.Expression); err != nil {
+			return err
+		} else {
+			traversalStep.EdgeConstraints = constraints.Edge
+		}
+
+		traversalStep.Frame.Export(traversalStep.RightNode.Identifier)
+
+		if err := RewriteFrameBindings(s.scope, constraints.RightNode.Expression); err != nil {
+			return err
+		} else {
+			traversalStep.RightNodeConstraints = constraints.RightNode.Expression
+		}
+
+		if rightNodeJoinCondition, err := rightNodeTraversalStepConstraint(traversalStep); err != nil {
+			return err
+		} else if err := RewriteFrameBindings(s.scope, rightNodeJoinCondition); err != nil {
+			return err
+		} else {
+			traversalStep.RightNodeJoinCondition = rightNodeJoinCondition
+		}
+	}
+
+	if boundProjections, err := buildVisibleProjections(s.scope); err != nil {
+		return err
+	} else {
+		// Zip through all projected identifiers and update their last projected frame
+		for _, binding := range boundProjections.Bindings {
+			binding.MaterializedBy(traversalStep.Frame)
+		}
+
+		traversalStep.Projection = boundProjections.Items
+	}
+
+	return nil
+}
+
+func (s *Translator) translateTraversalPatternPartWithExpansion(isFirstTraversalStep bool, traversalStep *PatternSegment) error {
+	if constraints, err := consumePatternConstraints(isFirstTraversalStep, recursivePattern, traversalStep, s.treeTranslator.IdentifierConstraints); err != nil {
+		return err
+	} else {
+		// If one side of the expansion has constraints but the other does not this may be an opportunity to reorder the traversal
+		// to start with tighter search bounds
+		constraints.OptimizePatternConstraintBalance(traversalStep)
+
+		if isFirstTraversalStep {
+			if err := RewriteFrameBindings(s.scope, constraints.LeftNode.Expression); err != nil {
+				return err
+			}
+
+			traversalStep.Expansion.Value.PrimerConstraints = pgsql.OptionalAnd(traversalStep.Expansion.Value.PrimerConstraints, constraints.LeftNode.Expression)
+
+			if leftNodeJoinCondition, err := leftNodeTraversalStepConstraint(traversalStep); err != nil {
+				return err
+			} else if err := RewriteFrameBindings(s.scope, leftNodeJoinCondition); err != nil {
+				return err
+			} else {
+				traversalStep.Expansion.Value.LeftNodeJoinCondition = leftNodeJoinCondition
+			}
+		}
+
+		if expansionNodeConstraints, err := rightNodeTraversalStepConstraint(traversalStep); err != nil {
+			return err
+		} else {
+			traversalStep.Expansion.Value.ExpansionNodeConstraints = expansionNodeConstraints
+		}
+
+		if err := RewriteFrameBindings(s.scope, constraints.Edge.Expression); err != nil {
+			return err
+		}
+
+		if isFirstTraversalStep {
+			traversalStep.Expansion.Value.PrimerConstraints = pgsql.OptionalAnd(traversalStep.Expansion.Value.PrimerConstraints, constraints.Edge.Expression)
+		}
+
+		traversalStep.Expansion.Value.ExpansionEdgeConstraints = constraints.Edge.Expression
+
+		if constraints.RightNode.Expression != nil {
+			if err := RewriteFrameBindings(s.scope, constraints.RightNode.Expression); err != nil {
+				return err
+			} else {
+				traversalStep.Expansion.Value.TerminalNodeConstraints = constraints.RightNode.Expression
+			}
+		}
+	}
+
+	// Export the path from the traversal's scope
+	traversalStep.Frame.Export(traversalStep.Expansion.Value.PathBinding.Identifier)
+
+	// Push a new frame that contains currently projected scope from the expansion recursive CTE
+	if expansionFrame, err := s.scope.PushFrame(); err != nil {
+		return err
+	} else {
+		traversalStep.Expansion.Value.Frame = expansionFrame
+		traversalStep.Expansion.Value.RecursiveConstraints = pgsql.OptionalAnd(traversalStep.Expansion.Value.ExpansionEdgeConstraints, expansionConstraints(expansionFrame.Binding.Identifier, traversalStep.Expansion.Value.MinDepth, traversalStep.Expansion.Value.MaxDepth))
+
+		// Remove the previous projections of the root and terminal node to reproject them after expansion
+		traversalStep.LeftNode.Dematerialize()
+		traversalStep.RightNode.Dematerialize()
+
+		if boundProjections, err := buildVisibleProjections(s.scope); err != nil {
+			return err
+		} else {
+			// Zip through all projected identifiers and update their last projected frame
+			for _, binding := range boundProjections.Bindings {
+				binding.MaterializedBy(expansionFrame)
+			}
+
+			traversalStep.Expansion.Value.Projection = boundProjections.Items
+		}
+
+		if err := s.scope.PopFrame(); err != nil {
+			return err
+		}
+	}
+
+	if boundProjections, err := buildVisibleProjections(s.scope); err != nil {
+		return err
+	} else {
+		// Zip through all projected identifiers and update their last projected frame
+		for _, binding := range boundProjections.Bindings {
+			binding.MaterializedBy(traversalStep.Frame)
+		}
+
+		traversalStep.Projection = boundProjections.Items
+	}
+
+	return nil
+}
+
+func (s *Translator) translateNonTraversalPatternPart(part *PatternPart) error {
+	if nextFrame, err := s.scope.PushFrame(); err != nil {
+		return err
+	} else {
+		part.NodeSelect.Frame = nextFrame
+
+		nextFrame.Export(part.NodeSelect.Binding.Identifier)
+
+		if constraint, err := s.treeTranslator.IdentifierConstraints.ConsumeSet(nextFrame.Known()); err != nil {
+			return err
+		} else if err := RewriteFrameBindings(s.scope, constraint.Expression); err != nil {
+			return err
+		} else {
+			part.NodeSelect.Constraints = constraint.Expression
+		}
+
+		if boundProjections, err := buildVisibleProjections(s.scope); err != nil {
+			return err
+		} else {
+			// Zip through all projected identifiers and update their last projected frame
+			for _, binding := range boundProjections.Bindings {
+				binding.MaterializedBy(nextFrame)
+			}
+
+			part.NodeSelect.Select.Projection = boundProjections.Items
+		}
+	}
+
+	return nil
 }

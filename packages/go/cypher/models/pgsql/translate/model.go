@@ -49,15 +49,11 @@ func expansionColumns() pgsql.RecordShape {
 	}
 }
 
-type Match struct {
-	Pattern *Pattern
-}
-
 type NodeSelect struct {
-	Frame      *Frame
-	Binding    *BoundIdentifier
-	Select     pgsql.Select
-	Constraint *Constraint
+	Frame       *Frame
+	Binding     *BoundIdentifier
+	Select      pgsql.Select
+	Constraints pgsql.Expression
 }
 
 type Expansion struct {
@@ -66,10 +62,7 @@ type Expansion struct {
 	MinDepth    models.Optional[int64]
 	MaxDepth    models.Optional[int64]
 
-	PrimerProjection  []pgsql.SelectItem
-	PrimerConstraints pgsql.Expression
-
-	RecursiveProjection  []pgsql.SelectItem
+	PrimerConstraints    pgsql.Expression
 	RecursiveConstraints pgsql.Expression
 
 	LeftNodeJoinCondition    pgsql.Expression
@@ -77,8 +70,7 @@ type Expansion struct {
 	ExpansionNodeConstraints pgsql.Expression
 	TerminalNodeConstraints  pgsql.Expression
 
-	Projection  []pgsql.SelectItem
-	Constraints pgsql.Expression
+	Projection []pgsql.SelectItem
 }
 
 type PatternSegment struct {
@@ -96,7 +88,6 @@ type PatternSegment struct {
 	RightNodeBound         bool
 	RightNodeConstraints   pgsql.Expression
 	RightNodeJoinCondition pgsql.Expression
-	Definitions            []*BoundIdentifier
 	Projection             []pgsql.SelectItem
 }
 
@@ -184,39 +175,18 @@ func (s *Pattern) CurrentPart() *PatternPart {
 
 type Query struct {
 	Parts []*QueryPart
-	Scope *Scope
 }
 
 func (s *Query) HasParts() bool {
 	return len(s.Parts) > 0
 }
 
-func (s *Query) CurrentPart() *QueryPart {
-	return s.Parts[len(s.Parts)-1]
+func (s *Query) AddPart(part *QueryPart) {
+	s.Parts = append(s.Parts, part)
 }
 
-func (s *Query) PreparePart(numReadingClauses, numUpdatingClauses int, allocateFrame bool) error {
-	newPart := &QueryPart{
-		Model: &pgsql.Query{
-			CommonTableExpressions: &pgsql.With{},
-		},
-
-		numReadingClauses:  numReadingClauses,
-		numUpdatingClauses: numUpdatingClauses,
-		mutations:          NewMutations(),
-		properties:         map[string]pgsql.Expression{},
-	}
-
-	if allocateFrame {
-		if frame, err := s.Scope.PushFrame(); err != nil {
-			return err
-		} else {
-			newPart.Frame = frame
-		}
-	}
-
-	s.Parts = append(s.Parts, newPart)
-	return nil
+func (s *Query) CurrentPart() *QueryPart {
+	return s.Parts[len(s.Parts)-1]
 }
 
 type QueryPart struct {
@@ -240,6 +210,19 @@ type QueryPart struct {
 	projections       *Projections
 	mutations         *Mutations
 	fromClauses       []pgsql.FromClause
+}
+
+func NewQueryPart(numReadingClauses, numUpdatingClauses int) *QueryPart {
+	return &QueryPart{
+		Model: &pgsql.Query{
+			CommonTableExpressions: &pgsql.With{},
+		},
+
+		numReadingClauses:  numReadingClauses,
+		numUpdatingClauses: numUpdatingClauses,
+		mutations:          NewMutations(),
+		properties:         map[string]pgsql.Expression{},
+	}
 }
 
 func (s *QueryPart) AddFromClause(clause pgsql.FromClause) {
@@ -357,8 +340,8 @@ type Update struct {
 	Projection          []pgsql.SelectItem
 	TargetBinding       *BoundIdentifier
 	UpdateBinding       *BoundIdentifier
-	Removals            *IndexedSlice[string, Removal]
-	PropertyAssignments *IndexedSlice[string, PropertyAssignment]
+	Removals            *graph.IndexedSlice[string, Removal]
+	PropertyAssignments *graph.IndexedSlice[string, PropertyAssignment]
 	KindRemovals        graph.Kinds
 	KindAssignments     graph.Kinds
 }
@@ -370,14 +353,14 @@ type Delete struct {
 }
 
 type Mutations struct {
-	Deletions *IndexedSlice[pgsql.Identifier, *Delete]
-	Updates   *IndexedSlice[pgsql.Identifier, *Update]
+	Deletions *graph.IndexedSlice[pgsql.Identifier, *Delete]
+	Updates   *graph.IndexedSlice[pgsql.Identifier, *Update]
 }
 
 func NewMutations() *Mutations {
 	return &Mutations{
-		Deletions: NewIndexedSlice[pgsql.Identifier, *Delete](),
-		Updates:   NewIndexedSlice[pgsql.Identifier, *Update](),
+		Deletions: graph.NewIndexedSlice[pgsql.Identifier, *Delete](),
+		Updates:   graph.NewIndexedSlice[pgsql.Identifier, *Update](),
 	}
 }
 
@@ -407,8 +390,8 @@ func (s *Mutations) newIdentifierAssignment(scope *Scope, targetBinding *BoundId
 		newUpdates := &Update{
 			TargetBinding:       targetBinding,
 			UpdateBinding:       updateBinding,
-			PropertyAssignments: NewIndexedSlice[string, PropertyAssignment](),
-			Removals:            NewIndexedSlice[string, Removal](),
+			PropertyAssignments: graph.NewIndexedSlice[string, PropertyAssignment](),
+			Removals:            graph.NewIndexedSlice[string, Removal](),
 		}
 
 		s.Updates.Put(targetBinding.Identifier, newUpdates)
@@ -419,7 +402,7 @@ func (s *Mutations) newIdentifierAssignment(scope *Scope, targetBinding *BoundId
 func (s *Mutations) getIdentifierMutation(scope *Scope, targetIdentifier pgsql.Identifier) (*Update, error) {
 	if targetBinding, bound := scope.Lookup(targetIdentifier); !bound {
 		return nil, fmt.Errorf("invalid identifier: %s", targetIdentifier)
-	} else if existingAssignments, hasExisting := s.Updates.Get(targetIdentifier); hasExisting {
+	} else if existingAssignments := s.Updates.Get(targetIdentifier); existingAssignments != nil {
 		return existingAssignments, nil
 	} else {
 		return s.newIdentifierAssignment(scope, targetBinding)
