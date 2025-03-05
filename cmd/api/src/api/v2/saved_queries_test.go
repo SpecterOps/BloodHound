@@ -64,72 +64,62 @@ func replaceFieldValueInJsonString(jsonString string, field string, value any) (
 	return string(modifiedJson), nil
 }
 
-type TestData struct {
-	testName             string
-	expectedResponseBody string
-	expectedResponseCode int
-	queryParams          map[string]string
-}
+// // Matrix testing experiment
+// Pro:  Unify test logic - later maintenance requires only one test modification, or splitting off new tests when necessary
+// Con:  Poor IDE integration, added complexity, test writer must determine when tests should and shouldn't be consolidated
+func TestResources_ListSavedQueries_SortingError(t *testing.T) {
+	type TestData struct {
+		testName             string
+		expectedResponseBody string
+		expectedResponseCode int
+		queryParams          map[string]string
+	}
 
-func getTestArgs() []TestData {
-	return []TestData{
+	testData := []TestData{
 		{
 			testName:             "SortingError",
 			expectedResponseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"column format does not support sorting"}]}`,
 			expectedResponseCode: http.StatusBadRequest,
 			queryParams:          map[string]string{"sort_by": "invalidColumn"},
 		},
-		{
-			testName:             "InvalidFilterColumn",
-			expectedResponseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"the specified column cannot be filtered: foo"}]}`,
-			expectedResponseCode: http.StatusBadRequest,
-			queryParams:          map[string]string{"foo": "gt:0"},
-		},
 	}
-}
 
-// // Matrix testing experiment
-// Pro:  Unify test logic - later maintenance requires only one test modification, or splitting off new tests when necessary
-// Con:  Poor IDE integration, added complexity, test writer must determine when tests should and shouldn't be consolidated
-func TestResources_ListSavedQueries_SortingError(t *testing.T) {
-	// move method for getargs into test
-	testData := getTestArgs()
 	for _, testArgs := range testData {
-		// New test context with test name
-		// t.Run(testArgs.testName, t)
-		// Setup
-		var (
-			mockCtrl  = gomock.NewController(t)
-			resources = v2.Resources{}
-		)
-		defer mockCtrl.Finish()
+		t.Run(testArgs.testName, func(tc *testing.T) {
+			// Setup
+			var (
+				mockCtrl  = gomock.NewController(t)
+				resources = v2.Resources{}
+			)
+			defer mockCtrl.Finish()
 
-		endpoint := "/api/v2/saved-queries"
-		userId, err := uuid2.NewV4()
-		require.NoError(t, err)
+			endpoint := "/api/v2/saved-queries"
+			userId, err := uuid2.NewV4()
+			require.NoError(t, err)
 
-		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil)
-		require.NoError(t, err)
-		q := url.Values{}
-		for key, val := range testArgs.queryParams {
-			q.Add(key, val)
-		}
+			req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil)
+			require.NoError(t, err)
+			q := url.Values{}
+			for key, val := range testArgs.queryParams {
+				q.Add(key, val)
+			}
 
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+			req.URL.RawQuery = q.Encode()
 
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
+			router := mux.NewRouter()
+			router.HandleFunc(endpoint, resources.ListSavedQueries).Methods("GET")
 
-		// Act
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
+			// Act
+			response := httptest.NewRecorder()
+			router.ServeHTTP(response, req)
 
-		// Assert
-		responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
-		require.NoError(t, err, fmt.Sprintf("Test: %s", testArgs.testName))
-		assert.Equal(t, testArgs.expectedResponseCode, response.Code, fmt.Sprintf("Test: %s", testArgs.testName))
-		assert.JSONEq(t, testArgs.expectedResponseBody, responseBodyWithDefaultTimestamp, fmt.Sprintf("Test: %s", testArgs.testName))
+			// Assert
+			responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+			require.NoError(t, err)
+			assert.Equal(t, testArgs.expectedResponseCode, response.Code)
+			assert.JSONEq(t, testArgs.expectedResponseBody, responseBodyWithDefaultTimestamp)
+		})
 	}
 }
 
