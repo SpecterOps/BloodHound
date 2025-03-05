@@ -388,9 +388,9 @@ func (s *Translator) buildAllShortestPathsExpansionRoot(part *PatternPart, trave
 		return pgsql.Query{}, err
 	} else if recursiveStatement, err := format.Statement(recursiveInsert, format.NewOutputBuilder().WithMaterializedParameters(s.translation.Parameters)); err != nil {
 		return pgsql.Query{}, err
-	} else if primerParameterBinding, err := s.query.Scope.DefineNew(pgsql.ParameterIdentifier); err != nil {
+	} else if primerParameterBinding, err := s.scope.DefineNew(pgsql.ParameterIdentifier); err != nil {
 		return pgsql.Query{}, err
-	} else if recursiveParameterBinding, err := s.query.Scope.DefineNew(pgsql.ParameterIdentifier); err != nil {
+	} else if recursiveParameterBinding, err := s.scope.DefineNew(pgsql.ParameterIdentifier); err != nil {
 		return pgsql.Query{}, err
 	} else if primerParameter, err := pgsql.AsParameter(primerParameterBinding.Identifier, primerStatement); err != nil {
 		return pgsql.Query{}, err

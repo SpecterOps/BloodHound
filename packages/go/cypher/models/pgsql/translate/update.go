@@ -19,9 +19,46 @@ package translate
 import (
 	"fmt"
 
+	"github.com/specterops/bloodhound/cypher/models/cypher"
+
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
+
+func (s *Translator) translateSetItem(setItem *cypher.SetItem) error {
+	if operator, err := translateCypherAssignmentOperator(setItem.Operator); err != nil {
+		return err
+	} else {
+		switch operator {
+		case pgsql.OperatorAssignment:
+			if rightOperand, err := s.treeTranslator.Pop(); err != nil {
+				return err
+			} else if leftOperand, err := s.treeTranslator.Pop(); err != nil {
+				return err
+			} else if leftPropertyLookup, err := decomposePropertyLookup(leftOperand); err != nil {
+				return err
+			} else {
+				return s.query.CurrentPart().mutations.AddPropertyAssignment(s.scope, leftPropertyLookup, operator, rightOperand)
+			}
+
+		case pgsql.OperatorKindAssignment:
+			if rightOperand, err := s.treeTranslator.Pop(); err != nil {
+				return err
+			} else if leftOperand, err := s.treeTranslator.Pop(); err != nil {
+				return err
+			} else if targetIdentifier, isIdentifier := leftOperand.(pgsql.Identifier); !isIdentifier {
+				return fmt.Errorf("expected an identifier for kind assignment left operand but got: %T", leftOperand)
+			} else if kindList, isKindListLiteral := rightOperand.(pgsql.KindListLiteral); !isKindListLiteral {
+				return fmt.Errorf("expected an identifier for kind list right operand but got: %T", rightOperand)
+			} else {
+				return s.query.CurrentPart().mutations.AddKindAssignment(s.scope, targetIdentifier, kindList.Values)
+			}
+
+		default:
+			return fmt.Errorf("unsupported set item operator: %s", operator)
+		}
+	}
+}
 
 func (s *Translator) translateUpdates() error {
 	currentQueryPart := s.query.CurrentPart()
@@ -34,7 +71,7 @@ func (s *Translator) translateUpdates() error {
 	}
 
 	for _, updateClause := range currentQueryPart.mutations.Updates.Values() {
-		if stepFrame, err := s.query.Scope.PushFrame(); err != nil {
+		if stepFrame, err := s.scope.PushFrame(); err != nil {
 			return err
 		} else {
 			updateClause.Frame = stepFrame
@@ -48,13 +85,13 @@ func (s *Translator) translateUpdates() error {
 				),
 			}
 
-			if err := RewriteFrameBindings(s.query.Scope, joinConstraint.Expression); err != nil {
+			if err := RewriteFrameBindings(s.scope, joinConstraint.Expression); err != nil {
 				return err
 			}
 
 			updateClause.JoinConstraint = joinConstraint.Expression
 
-			if boundProjections, err := buildVisibleProjections(s.query.Scope); err != nil {
+			if boundProjections, err := buildVisibleProjections(s.scope); err != nil {
 				return err
 			} else {
 				// Zip through all projected identifiers and update their last projected frame
@@ -69,7 +106,7 @@ func (s *Translator) translateUpdates() error {
 							return fmt.Errorf("expected aliased expression to have an alias set")
 						} else if typedProjection.Alias.Value == updateClause.TargetBinding.Identifier {
 							// This is the projection being replaced by the assignment
-							if rewrittenProjections, err := buildProjection(updateClause.TargetBinding.Identifier, updateClause.UpdateBinding, s.query.Scope, s.query.Scope.ReferenceFrame()); err != nil {
+							if rewrittenProjections, err := buildProjection(updateClause.TargetBinding.Identifier, updateClause.UpdateBinding, s.scope, s.scope.ReferenceFrame()); err != nil {
 								return err
 							} else {
 								updateClause.Projection = append(updateClause.Projection, rewrittenProjections...)
@@ -170,7 +207,7 @@ func (s *Translator) buildUpdates() error {
 			}
 
 			for _, propertyAssignment := range identifierMutation.PropertyAssignments.Values() {
-				if err := RewriteFrameBindings(s.query.Scope, propertyAssignment.ValueExpression); err != nil {
+				if err := RewriteFrameBindings(s.scope, propertyAssignment.ValueExpression); err != nil {
 					return err
 				}
 
@@ -201,7 +238,7 @@ func (s *Translator) buildUpdates() error {
 		}
 
 		if kindAssignments.Set {
-			if err := RewriteFrameBindings(s.query.Scope, kindAssignments.Value); err != nil {
+			if err := RewriteFrameBindings(s.scope, kindAssignments.Value); err != nil {
 				return err
 			}
 
@@ -271,7 +308,7 @@ func (s *Translator) buildUpdates() error {
 		}
 
 		if propertyAssignments.Set {
-			if err := RewriteFrameBindings(s.query.Scope, propertyAssignments.Value); err != nil {
+			if err := RewriteFrameBindings(s.scope, propertyAssignments.Value); err != nil {
 				return err
 			}
 
