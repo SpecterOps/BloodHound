@@ -55,8 +55,8 @@ const tabMap = {
     cypher: 2,
 } as const;
 
-const getInitialTab = (searchType: ExploreQueryParams['searchType']) => {
-    if (searchType && searchType in tabMap) return searchType as keyof typeof tabMap;
+const getTab = (searchTab: ExploreQueryParams['searchTab']) => {
+    if (searchTab && searchTab in tabMap) return searchTab as keyof typeof tabMap;
     return 'node';
 };
 
@@ -68,9 +68,9 @@ const ExploreSearchV2: React.FC = () => {
 
     const matches = useMediaQuery(theme.breakpoints.down('md'));
 
-    const { searchType, setExploreParams } = useExploreParams();
+    const { searchTab, setExploreParams } = useExploreParams();
 
-    const [activeTab, setActiveTab] = useState<keyof typeof tabMap>(getInitialTab(searchType));
+    const activeTab = getTab(searchTab);
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
 
@@ -78,16 +78,13 @@ const ExploreSearchV2: React.FC = () => {
     const handleTabChange = (newTabIndex: number) => {
         switch (newTabIndex) {
             case 0:
-                setActiveTab('node');
-                setExploreParams({ searchType: 'node' });
+                setExploreParams({ searchType: 'node', searchTab: 'node' });
                 break;
             case 1:
-                setActiveTab('pathfinding');
-                setExploreParams({ searchType: 'pathfinding' });
+                setExploreParams({ searchType: 'pathfinding', searchTab: 'pathfinding' });
                 break;
             case 2:
-                setActiveTab('cypher');
-                setExploreParams({ searchType: 'cypher' });
+                setExploreParams({ searchType: 'cypher', searchTab: 'cypher' });
                 break;
         }
     };

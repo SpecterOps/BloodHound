@@ -72,7 +72,7 @@ const GraphViewV2: FC = () => {
     const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
 
     const { data, isLoading, isError } = useAvailableDomains();
-    const { searchType } = useExploreParams();
+    const { searchTab } = useExploreParams();
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
@@ -84,7 +84,7 @@ const GraphViewV2: FC = () => {
     const sigmaChartRef = useRef<any>(null);
     const currentSearchAnchorElement = useRef(null);
 
-    const columns = searchType === 'cypher' ? cypherSearchColumns : columnsDefault;
+    const columns = searchTab === 'cypher' ? cypherSearchColumns : columnsDefault;
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;
