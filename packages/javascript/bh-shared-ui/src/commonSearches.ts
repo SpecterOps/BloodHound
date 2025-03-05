@@ -396,10 +396,6 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: 'MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToSMB]->(:Base)\nRETURN p LIMIT 500',
             },
             {
-                description: 'All NTLM session-based relay edges',
-                cypher: 'MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToSMB]->(:Base)\nRETURN p LIMIT 500',
-            },
-            {
                 description: 'ESC8-vulnerable Enterprise CAs',
                 cypher: 'MATCH (n:EnterpriseCA)\nWHERE n.adcswebenrollmenthttp = True\nOR (n.adcswebenrollmenthttps = True AND n.adcswebenrollmenthttpsepa = False)\nRETURN n',
             },
