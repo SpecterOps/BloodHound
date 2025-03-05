@@ -36,11 +36,11 @@ vi.mock('react-router-dom', async () => {
     };
 });
 
-const setup = async (searchTab = 'node') => {
+const setup = async (exploreSearchTab = 'node') => {
     const setExploreParamsSpy = vi.fn();
     useExploreParamsSpy.mockReturnValue({
         setExploreParams: setExploreParamsSpy,
-        searchTab,
+        exploreSearchTab,
     } as any);
 
     const screen = await act(async () => {
@@ -73,7 +73,7 @@ describe('ExploreSearch rendering per tab', async () => {
 
         await user.click(pathfindingTab);
 
-        expect(setExploreParamsSpy).toBeCalledWith({ searchTab: value, searchType: value });
+        expect(setExploreParamsSpy).toBeCalledWith({ exploreSearchTab: value, searchType: value });
     });
 
     it('should render the pathfinding search controls when searchType is pathfinding', async () => {
@@ -111,43 +111,46 @@ describe('ExploreSearch rendering per tab', async () => {
 });
 
 describe('ExploreSearch sets searchType on tab changing', async () => {
-    it('sets searchTab param to node when the user clicks the `Search` tab', async () => {
+    it('sets exploreSearchTab param to node when the user clicks the `Search` tab', async () => {
         const { screen, user, setExploreParamsSpy } = await setup('pathfinding');
 
-        const searchTab = screen.getByRole('tab', { name: /search/i });
-        await user.click(searchTab);
+        const exploreSearchTab = screen.getByRole('tab', { name: /search/i });
+        await user.click(exploreSearchTab);
 
         expect(setExploreParamsSpy).toHaveBeenCalledTimes(1);
-        expect(setExploreParamsSpy).toHaveBeenCalledWith({ searchTab: 'node', searchType: 'node' });
+        expect(setExploreParamsSpy).toHaveBeenCalledWith({ exploreSearchTab: 'node', searchType: 'node' });
     });
 
-    it('sets searchTab param to pathfinding when the user clicks the `pathfinding` tab', async () => {
+    it('sets exploreSearchTab param to pathfinding when the user clicks the `pathfinding` tab', async () => {
         const { screen, user, setExploreParamsSpy } = await setup();
 
         const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
         await user.click(pathfindingTab);
 
         expect(setExploreParamsSpy).toHaveBeenCalledTimes(1);
-        expect(setExploreParamsSpy).toHaveBeenCalledWith({ searchTab: 'pathfinding', searchType: 'pathfinding' });
+        expect(setExploreParamsSpy).toHaveBeenCalledWith({
+            exploreSearchTab: 'pathfinding',
+            searchType: 'pathfinding',
+        });
     });
 
-    it('sets searchTab param to cypher when the user clicks the `cypher` tab', async () => {
+    it('sets exploreSearchTab param to cypher when the user clicks the `cypher` tab', async () => {
         const { screen, user, setExploreParamsSpy } = await setup();
 
         const cypherTab = screen.getByRole('tab', { name: /cypher/i });
         await user.click(cypherTab);
 
         expect(setExploreParamsSpy).toHaveBeenCalledTimes(1);
-        expect(setExploreParamsSpy).toHaveBeenCalledWith({ searchTab: 'cypher', searchType: 'cypher' });
+        expect(setExploreParamsSpy).toHaveBeenCalledWith({ exploreSearchTab: 'cypher', searchType: 'cypher' });
     });
 
-    it('initializes search tab to node search if the searchTab is not a supported tab name on first render', async () => {
+    it('initializes search tab to node search if the exploreSearchTab is not a supported tab name on first render', async () => {
         const { screen } = await setup('unsupported_tab');
         const primarySearchInput = screen.getByPlaceholderText('Search Nodes');
         expect(primarySearchInput).toBeInTheDocument();
     });
 
-    it('initializes search tab to the searchTab on initial render', async () => {
+    it('initializes search tab to the exploreSearchTab on initial render', async () => {
         const { screen } = await setup('pathfinding');
         const startNodeInput = screen.getByPlaceholderText('Start Node');
         const endNodeInput = screen.getByPlaceholderText('Destination Node');
@@ -219,8 +222,8 @@ describe('ExploreSearch interaction', () => {
             await user.type(startInput, 'admin');
             await user.click(await screen.findByRole('option', { name: /admin/i }));
 
-            const searchTab = screen.getByRole('tab', { name: /search/i });
-            await user.click(searchTab);
+            const exploreSearchTab = screen.getByRole('tab', { name: /search/i });
+            await user.click(exploreSearchTab);
 
             const searchInput = screen.getByPlaceholderText('Search Nodes');
             expect(searchInput).toHaveValue('admin');
