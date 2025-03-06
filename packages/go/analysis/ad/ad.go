@@ -122,7 +122,8 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Fix well known node types")()
 
-	groupSuffixes := []string{EnterpriseKeyAdminsGroupSIDSuffix,
+	groupSuffixes := []string{
+		EnterpriseKeyAdminsGroupSIDSuffix,
 		KeyAdminsGroupSIDSuffix,
 		EnterpriseDomainControllersGroupSIDSuffix,
 		DomainAdminsGroupSIDSuffix,
@@ -190,7 +191,6 @@ func RunDomainAssociations(ctx context.Context, db graph.Database) error {
 		// TODO: Reimplement unassociated node pruning if we decide that FOSS needs unassociated node pruning
 		return nil
 	})
-
 }
 
 func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
@@ -273,15 +273,20 @@ func LinkWellKnownGroups(ctx context.Context, db graph.Database) error {
 	}
 }
 
-func getOrCreateWellKnownGroup(tx graph.Transaction, wellKnownSid string, domainSid, domainName, nodeName string) (*graph.Node, error) {
+func getOrCreateWellKnownGroup(
+	tx graph.Transaction,
+	wellKnownSid, domainSid, domainName, nodeName string,
+) (
+	*graph.Node,
+	error,
+) {
+	// Only filter by ObjectID, not by kind
 	if wellKnownNode, err := tx.Nodes().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Equals(query.NodeProperty(common.ObjectID.String()), wellKnownSid),
-			query.Kind(query.Node(), ad.Group),
-		)
+		return query.Equals(query.NodeProperty(common.ObjectID.String()), wellKnownSid)
 	}).First(); err != nil && !graph.IsErrNotFound(err) {
 		return nil, err
 	} else if graph.IsErrNotFound(err) {
+		// Only create a new node if no node with this ObjectID exists
 		properties := graph.AsProperties(graph.PropertyMap{
 			common.Name:     nodeName,
 			common.ObjectID: wellKnownSid,
@@ -291,6 +296,15 @@ func getOrCreateWellKnownGroup(tx graph.Transaction, wellKnownSid string, domain
 		})
 		return tx.CreateNode(properties, ad.Entity, ad.Group)
 	} else {
+		// If a node with this ObjectID exists (regardless of its kind), return it
+		// Optionally, we could add the ad.Group kind if it's missing
+		if !wellKnownNode.Kinds.ContainsOneOf(ad.Group) {
+			// Add the ad.Group kind if it's missing
+			wellKnownNode.AddKinds(ad.Group)
+			if err := tx.UpdateNode(wellKnownNode); err != nil {
+				return nil, fmt.Errorf("failed to update node with Group kind: %w", err)
+			}
+		}
 		return wellKnownNode, nil
 	}
 }
@@ -342,7 +356,6 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.
 
 	// Get the IDs of the Auth. Users and Everyone groups
 	specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx)
-
 	if err != nil {
 		slog.Error(fmt.Sprintf("Could not fetch groups: %s", err.Error()))
 	}
