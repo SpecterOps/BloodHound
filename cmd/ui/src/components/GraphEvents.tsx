@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
-import { setSelectedEdge } from 'bh-shared-ui';
+import { setSelectedEdge, useExploreSelectedItem } from 'bh-shared-ui';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { AbstractGraph, Attributes } from 'graphology-types';
@@ -57,7 +57,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     ref
 ) {
     const dispatch = useAppDispatch();
-    const selectedEdge = useAppSelector((state) => state.edgeinfo.selectedEdge);
+    const { selectedItem } = useExploreSelectedItem();
     const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
 
     const sigma = useSigma();
@@ -225,7 +225,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
                         if (!prevent.current) {
                             onClickNode(event.node);
                             setHighlightedNode(event.node);
-                            dispatch(setSelectedEdge(null));
                         }
                         prevent.current = false;
                     }, 200);
@@ -280,7 +279,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                 };
 
-                if (edge === selectedEdge?.id) {
+                if (edge === selectedItem) {
                     newData.selected = true;
                 } else {
                     newData.selected = false;
@@ -299,7 +298,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         hoveredNode,
         draggedNode,
         highlightedNode,
-        selectedEdge,
+        selectedItem,
         curvedEdgeReducer,
         selfEdgeReducer,
         edgeReducer,
@@ -320,10 +319,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
     useEffect(() => {
         resetCamera(sigma);
     }, [sigma]);
-
-    useEffect(() => {
-        if (selectedEdge) setHighlightedNode(null);
-    }, [selectedEdge]);
 
     useEffect(() => {
         if (selectedNode?.graphId) {

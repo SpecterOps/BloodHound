@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSigma } from '@react-sigma/core';
-import { setEdgeInfoOpen, setSelectedEdge } from 'bh-shared-ui';
+import { setEdgeInfoOpen, setSelectedEdge, useExploreSelectedItem } from 'bh-shared-ui';
 import { FC, useCallback } from 'react';
 import { setEntityInfoOpen } from 'src/ducks/entityinfo/actions';
 import {
@@ -32,6 +32,7 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 const GraphEdgeEvents: FC = () => {
     const dispatch = useAppDispatch();
     const graphState = useAppSelector((state) => state.explore);
+    const { setSelectedItem: setExploreSelectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();
     const canvases = sigma.getCanvases();
@@ -45,6 +46,8 @@ const GraphEdgeEvents: FC = () => {
             const exploreGraphId = sigma.getGraph().getEdgeAttribute(id, 'exploreGraphId');
             const selectedItem = graphState.chartProps.items?.[id] || graphState.chartProps.items?.[exploreGraphId];
             if (!selectedItem) return;
+
+            setExploreSelectedItem(exploreGraphId);
 
             dispatch(setEntityInfoOpen(false));
             dispatch(setEdgeInfoOpen(true));
@@ -68,7 +71,7 @@ const GraphEdgeEvents: FC = () => {
                 })
             );
         },
-        [graphState.chartProps.items, dispatch, sigma]
+        [graphState.chartProps.items, dispatch, sigma, setExploreSelectedItem]
     );
 
     const handleEdgeEvents = useCallback(
