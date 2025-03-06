@@ -5,7 +5,7 @@ import { useGraphItem } from './useGraphItem';
 
 export const useExploreSelectedItem = () => {
     const { selectedItem, setExploreParams } = useExploreParams();
-    const selectedItemQuery = useGraphItem(selectedItem);
+    const selectedItemQuery = useGraphItem(selectedItem!);
 
     const setSelectedItem = useCallback(
         (itemId: string) => {
