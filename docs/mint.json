@@ -30,6 +30,11 @@
   "background": {
     "style": "gradient"
   },
+ "api": {
+  "playground": {
+    "mode": "hide"
+  }
+},
   "topbarLinks": [
     {
       "name": "Support",
