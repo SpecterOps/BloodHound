@@ -24,50 +24,6 @@ const EdgeInfoPane: React.FC<{ sx?: SxProps; selectedEdge?: any }> = ({ sx, sele
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
 
-    // const { panelSelection } = useExploreParams();
-    // const edgeComposition = (panelSelection as string).split('_');
-
-    // const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | number, edgeKind: string): string =>
-    //     `MATCH p= (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN p`;
-
-    // const { data: cypherResponse } = useQuery(['edge-info-get', panelSelection], ({ signal }) => {
-    //     return apiClient
-    //         .cypherSearch(
-    //             selectedEdgeCypherQuery(edgeComposition[0], edgeComposition[2], edgeComposition[1]),
-    //             { signal },
-    //             true
-    //         )
-    //         .then((result: any) => {
-    //             if (!result.data.data) return { nodes: {}, edges: [] };
-    //             return result.data.data;
-    //         });
-    // });
-    // if (!cypherResponse) return; // to do: change this
-
-    // const selectedEdgeResponseObject = cypherResponse.edges[0];
-    // const selectedEdgeNodes = cypherResponse.nodes;
-    // console.log('cypherResponse', cypherResponse);
-    // console.log('selectedEdgeResponseObject', selectedEdgeResponseObject);
-    // console.log('selectedEdgeNodes', selectedEdgeNodes);
-
-    // const selectedEdge = {
-    //     id: panelSelection,
-    //     name: selectedEdgeResponseObject.label || '',
-    //     data: selectedEdgeResponseObject.properties || {},
-    //     sourceNode: {
-    //         id: selectedEdgeResponseObject.source,
-    //         objectId: selectedEdgeNodes[selectedEdgeResponseObject.source]?.objectId,
-    //         name: selectedEdgeNodes[selectedEdgeResponseObject.source]?.label,
-    //         type: selectedEdgeNodes[selectedEdgeResponseObject.source]?.kind,
-    //     },
-    //     targetNode: {
-    //         id: selectedEdgeResponseObject.target,
-    //         objectId: selectedEdgeNodes[selectedEdgeResponseObject.target]?.objectId,
-    //         name: selectedEdgeNodes[selectedEdgeResponseObject.target]?.label,
-    //         type: selectedEdgeNodes[selectedEdgeResponseObject.target]?.kind,
-    //     },
-    // };
-
     return (
         <Box sx={sx} className={styles.container} data-testid='explore_edge-information-pane'>
             <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
