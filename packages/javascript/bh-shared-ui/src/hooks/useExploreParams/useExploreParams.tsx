@@ -19,7 +19,7 @@ import { MappedStringLiteral } from '../..';
 import { EntityInfoDataTableProps } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
-type ExploreSearchTab = 'node' | 'pathfinding' | 'cypher';
+export type ExploreSearchTab = 'node' | 'pathfinding' | 'cypher';
 type SearchType = ExploreSearchTab | 'relationship' | 'composition';
 
 export type ExploreQueryParams = {
@@ -33,7 +33,7 @@ export type ExploreQueryParams = {
     expandedRelationships: EntityInfoDataTableProps['label'][] | null;
 };
 
-const acceptedExploreSearchTabs = {
+export const acceptedExploreSearchTabs = {
     node: 'node',
     pathfinding: 'pathfinding',
     cypher: 'cypher',

@@ -18,7 +18,7 @@ import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/fr
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Paper, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { ExploreQueryParams, Icon, useExploreParams } from 'bh-shared-ui';
+import { ExploreQueryParams, ExploreSearchTab, Icon, MappedStringLiteral, useExploreParams } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
@@ -53,7 +53,7 @@ const tabMap = {
     node: 0,
     pathfinding: 1,
     cypher: 2,
-} as const;
+} satisfies MappedStringLiteral<ExploreSearchTab, number>;
 
 const getTab = (exploreSearchTab: ExploreQueryParams['exploreSearchTab']) => {
     if (exploreSearchTab && exploreSearchTab in tabMap) return exploreSearchTab as keyof typeof tabMap;
