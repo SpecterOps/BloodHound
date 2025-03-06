@@ -19,8 +19,10 @@ import {
     EdgeCompositionRelationships,
     EdgeInfoComponents,
     EdgeSections,
+    Flag,
     SelectedEdge,
     apiClient,
+    useFeatureFlag,
     useFetchEntityProperties,
 } from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
@@ -32,7 +34,13 @@ import { transformToFlatGraphResponse } from 'src/utils';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 
-const getOnChange = (dispatch: Dispatch<any>, sourceNodeId: number, targetNodeId: number, selectedEdgeName: string) => {
+const getOnChange = (
+    dispatch: Dispatch<any>,
+    sourceNodeId: number,
+    targetNodeId: number,
+    selectedEdgeName: string,
+    backButtonFlag?: Flag
+) => {
     return async (label: string, isOpen: boolean) => {
         if (isOpen) {
             dispatch(setGraphLoading(true));
@@ -45,7 +53,7 @@ const getOnChange = (dispatch: Dispatch<any>, sourceNodeId: number, targetNodeId
                     const formattedData = transformToFlatGraphResponse(result.data);
 
                     dispatch(saveResponseForExport(formattedData));
-                    dispatch(putGraphData(formattedData));
+                    !backButtonFlag?.enabled && dispatch(putGraphData(formattedData)); // To do: Set params here
                 })
                 .catch((err) => {
                     if (err?.code === 'ERR_CANCELED') {
@@ -64,6 +72,7 @@ const getOnChange = (dispatch: Dispatch<any>, sourceNodeId: number, targetNodeId
 const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
+    const { data: backButtonFlag } = useFeatureFlag('back_button_support');
 
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
@@ -94,7 +103,8 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                                   dispatch,
                                                   parseInt(`${sourceNode.id}`),
                                                   parseInt(`${targetNode.id}`),
-                                                  selectedEdge.name
+                                                  selectedEdge.name,
+                                                  backButtonFlag
                                               )
                                             : undefined
                                     }>
