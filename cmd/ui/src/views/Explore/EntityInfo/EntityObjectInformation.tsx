@@ -26,6 +26,7 @@ import React from 'react';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
+import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
     const { entityProperties, informationAvailable, isLoading, isError } = useFetchEntityProperties({
@@ -33,12 +34,14 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
         nodeType,
         databaseId,
     });
+    const { expandedSections } = useEntityInfoPanelContext();
+    const sectionLabel = 'Object Information';
 
     if (isLoading) return <Skeleton data-testid='entity-object-information-skeleton' variant='text' />;
 
     if (isError || !informationAvailable)
         return (
-            <EntityInfoCollapsibleSection label='Object Information'>
+            <EntityInfoCollapsibleSection isExpanded={!!expandedSections[sectionLabel]} label={sectionLabel}>
                 <FieldsContainer>
                     <Alert severity='error'>Unable to load object information for this node.</Alert>
                 </FieldsContainer>
@@ -48,7 +51,7 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     const formattedObjectFields: EntityField[] = formatObjectInfoFields(entityProperties);
 
     return (
-        <EntityInfoCollapsibleSection label='Object Information'>
+        <EntityInfoCollapsibleSection isExpanded={!!expandedSections[sectionLabel]} label={sectionLabel}>
             <FieldsContainer>
                 <BasicObjectInfoFields {...entityProperties} />
                 <ObjectInfoFields fields={formattedObjectFields} />

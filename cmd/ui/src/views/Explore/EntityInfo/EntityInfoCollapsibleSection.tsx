@@ -19,7 +19,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionDetails, AccordionSummary, Alert, AlertTitle } from '@mui/material';
 import { SubHeader, useCollapsibleSectionStyles } from 'bh-shared-ui';
 import React, { PropsWithChildren } from 'react';
-import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 
 const EntityInfoCollapsibleSectionError: React.FC<{ error: any }> = ({ error }) => {
     //TODO: Once azure backend changes for counts param are in, utilize response error details
@@ -49,25 +48,32 @@ export const EntityInfoCollapsibleSection: React.FC<
         isLoading?: boolean;
         isError?: boolean;
         error?: any;
+        isExpanded: boolean;
     }>
-> = ({ children, label = '', count, onChange = () => {}, isLoading = false, isError = false, error = null }) => {
+> = ({
+    children,
+    label = '',
+    count,
+    onChange = () => {},
+    isLoading = false,
+    isError = false,
+    error = null,
+    isExpanded,
+}) => {
     const styles = useCollapsibleSectionStyles();
-    const entityInfoPanelContext = useEntityInfoPanelContext();
-    const expanded = !!entityInfoPanelContext.expandedSections[label];
     const disabled = isLoading || (count === 0 && !isError);
 
     return (
         <Accordion
-            expanded={expanded}
-            onChange={(e, expanded) => {
-                entityInfoPanelContext.toggleSection(label);
+            expanded={isExpanded}
+            onChange={(_e, expanded) => {
                 onChange(label, expanded);
             }}
             disabled={disabled}
             TransitionProps={{ unmountOnExit: true }}
             className={styles.accordionRoot}>
             <AccordionSummary
-                expandIcon={<FontAwesomeIcon icon={expanded ? faMinus : faPlus} />}
+                expandIcon={<FontAwesomeIcon icon={isExpanded ? faMinus : faPlus} />}
                 className={'accordion-summary'}
                 classes={{
                     root: styles.accordionSummary,

@@ -15,8 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps, Typography } from '@mui/material';
-import { NoEntitySelectedHeader, NoEntitySelectedMessage, usePaneStyles } from 'bh-shared-ui';
-import React, { useEffect, useState } from 'react';
+import {
+    NoEntitySelectedHeader,
+    NoEntitySelectedMessage,
+    useExploreParams,
+    useFeatureFlag,
+    usePaneStyles,
+} from 'bh-shared-ui';
+import React, { useCallback, useEffect, useState } from 'react';
 import usePreviousValue from 'src/hooks/usePreviousValue';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
@@ -31,30 +37,37 @@ interface EntityInfoPanelProps {
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
-    const { setExpandedSections } = useEntityInfoPanelContext();
-    // const { panelSelection } = useExploreParams();
-    // const nodeQueryParam = panelSelection || '';
-    // const { data: nodeInfoResponse } = useSearch(nodeQueryParam, undefined);
-    // const nodeInfoObject = nodeInfoResponse?.length && nodeInfoResponse?.at(0);
-    // const selectedNode = useMemo(
-    //     () =>
-    //         nodeInfoObject
-    //             ? {
-    //                   id: nodeInfoObject.objectid,
-    //                   name: nodeInfoObject.name,
-    //                   type: nodeInfoObject.type as EntityKinds,
-    //                   graphId: '',
-    //               } // To do: Type this
-    //             : null,
-    //     [nodeInfoObject]
-    // );
+    const { setExpandedSections, expandedSections } = useEntityInfoPanelContext();
+    const { expandedRelationships } = useExploreParams();
+    const { data: backButtonFlag } = useFeatureFlag('back_button_support');
     const previousSelectedNode = usePreviousValue(selectedNode);
+
+    const formatRelationshipsParams = useCallback(() => {
+        return expandedRelationships?.reduce(
+            (queryParamObject: { [k: string]: boolean }, relationshipsLabel: string) => {
+                queryParamObject[relationshipsLabel.split('-')[1]] = true;
+                return queryParamObject;
+            },
+            {}
+        );
+    }, [expandedRelationships]);
 
     useEffect(() => {
         if (previousSelectedNode?.id !== selectedNode?.id) {
-            setExpandedSections({ 'Object Information': true });
+            let initialExpandedSections = { 'Object Information': true };
+            if (backButtonFlag?.enabled) {
+                initialExpandedSections = { ...initialExpandedSections, ...formatRelationshipsParams() };
+            }
+            setExpandedSections(initialExpandedSections);
         }
-    }, [setExpandedSections, previousSelectedNode, selectedNode]);
+    }, [
+        setExpandedSections,
+        expandedSections,
+        previousSelectedNode,
+        selectedNode,
+        backButtonFlag,
+        formatRelationshipsParams,
+    ]);
 
     return (
         <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
