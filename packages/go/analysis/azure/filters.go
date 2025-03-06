@@ -73,6 +73,14 @@ func FilterGroupMembers() graph.Criteria {
 	)
 }
 
+func FilterRoleAssignableGroupMembersUsers() graph.Criteria {
+	return query.And(
+		query.Kind(query.Relationship(), azure.MemberOf),
+		query.Kind(query.Start(), azure.User),
+		query.Equals(query.EndProperty(azure.IsAssignableToRole.String()), "true"),
+	)
+}
+
 func FilterContains() graph.Criteria {
 	return query.KindIn(query.Relationship(), azure.Contains)
 }
