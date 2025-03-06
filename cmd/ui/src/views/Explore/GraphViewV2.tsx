@@ -80,23 +80,17 @@ const NodeDataFetcher: FC<{ panelSelection: string; children: any }> = ({ panelS
 
 const EdgeDataFetcher: FC<{ panelSelection: string; queryParamComposition: string[]; children: any }> = ({
     panelSelection,
-    queryParamComposition,
+    queryParamComposition, // To do: make this a bit more readable
     children,
 }) => {
-    const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | number, edgeKind: string): string =>
-        `MATCH p= (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN p`;
+    const selectedEdgeCypherQuery = (): string =>
+        `MATCH p= (s)-[r:${queryParamComposition[1]}]->(t) WHERE ID(s) = ${queryParamComposition[0]} AND ID(t) = ${queryParamComposition[2]} RETURN p`;
 
-    const { data: cypherResponse } = useQuery(['edge-info-get', panelSelection], ({ signal }) => {
-        return apiClient
-            .cypherSearch(
-                selectedEdgeCypherQuery(queryParamComposition[0], queryParamComposition[2], queryParamComposition[1]),
-                { signal },
-                true
-            )
-            .then((result: any) => {
-                if (!result.data.data) return { nodes: {}, edges: [] };
-                return result.data.data;
-            });
+    const { data: cypherResponse } = useQuery(['selected-edge', panelSelection], ({ signal }) => {
+        return apiClient.cypherSearch(selectedEdgeCypherQuery(), { signal }, true).then((result: any) => {
+            if (!result.data.data) return { nodes: {}, edges: [] };
+            return result.data.data;
+        });
     });
 
     const selectedEdgeResponseObject = cypherResponse?.edges[0];
@@ -122,6 +116,7 @@ const EdgeDataFetcher: FC<{ panelSelection: string; queryParamComposition: strin
                   },
               }
             : null;
+    console.log('edge', selectedEdge);
     return children(selectedEdge);
 };
 
