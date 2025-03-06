@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { SearchValue } from '../../../store';
-import { useExploreParams } from '../../useExploreParams';
+import { SearchValue } from '../../store';
+import { useExploreParams } from '../useExploreParams';
+import { useExploreGraph } from './useExploreGraph';
 
 export const usePathfindingSearch = () => {
     const [sourceSearchTerm, setSourceSearchTerm] = useState<string>('');
@@ -10,43 +11,66 @@ export const usePathfindingSearch = () => {
     const [destinationSelectedItem, setDestinationSelectedItem] = useState<SearchValue | undefined>(undefined);
 
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
+    const { data: graphData } = useExploreGraph();
 
     // Watch query params and seperately sync them to each search field
     useEffect(() => {
-        if (primarySearch) {
-            setSourceSearchTerm(primarySearch);
+        if (primarySearch && graphData) {
+            const matchedNode = Object.values(graphData).find((node) => node.data['objectid'] === primarySearch);
+
+            if (matchedNode) {
+                setSourceSearchTerm(matchedNode.data['name']);
+
+                setSourceSelectedItem({
+                    name: matchedNode.data['name'],
+                    objectid: matchedNode.data['objectid'],
+                    type: matchedNode.data['nodetype'],
+                });
+            }
         }
-    }, [primarySearch]);
+    }, [primarySearch, graphData]);
 
     useEffect(() => {
-        if (secondarySearch) {
-            setSourceSearchTerm(secondarySearch);
+        if (secondarySearch && graphData) {
+            const matchedNode = Object.values(graphData).find((node) => node.data['objectid'] === secondarySearch);
+
+            if (matchedNode) {
+                setDestinationSearchTerm(matchedNode.data['name']);
+
+                setDestinationSelectedItem({
+                    name: matchedNode.data['name'],
+                    objectid: matchedNode.data['objectid'],
+                    type: matchedNode.data['nodetype'],
+                });
+            }
         }
-    }, [secondarySearch]);
+    }, [secondarySearch, graphData]);
 
     // Handle syncing each search field up to query params to trigger a graph query. Should trigger pathfinding if both have been selected and node
     // if only one has been selected
     const handleSourceNodeSelected = (selected?: SearchValue) => {
-        const currentSearch = selected?.name ?? selected?.objectid ?? '';
+        const objectId = selected?.objectid ?? '';
+        const term = selected?.name ?? objectId;
 
         setSourceSelectedItem(selected);
-        setSourceSearchTerm(currentSearch);
+        setSourceSearchTerm(term);
 
         setExploreParams({
             searchType: secondarySearch ? 'pathfinding' : 'node',
-            primarySearch: currentSearch,
+            primarySearch: objectId,
         });
     };
 
     const handleDestinationNodeSelected = (selected?: SearchValue) => {
-        const currentSearch = selected?.name ?? selected?.objectid ?? '';
+        const objectId = selected?.objectid ?? '';
+        const term = selected?.name ?? objectId;
 
         setDestinationSelectedItem(selected);
-        setDestinationSearchTerm(currentSearch);
+        setDestinationSearchTerm(term);
 
         setExploreParams({
             searchType: primarySearch ? 'pathfinding' : 'node',
-            secondarySearch: currentSearch,
+            secondarySearch: objectId,
         });
     };
 

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { MappedStringLiteral } from '../..';
+import { EdgeCheckboxType, MappedStringLiteral } from '../..';
 import { EntityInfoDataTableProps } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
@@ -29,6 +29,7 @@ export type ExploreQueryParams = {
     graphSelection: string | null;
     panelSelection: string | null;
     expandedRelationships: EntityInfoDataTableProps['label'][] | null;
+    pathFilters: EdgeCheckboxType['edgeType'][] | null;
 };
 
 export const acceptedSearchTypes = {
@@ -61,6 +62,7 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         graphSelection: searchParams.get('graphSelection'),
         panelSelection: searchParams.get('panelSelection'),
         expandedRelationships: searchParams.getAll('expandedRelationship'),
+        pathFilters: searchParams.getAll('pathFilters'),
         // react doesnt like this because it doesnt know the params needed for the function factory return function.
         // but the params needed are not needed in the deps array
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,6 +75,7 @@ export const useExploreParams = (): UseExploreParamsReturn => {
                 'graphSelection',
                 'panelSelection',
                 'expandedRelationships',
+                'pathFilters',
             ]),
             [setSearchParams]
         ),

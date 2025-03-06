@@ -15,10 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useEffect, useState } from 'react';
-import { useQuery } from 'react-query';
-import { SearchValue } from '../../../store';
-import { useExploreParams } from '../../useExploreParams';
-import { nodeSearchGraphQuery } from '../queries';
+import { SearchValue } from '../../store';
+import { useExploreParams } from '../useExploreParams';
+import { useExploreGraph } from './useExploreGraph';
 
 /* Reusable logic for syncing up a single node search field with browser query params on the Explore page. The value of the search field is tracked
 internally, and is only pushed to query params once the event handler is called by the consumer component. Direct changes to the associated query
@@ -28,9 +27,7 @@ export const useNodeSearch = () => {
     const [selectedItem, setSelectedItem] = useState<SearchValue | undefined>(undefined);
 
     const { primarySearch, searchType, setExploreParams } = useExploreParams();
-
-    const graphQuery = nodeSearchGraphQuery({ primarySearch, searchType });
-    const { data: graphData } = useQuery(graphQuery);
+    const { data: graphData } = useExploreGraph();
 
     // Watch query params for a new incoming node search and sync to internal state
     useEffect(() => {

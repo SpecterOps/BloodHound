@@ -17,10 +17,12 @@
 import { FlatGraphResponse } from 'js-client-library';
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
-import { ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
+import { ExploreGraphQueryKey, ExploreGraphQueryOptions, Notifier } from './utils';
 
-// Temporary example code. To be fully implemented in BED-5445
-export const nodeSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
+export const nodeSearchGraphQuery = (
+    paramOptions: Partial<ExploreQueryParams>,
+    addNotification: Notifier
+): ExploreGraphQueryOptions => {
     const { searchType, primarySearch } = paramOptions;
     if (!primarySearch || !searchType) {
         return {
@@ -34,6 +36,7 @@ export const nodeSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
             apiClient
                 .getSearchResult(primarySearch, 'exact', { signal })
                 .then((res) => res.data.data as FlatGraphResponse),
+        onError: () => addNotification('No matching node found.', 'NodeSearchQueryFailure'),
         enabled: !!(searchType && primarySearch),
     };
 };

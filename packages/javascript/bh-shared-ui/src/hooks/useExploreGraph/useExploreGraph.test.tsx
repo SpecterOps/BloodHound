@@ -22,15 +22,20 @@ const nodeSearchGraphQuerySpy = vi.spyOn(modes, 'nodeSearchGraphQuery');
 describe('useExploreGraph', () => {
     describe('getExploreGraphQuery', () => {
         it('returns {enabled: false} if there is not a match on the switch statement', () => {
-            const actual = getExploreGraphQuery({
-                searchType: 'noMatch',
-            } as any);
+            const addNotification = vi.fn();
+            const actual = getExploreGraphQuery(
+                {
+                    searchType: 'noMatch',
+                } as any,
+                addNotification
+            );
 
             expect(actual).toStrictEqual({ enabled: false });
         });
         it('runs nodeSearchGraphQuery when search type is node', () => {
             const paramOptions = { searchType: 'node', primarySearch: 'test1' } as any;
-            getExploreGraphQuery(paramOptions);
+            const addNotification = vi.fn();
+            getExploreGraphQuery(paramOptions, addNotification);
 
             expect(nodeSearchGraphQuerySpy).toBeCalledWith(paramOptions);
         });

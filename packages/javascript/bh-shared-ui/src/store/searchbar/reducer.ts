@@ -16,24 +16,8 @@
 
 import { produce } from 'immer';
 import cloneDeep from 'lodash/cloneDeep';
-import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory } from '../../views/Explore/ExploreSearch/edgeTypes';
+import { getInitialPathFilters } from '../../hooks';
 import * as types from './types';
-
-// by default: all checkboxes are selected
-const initialPathFilters: EdgeCheckboxType[] = [];
-
-AllEdgeTypes.forEach((category: Category) => {
-    category.subcategories.forEach((subcategory: Subcategory) => {
-        subcategory.edgeTypes.forEach((edgeType: string) => {
-            initialPathFilters.push({
-                category: category.categoryName,
-                subcategory: subcategory.name,
-                edgeType,
-                checked: true,
-            });
-        });
-    });
-});
 
 export const initialSearchState: types.SearchState = {
     searchType: types.SEARCH_TYPE_EXACT,
@@ -53,7 +37,7 @@ export const initialSearchState: types.SearchState = {
     cypher: {
         searchTerm: '',
     },
-    pathFilters: initialPathFilters,
+    pathFilters: getInitialPathFilters(),
     activeTab: 'primary',
 };
 
