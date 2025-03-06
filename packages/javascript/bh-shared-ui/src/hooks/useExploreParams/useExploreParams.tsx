@@ -29,6 +29,7 @@ export type ExploreQueryParams = {
     graphSelection: string | null;
     panelSelection: string | null;
     expandedRelationships: EntityInfoDataTableProps['label'][] | null;
+    selectedItem: string | null;
 };
 
 export const acceptedSearchTypes = {
@@ -61,6 +62,7 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         graphSelection: searchParams.get('graphSelection'),
         panelSelection: searchParams.get('panelSelection'),
         expandedRelationships: searchParams.getAll('expandedRelationship'),
+        selectedItem: searchParams.get('selectedItem'),
         // react doesnt like this because it doesnt know the params needed for the function factory return function.
         // but the params needed are not needed in the deps array
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,6 +75,7 @@ export const useExploreParams = (): UseExploreParamsReturn => {
                 'graphSelection',
                 'panelSelection',
                 'expandedRelationships',
+                'selectedItem',
             ]),
             [setSearchParams]
         ),
