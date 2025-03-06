@@ -14,64 +14,29 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Skeleton } from '@mui/material';
-import {
-    EntityField,
-    FieldsContainer,
-    ObjectInfoFields,
-    SelectedEdge,
-    apiClient,
-    formatObjectInfoFields,
-} from 'bh-shared-ui';
+import { EdgeResponse, EntityField, FieldsContainer, ObjectInfoFields, formatObjectInfoFields } from 'bh-shared-ui';
 import { FC } from 'react';
-import { useQuery } from 'react-query';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 
-const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | number, edgeKind: string): string =>
-    `MATCH (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN r LIMIT 1`;
-
-const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
-    const {
-        data: cypherResponse,
-        isLoading,
-        isError,
-    } = useQuery([selectedEdge.id], ({ signal }) => {
-        return apiClient
-            .cypherSearch(
-                selectedEdgeCypherQuery(selectedEdge.sourceNode.id, selectedEdge.targetNode.id, selectedEdge.name),
-                { signal },
-                true
-            )
-            .then((result: any) => {
-                if (!result.data.data) return { nodes: {}, edges: [] };
-                return result.data.data;
-            });
-    });
-
-    if (isLoading) {
-        return <Skeleton variant='rectangular' />;
-    }
-
+const EdgeObjectInformation: FC<{ selectedEdge: EdgeResponse }> = ({ selectedEdge }) => {
     const sourceNodeField: EntityField = {
         label: 'Source Node:',
-        value: selectedEdge.sourceNode.name,
+        value: selectedEdge.sourceNode.label,
     };
 
     const targetNodeField: EntityField = {
         label: 'Target Node:',
-        value: selectedEdge.targetNode.name,
+        value: selectedEdge.targetNode.label,
     };
 
     let formattedObjectFields: EntityField[] = [sourceNodeField, targetNodeField];
 
-    if (!isError) {
-        formattedObjectFields = [
-            ...formattedObjectFields,
-            ...formatObjectInfoFields({
-                ...(cypherResponse.edges[0]?.properties || {}),
-            }),
-        ];
-    }
+    formattedObjectFields = [
+        ...formattedObjectFields,
+        ...formatObjectInfoFields({
+            ...selectedEdge.properties,
+        }),
+    ];
 
     return (
         <EdgeInfoCollapsibleSection section={'data'}>

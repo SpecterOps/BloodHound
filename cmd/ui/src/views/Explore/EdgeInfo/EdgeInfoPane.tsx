@@ -15,12 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps } from '@mui/material';
-import { SelectedEdge, usePaneStyles } from 'bh-shared-ui';
+import { EdgeResponse, usePaneStyles } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 import Header from 'src/views/Explore/EdgeInfo/EdgeInfoHeader';
 
-const EdgeInfoPane: React.FC<{ selectedEdge: SelectedEdge; sx?: SxProps }> = ({ selectedEdge, sx }) => {
+const EdgeInfoPane: React.FC<{ selectedEdge: EdgeResponse; sx?: SxProps }> = ({ selectedEdge, sx }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
 
@@ -28,7 +28,7 @@ const EdgeInfoPane: React.FC<{ selectedEdge: SelectedEdge; sx?: SxProps }> = ({ 
         <Box sx={sx} className={styles.container} data-testid='explore_edge-information-pane'>
             <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
                 <Header
-                    name={selectedEdge?.name || 'None'}
+                    name={selectedEdge.label || 'None'}
                     expanded={expanded}
                     onToggleExpanded={(expanded) => {
                         setExpanded(expanded);

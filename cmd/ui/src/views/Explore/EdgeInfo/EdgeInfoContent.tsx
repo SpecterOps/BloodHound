@@ -15,14 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Divider, Typography, useTheme } from '@mui/material';
-import {
-    EdgeCompositionRelationships,
-    EdgeInfoComponents,
-    EdgeSections,
-    SelectedEdge,
-    apiClient,
-    useFetchEntityProperties,
-} from 'bh-shared-ui';
+import { EdgeCompositionRelationships, EdgeInfoComponents, EdgeResponse, EdgeSections, apiClient } from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import { Dispatch, FC, Fragment } from 'react';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
@@ -62,14 +55,12 @@ const getOnChange = (dispatch: Dispatch<any>, sourceNodeId: number, targetNodeId
     };
 };
 
-const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
+const EdgeInfoContent: FC<{ selectedEdge: EdgeResponse }> = ({ selectedEdge }) => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
 
-    const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
-    const { sourceNode, targetNode } = selectedEdge;
-    const { objectId, type } = targetNode;
-    const { entityProperties: targetNodeProperties } = useFetchEntityProperties({ objectId, nodeType: type });
+    const sections = EdgeInfoComponents[selectedEdge.label as keyof typeof EdgeInfoComponents];
+    const { sourceNode, targetNode, sourceNodeId, targetNodeId } = selectedEdge;
 
     return (
         <Box>
@@ -80,7 +71,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                         const Section = section[1];
 
                         const sendOnChange =
-                            EdgeCompositionRelationships.includes(selectedEdge.name) && section[0] === 'composition';
+                            EdgeCompositionRelationships.includes(selectedEdge.label) && section[0] === 'composition';
 
                         return (
                             <Fragment key={index}>
@@ -93,22 +84,22 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                         sendOnChange
                                             ? getOnChange(
                                                   dispatch,
-                                                  parseInt(`${sourceNode.id}`),
-                                                  parseInt(`${targetNode.id}`),
-                                                  selectedEdge.name
+                                                  parseInt(sourceNodeId),
+                                                  parseInt(targetNodeId),
+                                                  selectedEdge.label
                                               )
                                             : undefined
                                     }>
                                     <Section
-                                        edgeName={selectedEdge.name}
-                                        sourceDBId={sourceNode.id}
-                                        sourceName={sourceNode.name}
-                                        sourceType={sourceNode.type}
-                                        targetDBId={targetNode.id}
-                                        targetName={targetNode.name}
-                                        targetType={targetNode.type}
+                                        edgeName={selectedEdge.label}
+                                        sourceDBId={sourceNodeId}
+                                        sourceName={sourceNode.label}
+                                        sourceType={sourceNode.kind}
+                                        targetDBId={targetNodeId}
+                                        targetName={targetNode.label}
+                                        targetType={targetNode.kind}
                                         targetId={targetNode.objectId}
-                                        haslaps={!!targetNodeProperties?.haslaps}
+                                        haslaps={!!targetNode.properties?.haslaps}
                                     />
                                 </EdgeInfoCollapsibleSection>
                             </Fragment>
@@ -124,7 +115,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                         <Typography variant='body1' fontSize={'0.75rem'}>
                             The edge{' '}
                             <Typography component={'span'} variant='body1' fontWeight={'bold'} fontSize={'0.75rem'}>
-                                {selectedEdge.name}
+                                {selectedEdge.label}
                             </Typography>{' '}
                             does not have any additional contextual information at this time.
                         </Typography>

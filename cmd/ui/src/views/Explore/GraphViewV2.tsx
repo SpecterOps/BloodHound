@@ -16,15 +16,13 @@
 
 import { Box, Grid, Popper, useTheme } from '@mui/material';
 import {
-    EdgeInfoState,
     GraphProgress,
     SearchCurrentNodes,
     WebGLDisabledAlert,
     exportToJson,
     isWebGLEnabled,
-    setEdgeInfoOpen,
-    setSelectedEdge,
     useAvailableDomains,
+    useExploreSelectedItem,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -36,19 +34,17 @@ import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
-import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { GraphState } from 'src/ducks/explore/types';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { transformFlatGraphResponse } from 'src/utils';
-import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
-import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
+import GraphItemInformationPanel from './GraphItemInformationPanel';
 
 const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
 
@@ -86,15 +82,13 @@ const GraphViewV2: FC = () => {
 
     const currentSearchAnchorElement = useRef(null);
 
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
-
-    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
-
     const [columns, setColumns] = useState(columnsDefault);
 
     const [showNodeLabels, setShowNodeLabels] = useState(true);
 
     const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+
+    const { setSelectedItem } = useExploreSelectedItem();
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;
@@ -144,31 +138,13 @@ const GraphViewV2: FC = () => {
     }
 
     /* Event Handlers */
-    const findNodeAndSelect = (id: string) => {
-        const selectedItem = graphState.chartProps.items?.[id];
-        if (selectedItem?.data?.nodetype) {
-            dispatch(setSelectedEdge(null));
-            dispatch(
-                setSelectedNode({
-                    id: selectedItem.data.objectid,
-                    type: selectedItem.data.nodetype,
-                    name: selectedItem.data.name,
-                    graphId: id,
-                })
-            );
-        }
-    };
-
     const handleClickNode = (id: string) => {
-        dispatch(setEdgeInfoOpen(false));
-        dispatch(setEntityInfoOpen(true));
-        findNodeAndSelect(id);
+        setSelectedItem(id);
     };
 
     const handleContextMenu = (event: SigmaNodeEventPayload) => {
         setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
-        const nodeId = event.node;
-        findNodeAndSelect(nodeId);
+        setSelectedItem(event.node);
     };
 
     const handleCloseContextMenu = () => {
@@ -285,11 +261,7 @@ const GraphViewV2: FC = () => {
                     </Box>
                 </Grid>
                 <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
-                    {edgeInfoState.open ? (
-                        <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} />
-                    ) : (
-                        <EntityInfoPanel selectedNode={selectedNode} />
-                    )}
+                    <GraphItemInformationPanel />
                 </Grid>
             </Grid>
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
