@@ -19,6 +19,7 @@ package registration
 import (
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/api"
@@ -60,7 +61,9 @@ func RegisterFossRoutes(
 	authenticator api.Authenticator,
 	authorizer auth.Authorizer,
 ) {
-	router.With(middleware.DefaultRateLimitMiddleware,
+	router.With(func() mux.MiddlewareFunc {
+		return middleware.DefaultRateLimitMiddleware(cfg)
+	},
 		// Health Endpoint
 		routerInst.GET("/health", func(response http.ResponseWriter, _ *http.Request) {
 			response.WriteHeader(http.StatusOK)

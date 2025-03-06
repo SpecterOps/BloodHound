@@ -20,72 +20,33 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
-	"github.com/didip/tollbooth/v6"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api/middleware"
+	"github.com/specterops/bloodhound/src/config"
+	"github.com/stretchr/testify/require"
+	"github.com/ulule/limiter/v3"
+	"github.com/ulule/limiter/v3/drivers/store/memory"
 )
 
-func TestRateLimitHandler(t *testing.T) {
-
-	// Limit to 1 req/s
-	limiter := tollbooth.NewLimiter(1, nil)
-
-	count_429 := 0
-	limiter.SetOnLimitReached(func(response http.ResponseWriter, request *http.Request) {
-		count_429++
-	})
-
-	if req, err := http.NewRequest("GET", "/teapot", nil); err != nil {
-		t.Fatal(err)
-	} else {
-		req.Header.Set("X-Real-IP", "8.8.8.8")
-
-		handler := middleware.RateLimitHandler(limiter, &CountingHandler{})
-		router := mux.NewRouter()
-		router.Handle("/teapot", handler)
-
-		rr := httptest.NewRecorder()
-		router.ServeHTTP(rr, req)
-
-		// Expect a 200
-		if status := rr.Code; status != http.StatusOK {
-			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-		}
-
-		ch := make(chan int)
-		go func() {
-			rr := httptest.NewRecorder()
-			router.ServeHTTP(rr, req)
-
-			// Expect a 429
-			if status := rr.Code; status != http.StatusTooManyRequests {
-				t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusTooManyRequests)
-			}
-
-			if count_429 == 0 {
-				t.Error("OnLimitReached callback function should have been called")
-			}
-
-			close(ch)
-		}()
-		<-ch
-	}
-}
-
 func TestRateLimitMiddleware(t *testing.T) {
-
 	allowedReqsPerSecond := 5
-	limiter := tollbooth.NewLimiter(float64(allowedReqsPerSecond), nil)
+	rate := limiter.Rate{
+		Period: 1 * time.Second,
+		Limit:  int64(allowedReqsPerSecond),
+	}
 
-	count_429 := 0
-	limiter.SetOnLimitReached(func(w http.ResponseWriter, r *http.Request) {
-		count_429++
-	})
+	store := memory.NewStore()
+
+	instance := limiter.New(store, rate)
+
+	cfg, err := config.NewDefaultConfiguration()
+	require.Nil(t, err)
 
 	testHandler := &CountingHandler{}
 	router := mux.NewRouter()
-	router.Use(middleware.RateLimitMiddleware(limiter))
+	router.Use(middleware.RateLimitMiddleware(cfg, instance))
 	router.Handle("/teapot", testHandler)
 
 	if req, err := http.NewRequest("GET", "/teapot", nil); err != nil {
@@ -103,17 +64,16 @@ func TestRateLimitMiddleware(t *testing.T) {
 	if testHandler.Count != allowedReqsPerSecond {
 		t.Errorf("invalid HTTP 200 count: got %v want %v", testHandler.Count, 5)
 	}
-
-	if count_429 != 1 {
-		t.Errorf("invalid HTTP 429 count: got %v want %v", count_429, 1)
-	}
 }
 
 func TestDefaultRateLimitMiddleware(t *testing.T) {
 	testHandler := &CountingHandler{}
 
+	cfg, err := config.NewDefaultConfiguration()
+	require.Nil(t, err)
+
 	router := mux.NewRouter()
-	router.Use(middleware.DefaultRateLimitMiddleware())
+	router.Use(middleware.DefaultRateLimitMiddleware(cfg))
 	router.Handle("/teapot", testHandler)
 
 	if req, err := http.NewRequest("GET", "/teapot", nil); err != nil {
