@@ -52,6 +52,7 @@ import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
+import { addSnackbar } from '../../ducks/global/actions';
 import ContextMenu from './ContextMenu/ContextMenu';
 
 const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
@@ -83,14 +84,22 @@ const EdgeDataFetcher: FC<{ panelSelection: string; queryParamComposition: strin
     queryParamComposition, // To do: make this a bit more readable
     children,
 }) => {
+    const dispatch = useAppDispatch();
     const selectedEdgeCypherQuery = (): string =>
         `MATCH p= (s)-[r:${queryParamComposition[1]}]->(t) WHERE ID(s) = ${queryParamComposition[0]} AND ID(t) = ${queryParamComposition[2]} RETURN p`;
 
     const { data: cypherResponse } = useQuery(['selected-edge', panelSelection], ({ signal }) => {
-        return apiClient.cypherSearch(selectedEdgeCypherQuery(), { signal }, true).then((result: any) => {
-            if (!result.data.data) return { nodes: {}, edges: [] };
-            return result.data.data;
-        });
+        return apiClient
+            .cypherSearch(selectedEdgeCypherQuery(), { signal }, true)
+            .then((result: any) => {
+                if (!result.data.data) return { nodes: {}, edges: [] };
+                return result.data.data;
+            })
+            .catch((err) => {
+                if (err.response.status === 404) {
+                    dispatch(addSnackbar('Selected Edge not found', 'Explore Error'));
+                }
+            });
     });
 
     const selectedEdgeResponseObject = cypherResponse?.edges[0];
@@ -116,7 +125,6 @@ const EdgeDataFetcher: FC<{ panelSelection: string; queryParamComposition: strin
                   },
               }
             : null;
-    console.log('edge', selectedEdge);
     return children(selectedEdge);
 };
 
