@@ -25,6 +25,7 @@ import {
     setEdgeInfoOpen,
     setSelectedEdge,
     useAvailableDomains,
+    useExploreParams,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -45,10 +46,10 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 import { transformFlatGraphResponse } from 'src/utils';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
-import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
+import ExploreSearchV2 from './ExploreSearch/ExploreSearchV2';
 
 const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
 
@@ -77,6 +78,7 @@ const GraphViewV2: FC = () => {
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
     const { data, isLoading, isError } = useAvailableDomains();
+    const { exploreSearchTab } = useExploreParams();
 
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
@@ -90,11 +92,11 @@ const GraphViewV2: FC = () => {
 
     const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
 
-    const [columns, setColumns] = useState(columnsDefault);
-
     const [showNodeLabels, setShowNodeLabels] = useState(true);
 
     const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+
+    const columns = exploreSearchTab === 'cypher' ? cypherSearchColumns : columnsDefault;
 
     useEffect(() => {
         let items: any = graphState.chartProps.items;
@@ -175,10 +177,6 @@ const GraphViewV2: FC = () => {
         setContextMenu(null);
     };
 
-    const handleCypherTab = (tab: string) => {
-        tab === 'cypher' ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
-    };
-
     return (
         <Box
             sx={{
@@ -220,7 +218,7 @@ const GraphViewV2: FC = () => {
                         gap: 2,
                     }}
                     key={'exploreSearch'}>
-                    <ExploreSearch onTabChange={handleCypherTab} />
+                    <ExploreSearchV2 />
                     <Box
                         sx={{
                             pointerEvents: 'auto',
