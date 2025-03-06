@@ -3166,6 +3166,7 @@ func TestActivateMFA_Success(t *testing.T) {
 	}
 }
 
+// Steel Thread Demo
 func TestManagementResource_CreateAuthToken(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -3218,11 +3219,161 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 		}
 	})
 
-	t.Run("User not allowed to create token", func(tc *testing.T) {})
+	t.Run("User not allowed to create token", func(tc *testing.T) {
+		localCtrl := gomock.NewController(tc)
+		defer localCtrl.Finish()
 
-	t.Run("Failed to create token", func(tc *testing.T) {})
+		localResources, localMockDB := apitest.NewAuthManagementResource(localCtrl)
+		localRouter := createRouter(endpointUrl, localResources.CreateAuthToken, "POST")
 
-	t.Run("Failed to store token", func(tc *testing.T) {})
+		regularUser := model.User{
+			FirstName:     null.String{NullString: sql.NullString{String: "Regular", Valid: true}},
+			LastName:      null.String{NullString: sql.NullString{String: "User", Valid: true}},
+			EmailAddress:  null.String{NullString: sql.NullString{String: "regular@example.com", Valid: true}},
+			PrincipalName: "RegularUser",
+			Unique:        model.Unique{ID: must.NewUUIDv4()},
+		}
 
-	t.Run("Success", func(tc *testing.T) {})
+		regularUserContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		regularBhCtx := ctx.Get(regularUserContext)
+		regularBhCtx.AuthCtx.Owner = regularUser
+
+		localMockDB.EXPECT().GetUser(gomock.Any(), regularUser.ID).Return(regularUser, nil)
+
+		otherUserID := "00000000-1111-2222-3333-444444444444"
+
+		tokenRequest := v2.CreateUserToken{
+			UserID:    otherUserID,
+			TokenName: "test token",
+		}
+
+		b, err := json.Marshal(tokenRequest)
+		require.NoError(tc, err)
+
+		req, err := http.NewRequestWithContext(regularUserContext, "POST", endpointUrl, bytes.NewReader(b))
+		require.NoError(tc, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		rec := httptest.NewRecorder()
+		localRouter.ServeHTTP(rec, req)
+
+		require.Equal(tc, http.StatusForbidden, rec.Code)
+	})
+
+	t.Run("Failed to create token", func(tc *testing.T) {
+		localCtrl := gomock.NewController(tc)
+		defer localCtrl.Finish()
+
+		localResources, _ := apitest.NewAuthManagementResource(localCtrl)
+		localRouter := createRouter(endpointUrl, localResources.CreateAuthToken, "POST")
+
+		admin, _ := createAdminUser(tc)
+
+		emptyContext := context.Background()
+
+		tokenRequest := v2.CreateUserToken{
+			UserID:    admin.ID.String(),
+			TokenName: "test token",
+		}
+
+		b, err := json.Marshal(tokenRequest)
+		require.NoError(tc, err)
+
+		req, err := http.NewRequestWithContext(emptyContext, "POST", endpointUrl, bytes.NewReader(b))
+		require.NoError(tc, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		rec := httptest.NewRecorder()
+		localRouter.ServeHTTP(rec, req)
+
+		require.Equal(tc, http.StatusInternalServerError, rec.Code)
+	})
+
+	t.Run("Failed to store token", func(tc *testing.T) {
+		mockCtrl := gomock.NewController(tc)
+		defer mockCtrl.Finish()
+
+		resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+		router := createRouter(endpointUrl, resources.CreateAuthToken, "POST")
+
+		admin, adminContext := createAdminUser(tc)
+
+		tokenRequest := v2.CreateUserToken{
+			UserID:    admin.ID.String(),
+			TokenName: "test token",
+		}
+
+		mockDB.EXPECT().GetUser(gomock.Any(), admin.ID).Return(admin, nil)
+
+		mockDB.EXPECT().CreateAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, errors.New("failed to store token"))
+
+		if b, err := json.Marshal(tokenRequest); err != nil {
+			tc.Fatal(err)
+		} else if req, err := http.NewRequestWithContext(adminContext, "POST", endpointUrl, bytes.NewReader(b)); err != nil {
+			tc.Fatal(err)
+		} else {
+			rec := httptest.NewRecorder()
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+			router.ServeHTTP(rec, req)
+			require.Equal(tc, http.StatusInternalServerError, rec.Code)
+		}
+	})
+
+	t.Run("Success", func(tc *testing.T) {
+		localMockCtrl := gomock.NewController(tc)
+		defer localMockCtrl.Finish()
+
+		localResources, localMockDB := apitest.NewAuthManagementResource(localMockCtrl)
+		localRouter := createRouter(endpointUrl, localResources.CreateAuthToken, "POST")
+
+		admin, adminContext := createAdminUser(tc)
+
+		tokenRequest := v2.CreateUserToken{
+			UserID:    admin.ID.String(),
+			TokenName: "test token",
+		}
+
+		localMockDB.EXPECT().GetUser(gomock.Any(), admin.ID).Return(admin, nil)
+
+		matchAuthToken := gomock.Any()
+
+		expectedToken := model.AuthToken{
+			UserID:     uuid.NullUUID{UUID: admin.ID, Valid: true},
+			Name:       null.StringFrom("test token"),
+			HmacMethod: "hmac-sha2-256",
+			Key:        "test-key",
+		}
+
+		localMockDB.EXPECT().CreateAuthToken(gomock.Any(), matchAuthToken).Return(expectedToken, nil)
+
+		if b, err := json.Marshal(tokenRequest); err != nil {
+			tc.Fatal(err)
+		} else if req, err := http.NewRequestWithContext(adminContext, "POST", endpointUrl, bytes.NewReader(b)); err != nil {
+			tc.Fatal(err)
+		} else {
+			rec := httptest.NewRecorder()
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+			localRouter.ServeHTTP(rec, req)
+			require.Equal(tc, http.StatusOK, rec.Code)
+
+			var responseWrapper struct {
+				Data model.AuthToken `json:"data"`
+			}
+
+			if err := json.Unmarshal(rec.Body.Bytes(), &responseWrapper); err != nil {
+				var responseToken model.AuthToken
+				if err := json.Unmarshal(rec.Body.Bytes(), &responseToken); err != nil {
+					tc.Fatal("Failed to unmarshal response:", err)
+				}
+
+				require.Equal(tc, expectedToken.Name.String, responseToken.Name.String)
+			} else {
+				require.Equal(tc, expectedToken.Name.String, responseWrapper.Data.Name.String)
+			}
+		}
+	})
 }

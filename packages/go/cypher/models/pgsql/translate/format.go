@@ -19,6 +19,7 @@ package translate
 import (
 	"bytes"
 	"context"
+
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	cypherFormat "github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"

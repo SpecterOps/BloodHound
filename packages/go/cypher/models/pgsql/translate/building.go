@@ -18,6 +18,7 @@ package translate
 
 import (
 	"errors"
+
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
 

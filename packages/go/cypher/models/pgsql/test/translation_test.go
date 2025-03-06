@@ -55,11 +55,10 @@ func TestTranslate(t *testing.T) {
 	)
 
 	if updateCases, varSet := os.LookupEnv("CYSQL_UPDATE_CASES"); varSet && strings.ToLower(strings.TrimSpace(updateCases)) == "true" {
-		if err := UpdateTranslationTestCases(kindMapper); err  != nil {
+		if err := UpdateTranslationTestCases(kindMapper); err != nil {
 			fmt.Printf("Error updating cases: %v\n", err)
 		}
 	}
-
 
 	if testCases, err := ReadTranslationTestCases(); err != nil {
 		t.Fatal(err)
