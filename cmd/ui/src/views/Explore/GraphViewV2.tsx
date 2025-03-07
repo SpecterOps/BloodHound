@@ -16,18 +16,18 @@
 
 import { Box, Grid, Popper, useTheme } from '@mui/material';
 import {
-    EntityKinds,
+    EdgeDataFetcher,
     GraphProgress,
+    NodeDataFetcher,
     SearchCurrentNodes,
+    SelectedEdge,
     WebGLDisabledAlert,
-    apiClient,
     exportToJson,
     isWebGLEnabled,
     setEdgeInfoOpen,
     setSelectedEdge,
     useAvailableDomains,
     useExploreParams,
-    useSearch,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -35,12 +35,12 @@ import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useRef, useState } from 'react';
-import { useQuery } from 'react-query';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
 import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
+import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { GraphState } from 'src/ducks/explore/types';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
@@ -52,7 +52,6 @@ import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
-import { addSnackbar } from '../../ducks/global/actions';
 import ContextMenu from './ContextMenu/ContextMenu';
 
 const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
@@ -60,75 +59,6 @@ const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
 const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
 
 const columnStyles = { height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' };
-
-// To do: move the below to shared ui maybe as we need to use them in both bhe bhce
-
-const NodeDataFetcher: FC<{ panelSelection: string; children: any }> = ({ panelSelection, children }) => {
-    const nodeQueryParam = panelSelection || '';
-    const { data: nodeInfoResponse } = useSearch(nodeQueryParam, undefined);
-    const nodeInfoObject = nodeInfoResponse?.length && nodeInfoResponse?.at(0);
-    const selectedNode = nodeInfoObject
-        ? {
-              id: nodeInfoObject.objectid,
-              name: nodeInfoObject.name,
-              type: nodeInfoObject.type as EntityKinds,
-              graphId: '',
-          } // To do: Type this
-        : null;
-
-    return children(selectedNode as any);
-};
-
-const EdgeDataFetcher: FC<{ panelSelection: string; queryParamComposition: string[]; children: any }> = ({
-    panelSelection,
-    queryParamComposition, // To do: make this a bit more readable
-    children,
-}) => {
-    const dispatch = useAppDispatch();
-    const selectedEdgeCypherQuery = (): string =>
-        `MATCH p= (s)-[r:${queryParamComposition[1]}]->(t) WHERE ID(s) = ${queryParamComposition[0]} AND ID(t) = ${queryParamComposition[2]} RETURN p`;
-
-    const { data: cypherResponse } = useQuery(['selected-edge', panelSelection], ({ signal }) => {
-        return apiClient
-            .cypherSearch(selectedEdgeCypherQuery(), { signal }, true)
-            .then((result: any) => {
-                if (!result.data.data) return { nodes: {}, edges: [] };
-                return result.data.data;
-            })
-            .catch((err) => {
-                if (err.response.status === 404) {
-                    dispatch(addSnackbar('Selected Edge not found', 'Explore Error'));
-                }
-            });
-    });
-
-    const selectedEdgeResponseObject = cypherResponse?.edges[0];
-    const selectedEdgeNodes = cypherResponse?.nodes;
-
-    const selectedEdge =
-        selectedEdgeResponseObject && selectedEdgeNodes
-            ? {
-                  id: panelSelection,
-                  name: selectedEdgeResponseObject.label || '',
-                  data: selectedEdgeResponseObject.properties || {},
-                  sourceNode: {
-                      id: selectedEdgeResponseObject.source,
-                      objectId: selectedEdgeNodes[selectedEdgeResponseObject.source]?.objectId,
-                      name: selectedEdgeNodes[selectedEdgeResponseObject.source]?.label,
-                      type: selectedEdgeNodes[selectedEdgeResponseObject.source]?.kind,
-                  },
-                  targetNode: {
-                      id: selectedEdgeResponseObject.target,
-                      objectId: selectedEdgeNodes[selectedEdgeResponseObject.target]?.objectId,
-                      name: selectedEdgeNodes[selectedEdgeResponseObject.target]?.label,
-                      type: selectedEdgeNodes[selectedEdgeResponseObject.target]?.kind,
-                  },
-              }
-            : null;
-    return children(selectedEdge);
-};
-
-//
 
 const GraphViewV2: FC = () => {
     /* Hooks */
@@ -160,10 +90,9 @@ const GraphViewV2: FC = () => {
 
     const currentSearchAnchorElement = useRef(null);
 
-    // To do: Maybe create a hook for this ?
+    // To do: Maybe create a hook for this to use in both projects
     const { panelSelection } = useExploreParams();
-    const queryParamComposition = panelSelection ? (panelSelection as string).split('_') : [];
-    const isEdge = queryParamComposition.length === 3;
+    const isEdge = panelSelection ? (panelSelection as string).split('_').length === 3 : false; // To do: abstract this
     //
 
     const [columns, setColumns] = useState(columnsDefault);
@@ -361,16 +290,13 @@ const GraphViewV2: FC = () => {
                     </Box>
                 </Grid>
                 <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
-                    {/* To do: this conditional wont work because we could have a case of no param */}
                     {isEdge ? (
-                        <EdgeDataFetcher
-                            panelSelection={panelSelection as string}
-                            queryParamComposition={queryParamComposition}>
-                            {(selectedEdge: any) => <EdgeInfoPane selectedEdge={selectedEdge} />}
+                        <EdgeDataFetcher>
+                            {(selectedEdge: SelectedEdge) => <EdgeInfoPane selectedEdge={selectedEdge} />}
                         </EdgeDataFetcher>
                     ) : (
-                        <NodeDataFetcher panelSelection={panelSelection as string}>
-                            {(selectedNode: any) => <EntityInfoPanel selectedNode={selectedNode} />}
+                        <NodeDataFetcher>
+                            {(selectedNode: SelectedNode | null) => <EntityInfoPanel selectedNode={selectedNode} />}
                         </NodeDataFetcher>
                     )}
                 </Grid>
