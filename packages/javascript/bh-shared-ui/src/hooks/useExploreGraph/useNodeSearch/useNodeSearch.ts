@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import { SearchValue } from '../../../store';
 import { useExploreParams } from '../../useExploreParams';
-import { nodeSearchGraphQuery } from '../queries';
+import { nodeSearchGraphQuery } from '../queries/nodeSearch';
 
 /* Reusable logic for syncing up a single node search field with browser query params on the Explore page. The value of the search field is tracked
 internally, and is only pushed to query params once the event handler is called by the consumer component. Direct changes to the associated query
