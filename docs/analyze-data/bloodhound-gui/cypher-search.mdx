@@ -1,0 +1,118 @@
+---
+title: Searching with Cypher
+---
+
+<Frame>
+  <img src="/assets/image-2-1.png"/>
+</Frame>
+
+Purpose
+=======
+
+This article describes how to use Cypher Search within BloodHound. Users of BloodHound should use it to extend the basic search functionality of BloodHound.
+
+Process
+=======
+
+One of the most overlooked features of BloodHound is the ability to enter raw Cypher queries directly into the user interface. Likely, a lot of that has to do with the fact that it's not a very emphasized feature and requires learning Cypher. However, with some work, using raw Cypher queries can let you manipulate and examine BloodHound data in custom ways to help you further understand your network or identify interesting relationships.
+
+<Frame>
+  <img src="/assets/image1-25.png"/>
+</Frame>
+
+What is Cypher?[](#what-is-cypher)
+----------------------------------
+
+Just like SQL exists for MSSQL and other traditional relational databases, Cypher is a language designed for graph databases with its own syntax. Cypher enables users to write queries using an "ASCII-art" style syntax. If you can describe the path you're trying to find, you can probably right it in Cypher.
+
+Elements of the graph database[](#elements-of-the-neo4j-database)
+-----------------------------------------------------------------
+
+Everything in the graph database is represented using common terms from graph theory, particularly **edges,** and **nodes**.
+
+Nodes represent discrete objects that can be acted upon when moving through an environment. In BloodHound, a node can, for example, represent a User in an Active Directory environment. Read more about BloodHound nodes in [About BloodHound Nodes](/resources/nodes/overview).
+
+Edges represent a relationship between two nodes and can be the action necessary to act on a node. In BloodHound, an edge can, for example, represent the relationship between a User node and a Group node through the MemberOf edge, indicating that the user is a group member. Read more about BloodHound edges in the article [About BloodHound Edges](/resources/edges/overview).
+
+Together, edges and nodes create the paths we use in BloodHound to demonstrate how different permissions in Active Directory and Azure can be executed to gain control over a given target.
+
+Basic Cypher[](#basic-cypher)
+-----------------------------
+
+When building Cypher queries, it's important to note that you're generally trying to build a path using the relationships available to you. Let's look at an extremely basic query:
+
+```
+    MATCH (B)-[A]->(R) RETURN B
+```
+
+Let's break down how this Cypher query is constructed. When querying the database, we start our queries with the MATCH keyword. The MATCH clause lets you specify a pattern in the database.
+
+* Each variable in the Cypher query is defined using an identifier, in this case, the following ones: B, A, and R. The identifier for variables can be anything you want, including entire words, such as 'groups'.
+* In Cypher queries, nodes are specified using parentheses, so B and R are nodes in the sample query above.
+* Relationships are specified using brackets, so in this example, A represents relationships.
+
+The dashes between the nodes and relationships can be used to specify direction. Relationships in BloodHound always go in the direction of compromise or further privilege, whether through group membership or user credentials from a session.
+
+In the above query, the **->** specifies that the query should return relationships that go from B to R. Removing the **>** will allow the query to search relationships in both directions. Finally, the RETURN statement instructs the database to return the item matched with the corresponding variable name B.
+
+Now, let's take our previous query and make it a bit more complex:
+```
+    MATCH (n:User),(m:Group) MATCH p=(n)-[r:MemberOf*1..3]->(m) RETURN p
+```
+
+This query is a bit more refined than the previous one. By using labels on both nodes and edges, we can make our query a lot more specific. We also pre-assign the variables **n** and **m** and give them labels to make the query easier to read. In this particular case, we're asking BloodHound to find nodes with the labels User and Group, and then match those nodes using the _MemberOf_ relationship. We added a length modifier as well to the relationship. Adding ***1..3** limits the search to relationships that are between one and three links. In simple terms, give me any users that are a member of a group up to three links away. Additionally, we're assigning the result of the pattern to the variable **p** and returning that variable. When we get **p** back, it will contain the result of each path it can find that matches our pattern we asked for.
+
+Now that we've looked at the basic building blocks of queries, let's look at a more complicated one. As an example, here's the query we use to calculate shortest paths to Domain Admins, one of the most important queries in the BloodHound interface:
+
+```
+    MATCH p=shortestPath((n:User)-[*1..]->(m:Group))WHERE m.name = "DOMAIN ADMINS@INTERNAL.LOCAL"RETURN p
+```
+
+<Note>
+Cypher is case-sensitive, and the node property "name" is always all uppercase and postfixed with the directory's domain. In the code above, "Domain Admins" in the domain "internal.local" has become **"DOMAIN ADMINS@INTERNAL.LOCAL"**.
+</Note>
+
+In this query, we add a few more elements to our previous ones. We still use labels to specify our nodes, but we also add another degree of specificity to our group node by restricting the group nodes that can be returned to only the **DOMAIN ADMINS@INTERNAL.LOCAL** by specifying the name parameter. We also use the shortestPath function. Using this function, we ask the graph to give us the shortest path it can find between each node **n** and the Domain Admins group. Because we didn't specify any relationship labels, the query will use any possible relationship it can find. We also removed the limit on how many hops the database can search. By not specifying an upper limit, the database will go as many hops as possible to find a path.
+
+There is also an allShortestPaths function available, which, as the name implies, will find every shortest path from each node to your target. Note that this results in more data analysis to perform the query and could result in higher resource consumption.
+
+Another important part of Cypher to note is that wildcard matches are possible using regex, although the syntax for the query changes slightly. As an example, here's the query that's run each time you type a letter in the search bar:
+```
+    MATCH (n)WHERE n.name =~ "(.i).*searchterm.*"RETURN nLIMIT 10
+```
+
+In this query, we ask the graph to return any nodes of any type that match the search term given. The (**?i**) tells the graph this is a case-insensitive regex, with the **.**\* on each side indicating that we want to match anything on either side. We limit the number of items returned to the first ten using the **LIMIT** keyword.
+
+Advanced Concepts[](#advanced-concepts)
+---------------------------------------
+
+As you build into more complicated queries, the **WITH** keyword will become important. The **WITH** keyword allows you to use multiple queries and pass the results of each query to the next step. An example of this is in the BloodHound interface whenever you click on a group node. The "Session" section displays the number of places where users in this group (including its subgroups) currently have sessions.
+
+The UI calculates the number of sessions for the group using two separate queries put together:
+
+```
+    MATCH p=shortestPath((m:User)-[r:MemberOf*1..]->(n:Group))WHERE n.name = "$name_of_group"WITH m MATCH q=((m)<-[:HasSession]-(o:Computer)) RETURN count(o)
+```
+
+This query looks more complicated than we had before, so let's break it down into two components.
+```
+    MATCH p=shortestPath((m:User)-[r:MemberOf*1..]->(n:Group))WHERE n.name = "$name_of_group"
+```
+This is the first query we run. We ask BloodHound to find the shortestPath possible from any user node to the group we specify. Note that we allow the _MemberOf_ relationship to span any number of hops, allowing us to include users inside nested groups. This first query gives us all the effective members of the group we ask for.
+
+```
+    MATCH q=((m)<-[:HasSession]-(o:Computer))RETURN count(o)
+```
+
+This is the second query that actually gives us the session data. The variable **m** is carried over from the previous query and contains all the users relevant to the group we're attempting to find sessions for. We ask BloodHound to find any computer where any of the users we found in the first step has a session using the _HasSession_ relationship. We're not interested in returning the relationships in this particular case, so we don't assign a variable. Finally, we return the count of the number of computers we have sessions on. The two queries we execute are joined together using the **WITH** keyword. When using the keyword, you specify any variables you want to carry over from the previous part of the query. These variables will be available with the data for the next query in your chain.
+
+Outcome
+=======
+
+Now that we've explained Cypher and the syntax and all the cool ways you can narrow down search results, the next step is for you to build some new and interesting queries and start examining how you can view relationships.
+
+A quick way to start looking at Cypher queries is through the many examples included in the "Pre-built Searches" section, which is expanded after clicking the folder icon.
+
+<Frame>
+  <img src="/assets/image1-26.png"/>
+</Frame>

@@ -108,7 +108,6 @@ func (s *relationshipQuery) Count() (int64, error) {
 	))
 }
 
-// TODO: Max depth is relying on an uninformed default and should be passed either with criteria as an AST node or as an explicit parameter to this function
 func (s *relationshipQuery) FetchAllShortestPaths(delegate func(cursor graph.Cursor[graph.Path]) error) error {
 	return s.QueryAllShortestPaths(func(results graph.Result) error {
 		cursor := graph.NewResultIterator(s.ctx, results, func(scanner graph.Scanner) (graph.Path, error) {

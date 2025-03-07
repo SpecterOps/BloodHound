@@ -329,7 +329,7 @@ begin
   if target != 'null'::jsonb then
     return array(select jsonb_array_elements_text(target));
   else
-    return null;
+    return array[]::text[];
   end if;
 end
 $$
@@ -395,11 +395,20 @@ begin
   create index next_pathspace_satisfied_index on next_pathspace using btree (satisfied);
   create index next_pathspace_is_cycle_index on next_pathspace using btree (is_cycle);
 
-  -- Populate initial pathspace with the primer query
+  raise notice 'Expansion start';
+
+  -- Populate initial pathspace with the primer query - this is the depth 1 traversal expansion
   execute primer_query;
 
-  -- Iterate until either we reach a depth limit or if there are satisfied paths
-  while depth < max_depth and not exists(select 1 from next_pathspace np where np.satisfied)
+  raise notice 'Expansion step % - Available Paths % - Num satisfied: %', depth, (select count(*) from next_pathspace), (select count(*) from next_pathspace p where p.satisfied);
+
+  -- Iterate until one of the following conditions:
+  -- * Traversal has reached the max allowed depth
+  -- * Pathspace is exhausted (no further expansion possible)
+  -- * A terminal node (and therefore one of the shortest paths) has been found
+  while depth < max_depth and
+        exists(select 1 from next_pathspace) and
+        not exists(select 1 from next_pathspace np where np.satisfied)
     loop
       -- Rename tables to swap in the next pathspace as the current pathspace for the next traversal step
       alter table pathspace
@@ -412,15 +421,21 @@ begin
       -- Clear the next pathspace scratch
       truncate table next_pathspace;
 
-      -- Remove any non-satisfied terminals and cycles from pathspace to prune any terminal, non-satisfied paths
+      -- Remove any non-satisfied terminals and cycles from pathspace
+      raise notice 'Available Paths Before Delete % - Num satisfied: %', (select count(*) from pathspace), (select count(*) from pathspace p where p.satisfied);
+
       delete
       from pathspace p
       where p.is_cycle
-         or not exists(select 1 from edge e where e.start_id = p.next_id);
+         or not exists(select 1 from edge e where e.end_id = p.next_id);
+
+      raise notice 'Available Paths After Delete % - Num satisfied: %', (select count(*) from pathspace), (select count(*) from pathspace p where p.satisfied);
 
       -- Increase the current depth and execute the recursive query
       depth := depth + 1;
       execute recursive_query;
+
+      raise notice 'Expansion step % - Available Paths % - Num satisfied: %', depth, (select count(*) from next_pathspace), (select count(*) from next_pathspace p where p.satisfied);
     end loop;
 
   -- Return all satisfied paths from the next pathspace table

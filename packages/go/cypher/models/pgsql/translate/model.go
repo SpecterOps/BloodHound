@@ -26,19 +26,19 @@ import (
 )
 
 const (
-	expansionRootID     pgsql.Identifier = "root_id"
-	nextExpansionNodeID pgsql.Identifier = "next_id"
-	expansionDepth      pgsql.Identifier = "depth"
-	expansionSatisfied  pgsql.Identifier = "satisfied"
-	expansionIsCycle    pgsql.Identifier = "is_cycle"
-	expansionPath       pgsql.Identifier = "path"
+	expansionRootID    pgsql.Identifier = "root_id"
+	expansionNextID    pgsql.Identifier = "next_id"
+	expansionDepth     pgsql.Identifier = "depth"
+	expansionSatisfied pgsql.Identifier = "satisfied"
+	expansionIsCycle   pgsql.Identifier = "is_cycle"
+	expansionPath      pgsql.Identifier = "path"
 )
 
 func expansionColumns() pgsql.RecordShape {
 	return pgsql.RecordShape{
 		Columns: []pgsql.Identifier{
 			expansionRootID,
-			nextExpansionNodeID,
+			expansionNextID,
 			expansionDepth,
 			expansionSatisfied,
 			expansionIsCycle,
@@ -64,17 +64,16 @@ type Expansion struct {
 	MinDepth    models.Optional[int64]
 	MaxDepth    models.Optional[int64]
 
-	PrimerProjection          []pgsql.SelectItem
-	PrimerRootNodeConstraints pgsql.Expression
-	PrimerConstraints         pgsql.Expression
-
-	ExpansionEdgeConstraints pgsql.Expression
-	ExpansionNodeConstraints pgsql.Expression
+	PrimerProjection  []pgsql.SelectItem
+	PrimerConstraints pgsql.Expression
 
 	RecursiveProjection  []pgsql.SelectItem
 	RecursiveConstraints pgsql.Expression
 
-	TerminalNodeConstraints pgsql.Expression
+	LeftNodeJoinCondition    pgsql.Expression
+	ExpansionEdgeConstraints pgsql.Expression
+	ExpansionNodeConstraints pgsql.Expression
+	TerminalNodeConstraints  pgsql.Expression
 
 	Projection  []pgsql.SelectItem
 	Constraints pgsql.Expression
@@ -86,14 +85,30 @@ type PatternSegment struct {
 	Expansion              models.Optional[Expansion]
 	LeftNode               *BoundIdentifier
 	LeftNodeBound          bool
+	LeftNodeConstraints    pgsql.Expression
 	LeftNodeJoinCondition  pgsql.Expression
 	Edge                   *BoundIdentifier
-	EdgeConstraint         *Constraint
+	EdgeConstraints        *Constraint
+	EdgeJoinCondition      pgsql.Expression
 	RightNode              *BoundIdentifier
 	RightNodeBound         bool
+	RightNodeConstraints   pgsql.Expression
 	RightNodeJoinCondition pgsql.Expression
 	Definitions            []*BoundIdentifier
 	Projection             []pgsql.SelectItem
+}
+
+func (s *PatternSegment) FlipNodes() {
+	oldLeftNode := s.LeftNode
+	s.LeftNode = s.RightNode
+	s.RightNode = oldLeftNode
+
+	switch s.Direction {
+	case graph.DirectionOutbound:
+		s.Direction = graph.DirectionInbound
+	case graph.DirectionInbound:
+		s.Direction = graph.DirectionOutbound
+	}
 }
 
 // TerminalNode will find the terminal node of this pattern segment based on the segment's direction
