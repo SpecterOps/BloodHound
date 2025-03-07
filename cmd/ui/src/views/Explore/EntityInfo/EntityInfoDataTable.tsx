@@ -25,6 +25,7 @@ import {
 } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
 import { useDispatch } from 'react-redux';
+import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { transformFlatGraphResponse } from 'src/utils';
@@ -58,21 +59,19 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
 
     const setExpandedRelationshipsParams = () => {
         let expandedRelationshipHelperArray: string[] = [];
-        const expandedRelationshipsLength = (expandedRelationships as string[]).length;
-        const listWithExistingParams = [...(expandedRelationships as string[]), `${parentSectionIndex}-${label}`];
+        const expandedRelationshipsLength = expandedRelationships!.length;
         const listNewParamsOnly = [`${parentSectionIndex}-${label}`];
-
         if (!expandedRelationshipsLength) {
             expandedRelationshipHelperArray = listNewParamsOnly;
         } else {
-            const parentIndexOfNested = parseInt((expandedRelationships as string[])?.at(-1)?.split('-')[0] as string);
+            const parentIndexOfNested = parseInt(expandedRelationships!.at(-1)?.split('-')[0] as string);
             const isNestedSameSection = parentIndexOfNested === parentSectionIndex;
             if (expandedRelationshipsLength >= 2 && isNestedSameSection) {
-                expandedRelationships?.pop();
+                expandedRelationships!.pop(); // Always remove the last one if more than two as it guarantees that we always leave the parent
             }
+            const listWithExistingParams = [...expandedRelationships!, `${parentSectionIndex}-${label}`];
             expandedRelationshipHelperArray = isNestedSameSection ? listWithExistingParams : listNewParamsOnly;
         }
-
         setExploreParams({
             expandedRelationships: expandedRelationshipHelperArray,
             searchType: 'relationship',
@@ -118,15 +117,15 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     };
 
     const isParentSection = (key: string) => {
-        // for it to be a parent key/label that is being checked needs to be label of 0 index of expanded relationships nad needs to have the index same as the current section index we are evaluating
-        const checkKey = expandedRelationships?.at(0)?.split('-')[1] === key;
-        const checkIndex = expandedRelationships?.at(0)?.split('-')[0] == parentSectionIndex;
+        const splitFirstExpandedRelationship = expandedRelationships?.at(0)?.split('-') as string[]; // Always check first index because it will always be parent if nesting is there
+        const checkKey = splitFirstExpandedRelationship[1] === key; // confirm if key/label is the parent one
+        const checkIndex = parseInt(splitFirstExpandedRelationship[0]) == parentSectionIndex; // confirm if its the same parent or if you went from one parent to another
         return checkKey && checkIndex;
     };
 
     const handleCurrentSectionToggle = () => {
         if (backButtonFlag?.enabled) {
-            if (expandedSections && (expandedRelationships as string[]).length > 0) {
+            if (expandedSections && expandedRelationships!.length > 0) {
                 for (const [key] of Object.entries(expandedSections)) {
                     // Closes if the key that is being evaluated is not a direct parent, is not object information and its not the same label that we are trying to open
                     if (key !== 'Object Information' && !isParentSection(key) && key !== label) {
@@ -138,7 +137,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         toggleSection(label);
     };
 
-    const setNodeSearchParams = (item: any) => {
+    const setNodeSearchParams = (item: SelectedNode) => {
         setExploreParams({
             primarySearch: item.id ?? item.name,
             searchType: 'node',
@@ -146,7 +145,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         });
     };
 
-    const setSourceNodeSelected = (item: any) => {
+    const setSourceNodeSelected = (item: SelectedNode) => {
         dispatch(
             searchbarActions.sourceNodeSelected({
                 objectid: item.id,
@@ -156,7 +155,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         );
     };
 
-    const handleOnClick = (item: any) => {
+    const handleOnClick = (item: SelectedNode) => {
         if (backButtonFlag?.enabled) {
             setNodeSearchParams(item);
         } else {
