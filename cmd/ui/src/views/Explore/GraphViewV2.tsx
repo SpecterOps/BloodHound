@@ -26,6 +26,7 @@ import {
     setSelectedEdge,
     useAvailableDomains,
     useExploreGraph,
+    useExploreParams,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -42,7 +43,7 @@ import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import { transformFlatGraphResponse } from 'src/utils';
+import { transformFlatGraphResponse, transformToFlatGraphResponse } from 'src/utils';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
@@ -60,6 +61,7 @@ const GraphViewV2: FC = () => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
 
+    const { searchType } = useExploreParams();
     const newGraphState = useExploreGraph<FlatGraphResponse>();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
@@ -89,7 +91,10 @@ const GraphViewV2: FC = () => {
         let items: any = newGraphState.data;
         if (!items) return;
         // `items` may be empty, or it may contain an empty `nodes` object
-        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
+        if (isEmpty(items) || isEmpty(items.nodes)) {
+            if (searchType === 'composition') items = transformToFlatGraphResponse(items);
+            items = transformFlatGraphResponse(items);
+        }
 
         const graph = new MultiDirectedGraph();
 
@@ -98,7 +103,7 @@ const GraphViewV2: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [newGraphState.data, theme, darkMode]);
+    }, [newGraphState.data, theme, darkMode, searchType]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {

@@ -1,6 +1,6 @@
-import { apiClient } from '../..';
-import { ExploreQueryParams } from '../useExploreParams';
-import { ExploreGraphQueryKey, ExploreGraphQueryOptions } from './search-modes/utils';
+import { apiClient } from '../../../utils/api';
+import { ExploreQueryParams } from '../../useExploreParams';
+import { ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
 
 // const selectedEdgeCypherQuery = (sourceId: string, targetId: string, edgeKind: string): string =>
 // `MATCH (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN r LIMIT 1`;
@@ -16,7 +16,7 @@ export const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
         };
     }
 
-    const [_rel, sourceId, edgeType, targetId] = panelSelection.split('_');
+    const [_rel, sourceId, edgeType, targetId] = panelSelection.split('_'); // TODO: what is this actually going to look like?
     if (!sourceId || !edgeType || !targetId || isNaN(Number(sourceId)) || isNaN(Number(targetId)))
         return {
             enabled: false,
@@ -40,9 +40,7 @@ export const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
 
 /**
  * TODO:
- * is this what graph ids look like?
- * we need one util for determining if something is edge or node and to pull apart the edge in the same manor
- *   reuse that util for these queries
+ * selection data type to be determined in a separate ticket
  * edge panel can only open one accordion at a time? no?
  * dont refetch graph on clicking in the window
  */

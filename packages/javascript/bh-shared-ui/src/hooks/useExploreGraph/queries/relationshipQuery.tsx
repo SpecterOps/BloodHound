@@ -1,8 +1,13 @@
-import { SearchResults } from '../../hooks/useSearch';
-import { apiClient } from '../../utils/api';
-import { EntityInfoDataTableProps, EntityKinds, EntitySectionEndpointParams, allSections } from '../../utils/content';
-import { ExploreQueryParams } from '../useExploreParams';
-import { ExploreGraphQueryKey, ExploreGraphQueryOptions } from './search-modes/utils';
+import { apiClient } from '../../../utils/api';
+import {
+    EntityInfoDataTableProps,
+    EntityKinds,
+    EntitySectionEndpointParams,
+    allSections,
+} from '../../../utils/content';
+import { ExploreQueryParams } from '../../useExploreParams';
+import { SearchResults } from '../../useSearch';
+import { ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
 
 type SectionEndpoint = (p: EntitySectionEndpointParams) => Promise<any>;
 
@@ -28,7 +33,7 @@ const getRelationshipEndpoint = (
 export const relationshipSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { expandedRelationships, panelSelection, searchType } = paramOptions;
 
-    const isEdgeId = panelSelection?.includes('_'); // TODO: reuse whatever Francisco uses to determine node/edge
+    const isEdgeId = panelSelection?.includes('_'); // TODO: tobe determined from entity panel work
 
     if (searchType !== 'relationship' || !expandedRelationships?.length || !panelSelection || isEdgeId) {
         return {
@@ -44,22 +49,21 @@ export const relationshipSearchGraphQuery = (paramOptions: Partial<ExploreQueryP
     return {
         queryKey: [ExploreGraphQueryKey, ...expandedRelationships, panelSelection, searchType],
         queryFn: async ({ signal }) => {
-            // gets node info -> get endpoing based on relationships -> return that promise
-            const nodeDetails: SearchResults | undefined = await apiClient
+            const nodeDetails: SearchResults[number] | undefined = await apiClient
                 .searchHandler(panelSelection, undefined, { signal })
                 .then((result) => {
                     if (!result.data.data) return [];
-                    return result.data.data;
+                    return result.data.data[0];
                 });
 
-            const nodeType = nodeDetails?.[0].type;
+            const nodeType = nodeDetails?.type;
             if (!nodeType) {
-                throw new Error('unable to fetch relationship');
+                throw new Error('unable to fetch source node details');
             }
-            const isValidNodeType = nodeType in allSections;
 
+            const isValidNodeType = nodeType in allSections;
             if (!isValidNodeType) {
-                throw new Error('invalid node type');
+                throw new Error('invalid source node type');
             }
 
             const endpoint = getRelationshipEndpoint(nodeType as EntityKinds, panelSelection, accordionMap);
@@ -74,7 +78,8 @@ export const relationshipSearchGraphQuery = (paramOptions: Partial<ExploreQueryP
     };
 };
 
-// ?panelSelection=S-1-5-21-3702535222-3822678775-2090119576-1143&expandedRelationships=Inbound%20Object%20Control&expandedRelationships=Member%20Of&searchType=relationship
+// ?panelSelection=A12512B2-7103-4BEF-B528-50681B3796AB&expandedRelationships=Affected%20Objects%20Control&expandedRelationships=OUs&searchType=relationship
+// match (a:GPO) where a.objectid = 'A12512B2-7103-4BEF-B528-50681B3796AB' return a
 
 /**
  * TODO:

@@ -17,6 +17,8 @@
 import { useQuery } from 'react-query';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams/useExploreParams';
 import { ExploreGraphQueryOptions, nodeSearchGraphQuery } from './queries';
+import { compositionSearchGraphQuery } from './queries/compositionQuery';
+import { relationshipSearchGraphQuery } from './queries/relationshipQuery';
 
 export function getExploreGraphQuery(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions {
     switch (paramOptions.searchType) {
@@ -27,9 +29,9 @@ export function getExploreGraphQuery(paramOptions: Partial<ExploreQueryParams>):
         case 'cypher':
             return {};
         case 'relationship':
-            return {};
+            return relationshipSearchGraphQuery(paramOptions);
         case 'composition':
-            return {};
+            return compositionSearchGraphQuery(paramOptions);
         default:
             return { enabled: false };
     }
