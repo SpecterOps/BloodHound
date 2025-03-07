@@ -23,6 +23,7 @@ import {
     usePaneStyles,
 } from 'bh-shared-ui';
 import React, { useCallback, useEffect, useState } from 'react';
+import { SelectedNode } from 'src/ducks/entityinfo/types';
 import usePreviousValue from 'src/hooks/usePreviousValue';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
@@ -30,7 +31,7 @@ import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 interface EntityInfoPanelProps {
-    selectedNode?: any; // To do: type it
+    selectedNode: SelectedNode | null;
     sx?: SxProps;
 }
 
