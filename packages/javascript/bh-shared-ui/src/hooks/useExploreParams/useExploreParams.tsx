@@ -60,7 +60,7 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         searchType: parseSearchType(searchParams.get('searchType')),
         graphSelection: searchParams.get('graphSelection'),
         panelSelection: searchParams.get('panelSelection'),
-        expandedRelationships: searchParams.getAll('expandedRelationship'),
+        expandedRelationships: searchParams.getAll('expandedRelationships'),
         // react doesnt like this because it doesnt know the params needed for the function factory return function.
         // but the params needed are not needed in the deps array
         // eslint-disable-next-line react-hooks/exhaustive-deps
