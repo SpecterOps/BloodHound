@@ -28,7 +28,6 @@ const CoerceAndRelayNTLMToLDAP = {
     linuxAbuse: LinuxAbuse,
     opsec: Opsec,
     references: References,
-
 };
 
 export default CoerceAndRelayNTLMToLDAP;
