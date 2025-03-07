@@ -4,7 +4,7 @@ import { useExploreParams } from '../../hooks';
 import { SelectedEdge } from '../../store';
 import { apiClient } from '../../utils';
 
-export const EdgeDataFetcher: FC<{ children: (selectedEdge: SelectedEdge) => ReactNode }> = ({ children }) => {
+export const EdgeDataFetcher: FC<{ children: (selectedEdge: SelectedEdge | null) => ReactNode }> = ({ children }) => {
     const { panelSelection } = useExploreParams();
     const panelSelectionItems = (panelSelection as string).split('_');
     const selectedEdgeCypherQuery = (): string =>

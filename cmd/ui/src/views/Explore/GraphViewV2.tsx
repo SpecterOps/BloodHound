@@ -292,7 +292,7 @@ const GraphViewV2: FC = () => {
                 <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
                     {isEdge ? (
                         <EdgeDataFetcher>
-                            {(selectedEdge: SelectedEdge) => <EdgeInfoPane selectedEdge={selectedEdge} />}
+                            {(selectedEdge: SelectedEdge | null) => <EdgeInfoPane selectedEdge={selectedEdge} />}
                         </EdgeDataFetcher>
                     ) : (
                         <NodeDataFetcher>
