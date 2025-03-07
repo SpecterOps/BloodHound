@@ -17,35 +17,38 @@
 import { useQuery } from 'react-query';
 import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
-import { ExploreGraphQueryOptions, Notifier, nodeSearchGraphQuery, pathfindingSearchGraphQuery } from './queries';
+import { ExploreGraphQueryContext, nodeSearchQueryContext, pathfindingSearchQueryContext } from './queries';
 
-export function getExploreGraphQuery(
-    paramOptions: Partial<ExploreQueryParams>,
-    addNotification: Notifier
-): ExploreGraphQueryOptions {
+export function getExploreGraphQueryContext(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryContext {
     switch (paramOptions.searchType) {
         case 'node':
-            return nodeSearchGraphQuery(paramOptions, addNotification);
+            return nodeSearchQueryContext;
         case 'pathfinding':
-            return pathfindingSearchGraphQuery(paramOptions, addNotification);
-        case 'cypher':
-            return {};
-        case 'relationship':
-            return {};
-        case 'composition':
-            return {};
+            return pathfindingSearchQueryContext;
+        // case 'cypher':
+        //     return {};
+        // case 'relationship':
+        //     return {};
+        // case 'composition':
+        //     return {};
         default:
-            return { enabled: false };
+            return { getQueryConfig: () => ({ enabled: false }) };
     }
     // else some unidentified type, display error, set to node-search
 }
 
-// Consumer of query params example
+// Hook for maintaining the top level graph query powering the explore page
 export const useExploreGraph = () => {
     const params = useExploreParams();
     const { addNotification } = useNotifications();
 
-    const queryConfig = getExploreGraphQuery(params, addNotification);
+    const queryContext = getExploreGraphQueryContext(params);
+    const query = useQuery(queryContext.getQueryConfig(params));
 
-    return useQuery(queryConfig);
+    if (query.error && queryContext.getGraphError) {
+        const error = queryContext.getGraphError(query.error);
+        addNotification(error.message, error.key);
+    }
+
+    return query;
 };

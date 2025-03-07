@@ -8,6 +8,8 @@ export const usePathfindingFilters = () => {
     const [selectedFilters, updateSelectedFilters] = useState<EdgeCheckboxType[]>(INITIAL_FILTERS);
     const { pathFilters, setExploreParams } = useExploreParams();
 
+    // Instead of tracking this in an effect, we want to create a callback to let the consumer decide when to sync down
+    // query params. This is useful for our filter form where we only want to sync once when the user opens it
     const initialize = () => {
         if (pathFilters?.length) {
             const mapped = mapParamsToFilters(pathFilters, INITIAL_FILTERS);
@@ -20,6 +22,7 @@ export const usePathfindingFilters = () => {
     const handleApplyFilters = () => {
         const selectedEdgeTypes = extractEdgeTypes(selectedFilters);
 
+        // To avoid giant query strings where at all possible, clear them out if the user selects the default
         if (compareEdgeTypes(INITIAL_FILTER_TYPES, selectedEdgeTypes)) {
             setExploreParams({ pathFilters: null });
         } else {

@@ -17,17 +17,17 @@
 import { FlatGraphResponse } from 'js-client-library';
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
-import { ExploreGraphQueryKey, ExploreGraphQueryOptions, Notifier } from './utils';
+import {
+    ExploreGraphQueryContext,
+    ExploreGraphQueryError,
+    ExploreGraphQueryKey,
+    ExploreGraphQueryOptions,
+} from './utils';
 
-export const nodeSearchGraphQuery = (
-    paramOptions: Partial<ExploreQueryParams>,
-    addNotification: Notifier
-): ExploreGraphQueryOptions => {
+export const nodeSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { searchType, primarySearch } = paramOptions;
     if (!primarySearch || !searchType) {
-        return {
-            enabled: false,
-        };
+        return { enabled: false };
     }
 
     return {
@@ -36,7 +36,20 @@ export const nodeSearchGraphQuery = (
             apiClient
                 .getSearchResult(primarySearch, 'exact', { signal })
                 .then((res) => res.data.data as FlatGraphResponse),
-        onError: () => addNotification('No matching node found.', 'NodeSearchQueryFailure'),
+        retry: false,
         enabled: !!(searchType && primarySearch),
     };
+};
+
+const handleNodeSearchError = (error: any): ExploreGraphQueryError => {
+    if (error?.response?.status) {
+        return { message: 'No matching node found.', key: 'NodeSearchQueryFailure' };
+    } else {
+        return { message: 'An unknown error occurred.', key: 'NodeSearchUnknown' };
+    }
+};
+
+export const nodeSearchQueryContext: ExploreGraphQueryContext = {
+    getQueryConfig: nodeSearchGraphQuery,
+    getGraphError: handleNodeSearchError,
 };

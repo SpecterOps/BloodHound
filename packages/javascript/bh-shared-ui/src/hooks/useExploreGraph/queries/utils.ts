@@ -16,7 +16,7 @@
 
 import { FlatGraphResponse, GraphData, GraphResponse, StyledGraphEdge, StyledGraphNode } from 'js-client-library';
 import { UseQueryOptions } from 'react-query';
-import { useNotifications } from '../../../providers';
+import { ExploreQueryParams } from '../../useExploreParams';
 import { extractEdgeTypes, getInitialPathFilters } from '../utils';
 
 type QueryKeys = ('explore-graph-query' | string | undefined)[];
@@ -25,7 +25,12 @@ export type ExploreGraphQueryOptions = UseQueryOptions<FlatGraphResponse, unknow
 
 export type GraphItemMutationFn = (items: any) => unknown;
 
-export type Notifier = ReturnType<typeof useNotifications>['addNotification'];
+export type ExploreGraphQueryError = { message: string; key: string };
+
+export type ExploreGraphQueryContext = {
+    getQueryConfig: (paramOptions: Partial<ExploreQueryParams>) => ExploreGraphQueryOptions;
+    getGraphError?: (error: any) => ExploreGraphQueryError;
+};
 
 export const ExploreGraphQueryKey = 'explore-graph-query';
 
