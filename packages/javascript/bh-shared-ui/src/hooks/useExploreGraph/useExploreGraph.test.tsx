@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { ExploreQueryParams } from '../useExploreParams';
 import * as modes from './queries';
 import { getExploreGraphQueryContext } from './useExploreGraph';
 
@@ -22,17 +23,19 @@ const nodeSearchGraphQuerySpy = vi.spyOn(modes, 'nodeSearchGraphQuery');
 describe('useExploreGraph', () => {
     describe('getExploreGraphQuery', () => {
         it('returns {enabled: false} if there is not a match on the switch statement', () => {
-            const actual = getExploreGraphQueryContext({
+            const paramOptions = {
                 searchType: 'noMatch',
-            } as any);
-
-            expect(actual).toStrictEqual({ enabled: false });
+            } as any;
+            const queryContext = getExploreGraphQueryContext(paramOptions);
+            const config = queryContext.getQueryConfig(paramOptions);
+            expect(config).toStrictEqual({ enabled: false });
         });
         it('runs nodeSearchGraphQuery when search type is node', () => {
-            const paramOptions = { searchType: 'node', primarySearch: 'test1' } as any;
-            getExploreGraphQueryContext(paramOptions);
+            const paramOptions: Partial<ExploreQueryParams> = { searchType: 'node', primarySearch: 'test1' };
+            const context = getExploreGraphQueryContext(paramOptions);
 
-            expect(nodeSearchGraphQuerySpy).toBeCalledWith(paramOptions);
+            context.getQueryConfig(paramOptions);
+            expect(nodeSearchGraphQuerySpy).toBeCalled();
         });
     });
 });

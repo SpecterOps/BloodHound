@@ -34,7 +34,6 @@ export function getExploreGraphQueryContext(paramOptions: Partial<ExploreQueryPa
         default:
             return { getQueryConfig: () => ({ enabled: false }) };
     }
-    // else some unidentified type, display error, set to node-search
 }
 
 // Hook for maintaining the top level graph query powering the explore page
