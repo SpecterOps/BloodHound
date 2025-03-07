@@ -42,12 +42,15 @@ export const useExploreGraph = () => {
     const { addNotification } = useNotifications();
 
     const queryContext = getExploreGraphQueryContext(params);
-    const query = useQuery(queryContext.getQueryConfig(params));
-
-    if (query.error && queryContext.getGraphError) {
-        const error = queryContext.getGraphError(query.error);
-        addNotification(error.message, error.key);
-    }
+    const query = useQuery({
+        ...queryContext.getQueryConfig(params),
+        onError: (error: any) => {
+            if (queryContext.getGraphError) {
+                const { message, key } = queryContext.getGraphError(error);
+                addNotification(message, key);
+            }
+        },
+    });
 
     return query;
 };
