@@ -59,33 +59,18 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     const setExpandedRelationshipsParams = () => {
         let expandedRelationshipHelperArray: string[] = [];
         const expandedRelationshipsLength = (expandedRelationships as string[]).length;
+        const listWithExistingParams = [...(expandedRelationships as string[]), `${parentSectionIndex}-${label}`];
+        const listNewParamsOnly = [`${parentSectionIndex}-${label}`];
 
         if (!expandedRelationshipsLength) {
-            expandedRelationshipHelperArray = [`${parentSectionIndex}-${label}`];
+            expandedRelationshipHelperArray = listNewParamsOnly;
         } else {
             const parentIndexOfNested = parseInt((expandedRelationships as string[])?.at(-1)?.split('-')[0] as string);
             const isNestedSameSection = parentIndexOfNested === parentSectionIndex;
-            if (expandedRelationshipsLength === 1) {
-                if (isNestedSameSection) {
-                    expandedRelationshipHelperArray = [
-                        ...(expandedRelationships as string[]),
-                        `${parentSectionIndex}-${label}`,
-                    ];
-                } else {
-                    expandedRelationshipHelperArray = [`${parentSectionIndex}-${label}`];
-                }
+            if (expandedRelationshipsLength >= 2 && isNestedSameSection) {
+                expandedRelationships?.pop();
             }
-            if (expandedRelationshipsLength >= 2) {
-                if (isNestedSameSection) {
-                    expandedRelationships?.pop();
-                    expandedRelationshipHelperArray = [
-                        ...(expandedRelationships as string[]),
-                        `${parentSectionIndex}-${label}`,
-                    ];
-                } else {
-                    expandedRelationshipHelperArray = [`${parentSectionIndex}-${label}`];
-                }
-            }
+            expandedRelationshipHelperArray = isNestedSameSection ? listWithExistingParams : listNewParamsOnly;
         }
 
         setExploreParams({
@@ -95,15 +80,15 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     };
 
     const handleOnChange = (label: string, isOpen: boolean) => {
-        if (backButtonFlag?.enabled && isOpen && !endpoint) {
-            setExpandedRelationshipsParams();
-        }
         handleCurrentSectionToggle();
         handleSetGraph(label, isOpen);
     };
 
     const handleSetGraph = async (label: string, isOpen: boolean) => {
         if (!endpoint) {
+            if (backButtonFlag?.enabled && isOpen) {
+                setExpandedRelationshipsParams();
+            }
             return;
         }
 

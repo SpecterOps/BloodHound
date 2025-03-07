@@ -59,7 +59,7 @@ export const EdgeInfoCollapsibleSection: React.FC<
     const setExpandedRelationshipsParam = () => {
         setExploreParams({
             expandedRelationships: [section],
-            searchType: section === 'composition' ? 'composition' : 'relationship',
+            ...(section === 'composition' && { searchType: 'composition' }),
         });
     };
 
