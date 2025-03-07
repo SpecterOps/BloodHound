@@ -31,7 +31,7 @@ import {
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { FlatGraphResponse, GraphNodes } from 'js-client-library';
+import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
@@ -60,7 +60,7 @@ const GraphViewV2: FC = () => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
 
-    const newGraphState = useExploreGraph<FlatGraphResponse>();
+    const newGraphState = useExploreGraph();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exportableGraphState = useAppSelector((state) => state.explore.export);

@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SearchValue } from '../../store';
 import { useExploreParams } from '../useExploreParams';
-import { useExploreGraph } from './useExploreGraph';
+import { getKeywordAndTypeValues, useSearch } from '../useSearch';
 
 /* Reusable logic for syncing up a single node search field with browser query params on the Explore page. The value of the search field is tracked
 internally, and is only pushed to query params once the event handler is called by the consumer component. Direct changes to the associated query
@@ -27,24 +27,22 @@ export const useNodeSearch = () => {
     const [selectedItem, setSelectedItem] = useState<SearchValue | undefined>(undefined);
 
     const { primarySearch, searchType, setExploreParams } = useExploreParams();
-    const { data: graphData } = useExploreGraph();
+
+    // Wire up search query. we should only recompute the keyword/type when the param value changes
+    const { keyword, type } = useMemo(() => getKeywordAndTypeValues(primarySearch ?? undefined), [primarySearch]);
+    const { data: searchData } = useSearch(keyword, type);
 
     // Watch query params for a new incoming node search and sync to internal state
     useEffect(() => {
-        if (primarySearch && graphData) {
-            const matchedNode = Object.values(graphData).find((node) => node.data['objectid'] === primarySearch);
+        if (primarySearch && searchData) {
+            const matchedNode = searchData.find((node) => node.objectid === primarySearch);
 
             if (matchedNode) {
-                setSearchTerm(matchedNode.data['name']);
-
-                setSelectedItem({
-                    name: matchedNode.data['name'],
-                    objectid: matchedNode.data['objectid'],
-                    type: matchedNode.data['nodetype'],
-                });
+                setSearchTerm(matchedNode.name);
+                setSelectedItem(matchedNode);
             }
         }
-    }, [primarySearch, searchType, graphData]);
+    }, [primarySearch, searchType, searchData]);
 
     // Handles syncing the local search state up to query params to trigger a graph query
     const selectSourceNode = (selected?: SearchValue) => {

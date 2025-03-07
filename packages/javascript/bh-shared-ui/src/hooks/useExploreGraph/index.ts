@@ -17,5 +17,6 @@
 export * from './queries';
 export * from './useExploreGraph';
 export * from './useNodeSearch';
+export * from './usePathfindingFilters';
 export * from './usePathfindingSearch';
 export * from './utils';
