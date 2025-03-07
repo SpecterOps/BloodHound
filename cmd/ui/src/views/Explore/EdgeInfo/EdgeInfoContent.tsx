@@ -53,7 +53,7 @@ const getOnChange = (
                     const formattedData = transformToFlatGraphResponse(result.data);
 
                     dispatch(saveResponseForExport(formattedData));
-                    !backButtonFlag?.enabled && dispatch(putGraphData(formattedData)); // To do: Set params here
+                    !backButtonFlag?.enabled && dispatch(putGraphData(formattedData));
                 })
                 .catch((err) => {
                     if (err?.code === 'ERR_CANCELED') {
