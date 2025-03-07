@@ -2,28 +2,27 @@
 title: RootCAFor
 ---
 
-<Frame>
-  <img src="/assets/image-2-1.png"/>
-</Frame>
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
 
 
 The CA is trusted as a root certification authority by the domain. Any certificates signed by this CA
 will be trusted by the domain and all hosts in the domain.
 
-Abuse Info[](#h_01HPHZJSTFS46D4BFVYAB25KTE)
--------------------------------------------
+Abuse Info
+----------
 
 An attacker may perform several attacks that rely on the existence of a root CA, such as ESC1. This edge
 alone is not enough to escalate rights or impersonate other principals. This edge may contribute to other
 edges and attributes, from which an escalation opportunity may emerge.
 
-Opsec Considerations[](#heading-2)
-----------------------------------
+Opsec Considerations
+--------------------
 
 When the affected certificate authority issues the certificate to the attacker, it will retain a local copy of that certificate in its issued certificates store. Defenders may analyze those issued certificates to identify illegitimately issued certificates and identify the principal that requested the certificate, as well as the target identity the attacker is attempting to impersonate.
 
-References[](#heading-3)
-------------------------
+References
+----------
 
 This edge is related to the following MITRE ATT&CK tactic and techniques:
 

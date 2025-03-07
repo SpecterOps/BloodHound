@@ -2,25 +2,23 @@
 title: IssuedSignedBy
 ---
 
-<Frame>
-  <img src="/assets/image-2-1.png"/>
-</Frame>
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
 
 
 When Windows assesses the validity and trustworthiness of a certificate it verifies the certificate chain up to a trusted root certificate. The IssuedSignedBy edge represent a link within the certificate chain.
 
-Abuse Info[](#h_01HPHZJSTFS46D4BFVYAB25KTE)
--------------------------------------------
+Abuse Info
+-----------
 
 An attacker may perform several attacks that rely on the certificate chain, such as ESC1. This relationship alone is not enough to escalate rights or impersonate other principals. This relationship may contribute to other relationships and attributes, from which an escalation opportunity may emerge.
 
-Opsec Considerations[](#heading-2)
-----------------------------------
+Opsec Considerations
+--------------------
 
 When an attacker abuses a privilege escalation or impersonation primitive that relies on this relationship, it will necessarily result in the issuance of a certificate. A copy of the issued certificate will be saved on the host that issued the certificate.
 
-References[](#heading-3)
-------------------------
+References
+-----------
 
 This edge is related to the following MITRE ATT&CK tactic and techniques:
 

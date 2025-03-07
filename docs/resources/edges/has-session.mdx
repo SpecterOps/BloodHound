@@ -2,9 +2,8 @@
 title: HasSession
 ---
 
-<Frame>
-  <img src="/assets/image-2-1.png"/>
-</Frame>
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
 
 When a user authenticates to a computer, they often leave credentials exposed on the system, which can be retrieved through LSASS injection, token manipulation or theft, or injecting into a user’s process.
 
@@ -16,8 +15,8 @@ This video explains how BloodHound CE's session data collection method works:
 
 <iframe id="youtube-7414" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Player for How BloodHound's Session Collection Works" width="360" height="420" src="https://www.youtube.com/embed/q86VgM2Tafc?autoplay=0&amp;controls=0&amp;disablekb=1&amp;playsinline=1&amp;cc_load_policy=0&amp;cc_lang_pref=auto&amp;widget_referrer=https%3A%2F%2Fsupport.bloodhoundenterprise.io%2Fhc%2Fen-us%2Farticles%2FHasSession&amp;rel=0&amp;showinfo=0&amp;iv_load_policy=3&amp;modestbranding=1&amp;customControls=true&amp;noCookie=false&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fsupport.bloodhoundenterprise.io&amp;widgetid=1" data-gtm-yt-inspected-6="true"></iframe>
 
-Abuse Info[](#heading-1)
-------------------------
+Abuse Info
+-----------
 
 When a user has a session on the computer, you may be able to obtain credentials for the user via credential dumping or token impersonation. You must be able to move laterally to the computer, have administrative access on the computer, and the user must have a non-network logon session on the computer.
 
@@ -31,13 +30,13 @@ You may run into a situation where a user is logged onto the system, but you can
 
 User sessions can be short lived and only represent the sessions that were present at the time of collection. A user may have ended their session by the time you move to the computer to target them. However, users tend to use the same machines, such as the workstations or servers they are assigned to use for their job duties, so it can be valuable to check multiple times if a user session has started.
 
-Opsec Considerations[](#heading-2)
-----------------------------------
+Opsec Considerations
+--------------------
 
 An EDR product may detect your attempt to inject into lsass and alert a SOC analyst. There are many more opsec considerations to keep in mind when stealing credentials or tokens. For more information, see the References section.
 
-References[](#heading-3)
-------------------------
+References
+----------
 
 * [http://blog.gentilkiwi.com/mimikatz](http://blog.gentilkiwi.com/mimikatz)
 * [https://github.com/gentilkiwi/mimikatz](https://github.com/gentilkiwi/mimikatz)

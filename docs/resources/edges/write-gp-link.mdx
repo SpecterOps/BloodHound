@@ -2,9 +2,8 @@
 title: WriteGPLink
 ---
 
-<Frame>
-  <img src="/assets/image-2-1.png"/>
-</Frame>
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
 
 The WriteGPLink edge indicates that the principal has the permissions to modify the gPLink attribute of the targeted OU/domain node.
 
@@ -14,8 +13,8 @@ Successful exploitation will require the possibility to add non-existing DNS rec
 
 Alternatively, the ability to modify the gPLink attribute can be exploited in conjunction with write permissions on a GPO. In such a situation, an attacker could first inject a malicious scheduled task in the controlled GPO, and then link the GPO to the target through its gPLink attribute, making all child users and computers apply the malicious GPO and execute arbitrary commands.
 
-Abuse Info[](#heading-1)
-------------------------
+Abuse Info
+----------
 
 ### Windows abuse
 
@@ -29,13 +28,13 @@ From a Linux machine, the WriteGPLink permission may be abused using the [OUned.
 
 Be mindful of the number of users and computers that are in the given domain as they all will attempt to fetch and apply the malicious GPO.
 
-Opsec Considerations[](#heading-2)
-----------------------------------
+Opsec Considerations
+--------------------
 
 The present attack vector relies on the execution of a malicious Group Policy Object. In case some objects in the target Organizational Unit are unable to apply said Group Policy Object (for instance, because these objects cannot reach the attacker's machine in the internal network), events related to failed GPO application will be created. Furthermore, the execution of this attack will result in the modification of the gPLink property of the target Organizational Unit. The property should be reset to its original value after attack execution to avoid detection and ensure the OU child items can apply their legitimate Group Policy Objects again.
 
-References[](#heading-3)
-------------------------
+References
+----------
 
 This edge is related to the following MITRE ATT&CK technique:
 

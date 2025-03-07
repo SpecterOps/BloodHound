@@ -2,15 +2,14 @@
 title: Install and Upgrade SharpHound Enterprise
 ---
 
-<Frame>
-  <img src="/assets/image-2-1.png"/>
-</Frame>
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
 ## Purpose
 
 This article outlines how to:
 
-* [Install SharpHound Enterprise](#h_01J8R1CP6JCXSCYRBWGZCN3KYR)
-* [Upgrade the SharpHound Enterprise](#h_01HF6RH9VBHXVPR4M1QKAFHSQN)
+* Install SharpHound Enterprise
+* Upgrade the SharpHound Enterprise
 
 BHE users may use it during SharpHound Enterprise deployment or upgrades.
 
@@ -77,7 +76,7 @@ BHE users may use it during SharpHound Enterprise deployment or upgrades.
 </Frame>
 
 
-13. The "SharpHoundDelegator" service has now been installed. If you don't see the service, see the headline: [I don't see the SHDelegator Service](#h_01GECRFRNEMXKS76D21VFYBK5C)
+13. The "SharpHoundDelegator" service has now been installed. If you don't see the service, see the section _I don't see the SHDelegator Service_.
 <Frame>
   <img src="/assets/image-47.png" alt=""/>
 </Frame>
@@ -90,7 +89,7 @@ BHE users may use it during SharpHound Enterprise deployment or upgrades.
         * Set "RestEndpoint" to the BloodHound Enterprise domain name in the format: "CODENAME.bloodhoundenterprise.io". This is the domain that the service connects to.
         * If using a proxy, set "Proxy" to the proxy name and port in the format: "proxy.acme.com:8080"
     * [Create a BloodHound Enterprise collector client](/collect-data/enterprise-collection/create-collector), and then in "auth.json" set "Token" and "TokenID" to the values given after you created the client. This is the secret that the service authenticates with.
-17. Start the service. If service start fails see the headline: [The SharpHound Delegator Service won't start](#h_01GECRNKQG8YEXEEEDHTE4CG1B)
+17. Start the service. If service start fails see the section _The SharpHound Delegator Service won't start_
 18. Return to BloodHound Enterprise, and you should see the client reporting "🟢 Ready"
 <Frame>
   <img src="/assets/image-48.png" alt=""/>
@@ -123,7 +122,7 @@ BHE users may use it during SharpHound Enterprise deployment or upgrades.
 
 
 8.  SharpHound Enterprise has now been upgraded.
-9.  Start the "SharpHound Delegator" service. If you can't start the service, see the headline: [The SharpHound Delegator Service won't start](#h_01GECRNKQG8YEXEEEDHTE4CG1B)
+9.  Start the "SharpHound Delegator" service. If you can't start the service, see the section _The SharpHound Delegator Service won't start_.
 
 ### Common installation issues
 
