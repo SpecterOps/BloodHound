@@ -144,6 +144,7 @@ const GraphViewV2: FC = () => {
 
     const handleContextMenu = (event: SigmaNodeEventPayload) => {
         setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
+        console.log(event.node);
         setSelectedItem(event.node);
     };
 

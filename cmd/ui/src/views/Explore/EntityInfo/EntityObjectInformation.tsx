@@ -14,29 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Skeleton } from '@mui/material';
-import {
-    EntityField,
-    FieldsContainer,
-    ObjectInfoFields,
-    formatObjectInfoFields,
-    useFetchEntityProperties,
-} from 'bh-shared-ui';
+import { Alert } from '@mui/material';
+import { EntityField, FieldsContainer, ObjectInfoFields, formatObjectInfoFields } from 'bh-shared-ui';
 import React from 'react';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
 
-const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
-    const { entityProperties, informationAvailable, isLoading, isError } = useFetchEntityProperties({
-        objectId: id,
-        nodeType,
-        databaseId,
-    });
-
-    if (isLoading) return <Skeleton data-testid='entity-object-information-skeleton' variant='text' />;
-
-    if (isError || !informationAvailable)
+const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ selectedNode }) => {
+    if (!selectedNode.properties)
         return (
             <EntityInfoCollapsibleSection label='Object Information'>
                 <FieldsContainer>
@@ -45,12 +31,12 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
             </EntityInfoCollapsibleSection>
         );
 
-    const formattedObjectFields: EntityField[] = formatObjectInfoFields(entityProperties);
+    const formattedObjectFields: EntityField[] = formatObjectInfoFields(selectedNode.properties);
 
     return (
         <EntityInfoCollapsibleSection label='Object Information'>
             <FieldsContainer>
-                <BasicObjectInfoFields {...entityProperties} />
+                <BasicObjectInfoFields {...selectedNode.properties} />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>
         </EntityInfoCollapsibleSection>

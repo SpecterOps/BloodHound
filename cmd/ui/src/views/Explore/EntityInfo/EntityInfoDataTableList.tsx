@@ -20,11 +20,11 @@ import React from 'react';
 import { EntityInfoContentProps } from './EntityInfoContent';
 import EntityInfoDataTable from './EntityInfoDataTable';
 
-const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeType }) => {
-    let type = nodeType as EntityKinds;
-    if (nodeType === ActiveDirectoryNodeKind.LocalGroup || nodeType === ActiveDirectoryNodeKind.LocalUser)
+const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ selectedNode }) => {
+    let type = selectedNode.kind as EntityKinds;
+    if (type === ActiveDirectoryNodeKind.LocalGroup || type === ActiveDirectoryNodeKind.LocalUser)
         type = ActiveDirectoryNodeKind.Entity;
-    const tables = allSections[type]?.(id) || [];
+    const tables = allSections[type]?.(selectedNode.objectId) || [];
 
     return (
         <>

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
-import { setSelectedEdge, useExploreSelectedItem } from 'bh-shared-ui';
+import { useExploreSelectedItem } from 'bh-shared-ui';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { AbstractGraph, Attributes } from 'graphology-types';
@@ -30,7 +30,7 @@ import {
 import layoutDagre, { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { bezier } from 'src/rendering/utils/bezier';
 import { getNodeRadius } from 'src/rendering/utils/utils';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { useAppDispatch } from 'src/store';
 
 export interface GraphEventProps {
     onDoubleClickNode?: (id: string) => void;
@@ -58,7 +58,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
 ) {
     const dispatch = useAppDispatch();
     const { selectedItem } = useExploreSelectedItem();
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
 
     const sigma = useSigma();
     const registerEvents = useRegisterEvents();
@@ -66,7 +65,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     const [hoveredNode, setHoveredNode] = useState<string | null>(null);
     const [draggedNode, setDraggedNode] = useState<string | null>(null);
-    const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
     const [isDragging, setIsDragging] = useState(false);
 
     const isLongPress = useRef(false);
@@ -224,7 +222,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     clickTimerRef.current = setTimeout(function () {
                         if (!prevent.current) {
                             onClickNode(event.node);
-                            setHighlightedNode(event.node);
                         }
                         prevent.current = false;
                     }, 200);
@@ -250,7 +247,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigma,
         draggedNode,
         isDragging,
-        highlightedNode,
         sigmaContainer,
     ]);
 
@@ -264,7 +260,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                 };
 
-                if (node === highlightedNode) {
+                if (node === selectedItem) {
                     newData.highlighted = true;
                 }
 
@@ -294,17 +290,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 return newData;
             },
         });
-    }, [
-        hoveredNode,
-        draggedNode,
-        highlightedNode,
-        selectedItem,
-        curvedEdgeReducer,
-        selfEdgeReducer,
-        edgeReducer,
-        setSettings,
-        sigma,
-    ]);
+    }, [hoveredNode, draggedNode, selectedItem, curvedEdgeReducer, selfEdgeReducer, edgeReducer, setSettings, sigma]);
 
     // Toggle off edge labels when dragging a node. Since these are rendered on a 2d canvas, dragging nodes with lots of edges
     // can tank performance
@@ -319,13 +305,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
     useEffect(() => {
         resetCamera(sigma);
     }, [sigma]);
-
-    useEffect(() => {
-        if (selectedNode?.graphId) {
-            setSelectedEdge(null);
-            setHighlightedNode(selectedNode.graphId);
-        }
-    }, [selectedNode]);
 
     useEffect(() => {
         setSettings({

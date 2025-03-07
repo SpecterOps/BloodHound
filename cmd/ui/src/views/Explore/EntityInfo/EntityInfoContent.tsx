@@ -15,15 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box } from '@mui/material';
-import { EntityKinds } from 'bh-shared-ui';
+import { NodeResponse } from 'bh-shared-ui';
 import React from 'react';
 import EntityInfoDataTableList from './EntityInfoDataTableList';
 import EntityObjectInformation from './EntityObjectInformation';
 
 export interface EntityInfoContentProps {
-    id: string;
-    nodeType: EntityKinds | string;
-    databaseId?: string;
+    selectedNode: NodeResponse;
 }
 
 const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {

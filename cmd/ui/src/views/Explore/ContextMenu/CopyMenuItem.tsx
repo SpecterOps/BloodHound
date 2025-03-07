@@ -17,8 +17,7 @@
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { MenuItem, Tooltip, TooltipProps, styled, tooltipClasses } from '@mui/material';
-import { useNotifications } from 'bh-shared-ui';
-import { useAppSelector } from 'src/store';
+import { NodeResponse, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
 
 const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
     <Tooltip {...props} classes={{ popper: className }} />
@@ -37,25 +36,25 @@ const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
 const CopyMenuItem = () => {
     const { addNotification } = useNotifications();
 
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
+    const { selectedItemQuery } = useExploreSelectedItem();
 
     const handleCopyDisplayName = () => {
-        if (selectedNode) {
-            navigator.clipboard.writeText(selectedNode.name);
+        if (selectedItemQuery.data) {
+            navigator.clipboard.writeText(selectedItemQuery.data.label);
             addNotification(`Display name copied to clipboard`, 'copyToClipboard');
         }
     };
 
     const handleCopyObjectId = () => {
-        if (selectedNode) {
-            navigator.clipboard.writeText(selectedNode.id);
+        if (selectedItemQuery.data) {
+            navigator.clipboard.writeText((selectedItemQuery.data as NodeResponse).objectId);
             addNotification(`Object ID name copied to clipboard`, 'copyToClipboard');
         }
     };
 
     const handleCopyCypher = () => {
-        if (selectedNode) {
-            const cypher = `MATCH (n:${selectedNode.type}) WHERE n.objectid = '${selectedNode.id}' RETURN n`;
+        if (selectedItemQuery.data) {
+            const cypher = `MATCH (n:${selectedItemQuery.data.kind}) WHERE n.objectid = '${(selectedItemQuery.data as NodeResponse).objectId}' RETURN n`;
             navigator.clipboard.writeText(cypher);
             addNotification(`Cypher copied to clipboard`, 'copyToClipboard');
         }

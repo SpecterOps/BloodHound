@@ -17,19 +17,17 @@
 import { faGem } from '@fortawesome/free-solid-svg-icons';
 import {
     DropdownOption,
-    EntityKinds,
     GroupManagementContent,
     Permission,
     searchbarActions,
     TIER_ZERO_LABEL,
     TIER_ZERO_TAG,
+    useNodeByObjectId,
     usePermissions,
 } from 'bh-shared-ui';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setSelectedNode } from 'src/ducks/entityinfo/actions';
-import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
@@ -42,29 +40,26 @@ const GroupManagement = () => {
     const globalDomain = useAppSelector((state) => state.global.options.domain);
 
     // Kept out of the shared UI due to diff between GraphNodeTypes across apps
-    const [openNode, setOpenNode] = useState<SelectedNode | null>(null);
+    const [selectedNode, setSelectedNode] = useState<string | null>(null);
+    const getGraphNodeByObjectId = useNodeByObjectId(selectedNode || undefined);
 
     const { checkPermission } = usePermissions();
 
     const handleClickMember = (member: AssetGroupMember) => {
-        setOpenNode({
-            id: member.object_id,
-            type: member.primary_kind as EntityKinds,
-            name: member.name,
-        });
+        setSelectedNode(member.object_id);
     };
 
     const handleShowNodeInExplore = () => {
-        if (openNode) {
+        if (getGraphNodeByObjectId.data) {
             const searchNode = {
-                objectid: openNode.id,
-                label: openNode.name,
-                ...openNode,
+                objectid: getGraphNodeByObjectId.data.objectId,
+                name: getGraphNodeByObjectId.data.label,
+                type: getGraphNodeByObjectId.data.kind,
             };
             dispatch(searchbarActions.sourceNodeSelected(searchNode));
-            dispatch(setSelectedNode(openNode));
+            console.log(getGraphNodeByObjectId.data.id);
 
-            navigate(ROUTE_EXPLORE);
+            navigate(ROUTE_EXPLORE + '?selectedItem=' + getGraphNodeByObjectId.data.id);
         }
     };
 
@@ -83,11 +78,13 @@ const GroupManagement = () => {
     return (
         <GroupManagementContent
             globalDomain={globalDomain}
-            showExplorePageLink={!!openNode}
+            showExplorePageLink={!!selectedNode}
             tierZeroLabel={TIER_ZERO_LABEL}
             tierZeroTag={TIER_ZERO_TAG}
             // Both these components should eventually be moved into the shared UI library
-            entityPanelComponent={<EntityInfoPanel selectedNode={openNode} />}
+            entityPanelComponent={
+                getGraphNodeByObjectId?.data && <EntityInfoPanel selectedNode={getGraphNodeByObjectId.data} />
+            }
             domainSelectorErrorMessage={<>Domains unavailable. {dataCollectionMessage}</>}
             onShowNodeInExplore={handleShowNodeInExplore}
             onClickMember={handleClickMember}

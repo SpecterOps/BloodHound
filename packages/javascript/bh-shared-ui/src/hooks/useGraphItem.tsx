@@ -2,6 +2,7 @@ import { useQuery } from 'react-query';
 import { apiClient, parseItemId } from '../utils';
 
 export interface BaseItemResponse {
+    id: string;
     kind: string;
     label: string;
     lastSeen: string;
@@ -15,9 +16,9 @@ export interface NodeResponse extends BaseItemResponse {
 }
 
 export interface EdgeResponse extends BaseItemResponse {
-    sourceNodeId: string;
+    source: string;
     sourceNode: NodeResponse;
-    targetNodeId: string;
+    target: string;
     targetNode: NodeResponse;
 }
 
@@ -42,18 +43,49 @@ export const useGraphItem = (itemId?: string) => {
                 }
                 if (parsedItem.itemType === 'edge') {
                     const edgeResponse = res.data?.data?.edges?.[0];
-                    const sourceNode = res.data?.data?.nodes?.[edgeResponse.source];
-                    const targetNode = res.data?.data?.nodes?.[edgeResponse.target];
+                    const sourceNode = { id: edgeResponse.source, ...res.data?.data?.nodes?.[edgeResponse.source] };
+                    const targetNode = { id: edgeResponse.target, ...res.data?.data?.nodes?.[edgeResponse.target] };
                     return {
+                        id: itemId,
                         ...edgeResponse,
-                        sourceNodeId: edgeResponse.source,
-                        targetNodeId: edgeResponse.target,
                         sourceNode,
                         targetNode,
                     };
                 }
-                return res.data?.data?.nodes?.[itemId || ''];
+                return {
+                    id: itemId,
+                    ...res.data?.data?.nodes?.[itemId || ''],
+                };
             });
+        },
+        {
+            enabled: !!itemId,
+            retry: false,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useNodeByObjectId = (itemId?: string) => {
+    return useQuery<NodeResponse>(
+        ['getGraphNodeByObjectId', itemId],
+        () => {
+            return apiClient
+                .cypherSearch(`MATCH (n) WHERE n.objectid = "${itemId}" RETURN n LIMIT 1`, undefined, true)
+                .then((res) => {
+                    if (!itemId) {
+                        return undefined;
+                    }
+
+                    const firstElement: any = Object.values(res.data?.data?.nodes)[0];
+
+                    const id = Object.keys(res.data?.data?.nodes)[0];
+
+                    return {
+                        id,
+                        ...firstElement,
+                    };
+                });
         },
         {
             enabled: !!itemId,

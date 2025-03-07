@@ -1,6 +1,6 @@
-import { isEdge, useExploreSelectedItem } from 'bh-shared-ui';
+import { isEdge, isNode, useExploreSelectedItem } from 'bh-shared-ui';
 import EdgeInfoPane from './EdgeInfo/EdgeInfoPane';
-// import EntityInfoPanel from './EntityInfo/EntityInfoPanel';
+import EntityInfoPanel from './EntityInfo/EntityInfoPanel';
 
 const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
@@ -14,10 +14,9 @@ const GraphItemInformationPanel = () => {
 
     if (selectedItemQuery.isError) return null;
 
-    return isEdge(selectedItemQuery.data!) ? (
-        <EdgeInfoPane selectedEdge={selectedItemQuery.data} />
-    ) : // : <EntityInfoPanel />;
-    undefined;
+    if (isEdge(selectedItemQuery.data!)) return <EdgeInfoPane selectedEdge={selectedItemQuery.data} />;
+
+    if (isNode(selectedItemQuery.data!)) return <EntityInfoPanel selectedNode={selectedItemQuery.data} />;
 };
 
 export default GraphItemInformationPanel;

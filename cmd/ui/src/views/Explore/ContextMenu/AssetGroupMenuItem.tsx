@@ -16,7 +16,7 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
-import { apiClient, useNotifications } from 'bh-shared-ui';
+import { NodeResponse, apiClient, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
@@ -29,7 +29,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
 
     const [open, setOpen] = useState(false);
 
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
+    const { selectedItemQuery } = useExploreSelectedItem();
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
     const ownedObjectAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
 
@@ -47,11 +47,11 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
             ]);
         },
         onSuccess: () => {
-            if (selectedNode?.graphId) {
+            if (selectedItemQuery.data?.id) {
                 if (isMenuItemForTierZero) {
-                    dispatch(toggleTierZeroNode(selectedNode.graphId));
+                    dispatch(toggleTierZeroNode(selectedItemQuery.data.id));
                 } else if (isMenuItemForOwnedObject) {
-                    dispatch(toggleOwnedObjectNode(selectedNode.graphId));
+                    dispatch(toggleOwnedObjectNode(selectedItemQuery.data.id));
                 }
             }
 
@@ -67,21 +67,21 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
         apiClient
             .listAssetGroupMembers(assetGroupId, undefined, {
                 params: {
-                    object_id: `object_id=eq:${selectedNode?.id}`,
+                    object_id: `object_id=eq:${(selectedItemQuery.data as NodeResponse)?.objectId}`,
                 },
             })
             .then((res) => res.data.data?.members)
     );
 
     const handleAddToAssetGroup = () => {
-        if (selectedNode) {
-            mutation.mutate({ nodeId: selectedNode.id, action: 'add' });
+        if (selectedItemQuery.data) {
+            mutation.mutate({ nodeId: (selectedItemQuery.data as NodeResponse).objectId, action: 'add' });
         }
     };
 
     const handleRemoveFromAssetGroup = () => {
-        if (selectedNode) {
-            mutation.mutate({ nodeId: selectedNode.id, action: 'remove' });
+        if (selectedItemQuery.data) {
+            mutation.mutate({ nodeId: (selectedItemQuery.data as NodeResponse).objectId, action: 'remove' });
         }
     };
 

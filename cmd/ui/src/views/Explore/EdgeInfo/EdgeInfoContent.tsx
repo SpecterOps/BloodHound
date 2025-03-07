@@ -60,7 +60,7 @@ const EdgeInfoContent: FC<{ selectedEdge: EdgeResponse }> = ({ selectedEdge }) =
     const dispatch = useAppDispatch();
 
     const sections = EdgeInfoComponents[selectedEdge.label as keyof typeof EdgeInfoComponents];
-    const { sourceNode, targetNode, sourceNodeId, targetNodeId } = selectedEdge;
+    const { sourceNode, targetNode } = selectedEdge;
 
     return (
         <Box>
@@ -84,18 +84,18 @@ const EdgeInfoContent: FC<{ selectedEdge: EdgeResponse }> = ({ selectedEdge }) =
                                         sendOnChange
                                             ? getOnChange(
                                                   dispatch,
-                                                  parseInt(sourceNodeId),
-                                                  parseInt(targetNodeId),
+                                                  parseInt(sourceNode.id),
+                                                  parseInt(targetNode.id),
                                                   selectedEdge.label
                                               )
                                             : undefined
                                     }>
                                     <Section
                                         edgeName={selectedEdge.label}
-                                        sourceDBId={sourceNodeId}
+                                        sourceDBId={sourceNode.id}
                                         sourceName={sourceNode.label}
                                         sourceType={sourceNode.kind}
-                                        targetDBId={targetNodeId}
+                                        targetDBId={targetNode.id}
                                         targetName={targetNode.label}
                                         targetType={targetNode.kind}
                                         targetId={targetNode.objectId}

@@ -18,5 +18,8 @@ export const parseItemId = (itemId: string) => {
     }
 
     // otherwise it is a node identifier
-    return { itemType: 'node', cypherQuery: `MATCH (n) where ID(n) = ${itemId} RETURN n LIMIT 1` };
+    return {
+        itemType: 'node',
+        cypherQuery: `MATCH (n) where ID(n) = ${itemId} RETURN n LIMIT 1`,
+    };
 };

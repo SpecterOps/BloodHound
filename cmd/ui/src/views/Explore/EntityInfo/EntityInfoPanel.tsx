@@ -15,9 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps, Typography } from '@mui/material';
-import { NoEntitySelectedHeader, NoEntitySelectedMessage, usePaneStyles } from 'bh-shared-ui';
+import { NoEntitySelectedHeader, NoEntitySelectedMessage, NodeResponse, usePaneStyles } from 'bh-shared-ui';
 import React, { useEffect, useState } from 'react';
-import { SelectedNode } from 'src/ducks/entityinfo/types';
 import usePreviousValue from 'src/hooks/usePreviousValue';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
@@ -25,7 +24,7 @@ import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 interface EntityInfoPanelProps {
-    selectedNode: SelectedNode | null;
+    selectedNode: NodeResponse;
     sx?: SxProps;
 }
 
@@ -36,7 +35,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
     const previousSelectedNode = usePreviousValue(selectedNode);
 
     useEffect(() => {
-        if (previousSelectedNode?.id !== selectedNode?.id) {
+        if (previousSelectedNode?.id !== selectedNode.id) {
             setExpandedSections({ 'Object Information': true });
         }
     }, [setExpandedSections, previousSelectedNode, selectedNode]);
@@ -45,8 +44,8 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
         <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
             <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
                 <Header
-                    name={selectedNode?.name || NoEntitySelectedHeader}
-                    nodeType={selectedNode?.type}
+                    name={selectedNode?.label || NoEntitySelectedHeader}
+                    nodeType={selectedNode?.kind}
                     expanded={expanded}
                     onToggleExpanded={(expanded) => {
                         setExpanded(expanded);
@@ -60,11 +59,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
                     display: expanded ? 'initial' : 'none',
                 }}>
                 {selectedNode ? (
-                    <EntityInfoContent
-                        id={selectedNode.id}
-                        nodeType={selectedNode.type}
-                        databaseId={selectedNode.graphId}
-                    />
+                    <EntityInfoContent selectedNode={selectedNode} />
                 ) : (
                     <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
                 )}
