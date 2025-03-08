@@ -36,7 +36,7 @@ describe('useExploreGraph', () => {
             expect(query?.queryKey).toContain('node');
         });
 
-        it('runs a pathfinding search when the query param is set to "node"', () => {
+        it('runs a pathfinding search when the query param is set to "pathfinding"', () => {
             const paramOptions: Partial<ExploreQueryParams> = {
                 searchType: 'pathfinding',
                 primarySearch: 'test1',
