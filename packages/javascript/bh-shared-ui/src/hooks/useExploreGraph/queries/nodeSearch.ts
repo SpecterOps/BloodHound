@@ -17,12 +17,7 @@
 import { FlatGraphResponse } from 'js-client-library';
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
-import {
-    ExploreGraphQueryContext,
-    ExploreGraphQueryError,
-    ExploreGraphQueryKey,
-    ExploreGraphQueryOptions,
-} from './utils';
+import { ExploreGraphQuery, ExploreGraphQueryError, ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
 
 export const nodeSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { searchType, primarySearch } = paramOptions;
@@ -41,7 +36,7 @@ export const nodeSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
     };
 };
 
-const handleNodeSearchError = (error: any): ExploreGraphQueryError => {
+const getNodeErrorMessage = (error: any): ExploreGraphQueryError => {
     if (error?.response?.status) {
         return { message: 'No matching node found.', key: 'NodeSearchQueryFailure' };
     } else {
@@ -49,7 +44,7 @@ const handleNodeSearchError = (error: any): ExploreGraphQueryError => {
     }
 };
 
-export const nodeSearchQueryContext: ExploreGraphQueryContext = {
+export const nodeSearchQuery: ExploreGraphQuery = {
     getQueryConfig: nodeSearchGraphQuery,
-    getGraphError: handleNodeSearchError,
+    getErrorMessage: getNodeErrorMessage,
 };

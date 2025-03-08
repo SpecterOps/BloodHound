@@ -15,27 +15,37 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ExploreQueryParams } from '../useExploreParams';
-import * as modes from './queries';
-import { getExploreGraphQueryContext } from './useExploreGraph';
-
-const nodeSearchGraphQuerySpy = vi.spyOn(modes, 'nodeSearchGraphQuery');
+import { exploreGraphQueryFactory } from './useExploreGraph';
 
 describe('useExploreGraph', () => {
-    describe('getExploreGraphQuery', () => {
+    describe('exploreGraphQueryFactory', () => {
         it('returns {enabled: false} if there is not a match on the switch statement', () => {
             const paramOptions = {
                 searchType: 'noMatch',
             } as any;
-            const queryContext = getExploreGraphQueryContext(paramOptions);
+            const queryContext = exploreGraphQueryFactory(paramOptions);
             const config = queryContext.getQueryConfig(paramOptions);
             expect(config).toStrictEqual({ enabled: false });
         });
-        it('runs nodeSearchGraphQuery when search type is node', () => {
-            const paramOptions: Partial<ExploreQueryParams> = { searchType: 'node', primarySearch: 'test1' };
-            const context = getExploreGraphQueryContext(paramOptions);
 
-            context.getQueryConfig(paramOptions);
-            expect(nodeSearchGraphQuerySpy).toBeCalled();
+        it('runs a node search when the query param is set to "node"', () => {
+            const paramOptions: Partial<ExploreQueryParams> = { searchType: 'node', primarySearch: 'test1' };
+            const context = exploreGraphQueryFactory(paramOptions);
+
+            const query = context.getQueryConfig(paramOptions);
+            expect(query?.queryKey).toContain('node');
+        });
+
+        it('runs a pathfinding search when the query param is set to "node"', () => {
+            const paramOptions: Partial<ExploreQueryParams> = {
+                searchType: 'pathfinding',
+                primarySearch: 'test1',
+                secondarySearch: 'test2',
+            };
+            const context = exploreGraphQueryFactory(paramOptions);
+
+            const query = context.getQueryConfig(paramOptions);
+            expect(query?.queryKey).toContain('pathfinding');
         });
     });
 });

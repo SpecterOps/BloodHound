@@ -17,14 +17,14 @@
 import { useQuery } from 'react-query';
 import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
-import { ExploreGraphQueryContext, nodeSearchQueryContext, pathfindingSearchQueryContext } from './queries';
+import { ExploreGraphQuery, fallbackQuery, nodeSearchQuery, pathfindingSearchQuery } from './queries';
 
-export function getExploreGraphQueryContext(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryContext {
+export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery {
     switch (paramOptions.searchType) {
         case 'node':
-            return nodeSearchQueryContext;
+            return nodeSearchQuery;
         case 'pathfinding':
-            return pathfindingSearchQueryContext;
+            return pathfindingSearchQuery;
         // case 'cypher':
         //     return {};
         // case 'relationship':
@@ -32,7 +32,7 @@ export function getExploreGraphQueryContext(paramOptions: Partial<ExploreQueryPa
         // case 'composition':
         //     return {};
         default:
-            return { getQueryConfig: () => ({ enabled: false }) };
+            return fallbackQuery;
     }
 }
 
@@ -41,16 +41,13 @@ export const useExploreGraph = () => {
     const params = useExploreParams();
     const { addNotification } = useNotifications();
 
-    const queryContext = getExploreGraphQueryContext(params);
-    const query = useQuery({
-        ...queryContext.getQueryConfig(params),
+    const query = exploreGraphQueryFactory(params);
+
+    return useQuery({
+        ...query.getQueryConfig(params),
         onError: (error: any) => {
-            if (queryContext.getGraphError) {
-                const { message, key } = queryContext.getGraphError(error);
-                addNotification(message, key);
-            }
+            const { message, key } = query.getErrorMessage(error);
+            addNotification(message, key);
         },
     });
-
-    return query;
 };

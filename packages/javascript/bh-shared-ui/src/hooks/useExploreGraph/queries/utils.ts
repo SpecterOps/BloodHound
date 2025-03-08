@@ -27,9 +27,9 @@ export type GraphItemMutationFn = (items: any) => unknown;
 
 export type ExploreGraphQueryError = { message: string; key: string };
 
-export type ExploreGraphQueryContext = {
+export type ExploreGraphQuery = {
     getQueryConfig: (paramOptions: Partial<ExploreQueryParams>) => ExploreGraphQueryOptions;
-    getGraphError?: (error: any) => ExploreGraphQueryError;
+    getErrorMessage: (error: any) => ExploreGraphQueryError;
 };
 
 export const ExploreGraphQueryKey = 'explore-graph-query';

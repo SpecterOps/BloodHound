@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, renderHook } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { BrowserRouter } from 'react-router-dom';
+import { act, renderHook } from '../../test-utils';
 import { useNodeSearch } from './useNodeSearch';
 
 const TEST_STRING_1 = 'Test1';

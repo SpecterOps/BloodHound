@@ -1,7 +1,7 @@
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
 import {
-    ExploreGraphQueryContext,
+    ExploreGraphQuery,
     ExploreGraphQueryError,
     ExploreGraphQueryKey,
     ExploreGraphQueryOptions,
@@ -35,7 +35,7 @@ export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
     };
 };
 
-const handlePathfindingSearchError = (error: any): ExploreGraphQueryError => {
+const getPathfindingErrorMessage = (error: any): ExploreGraphQueryError => {
     const statusCode = error?.response?.status;
     if (statusCode === 404) {
         return { message: 'Path not found.', key: 'shortestPathNotFound' };
@@ -55,7 +55,7 @@ const handlePathfindingSearchError = (error: any): ExploreGraphQueryError => {
     }
 };
 
-export const pathfindingSearchQueryContext: ExploreGraphQueryContext = {
+export const pathfindingSearchQuery: ExploreGraphQuery = {
     getQueryConfig: pathfindingSearchGraphQuery,
-    getGraphError: handlePathfindingSearchError,
+    getErrorMessage: getPathfindingErrorMessage,
 };
