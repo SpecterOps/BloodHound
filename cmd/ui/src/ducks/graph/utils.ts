@@ -19,14 +19,6 @@ import Sigma from 'sigma';
 import { CameraState, Coordinates, Extent, NodeDisplayData } from 'sigma/types';
 import { graphExtent } from 'sigma/utils';
 
-export const isLink = (item: any): boolean => {
-    return item.id1 !== undefined;
-};
-
-export const isNode = (item: any): boolean => {
-    return !isLink(item);
-};
-
 export const GROUP_SPREAD = 0.06;
 export const MIN_CAMERA_RATIO = 0.5;
 export const MAX_CAMERA_RATIO = 15;

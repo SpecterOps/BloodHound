@@ -38,27 +38,24 @@ import {
     Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory, searchbarActions } from 'bh-shared-ui';
+import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory } from 'bh-shared-ui';
 import { useState } from 'react';
-import { useAppDispatch, useAppSelector } from 'src/store';
 
 interface EdgeFilteringDialogProps {
+    selectedFilters: EdgeCheckboxType[];
     isOpen: boolean;
-    handleCancel: () => void;
     handleApply: () => void;
+    handleUpdate: (checked: EdgeCheckboxType[]) => void;
+    handleCancel: () => void;
 }
 
-const EdgeFilteringDialog = ({ isOpen, handleCancel, handleApply }: EdgeFilteringDialogProps) => {
-    const selectedFilters: EdgeCheckboxType[] = useAppSelector((state) => state.search.pathFilters);
-
-    const onCancel = () => {
-        handleCancel();
-    };
-
-    const onApply = () => {
-        handleApply();
-    };
-
+const EdgeFilteringDialog = ({
+    selectedFilters,
+    isOpen,
+    handleApply,
+    handleUpdate,
+    handleCancel,
+}: EdgeFilteringDialogProps) => {
     const title = 'Path Edge Filtering';
     const description = 'Select the edge types to include in your pathfinding search.';
 
@@ -71,14 +68,14 @@ const EdgeFilteringDialog = ({ isOpen, handleCancel, handleApply }: EdgeFilterin
             </Typography>
 
             <DialogContent>
-                <CategoryList selectedFilters={selectedFilters} />
+                <CategoryList selectedFilters={selectedFilters} handleUpdate={handleUpdate} />
             </DialogContent>
 
             <DialogActions>
-                <Button variant='tertiary' onClick={onCancel}>
+                <Button variant='tertiary' onClick={handleCancel}>
                     Cancel
                 </Button>
-                <Button onClick={onApply}>Apply</Button>
+                <Button onClick={handleApply}>Apply</Button>
             </DialogActions>
         </Dialog>
     );
@@ -86,11 +83,10 @@ const EdgeFilteringDialog = ({ isOpen, handleCancel, handleApply }: EdgeFilterin
 
 interface CategoryListProps {
     selectedFilters: Array<EdgeCheckboxType>;
+    handleUpdate: (checked: EdgeCheckboxType[]) => void;
 }
 
-const CategoryList = ({ selectedFilters }: CategoryListProps) => {
-    const dispatch = useAppDispatch();
-
+const CategoryList = ({ selectedFilters, handleUpdate }: CategoryListProps) => {
     return (
         <List>
             {AllEdgeTypes.map((category: Category) => {
@@ -100,9 +96,7 @@ const CategoryList = ({ selectedFilters }: CategoryListProps) => {
                         key={categoryName}
                         category={category}
                         checked={selectedFilters}
-                        setChecked={(checked: EdgeCheckboxType[]) =>
-                            dispatch(searchbarActions.pathFiltersSaved(checked))
-                        }
+                        setChecked={handleUpdate}
                     />
                 );
             })}

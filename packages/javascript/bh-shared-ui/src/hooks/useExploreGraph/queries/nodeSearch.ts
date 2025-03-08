@@ -17,15 +17,12 @@
 import { FlatGraphResponse } from 'js-client-library';
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
-import { ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
+import { ExploreGraphQuery, ExploreGraphQueryError, ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
 
-// Temporary example code. To be fully implemented in BED-5445
 export const nodeSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { searchType, primarySearch } = paramOptions;
     if (!primarySearch || !searchType) {
-        return {
-            enabled: false,
-        };
+        return { enabled: false };
     }
 
     return {
@@ -34,6 +31,20 @@ export const nodeSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
             apiClient
                 .getSearchResult(primarySearch, 'exact', { signal })
                 .then((res) => res.data.data as FlatGraphResponse),
+        retry: false,
         enabled: !!(searchType && primarySearch),
     };
+};
+
+const getNodeErrorMessage = (error: any): ExploreGraphQueryError => {
+    if (error?.response?.status) {
+        return { message: 'No matching node found.', key: 'NodeSearchQueryFailure' };
+    } else {
+        return { message: 'An unknown error occurred.', key: 'NodeSearchUnknown' };
+    }
+};
+
+export const nodeSearchQuery: ExploreGraphQuery = {
+    getQueryConfig: nodeSearchGraphQuery,
+    getErrorMessage: getNodeErrorMessage,
 };

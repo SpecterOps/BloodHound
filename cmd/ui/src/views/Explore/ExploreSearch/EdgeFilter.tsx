@@ -18,10 +18,9 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { faFilter } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import makeStyles from '@mui/styles/makeStyles';
-import { EdgeCheckboxType, searchbarActions } from 'bh-shared-ui';
-import { useRef, useState } from 'react';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { useState } from 'react';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
+import { usePathfindingFilterSwitch } from './switches';
 
 const useStyles = makeStyles((theme) => ({
     pathfindingButton: {
@@ -37,16 +36,11 @@ const useStyles = makeStyles((theme) => ({
 
 const EdgeFilter = () => {
     const classes = useStyles();
-    const dispatch = useAppDispatch();
 
     const [isOpenDialog, setIsOpenDialog] = useState(false);
 
-    const initialFilterState = useRef<EdgeCheckboxType[]>([]);
-    const pathFilters = useAppSelector((state) => state.search.pathFilters);
-
-    const handlePathfindingSearch = () => {
-        dispatch(searchbarActions.pathfindingSearch());
-    };
+    const { selectedFilters, initialize, handleApplyFilters, handleUpdateFilters, handleCancelFilters } =
+        usePathfindingFilterSwitch();
 
     return (
         <>
@@ -55,21 +49,21 @@ const EdgeFilter = () => {
                 onClick={() => {
                     setIsOpenDialog(true);
                     // what is the initial state of edge filters?  save it
-                    initialFilterState.current = pathFilters;
+                    initialize();
                 }}>
                 <FontAwesomeIcon icon={faFilter} />
             </Button>
             <EdgeFilteringDialog
                 isOpen={isOpenDialog}
-                handleCancel={() => {
-                    setIsOpenDialog(false);
-
-                    // rollback changes made in dialog.
-                    dispatch(searchbarActions.pathFiltersSaved(initialFilterState.current));
-                }}
+                selectedFilters={selectedFilters}
                 handleApply={() => {
                     setIsOpenDialog(false);
-                    handlePathfindingSearch();
+                    handleApplyFilters();
+                }}
+                handleUpdate={handleUpdateFilters}
+                handleCancel={() => {
+                    setIsOpenDialog(false);
+                    handleCancelFilters();
                 }}
             />
         </>
