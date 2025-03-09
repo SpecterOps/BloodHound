@@ -78,7 +78,7 @@ There is also an allShortestPaths function available, which, as the name implies
 
 Another important part of Cypher to note is that wildcard matches are possible using regex, although the syntax for the query changes slightly. As an example, here's the query that's run each time you type a letter in the search bar:
 ```
-    MATCH (n)WHERE n.name =~ "(.i).*searchterm.*"RETURN nLIMIT 10
+    MATCH (n)WHERE n.name =~ "(?i).*searchterm.*"RETURN nLIMIT 10
 ```
 
 In this query, we ask the graph to return any nodes of any type that match the search term given. The (**?i**) tells the graph this is a case-insensitive regex, with the **.**\* on each side indicating that we want to match anything on either side. We limit the number of items returned to the first ten using the **LIMIT** keyword.

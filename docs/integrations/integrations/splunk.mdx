@@ -6,72 +6,11 @@ title: Integrate BloodHound Enterprise with Splunk
   <img src="/assets/18258001080731.png"/>
 </Frame>
 
-The BloodHound Enterprise Splunk app allows you to view and analyze BloodHound Enterprise data in Splunk. This integration provides:
+The BloodHound Enterprise Splunk app ingests your BloodHound Enterprise data into Splunk.
 
-- Dashboards for visualizing attack paths and security posture
-- Alerts for new attack paths and security issues
-- Correlation with other security data in Splunk
-
-## Prerequisites
-
-Before you begin, ensure you have:
-
-1. A BloodHound Enterprise instance
-2. A Splunk instance
-3. Admin access to both systems
-4. The BloodHound Enterprise Splunk app installed
-5. A BloodHound Enterprise API key with appropriate permissions
-
-## Configuration
-
-1. Install the BloodHound Enterprise Splunk app from Splunkbase.
-
-2. Configure the app in Splunk:
-   - Navigate to **Settings** > **Data inputs** > **BloodHound Enterprise**
-   - Click **New**
-   - Enter your BloodHound Enterprise URL and API key
-   - Configure the polling interval
-   - Click **Save**
-
-3. Create a non-personal API key/ID pair in BloodHound Enterprise:
-   - Navigate to **Settings** > **API Keys**
-   - Click **Create API Key**
-   - Select appropriate permissions
-   - Save the key securely
-
-4. Verify the integration:
-   - Check the Splunk logs for successful API connections
-   - View the BloodHound Enterprise dashboards in Splunk
-   - Test alerts and data collection
-
-## Using the Integration
-
-The BloodHound Enterprise Splunk app provides several dashboards and features:
-
-1. **Attack Path Dashboard**
-   - View current attack paths
-   - Track changes over time
-   - Filter by severity and type
-
-2. **Security Posture Dashboard**
-   - Monitor overall security metrics
-   - Track remediation progress
-   - View trend analysis
-
-3. **Alerts and Reports**
-   - Configure alerts for new attack paths
-   - Generate compliance reports
-   - Track security improvements
-
-## Troubleshooting
-
-If you encounter issues:
-
-1. Check API connectivity
-2. Verify API key permissions
-3. Review Splunk logs
-4. Ensure proper network access
-5. Validate data input configuration
+* Use the dashboards to track the Active Directory and Azure attack paths of your environment
+* Create alerts to detect when new attack paths emerge or exposure increases
+* Enrich your SIEM data with information about the attack paths to and from principals
 
 **Note: Version 2.0+ introduces ingest of BHE Audit Log data. To successfully ingest this data the BHE API user must be assigned the 'Administrator' role in BHE.**
 
@@ -97,7 +36,7 @@ If you encounter issues:
 <Frame>
   <img src="/assets/image1-13.png"/>
 </Frame>
-6.  If you have not already, create an API key/ID pair, following [Create an API Key](/reference/api-tokens)
+6.  If you have not already, create an API key/ID pair, following [Create a non-personal API Key/ID pair](/integrations/bloodhound-api/working-with-api#create-a-non-personal-api-key-id-pair)
     * The API user must at least have the **_read-only_** role. The **_Administrator_** role is required to collect BloodHound Enterprise audit logs.
 7.  In the setup screen, enter your BloodHound Enterprise domain name (`CODENAME.bloodhoundenterprise.io`), the API key/ID pair you created and click **Submit**
 
