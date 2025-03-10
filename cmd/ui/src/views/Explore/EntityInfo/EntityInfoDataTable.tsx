@@ -40,6 +40,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     countLabel,
     sections,
     parentSectionIndex,
+    accordionMapper,
 }) => {
     const dispatch = useDispatch();
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
@@ -58,21 +59,19 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         { refetchOnWindowFocus: false, retry: false }
     );
 
+    const findLabelLocation = () => {
+        const filteredArray = accordionMapper.find((nestedArray: any) => nestedArray.includes(label));
+        const index = filteredArray.indexOf(label);
+        return [filteredArray, index];
+    };
+
     const setExpandedRelationshipsParams = () => {
-        let expandedRelationshipHelperArray: string[] = [];
-        const expandedRelationshipsLength = expandedRelationships!.length;
-        const listNewParamsOnly = [`${parentSectionIndex}-${label}`];
-        if (!expandedRelationshipsLength) {
-            expandedRelationshipHelperArray = listNewParamsOnly;
-        } else {
-            const parentIndexOfNested = parseInt(expandedRelationships!.at(-1)?.split('-')[0] as string);
-            const isNestedSameSection = parentIndexOfNested === parentSectionIndex;
-            if (expandedRelationshipsLength >= 2 && isNestedSameSection) {
-                expandedRelationships!.pop(); // Always remove the last one if more than two as it guarantees that we always leave the parent
-            }
-            const listWithExistingParams = [...expandedRelationships!, `${parentSectionIndex}-${label}`];
-            expandedRelationshipHelperArray = isNestedSameSection ? listWithExistingParams : listNewParamsOnly;
-        }
+        const expandedRelationshipHelperArray: string[] = [];
+
+        const [filteredArray, index] = findLabelLocation();
+        expandedRelationshipHelperArray.push(label);
+        if (index > 0) expandedRelationshipHelperArray.unshift(filteredArray[0]);
+
         setExploreParams({
             expandedRelationships: expandedRelationshipHelperArray,
             searchType: 'relationship',
@@ -80,6 +79,29 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
             relationshipQueryObjectId: id,
         });
     };
+
+    // const setExpandedRelationshipsParams = () => {
+    //     let expandedRelationshipHelperArray: string[] = [];
+    //     const expandedRelationshipsLength = expandedRelationships!.length;
+    //     const listNewParamsOnly = [`${parentSectionIndex}-${label}`];
+    //     if (!expandedRelationshipsLength) {
+    //         expandedRelationshipHelperArray = listNewParamsOnly;
+    //     } else {
+    //         const parentIndexOfNested = parseInt(expandedRelationships!.at(-1)?.split('-')[0] as string);
+    //         const isNestedSameSection = parentIndexOfNested === parentSectionIndex;
+    //         if (expandedRelationshipsLength >= 2 && isNestedSameSection) {
+    //             expandedRelationships!.pop(); // Always remove the last one if more than two as it guarantees that we always leave the parent
+    //         }
+    //         const listWithExistingParams = [...expandedRelationships!, `${parentSectionIndex}-${label}`];
+    //         expandedRelationshipHelperArray = isNestedSameSection ? listWithExistingParams : listNewParamsOnly;
+    //     }
+    //     setExploreParams({
+    //         expandedRelationships: expandedRelationshipHelperArray,
+    //         searchType: 'relationship',
+    //         relationshipQueryType: queryKey,
+    //         relationshipQueryObjectId: id,
+    //     });
+    // };
 
     const handleOnChange = (label: string, isOpen: boolean) => {
         handleCurrentSectionToggle();
@@ -121,19 +143,26 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         }
     };
 
-    const isParentSection = (key: string) => {
-        const splitFirstExpandedRelationship = expandedRelationships?.at(0)?.split('-') as string[]; // Always check first index because it will always be parent if nesting is there
-        const checkKey = splitFirstExpandedRelationship[1] === key; // confirm if key/label is the parent one
-        const checkIndex = parseInt(splitFirstExpandedRelationship[0]) == parentSectionIndex; // confirm if its the same parent or if you went from one parent to another
-        return checkKey && checkIndex;
+    // const isParentSection = (key: string) => {
+    //     const splitFirstExpandedRelationship = expandedRelationships?.at(0)?.split('-') as string[]; // Always check first index because it will always be parent if nesting is there
+    //     const checkKey = splitFirstExpandedRelationship[1] === key; // confirm if key/label is the parent one
+    //     const checkIndex = parseInt(splitFirstExpandedRelationship[0]) == parentSectionIndex; // confirm if its the same parent or if you went from one parent to another
+    //     return checkKey && checkIndex;
+    // };
+
+    const isParentOfLabel = (key: string) => {
+        const [filteredArray, index] = findLabelLocation();
+        if (index > 0) {
+            return key === filteredArray[0];
+        }
+        return false;
     };
 
     const handleCurrentSectionToggle = () => {
         if (backButtonFlag?.enabled) {
             if (expandedSections && expandedRelationships!.length > 0) {
                 for (const [key] of Object.entries(expandedSections)) {
-                    // Closes if the key that is being evaluated is not a direct parent, is not object information and its not the same label that we are trying to open
-                    if (key !== 'Object Information' && !isParentSection(key) && key !== label) {
+                    if (key !== 'Object Information' && !isParentOfLabel(key)) {
                         expandedSections[key] = false;
                     }
                 }
@@ -199,6 +228,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
             {sections &&
                 sections.map((nestedSection, nestedSectionIndex) => (
                     <EntityInfoDataTable
+                        accordionMapper={accordionMapper}
                         key={nestedSectionIndex}
                         parentSectionIndex={parentSectionIndex}
                         {...nestedSection}
