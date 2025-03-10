@@ -43,7 +43,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
 }) => {
     const dispatch = useDispatch();
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
-    const { setExploreParams, expandedRelationships } = useExploreParams();
+    const { setExploreParams } = useExploreParams();
     const { expandedSections, toggleSection } = useEntityInfoPanelContext();
 
     const countQuery = useQuery(
@@ -129,15 +129,20 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         return false;
     };
 
+    const collapseOtherSections = () => {
+        for (const [key] of Object.entries(expandedSections)) {
+            const isNotObjectInformation = key !== 'Object Information';
+            const isNotParentOfSection = !isParentOfLabel(key);
+            const isNotClickedSection = key !== label; // to not interfere with normal toggle flow
+            if (isNotObjectInformation && isNotParentOfSection && isNotClickedSection) {
+                expandedSections[key] = false;
+            }
+        }
+    };
+
     const handleCurrentSectionToggle = () => {
         if (backButtonFlag?.enabled) {
-            if (expandedSections && expandedRelationships!.length > 0) {
-                for (const [key] of Object.entries(expandedSections)) {
-                    if (key !== 'Object Information' && !isParentOfLabel(key)) {
-                        expandedSections[key] = false;
-                    }
-                }
-            }
+            collapseOtherSections(); // We want to keep only one open at a time
         }
         toggleSection(label);
     };
