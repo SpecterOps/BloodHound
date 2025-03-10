@@ -46,7 +46,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
     const formatRelationshipsParams = useCallback(() => {
         return expandedRelationships?.reduce(
             (queryParamObject: { [k: string]: boolean }, relationshipsLabel: string) => {
-                queryParamObject[relationshipsLabel.split('-')[1]] = true;
+                queryParamObject[relationshipsLabel] = true;
                 return queryParamObject;
             },
             {}

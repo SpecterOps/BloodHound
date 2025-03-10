@@ -26,8 +26,8 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
         type = ActiveDirectoryNodeKind.Entity;
     const tables = allSections[type]?.(id) || [];
 
-    const accordionMapper = tables.map((item) => {
-        const returnItem: (string | string[])[] = [item.label];
+    const sectionsMapper = tables.map((item) => {
+        const returnItem: string[] = [item.label];
         if (item.sections) {
             const listWithSubItems = item.sections.map((nestedItem) => nestedItem.label);
             listWithSubItems.forEach((nestedItemString) => {
@@ -44,7 +44,7 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
                     <Box padding={1}>
                         <Divider />
                     </Box>
-                    <EntityInfoDataTable accordionMapper={accordionMapper} parentSectionIndex={index} {...table} />
+                    <EntityInfoDataTable sectionsMapper={sectionsMapper} {...table} />
                 </React.Fragment>
             ))}
         </>
