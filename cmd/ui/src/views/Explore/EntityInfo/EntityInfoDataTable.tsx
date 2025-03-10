@@ -20,16 +20,30 @@ import {
     NODE_GRAPH_RENDER_LIMIT,
     abortEntitySectionRequest,
     searchbarActions,
+    useExploreParams,
+    useFeatureFlag,
 } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
 import { useDispatch } from 'react-redux';
+import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { transformFlatGraphResponse } from 'src/utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
+import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 
-const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, endpoint, countLabel, sections }) => {
+const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
+    id,
+    label,
+    endpoint,
+    countLabel,
+    sections,
+    parentSectionIndex,
+}) => {
     const dispatch = useDispatch();
+    const { data: backButtonFlag } = useFeatureFlag('back_button_support');
+    const { setExploreParams, expandedRelationships } = useExploreParams();
+    const { expandedSections, toggleSection } = useEntityInfoPanelContext();
 
     const countQuery = useQuery(
         ['relatedCount', label, id],
@@ -43,8 +57,39 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
         { refetchOnWindowFocus: false, retry: false }
     );
 
-    const handleOnChange = async (label: string, isOpen: boolean) => {
-        if (!endpoint) return;
+    const setExpandedRelationshipsParams = () => {
+        let expandedRelationshipHelperArray: string[] = [];
+        const expandedRelationshipsLength = expandedRelationships!.length;
+        const listNewParamsOnly = [`${parentSectionIndex}-${label}`];
+        if (!expandedRelationshipsLength) {
+            expandedRelationshipHelperArray = listNewParamsOnly;
+        } else {
+            const parentIndexOfNested = parseInt(expandedRelationships!.at(-1)?.split('-')[0] as string);
+            const isNestedSameSection = parentIndexOfNested === parentSectionIndex;
+            if (expandedRelationshipsLength >= 2 && isNestedSameSection) {
+                expandedRelationships!.pop(); // Always remove the last one if more than two as it guarantees that we always leave the parent
+            }
+            const listWithExistingParams = [...expandedRelationships!, `${parentSectionIndex}-${label}`];
+            expandedRelationshipHelperArray = isNestedSameSection ? listWithExistingParams : listNewParamsOnly;
+        }
+        setExploreParams({
+            expandedRelationships: expandedRelationshipHelperArray,
+            searchType: 'relationship',
+        });
+    };
+
+    const handleOnChange = (label: string, isOpen: boolean) => {
+        handleCurrentSectionToggle();
+        handleSetGraph(label, isOpen);
+    };
+
+    const handleSetGraph = async (label: string, isOpen: boolean) => {
+        if (!endpoint) {
+            if (backButtonFlag?.enabled && isOpen) {
+                setExpandedRelationshipsParams();
+            }
+            return;
+        }
 
         if (isOpen && countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
             abortEntitySectionRequest();
@@ -56,7 +101,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
                     const formattedData = transformFlatGraphResponse(result);
 
                     dispatch(saveResponseForExport(formattedData));
-                    dispatch(putGraphData(result));
+                    backButtonFlag?.enabled ? setExpandedRelationshipsParams() : dispatch(putGraphData(result));
                 })
                 .catch((err) => {
                     if (err?.code === 'ERR_CANCELED') {
@@ -71,7 +116,36 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
         }
     };
 
-    const handleOnClick = (item: any) => {
+    const isParentSection = (key: string) => {
+        const splitFirstExpandedRelationship = expandedRelationships?.at(0)?.split('-') as string[]; // Always check first index because it will always be parent if nesting is there
+        const checkKey = splitFirstExpandedRelationship[1] === key; // confirm if key/label is the parent one
+        const checkIndex = parseInt(splitFirstExpandedRelationship[0]) == parentSectionIndex; // confirm if its the same parent or if you went from one parent to another
+        return checkKey && checkIndex;
+    };
+
+    const handleCurrentSectionToggle = () => {
+        if (backButtonFlag?.enabled) {
+            if (expandedSections && expandedRelationships!.length > 0) {
+                for (const [key] of Object.entries(expandedSections)) {
+                    // Closes if the key that is being evaluated is not a direct parent, is not object information and its not the same label that we are trying to open
+                    if (key !== 'Object Information' && !isParentSection(key) && key !== label) {
+                        expandedSections[key] = false;
+                    }
+                }
+            }
+        }
+        toggleSection(label);
+    };
+
+    const setNodeSearchParams = (item: SelectedNode) => {
+        setExploreParams({
+            primarySearch: item.id ?? item.name,
+            searchType: 'node',
+            searchTab: 'node',
+        });
+    };
+
+    const setSourceNodeSelected = (item: SelectedNode) => {
         dispatch(
             searchbarActions.sourceNodeSelected({
                 objectid: item.id,
@@ -79,6 +153,14 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
                 name: item.name,
             })
         );
+    };
+
+    const handleOnClick = (item: SelectedNode) => {
+        if (backButtonFlag?.enabled) {
+            setNodeSearchParams(item);
+        } else {
+            setSourceNodeSelected(item);
+        }
     };
 
     let count: number | undefined;
@@ -101,6 +183,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
         <EntityInfoCollapsibleSection
             label={label}
             count={count}
+            isExpanded={!!expandedSections[label]}
             isLoading={countQuery.isLoading}
             isError={countQuery.isError}
             error={countQuery.error}
@@ -108,7 +191,14 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
             {endpoint && (
                 <InfiniteScrollingTable itemCount={count} fetchDataCallback={endpoint} onClick={handleOnClick} />
             )}
-            {sections && sections.map((nestedSection, index) => <EntityInfoDataTable key={index} {...nestedSection} />)}
+            {sections &&
+                sections.map((nestedSection, nestedSectionIndex) => (
+                    <EntityInfoDataTable
+                        key={nestedSectionIndex}
+                        parentSectionIndex={parentSectionIndex}
+                        {...nestedSection}
+                    />
+                ))}
         </EntityInfoCollapsibleSection>
     );
 };

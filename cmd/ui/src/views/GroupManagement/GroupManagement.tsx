@@ -57,7 +57,6 @@ const GroupManagement = () => {
                 type: getGraphNodeByObjectId.data.kind,
             };
             dispatch(searchbarActions.sourceNodeSelected(searchNode));
-            console.log(getGraphNodeByObjectId.data.id);
 
             navigate(ROUTE_EXPLORE + '?selectedItem=' + getGraphNodeByObjectId.data.id);
         }

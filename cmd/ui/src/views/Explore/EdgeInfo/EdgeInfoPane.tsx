@@ -15,12 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps } from '@mui/material';
-import { EdgeResponse, usePaneStyles } from 'bh-shared-ui';
+import { usePaneStyles } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 import Header from 'src/views/Explore/EdgeInfo/EdgeInfoHeader';
 
-const EdgeInfoPane: React.FC<{ selectedEdge: EdgeResponse; sx?: SxProps }> = ({ selectedEdge, sx }) => {
+const EdgeInfoPane: React.FC<{ sx?: SxProps; selectedEdge?: any }> = ({ sx, selectedEdge }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
 

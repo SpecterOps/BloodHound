@@ -17,7 +17,15 @@
 import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
-import { EdgeInfoState, EdgeSections, SubHeader, edgeSectionToggle, useCollapsibleSectionStyles } from 'bh-shared-ui';
+import {
+    EdgeInfoState,
+    EdgeSections,
+    SubHeader,
+    edgeSectionToggle,
+    useCollapsibleSectionStyles,
+    useExploreParams,
+    useFeatureFlag,
+} from 'bh-shared-ui';
 import React, { PropsWithChildren } from 'react';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
@@ -28,18 +36,53 @@ export const EdgeInfoCollapsibleSection: React.FC<
     }>
 > = ({ children, section, onChange = () => {} }) => {
     const styles = useCollapsibleSectionStyles();
+    const { data: backButtonFlag } = useFeatureFlag('back_button_support');
+    const { setExploreParams, expandedRelationships } = useExploreParams();
 
     const dispatch = useAppDispatch();
     const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
 
-    const expanded = edgeInfoState.expandedSections[section];
+    const setExpandedSection = () => {
+        if (backButtonFlag?.enabled) {
+            dispatch(
+                edgeSectionToggle({
+                    section: expandedRelationships?.at(0) as keyof typeof EdgeSections,
+                    expanded: true,
+                })
+            );
+        }
+        return edgeInfoState.expandedSections[section];
+    };
+
+    const expanded = setExpandedSection();
+
+    const setExpandedRelationshipsParam = () => {
+        setExploreParams({
+            expandedRelationships: [section],
+            ...(section === 'composition' && { searchType: 'composition' }),
+        });
+    };
+
+    const handleOnChange = () => {
+        if (backButtonFlag?.enabled) {
+            dispatch(
+                edgeSectionToggle({
+                    section: expandedRelationships?.at(0) as keyof typeof EdgeSections,
+                    expanded: false,
+                })
+            );
+            setExpandedRelationshipsParam();
+        } else {
+            dispatch(edgeSectionToggle({ section: section, expanded: !expanded }));
+        }
+        onChange(section, !expanded);
+    };
 
     return (
         <Accordion
             expanded={expanded}
             onChange={() => {
-                dispatch(edgeSectionToggle({ section: section, expanded: !expanded }));
-                onChange(section, !expanded);
+                handleOnChange();
             }}
             TransitionProps={{ unmountOnExit: true }}
             className={styles.accordionRoot}>

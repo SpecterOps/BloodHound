@@ -20,11 +20,11 @@ import React from 'react';
 import { EntityInfoContentProps } from './EntityInfoContent';
 import EntityInfoDataTable from './EntityInfoDataTable';
 
-const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ selectedNode }) => {
-    let type = selectedNode.kind as EntityKinds;
-    if (type === ActiveDirectoryNodeKind.LocalGroup || type === ActiveDirectoryNodeKind.LocalUser)
+const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeType }) => {
+    let type = nodeType as EntityKinds;
+    if (nodeType === ActiveDirectoryNodeKind.LocalGroup || nodeType === ActiveDirectoryNodeKind.LocalUser)
         type = ActiveDirectoryNodeKind.Entity;
-    const tables = allSections[type]?.(selectedNode.objectId) || [];
+    const tables = allSections[type]?.(id) || [];
 
     return (
         <>
@@ -33,7 +33,7 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ selectedNod
                     <Box padding={1}>
                         <Divider />
                     </Box>
-                    <EntityInfoDataTable {...table} />
+                    <EntityInfoDataTable parentSectionIndex={index} {...table} />
                 </React.Fragment>
             ))}
         </>

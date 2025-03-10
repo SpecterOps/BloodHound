@@ -26,8 +26,6 @@ export type ExploreQueryParams = {
     secondarySearch: string | null;
     cypherSearch: string | null;
     searchType: SearchType | null;
-    graphSelection: string | null;
-    panelSelection: string | null;
     expandedRelationships: EntityInfoDataTableProps['label'][] | null;
     selectedItem: string | null;
 };
@@ -59,8 +57,6 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         secondarySearch: searchParams.get('secondarySearch'),
         cypherSearch: searchParams.get('cypherSearch'),
         searchType: parseSearchType(searchParams.get('searchType')),
-        graphSelection: searchParams.get('graphSelection'),
-        panelSelection: searchParams.get('panelSelection'),
         expandedRelationships: searchParams.getAll('expandedRelationship'),
         selectedItem: searchParams.get('selectedItem'),
         // react doesnt like this because it doesnt know the params needed for the function factory return function.
@@ -72,8 +68,6 @@ export const useExploreParams = (): UseExploreParamsReturn => {
                 'secondarySearch',
                 'cypherSearch',
                 'searchType',
-                'graphSelection',
-                'panelSelection',
                 'expandedRelationships',
                 'selectedItem',
             ]),

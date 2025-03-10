@@ -15,7 +15,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Divider, Typography, useTheme } from '@mui/material';
-import { EdgeCompositionRelationships, EdgeInfoComponents, EdgeResponse, EdgeSections, apiClient } from 'bh-shared-ui';
+import {
+    EdgeCompositionRelationships,
+    EdgeInfoComponents,
+    EdgeSections,
+    Flag,
+    SelectedEdge,
+    apiClient,
+    useFeatureFlag,
+    useFetchEntityProperties,
+} from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
 import { Dispatch, FC, Fragment } from 'react';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
@@ -25,11 +34,16 @@ import { transformToFlatGraphResponse } from 'src/utils';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 
-const getOnChange = (dispatch: Dispatch<any>, sourceNodeId: number, targetNodeId: number, selectedEdgeName: string) => {
+const getOnChange = (
+    dispatch: Dispatch<any>,
+    sourceNodeId: number,
+    targetNodeId: number,
+    selectedEdgeName: string,
+    backButtonFlag?: Flag
+) => {
     return async (label: string, isOpen: boolean) => {
         if (isOpen) {
             dispatch(setGraphLoading(true));
-
             await apiClient
                 .getEdgeComposition(sourceNodeId, targetNodeId, selectedEdgeName)
                 .then((result) => {
@@ -39,7 +53,7 @@ const getOnChange = (dispatch: Dispatch<any>, sourceNodeId: number, targetNodeId
                     const formattedData = transformToFlatGraphResponse(result.data);
 
                     dispatch(saveResponseForExport(formattedData));
-                    dispatch(putGraphData(formattedData));
+                    !backButtonFlag?.enabled && dispatch(putGraphData(formattedData));
                 })
                 .catch((err) => {
                     if (err?.code === 'ERR_CANCELED') {
@@ -55,12 +69,15 @@ const getOnChange = (dispatch: Dispatch<any>, sourceNodeId: number, targetNodeId
     };
 };
 
-const EdgeInfoContent: FC<{ selectedEdge: EdgeResponse }> = ({ selectedEdge }) => {
+const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
+    const { data: backButtonFlag } = useFeatureFlag('back_button_support');
 
-    const sections = EdgeInfoComponents[selectedEdge.label as keyof typeof EdgeInfoComponents];
+    const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
+    const { objectId, type } = targetNode;
+    const { entityProperties: targetNodeProperties } = useFetchEntityProperties({ objectId, nodeType: type });
 
     return (
         <Box>
@@ -71,7 +88,7 @@ const EdgeInfoContent: FC<{ selectedEdge: EdgeResponse }> = ({ selectedEdge }) =
                         const Section = section[1];
 
                         const sendOnChange =
-                            EdgeCompositionRelationships.includes(selectedEdge.label) && section[0] === 'composition';
+                            EdgeCompositionRelationships.includes(selectedEdge.name) && section[0] === 'composition';
 
                         return (
                             <Fragment key={index}>
@@ -84,22 +101,23 @@ const EdgeInfoContent: FC<{ selectedEdge: EdgeResponse }> = ({ selectedEdge }) =
                                         sendOnChange
                                             ? getOnChange(
                                                   dispatch,
-                                                  parseInt(sourceNode.id),
-                                                  parseInt(targetNode.id),
-                                                  selectedEdge.label
+                                                  parseInt(`${sourceNode.id}`),
+                                                  parseInt(`${targetNode.id}`),
+                                                  selectedEdge.name,
+                                                  backButtonFlag
                                               )
                                             : undefined
                                     }>
                                     <Section
-                                        edgeName={selectedEdge.label}
+                                        edgeName={selectedEdge.name}
                                         sourceDBId={sourceNode.id}
-                                        sourceName={sourceNode.label}
-                                        sourceType={sourceNode.kind}
+                                        sourceName={sourceNode.name}
+                                        sourceType={sourceNode.type}
                                         targetDBId={targetNode.id}
-                                        targetName={targetNode.label}
-                                        targetType={targetNode.kind}
+                                        targetName={targetNode.name}
+                                        targetType={targetNode.type}
                                         targetId={targetNode.objectId}
-                                        haslaps={!!targetNode.properties?.haslaps}
+                                        haslaps={!!targetNodeProperties?.haslaps}
                                     />
                                 </EdgeInfoCollapsibleSection>
                             </Fragment>
@@ -115,7 +133,7 @@ const EdgeInfoContent: FC<{ selectedEdge: EdgeResponse }> = ({ selectedEdge }) =
                         <Typography variant='body1' fontSize={'0.75rem'}>
                             The edge{' '}
                             <Typography component={'span'} variant='body1' fontWeight={'bold'} fontSize={'0.75rem'}>
-                                {selectedEdge.label}
+                                {selectedEdge.name}
                             </Typography>{' '}
                             does not have any additional contextual information at this time.
                         </Typography>

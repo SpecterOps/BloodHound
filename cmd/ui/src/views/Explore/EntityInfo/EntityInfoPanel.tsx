@@ -15,8 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps, Typography } from '@mui/material';
-import { NoEntitySelectedHeader, NoEntitySelectedMessage, NodeResponse, usePaneStyles } from 'bh-shared-ui';
-import React, { useEffect, useState } from 'react';
+import {
+    NoEntitySelectedHeader,
+    NoEntitySelectedMessage,
+    useExploreParams,
+    useFeatureFlag,
+    usePaneStyles,
+} from 'bh-shared-ui';
+import React, { useCallback, useEffect, useState } from 'react';
+import { SelectedNode } from 'src/ducks/entityinfo/types';
 import usePreviousValue from 'src/hooks/usePreviousValue';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
@@ -24,28 +31,51 @@ import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 interface EntityInfoPanelProps {
-    selectedNode: NodeResponse;
+    selectedNode: SelectedNode | null;
     sx?: SxProps;
 }
 
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
-    const { setExpandedSections } = useEntityInfoPanelContext();
+    const { setExpandedSections, expandedSections } = useEntityInfoPanelContext();
+    const { expandedRelationships } = useExploreParams();
+    const { data: backButtonFlag } = useFeatureFlag('back_button_support');
     const previousSelectedNode = usePreviousValue(selectedNode);
 
+    const formatRelationshipsParams = useCallback(() => {
+        return expandedRelationships?.reduce(
+            (queryParamObject: { [k: string]: boolean }, relationshipsLabel: string) => {
+                queryParamObject[relationshipsLabel.split('-')[1]] = true;
+                return queryParamObject;
+            },
+            {}
+        );
+    }, [expandedRelationships]);
+
     useEffect(() => {
-        if (previousSelectedNode?.id !== selectedNode.id) {
-            setExpandedSections({ 'Object Information': true });
+        if (previousSelectedNode?.id !== selectedNode?.id) {
+            let initialExpandedSections = { 'Object Information': true };
+            if (backButtonFlag?.enabled) {
+                initialExpandedSections = { ...initialExpandedSections, ...formatRelationshipsParams() };
+            }
+            setExpandedSections(initialExpandedSections);
         }
-    }, [setExpandedSections, previousSelectedNode, selectedNode]);
+    }, [
+        setExpandedSections,
+        expandedSections,
+        previousSelectedNode,
+        selectedNode,
+        backButtonFlag,
+        formatRelationshipsParams,
+    ]);
 
     return (
         <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
             <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
                 <Header
-                    name={selectedNode?.label || NoEntitySelectedHeader}
-                    nodeType={selectedNode?.kind}
+                    name={selectedNode?.name || NoEntitySelectedHeader}
+                    nodeType={selectedNode?.type}
                     expanded={expanded}
                     onToggleExpanded={(expanded) => {
                         setExpanded(expanded);
@@ -59,7 +89,11 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
                     display: expanded ? 'initial' : 'none',
                 }}>
                 {selectedNode ? (
-                    <EntityInfoContent selectedNode={selectedNode} />
+                    <EntityInfoContent
+                        id={selectedNode.id}
+                        nodeType={selectedNode.type}
+                        databaseId={selectedNode.graphId}
+                    />
                 ) : (
                     <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
                 )}
