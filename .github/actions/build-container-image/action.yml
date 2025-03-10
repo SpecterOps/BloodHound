@@ -150,6 +150,7 @@ runs:
   steps:
     - uses: docker/login-action@v3
       name: Authenticate with DockerHub Registry
+      if: ${{ github.event.repository.fork == false }}
       with:
         registry: docker.io
         username: ${{ inputs.dockerhub_account }}
