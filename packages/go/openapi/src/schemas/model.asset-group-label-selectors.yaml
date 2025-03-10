@@ -1,0 +1,10 @@
+allOf:
+  - $ref: './model.components.int32.id.yaml'
+  - $ref: './model.components.timestamps.yaml'
+  - type: object
+    properties:
+      entries:
+        type: array
+        readOnly: true
+        items:
+          $ref: './model.asset-group-label-selector.yaml'

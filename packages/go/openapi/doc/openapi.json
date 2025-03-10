@@ -4428,6 +4428,78 @@
         }
       }
     },
+    "/api/v2/asset-group-labels": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupLabelsSelectors",
+        "summary": "Get Asset Group Label selectors",
+        "description": "Get a list of selectors for this group.",
+        "tags": [
+          "Groups",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-label-selectors"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/pathfinding": {
       "parameters": [
         {
@@ -13970,15 +14042,6 @@
           "description": "The unique object identifier"
         }
       },
-      "query.hydrate-counts": {
-        "description": "Include counts of related entities. Default value is `true`.",
-        "name": "counts",
-        "in": "query",
-        "schema": {
-          "type": "boolean",
-          "default": true
-        }
-      },
       "query.entity.skip": {
         "name": "skip",
         "description": "The number of entries to skip for pagination. Only available for `type=list`.",
@@ -14018,6 +14081,15 @@
         "description": "Sort by column. Can be used multiple times; prepend a hyphen for descending order. Columns available\nfor sorting are dependent on the entity object kind.\n",
         "schema": {
           "$ref": "#/components/schemas/api.params.query.sort-by"
+        }
+      },
+      "query.hydrate-counts": {
+        "description": "Include counts of related entities. Default value is `true`.",
+        "name": "counts",
+        "in": "query",
+        "schema": {
+          "type": "boolean",
+          "default": true
         }
       },
       "query.clients.hydrate-domains": {
@@ -15576,6 +15648,66 @@
             "type": "boolean"
           }
         }
+      },
+      "model.asset-group-label-selector": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "object_id": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "asset_group_label_id": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "allow_disable": {
+                "type": "boolean"
+              },
+              "is_default": {
+                "type": "boolean"
+              },
+              "auto-certify": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "model.asset-group-label-selectors": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "entries": {
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "$ref": "#/components/schemas/model.asset-group-label-selector"
+                }
+              }
+            }
+          }
+        ]
       },
       "model.bh-graph.item-border": {
         "type": "object",

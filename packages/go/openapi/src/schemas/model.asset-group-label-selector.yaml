@@ -1,0 +1,21 @@
+allOf:
+  - $ref: './model.components.int32.id.yaml'
+  - $ref: './model.components.timestamps.yaml'
+  - type: object
+    properties:
+      object_id:
+        type: integer
+        format: int32
+      asset_group_label_id:
+        type: integer
+        format: int32
+      name:
+        type: string
+      description:
+        type: string
+      allow_disable:
+        type: boolean
+      is_default:
+        type: boolean
+      auto-certify:
+        type: boolean

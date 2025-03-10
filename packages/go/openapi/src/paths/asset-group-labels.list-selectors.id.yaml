@@ -1,0 +1,37 @@
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+  - $ref: './../parameters/path.object-id.yaml'
+get:
+  operationId: GetAssetGroupLabelsSelectors
+  summary: Get Asset Group Label selectors
+  description: Get a list of selectors for this group.
+  tags:
+    - Groups
+    - Enterprise
+  parameters:
+    - $ref: './../parameters/query.entity.skip.yaml'
+    - $ref: './../parameters/query.entity.limit.yaml'
+    - $ref: './../parameters/query.entity.type.yaml'
+    - $ref: './../parameters/query.entity.sort-by.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: './../schemas/api.response.pagination.yaml'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './../schemas/model.asset-group-label-selectors.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
