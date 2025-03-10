@@ -35,6 +35,7 @@ import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     id,
     label,
+    queryKey,
     endpoint,
     countLabel,
     sections,
@@ -75,6 +76,8 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         setExploreParams({
             expandedRelationships: expandedRelationshipHelperArray,
             searchType: 'relationship',
+            relationshipQueryType: queryKey,
+            relationshipQueryObjectId: id,
         });
     };
 
@@ -93,15 +96,17 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
 
         if (isOpen && countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
             abortEntitySectionRequest();
-
+            if (backButtonFlag?.enabled) {
+                setExpandedRelationshipsParams();
+                return;
+            }
             dispatch(setGraphLoading(true));
-
             await endpoint({ type: 'graph' })
                 .then((result) => {
                     const formattedData = transformFlatGraphResponse(result);
 
                     dispatch(saveResponseForExport(formattedData));
-                    backButtonFlag?.enabled ? setExpandedRelationshipsParams() : dispatch(putGraphData(result));
+                    dispatch(putGraphData(result));
                 })
                 .catch((err) => {
                     if (err?.code === 'ERR_CANCELED') {
