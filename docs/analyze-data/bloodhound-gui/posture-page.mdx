@@ -1,0 +1,47 @@
+---
+title: Posture Page
+---
+
+<Frame>
+  <img src="/assets/18258001080731.png"/>
+</Frame>
+
+## Summary
+
+The Posture page is a simplified reporting dashboard that helps users understand their environment's current and historical risks. It is divided into several parts to illustrate where the biggest risks originate and provide metrics to indicate progress on remediation over time.
+
+This page allows users to select an environment and a duration over which to view the overall risk to the selected environment.
+
+<Frame>
+  <img src="/assets/image1-18.png"/>
+</Frame>
+
+## Attack Paths
+
+The **Attack Paths** list on the left of the page displays the Attack Paths with active findings during the selected date range. Each Attack Path shows:
+
+* Severity of the path at the end date of the selected range
+* Name of the Attack Path
+* Category of the Attack Path
+* How many findings existed on the end date of the selected range
+* The calculated difference in the number of findings between the beginning and end date of the selected range
+
+This list will display Attack paths that were entirely resolved or deprecated by SpecterOps during the selected duration.
+
+## Attack Path Summary
+
+The **Attack Path Summary** in the top right of the page includes a "plain English" description of the risk held within the selected environment on the selected end date.
+
+## Posture Over Time Graphs
+
+The graph in the middle right of the page has multiple paginated graphs that show posture over time. These include:
+
+* **Total Tier Zero Attack Path Exposure** \- This represents the overall exposure of your Tier Zero asset group within the selected environment over time. This risk represents the percentage of principals within the environment (and trusted/connected environments) that can compromise the Tier Zero asset group.
+* **Historical Findings** \- As findings are remediated or newly created misconfigurations generate new ones, this chart will help users track the changes in the number of identified findings over time.
+* **Tier Zero Objects** \- A graph representing the volume of assets in the Tier Zero group.
+
+## Completeness Graphs
+
+For Active Directory environments, the **Group Completeness** and **Session Completeness** graphs in the bottom right of the page provide a view of how complete of a perspective BloodHound Enterprise has within the environment to indicate how accurately the assessed risk is communicated.
+
+The total collection completeness significantly impacts the accuracy of the graph available for analysis within BloodHound Enterprise. See [Why perform privileged collection in SharpHound](/collect-data/enterprise-collection/privileged-collection) for more details.

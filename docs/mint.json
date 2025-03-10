@@ -30,6 +30,11 @@
   "background": {
     "style": "gradient"
   },
+ "api": {
+  "playground": {
+    "mode": "hide"
+  }
+},
   "topbarLinks": [
     {
       "name": "Support",
@@ -44,12 +49,16 @@
   },
   "tabs": [
     {
+      "name": "Home",
+      "url": "/home"
+    },
+    {
       "name": "BloodHound",
-      "url": "hc"
+      "url": "/"
     },
     {
       "name": "API Reference",
-      "url": "hc/en-us/reference"
+      "url": "reference"
     }
   ],
   "anchors": [
@@ -73,58 +82,58 @@
     "name": "Home"
   },
   "navigation": [
-        {
+    {
       "group": "Home",
-      "pages": ["home"]
+      "pages": ["/home"]
     },
     {
       "group": "Get Started with BloodHound",
       "pages": [
-        "hc/en-us/get-started/introduction-to-bloodhound",
+        "get-started/introduction",
         {
           "group": "Quickstart",
           "pages": [
-            "hc/en-us/get-started/bloodhound-enterprise-quickstart",
-            "hc/en-us/get-started/bloodhound-community-edition-quickstart"
+            "get-started/quickstart/enterprise-quickstart",
+            "get-started/quickstart/community-edition-quickstart"
           ]
         },
         {
-          "group": "BloodHound and Security Boundaries",
+          "group": "Security Boundaries",
           "pages": [
-            "hc/en-us/articles/BloodHound-Enterprise-Security-Overview",
-            "hc/en-us/articles/Modifying-Tier-Zero",
-            "hc/en-us/articles/Tier-Zero-Members-and-Modification"
+            "get-started/security-boundaries/enterprise-security-overview",
+            "get-started/security-boundaries/modifying-tier-zero",
+            "get-started/security-boundaries/tier-zero-members"
           ]
         }
       ]
     },
     {
-      "group": "Install a Data Collector",
+      "group": "Install Data Collector",
       "pages": [
-        "hc/en-us/categories/Deployment",
+        "install-data-collector/overview",
         {
           "group": "Install SharpHound",
           "pages": [
-            "hc/en-us/sections/Deploying-SharpHound-Enterprise",
-            "hc/en-us/articles/SharpHound-Enterprise-System-Requirements-and-Deployment-Process",
-            "hc/en-us/articles/Install-and-Upgrade-SharpHound-Enterprise",
-            "hc/en-us/articles/Deploying-a-tiered-SharpHound-Enterprise-collector-strategy",
-            "hc/en-us/articles/Create-a-gMSA-for-use-with-SharpHound-Enterprise",
-            "hc/en-us/articles/SharpHound-Enterprise-Local-Configuration",
-            "hc/en-us/articles/Modify-the-service-account-used-by-SharpHound-Enterprise",
-            "hc/en-us/articles/SharpHound-Enterprise-Tenant-Configuration",
-            "hc/en-us/articles/Troubleshooting-Local-Collection-Coverage"
+            "install-data-collector/install-sharphound/overview",
+            "install-data-collector/install-sharphound/system-requirements",
+            "install-data-collector/install-sharphound/installation-upgrade",
+            "install-data-collector/install-sharphound/tiered-collector-strategy",
+            "install-data-collector/install-sharphound/create-gmsa",
+            "install-data-collector/install-sharphound/local-configuration",
+            "install-data-collector/install-sharphound/modify-service-account",
+            "install-data-collector/install-sharphound/tenant-configuration",
+            "install-data-collector/install-sharphound/troubleshooting"
           ]
         },
         {
           "group": "Install AzureHound",
           "pages": [
-            "hc/en-us/sections/Deploying-AzureHound-Enterprise",
-            "hc/en-us/articles/AzureHound-Enterprise-System-Requirements-and-Deployment-Process",
-            "hc/en-us/articles/AzureHound-Enterprise-Azure-Configuration",
-            "hc/en-us/articles/Create-an-AzureHound-Configuration",
-            "hc/en-us/articles/Install-and-Upgrade-AzureHound-Windows-Docker-or-Kubernetes",
-            "hc/en-us/articles/Running-multiple-AzureHound-Enterprise-collectors-on-one-server-with-Scheduled-Tasks"
+            "install-data-collector/install-azurehound/overview",
+            "install-data-collector/install-azurehound/system-requirements",
+            "install-data-collector/install-azurehound/azure-configuration",
+            "install-data-collector/install-azurehound/create-configuration",
+            "install-data-collector/install-azurehound/installation-options",
+            "install-data-collector/install-azurehound/multiple-collectors"
           ]
         }
       ]
@@ -132,30 +141,30 @@
     {
       "group": "Collect Data",
       "pages": [
-        "hc/en-us/categories/Data-Collection",
+        "collect-data/overview",
         {
           "group": "BloodHound Enterprise Collection",
           "pages": [
-            "hc/en-us/sections/BloodHound-Enterprise-Collection",
-            "hc/en-us/articles/SharpHound-Enterprise-Data-Collection-and-Permissions",
-            "hc/en-us/articles/Data-reconciliation-and-retention",
-            "hc/en-us/articles/Ad-hoc-BHE-Data-Collection-with-SharpHound-CE",
-            "hc/en-us/articles/Run-an-On-Demand-Scan",
-            "hc/en-us/articles/Create-a-BloodHound-Enterprise-collector-client",
-            "hc/en-us/articles/Create-a-data-collection-schedule",
-            "hc/en-us/articles/Why-perform-privileged-collection-in-SharpHound",
-            "hc/en-us/articles/SharpHound-Enterprise-Cross-Trust-Collection",
-            "hc/en-us/articles/SharpHound-Collection-FAQ"
+            "collect-data/enterprise-collection/overview",
+            "collect-data/enterprise-collection/permissions",
+            "collect-data/enterprise-collection/data-retention",
+            "collect-data/enterprise-collection/ad-hoc-collection",
+            "collect-data/enterprise-collection/on-demand-scan",
+            "collect-data/enterprise-collection/create-collector",
+            "collect-data/enterprise-collection/collection-schedule",
+            "collect-data/enterprise-collection/privileged-collection",
+            "collect-data/enterprise-collection/cross-trust",
+            "collect-data/enterprise-collection/faq"
           ]
         },
         {
-          "group": "BloodHound CE Collection",
+          "group": "Community Edition Collection",
           "pages": [
-            "hc/en-us/sections/BloodHound-CE-Collection",
-            "hc/en-us/articles/SharpHound-Community-Edition",
-            "hc/en-us/articles/All-SharpHound-Community-Edition-Flags-Explained",
-            "hc/en-us/articles/AzureHound-Community-Edition",
-            "hc/en-us/articles/All-AzureHound-Community-Edition-Flags-Explained"
+            "collect-data/ce-collection/overview",
+            "collect-data/ce-collection/sharphound",
+            "collect-data/ce-collection/sharphound-flags",
+            "collect-data/ce-collection/azurehound",
+            "collect-data/ce-collection/azurehound-flags"
           ]
         }
       ]
@@ -163,16 +172,16 @@
     {
       "group": "Analyze Attack Path Data",
       "pages": [
-        "hc/en-us/categories/Data-Analysis",
+        "analyze-data/overview",
         {
-          "group": "The BloodHound GUI",
+          "group": "BloodHound GUI",
           "pages": [
-            "hc/en-us/sections/The-BloodHound-GUI",
-            "hc/en-us/articles/Posture-Page",
-            "hc/en-us/articles/BloodHound-Configuration",
-            "hc/en-us/articles/Mute-unmute-attack-path-finding",
-            "hc/en-us/articles/Searching-with-Cypher",
-            "hc/en-us/articles/Explore-Search-for-Objects"
+            "analyze-data/bloodhound-gui/overview",
+            "analyze-data/bloodhound-gui/posture-page",
+            "analyze-data/bloodhound-gui/configuration",
+            "analyze-data/bloodhound-gui/mute-paths",
+            "analyze-data/bloodhound-gui/cypher-search",
+            "analyze-data/bloodhound-gui/explore-objects"
           ]
         }
       ]
@@ -180,60 +189,58 @@
     {
       "group": "Manage BloodHound",
       "pages": [
-        "hc/en-us/categories/Administration",
+        "manage-bloodhound/overview",
         {
-          "group": " Bloodhound Enterprise Compliance Framework",
+          "group": "BloodHound Enterprise Compliance Framework",
           "pages": [
-            "hc/en-us/sections/Bloodhound-Enterprise-Compliance-Framework",
-            "hc/en-us/articles/Bloodhound-Enterprise-Compliance-Framework-Resource",
-            "hc/en-us/articles/Bloodhound-Enterprise-NIST-SP-800-171-Compliance-Resource",
-            "hc/en-us/articles/Bloodhound-Enterprise-NIST-SP-800-53-Rev-8-Compliance-Resource",
-            "hc/en-us/articles/Bloodhound-Enterprise-NIST-CSF-v2-Compliance-Resource",
-            "hc/en-us/articles/Bloodhound-Enterprise-NIST-CSF-v1-1-Compliance-Resource"
+            "manage-bloodhound/compliance-framework/overview",
+            "manage-bloodhound/compliance-framework/resources",
+            "manage-bloodhound/compliance-framework/nist-sp-800-171",
+            "manage-bloodhound/compliance-framework/nist-sp-800-53",
+            "manage-bloodhound/compliance-framework/nist-csf-v2",
+            "manage-bloodhound/compliance-framework/nist-csf-v1-1"
           ]
         },
         {
           "group": "Authentication and Authorization",
           "pages": [
-            "hc/en-us/sections/Authentication-and-Authorization",
-            "hc/en-us/articles/Administering-users-and-roles",
-            "hc/en-us/articles/Enable-Disable-Multi-Factor-Authentication",
-            "hc/en-us/articles/OIDC-in-BloodHound",
-            "hc/en-us/articles/SAML-in-BloodHound",
-            "hc/en-us/articles/SAML-ADFS-Configuration",
-            "hc/en-us/articles/SAML-Auth0-Configuration",
-            "hc/en-us/articles/SAML-Entra-ID-Configuration",
-            "hc/en-us/articles/SAML-Google-IDP-Configuration",
-            "hc/en-us/articles/SAML-Okta-Configuration"
+            "manage-bloodhound/auth/overview",
+            "manage-bloodhound/auth/users-and-roles",
+            "manage-bloodhound/auth/mfa",
+            "manage-bloodhound/auth/oidc",
+            "manage-bloodhound/auth/saml",
+            "manage-bloodhound/auth/saml-adfs",
+            "manage-bloodhound/auth/saml-auth0",
+            "manage-bloodhound/auth/saml-entra-id",
+            "manage-bloodhound/auth/saml-google",
+            "manage-bloodhound/auth/saml-okta"
           ]
         },
         {
           "group": "Securing BloodHound and collectors",
           "pages": [
-            "hc/en-us/sections/Securing-BloodHound-and-collectors",
-            "hc/en-us/articles/SharpHound-Enterprise-Service-Hardening"
+            "manage-bloodhound/securing-bloodhound-and-collectors/overview",
+            "manage-bloodhound/securing-bloodhound-and-collectors/sharphound-hardening"
           ]
         }
       ]
     },
     {
-      "group": " API & Integrations",
+      "group": "API & Integrations",
       "pages": [
-        "hc/en-us/categories/API-and-Integrations",
+        "integrations/overview",
         {
           "group": "BloodHound API",
           "pages": [
-            "hc/en-us/sections/BloodHound-API",
-            "hc/en-us/articles/BloodHound-JSON-Formats",
-            "hc/en-us/articles/Working-with-the-BloodHound-API"
+            "integrations/bloodhound-api/json-formats",
+            "integrations/bloodhound-api/working-with-api"
           ]
         },
         {
-          "group": "BloodHound Integrations",
+          "group": "Integrations",
           "pages": [
-            "hc/en-us/sections/BloodHound-Integrations",
-            "hc/en-us/articles/Overview-of-BloodHound-Integrations",
-            "hc/en-us/articles/Integrate-BloodHound-Enterprise-with-Splunk"
+            "integrations/integrations/overview",
+            "integrations/integrations/splunk"
           ]
         }
       ]
@@ -241,634 +248,633 @@
     {
       "group": "Resources",
       "pages": [
-        "hc/en-us/categories/resources",
+        "resources/overview",
         {
           "group": "Nodes",
           "pages": [
-            "hc/en-us/sections/Nodes",
-            "hc/en-us/articles/About-BloodHound-Nodes",
-            "hc/en-us/articles/ADLocalGroup",
-            "hc/en-us/articles/ADLocalUser",
-            "hc/en-us/articles/AIACA",
-            "hc/en-us/articles/AZApp",
-            "hc/en-us/articles/AZAutomationAccount",
-            "hc/en-us/articles/AZBase",
-            "hc/en-us/articles/AZContainerRegistry",
-            "hc/en-us/articles/AZDevice",
-            "hc/en-us/articles/AZFunctionApp",
-            "hc/en-us/articles/AZGroup",
-            "hc/en-us/articles/AZKeyVault",
-            "hc/en-us/articles/AZLogicApp",
-            "hc/en-us/articles/AZManagedCluster",
-            "hc/en-us/articles/AZManagementGroup",
-            "hc/en-us/articles/AZResourceGroup",
-            "hc/en-us/articles/AZRole",
-            "hc/en-us/articles/AZServicePrincipal",
-            "hc/en-us/articles/AZSubscription",
-            "hc/en-us/articles/AZTenant",
-            "hc/en-us/articles/AZUser",
-            "hc/en-us/articles/AZVM",
-            "hc/en-us/articles/AZVMScaleSet",
-            "hc/en-us/articles/AZWebApp",
-            "hc/en-us/articles/Base",
-            "hc/en-us/articles/CertTemplate",
-            "hc/en-us/articles/Computer",
-            "hc/en-us/articles/Container",
-            "hc/en-us/articles/Domain",
-            "hc/en-us/articles/EnterpriseCA",
-            "hc/en-us/articles/GPO",
-            "hc/en-us/articles/Group",
-            "hc/en-us/articles/IssuancePolicy",
-            "hc/en-us/articles/NTAuthStore",
-            "hc/en-us/articles/OU",
-            "hc/en-us/articles/RootCA",
-            "hc/en-us/articles/User"
+            "resources/nodes/overview",
+            "resources/nodes/ad-local-group",
+            "resources/nodes/ad-local-user",
+            "resources/nodes/aiaca",
+            "resources/nodes/az-app",
+            "resources/nodes/az-automation-account",
+            "resources/nodes/az-base",
+            "resources/nodes/az-container-registry",
+            "resources/nodes/az-device",
+            "resources/nodes/az-function-app",
+            "resources/nodes/az-group",
+            "resources/nodes/az-key-vault",
+            "resources/nodes/az-logic-app",
+            "resources/nodes/az-managed-cluster",
+            "resources/nodes/az-management-group",
+            "resources/nodes/az-resource-group",
+            "resources/nodes/az-role",
+            "resources/nodes/az-service-principal",
+            "resources/nodes/az-subscription",
+            "resources/nodes/az-tenant",
+            "resources/nodes/az-user",
+            "resources/nodes/az-vm",
+            "resources/nodes/az-vm-scale-set",
+            "resources/nodes/az-web-app",
+            "resources/nodes/base",
+            "resources/nodes/cert-template",
+            "resources/nodes/computer",
+            "resources/nodes/container",
+            "resources/nodes/domain",
+            "resources/nodes/enterprise-ca",
+            "resources/nodes/gpo",
+            "resources/nodes/group",
+            "resources/nodes/issuance-policy",
+            "resources/nodes/nt-auth-store",
+            "resources/nodes/ou",
+            "resources/nodes/root-ca",
+            "resources/nodes/user"
           ]
         },
         {
           "group": "Edges",
           "pages": [
-            "hc/en-us/sections/Edges",
-            "hc/en-us/articles/About-BloodHound-Edges",
-            "hc/en-us/articles/Traversable-and-Non-Traversable-Edge-Types",
-            "hc/en-us/articles/ADCSESC1",
-            "hc/en-us/articles/ADCSESC10a",
-            "hc/en-us/articles/ADCSESC10b",
-            "hc/en-us/articles/ADCSESC13",
-            "hc/en-us/articles/ADCSESC3",
-            "hc/en-us/articles/ADCSESC4",
-            "hc/en-us/articles/ADCSESC6a",
-            "hc/en-us/articles/ADCSESC6b",
-            "hc/en-us/articles/ADCSESC9a",
-            "hc/en-us/articles/ADCSESC9b",
-            "hc/en-us/articles/AZAKSContributor",
-            "hc/en-us/articles/AZAddMembers",
-            "hc/en-us/articles/AZAddOwner",
-            "hc/en-us/articles/AZAddSecret",
-            "hc/en-us/articles/AZAppAdmin",
-            "hc/en-us/articles/AZAutomationContributor",
-            "hc/en-us/articles/AZAvereContributor",
-            "hc/en-us/articles/AZCloudAppAdmin",
-            "hc/en-us/articles/AZContains",
-            "hc/en-us/articles/AZContributor",
-            "hc/en-us/articles/AZExecuteCommand",
-            "hc/en-us/articles/AZGetCertificates",
-            "hc/en-us/articles/AZGetKeys",
-            "hc/en-us/articles/AZGetSecrets",
-            "hc/en-us/articles/AZGlobalAdmin",
-            "hc/en-us/articles/AZHasRole",
-            "hc/en-us/articles/AZKeyVaultContributor",
-            "hc/en-us/articles/AZLogicAppContributor",
-            "hc/en-us/articles/AZMGAddMember",
-            "hc/en-us/articles/AZMGAddOwner",
-            "hc/en-us/articles/AZMGAddSecret",
-            "hc/en-us/articles/AZMGAppRoleAssignment-ReadWrite-All",
-            "hc/en-us/articles/AZMGApplication-ReadWrite-All",
-            "hc/en-us/articles/AZMGDirectory-ReadWrite-All",
-            "hc/en-us/articles/AZMGGrantAppRoles",
-            "hc/en-us/articles/AZMGGrantRole",
-            "hc/en-us/articles/AZMGGroupMember-ReadWrite-All",
-            "hc/en-us/articles/AZMGGroup-ReadWrite-All",
-            "hc/en-us/articles/AZMGRoleManagement-ReadWrite-Directory",
-            "hc/en-us/articles/AZMGServicePrincipalEndpoint-ReadWrite-All",
-            "hc/en-us/articles/AZManagedIdentity",
-            "hc/en-us/articles/AZMemberOf",
-            "hc/en-us/articles/AZNodeResourceGroup",
-            "hc/en-us/articles/AZOwner",
-            "hc/en-us/articles/AZOwns",
-            "hc/en-us/articles/AZPrivilegedAuthAdmin",
-            "hc/en-us/articles/AZPrivilegedRoleAdmin",
-            "hc/en-us/articles/AZResetPassword",
-            "hc/en-us/articles/AZRunAs",
-            "hc/en-us/articles/AZScopedTo",
-            "hc/en-us/articles/AZUserAccessAdministrator",
-            "hc/en-us/articles/AZVMAdminLogin",
-            "hc/en-us/articles/AZVMContributor",
-            "hc/en-us/articles/AZWebsiteContributor",
-            "hc/en-us/articles/AddAllowedToAct",
-            "hc/en-us/articles/AddKeyCredentialLink",
-            "hc/en-us/articles/AddMember",
-            "hc/en-us/articles/AddSelf",
-            "hc/en-us/articles/AdminTo",
-            "hc/en-us/articles/AllExtendedRights",
-            "hc/en-us/articles/AllowedToAct",
-            "hc/en-us/articles/AllowedToDelegate",
-            "hc/en-us/articles/CanPSRemote",
-            "hc/en-us/articles/CanRDP",
-            "hc/en-us/articles/CoerceToTGT",
-            "hc/en-us/articles/Contains",
-            "hc/en-us/articles/DCFor",
-            "hc/en-us/articles/DCSync",
-            "hc/en-us/articles/DelegatedEnrollmentAgent",
-            "hc/en-us/articles/DumpSMSAPassword",
-            "hc/en-us/articles/Enroll",
-            "hc/en-us/articles/EnrollOnBehalfOf",
-            "hc/en-us/articles/EnterpriseCAFor",
-            "hc/en-us/articles/ExecuteDCOM",
-            "hc/en-us/articles/ExtendedByPolicy",
-            "hc/en-us/articles/ForceChangePassword",
-            "hc/en-us/articles/GPLink",
-            "hc/en-us/articles/GenericAll",
-            "hc/en-us/articles/GenericWrite",
-            "hc/en-us/articles/GetChanges",
-            "hc/en-us/articles/GetChangesAll",
-            "hc/en-us/articles/GetChangesInFilteredSet",
-            "hc/en-us/articles/GoldenCert",
-            "hc/en-us/articles/HasSIDHistory",
-            "hc/en-us/articles/HasSession",
-            "hc/en-us/articles/HostsCAService",
-            "hc/en-us/articles/IssuedSignedBy",
-            "hc/en-us/articles/LocalToComputer",
-            "hc/en-us/articles/ManageCA",
-            "hc/en-us/articles/ManageCertificates",
-            "hc/en-us/articles/MemberOf",
-            "hc/en-us/articles/MemberOfLocalGroup",
-            "hc/en-us/articles/NTAuthStoreFor",
-            "hc/en-us/articles/OIDGroupLink",
-            "hc/en-us/articles/Owns",
-            "hc/en-us/articles/PublishedTo",
-            "hc/en-us/articles/ReadGMSAPassword",
-            "hc/en-us/articles/ReadLAPSPassword",
-            "hc/en-us/articles/RemoteInteractiveLogonPrivilege",
-            "hc/en-us/articles/RootCAFor",
-            "hc/en-us/articles/SQLAdmin",
-            "hc/en-us/articles/SyncLAPSPassword",
-            "hc/en-us/articles/SyncedToADUser",
-            "hc/en-us/articles/SyncedToEntraUser",
-            "hc/en-us/articles/TrustedBy",
-            "hc/en-us/articles/TrustedForNTAuth",
-            "hc/en-us/articles/WriteAccountRestrictions",
-            "hc/en-us/articles/WriteDacl",
-            "hc/en-us/articles/WriteGPLink",
-            "hc/en-us/articles/WriteOwner",
-            "hc/en-us/articles/WritePKIEnrollmentFlag",
-            "hc/en-us/articles/WritePKINameFlag",
-            "hc/en-us/articles/WriteSPN"
+            "resources/edges/overview",
+            "resources/edges/traversable-edges",
+                "resources/edges/adcs-esc1",
+                "resources/edges/adcs-esc10a",
+                "resources/edges/adcs-esc10b",
+                "resources/edges/adcs-esc13",
+                "resources/edges/adcs-esc3",
+                "resources/edges/adcs-esc4",
+                "resources/edges/adcs-esc6a",
+                "resources/edges/adcs-esc6b",
+                "resources/edges/adcs-esc9a",
+                "resources/edges/adcs-esc9b",
+                "resources/edges/aks-contributor",
+                "resources/edges/add-members",
+                "resources/edges/add-owner",
+                "resources/edges/add-secret",
+                "resources/edges/app-admin",
+                "resources/edges/automation-contributor",
+                "resources/edges/avere-contributor",
+                "resources/edges/cloud-app-admin",
+                "resources/edges/contains",
+                "resources/edges/contributor",
+                "resources/edges/execute-command",
+                "resources/edges/get-certificates",
+                "resources/edges/get-keys",
+                "resources/edges/get-secrets",
+                "resources/edges/global-admin",
+                "resources/edges/has-role",
+                "resources/edges/key-vault-contributor",
+                "resources/edges/logic-app-contributor",
+                "resources/edges/managed-identity",
+                "resources/edges/member-of",
+                "resources/edges/node-resource-group",
+                "resources/edges/owner",
+                "resources/edges/owns",
+                "resources/edges/privileged-auth-admin",
+                "resources/edges/privileged-role-admin",
+                "resources/edges/reset-password",
+                "resources/edges/run-as",
+                "resources/edges/scoped-to",
+                "resources/edges/user-access-administrator",
+                "resources/edges/vm-admin-login",
+                "resources/edges/vm-contributor",
+                "resources/edges/website-contributor",
+
+                "resources/edges/add-member",
+                "resources/edges/add-owner",
+                "resources/edges/add-secret",
+                "resources/edges/app-role-assignment-readwrite-all",
+                "resources/edges/application-readwrite-all",
+                "resources/edges/directory-readwrite-all",
+                "resources/edges/grant-app-roles",
+                "resources/edges/grant-role",
+                "resources/edges/group-member-readwrite-all",
+                "resources/edges/group-readwrite-all",
+                "resources/edges/role-management-readwrite-directory",
+                "resources/edges/service-principal-endpoint-readwrite-all",
+                "resources/edges/add-allowed-to-act",
+                "resources/edges/add-key-credential-link",
+                "resources/edges/add-member",
+                "resources/edges/add-self",
+                "resources/edges/admin-to",
+                "resources/edges/all-extended-rights",
+                "resources/edges/allowed-to-act",
+                "resources/edges/allowed-to-delegate",
+                "resources/edges/can-ps-remote",
+                "resources/edges/can-rdp",
+                "resources/edges/coerce-to-tgt",
+                "resources/edges/contains",
+                "resources/edges/dc-for",
+                "resources/edges/dc-sync",
+                "resources/edges/delegated-enrollment-agent",
+                "resources/edges/dump-smsa-password",
+                "resources/edges/enroll",
+                "resources/edges/enroll-on-behalf-of",
+                "resources/edges/enterprise-ca-for",
+                "resources/edges/execute-dcom",
+                "resources/edges/extended-by-policy",
+                "resources/edges/force-change-password",
+                "resources/edges/gp-link",
+                "resources/edges/generic-all",
+                "resources/edges/generic-write",
+                "resources/edges/get-changes",
+                "resources/edges/get-changes-all",
+                "resources/edges/get-changes-in-filtered-set",
+                "resources/edges/golden-cert",
+                "resources/edges/has-sid-history",
+                "resources/edges/has-session",
+                "resources/edges/hosts-ca-service",
+                "resources/edges/issued-signed-by",
+                "resources/edges/local-to-computer",
+                "resources/edges/manage-ca",
+                "resources/edges/manage-certificates",
+                "resources/edges/member-of",
+                "resources/edges/member-of-local-group",
+                "resources/edges/nt-auth-store-for",
+                "resources/edges/oid-group-link",
+                "resources/edges/owns",
+                "resources/edges/published-to",
+                "resources/edges/read-gmsa-password",
+                "resources/edges/read-laps-password",
+                "resources/edges/remote-interactive-logon-privilege",
+                "resources/edges/root-ca-for",
+                "resources/edges/sql-admin",
+                "resources/edges/sync-laps-password",
+                "resources/edges/synced-to-ad-user",
+                "resources/edges/synced-to-entra-user",
+                "resources/edges/trusted-by",
+                "resources/edges/trusted-for-nt-auth",
+                "resources/edges/write-account-restrictions",
+                "resources/edges/write-dacl",
+                "resources/edges/write-gp-link",
+                "resources/edges/write-owner",
+                "resources/edges/write-pki-enrollment-flag",
+                "resources/edges/write-pki-name-flag",
+                "resources/edges/write-spn"
           ]
         },
         {
           "group": "Glossary",
           "pages": [
-            "hc/en-us/get-started/bloodhound-glossary"
+            "resources/glossary/overview"
           ]
         },
         {
           "group": "Community and Support",
           "pages": [
-            "hc/en-us/sections/Community-and-Support",
-            "hc/en-us/articles/Additional-Training-and-Resources",
-            "hc/en-us/articles/Getting-Help-and-the-BloodHound-community"
+            "resources/community-support/overview",
+            "resources/community-support/training-resources",
+            "resources/community-support/getting-help"
           ]
         },
         {
           "group": "Release Notes",
           "pages": [
-            "hc/en-us/sections/BloodHound-Release-Notes",
-            "hc/en-us/articles/Release-Notes-Summary-Overview",
-            "hc/en-us/articles/2024-12-09-Release-Notes-v6-3-0",
-            "hc/en-us/articles/2024-11-14-Release-Notes-v6-2-0",
-            "hc/en-us/articles/2024-10-22-Release-Notes-v6-1-0",
-            "hc/en-us/articles/2024-09-30-Release-Notes-v6-0-0",
-            "hc/en-us/articles/2024-09-10-Release-Notes-v5-15-0",
-            "hc/en-us/articles/2024-08-20-Release-Notes-v5-14-0",
-            "hc/en-us/articles/2024-08-06-Release-Notes-v5-13-1",
-            "hc/en-us/articles/2024-08-01-Release-Notes-v5-13-0",
-            "hc/en-us/articles/2024-07-17-Release-Notes-v5-12-0",
-            "hc/en-us/articles/2024-06-17-Release-Notes-v5-11-0",
-            "hc/en-us/articles/2024-05-28-Release-Notes-v5-10-0",
-            "hc/en-us/articles/2024-05-09-Release-Notes-v5-9-0",
-            "hc/en-us/articles/2024-04-15-Release-Notes-v5-8-1",
-            "hc/en-us/articles/2024-03-27-Release-Notes-v5-8-0",
-            "hc/en-us/articles/2024-03-04-Release-Notes-v5-7-0",
-            "hc/en-us/articles/2024-02-14-Release-Notes-v5-6-0",
-            "hc/en-us/articles/2024-01-23-Release-Notes-v5-5-0",
-            "hc/en-us/articles/2024-01-04-Release-Notes-v5-4-0",
-            "hc/en-us/articles/2023-12-05-Release-Notes-v5-3-0",
-            "hc/en-us/articles/2023-11-06-Release-v5-2-0-BHE-Only",
-            "hc/en-us/articles/2023-10-16-Release-notes-v5-1-0",
-            "hc/en-us/articles/2023-09-19-Release-Notes-v5-0-9",
-            "hc/en-us/articles/2023-08-31-Release-Notes-v5-0-8",
-            "hc/en-us/articles/2023-08-30-Release-Notes-v5-0-7",
-            "hc/en-us/articles/2023-08-08-Release-Notes",
-            "hc/en-us/articles/2023-06-20-Release-Notes",
-            "hc/en-us/articles/2023-05-16-Release-Notes",
-            "hc/en-us/articles/2023-04-25-Release-Notes",
-            "hc/en-us/articles/2023-04-13-Release-Notes",
-            "hc/en-us/articles/2023-03-27-Release-Notes",
-            "hc/en-us/articles/2023-03-06-Release-Notes",
-            "hc/en-us/articles/2023-02-21-Release-Notes",
-            "hc/en-us/articles/2023-02-07-Release-Notes",
-            "hc/en-us/articles/2023-01-31-Release-Notes",
-            "hc/en-us/articles/2023-01-18-Release-Notes",
-            "hc/en-us/articles/2022-12-19-Release-Notes",
-            "hc/en-us/articles/2022-12-13-Release-Notes",
-            "hc/en-us/articles/2022-11-21-Release-Notes",
-            "hc/en-us/articles/2022-11-03-Release-Notes",
-            "hc/en-us/articles/2022-10-24-Release-Notes",
-            "hc/en-us/articles/2022-10-11-Release-Notes"
+            "resources/release-notes/overview",
+            "resources/release-notes/summary",
+            "resources/release-notes/2024-12-09-v6-3-0",
+            "resources/release-notes/2024-11-14-v6-2-0",
+            "resources/release-notes/2024-10-22-v6-1-0",
+            "resources/release-notes/2024-09-30-v6-0-0",
+            "resources/release-notes/2024-09-10-v5-15-0",
+            "resources/release-notes/2024-08-20-v5-14-0",
+            "resources/release-notes/2024-08-06-v5-13-1",
+            "resources/release-notes/2024-08-01-v5-13-0",
+            "resources/release-notes/2024-07-17-v5-12-0",
+            "resources/release-notes/2024-06-17-v5-11-0",
+            "resources/release-notes/2024-05-28-v5-10-0",
+            "resources/release-notes/2024-05-09-v5-9-0",
+            "resources/release-notes/2024-04-15-v5-8-1",
+            "resources/release-notes/2024-03-27-v5-8-0",
+            "resources/release-notes/2024-03-04-v5-7-0",
+            "resources/release-notes/2024-02-14-v5-6-0",
+            "resources/release-notes/2024-01-23-v5-5-0",
+            "resources/release-notes/2024-01-04-v5-4-0",
+            "resources/release-notes/2023-12-05-v5-3-0",
+            "resources/release-notes/2023-11-06-v5-2-0",
+            "resources/release-notes/2023-10-16-v5-1-0",
+            "resources/release-notes/2023-09-19-v5-0-9",
+            "resources/release-notes/2023-08-31-v5-0-8",
+            "resources/release-notes/2023-08-30-v5-0-7",
+            "resources/release-notes/2023-08-08",
+            "resources/release-notes/2023-06-20",
+            "resources/release-notes/2023-05-16",
+            "resources/release-notes/2023-04-25",
+            "resources/release-notes/2023-04-13",
+            "resources/release-notes/2023-03-27",
+            "resources/release-notes/2023-03-06",
+            "resources/release-notes/2023-02-21",
+            "resources/release-notes/2023-02-07",
+            "resources/release-notes/2023-01-31",
+            "resources/release-notes/2023-01-18",
+            "resources/release-notes/2022-12-19",
+            "resources/release-notes/2022-12-13",
+            "resources/release-notes/2022-11-21",
+            "resources/release-notes/2022-11-03",
+            "resources/release-notes/2022-10-24",
+            "resources/release-notes/2022-10-11"
           ]
         }
       ]
     },
     {
-        "group": "Auth",
-        "pages": [
-          "hc/en-us/reference/auth/login-to-bloodhound",
-          "hc/en-us/reference/auth/logout-of-bloodhound",
-          "hc/en-us/reference/auth/get-self",
-          "hc/en-us/reference/auth/list-saml-providers",
-          "hc/en-us/reference/auth/get-all-saml-sign-on-endpoints",
-          "hc/en-us/reference/auth/create-a-new-saml-provider-from-metadata",
-          "hc/en-us/reference/auth/get-saml-provider",
-          "hc/en-us/reference/auth/delete-a-saml-provider",
-          "hc/en-us/reference/auth/list-sso-providers",
-          "hc/en-us/reference/auth/create-oidc-provider",
-          "hc/en-us/reference/auth/create-a-new-saml-provider-from-metadata-1",
-          "hc/en-us/reference/auth/delete-sso-provider",
-          "hc/en-us/reference/auth/update-sso-provider",
-          "hc/en-us/reference/auth/get-saml-provider-signing-certificate"
-        ]
-      },
-      {
-        "group": "Permissions",
-        "pages": [
-          "hc/en-us/reference/permissions/list-permissions",
-          "hc/en-us/reference/permissions/get-permission"
-        ]
-      },
-      {
-        "group": "Roles",
-        "pages": [
-          "hc/en-us/reference/roles/list-roles",
-          "hc/en-us/reference/roles/get-role"
-        ]
-      },
-      {
-        "group": "API Tokens",
-        "pages": [
-          "hc/en-us/reference/api-tokens/list-auth-tokens",
-          "hc/en-us/reference/api-tokens/create-token-for-user",
-          "hc/en-us/reference/api-tokens/delete-a-user-token"
-        ]
-      },
-      {
-        "group": "BloodHound Users",
-        "pages": [
-          "hc/en-us/reference/bloodhound-users/list-users",
-          "hc/en-us/reference/bloodhound-users/create-a-new-user",
-          "hc/en-us/reference/bloodhound-users/get-a-user",
-          "hc/en-us/reference/bloodhound-users/delete-a-user",
-          "hc/en-us/reference/bloodhound-users/update-a-user",
-          "hc/en-us/reference/bloodhound-users/create-or-set-user-secret",
-          "hc/en-us/reference/bloodhound-users/expire-user-secret",
-          "hc/en-us/reference/bloodhound-users/enrolls-user-in-multi-factor-authentication",
-          "hc/en-us/reference/bloodhound-users/unenroll-user-from-multi-factor-authentication",
-          "hc/en-us/reference/bloodhound-users/returns-mfa-activation-status-for-a-user",
-          "hc/en-us/reference/bloodhound-users/activates-mfa-for-an-enrolled-user"
-        ]
-      },
-      {
-        "group": "Collectors",
-        "pages": [
-          "hc/en-us/reference/collectors/get-collector-manifest",
-          "hc/en-us/reference/collectors/get-collector-download-by-version",
-          "hc/en-us/reference/collectors/get-collector-checksum-by-version"
-        ]
-      },
-      {
-        "group": "Collection Uploads",
-        "pages": [
-          "hc/en-us/reference/collection-uploads/list-file-upload-jobs",
-          "hc/en-us/reference/collection-uploads/create-file-upload-job",
-          "hc/en-us/reference/collection-uploads/upload-file-to-job",
-          "hc/en-us/reference/collection-uploads/end-file-upload-job",
-          "hc/en-us/reference/collection-uploads/list-accepted-file-upload-types"
-        ]
-      },
-      {
-        "group": "API Info",
-        "pages": [
-          "hc/en-us/reference/api-info/get-api-version",
-          "hc/en-us/reference/api-info/get-api-spec"
-        ]
-      },
-      {
-        "group": "Search",
-        "pages": [
-          "hc/en-us/reference/search/search-for-objects",
-          "hc/en-us/reference/search/get-available-domains"
-        ]
-      },
-      {
-        "group": "Audit",
-        "pages": [
-          "hc/en-us/reference/audit/list-audit-logs"
-        ]
-      },
-      {
-        "group": "Config",
-        "pages": [
-          "hc/en-us/reference/config/list-application-config-parameters",
-          "hc/en-us/reference/config/write-application-configuration-parameters",
-          "hc/en-us/reference/config/list-feature-flags",
-          "hc/en-us/reference/config/toggle-a-feature-flags-enabled-status-to-either-enable-or-disable-it"
-        ]
-      },
-      {
-        "group": "Asset Isolation",
-        "pages": [
-          "hc/en-us/reference/asset-isolation/list-all-asset-isolation-groups",
-          "hc/en-us/reference/asset-isolation/create-an-asset-group",
-          "hc/en-us/reference/asset-isolation/get-asset-group-by-id",
-          "hc/en-us/reference/asset-isolation/update-an-asset-group",
-          "hc/en-us/reference/asset-isolation/delete-an-asset-group",
-          "hc/en-us/reference/asset-isolation/list-asset-group-collections",
-          "hc/en-us/reference/asset-isolation/update-asset-group-selectors",
-          "hc/en-us/reference/asset-isolation/update-asset-group-selectors-1",
-          "hc/en-us/reference/asset-isolation/delete-an-asset-group-selector",
-          "hc/en-us/reference/asset-isolation/get-asset-group-custom-member-count",
-          "hc/en-us/reference/asset-isolation/list-all-asset-isolation-group-members",
-          "hc/en-us/reference/asset-isolation/list-asset-group-member-count-by-kind"
-        ]
-      },
-      {
-        "group": "Graph",
-        "pages": [
-          "hc/en-us/reference/graph/get-pathfinding-result",
-          "hc/en-us/reference/graph/get-search-result",
-          "hc/en-us/reference/graph/get-the-shortest-path-graph",
-          "hc/en-us/reference/graph/get-path-composition"
-        ]
-      },
-      {
-        "group": "Cypher",
-        "pages": [
-          "hc/en-us/reference/cypher/list-saved-queries",
-          "hc/en-us/reference/cypher/create-a-saved-query",
-          "hc/en-us/reference/cypher/update-a-saved-query",
-          "hc/en-us/reference/cypher/delete-a-saved-query",
-          "hc/en-us/reference/cypher/share-a-saved-query-or-set-it-to-public",
-          "hc/en-us/reference/cypher/revokes-permission-of-a-saved-query-from-users",
-          "hc/en-us/reference/cypher/run-a-cypher-query"
-        ]
-      },
-      {
-        "group": "Azure Entities",
-        "pages": [
-          "hc/en-us/reference/azure-entities/get-azure-entity"
-        ]
-      },
-      {
-        "group": "AD Base Entities",
-        "pages": [
-          "hc/en-us/reference/ad-base-entities/get-entity-info",
-          "hc/en-us/reference/ad-base-entities/get-entity-controllables",
-          "hc/en-us/reference/ad-base-entities/get-entity-controllers"
-        ]
-      },
-      {
-        "group": "Computers",
-        "pages": [
-          "hc/en-us/reference/computers/get-computer-entity-info",
-          "hc/en-us/reference/computers/get-computer-entity-admin-rights",
-          "hc/en-us/reference/computers/get-computer-entity-admins",
-          "hc/en-us/reference/computers/get-computer-entity-constrained-delegation-rights",
-          "hc/en-us/reference/computers/get-computer-entity-constrained-users",
-          "hc/en-us/reference/computers/get-computer-entity-controllables",
-          "hc/en-us/reference/computers/get-computer-entity-controllers",
-          "hc/en-us/reference/computers/get-computer-entity-dcom-rights",
-          "hc/en-us/reference/computers/get-computer-entity-dcom-users",
-          "hc/en-us/reference/computers/get-computer-entity-group-membership",
-          "hc/en-us/reference/computers/get-computer-entity-remote-powershell-rights",
-          "hc/en-us/reference/computers/get-computer-entity-remote-powershell-users",
-          "hc/en-us/reference/computers/get-computer-entity-rdp-rights",
-          "hc/en-us/reference/computers/get-computer-entity-rdp-users",
-          "hc/en-us/reference/computers/get-computer-entity-sessions",
-          "hc/en-us/reference/computers/get-computer-entity-sql-admins"
-        ]
-      },
-      {
-        "group": "Containers",
-        "pages": [
-          "hc/en-us/reference/containers/get-container-entity-info",
-          "hc/en-us/reference/containers/get-container-entity-controllers"
-        ]
-      },
-      {
-        "group": "Domains",
-        "pages": [
-          "hc/en-us/reference/domains/get-domain-entity-info",
-          "hc/en-us/reference/domains/update-the-domain-entity",
-          "hc/en-us/reference/domains/get-domain-entity-computers",
-          "hc/en-us/reference/domains/get-domain-entity-controllers",
-          "hc/en-us/reference/domains/get-domain-entity-dc-syncers",
-          "hc/en-us/reference/domains/get-domain-entity-foreign-admins",
-          "hc/en-us/reference/domains/get-domain-entity-foreign-gpo-controllers",
-          "hc/en-us/reference/domains/get-domain-entity-foregin-groups",
-          "hc/en-us/reference/domains/get-domain-entity-foreign-users",
-          "hc/en-us/reference/domains/get-domain-entity-gpos",
-          "hc/en-us/reference/domains/get-domain-entity-groups",
-          "hc/en-us/reference/domains/get-domain-entity-inbound-trusts",
-          "hc/en-us/reference/domains/get-domain-entity-linked-gpos",
-          "hc/en-us/reference/domains/get-domain-entity-ous",
-          "hc/en-us/reference/domains/get-domain-entity-outbound-trusts",
-          "hc/en-us/reference/domains/get-domain-entity-users"
-        ]
-      },
-      {
-        "group": "GPOs",
-        "pages": [
-          "hc/en-us/reference/gpos/get-gpo-entity-info",
-          "hc/en-us/reference/gpos/get-gpo-entity-computer",
-          "hc/en-us/reference/gpos/get-gpo-entity-controllers",
-          "hc/en-us/reference/gpos/get-gpo-entity-ous",
-          "hc/en-us/reference/gpos/get-gpo-entity-tier-zero",
-          "hc/en-us/reference/gpos/get-gpo-entity-users"
-        ]
-      },
-      {
-        "group": "AIA CAs",
-        "pages": [
-          "hc/en-us/reference/aia-cas/get-aia-ca-entity-info",
-          "hc/en-us/reference/aia-cas/get-aia-ca-entity-controllers"
-        ]
-      },
-      {
-        "group": "Root CAs",
-        "pages": [
-          "hc/en-us/reference/root-cas/get-root-ca-entity-info",
-          "hc/en-us/reference/root-cas/get-root-ca-entity-controllers"
-        ]
-      },
-      {
-        "group": "Enterprise CAs",
-        "pages": [
-          "hc/en-us/reference/enterprise-cas/get-enterprise-ca-entity-info",
-          "hc/en-us/reference/enterprise-cas/get-enterprise-ca-entity-controllers"
-        ]
-      },
-      {
-        "group": "NT Auth Stores",
-        "pages": [
-          "hc/en-us/reference/nt-auth-stores/get-nt-auth-store-entity-info",
-          "hc/en-us/reference/nt-auth-stores/get-nt-auth-store-entity-controllers"
-        ]
-      },
-      {
-        "group": "Cert Templates",
-        "pages": [
-          "hc/en-us/reference/cert-templates/get-cert-template-entity-info",
-          "hc/en-us/reference/cert-templates/get-cert-template-entity-controllers"
-        ]
-      },
-      {
-        "group": "OUs",
-        "pages": [
-          "hc/en-us/reference/ous/get-ou-entity-info",
-          "hc/en-us/reference/ous/get-ou-entity-computers",
-          "hc/en-us/reference/ous/get-ou-entity-gpos",
-          "hc/en-us/reference/ous/get-ou-entity-groups",
-          "hc/en-us/reference/ous/get-ou-entity-users"
-        ]
-      },
-      {
-        "group": "AD Users",
-        "pages": [
-          "hc/en-us/reference/ad-users/get-user-entity-info",
-          "hc/en-us/reference/ad-users/get-user-entity-admin-rights",
-          "hc/en-us/reference/ad-users/get-user-entity-constrained-delegation-rights",
-          "hc/en-us/reference/ad-users/get-user-entity-controllables",
-          "hc/en-us/reference/ad-users/get-user-entity-controllers",
-          "hc/en-us/reference/ad-users/get-user-entity-dcom-rights",
-          "hc/en-us/reference/ad-users/get-user-entity-membership",
-          "hc/en-us/reference/ad-users/get-user-entity-powershell-remote-rights",
-          "hc/en-us/reference/ad-users/get-user-entity-rdp-rights",
-          "hc/en-us/reference/ad-users/get-user-entity-sessions",
-          "hc/en-us/reference/ad-users/get-user-entity-sql-admin-rights"
-        ]
-      },
-      {
-        "group": "Groups",
-        "pages": [
-          "hc/en-us/reference/groups/get-group-entity-info",
-          "hc/en-us/reference/groups/get-group-entity-admin-rights",
-          "hc/en-us/reference/groups/get-group-entity-controllables",
-          "hc/en-us/reference/groups/get-group-entity-controllers",
-          "hc/en-us/reference/groups/get-group-entity-dcomrights",
-          "hc/en-us/reference/groups/get-group-entity-members",
-          "hc/en-us/reference/groups/get-group-entity-memberships",
-          "hc/en-us/reference/groups/get-group-entity-powershell-remote-rights",
-          "hc/en-us/reference/groups/get-group-entity-rdp-rights",
-          "hc/en-us/reference/groups/get-group-entity-sessions"
-        ]
-      },
-      {
-        "group": "Data Quality",
-        "pages": [
-          "hc/en-us/reference/data-quality/get-database-completeness-stats",
-          "hc/en-us/reference/data-quality/get-ad-domain-data-quality-stats",
-          "hc/en-us/reference/data-quality/get-azure-tenant-data-quality-stats",
-          "hc/en-us/reference/data-quality/get-platform-data-quality-aggregate"
-        ]
-      },
-      {
-        "group": "Database",
-        "pages": [
-          "hc/en-us/reference/database/delete-your-bloodhound-data"
-        ]
-      },
-      {
-        "group": "Datapipe",
-        "pages": [
-          "hc/en-us/reference/datapipe/get-datapipe-status",
-          "hc/en-us/reference/datapipe/start-analysis"
-        ]
-      },
-      {
-        "group": "EULA",
-        "pages": [
-          "hc/en-us/reference/eula/accept-eula"
-        ]
-      },
-      {
-        "group": "Analysis",
-        "pages": [
-          "hc/en-us/reference/analysis/get-latest-tier-zero-combo-node",
-          "hc/en-us/reference/analysis/get-the-graph-for-meta-tree",
-          "hc/en-us/reference/analysis/get-the-combo-tree-for-an-asset-group"
-        ]
-      },
-      {
-        "group": "Client Ingest",
-        "pages": [
-          "hc/en-us/reference/client-ingest/endpoint-for-data-ingestion"
-        ]
-      },
-      {
-        "group": "Clients",
-        "pages": [
-          "hc/en-us/reference/clients/list-clients",
-          "hc/en-us/reference/clients/create-client",
-          "hc/en-us/reference/clients/client-error",
-          "hc/en-us/reference/clients/update-client-values",
-          "hc/en-us/reference/clients/get-client",
-          "hc/en-us/reference/clients/update-client",
-          "hc/en-us/reference/clients/delete-client",
-          "hc/en-us/reference/clients/regenerate-the-authentication-token-for-a-client",
-          "hc/en-us/reference/clients/list-all-completed-tasks-for-a-client",
-          "hc/en-us/reference/clients/list-all-completed-jobs-for-a-client",
-          "hc/en-us/reference/clients/creates-a-scheduled-task",
-          "hc/en-us/reference/clients/creates-a-scheduled-job"
-        ]
-      },
-      {
-        "group": "Jobs",
-        "pages": [
-          "hc/en-us/reference/jobs/list-available-client-jobs",
-          "hc/en-us/reference/jobs/list-finished-jobs",
-          "hc/en-us/reference/jobs/get-jobs",
-          "hc/en-us/reference/jobs/get-client-current-job",
-          "hc/en-us/reference/jobs/notifies-the-api-of-a-job-start",
-          "hc/en-us/reference/jobs/notifies-the-api-of-a-job-ending",
-          "hc/en-us/reference/jobs/get-client-job",
-          "hc/en-us/reference/jobs/cancels-a-scheduled-job",
-          "hc/en-us/reference/jobs/get-job-log-file"
-        ]
-      },
-      {
-        "group": "Events (Schedules)",
-        "pages": [
-          "hc/en-us/reference/events-schedules/list-events",
-          "hc/en-us/reference/events-schedules/create-event",
-          "hc/en-us/reference/events-schedules/get-event",
-          "hc/en-us/reference/events-schedules/update-event",
-          "hc/en-us/reference/events-schedules/delete-event"
-        ]
-      },
-      {
-        "group": "Attack Paths",
-        "pages": [
-          "hc/en-us/reference/attack-paths/export-attack-path-findings",
-          "hc/en-us/reference/attack-paths/list-all-attack-path-types",
-          "hc/en-us/reference/attack-paths/start-analysis",
-          "hc/en-us/reference/attack-paths/list-available-attack-paths",
-          "hc/en-us/reference/attack-paths/list-domain-attack-paths-details",
-          "hc/en-us/reference/attack-paths/list-attack-path-sparkline-values",
-          "hc/en-us/reference/attack-paths/update-attack-path-risk"
-        ]
-      },
-      {
-        "group": "Risk Posture",
-        "pages": [
-          "hc/en-us/reference/risk-posture/get-posture-statistics"
-        ]
-      },
-      {
-        "group": "Meta Entities",
-        "pages": [
-          "hc/en-us/reference/meta-entities/get-meta-entity-info"
-        ]
-      }
+      "group": "Auth",
+      "pages": [
+        "reference/auth/login-to-bloodhound",
+        "reference/auth/logout-of-bloodhound",
+        "reference/auth/get-self",
+        "reference/auth/list-saml-providers",
+        "reference/auth/get-all-saml-sign-on-endpoints",
+        "reference/auth/create-a-new-saml-provider-from-metadata",
+        "reference/auth/get-saml-provider",
+        "reference/auth/delete-a-saml-provider",
+        "reference/auth/list-sso-providers",
+        "reference/auth/create-oidc-provider",
+        "reference/auth/create-a-new-saml-provider-from-metadata-1",
+        "reference/auth/delete-sso-provider",
+        "reference/auth/update-sso-provider",
+        "reference/auth/get-saml-provider-signing-certificate"
+      ]
+    },
+    {
+      "group": "Permissions",
+      "pages": [
+        "reference/permissions/list-permissions",
+        "reference/permissions/get-permission"
+      ]
+    },
+    {
+      "group": "Roles",
+      "pages": [
+        "reference/roles/list-roles",
+        "reference/roles/get-role"
+      ]
+    },
+    {
+      "group": "API Tokens",
+      "pages": [
+        "reference/api-tokens/list-auth-tokens",
+        "reference/api-tokens/create-token-for-user",
+        "reference/api-tokens/delete-a-user-token"
+      ]
+    },
+    {
+      "group": "BloodHound Users",
+      "pages": [
+        "reference/bloodhound-users/list-users",
+        "reference/bloodhound-users/create-a-new-user",
+        "reference/bloodhound-users/get-a-user",
+        "reference/bloodhound-users/delete-a-user",
+        "reference/bloodhound-users/update-a-user",
+        "reference/bloodhound-users/create-or-set-user-secret",
+        "reference/bloodhound-users/expire-user-secret",
+        "reference/bloodhound-users/enrolls-user-in-multi-factor-authentication",
+        "reference/bloodhound-users/unenroll-user-from-multi-factor-authentication",
+        "reference/bloodhound-users/returns-mfa-activation-status-for-a-user",
+        "reference/bloodhound-users/activates-mfa-for-an-enrolled-user"
+      ]
+    },
+    {
+      "group": "Collectors",
+      "pages": [
+        "reference/collectors/get-collector-manifest",
+        "reference/collectors/get-collector-download-by-version",
+        "reference/collectors/get-collector-checksum-by-version"
+      ]
+    },
+    {
+      "group": "Collection Uploads",
+      "pages": [
+        "reference/collection-uploads/list-file-upload-jobs",
+        "reference/collection-uploads/create-file-upload-job",
+        "reference/collection-uploads/upload-file-to-job",
+        "reference/collection-uploads/end-file-upload-job",
+        "reference/collection-uploads/list-accepted-file-upload-types"
+      ]
+    },
+    {
+      "group": "API Info",
+      "pages": [
+        "reference/api-info/get-api-version",
+        "reference/api-info/get-api-spec"
+      ]
+    },
+    {
+      "group": "Search",
+      "pages": [
+        "reference/search/search-for-objects",
+        "reference/search/get-available-domains"
+      ]
+    },
+    {
+      "group": "Audit",
+      "pages": [
+        "reference/audit/list-audit-logs"
+      ]
+    },
+    {
+      "group": "Config",
+      "pages": [
+        "reference/config/list-application-config-parameters",
+        "reference/config/write-application-configuration-parameters",
+        "reference/config/list-feature-flags",
+        "reference/config/toggle-a-feature-flags-enabled-status-to-either-enable-or-disable-it"
+      ]
+    },
+    {
+      "group": "Asset Isolation",
+      "pages": [
+        "reference/asset-isolation/list-all-asset-isolation-groups",
+        "reference/asset-isolation/create-an-asset-group",
+        "reference/asset-isolation/get-asset-group-by-id",
+        "reference/asset-isolation/update-an-asset-group",
+        "reference/asset-isolation/delete-an-asset-group",
+        "reference/asset-isolation/list-asset-group-collections",
+        "reference/asset-isolation/update-asset-group-selectors",
+        "reference/asset-isolation/update-asset-group-selectors-1",
+        "reference/asset-isolation/delete-an-asset-group-selector",
+        "reference/asset-isolation/get-asset-group-custom-member-count",
+        "reference/asset-isolation/list-all-asset-isolation-group-members",
+        "reference/asset-isolation/list-asset-group-member-count-by-kind"
+      ]
+    },
+    {
+      "group": "Graph",
+      "pages": [
+        "reference/graph/get-pathfinding-result",
+        "reference/graph/get-search-result",
+        "reference/graph/get-the-shortest-path-graph",
+        "reference/graph/get-path-composition"
+      ]
+    },
+    {
+      "group": "Cypher",
+      "pages": [
+        "reference/cypher/list-saved-queries",
+        "reference/cypher/create-a-saved-query",
+        "reference/cypher/update-a-saved-query",
+        "reference/cypher/delete-a-saved-query",
+        "reference/cypher/share-a-saved-query-or-set-it-to-public",
+        "reference/cypher/revokes-permission-of-a-saved-query-from-users",
+        "reference/cypher/run-a-cypher-query"
+      ]
+    },
+    {
+      "group": "Azure Entities",
+      "pages": [
+        "reference/azure-entities/get-azure-entity"
+      ]
+    },
+    {
+      "group": "AD Base Entities",
+      "pages": [
+        "reference/ad-base-entities/get-entity-info",
+        "reference/ad-base-entities/get-entity-controllables",
+        "reference/ad-base-entities/get-entity-controllers"
+      ]
+    },
+    {
+      "group": "Computers",
+      "pages": [
+        "reference/computers/get-computer-entity-info",
+        "reference/computers/get-computer-entity-admin-rights",
+        "reference/computers/get-computer-entity-admins",
+        "reference/computers/get-computer-entity-constrained-delegation-rights",
+        "reference/computers/get-computer-entity-constrained-users",
+        "reference/computers/get-computer-entity-controllables",
+        "reference/computers/get-computer-entity-controllers",
+        "reference/computers/get-computer-entity-dcom-rights",
+        "reference/computers/get-computer-entity-dcom-users",
+        "reference/computers/get-computer-entity-group-membership",
+        "reference/computers/get-computer-entity-remote-powershell-rights",
+        "reference/computers/get-computer-entity-remote-powershell-users",
+        "reference/computers/get-computer-entity-rdp-rights",
+        "reference/computers/get-computer-entity-rdp-users",
+        "reference/computers/get-computer-entity-sessions",
+        "reference/computers/get-computer-entity-sql-admins"
+      ]
+    },
+    {
+      "group": "Containers",
+      "pages": [
+        "reference/containers/get-container-entity-info",
+        "reference/containers/get-container-entity-controllers"
+      ]
+    },
+    {
+      "group": "Domains",
+      "pages": [
+        "reference/domains/get-domain-entity-info",
+        "reference/domains/update-the-domain-entity",
+        "reference/domains/get-domain-entity-computers",
+        "reference/domains/get-domain-entity-controllers",
+        "reference/domains/get-domain-entity-dc-syncers",
+        "reference/domains/get-domain-entity-foreign-admins",
+        "reference/domains/get-domain-entity-foreign-gpo-controllers",
+        "reference/domains/get-domain-entity-foregin-groups",
+        "reference/domains/get-domain-entity-foreign-users",
+        "reference/domains/get-domain-entity-gpos",
+        "reference/domains/get-domain-entity-groups",
+        "reference/domains/get-domain-entity-inbound-trusts",
+        "reference/domains/get-domain-entity-linked-gpos",
+        "reference/domains/get-domain-entity-ous",
+        "reference/domains/get-domain-entity-outbound-trusts",
+        "reference/domains/get-domain-entity-users"
+      ]
+    },
+    {
+      "group": "GPOs",
+      "pages": [
+        "reference/gpos/get-gpo-entity-info",
+        "reference/gpos/get-gpo-entity-computer",
+        "reference/gpos/get-gpo-entity-controllers",
+        "reference/gpos/get-gpo-entity-ous",
+        "reference/gpos/get-gpo-entity-tier-zero",
+        "reference/gpos/get-gpo-entity-users"
+      ]
+    },
+    {
+      "group": "AIA CAs",
+      "pages": [
+        "reference/aia-cas/get-aia-ca-entity-info",
+        "reference/aia-cas/get-aia-ca-entity-controllers"
+      ]
+    },
+    {
+      "group": "Root CAs",
+      "pages": [
+        "reference/root-cas/get-root-ca-entity-info",
+        "reference/root-cas/get-root-ca-entity-controllers"
+      ]
+    },
+    {
+      "group": "Enterprise CAs",
+      "pages": [
+        "reference/enterprise-cas/get-enterprise-ca-entity-info",
+        "reference/enterprise-cas/get-enterprise-ca-entity-controllers"
+      ]
+    },
+    {
+      "group": "NT Auth Stores",
+      "pages": [
+        "reference/nt-auth-stores/get-nt-auth-store-entity-info",
+        "reference/nt-auth-stores/get-nt-auth-store-entity-controllers"
+      ]
+    },
+    {
+      "group": "Cert Templates",
+      "pages": [
+        "reference/cert-templates/get-cert-template-entity-info",
+        "reference/cert-templates/get-cert-template-entity-controllers"
+      ]
+    },
+    {
+      "group": "OUs",
+      "pages": [
+        "reference/ous/get-ou-entity-info",
+        "reference/ous/get-ou-entity-computers",
+        "reference/ous/get-ou-entity-gpos",
+        "reference/ous/get-ou-entity-groups",
+        "reference/ous/get-ou-entity-users"
+      ]
+    },
+    {
+      "group": "AD Users",
+      "pages": [
+        "reference/ad-users/get-user-entity-info",
+        "reference/ad-users/get-user-entity-admin-rights",
+        "reference/ad-users/get-user-entity-constrained-delegation-rights",
+        "reference/ad-users/get-user-entity-controllables",
+        "reference/ad-users/get-user-entity-controllers",
+        "reference/ad-users/get-user-entity-dcom-rights",
+        "reference/ad-users/get-user-entity-membership",
+        "reference/ad-users/get-user-entity-powershell-remote-rights",
+        "reference/ad-users/get-user-entity-rdp-rights",
+        "reference/ad-users/get-user-entity-sessions",
+        "reference/ad-users/get-user-entity-sql-admin-rights"
+      ]
+    },
+    {
+      "group": "Groups",
+      "pages": [
+        "reference/groups/get-group-entity-info",
+        "reference/groups/get-group-entity-admin-rights",
+        "reference/groups/get-group-entity-controllables",
+        "reference/groups/get-group-entity-controllers",
+        "reference/groups/get-group-entity-dcomrights",
+        "reference/groups/get-group-entity-members",
+        "reference/groups/get-group-entity-memberships",
+        "reference/groups/get-group-entity-powershell-remote-rights",
+        "reference/groups/get-group-entity-rdp-rights",
+        "reference/groups/get-group-entity-sessions"
+      ]
+    },
+    {
+      "group": "Data Quality",
+      "pages": [
+        "reference/data-quality/get-database-completeness-stats",
+        "reference/data-quality/get-ad-domain-data-quality-stats",
+        "reference/data-quality/get-azure-tenant-data-quality-stats",
+        "reference/data-quality/get-platform-data-quality-aggregate"
+      ]
+    },
+    {
+      "group": "Database",
+      "pages": [
+        "reference/database/delete-your-bloodhound-data"
+      ]
+    },
+    {
+      "group": "Datapipe",
+      "pages": [
+        "reference/datapipe/get-datapipe-status",
+        "reference/datapipe/start-analysis"
+      ]
+    },
+    {
+      "group": "EULA",
+      "pages": [
+        "reference/eula/accept-eula"
+      ]
+    },
+    {
+      "group": "Analysis",
+      "pages": [
+        "reference/analysis/get-latest-tier-zero-combo-node",
+        "reference/analysis/get-the-graph-for-meta-tree",
+        "reference/analysis/get-the-combo-tree-for-an-asset-group"
+      ]
+    },
+    {
+      "group": "Client Ingest",
+      "pages": [
+        "reference/client-ingest/endpoint-for-data-ingestion"
+      ]
+    },
+    {
+      "group": "Clients",
+      "pages": [
+        "reference/clients/list-clients",
+        "reference/clients/create-client",
+        "reference/clients/client-error",
+        "reference/clients/update-client-values",
+        "reference/clients/get-client",
+        "reference/clients/update-client",
+        "reference/clients/delete-client",
+        "reference/clients/regenerate-the-authentication-token-for-a-client",
+        "reference/clients/list-all-completed-tasks-for-a-client",
+        "reference/clients/list-all-completed-jobs-for-a-client",
+        "reference/clients/creates-a-scheduled-task",
+        "reference/clients/creates-a-scheduled-job"
+      ]
+    },
+    {
+      "group": "Jobs",
+      "pages": [
+        "reference/jobs/list-available-client-jobs",
+        "reference/jobs/list-finished-jobs",
+        "reference/jobs/get-jobs",
+        "reference/jobs/get-client-current-job",
+        "reference/jobs/notifies-the-api-of-a-job-start",
+        "reference/jobs/notifies-the-api-of-a-job-ending",
+        "reference/jobs/get-client-job",
+        "reference/jobs/cancels-a-scheduled-job",
+        "reference/jobs/get-job-log-file"
+      ]
+    },
+    {
+      "group": "Events (Schedules)",
+      "pages": [
+        "reference/events-schedules/list-events",
+        "reference/events-schedules/create-event",
+        "reference/events-schedules/get-event",
+        "reference/events-schedules/update-event",
+        "reference/events-schedules/delete-event"
+      ]
+    },
+    {
+      "group": "Attack Paths",
+      "pages": [
+        "reference/attack-paths/export-attack-path-findings",
+        "reference/attack-paths/list-all-attack-path-types",
+        "reference/attack-paths/start-analysis",
+        "reference/attack-paths/list-available-attack-paths",
+        "reference/attack-paths/list-domain-attack-paths-details",
+        "reference/attack-paths/list-attack-path-sparkline-values",
+        "reference/attack-paths/update-attack-path-risk"
+      ]
+    },
+    {
+      "group": "Risk Posture",
+      "pages": [
+        "reference/risk-posture/get-posture-statistics"
+      ]
+    },
+    {
+      "group": "Meta Entities",
+      "pages": [
+        "reference/meta-entities/get-meta-entity-info"
+      ]
+    }
   ],
   "footerSocials": {
     "x": "https://twitter.com/specterops",

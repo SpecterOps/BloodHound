@@ -1,0 +1,60 @@
+---
+title: Create a data collection schedule
+---
+
+<img src="/assets/18258001080731.png"/>
+
+## Purpose
+
+This article outlines how to create a collection schedule on a collector client that will ensure continuous data collection. BHE administrators should use it when deploying a new client or adding an additional schedule to an existing client.
+
+Generally, Azure and Active Directory Structure do not change significantly enough to warrant more than daily collection.  Local Groups and Sessions can be scheduled to collect every 7 hours to ensure a good sampling of round-the-clock activity.
+
+## Prerequisites
+
+* Creation of one SharpHound Enterprise client, see [Create a SharpHound Enterprise collector client](/collect-data/enterprise-collection/create-collector)
+* Logged in as a user role which is authorized to modify clients, see [User Role Definitions](/manage-bloodhound/auth/users-and-roles)
+
+## Process
+
+1.  In the top right, click settings ⚙️ → **Administration**
+<Frame>
+  <img src="/assets/image-75.png" alt=""/>
+</Frame>
+2.  In the top left side, click **Manage Clients**
+<Frame>
+  <img src="/assets/image-76.png" alt=""/>
+</Frame>
+3.  On a client, click the burger menu and select **Edit Client**
+<Frame>
+  <img src="/assets/image-77.png" alt=""/>
+</Frame>
+4.  In the _Edit SharpHound Client_ window, under the heading _Collection Schedule_, click the **\+ icon** to add a new schedule.
+<Frame>
+  <img src="/assets/image-78.png" alt=""/>
+</Frame>
+5.  In the _Schedule_ window, configure the schedule:
+    * **Start Date**: The time on which the first collection should run
+    * **Frequency**: The frequency of the schedule
+    * **Data**: The type of data the schedule collects, see [SharpHound Enterprise Data Collection and Permissions](/collect-data/enterprise-collection/permissions)
+    * **Advanced Options**: See the [Scanning section in the article SharpHound Enterprise Tenant Configuration](/install-data-collector/install-sharphound/tenant-configuration#h_01GECVA74SF7JN7XRYPFBXASYW)
+<Frame>
+  <img src="/assets/image-79.png" alt=""/>
+</Frame>
+6.  Save the schedule by clicking **Save**
+7.  Save the collector client by clicking **Save**
+
+## Outcome
+
+The client is now configured for continuous data collection with one schedule. You can add multiple schedules to a single client for more granular control.
+
+A brief of a client's schedule is shown in the client table's column _Collection Schedule_.
+
+<Frame>
+  <img src="/assets/image-80.png" alt=""/>
+</Frame>
+After the next schedule, see the job's status in the _Finished Jobs Log_ by clicking ⚙️ → **Administration**, and in the top left side, click **Finished Jobs** **Log**_. _The columns **Status** and **Status Message** report on the job's completion.
+
+<Frame>
+  <img src="/assets/image-81.png" alt=""/>
+</Frame>
