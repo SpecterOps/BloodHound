@@ -2,9 +2,8 @@
 title: Create a gMSA for use with SharpHound Enterprise
 ---
 
-<Frame>
-  <img src="/assets/image-2-1.png"/>
-</Frame>
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
 Group Managed Service Accounts (gMSA) are managed domain accounts that provide automatic password management, simplified service principal name (SPN) management, and the ability to delegate the management to other objects.
 
 Detailed software requirements from Microsoft are available [here](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/hh831782(v=ws.11)#software-requirements).
@@ -111,7 +110,7 @@ Perform the following steps from/against a writeable Domain Controller.
 2.  Grant the gMSA the "Log on as a service" User Rights Assignment on the SharpHound Enterprise server. This can for example be done through \`secpol.msc\`, or policy deployment methods like a GPO.
 
 
-3.  Optional: Test that the SharpHound Enterprise server can retrieve the gMSA password, see _[Test the gMSA (optional)](#h_01HBG90GWZDZZ3KE4FPGAKFF1Y)
+3.  Optional: Test that the SharpHound Enterprise server can retrieve the gMSA password, see Test the gMSA.
 
     _
 4.  The gMSA is now ready to be used on the SharpHound Enterprise server. Follow [Install and Upgrade SharpHound Enterprise](/install-data-collector/install-sharphound/installation-upgrade) to complete the installation of the SharpHound Enterprise service.
