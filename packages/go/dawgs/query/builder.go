@@ -292,7 +292,7 @@ func (s *Builder) Apply(criteria ...graph.Criteria) {
 			s.regularQuery.SingleQuery.SinglePartQuery.AddUpdatingClause(cypher.Copy(typedCriteria))
 
 		default:
-			panic(fmt.Errorf("invalid type for dawgs query: %T %+v", criteria, criteria))
+			panic(fmt.Errorf("invalid type for dawgs query: %T %+v", typedCriteria, typedCriteria))
 		}
 	}
 }
