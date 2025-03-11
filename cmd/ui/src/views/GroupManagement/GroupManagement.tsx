@@ -17,6 +17,7 @@
 import { faGem } from '@fortawesome/free-solid-svg-icons';
 import {
     DropdownOption,
+    EntityKinds,
     GroupManagementContent,
     Permission,
     searchbarActions,
@@ -82,7 +83,16 @@ const GroupManagement = () => {
             tierZeroTag={TIER_ZERO_TAG}
             // Both these components should eventually be moved into the shared UI library
             entityPanelComponent={
-                getGraphNodeByObjectId?.data && <EntityInfoPanel selectedNode={getGraphNodeByObjectId.data} />
+                getGraphNodeByObjectId?.data && (
+                    <EntityInfoPanel
+                        selectedNode={{
+                            graphId: getGraphNodeByObjectId.data.id,
+                            id: getGraphNodeByObjectId.data.objectId,
+                            name: getGraphNodeByObjectId.data.label,
+                            type: getGraphNodeByObjectId.data.kind as EntityKinds,
+                        }}
+                    />
+                )
             }
             domainSelectorErrorMessage={<>Domains unavailable. {dataCollectionMessage}</>}
             onShowNodeInExplore={handleShowNodeInExplore}

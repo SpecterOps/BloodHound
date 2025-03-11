@@ -28,7 +28,7 @@ const EdgeInfoPane: React.FC<{ sx?: SxProps; selectedEdge?: any }> = ({ sx, sele
         <Box sx={sx} className={styles.container} data-testid='explore_edge-information-pane'>
             <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
                 <Header
-                    name={selectedEdge.label || 'None'}
+                    name={selectedEdge.name || 'None'}
                     expanded={expanded}
                     onToggleExpanded={(expanded) => {
                         setExpanded(expanded);
