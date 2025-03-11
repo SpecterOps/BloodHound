@@ -267,6 +267,13 @@ paths:
   /api/v2/collectors/{collector_type}/{release_tag}/checksum:
     $ref: './paths/collectors.collectors.type.tag.checksum.yaml'
 
+  /api/v2/kennel/manfest:
+    $ref: './paths/kennel.manfiest.type.yaml'
+  /api/v2/kennel/enterprise-manfest:
+    $ref: './paths/kennel.enterprise-manfiest.type.yaml'
+  /api/v2/kennel/download/{asset_name}:
+    $ref: './paths/kennel.download.type.yaml'
+
   # collection uploads
   /api/v2/file-upload:
     $ref: './paths/collection-uploads.file-upload.yaml'
