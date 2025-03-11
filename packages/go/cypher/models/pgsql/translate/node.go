@@ -86,7 +86,7 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 	if part.IsTraversal {
 		if numSteps := len(part.TraversalSteps); numSteps == 0 {
 			// This is the traversal step's left node
-			part.TraversalSteps = append(part.TraversalSteps, &PatternSegment{
+			part.TraversalSteps = append(part.TraversalSteps, &TraversalStep{
 				LeftNode:      bindingResult.Binding,
 				LeftNodeBound: bindingResult.AlreadyBound,
 			})
@@ -109,7 +109,7 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 	return nil
 }
 
-func (s *Translator) buildNodePattern(part *PatternPart) error {
+func (s *Translator) buildNodePatternPart(part *PatternPart) error {
 	var (
 		partFrame  = part.NodeSelect.Frame
 		nextSelect = pgsql.Select{
