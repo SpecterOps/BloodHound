@@ -38,7 +38,6 @@ func TestRateLimitMiddleware(t *testing.T) {
 	}
 
 	store := memory.NewStore()
-
 	instance := limiter.New(store, rate)
 
 	cfg, err := config.NewDefaultConfiguration()
