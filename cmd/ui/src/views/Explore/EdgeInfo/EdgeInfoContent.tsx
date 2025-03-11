@@ -19,7 +19,6 @@ import {
     EdgeCompositionRelationships,
     EdgeInfoComponents,
     EdgeSections,
-    Flag,
     SelectedEdge,
     apiClient,
     useFeatureFlag,
@@ -34,13 +33,7 @@ import { transformToFlatGraphResponse } from 'src/utils';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 
-const getOnChange = (
-    dispatch: Dispatch<any>,
-    sourceNodeId: number,
-    targetNodeId: number,
-    selectedEdgeName: string,
-    backButtonFlag?: Flag
-) => {
+const getOnChange = (dispatch: Dispatch<any>, sourceNodeId: number, targetNodeId: number, selectedEdgeName: string) => {
     return async (label: string, isOpen: boolean) => {
         if (isOpen) {
             dispatch(setGraphLoading(true));
@@ -53,7 +46,7 @@ const getOnChange = (
                     const formattedData = transformToFlatGraphResponse(result.data);
 
                     dispatch(saveResponseForExport(formattedData));
-                    !backButtonFlag?.enabled && dispatch(putGraphData(formattedData));
+                    dispatch(putGraphData(formattedData));
                 })
                 .catch((err) => {
                     if (err?.code === 'ERR_CANCELED') {
@@ -98,13 +91,12 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                 <EdgeInfoCollapsibleSection
                                     section={section[0] as keyof typeof EdgeSections}
                                     onChange={
-                                        sendOnChange
+                                        sendOnChange && !backButtonFlag?.enabled
                                             ? getOnChange(
                                                   dispatch,
                                                   parseInt(`${sourceNode.id}`),
                                                   parseInt(`${targetNode.id}`),
-                                                  selectedEdge.name,
-                                                  backButtonFlag
+                                                  selectedEdge.name
                                               )
                                             : undefined
                                     }>
