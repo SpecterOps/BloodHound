@@ -27,7 +27,7 @@ const CoerceAndRelayNTLMToLDAPS = {
     windowsAbuse: WindowsAbuse,
     linuxAbuse: LinuxAbuse,
     opsec: Opsec,
-    references: References
+    references: References,
 };
 
 export default CoerceAndRelayNTLMToLDAPS;
