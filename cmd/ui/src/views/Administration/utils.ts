@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AdministrationSection, Permission } from 'bh-shared-ui';
+import { ROUTE_ADMINISTRATION } from 'src/routes/constants';
 
 export const getAdminSubRoute = (route: string) => {
-    const administrationRoute = '/administration/';
-    return route.slice(administrationRoute.length);
+    return route.slice(ROUTE_ADMINISTRATION.length);
 };
 
 export const getAdminFilteredSections = (
