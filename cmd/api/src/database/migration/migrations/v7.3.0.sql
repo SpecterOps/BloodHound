@@ -15,7 +15,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 -- This table is normally created by dawgs, as defined in schema_up.sql
--- We add it here to maintain a new FK to asset_group_tags below regardless 
+-- We add it here to maintain a new FK to asset_group_tags below regardless
 -- of graph driver selected. Any future changes to the schema should be reflected
 -- in `schema_up.sql` as well
 CREATE TABLE IF NOT EXISTS kind
@@ -106,3 +106,30 @@ CREATE TABLE IF NOT EXISTS asset_group_tag_selector_seeds
 -- generic ingest
 ALTER TABLE IF EXISTS file_upload_jobs RENAME TO ingest_jobs;
 ALTER TABLE ingest_tasks ADD COLUMN IF NOT EXISTS is_generic BOOLEAN NOT NULL DEFAULT FALSE;
+
+
+-- Add asset_group_tag_selector_nodes table
+CREATE TABLE IF NOT EXISTS asset_group_tag_selector_nodes
+(
+  selector_id int NOT NULL,
+  node_id bigint NOT NULL,
+  certified int NOT NULL DEFAULT 0,
+  certified_by text,
+  CONSTRAINT fk_asset_group_tag_selectors_asset_group_tag_selector_nodes FOREIGN KEY (selector_id) REFERENCES asset_group_tag_selectors(id) ON DELETE CASCADE,
+  CONSTRAINT selector_id_node_id_key UNIQUE (selector_id, node_id)
+);
+
+-- Populate default cypher selectors
+
+-- Domain Controllers
+WITH inserted_selector_id AS (
+  INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
+    VALUES ((SELECT id FROM asset_group_tags WHERE name = 'Tier Zero'), current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM', 'Enterprise Domain Controllers', 'Enterprise domain controllers group', true, false, false) RETURNING id)
+INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) VALUES ((SELECT id FROM inserted_selector_id), 2, 'match (n:User:Group) where n.objectid ends with "1-5-9" return n');
+
+-- Administrator Account
+WITH inserted_selector_id AS (
+  INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
+    VALUES ((SELECT id FROM asset_group_tags WHERE name = 'Tier Zero'), current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM', 'Administrator Account', 'Administrator account', true, false, false) RETURNING id)
+INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) VALUES ((SELECT id FROM inserted_selector_id), 2, 'match (n:User:Group) where n.objectid ends with "-500" return n');
+
