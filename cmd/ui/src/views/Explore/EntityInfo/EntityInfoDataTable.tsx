@@ -19,6 +19,8 @@ import {
     InfiniteScrollingTable,
     NODE_GRAPH_RENDER_LIMIT,
     abortEntitySectionRequest,
+    collapseNonSelectedSections,
+    manageRelationshipParams,
     searchbarActions,
     useExploreParams,
     useFeatureFlag,
@@ -39,7 +41,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     endpoint,
     countLabel,
     sections,
-    sectionsMapper,
+    allSectionsMap,
 }) => {
     const dispatch = useDispatch();
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
@@ -58,23 +60,11 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         { refetchOnWindowFocus: false, retry: false }
     );
 
-    const findLabelLocation = () => {
-        const filteredArray: string[] = sectionsMapper!.find((nestedArray: string[]) =>
-            nestedArray.includes(label)
-        ) as string[];
-        const index = filteredArray.indexOf(label);
-        return { filteredArray, index };
-    };
-
     const setExpandedRelationshipsParams = () => {
-        const expandedRelationshipHelperArray: string[] = [];
-
-        const { filteredArray, index } = findLabelLocation();
-        expandedRelationshipHelperArray.push(label);
-        if (index > 0) expandedRelationshipHelperArray.unshift(filteredArray[0]);
+        const updatedParams = manageRelationshipParams(allSectionsMap, label);
 
         setExploreParams({
-            expandedRelationships: expandedRelationshipHelperArray,
+            expandedRelationships: updatedParams,
             searchType: 'relationship',
             relationshipQueryType: queryKey,
             relationshipQueryObjectId: id,
@@ -121,27 +111,9 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         }
     };
 
-    const isParentOfLabel = (key: string) => {
-        const { filteredArray, index } = findLabelLocation();
-        if (index > 0) {
-            return key === filteredArray[0];
-        }
-        return false;
-    };
-
-    const collapseOtherSections = () => {
-        for (const [key] of Object.entries(expandedSections)) {
-            const isNotParentOfSection = !isParentOfLabel(key);
-            const isNotClickedSection = key !== label; // to not interfere with normal toggle flow
-            if (isNotParentOfSection && isNotClickedSection) {
-                expandedSections[key] = false;
-            }
-        }
-    };
-
     const handleCurrentSectionToggle = () => {
-        if (backButtonFlag?.enabled) {
-            collapseOtherSections(); // We want to keep only one open at a time
+        if (backButtonFlag?.enabled && allSectionsMap) {
+            collapseNonSelectedSections(expandedSections, allSectionsMap, label); // We want to keep only one open at a time
         }
         toggleSection(label);
     };
@@ -202,7 +174,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
             )}
             {sections &&
                 sections.map((nestedSection, nestedSectionIndex) => (
-                    <EntityInfoDataTable sectionsMapper={sectionsMapper} key={nestedSectionIndex} {...nestedSection} />
+                    <EntityInfoDataTable key={nestedSectionIndex} allSectionsMap={allSectionsMap} {...nestedSection} />
                 ))}
         </EntityInfoCollapsibleSection>
     );
