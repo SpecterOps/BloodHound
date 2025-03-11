@@ -165,6 +165,33 @@ func FetchNodeIDs(query graph.NodeQuery) ([]graph.ID, error) {
 	})
 }
 
+func FetchNodesByQuery(tx graph.Transaction, query string) (graph.NodeSet, error) {
+	nodes := graph.NodeSet{}
+
+	if result := tx.Query(query, nil); result.Error() != nil {
+		return nodes, result.Error()
+	} else {
+		defer result.Close()
+
+		for result.Next() {
+			var node graph.Node
+
+			if values, err := result.Values(); err != nil {
+				return nodes, err
+			} else if mapped, err := values.MapOptions(&node); err != nil {
+				return nodes, err
+			} else {
+				switch typedMapped := mapped.(type) {
+				case *graph.Node:
+					nodes.Add(typedMapped)
+				}
+			}
+		}
+
+		return nodes, result.Error()
+	}
+}
+
 func FetchPathSetByQuery(tx graph.Transaction, query string) (graph.PathSet, error) {
 	var (
 		currentPath graph.Path

@@ -90,15 +90,15 @@ func DeleteKind(reference graph.Criteria, kind graph.Kind) *cypherModel.Updating
 	})
 }
 
-func DeleteKinds(reference graph.Criteria, kinds graph.Kinds) *cypherModel.Remove {
-	return &cypherModel.Remove{
+func DeleteKinds(reference graph.Criteria, kinds graph.Kinds) *cypherModel.UpdatingClause {
+	return cypherModel.NewUpdatingClause(&cypherModel.Remove{
 		Items: []*cypherModel.RemoveItem{{
 			KindMatcher: &cypherModel.KindMatcher{
 				Reference: reference,
 				Kinds:     kinds,
 			},
 		}},
-	}
+	})
 }
 
 func SetProperty(reference graph.Criteria, value any) *cypherModel.UpdatingClause {
