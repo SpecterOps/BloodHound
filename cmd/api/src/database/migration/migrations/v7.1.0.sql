@@ -52,6 +52,6 @@ VALUES (current_timestamp,
         'ntlm_post_processing',
         'NTLM Post Processing Support',
         'Enable the post processing of NTLM relay attack paths, this will enable the creation of CoerceAndRelayNTLMTo[LDAP, LDAPS, ADCS, SMB] edges.',
-        true,
+        false,
         true)
 ON CONFLICT DO NOTHING;

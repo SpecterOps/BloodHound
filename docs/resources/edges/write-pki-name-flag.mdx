@@ -2,24 +2,23 @@
 title: WritePKINameFlag
 ---
 
-<Frame>
-  <img src="/assets/image-2-1.png"/>
-</Frame>
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
 
 The attacker principal has the ability to write to the msPKI-Certificate-Name-Flag attribute on the victim principal, which allows the attacker principal to configure "enrollee supplies subject" for the certificate template and other settings.
 
-Abuse Info[](#h_01HPHZJSTFS46D4BFVYAB25KTE)
--------------------------------------------
+Abuse Info
+----------
 
 This relationship alone is not enough to perform a privilege escalation or impersonation primitive. This relationship may contribute to other relationships and attributes, from which an escalation opportunity may emerge.
 
-Opsec Considerations[](#heading-2)
-----------------------------------
+Opsec Considerations
+--------------------
 
 When an attacker abuses a privilege escalation or impersonation primitive that relies on this relationship, it will necessarily result in the issuance of a certificate. A copy of the issued certificate will be saved on the host that issued the certificate.
 
-References[](#heading-3)
-------------------------
+References
+----------
 
 This edge is related to the following MITRE ATT&CK tactic and techniques:
 

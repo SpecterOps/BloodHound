@@ -141,7 +141,7 @@ func TestConvertComputerToNode(t *testing.T) {
 				"isdc": true,
 			},
 		},
-		RegistryData: ein.RegistryDataAPIResult{
+		NTLMRegistryData: ein.RegistryDataAPIResult{
 			APIResult: ein.APIResult{
 				Collected: true,
 			},

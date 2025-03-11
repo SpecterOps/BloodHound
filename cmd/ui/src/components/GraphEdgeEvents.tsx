@@ -159,10 +159,10 @@ const GraphEdgeEvents: FC = () => {
                     const x2 = x1 + width;
                     const y2 = y1 + height;
 
-                    const offsetY = edgeLabelsCanvas.getBoundingClientRect().y;
+                    const offsetX = edgeLabelsCanvas.getBoundingClientRect().x;
                     const { x: viewportX, y: viewportY } = {
-                        x: event.clientX,
-                        y: event.clientY - offsetY,
+                        x: event.clientX - offsetX,
+                        y: event.clientY,
                     };
 
                     //Check if the click happened within the bounds of the label

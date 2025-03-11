@@ -21,9 +21,13 @@ export const NODE_GRAPH_RENDER_LIMIT = 1000;
 
 export const ZERO_VALUE_API_DATE = '0001-01-01T00:00:00Z';
 
-export const TIER_ZERO_TAG = 'admin_tier_0';
-export const TIER_ZERO_LABEL = 'High Value';
+// These tags are values associated with the `system_tags` property of a node
 export const OWNED_OBJECT_TAG = 'owned';
+export const TIER_ZERO_TAG = 'admin_tier_0';
+
+// These labels are used as display values
+export const TIER_ZERO_LABEL = 'Admin Tier Zero';
+export const HIGH_VALUE_LABEL = 'High Value';
 
 export const lightPalette = {
     primary: {

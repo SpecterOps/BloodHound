@@ -27,6 +27,38 @@ import { setupServer } from 'msw/node';
 import { act, render, screen } from 'src/test-utils';
 import ExploreSearch from '.';
 
+const server = setupServer(
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    }),
+    rest.get('/api/v2/search', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        name: 'admin',
+                        objectid: '1',
+                        type: 'User',
+                    },
+                    {
+                        name: 'computer',
+                        objectid: '2',
+                        type: 'Computer',
+                    },
+                ],
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
 describe('ExploreSearch rendering per tab', async () => {
     beforeEach(async () => {
         await act(async () => {
@@ -146,36 +178,11 @@ describe('ExploreSearch handles search on tab changing', async () => {
 describe('ExploreSearch interaction', () => {
     const user = userEvent.setup();
 
-    const comboboxLookaheadOptions = {
-        data: [
-            {
-                name: 'admin',
-                objectid: '1',
-                type: 'User',
-            },
-            {
-                name: 'computer',
-                objectid: '2',
-                type: 'Computer',
-            },
-        ],
-    };
-
-    const server = setupServer(
-        rest.get('/api/v2/search', (req, res, ctx) => {
-            return res(ctx.json(comboboxLookaheadOptions));
-        })
-    );
-
     beforeEach(async () => {
         await act(async () => {
             render(<ExploreSearch />);
         });
     });
-
-    beforeAll(() => server.listen());
-    afterEach(() => server.resetHandlers());
-    afterAll(() => server.close());
 
     it('when user performs a single node search, the selected node carries over to the `start node` input field on the pathfinding tab', async () => {
         const searchInput = screen.getByPlaceholderText(/search nodes/i);

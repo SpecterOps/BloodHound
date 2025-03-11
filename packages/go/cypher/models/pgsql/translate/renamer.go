@@ -28,12 +28,6 @@ func rewriteCompositeTypeFieldReference(scopeIdentifier pgsql.Identifier, compos
 	}
 }
 
-type FrameBindingRewriter struct {
-	walk.HierarchicalVisitor[pgsql.SyntaxNode]
-
-	scope *Scope
-}
-
 func rewriteIdentifierScopeReference(scope *Scope, identifier pgsql.Identifier) (pgsql.SelectItem, error) {
 	if !pgsql.IsReservedIdentifier(identifier) {
 		if binding, bound := scope.Lookup(identifier); bound {
@@ -59,6 +53,12 @@ func rewriteCompoundIdentifierScopeReference(scope *Scope, identifier pgsql.Comp
 
 	// Return the original identifier if no rewrite is needed
 	return identifier, nil
+}
+
+type FrameBindingRewriter struct {
+	walk.HierarchicalVisitor[pgsql.SyntaxNode]
+
+	scope *Scope
 }
 
 func (s *FrameBindingRewriter) enter(node pgsql.SyntaxNode) error {

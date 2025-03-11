@@ -21,25 +21,6 @@ import CodeController from '../CodeController/CodeController';
 const LinuxAbuse: FC = () => {
     return (
         <>
-            <Typography variant='body2'>
-                Examples of this attack are detailed in the following blog posts:
-                <ul>
-                    <li>
-                        <a
-                            href={
-                                'https://www.guidepointsecurity.com/blog/beyond-the-basics-exploring-uncommon-ntlm-relay-attack-techniques/'
-                            }>
-                            Beyond the Basics: Exploring Uncommon NTLM Relay Attack Techniques
-                        </a>
-                    </li>
-                    <li>
-                        <a href={'https://trustedsec.com/blog/a-comprehensive-guide-on-relaying-anno-2022'}>
-                            I’m bringing relaying back: A comprehensive guide on relaying anno 2022
-                        </a>
-                    </li>
-                </ul>
-            </Typography>
-
             <Typography variant={'body2'}>
                 1. Start the Relay Server The NTLM relay can be executed with{' '}
                 <a href={'https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'}>ntlmrelayx.py</a>. To

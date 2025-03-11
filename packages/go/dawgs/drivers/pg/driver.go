@@ -152,7 +152,7 @@ func (s *Driver) WriteTransaction(ctx context.Context, txDelegate graph.Transact
 	} else {
 		defer conn.Release()
 
-		if tx, err := newTransaction(ctx, conn, s.schemaManager, cfg); err != nil {
+		if tx, err := newTransactionWrapper(ctx, conn, s.schemaManager, cfg, true); err != nil {
 			return err
 		} else {
 			defer tx.Close()

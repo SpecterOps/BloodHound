@@ -17,7 +17,7 @@
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
     },
     "dependencies": {
-        "axios": "^1.7.4"
+        "axios": "^1.8.2"
     },
     "devDependencies": {
         "@rollup/plugin-typescript": "^11.1.6",

@@ -83,7 +83,7 @@ func (s *Translator) buildDeletions(scope *Scope) error {
 			return fmt.Errorf("invalid identifier data type for deletion: %s", identifierDeletion.UpdateBinding.Identifier)
 		}
 
-		if err := rewriteConstraintIdentifierReferences(s.query.Scope, identifierDeletion.Frame, []*Constraint{joinConstraint}); err != nil {
+		if err := rewriteConstraintIdentifierReferences(s.scope, identifierDeletion.Frame, []*Constraint{joinConstraint}); err != nil {
 			return err
 		}
 
@@ -97,6 +97,30 @@ func (s *Translator) buildDeletions(scope *Scope) error {
 				Body: sqlDelete,
 			},
 		})
+	}
+
+	return nil
+}
+
+func (s *Translator) translateRemoveItem(removeItem *cypher.RemoveItem) error {
+	if removeItem.KindMatcher != nil {
+		if variable, isVariable := removeItem.KindMatcher.Reference.(*cypher.Variable); !isVariable {
+			return fmt.Errorf("expected variable for kind matcher reference but found type: %T", removeItem.KindMatcher.Reference)
+		} else if binding, resolved := s.scope.LookupString(variable.Symbol); !resolved {
+			return fmt.Errorf("unable to find identifier %s", variable.Symbol)
+		} else {
+			return s.query.CurrentPart().mutations.AddKindRemoval(s.scope, binding.Identifier, removeItem.KindMatcher.Kinds)
+		}
+	}
+
+	if removeItem.Property != nil {
+		if propertyLookupExpression, err := s.treeTranslator.Pop(); err != nil {
+			return err
+		} else if propertyLookup, err := decomposePropertyLookup(propertyLookupExpression); err != nil {
+			return err
+		} else {
+			return s.query.CurrentPart().mutations.AddPropertyRemoval(s.scope, propertyLookup)
+		}
 	}
 
 	return nil

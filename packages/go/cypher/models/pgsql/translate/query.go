@@ -17,11 +17,24 @@
 package translate
 
 import (
-	"fmt"
-
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
+
+func (s *Translator) previousValidFrame(partFrame *Frame) (*Frame, bool) {
+	if partFrame.Previous == nil {
+		return nil, false
+	}
+
+	if currentQueryPart := s.query.CurrentPart(); currentQueryPart.Frame != nil && partFrame.Previous.Binding.Identifier == currentQueryPart.Frame.Binding.Identifier {
+		// If the part's previous frame matches the query part's frame identifier then it's possible that
+		// this current part is a multipart query part. In this case there still may be a valid frame
+		// to source references from
+		return currentQueryPart.Frame.Previous, currentQueryPart.Frame.Previous != nil
+	}
+
+	return partFrame.Previous, true
+}
 
 func (s *Translator) buildMultiPartSinglePartQuery(singlePartQuery *cypher.SinglePartQuery, cteChain []pgsql.CommonTableExpression) error {
 	// Prepend the CTE chain to the model's
@@ -33,7 +46,7 @@ func (s *Translator) buildMultiPartSinglePartQuery(singlePartQuery *cypher.Singl
 
 func (s *Translator) buildSinglePartQuery(singlePartQuery *cypher.SinglePartQuery) error {
 	if s.query.CurrentPart().HasDeletions() {
-		if err := s.buildDeletions(s.query.Scope); err != nil {
+		if err := s.buildDeletions(s.scope); err != nil {
 			s.SetError(err)
 		}
 	}
@@ -92,106 +105,28 @@ func (s *Translator) buildMultiPartQuery(singlePartQuery *cypher.SinglePartQuery
 	return nil
 }
 
-func (s *Translator) translateWith() error {
-	currentPart := s.query.CurrentPart()
-
-	if !currentPart.HasProjections() {
-		currentPart.Frame.Exported.Clear()
-	} else {
-		var (
-			projectedItems  = pgsql.NewIdentifierSet()
-			aggregatedItems = pgsql.NewIdentifierSet()
-		)
-
-		// If an aggregation function is being used this invokes an implicit group by of non-function projections
-		for _, projectionItem := range currentPart.projections.Items {
-			switch typedSelectItem := projectionItem.SelectItem.(type) {
-			case pgsql.FunctionCall:
-				if pgsql.IsAggregateFunction(typedSelectItem.Function) {
-					aggregatedItems.Add(typedSelectItem.Function)
-				}
-			}
-		}
-
-		for idx, projectionItem := range currentPart.projections.Items {
-			if err := RewriteFrameBindings(s.query.Scope, projectionItem.SelectItem); err != nil {
-				return err
-			}
-
-			switch typedSelectItem := projectionItem.SelectItem.(type) {
-			case *pgsql.BinaryExpression:
-				return fmt.Errorf("binary expression not supported in with statement")
-
-			case pgsql.CompoundIdentifier:
-				return fmt.Errorf("compound identifier not supported in with statement")
-
-			case pgsql.Identifier:
-				if !aggregatedItems.IsEmpty() && !aggregatedItems.Contains(typedSelectItem) {
-					currentPart.projections.GroupBy = append(currentPart.projections.GroupBy, typedSelectItem)
-				}
-
-				if binding, isBound := s.query.Scope.Lookup(typedSelectItem); !isBound {
-					return fmt.Errorf("unable to lookup identifer %s for with statement", typedSelectItem)
-				} else {
-					// Track this projected item for scope pruning
-					projectedItems.Add(binding.Identifier)
-
-					// Create a new projection that maps the identifier
-					currentPart.projections.Items[idx] = &Projection{
-						SelectItem: pgsql.CompoundIdentifier{
-							binding.LastProjection.Binding.Identifier, typedSelectItem,
-						},
-						Alias: pgsql.AsOptionalIdentifier(binding.Identifier),
-					}
-
-					// Assign the frame to the binding's last projection backref
-					binding.LastProjection = currentPart.Frame
-
-					// Reveal and export the identifier in the current multipart query part's frame
-					currentPart.Frame.Reveal(binding.Identifier)
-					currentPart.Frame.Export(binding.Identifier)
-				}
-
-			default:
-				// If this is not an identifier then check if the alias is specified. If the alias is specified, this
-				// is a pure export (left-hand side is some other expression) and a new bound identifier is being
-				// introduced.
-				if projectionItem.Alias.Set {
-					if binding, isBound := s.query.Scope.AliasedLookup(projectionItem.Alias.Value); !isBound {
-						return fmt.Errorf("unable to lookup alias %s for with statement", projectionItem.Alias.Value)
-					} else {
-						// Track this projected item for scope pruning
-						projectedItems.Add(binding.Identifier)
-
-						// Assign the frame to the binding's last projection backref
-						binding.LastProjection = currentPart.Frame
-
-						// Reveal and export the identifier in the current multipart query part's frame
-						currentPart.Frame.Reveal(binding.Identifier)
-						currentPart.Frame.Export(binding.Identifier)
-
-						// Rewrite this projection's alias to use the internal binding
-						projectionItem.Alias.Value = binding.Identifier
-					}
-				}
-			}
-		}
-
-		if err := s.query.Scope.PruneDefinitions(projectedItems); err != nil {
-			return err
-		}
-
-		// Prune scope to only what's being exported by the with statement
-		currentPart.Frame.Visible = projectedItems.Copy()
-		currentPart.Frame.Exported = projectedItems.Copy()
-	}
-
-	return nil
-}
-
-func (s *Translator) translateMultiPartQueryPart(scope *Scope, part *cypher.MultiPartQueryPart) error {
+func (s *Translator) translateMultiPartQueryPart() error {
 	queryPart := s.query.CurrentPart()
 
 	// Unwind nested frames
-	return scope.UnwindToFrame(queryPart.Frame)
+	return s.scope.UnwindToFrame(queryPart.Frame)
+}
+
+func (s *Translator) prepareSinglePartQueryPart(singlePartQuery *cypher.SinglePartQuery) error {
+	s.query.AddPart(NewQueryPart(len(singlePartQuery.ReadingClauses), len(singlePartQuery.UpdatingClauses)))
+	return nil
+}
+
+func (s *Translator) prepareMultiPartQueryPart(multiPartQueryPart *cypher.MultiPartQueryPart) error {
+	newQueryPart := NewQueryPart(len(multiPartQueryPart.ReadingClauses), len(multiPartQueryPart.UpdatingClauses))
+
+	// All multipart query parts must be wrapped in a nested CTE
+	if mpFrame, err := s.scope.PushFrame(); err != nil {
+		return err
+	} else {
+		newQueryPart.Frame = mpFrame
+	}
+
+	s.query.AddPart(newQueryPart)
+	return nil
 }

@@ -80,9 +80,11 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.ForceChangePassword,
                     ActiveDirectoryRelationshipKind.GenericAll,
                     ActiveDirectoryRelationshipKind.Owns,
+                    ActiveDirectoryRelationshipKind.OwnsLimitedRights,
                     ActiveDirectoryRelationshipKind.GenericWrite,
                     ActiveDirectoryRelationshipKind.WriteDACL,
                     ActiveDirectoryRelationshipKind.WriteOwner,
+                    ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
                 ],
             },
             {

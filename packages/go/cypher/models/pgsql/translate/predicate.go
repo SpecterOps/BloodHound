@@ -50,7 +50,7 @@ func (s *Translator) buildOptimizedRelationshipExistPredicate(part *PatternPart,
 			pgsql.CompoundIdentifier{traversalStep.LeftNode.Identifier, pgsql.ColumnID}),
 	)
 
-	if err := RewriteFrameBindings(s.query.Scope, whereClause); err != nil {
+	if err := RewriteFrameBindings(s.scope, whereClause); err != nil {
 		return nil, err
 	}
 

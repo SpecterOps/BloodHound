@@ -69,20 +69,25 @@ type transaction struct {
 	targetSchemaSet    bool
 }
 
-func newTransaction(ctx context.Context, conn *pgxpool.Conn, schemaManager *SchemaManager, cfg *Config) (*transaction, error) {
-	if pgxTx, err := conn.BeginTx(ctx, cfg.Options); err != nil {
-		return nil, err
-	} else {
-		return &transaction{
-			schemaManager:      schemaManager,
-			queryExecMode:      cfg.QueryExecMode,
-			queryResultsFormat: cfg.QueryResultFormats,
-			ctx:                ctx,
-			conn:               conn,
-			tx:                 pgxTx,
-			targetSchemaSet:    false,
-		}, nil
+func newTransactionWrapper(ctx context.Context, conn *pgxpool.Conn, schemaManager *SchemaManager, cfg *Config, allocateTransaction bool) (*transaction, error) {
+	wrapper := &transaction{
+		schemaManager:      schemaManager,
+		queryExecMode:      cfg.QueryExecMode,
+		queryResultsFormat: cfg.QueryResultFormats,
+		ctx:                ctx,
+		conn:               conn,
+		targetSchemaSet:    false,
 	}
+
+	if allocateTransaction {
+		if pgxTx, err := conn.BeginTx(ctx, cfg.Options); err != nil {
+			return nil, err
+		} else {
+			wrapper.tx = pgxTx
+		}
+	}
+
+	return wrapper, nil
 }
 
 func (s *transaction) driver() driver {

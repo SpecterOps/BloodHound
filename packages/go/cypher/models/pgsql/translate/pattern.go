@@ -30,16 +30,16 @@ type BindingResult struct {
 func (s *Translator) bindPatternExpression(cypherExpression cypher.Expression, dataType pgsql.DataType) (BindingResult, error) {
 	if cypherBinding, hasCypherBinding, err := extractIdentifierFromCypherExpression(cypherExpression); err != nil {
 		return BindingResult{}, err
-	} else if existingBinding, bound := s.query.Scope.AliasedLookup(cypherBinding); bound {
+	} else if existingBinding, bound := s.scope.AliasedLookup(cypherBinding); bound {
 		return BindingResult{
 			Binding:      existingBinding,
 			AlreadyBound: true,
 		}, nil
-	} else if binding, err := s.query.Scope.DefineNew(dataType); err != nil {
+	} else if binding, err := s.scope.DefineNew(dataType); err != nil {
 		return BindingResult{}, err
 	} else {
 		if hasCypherBinding {
-			s.query.Scope.Alias(cypherBinding, binding)
+			s.scope.Alias(cypherBinding, binding)
 		}
 
 		return BindingResult{
@@ -59,11 +59,11 @@ func (s *Translator) translatePatternPart(patternPart *cypher.PatternPart) error
 	if cypherBinding, hasCypherSymbol, err := extractIdentifierFromCypherExpression(patternPart); err != nil {
 		return err
 	} else if hasCypherSymbol {
-		if pathBinding, err := s.query.Scope.DefineNew(pgsql.PathComposite); err != nil {
+		if pathBinding, err := s.scope.DefineNew(pgsql.PathComposite); err != nil {
 			return err
 		} else {
 			// Generate an alias for this binding
-			s.query.Scope.Alias(cypherBinding, pathBinding)
+			s.scope.Alias(cypherBinding, pathBinding)
 
 			// Record the new binding in the traversal pattern being built
 			newPatternPart.PatternBinding = models.ValueOptional(pathBinding)
