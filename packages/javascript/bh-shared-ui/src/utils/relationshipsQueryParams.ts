@@ -14,13 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { EntityInfoDataTableProps } from './content';
+
 // Excluding top section with object information
-export const createAllSectionsMap = (sectionsData: any) => {
-    return sectionsData.map((sectionItem: any) => {
+export const createAllSectionsMap = (sectionsData: EntityInfoDataTableProps[]) => {
+    return sectionsData.map((sectionItem: EntityInfoDataTableProps) => {
         const allSectionsMap: string[] = [sectionItem.label];
         // subsections for nested items
         if (sectionItem.sections) {
-            const listWithSubItems = sectionItem.sections.map((nestedItem: any) => nestedItem.label);
+            const listWithSubItems = sectionItem.sections.map(
+                (nestedItem: EntityInfoDataTableProps) => nestedItem.label
+            );
             listWithSubItems.forEach((nestedItemString: string) => {
                 allSectionsMap.push(nestedItemString);
             });
@@ -69,9 +73,9 @@ export const formatRelationshipsParams = (expandedRelationships: string[]) => {
 };
 
 // Generates the param to add based on the label
-export const manageRelationshipParams = (allSections: any, label: string) => {
+export const manageRelationshipParams = (allSectionsMap: string[][], label: string) => {
     const updatedParams: string[] = [];
-    const { filteredArray, index } = findLabelLocation(allSections, label);
+    const { filteredArray, index } = findLabelLocation(allSectionsMap, label);
     updatedParams.push(label);
     if (index > 0) updatedParams.unshift(filteredArray[0]);
     return updatedParams;

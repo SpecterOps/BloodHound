@@ -174,8 +174,6 @@ export { default as UpsertSAMLProviderDialog } from './UpsertSSOProviders/Upsert
 export * from './UpsertSSOProviders/UpsertSAMLProviderForm';
 export { default as UpsertSAMLProviderForm } from './UpsertSSOProviders/UpsertSAMLProviderForm';
 
-export * from './UrlQueryParams';
-
 export * from './UserTokenManagementDialog';
 export { default as UserTokenManagementDialog } from './UserTokenManagementDialog';
 

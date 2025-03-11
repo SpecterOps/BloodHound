@@ -26,5 +26,6 @@ export * from './icons';
 export * from './parseItemId';
 export * from './passwd';
 export * from './permissions';
+export * from './relationshipsQueryParams';
 export * from './theme';
 export * from './user';
