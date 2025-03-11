@@ -21,9 +21,11 @@ const useGroupManagementStateSwitch = () => {
     const { data: flag } = useFeatureFlag('back_button_support');
     const { data: environmentFromParams } = useEnvironment();
 
-    const globalDomain = useAppSelector((state) => state.global.options.domain);
+    const reduxEnvironment = useAppSelector((state) => state.global.options.domain);
+    // Nullish coalesce to null to satisfy current types. We should be able to remove this coalesce when we remove the feature flag
+    const paramEnvironment = environmentFromParams ?? null;
 
-    return flag?.enabled ? environmentFromParams ?? null : globalDomain;
+    return flag?.enabled ? paramEnvironment : reduxEnvironment;
 };
 
 export default useGroupManagementStateSwitch;
