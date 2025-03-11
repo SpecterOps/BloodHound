@@ -16,7 +16,6 @@
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MappedStringLiteral } from '../..';
-import { EntityInfoDataTableProps } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
 type SearchType = 'node' | 'pathfinding' | 'cypher' | 'relationship' | 'composition';
@@ -26,8 +25,11 @@ export type ExploreQueryParams = {
     secondarySearch: string | null;
     cypherSearch: string | null;
     searchType: SearchType | null;
-    expandedRelationships: EntityInfoDataTableProps['label'][] | null;
+    expandedRelationships: string[] | null;
     selectedItem: string | null;
+    searchTab: string | null;
+    relationshipQueryType: string | null;
+    relationshipQueryObjectId: string | null;
 };
 
 export const acceptedSearchTypes = {
@@ -59,6 +61,9 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         searchType: parseSearchType(searchParams.get('searchType')),
         expandedRelationships: searchParams.getAll('expandedRelationship'),
         selectedItem: searchParams.get('selectedItem'),
+        searchTab: searchParams.get('searchTab'),
+        relationshipQueryType: searchParams.get('relationshipQueryType'),
+        relationshipQueryObjectId: searchParams.get('relationshipQueryObjectId'),
         // react doesnt like this because it doesnt know the params needed for the function factory return function.
         // but the params needed are not needed in the deps array
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -70,6 +75,9 @@ export const useExploreParams = (): UseExploreParamsReturn => {
                 'searchType',
                 'expandedRelationships',
                 'selectedItem',
+                'searchTab',
+                'relationshipQueryType',
+                'relationshipQueryObjectId',
             ]),
             [setSearchParams]
         ),

@@ -32,6 +32,7 @@ export interface EntityInfoDataTableProps {
     countLabel?: string;
     sections?: EntityInfoDataTableProps[];
     parentSectionIndex?: number;
+    queryKey?: string;
 }
 
 let controller = new AbortController();
