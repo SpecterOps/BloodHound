@@ -2,9 +2,8 @@
 title: WriteOwner
 ---
 
-<Frame>
-  <img src="/assets/image-2-1.png"/>
-</Frame>
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
 
 
 Object owners retain the ability to modify object security descriptors, regardless of permissions on the object’s DACL.
@@ -13,8 +12,8 @@ This clip shows an example of abusing this edge:
 
 <iframe id="youtube-2475" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Player for 2 11 BloodHound Head to Tail Andy Robbins Rohan Vazarkar" width="100%" height="420" src="https://www.youtube.com/embed/fqYoOoghqdE?autoplay=0&amp;controls=0&amp;disablekb=1&amp;playsinline=1&amp;cc_load_policy=0&amp;cc_lang_pref=auto&amp;widget_referrer=https%3A%2F%2Fsupport.bloodhoundenterprise.io%2Fhc%2Fen-us%2Farticles%2FWriteOwner&amp;rel=0&amp;showinfo=0&amp;iv_load_policy=3&amp;modestbranding=1&amp;customControls=true&amp;noCookie=false&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fsupport.bloodhoundenterprise.io&amp;widgetid=1" data-gtm-yt-inspected-6="true"></iframe>
 
-Abuse Info[](#heading-1)
-------------------------
+Abuse Info
+----------
 
 To change the ownership of the object, you may use the Set-DomainObjectOwner function in PowerView.
 
@@ -31,8 +30,8 @@ Set-DomainObjectOwner -Credential $Cred -TargetIdentity "Domain Admins" -OwnerId
 ```
 Now, with ownership of the object, you may modify the DACL of the object however you wish. For more information about that, see the WriteDacl edge section.
 
-Opsec Considerations[](#heading-2)
-----------------------------------
+Opsec Considerations
+--------------------
 
 This depends on the target object and how to take advantage of this privilege.
 
@@ -40,7 +39,7 @@ When using the PowerView functions, keep in mind that PowerShell v5 introduced s
 
 Modifying permissions on an object will generate 4670 and 4662 events on the domain controller that handled the request.
 
-References[](#heading-3)
-------------------------
+References
+----------
 
 * [https://www.youtube.com/watch?v=z8thoG7gPd0](https://www.youtube.com/watch?v=z8thoG7gPd0)
