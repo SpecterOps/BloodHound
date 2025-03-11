@@ -2,14 +2,13 @@
 title: WriteDacl
 ---
 
-<Frame>
-  <img src="/assets/image-2-1.png"/>
-</Frame>
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
 
 With write access to the target object’s DACL, you can grant yourself any privilege you want on the object.
 
-Abuse Info[](#h_01HM2CH96APS2E6T2092J4CRR8)
--------------------------------------------
+Abuse Info
+-----------
 
 With the ability to modify the DACL on the target object, you can grant yourself almost any privilege against the object you wish.
 
@@ -61,8 +60,8 @@ Add-DomainObjectAcl -TargetIdentity (OU GUID) -Rights All
 
 Then add a new ACE to the OU that inherits down to child objects to take over those child objects.
 
-Opsec Considerations[](#h_01HM2CH96B67RT53RDDN20Z9R9)
------------------------------------------------------
+Opsec Considerations
+---------------------
 
 When using the PowerView functions, keep in mind that PowerShell v5 introduced several security mechanisms that make it much easier for defenders to see what’s going on with PowerShell in their network, such as script block logging and AMSI. You can bypass those security mechanisms by downgrading to PowerShell v2, which all PowerView functions support.
 
@@ -70,8 +69,8 @@ Modifying permissions on an object will generate 4670 and 4662 events on the dom
 
 Additional opsec considerations depend on the target object and how to take advantage of this privilege.
 
-References[](#h_01HM2CH96B42XD736RMHC41Q0Q)
--------------------------------------------
+References
+-----------
 
 * [https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1](https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1)
 * [https://www.youtube.com/watch?v=z8thoG7gPd0](https://www.youtube.com/watch?v=z8thoG7gPd0)

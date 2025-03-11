@@ -3,9 +3,8 @@ title: SharpHound Enterprise Service Hardening
 description: "The BloodHound team recommends the hardening actions described on this page to protect the SharpHound service account. The hardening recommendations are focused on the remediation of the attack techniques targeting service accounts."
 ---
 
-<Frame>
-  <img src="/assets/image-2-1-1.jpg"/>
-</Frame>
+<img src="/assets/enterprise-edition-pill-tag.svg"/> 
+
 Many of the attacks involve privileged collection, in which the SharpHound service account gathers data from domain-joined Windows computers. During privileged collection, an attacker with administrative access to a computer in the domain could attempt to compromise the SharpHound service account, as the account will log in on the computer during the collection.
 
 This page will describe the attacks we want to prevent and the remediations that can be applied. All attacks can be remediated in more than one method. The first section will highlight the remediations that we recommend without going into detail about the different attack techniques and alternative remediations.
