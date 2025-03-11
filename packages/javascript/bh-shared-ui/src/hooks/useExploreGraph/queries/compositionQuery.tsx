@@ -6,24 +6,22 @@ import { ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
 // `MATCH (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN r LIMIT 1`;
 
 export const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
-    const { expandedRelationships, panelSelection, searchType } = paramOptions;
+    const { relationshipQueryItemId, searchType } = paramOptions;
 
-    const compositionExpanded = expandedRelationships?.includes('Composition');
-
-    if (searchType !== 'composition' || !expandedRelationships?.length || !compositionExpanded || !panelSelection) {
+    if (searchType !== 'composition' || !relationshipQueryItemId) {
         return {
             enabled: false,
         };
     }
 
-    const [_rel, sourceId, edgeType, targetId] = panelSelection.split('_'); // TODO: what is this actually going to look like?
+    const [_, sourceId, edgeType, targetId] = relationshipQueryItemId.split('_'); // TODO: determined in entity panel effort
     if (!sourceId || !edgeType || !targetId || isNaN(Number(sourceId)) || isNaN(Number(targetId)))
         return {
             enabled: false,
         };
 
     return {
-        queryKey: [ExploreGraphQueryKey, ...expandedRelationships, panelSelection, searchType],
+        queryKey: [ExploreGraphQueryKey, searchType, relationshipQueryItemId],
         queryFn: async () => {
             const res = await apiClient.getEdgeComposition(Number(sourceId), Number(targetId), edgeType);
 
@@ -40,7 +38,6 @@ export const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
 
 /**
  * TODO:
- * selection data type to be determined in a separate ticket
  * edge panel can only open one accordion at a time? no?
  * dont refetch graph on clicking in the window
  */

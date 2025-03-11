@@ -16,7 +16,6 @@
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MappedStringLiteral } from '../..';
-import { EntityInfoDataTableProps } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
 type SearchType = 'node' | 'pathfinding' | 'cypher' | 'relationship' | 'composition';
@@ -27,8 +26,10 @@ export type ExploreQueryParams = {
     cypherSearch: string | null;
     searchType: SearchType | null;
     graphSelection: string | null;
-    panelSelection: string | null;
-    expandedRelationships: EntityInfoDataTableProps['label'][] | null;
+    selectedItem: string | null;
+    expandedPanelSections: string[] | null;
+    relationshipQueryType: string | null; // TODO: this should be a type that is available in our mega map
+    relationshipQueryItemId: string | null;
 };
 
 export const acceptedSearchTypes = {
@@ -46,6 +47,8 @@ export const parseSearchType = (paramValue: string | null): SearchType | null =>
     return null;
 };
 
+export const parseRelationshipQueryType = () => {};
+
 interface UseExploreParamsReturn extends ExploreQueryParams {
     setExploreParams: (params: Partial<ExploreQueryParams>) => void;
 }
@@ -59,8 +62,10 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         cypherSearch: searchParams.get('cypherSearch'),
         searchType: parseSearchType(searchParams.get('searchType')),
         graphSelection: searchParams.get('graphSelection'),
-        panelSelection: searchParams.get('panelSelection'),
-        expandedRelationships: searchParams.getAll('expandedRelationships'),
+        selectedItem: searchParams.get('selectedItem'),
+        expandedPanelSections: searchParams.getAll('expandedPanelSections'),
+        relationshipQueryType: searchParams.get('relationshipQueryType'),
+        relationshipQueryItemId: searchParams.get('relationshipQueryItemId'),
         // react doesnt like this because it doesnt know the params needed for the function factory return function.
         // but the params needed are not needed in the deps array
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,8 +76,8 @@ export const useExploreParams = (): UseExploreParamsReturn => {
                 'cypherSearch',
                 'searchType',
                 'graphSelection',
-                'panelSelection',
-                'expandedRelationships',
+                'selectedItem',
+                'expandedPanelSections',
             ]),
             [setSearchParams]
         ),
