@@ -37,7 +37,7 @@ export const EdgeInfoCollapsibleSection: React.FC<
 > = ({ children, section, onChange = () => {} }) => {
     const styles = useCollapsibleSectionStyles();
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
-    const { setExploreParams, expandedRelationships } = useExploreParams();
+    const { setExploreParams, expandedRelationships, selectedItem } = useExploreParams();
 
     const dispatch = useAppDispatch();
     const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
@@ -59,7 +59,8 @@ export const EdgeInfoCollapsibleSection: React.FC<
     const setExpandedRelationshipsParam = () => {
         setExploreParams({
             expandedRelationships: [section],
-            ...(section === 'composition' && { searchType: 'composition' }),
+            ...(section === 'composition' ? { searchType: 'composition' } : { searchType: null }),
+            ...(section === 'composition' && { relationshipQueryItemId: selectedItem }),
         });
     };
 
