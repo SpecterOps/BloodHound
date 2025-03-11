@@ -22,18 +22,23 @@ import (
 	"github.com/specterops/bloodhound/cypher/models/walk"
 
 	"github.com/specterops/bloodhound/cypher/models"
-	cypher "github.com/specterops/bloodhound/cypher/models/cypher"
+	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
 const (
-	expansionRootID    pgsql.Identifier = "root_id"
-	expansionNextID    pgsql.Identifier = "next_id"
-	expansionDepth     pgsql.Identifier = "depth"
-	expansionSatisfied pgsql.Identifier = "satisfied"
-	expansionIsCycle   pgsql.Identifier = "is_cycle"
-	expansionPath      pgsql.Identifier = "path"
+	expansionRootID        pgsql.Identifier = "root_id"
+	expansionNextID        pgsql.Identifier = "next_id"
+	expansionDepth         pgsql.Identifier = "depth"
+	expansionSatisfied     pgsql.Identifier = "satisfied"
+	expansionIsCycle       pgsql.Identifier = "is_cycle"
+	expansionPath          pgsql.Identifier = "path"
+	expansionPathspace     pgsql.Identifier = "pathspace"
+	expansionNextPathspace pgsql.Identifier = "next_pathspace"
+	expansionForwardFront  pgsql.Identifier = "forward_front"
+	expansionBackwardFront pgsql.Identifier = "backward_front"
+	expansionNextFront     pgsql.Identifier = "next_front"
 )
 
 func expansionColumns() pgsql.RecordShape {
@@ -62,21 +67,68 @@ type Expansion struct {
 	MinDepth    models.Optional[int64]
 	MaxDepth    models.Optional[int64]
 
-	PrimerConstraints    pgsql.Expression
-	RecursiveConstraints pgsql.Expression
+	PrimerNodeConstraints              pgsql.Expression
+	PrimerNodeSatisfactionProjection   pgsql.SelectItem
+	PrimerNodeJoinCondition            pgsql.Expression
+	EdgeConstraints                    pgsql.Expression
+	EdgeJoinCondition                  pgsql.Expression
+	RecursiveConstraints               pgsql.Expression
+	ExpansionNodeJoinCondition         pgsql.Expression
+	TerminalNodeConstraints            pgsql.Expression
+	TerminalNodeSatisfactionProjection pgsql.SelectItem
 
-	LeftNodeJoinCondition    pgsql.Expression
-	ExpansionEdgeConstraints pgsql.Expression
-	ExpansionNodeConstraints pgsql.Expression
-	TerminalNodeConstraints  pgsql.Expression
+	PrimerQueryParameter            *BoundIdentifier
+	BackwardPrimerQueryParameter    *BoundIdentifier
+	RecursiveQueryParameter         *BoundIdentifier
+	BackwardRecursiveQueryParameter *BoundIdentifier
+
+	EdgeStartIdentifier pgsql.Identifier
+	EdgeStartColumn     pgsql.CompoundIdentifier
+	EdgeEndIdentifier   pgsql.Identifier
+	EdgeEndColumn       pgsql.CompoundIdentifier
 
 	Projection []pgsql.SelectItem
 }
 
-type PatternSegment struct {
+func NewExpansionModel() *Expansion {
+	return &Expansion{}
+}
+
+func (s *Expansion) CompletePattern(traversalStep *TraversalStep) error {
+	// This determines which side of the expansion is treated as the root (where the traversal begins)
+	switch traversalStep.Direction {
+	case graph.DirectionInbound:
+		s.EdgeStartIdentifier = pgsql.ColumnEndID
+		s.EdgeEndIdentifier = pgsql.ColumnStartID
+
+	case graph.DirectionOutbound:
+		s.EdgeStartIdentifier = pgsql.ColumnStartID
+		s.EdgeEndIdentifier = pgsql.ColumnEndID
+
+	default:
+		return ErrUnsupportedExpansionDirection
+	}
+
+	s.EdgeStartColumn = pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, s.EdgeStartIdentifier}
+	s.EdgeEndColumn = pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, s.EdgeEndIdentifier}
+
+	return nil
+}
+
+func (s *Expansion) FlipDirection() {
+	oldEdgeStartColumn := s.EdgeStartColumn
+	s.EdgeStartColumn = s.EdgeEndColumn
+	s.EdgeEndColumn = oldEdgeStartColumn
+}
+
+func (s *Expansion) CanExecuteBidirectionalSearch() bool {
+	return s.PrimerNodeConstraints != nil && s.TerminalNodeConstraints != nil
+}
+
+type TraversalStep struct {
 	Frame                  *Frame
 	Direction              graph.Direction
-	Expansion              models.Optional[Expansion]
+	Expansion              models.Optional[*Expansion]
 	LeftNode               *BoundIdentifier
 	LeftNodeBound          bool
 	LeftNodeConstraints    pgsql.Expression
@@ -91,7 +143,36 @@ type PatternSegment struct {
 	Projection             []pgsql.SelectItem
 }
 
-func (s *PatternSegment) FlipNodes() {
+// StartNode will find the root node of this pattern segment based on the segment's direction
+func (s *TraversalStep) StartNode() (*BoundIdentifier, error) {
+	switch s.Direction {
+	case graph.DirectionInbound:
+		return s.RightNode, nil
+	case graph.DirectionOutbound:
+		return s.LeftNode, nil
+	default:
+		return nil, fmt.Errorf("unsupported direction: %v", s.Direction)
+	}
+}
+
+// EndNode will find the terminal node of this pattern segment based on the segment's direction
+func (s *TraversalStep) EndNode() (*BoundIdentifier, error) {
+	switch s.Direction {
+	case graph.DirectionInbound:
+		return s.LeftNode, nil
+	case graph.DirectionOutbound:
+		return s.RightNode, nil
+	default:
+		return nil, fmt.Errorf("unsupported direction: %v", s.Direction)
+	}
+}
+
+func (s *TraversalStep) FlipNodes() {
+	if s.Expansion.Set {
+		// If the expansion is set then column identifiers must also be swapped
+		s.Expansion.Value.FlipDirection()
+	}
+
 	oldLeftNode := s.LeftNode
 	s.LeftNode = s.RightNode
 	s.RightNode = oldLeftNode
@@ -104,41 +185,17 @@ func (s *PatternSegment) FlipNodes() {
 	}
 }
 
-// TerminalNode will find the terminal node of this pattern segment based on the segment's direction
-func (s *PatternSegment) TerminalNode() (*BoundIdentifier, error) {
-	switch s.Direction {
-	case graph.DirectionInbound:
-		return s.LeftNode, nil
-	case graph.DirectionOutbound:
-		return s.RightNode, nil
-	default:
-		return nil, fmt.Errorf("unsupported direction: %v", s.Direction)
-	}
-}
-
-// TerminalNode will find the root node of this pattern segment based on the segment's direction
-func (s *PatternSegment) RootNode() (*BoundIdentifier, error) {
-	switch s.Direction {
-	case graph.DirectionInbound:
-		return s.RightNode, nil
-	case graph.DirectionOutbound:
-		return s.LeftNode, nil
-	default:
-		return nil, fmt.Errorf("unsupported direction: %v", s.Direction)
-	}
-}
-
 type PatternPart struct {
 	IsTraversal      bool
 	ShortestPath     bool
 	AllShortestPaths bool
 	PatternBinding   models.Optional[*BoundIdentifier]
-	TraversalSteps   []*PatternSegment
+	TraversalSteps   []*TraversalStep
 	NodeSelect       NodeSelect
 	Constraints      *ConstraintTracker
 }
 
-func (s *PatternPart) LastStep() *PatternSegment {
+func (s *PatternPart) LastStep() *TraversalStep {
 	return s.TraversalSteps[len(s.TraversalSteps)-1]
 }
 

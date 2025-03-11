@@ -329,7 +329,7 @@ begin
   if target != 'null'::jsonb then
     return array(select jsonb_array_elements_text(target));
   else
-    return array[]::text[];
+    return array []::text[];
   end if;
 end
 $$
@@ -337,118 +337,6 @@ $$
   immutable
   parallel safe
   strict;
-
--- All shortest path traversal harness.
-create or replace function public.asp_harness(primer_query text, recursive_query text, max_depth int4)
-  -- | Column      | type    | Usage                                                                                  |
-  -- |-------------|---------|----------------------------------------------------------------------------------------|
-  -- | `root_id`   | Int8    | Node that the path originated from. Simplifies referencing the root node of each path. |
-  -- | `next_id`   | Int8    | Next node to expand to.                                                                |
-  -- | `depth`     | Int4    | Depth of the current traversal.                                                        |
-  -- | `satisfied` | Boolean | True if the expansion is satisfied.                                                    |
-  -- | `is_cycle`  | Boolean | True if the expansion is a cycle.                                                      |
-  -- | `path`      | Int8[]  | Array of edges in order of traversal.                                                  |
-  returns table
-          (
-            root_id   int8,
-            next_id   int8,
-            depth     int4,
-            satisfied bool,
-            is_cycle  bool,
-            path      int8[]
-          )
-as
-$$
-declare
-  depth int4 := 1;
-begin
-  -- Define two tables to represent pathspace of the recursive expansion. These are temporary and as such are unlogged.
-  create temporary table pathspace
-  (
-    root_id   int8   not null,
-    next_id   int8   not null,
-    depth     int4   not null,
-    satisfied bool   not null,
-    is_cycle  bool   not null,
-    path      int8[] not null,
-    primary key (path)
-  ) on commit drop;
-
-  create temporary table next_pathspace
-  (
-    root_id   int8   not null,
-    next_id   int8   not null,
-    depth     int4   not null,
-    satisfied bool   not null,
-    is_cycle  bool   not null,
-    path      int8[] not null,
-    primary key (path)
-  ) on commit drop;
-
-  -- Creating these indexes should speed up certain operations during recursive expansion. Benchmarking should be done
-  -- to validate assumptions here.
-  create index pathspace_next_id_index on pathspace using btree (next_id);
-  create index pathspace_satisfied_index on pathspace using btree (satisfied);
-  create index pathspace_is_cycle_index on pathspace using btree (is_cycle);
-
-  create index next_pathspace_next_id_index on next_pathspace using btree (next_id);
-  create index next_pathspace_satisfied_index on next_pathspace using btree (satisfied);
-  create index next_pathspace_is_cycle_index on next_pathspace using btree (is_cycle);
-
-  raise notice 'Expansion start';
-
-  -- Populate initial pathspace with the primer query - this is the depth 1 traversal expansion
-  execute primer_query;
-
-  raise notice 'Expansion step % - Available Paths % - Num satisfied: %', depth, (select count(*) from next_pathspace), (select count(*) from next_pathspace p where p.satisfied);
-
-  -- Iterate until one of the following conditions:
-  -- * Traversal has reached the max allowed depth
-  -- * Pathspace is exhausted (no further expansion possible)
-  -- * A terminal node (and therefore one of the shortest paths) has been found
-  while depth < max_depth and
-        exists(select 1 from next_pathspace) and
-        not exists(select 1 from next_pathspace np where np.satisfied)
-    loop
-      -- Rename tables to swap in the next pathspace as the current pathspace for the next traversal step
-      alter table pathspace
-        rename to pathspace_old;
-      alter table next_pathspace
-        rename to pathspace;
-      alter table pathspace_old
-        rename to next_pathspace;
-
-      -- Clear the next pathspace scratch
-      truncate table next_pathspace;
-
-      -- Remove any non-satisfied terminals and cycles from pathspace
-      raise notice 'Available Paths Before Delete % - Num satisfied: %', (select count(*) from pathspace), (select count(*) from pathspace p where p.satisfied);
-
-      delete
-      from pathspace p
-      where p.is_cycle
-         or not exists(select 1 from edge e where e.end_id = p.next_id);
-
-      raise notice 'Available Paths After Delete % - Num satisfied: %', (select count(*) from pathspace), (select count(*) from pathspace p where p.satisfied);
-
-      -- Increase the current depth and execute the recursive query
-      depth := depth + 1;
-      execute recursive_query;
-
-      raise notice 'Expansion step % - Available Paths % - Num satisfied: %', depth, (select count(*) from next_pathspace), (select count(*) from next_pathspace p where p.satisfied);
-    end loop;
-
-  -- Return all satisfied paths from the next pathspace table
-  return query select *
-               from next_pathspace np
-               where np.satisfied;
-
-  -- Close the result set
-  return;
-end;
-$$
-  language plpgsql volatile
-                   strict;
 
 create or replace function public.edges_to_path(path variadic int8[]) returns pathComposite as
 $$
@@ -462,3 +350,293 @@ $$
   immutable
   parallel safe
   strict;
+
+create or replace function public.create_unidirectional_pathspace_tables()
+  returns void as
+$$
+begin
+  create temporary table forward_front
+  (
+    root_id   int8   not null,
+    next_id   int8   not null,
+    depth     int4   not null,
+    satisfied bool   not null,
+    is_cycle  bool   not null,
+    path      int8[] not null,
+    primary key (path)
+  ) on commit drop;
+
+  create temporary table next_front
+  (
+    root_id   int8   not null,
+    next_id   int8   not null,
+    depth     int4   not null,
+    satisfied bool   not null,
+    is_cycle  bool   not null,
+    path      int8[] not null,
+    primary key (path)
+  ) on commit drop;
+
+  create index forward_front_next_id_index on forward_front using btree (next_id);
+  create index forward_front_satisfied_index on forward_front using btree (satisfied);
+  create index forward_front_is_cycle_index on forward_front using btree (is_cycle);
+
+  create index next_front_next_id_index on next_front using btree (next_id);
+  create index next_front_satisfied_index on next_front using btree (satisfied);
+  create index next_front_is_cycle_index on next_front using btree (is_cycle);
+end;
+$$
+  language plpgsql
+  volatile
+  strict;
+
+create or replace function public.create_bidirectional_pathspace_tables()
+  returns void as
+$$
+begin
+  perform create_unidirectional_pathspace_tables();
+
+  create temporary table backward_front
+  (
+    root_id   int8   not null,
+    next_id   int8   not null,
+    depth     int4   not null,
+    satisfied bool   not null,
+    is_cycle  bool   not null,
+    path      int8[] not null,
+    primary key (path)
+  ) on commit drop;
+
+  create index backward_front_next_id_index on backward_front using btree (next_id);
+  create index backward_front_satisfied_index on backward_front using btree (satisfied);
+  create index backward_front_is_cycle_index on backward_front using btree (is_cycle);
+end;
+$$
+  language plpgsql
+  volatile
+  strict;
+
+create or replace function public.swap_forward_front()
+  returns void as
+$$
+begin
+  alter table forward_front
+    rename to forward_front_old;
+  alter table next_front
+    rename to forward_front;
+  alter table forward_front_old
+    rename to next_front;
+
+  truncate table next_front;
+
+  delete
+  from forward_front r
+  where r.is_cycle
+     or not r.satisfied and not exists(select 1 from edge e where e.end_id = r.next_id);
+
+  return;
+end;
+$$
+  language plpgsql
+  volatile
+  strict;
+
+create or replace function public.swap_backward_front()
+  returns void as
+$$
+begin
+  alter table backward_front
+    rename to backward_front_old;
+  alter table next_front
+    rename to backward_front;
+  alter table backward_front_old
+    rename to next_front;
+
+  truncate table next_front;
+
+  delete
+  from backward_front r
+  where r.is_cycle
+     or not r.satisfied and not exists(select 1 from edge e where e.start_id = r.next_id);
+
+  return;
+end;
+$$
+  language plpgsql
+  volatile
+  strict;
+
+create or replace function public.unidirectional_asp_harness(forward_primer text, forward_recursive text, max_depth int4)
+  returns table
+          (
+            root_id   int8,
+            next_id   int8,
+            depth     int4,
+            satisfied bool,
+            is_cycle  bool,
+            path      int8[]
+          )
+as
+$$
+declare
+  forward_front_depth int4 := 0;
+begin
+  raise notice 'unidirectional_asp_harness start';
+
+  -- Defines two tables to represent pathspace of the recursive expansion
+  perform create_unidirectional_pathspace_tables();
+
+  -- Populate the root front first with its primer query
+  forward_front_depth = forward_front_depth + 1;
+  execute forward_primer;
+
+  raise notice 'Expansion step % - Available Root Paths % - Num satisfied: %', forward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+
+  if exists(select 1 from next_front r where r.satisfied) then
+    -- Return all satisfied paths from the next front
+    return query select * from next_front r where r.satisfied;
+    return;
+  end if;
+
+  -- Swap the next_front table into the forward_front
+  perform swap_forward_front();
+
+  while forward_front_depth < max_depth and exists(select 1 from forward_front)
+    loop
+      -- Populate the next front with the recursive root front query
+      forward_front_depth = forward_front_depth + 1;
+      execute forward_recursive;
+
+      raise notice 'Expansion step % - Available Root Paths % - Num satisfied: %', forward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+
+      -- Check to see if the root front is satisfied
+      if exists(select 1
+                from next_front r
+                where r.satisfied) then
+        -- Return all satisfied paths from the next front
+        return query select * from next_front r where r.satisfied;
+        exit;
+      end if;
+
+      -- Swap the next_front table into the forward_front
+      perform swap_forward_front();
+    end loop;
+  return;
+end;
+$$
+  language plpgsql volatile
+                   strict;
+
+create or replace function public.bidirectional_asp_harness(forward_primer text, forward_recursive text,
+                                                            backward_primer text,
+                                                            backward_recursive text, max_depth int4)
+  returns table
+          (
+            root_id   int8,
+            next_id   int8,
+            depth     int4,
+            satisfied bool,
+            is_cycle  bool,
+            path      int8[]
+          )
+as
+$$
+declare
+  forward_front_depth  int4 := 0;
+  backward_front_depth int4 := 0;
+begin
+  raise notice 'bidirectional_asp_harness start';
+
+  -- Defines three tables to represent pathspace of the recursive expansion
+  perform create_bidirectional_pathspace_tables();
+
+  -- Populate the root front first with its primer query
+  forward_front_depth = forward_front_depth + 1;
+  execute forward_primer;
+
+  raise notice 'Expansion step % - Available Root Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+
+  -- Early check to make sure there's something to expand toward from the backward frontier
+  if not exists(select 1 from next_front) then
+    return;
+  end if;
+
+  if exists(select 1 from next_front r where r.satisfied) then
+    -- Return all satisfied paths from the next front
+    return query select * from next_front r where r.satisfied;
+    return;
+  end if;
+
+  -- Swap the next_front table into the forward_front
+  perform swap_forward_front();
+
+  -- Populate the terminal front next with its primer query
+  backward_front_depth = backward_front_depth + 1;
+  execute backward_primer;
+
+  raise notice 'Expansion step % - Available Terminal Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+
+  -- Check to see if the two fronts meet somewhere in the middle
+  if exists(select 1
+            from next_front t
+                   join forward_front r on r.next_id = t.next_id) then
+    -- Zip the path arrays together treating the matches as satisfied
+    return query select r.root_id, t.root_id, r.depth + t.depth, true, false, r.path || t.path
+                 from next_front t
+                        join forward_front r on r.next_id = t.next_id;
+    return;
+  end if;
+
+  -- Swap the next_front table into the backward_front
+  perform swap_backward_front();
+
+  while forward_front_depth + backward_front_depth < max_depth and
+        exists(select 1 from forward_front) and exists(select 1 from backward_front)
+    loop
+      if (select count(*) from forward_front) < (select count(*) from backward_front) then
+        -- Populate the next front with the recursive root front query
+        forward_front_depth = forward_front_depth + 1;
+        execute forward_recursive;
+
+        raise notice 'Expansion step % - Available Root Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+
+        -- Check to see if the root front is satisfied
+        if exists(select 1 from next_front r where r.satisfied) then
+          -- Return all satisfied paths from the next front
+          return query select * from next_front r where r.satisfied;
+          exit;
+        end if;
+
+        -- Swap the next_front table into the forward_front
+        perform swap_forward_front();
+      else
+        -- Populate the next front with the recursive terminal front query
+        backward_front_depth = backward_front_depth + 1;
+        execute backward_recursive;
+
+        raise notice 'Expansion step % - Available Terminal Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+
+        -- Check to see if the two fronts meet somewhere in the middle
+        if exists(select 1
+                  from next_front t
+                  where t.satisfied
+                  union
+                  select 1
+                  from next_front t
+                         join forward_front r on r.next_id = t.next_id) then
+          -- Zip the path arrays together treating the matches as satisfied
+          return query select r.root_id, t.root_id, r.depth + t.depth, true, false, r.path || t.path
+                       from next_front t
+                              join forward_front r on r.next_id = t.next_id;
+          exit;
+        end if;
+
+        -- Swap the next_front table into the backward_front
+        perform swap_backward_front();
+      end if;
+    end loop;
+  return;
+end;
+$$
+  language plpgsql volatile
+                   strict;

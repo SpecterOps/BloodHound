@@ -191,6 +191,40 @@ func (s *FrameBindingRewriter) enter(node pgsql.SyntaxNode) error {
 			}
 		}
 
+	case *pgsql.AnyExpression:
+		switch typedInnerExpression := typedExpression.Expression.(type) {
+		case pgsql.Identifier:
+			if rewritten, err := rewriteIdentifierScopeReference(s.scope, typedInnerExpression); err != nil {
+				return err
+			} else {
+				typedExpression.Expression = rewritten
+			}
+
+		case pgsql.CompoundIdentifier:
+			if rewritten, err := rewriteCompoundIdentifierScopeReference(s.scope, typedInnerExpression); err != nil {
+				return err
+			} else {
+				typedExpression.Expression = rewritten
+			}
+		}
+
+	case *pgsql.UnaryExpression:
+		switch typedOperand := typedExpression.Operand.(type) {
+		case pgsql.Identifier:
+			if rewritten, err := rewriteIdentifierScopeReference(s.scope, typedOperand); err != nil {
+				return err
+			} else {
+				typedExpression.Operand = rewritten
+			}
+
+		case pgsql.CompoundIdentifier:
+			if rewritten, err := rewriteCompoundIdentifierScopeReference(s.scope, typedOperand); err != nil {
+				return err
+			} else {
+				typedExpression.Operand = rewritten
+			}
+		}
+
 	case *pgsql.BinaryExpression:
 		switch typedLOperand := typedExpression.LOperand.(type) {
 		case pgsql.Identifier:
