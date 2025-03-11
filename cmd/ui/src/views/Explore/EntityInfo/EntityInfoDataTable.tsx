@@ -59,7 +59,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     );
 
     const findLabelLocation = () => {
-        const filteredArray: string[] = sectionsMapper.find((nestedArray: string[]) =>
+        const filteredArray: string[] = sectionsMapper!.find((nestedArray: string[]) =>
             nestedArray.includes(label)
         ) as string[];
         const index = filteredArray.indexOf(label);
@@ -81,12 +81,12 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         });
     };
 
-    const handleOnChange = (label: string, isOpen: boolean) => {
+    const handleOnChange = (isOpen: boolean) => {
         handleCurrentSectionToggle();
-        handleSetGraph(label, isOpen);
+        handleSetGraph(isOpen);
     };
 
-    const handleSetGraph = async (label: string, isOpen: boolean) => {
+    const handleSetGraph = async (isOpen: boolean) => {
         if (!endpoint) {
             if (backButtonFlag?.enabled && isOpen) {
                 setExpandedRelationshipsParams();
@@ -131,10 +131,9 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
 
     const collapseOtherSections = () => {
         for (const [key] of Object.entries(expandedSections)) {
-            const isNotObjectInformation = key !== 'Object Information';
             const isNotParentOfSection = !isParentOfLabel(key);
             const isNotClickedSection = key !== label; // to not interfere with normal toggle flow
-            if (isNotObjectInformation && isNotParentOfSection && isNotClickedSection) {
+            if (isNotParentOfSection && isNotClickedSection) {
                 expandedSections[key] = false;
             }
         }
