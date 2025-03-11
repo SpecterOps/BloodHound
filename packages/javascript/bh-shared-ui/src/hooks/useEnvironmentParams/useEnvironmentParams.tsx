@@ -59,10 +59,3 @@ export const useEnvironmentParams = (): UseEnvironmentParamsReturn => {
         ),
     };
 };
-
-/* TODO:
- *   clean up history
- *   length of subroutes
- *   test persistant param thing
- *
- * */
