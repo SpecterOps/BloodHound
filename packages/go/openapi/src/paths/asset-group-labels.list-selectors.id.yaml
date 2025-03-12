@@ -1,18 +1,19 @@
 parameters:
-  - $ref: './../parameters/header.prefer.yaml'
-  - $ref: './../parameters/path.object-id.yaml'
+  - name: asset_group_label_id
+    description: ID of the asset_group_label record to retrieve
+    in: path
+    required: true
+    schema:
+      type: integer
+      format: int
 get:
   operationId: GetAssetGroupLabelsSelectors
   summary: Get Asset Group Label selectors
   description: Get a list of selectors for this group.
   tags:
-    - Groups
+    - Asset Group Management
     - Enterprise
-  parameters:
-    - $ref: './../parameters/query.entity.skip.yaml'
-    - $ref: './../parameters/query.entity.limit.yaml'
-    - $ref: './../parameters/query.entity.type.yaml'
-    - $ref: './../parameters/query.entity.sort-by.yaml'
+    - Community 
   responses:
     200:
       description: OK
@@ -20,7 +21,6 @@ get:
         application/json:
           schema:
             allOf:
-              - $ref: './../schemas/api.response.pagination.yaml'
               - type: object
                 properties:
                   data:

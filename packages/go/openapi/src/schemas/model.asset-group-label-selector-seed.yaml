@@ -1,0 +1,7 @@
+allOf:
+  - type: object
+    properties:
+      type:
+        type: integer
+      value:
+        type: string

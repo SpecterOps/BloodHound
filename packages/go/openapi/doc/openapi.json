@@ -4428,13 +4428,17 @@
         }
       }
     },
-    "/api/v2/asset-group-labels": {
+    "/api/v2/asset-group-labels/{asset_group_label_id}/selectors": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/header.prefer"
-        },
-        {
-          "$ref": "#/components/parameters/path.object-id"
+          "name": "asset_group_label_id",
+          "description": "ID of the asset_group_label record to retrieve",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int"
+          }
         }
       ],
       "get": {
@@ -4442,22 +4446,9 @@
         "summary": "Get Asset Group Label selectors",
         "description": "Get a list of selectors for this group.",
         "tags": [
-          "Groups",
-          "Enterprise"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/query.entity.skip"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.limit"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.type"
-          },
-          {
-            "$ref": "#/components/parameters/query.entity.sort-by"
-          }
+          "Asset Group Management",
+          "Enterprise",
+          "Community"
         ],
         "responses": {
           "200": {
@@ -4466,9 +4457,6 @@
               "application/json": {
                 "schema": {
                   "allOf": [
-                    {
-                      "$ref": "#/components/schemas/api.response.pagination"
-                    },
                     {
                       "type": "object",
                       "properties": {
@@ -14042,6 +14030,15 @@
           "description": "The unique object identifier"
         }
       },
+      "query.hydrate-counts": {
+        "description": "Include counts of related entities. Default value is `true`.",
+        "name": "counts",
+        "in": "query",
+        "schema": {
+          "type": "boolean",
+          "default": true
+        }
+      },
       "query.entity.skip": {
         "name": "skip",
         "description": "The number of entries to skip for pagination. Only available for `type=list`.",
@@ -14081,15 +14078,6 @@
         "description": "Sort by column. Can be used multiple times; prepend a hyphen for descending order. Columns available\nfor sorting are dependent on the entity object kind.\n",
         "schema": {
           "$ref": "#/components/schemas/api.params.query.sort-by"
-        }
-      },
-      "query.hydrate-counts": {
-        "description": "Include counts of related entities. Default value is `true`.",
-        "name": "counts",
-        "in": "query",
-        "schema": {
-          "type": "boolean",
-          "default": true
         }
       },
       "query.clients.hydrate-domains": {
@@ -15649,24 +15637,52 @@
           }
         }
       },
-      "model.asset-group-label-selector": {
+      "model.asset-group-label-selector-seed": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/model.components.int32.id"
-          },
-          {
-            "$ref": "#/components/schemas/model.components.timestamps"
-          },
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "integer"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "model.asset-group-label-selector": {
+        "allOf": [
           {
             "type": "object",
             "properties": {
               "object_id": {
-                "type": "integer",
-                "format": "int32"
+                "type": "integer"
               },
               "asset_group_label_id": {
-                "type": "integer",
-                "format": "int32"
+                "type": "integer"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "created_by": {
+                "type": "string"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_by": {
+                "type": "string"
+              },
+              "disabled_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "disabled_by": {
+                "type": "string"
               },
               "name": {
                 "type": "string"
@@ -15674,14 +15690,17 @@
               "description": {
                 "type": "string"
               },
-              "allow_disable": {
-                "type": "boolean"
-              },
               "is_default": {
                 "type": "boolean"
               },
               "auto-certify": {
                 "type": "boolean"
+              },
+              "seeds": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.asset-group-label-selector-seed"
+                }
               }
             }
           }
@@ -15689,9 +15708,6 @@
       },
       "model.asset-group-label-selectors": {
         "allOf": [
-          {
-            "$ref": "#/components/schemas/model.components.int32.id"
-          },
           {
             "$ref": "#/components/schemas/model.components.timestamps"
           },

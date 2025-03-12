@@ -1,21 +1,34 @@
 allOf:
-  - $ref: './model.components.int32.id.yaml'
-  - $ref: './model.components.timestamps.yaml'
   - type: object
     properties:
       object_id:
         type: integer
-        format: int32
       asset_group_label_id:
         type: integer
-        format: int32
+      created_at:
+        type: string
+        format: date-time
+      created_by:
+        type: string
+      updated_at:
+        type: string
+        format: date-time
+      updated_by:
+        type: string
+      disabled_at:
+        type: string
+        format: date-time
+      disabled_by:
+        type: string
       name:
         type: string
       description:
         type: string
-      allow_disable:
-        type: boolean
       is_default:
         type: boolean
       auto-certify:
         type: boolean
+      seeds:
+        type: array
+        items:
+          $ref: './../schemas/model.asset-group-label-selector-seed.yaml'
