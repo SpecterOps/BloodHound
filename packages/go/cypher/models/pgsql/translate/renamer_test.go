@@ -55,7 +55,7 @@ func TestRewriteFrameBindings(t *testing.T) {
 	frame.Reveal(a.Identifier)
 	frame.Export(a.Identifier)
 
-	a.LastProjection = frame
+	a.MaterializedBy(frame)
 
 	// Cases
 	testCases := []testCase{{

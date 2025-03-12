@@ -73,55 +73,65 @@ export function openSearch() {
   marginRight: 'auto', paddingLeft: '1.25rem',
   paddingRight: '1.25rem' }}
 >
-
-<CardGroup cols={2}>
+<div
+      className="text-white dark:text-gray-200"
+      style={{
+       fontWeight: '600',
+       fontSize: '28px',
+       margin: '0',
+       paddingBottom: '1.25rem' 
+      }}
+    >
+      Get started
+    </div>
+<CardGroup cols={3}>
   <Card
-    title="General"
-    icon="circle-info"
+    title="Get Started"
+    icon="house"
     href="/get-started/introduction"
     iconType="solid"
   >
-    Welcome to BloodHound, what is it and its terminology? Find FAQ, release notes, community, support.
+    Learn about BloodHound, how to get started, and its security boundaries. 
   </Card>
   <Card
-    title="Deployment"
-    icon="server"
+    title="Install a Data Collector"
+    icon="folder"
     href="/install-data-collector/overview"
     iconType="solid"
   >
-    Deploying a BloodHound instance (database and GUI) and the Enterprise collectors; SharpHound Enterprise and AzureHound Enterprise.
+    Deploy SharpHound Enterprise or AzureHound Enterprise to collect and upload data for processing and analysis. 
   </Card>
+  <Card 
+    title="Collect Data"
+      icon="searchengin"
+      href="/collect-data/overview"
+      iconType="solid"
+    >
+    Learn how attack path data collection and ingestion works, and how to run attack path data collections.
+    </Card>
   <Card
-    title="Data Collection"
-    icon="database"
-    href="/collect-data/overview"
-    iconType="solid"
-  >
-    How attack path data collection and ingestion works, and how to run attack path data collection.
-  </Card>
-  <Card
-    title="Data Analysis"
-    icon="chart-line"
+    title="Analyze Attack Path Data"
+    icon="chart-column"
     href="/analyze-data/overview"
     iconType="solid"
   >
-  Analyzing ingested BloodHound data, identify and remediating attack paths/risks.
+  Analyzing ingested BloodHound data, and identify and remediate attack paths and risks.
   </Card>
   <Card
-    title="Administration"
+    title="Manage BloodHound"
     icon="user-shield"
     href="/manage-bloodhound/overview"
     iconType="solid"
   >
-    Administering a BloodHound instance and it's related components; users, roles, authentication, collector status, and general security.
+    Manage a BloodHound instance and its related components, such as users, roles, authentication, collector status, and general security.
   </Card>
     <Card
-    title=" API and Integrations"
+    title=" API & Integrations"
     icon="code"
     href="/integrations/overview"
     iconType="solid"
   >
-    Interacting with BloodHound through it's REST API and integrations which uses the API.
+    Build with BloodHound through its REST API and integrations.
   </Card>
 </CardGroup>
 

@@ -46,7 +46,7 @@ import { initGraph } from 'src/views/Explore/utils';
 import ContextMenuV2 from './ContextMenu/ContextMenuV2';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 
-const GraphView: FC = () => {
+const GraphViewV2: FC = () => {
     /* Hooks */
     const theme = useTheme();
 
@@ -223,4 +223,4 @@ const GraphView: FC = () => {
     );
 };
 
-export default GraphView;
+export default GraphViewV2;
