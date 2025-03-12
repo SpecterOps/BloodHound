@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './useCypherEditorSwitch';
+export * from './useCypherSearchSwitch';
 export * from './useNodeSearchSwitch';
 export * from './usePathfindingFilterSwitch';
 export * from './usePathfindingSearchSwitch';
