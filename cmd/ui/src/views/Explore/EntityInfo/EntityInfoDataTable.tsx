@@ -67,7 +67,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
             expandedRelationships: updatedParams,
             searchType: 'relationship',
             relationshipQueryType: queryKey,
-            relationshipQueryObjectId: id,
+            relationshipQueryItemId: id,
         });
     };
 
