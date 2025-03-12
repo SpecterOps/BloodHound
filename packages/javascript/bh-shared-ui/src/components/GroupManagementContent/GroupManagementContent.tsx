@@ -28,10 +28,10 @@ import AssetGroupFilters from '../AssetGroupFilters';
 import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
 import AssetGroupMemberList from '../AssetGroupMemberList';
 import DropdownSelector, { DropdownOption } from '../DropdownSelector';
-import { SelectedDomain } from './types';
+import { SelectedEnvironment } from './types';
 
 interface GroupManagementContentProps {
-    globalEnvironment: SelectedDomain | null;
+    globalEnvironment: SelectedEnvironment | null;
     showExplorePageLink: boolean;
     tierZeroLabel: string;
     tierZeroTag: string;
@@ -58,7 +58,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
 }) => {
     const theme = useTheme();
 
-    const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedDomain | null>(null);
+    const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | null>(null);
     const [selectedAssetGroupId, setSelectedAssetGroupId] = useState<number | null>(null);
     const [filterParams, setFilterParams] = useState<AssetGroupMemberParams>({});
 
@@ -159,7 +159,9 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                                 <DataSelector
                                     value={selectedEnvironment || globalEnvironment || { type: null, id: null }}
                                     errorMessage={domainSelectorErrorMessage}
-                                    onChange={(selection: SelectedDomain) => setSelectedEnvironment({ ...selection })}
+                                    onChange={(selection: SelectedEnvironment) =>
+                                        setSelectedEnvironment({ ...selection })
+                                    }
                                     fullWidth={true}
                                 />
                             </Grid>

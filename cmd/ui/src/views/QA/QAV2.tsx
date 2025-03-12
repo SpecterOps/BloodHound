@@ -23,7 +23,7 @@ import {
     DomainInfo,
     LoadingOverlay,
     PageWithTitle,
-    SelectedDomain,
+    SelectedEnvironment,
     TenantInfo,
     useEnvironment,
 } from 'bh-shared-ui';
@@ -41,7 +41,9 @@ const useStyles = makeStyles((theme) => ({
 const QualityAssuranceV2: React.FC = () => {
     const { data: globalEnvironment, isLoading } = useEnvironment();
 
-    const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedDomain | null>(globalEnvironment ?? null);
+    const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | null>(
+        globalEnvironment ?? null
+    );
     const [dataError, setDataError] = useState(false);
     const classes = useStyles();
 
@@ -73,7 +75,7 @@ const QualityAssuranceV2: React.FC = () => {
         }
     };
 
-    const domainErrorMessage = <>Domains unavailable. {dataCollectionMessage}</>;
+    const environmentErrorMessage = <>Environments unavailable. {dataCollectionMessage}</>;
 
     if (isLoading) {
         return (
@@ -105,7 +107,7 @@ const QualityAssuranceV2: React.FC = () => {
                             type: environment?.type ?? null,
                             id: environment?.id ?? null,
                         }}
-                        errorMessage={domainErrorMessage}
+                        errorMessage={environmentErrorMessage}
                         onChange={(selection) => setSelectedEnvironment(selection)}
                     />
                 </Box>
@@ -126,7 +128,7 @@ const QualityAssuranceV2: React.FC = () => {
             <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                 <DataSelector
                     value={selectedEnvironment || globalEnvironment || { type: null, id: null }}
-                    errorMessage={domainErrorMessage}
+                    errorMessage={environmentErrorMessage}
                     onChange={(selection) => setSelectedEnvironment({ ...selection })}
                 />
             </Box>
