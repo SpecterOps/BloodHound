@@ -71,10 +71,20 @@ export const usePathfindingSearch = () => {
         setSourceSelectedItem(selected);
         setSourceSearchTerm(term);
 
-        setExploreParams({
-            searchType: secondarySearch ? 'pathfinding' : 'node',
-            primarySearch: objectId,
-        });
+        // if i have the other node, set type to 'pathfinding' and search term to the objectid
+        // if not, set type to 'node' and clear out the opposing search term
+        if (secondarySearch && destinationSelectedItem) {
+            setExploreParams({
+                searchType: 'pathfinding',
+                primarySearch: objectId,
+            });
+        } else {
+            setExploreParams({
+                searchType: 'node',
+                primarySearch: objectId,
+                secondarySearch: null,
+            });
+        }
     };
 
     const handleDestinationNodeSelected = (selected?: SearchValue) => {
@@ -84,10 +94,18 @@ export const usePathfindingSearch = () => {
         setDestinationSelectedItem(selected);
         setDestinationSearchTerm(term);
 
-        setExploreParams({
-            searchType: primarySearch ? 'pathfinding' : 'node',
-            secondarySearch: objectId,
-        });
+        if (primarySearch && sourceSelectedItem) {
+            setExploreParams({
+                searchType: 'pathfinding',
+                secondarySearch: objectId,
+            });
+        } else {
+            setExploreParams({
+                searchType: 'node',
+                secondarySearch: objectId,
+                primarySearch: null,
+            });
+        }
     };
 
     // Handle changes internal to the search form that should not trigger a graph query. Each param should sync independently

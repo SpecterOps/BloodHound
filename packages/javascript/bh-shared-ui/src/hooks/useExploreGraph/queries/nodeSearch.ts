@@ -20,19 +20,21 @@ import { ExploreQueryParams } from '../../useExploreParams';
 import { ExploreGraphQuery, ExploreGraphQueryError, ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
 
 export const nodeSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
-    const { searchType, primarySearch } = paramOptions;
-    if (!primarySearch || !searchType) {
+    const { searchType, primarySearch, secondarySearch } = paramOptions;
+
+    // Fall back to secondary term for the case where the first term in a pathfinding search is removed
+    const term = primarySearch ?? secondarySearch;
+
+    if (!term || !searchType) {
         return { enabled: false };
     }
 
     return {
-        queryKey: [ExploreGraphQueryKey, searchType, primarySearch],
+        queryKey: [ExploreGraphQueryKey, searchType, term],
         queryFn: ({ signal }) =>
-            apiClient
-                .getSearchResult(primarySearch, 'exact', { signal })
-                .then((res) => res.data.data as FlatGraphResponse),
+            apiClient.getSearchResult(term, 'exact', { signal }).then((res) => res.data.data as FlatGraphResponse),
         retry: false,
-        enabled: !!(searchType && primarySearch),
+        enabled: !!(searchType && term),
     };
 };
 

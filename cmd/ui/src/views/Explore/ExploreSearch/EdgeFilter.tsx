@@ -17,26 +17,11 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { faFilter } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import makeStyles from '@mui/styles/makeStyles';
 import { useState } from 'react';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
 import { usePathfindingFilterSwitch } from './switches';
 
-const useStyles = makeStyles((theme) => ({
-    pathfindingButton: {
-        height: '25px',
-        width: '25px',
-        minWidth: '25px',
-        borderRadius: theme.shape.borderRadius,
-        borderColor: 'rgba(0,0,0,0.23)',
-        color: theme.palette.common.white,
-        padding: 0,
-    },
-}));
-
 const EdgeFilter = () => {
-    const classes = useStyles();
-
     const [isOpenDialog, setIsOpenDialog] = useState(false);
 
     const { selectedFilters, initialize, handleApplyFilters, handleUpdateFilters, handleCancelFilters } =
@@ -45,7 +30,7 @@ const EdgeFilter = () => {
     return (
         <>
             <Button
-                className={classes.pathfindingButton}
+                className={'h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25 text-white'}
                 onClick={() => {
                     setIsOpenDialog(true);
                     // what is the initial state of edge filters?  save it
