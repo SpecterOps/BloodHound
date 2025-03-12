@@ -21,7 +21,9 @@ import {
     WebGLDisabledAlert,
     exportToJson,
     isWebGLEnabled,
+    transformFlatGraphResponse,
     useAvailableDomains,
+    useExploreGraph,
     useExploreSelectedItem,
     useToggle,
 } from 'bh-shared-ui';
@@ -34,12 +36,10 @@ import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
-import { GraphState } from 'src/ducks/explore/types';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import { transformFlatGraphResponse } from 'src/utils';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
@@ -52,7 +52,7 @@ const GraphViewV2: FC = () => {
 
     const dispatch = useAppDispatch();
 
-    const graphState: GraphState = useAppSelector((state) => state.explore);
+    const graphState = useExploreGraph();
 
     const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
 
@@ -83,8 +83,10 @@ const GraphViewV2: FC = () => {
     const { setSelectedItem } = useExploreSelectedItem();
 
     useEffect(() => {
-        let items: any = graphState.chartProps.items;
-        if (!items) return;
+        let items: any = graphState.data;
+        if (!items && !graphState.isError) return;
+        if (!items) items = {};
+
         // `items` may be empty, or it may contain an empty `nodes` object
         if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
 
@@ -95,7 +97,7 @@ const GraphViewV2: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphState.chartProps.items, theme, darkMode]);
+    }, [graphState.data, theme, darkMode, graphState.isError]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {
@@ -217,7 +219,7 @@ const GraphViewV2: FC = () => {
             </div>
             <GraphItemInformationPanel />
             <ContextMenuV2 contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
-            <GraphProgress loading={graphState.loading} />
+            <GraphProgress loading={graphState.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
         </div>
     );

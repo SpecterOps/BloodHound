@@ -24,6 +24,7 @@ import {
     apiClient,
     collapseAllSections,
     edgeSectionToggle,
+    transformToFlatGraphResponse,
     useExploreParams,
     useFeatureFlag,
     useFetchEntityProperties,
@@ -33,7 +34,6 @@ import { Dispatch, FC, Fragment } from 'react';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import { transformToFlatGraphResponse } from 'src/utils';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 

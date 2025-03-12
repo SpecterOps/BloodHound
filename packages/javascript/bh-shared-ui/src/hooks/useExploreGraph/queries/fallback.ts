@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as ApiExplorer } from './ApiExplorer';
+import { ExploreGraphQuery } from './utils';
 
-export { default as UserProfile } from './UserProfile';
-
-export { default as SSOConfiguration } from './SSOConfiguration';
-
-export { default as Users } from './Users';
-
-export * from './Explore';
-
-export * from './DataQuality';
-
-export * from './Users';
+export const fallbackQuery: ExploreGraphQuery = {
+    getQueryConfig: () => ({ enabled: false }),
+    getErrorMessage: () => ({ message: 'An unknown error occurred.', key: 'unknownGraphError' }),
+};

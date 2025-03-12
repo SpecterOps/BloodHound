@@ -22,6 +22,7 @@ import {
     collapseNonSelectedSections,
     managePanelSectionsParams,
     searchbarActions,
+    transformFlatGraphResponse,
     useExploreParams,
     useFeatureFlag,
 } from 'bh-shared-ui';
@@ -30,7 +31,6 @@ import { useDispatch } from 'react-redux';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
-import { transformFlatGraphResponse } from 'src/utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 
