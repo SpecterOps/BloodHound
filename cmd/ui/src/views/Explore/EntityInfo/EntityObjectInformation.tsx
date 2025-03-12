@@ -37,8 +37,6 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     const { expandedSections, setExpandedSections } = useEntityInfoPanelContext();
     const sectionLabel = 'Object Information';
 
-    console.log(expandedSections);
-
     if (isLoading) return <Skeleton data-testid='entity-object-information-skeleton' variant='text' />;
 
     if (isError || !informationAvailable)

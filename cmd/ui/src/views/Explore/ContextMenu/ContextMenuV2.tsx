@@ -16,20 +16,19 @@
 
 import { Menu, MenuItem } from '@mui/material';
 
-import { Permission, searchbarActions, usePermissions } from 'bh-shared-ui';
+import { NodeResponse, Permission, searchbarActions, useExploreSelectedItem, usePermissions } from 'bh-shared-ui';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import AssetGroupMenuItem from './AssetGroupMenuItem';
-import CopyMenuItem from './CopyMenuItem';
+import AssetGroupMenuItem from './AssetGroupMenuItemV2';
+import CopyMenuItem from './CopyMenuItemV2';
 
 const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; handleClose: () => void }> = ({
     contextMenu,
     handleClose,
 }) => {
     const dispatch = useAppDispatch();
-
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
+    const { selectedItemQuery } = useExploreSelectedItem();
 
     const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
@@ -37,14 +36,14 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
     const { checkPermission } = usePermissions();
 
     const handleSetStartingNode = () => {
-        if (selectedNode) {
+        if (selectedItemQuery.data) {
             dispatch(searchbarActions.tabChanged('secondary'));
             dispatch(
                 searchbarActions.sourceNodeSelected(
                     {
-                        name: selectedNode.name,
-                        objectid: selectedNode.id,
-                        type: selectedNode.type,
+                        name: selectedItemQuery.data.label,
+                        objectid: (selectedItemQuery.data as NodeResponse).objectId,
+                        type: selectedItemQuery.data.kind,
                     },
                     true
                 )
@@ -53,13 +52,13 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
     };
 
     const handleSetEndingNode = () => {
-        if (selectedNode) {
+        if (selectedItemQuery.data) {
             dispatch(searchbarActions.tabChanged('secondary'));
             dispatch(
                 searchbarActions.destinationNodeSelected({
-                    name: selectedNode.name,
-                    objectid: selectedNode.id,
-                    type: selectedNode.type,
+                    name: selectedItemQuery.data.label,
+                    objectid: (selectedItemQuery.data as NodeResponse).objectId,
+                    type: selectedItemQuery.data.kind,
                 })
             );
         }

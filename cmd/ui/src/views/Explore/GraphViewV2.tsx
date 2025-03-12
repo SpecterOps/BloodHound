@@ -43,7 +43,7 @@ import { transformFlatGraphResponse } from 'src/utils';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
-import ContextMenu from './ContextMenu/ContextMenu';
+import ContextMenuV2 from './ContextMenu/ContextMenuV2';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 
 const GraphView: FC = () => {
@@ -216,7 +216,7 @@ const GraphView: FC = () => {
                 </Popper>
             </div>
             <GraphItemInformationPanel />
-            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
+            <ContextMenuV2 contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphState.loading} />
             <NoDataDialogWithLinks open={!data?.length} />
         </div>
