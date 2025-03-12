@@ -120,8 +120,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, qu
                     onClick={handleOnClick}
                 />
             )}
-            {sections &&
-                sections.map((nestedSection, index) => <EntityInfoDataTable key={index} {...nestedSection} id={id} />)}
+            {sections && sections.map((nestedSection, index) => <EntityInfoDataTable key={index} {...nestedSection} />)}
         </EntityInfoCollapsibleSection>
     );
 };
