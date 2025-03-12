@@ -19,12 +19,14 @@ package database
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
 )
 
 const (
+	kindTable                   = "kind"
 	assetGroupLabelTable        = "asset_group_labels"
 	assetGroupSelectorTable     = "asset_group_label_selectors"
 	assetGroupSelectorSeedTable = "asset_group_label_selector_seeds"
@@ -32,7 +34,7 @@ const (
 
 // AssetGroupLabelData defines the methods required to interact with the asset_group_labels table
 type AssetGroupLabelData interface {
-	CreateAssetGroupLabel(ctx context.Context, assetGroupTierId int, userId string, kindId int, name string, description string) (model.AssetGroupLabel, error)
+	CreateAssetGroupLabel(ctx context.Context, assetGroupTierId int, userId string, name string, description string) (model.AssetGroupLabel, error)
 	GetAssetGroupLabel(ctx context.Context, assetGroupLabelId int) (model.AssetGroupLabel, error)
 }
 
@@ -78,11 +80,14 @@ func (s *BloodhoundDB) GetAssetGroupLabel(ctx context.Context, assetGroupLabelId
 	return label, nil
 }
 
-func (s *BloodhoundDB) CreateAssetGroupLabel(ctx context.Context, assetGroupTierId int, userId string, kindId int, name string, description string) (model.AssetGroupLabel, error) {
+func (s *BloodhoundDB) CreateAssetGroupLabel(ctx context.Context, assetGroupTierId int, userId string, name string, description string) (model.AssetGroupLabel, error) {
 	var label model.AssetGroupLabel
 
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by) VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?) RETURNING *", assetGroupLabelTable),
+		var kindId int
+		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (name) VALUES (?) ON CONFLICT (id) DO NOTHING RETURNING id", kindTable), fmt.Sprintf("Tag_%s", strings.ReplaceAll(name, " ", "_"))).Scan(&kindId); result.Error != nil {
+			return CheckError(result)
+		} else if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by) VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?) RETURNING *", assetGroupLabelTable),
 			assetGroupTierId, kindId, name, description, userId, userId).Scan(&label); result.Error != nil {
 			return CheckError(result)
 		}

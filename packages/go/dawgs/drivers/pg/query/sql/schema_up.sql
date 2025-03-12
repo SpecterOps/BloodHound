@@ -78,7 +78,9 @@ create table if not exists graph
 );
 
 -- The kind table contains name to ID mappings for graph kinds. Storage of these types is necessary to maintain search
--- capability of a database without the origin application that generated it.
+-- capability of a database without the origin application that generated it. 
+-- To aid in testing tiering/labels, the kind table is duplicated in the stepwise migration files. Any schema upates here
+-- should be reflected in a stepwise migration file as well. 
 create table if not exists kind
 (
   id   smallserial,

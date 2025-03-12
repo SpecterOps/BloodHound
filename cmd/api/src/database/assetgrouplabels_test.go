@@ -72,10 +72,9 @@ func TestDatabase_CreateAssetGroupLabel(t *testing.T) {
 		testActor       = "test_actor"
 		testName        = "test label name"
 		testDescription = "test label description"
-		kindId          = 56
 	)
 
-	label, err := dbInst.CreateAssetGroupLabel(testCtx, tierId, testActor, kindId, testName, testDescription)
+	label, err := dbInst.CreateAssetGroupLabel(testCtx, tierId, testActor, testName, testDescription)
 	require.NoError(t, err)
 	require.Equal(t, tierId, int(label.AssetGroupTierId.Int32))
 	require.WithinDuration(t, time.Now(), label.CreatedAt, time.Second)
