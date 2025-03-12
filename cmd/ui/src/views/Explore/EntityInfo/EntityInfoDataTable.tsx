@@ -61,7 +61,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     );
 
     const setExpandedRelationshipsParams = () => {
-        const updatedParams = manageRelationshipParams(allSectionsMap, label);
+        const updatedParams = manageRelationshipParams(allSectionsMap as string[][], label);
 
         setExploreParams({
             expandedRelationships: updatedParams,

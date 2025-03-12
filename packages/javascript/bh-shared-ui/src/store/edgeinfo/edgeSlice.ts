@@ -33,7 +33,6 @@ export type SelectedEdge = {
 export type ExpandedEdgeSections = Record<keyof typeof EdgeSections, boolean>;
 
 export const EdgeSections = {
-    data: 'Relationship Information',
     general: 'General',
     abuse: 'Abuse',
     windowsAbuse: 'Windows Abuse',
@@ -48,7 +47,6 @@ export const initialState: EdgeInfoState = {
     open: false,
     selectedEdge: null,
     expandedSections: {
-        data: true,
         general: false,
         abuse: false,
         windowsAbuse: false,
