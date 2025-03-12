@@ -29,7 +29,6 @@ import {
     AzureNodeKind,
     AzureRelationshipKind,
     CommonKindProperties,
-    searchbarActions,
     useCreateSavedQuery,
 } from 'bh-shared-ui';
 import { useState } from 'react';
@@ -37,6 +36,7 @@ import { addSnackbar } from 'src/ducks/global/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import CommonSearches from './CommonSearches';
 import SaveQueryDialog from './SaveQueryDialog';
+import { useCypherSearchSwitch } from './switches';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -100,26 +100,10 @@ const schema = {
     ],
 };
 
-const useCypherEditor = () => {
-    const cypherQuery = useAppSelector((state) => state.search.cypher.searchTerm);
-
-    const dispatch = useAppDispatch();
-
-    const setCypherQuery = (query: string) => dispatch(searchbarActions.cypherQueryEdited(query));
-
-    const performSearch = () => dispatch(searchbarActions.cypherSearch(cypherQuery));
-
-    return {
-        cypherQuery,
-        setCypherQuery,
-        performSearch,
-    };
-};
-
 const CypherSearch = () => {
     const classes = useStyles();
 
-    const { cypherQuery, setCypherQuery, performSearch } = useCypherEditor();
+    const { cypherQuery, setCypherQuery, performSearch } = useCypherSearchSwitch();
     const createSavedQueryMutation = useCreateSavedQuery();
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
