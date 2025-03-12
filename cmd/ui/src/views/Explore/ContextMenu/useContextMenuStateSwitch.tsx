@@ -16,7 +16,7 @@ const useContextMenuStateSwitch = (contextMenuNodeId?: string) => {
                 if (contextMenuNodeId) {
                     const searchType = secondarySearch ? 'pathfinding' : 'node';
                     setExploreParams({
-                        searchTab: 'pathfinding',
+                        exploreSearchTab: 'pathfinding',
                         searchType,
                         primarySearch: contextMenuNodeId,
                     });
@@ -25,7 +25,7 @@ const useContextMenuStateSwitch = (contextMenuNodeId?: string) => {
             handleSetEndingNode: () => {
                 if (contextMenuNodeId) {
                     setExploreParams({
-                        searchTab: 'pathfinding',
+                        exploreSearchTab: 'pathfinding',
                         searchType: 'pathfinding',
                         secondarySearch: contextMenuNodeId,
                     });
