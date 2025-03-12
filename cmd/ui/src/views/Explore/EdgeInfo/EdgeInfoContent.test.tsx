@@ -172,7 +172,7 @@ describe('EdgeInfoContent', () => {
         render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsEnabled} />);
 
         const user = userEvent.setup();
-        const windowAbuseAccordion = screen.getByTestId('windowsabuse-accordion');
+        const windowAbuseAccordion = screen.getByText('Windows Abuse');
         await user.click(windowAbuseAccordion);
 
         expect(screen.getByText(hasLapsEnabledTestText, { exact: false })).toBeInTheDocument();
@@ -181,7 +181,7 @@ describe('EdgeInfoContent', () => {
         render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsDisabled} />);
 
         const user = userEvent.setup();
-        const windowAbuseAccordion = screen.getByTestId('windowsabuse-accordion');
+        const windowAbuseAccordion = screen.getByText('Windows Abuse');
         await user.click(windowAbuseAccordion);
 
         expect(screen.queryByText(hasLapsDisabledTestText, { exact: false })).not.toBeInTheDocument();
