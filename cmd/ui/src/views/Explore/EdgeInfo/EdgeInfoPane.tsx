@@ -25,21 +25,21 @@ import Header from 'src/views/Explore/EdgeInfo/EdgeInfoHeader';
 const EdgeInfoPane: React.FC<{ sx?: SxProps; selectedEdge?: any }> = ({ sx, selectedEdge }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
-    const { expandedRelationships } = useExploreParams();
+    const { expandedPanelSections } = useExploreParams();
     const previousSelectedEdge = usePreviousValue(selectedEdge);
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
     const dispatch = useAppDispatch();
 
     useEffect(() => {
-        if (previousSelectedEdge?.id !== selectedEdge?.id && backButtonFlag?.enabled && expandedRelationships) {
+        if (previousSelectedEdge?.id !== selectedEdge?.id && backButtonFlag?.enabled && expandedPanelSections) {
             dispatch(
                 edgeSectionToggle({
-                    section: expandedRelationships?.at(0) as keyof typeof EdgeSections,
+                    section: expandedPanelSections?.at(0) as keyof typeof EdgeSections,
                     expanded: true,
                 })
             );
         }
-    }, [expandedRelationships, dispatch, backButtonFlag, previousSelectedEdge, selectedEdge]);
+    }, [expandedPanelSections, dispatch, backButtonFlag, previousSelectedEdge, selectedEdge]);
 
     return (
         <Box sx={sx} className={styles.container} data-testid='explore_edge-information-pane'>

@@ -20,7 +20,7 @@ import {
     NODE_GRAPH_RENDER_LIMIT,
     abortEntitySectionRequest,
     collapseNonSelectedSections,
-    manageRelationshipParams,
+    managePanelSectionsParams,
     searchbarActions,
     useExploreParams,
     useFeatureFlag,
@@ -60,11 +60,11 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         { refetchOnWindowFocus: false, retry: false }
     );
 
-    const setExpandedRelationshipsParams = () => {
-        const updatedParams = manageRelationshipParams(allSectionsMap as string[][], label);
+    const setExpandedPanelSectionsParams = () => {
+        const updatedParams = managePanelSectionsParams(allSectionsMap as string[][], label);
 
         setExploreParams({
-            expandedRelationships: updatedParams,
+            expandedPanelSections: updatedParams,
             searchType: 'relationship',
             relationshipQueryType: queryKey,
             relationshipQueryItemId: id,
@@ -79,7 +79,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     const handleSetGraph = async (isOpen: boolean) => {
         if (!endpoint) {
             if (backButtonFlag?.enabled && isOpen) {
-                setExpandedRelationshipsParams();
+                setExpandedPanelSectionsParams();
             }
             return;
         }
@@ -87,7 +87,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         if (isOpen && countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
             abortEntitySectionRequest();
             if (backButtonFlag?.enabled) {
-                setExpandedRelationshipsParams();
+                setExpandedPanelSectionsParams();
                 return;
             }
             dispatch(setGraphLoading(true));

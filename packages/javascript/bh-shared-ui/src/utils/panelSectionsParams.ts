@@ -65,15 +65,15 @@ export const collapseNonSelectedSections = (
 };
 
 // From string array to object
-export const formatRelationshipsParams = (expandedRelationships: string[]) => {
-    return expandedRelationships?.reduce((queryParamObject: { [k: string]: boolean }, relationshipsLabel: string) => {
-        queryParamObject[relationshipsLabel] = true;
+export const formatPanelSectionsParams = (expandedPanelSections: string[]) => {
+    return expandedPanelSections?.reduce((queryParamObject: { [k: string]: boolean }, label: string) => {
+        queryParamObject[label] = true;
         return queryParamObject;
     }, {});
 };
 
 // Generates the param to add based on the label
-export const manageRelationshipParams = (allSectionsMap: string[][], label: string) => {
+export const managePanelSectionsParams = (allSectionsMap: string[][], label: string) => {
     const updatedParams: string[] = [];
     const { filteredArray, index } = findLabelLocation(allSectionsMap, label);
     updatedParams.push(label);

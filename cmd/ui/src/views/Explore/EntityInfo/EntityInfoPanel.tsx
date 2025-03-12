@@ -18,7 +18,7 @@ import { Box, Paper, SxProps, Typography } from '@mui/material';
 import {
     NoEntitySelectedHeader,
     NoEntitySelectedMessage,
-    formatRelationshipsParams,
+    formatPanelSectionsParams,
     useExploreParams,
     useFeatureFlag,
     usePaneStyles,
@@ -40,13 +40,13 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
     const { setExpandedSections, expandedSections } = useEntityInfoPanelContext();
-    const { expandedRelationships } = useExploreParams();
+    const { expandedPanelSections } = useExploreParams();
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
     const previousSelectedNode = usePreviousValue(selectedNode);
 
     useEffect(() => {
-        if (backButtonFlag?.enabled && previousSelectedNode?.id !== selectedNode?.id && expandedRelationships) {
-            const initialExpandedSections = { ...formatRelationshipsParams(expandedRelationships) };
+        if (backButtonFlag?.enabled && previousSelectedNode?.id !== selectedNode?.id && expandedPanelSections) {
+            const initialExpandedSections = { ...formatPanelSectionsParams(expandedPanelSections) };
             setExpandedSections(initialExpandedSections);
         }
     }, [
@@ -55,7 +55,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
         previousSelectedNode,
         selectedNode,
         backButtonFlag,
-        expandedRelationships,
+        expandedPanelSections,
     ]);
 
     return (

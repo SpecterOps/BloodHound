@@ -91,9 +91,9 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                         const sendOnChange =
                             EdgeCompositionRelationships.includes(selectedEdge.name) && section[0] === 'composition';
 
-                        const setExpandedRelationshipsParam = () => {
+                        const setExpandedPanelSectionsParam = () => {
                             setExploreParams({
-                                expandedRelationships: [sectionKeyLabel],
+                                expandedPanelSections: [sectionKeyLabel],
                                 ...(sectionKeyLabel === 'composition'
                                     ? { searchType: 'composition' }
                                     : { searchType: null }),
@@ -111,7 +111,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                         const handleOnChange = () => {
                             handleCurrentSectionToggle();
                             if (backButtonFlag?.enabled) {
-                                setExpandedRelationshipsParam();
+                                setExpandedPanelSectionsParam();
                             }
                             if (sendOnChange && !backButtonFlag?.enabled) {
                                 getOnChange(
