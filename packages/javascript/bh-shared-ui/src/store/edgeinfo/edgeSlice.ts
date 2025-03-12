@@ -33,6 +33,7 @@ export type SelectedEdge = {
 export type ExpandedEdgeSections = Record<keyof typeof EdgeSections, boolean>;
 
 export const EdgeSections = {
+    data: 'Relationship Information', // To do: Remove when we implement BHE deep linking
     general: 'General',
     abuse: 'Abuse',
     windowsAbuse: 'Windows Abuse',
@@ -47,6 +48,7 @@ export const initialState: EdgeInfoState = {
     open: false,
     selectedEdge: null,
     expandedSections: {
+        data: true, // To do: Remove when we implement BHE deep linking
         general: false,
         abuse: false,
         windowsAbuse: false,

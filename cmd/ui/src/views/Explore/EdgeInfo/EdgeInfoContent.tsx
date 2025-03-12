@@ -103,7 +103,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
 
                         const handleCurrentSectionToggle = () => {
                             if (backButtonFlag?.enabled) {
-                                dispatch(collapseAllSections());
+                                dispatch(collapseAllSections()); // Doesn't affect edge informational panel because its no longer connected to expanded sections remove comment after bhe deep linking
                             }
                             dispatch(edgeSectionToggle({ section: sectionKeyLabel, expanded: !isExpandedSection }));
                         };
