@@ -19,8 +19,8 @@ import {
     DropdownOption,
     EntityKinds,
     GroupManagementContent,
+    HIGH_VALUE_LABEL,
     Permission,
-    TIER_ZERO_LABEL,
     TIER_ZERO_TAG,
     searchbarActions,
     useFeatureFlag,
@@ -83,7 +83,7 @@ const GroupManagement = () => {
             const isTierZero = assetGroup.tag === TIER_ZERO_TAG;
             return {
                 key: assetGroup.id,
-                value: isTierZero ? TIER_ZERO_LABEL : assetGroup.name,
+                value: isTierZero ? HIGH_VALUE_LABEL : assetGroup.name,
                 icon: isTierZero ? faGem : undefined,
             };
         });
@@ -93,7 +93,7 @@ const GroupManagement = () => {
         <GroupManagementContent
             globalDomain={globalDomain}
             showExplorePageLink={!!openNode}
-            tierZeroLabel={TIER_ZERO_LABEL}
+            tierZeroLabel={HIGH_VALUE_LABEL}
             tierZeroTag={TIER_ZERO_TAG}
             // Both these components should eventually be moved into the shared UI library
             entityPanelComponent={<EntityInfoPanel selectedNode={openNode} />}
