@@ -200,7 +200,7 @@ func (s *Resources) GetKennelManifest(response http.ResponseWriter, request *htt
 		manifest.Azurehound = releases[:min(5, len(releases))]
 	}
 
-	api.WriteJSONResponse(request.Context(), manifest, http.StatusOK, response)
+	api.WriteBasicResponse(request.Context(), manifest, http.StatusOK, response)
 }
 
 type Manifest struct {
