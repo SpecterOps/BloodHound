@@ -73,7 +73,8 @@ const GraphViewV2: FC = () => {
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+    const [contextMenuPosition, setContextMenuPosition] = useState<{ mouseX: number; mouseY: number } | null>(null);
+    const [contextMenuNodeId, setContextMenuNodeId] = useState<string>();
     const [columns, setColumns] = useState(columnsDefault);
     const [showNodeLabels, setShowNodeLabels] = useState(true);
     const [showEdgeLabels, setShowEdgeLabels] = useState(true);
@@ -155,13 +156,16 @@ const GraphViewV2: FC = () => {
     };
 
     const handleContextMenu = (event: SigmaNodeEventPayload) => {
-        setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
-        const nodeId = event.node;
-        findNodeAndSelect(nodeId);
+        const contextMenuNode = newGraphState.data?.[event.node];
+        if (!contextMenuNode) return;
+
+        setContextMenuPosition(contextMenuPosition === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
+        setContextMenuNodeId(contextMenuNode.data.objectid);
     };
 
     const handleCloseContextMenu = () => {
-        setContextMenu(null);
+        setContextMenuPosition(null);
+        setContextMenuNodeId(undefined);
     };
 
     const handleCypherTab = (tab: string) => {
@@ -281,7 +285,11 @@ const GraphViewV2: FC = () => {
                     )}
                 </Grid>
             </Grid>
-            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
+            <ContextMenu
+                contextMenuNodeId={contextMenuNodeId}
+                contextMenu={contextMenuPosition}
+                handleClose={handleCloseContextMenu}
+            />
             <GraphProgress loading={newGraphState.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
         </Box>

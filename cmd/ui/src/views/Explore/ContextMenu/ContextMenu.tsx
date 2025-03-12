@@ -16,54 +16,27 @@
 
 import { Menu, MenuItem } from '@mui/material';
 
-import { Permission, searchbarActions, usePermissions } from 'bh-shared-ui';
+import { Permission, usePermissions } from 'bh-shared-ui';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { useAppSelector } from 'src/store';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
+import useContextMenuStateSwitch from './useContextMenuStateSwitch';
 
-const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; handleClose: () => void }> = ({
-    contextMenu,
-    handleClose,
-}) => {
-    const dispatch = useAppDispatch();
+interface ContextMenuProps {
+    contextMenu: { mouseX: number; mouseY: number } | null;
+    handleClose: () => void;
+    contextMenuNodeId?: string;
+}
 
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
-
+const ContextMenu: FC<ContextMenuProps> = ({ contextMenu, handleClose, contextMenuNodeId }) => {
     const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
 
     const { checkPermission } = usePermissions();
 
-    const handleSetStartingNode = () => {
-        if (selectedNode) {
-            dispatch(searchbarActions.tabChanged('secondary'));
-            dispatch(
-                searchbarActions.sourceNodeSelected(
-                    {
-                        name: selectedNode.name,
-                        objectid: selectedNode.id,
-                        type: selectedNode.type,
-                    },
-                    true
-                )
-            );
-        }
-    };
-
-    const handleSetEndingNode = () => {
-        if (selectedNode) {
-            dispatch(searchbarActions.tabChanged('secondary'));
-            dispatch(
-                searchbarActions.destinationNodeSelected({
-                    name: selectedNode.name,
-                    objectid: selectedNode.id,
-                    type: selectedNode.type,
-                })
-            );
-        }
-    };
+    const { handleSetStartingNode, handleSetEndingNode } = useContextMenuStateSwitch(contextMenuNodeId);
 
     return (
         <Menu
