@@ -16,7 +16,7 @@
 
 import { Menu, MenuItem } from '@mui/material';
 
-import { NodeResponse, Permission, searchbarActions, useExploreSelectedItem, usePermissions } from 'bh-shared-ui';
+import { Permission, searchbarActions, usePermissions } from 'bh-shared-ui';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppDispatch, useAppSelector } from 'src/store';
@@ -28,7 +28,8 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
     handleClose,
 }) => {
     const dispatch = useAppDispatch();
-    const { selectedItemQuery } = useExploreSelectedItem();
+
+    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
 
     const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
@@ -36,14 +37,14 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
     const { checkPermission } = usePermissions();
 
     const handleSetStartingNode = () => {
-        if (selectedItemQuery.data) {
+        if (selectedNode) {
             dispatch(searchbarActions.tabChanged('secondary'));
             dispatch(
                 searchbarActions.sourceNodeSelected(
                     {
-                        name: selectedItemQuery.data.label,
-                        objectid: (selectedItemQuery.data as NodeResponse).objectId,
-                        type: selectedItemQuery.data.kind,
+                        name: selectedNode.name,
+                        objectid: selectedNode.id,
+                        type: selectedNode.type,
                     },
                     true
                 )
@@ -52,13 +53,13 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
     };
 
     const handleSetEndingNode = () => {
-        if (selectedItemQuery.data) {
+        if (selectedNode) {
             dispatch(searchbarActions.tabChanged('secondary'));
             dispatch(
                 searchbarActions.destinationNodeSelected({
-                    name: selectedItemQuery.data.label,
-                    objectid: (selectedItemQuery.data as NodeResponse).objectId,
-                    type: selectedItemQuery.data.kind,
+                    name: selectedNode.name,
+                    objectid: selectedNode.id,
+                    type: selectedNode.type,
                 })
             );
         }

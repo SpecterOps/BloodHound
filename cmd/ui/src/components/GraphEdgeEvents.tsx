@@ -15,8 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSigma } from '@react-sigma/core';
-import { useExploreSelectedItem } from 'bh-shared-ui';
+import { setEdgeInfoOpen, setSelectedEdge } from 'bh-shared-ui';
 import { FC, useCallback } from 'react';
+import { setEntityInfoOpen } from 'src/ducks/entityinfo/actions';
 import {
     calculateEdgeDistanceForLabel,
     getEdgeDataFromKey,
@@ -26,11 +27,11 @@ import {
 import { getBackgroundBoundInfo, getSelfEdgeStartingPoint } from 'src/rendering/programs/edge-label';
 import { getControlPointsFromGroupSize } from 'src/rendering/programs/edge.self';
 import { bezier } from 'src/rendering/utils/bezier';
-import { useAppSelector } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 const GraphEdgeEvents: FC = () => {
+    const dispatch = useAppDispatch();
     const graphState = useAppSelector((state) => state.explore);
-    const { setSelectedItem: setExploreSelectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();
     const canvases = sigma.getCanvases();
@@ -45,9 +46,29 @@ const GraphEdgeEvents: FC = () => {
             const selectedItem = graphState.chartProps.items?.[id] || graphState.chartProps.items?.[exploreGraphId];
             if (!selectedItem) return;
 
-            setExploreSelectedItem(exploreGraphId);
+            dispatch(setEntityInfoOpen(false));
+            dispatch(setEdgeInfoOpen(true));
+            dispatch(
+                setSelectedEdge({
+                    id: id,
+                    name: selectedItem.label?.text || '',
+                    data: selectedItem.data || {},
+                    sourceNode: {
+                        name: graphState.chartProps.items?.[selectedItem.id1].data.name,
+                        id: selectedItem.id1,
+                        objectId: graphState.chartProps.items?.[selectedItem.id1].data.objectid,
+                        type: graphState.chartProps.items?.[selectedItem.id1].data.nodetype,
+                    },
+                    targetNode: {
+                        name: graphState.chartProps.items?.[selectedItem.id2].data.name,
+                        id: selectedItem.id2,
+                        objectId: graphState.chartProps.items?.[selectedItem.id2].data.objectid,
+                        type: graphState.chartProps.items?.[selectedItem.id2].data.nodetype,
+                    },
+                })
+            );
         },
-        [graphState.chartProps.items, sigma, setExploreSelectedItem]
+        [graphState.chartProps.items, dispatch, sigma]
     );
 
     const handleEdgeEvents = useCallback(
@@ -138,10 +159,10 @@ const GraphEdgeEvents: FC = () => {
                     const x2 = x1 + width;
                     const y2 = y1 + height;
 
-                    const offsetY = edgeLabelsCanvas.getBoundingClientRect().y;
+                    const offsetX = edgeLabelsCanvas.getBoundingClientRect().x;
                     const { x: viewportX, y: viewportY } = {
-                        x: event.clientX,
-                        y: event.clientY - offsetY,
+                        x: event.clientX - offsetX,
+                        y: event.clientY,
                     };
 
                     //Check if the click happened within the bounds of the label

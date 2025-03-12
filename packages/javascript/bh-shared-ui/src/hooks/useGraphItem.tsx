@@ -62,6 +62,7 @@ export const useGraphItem = (itemId?: string) => {
             enabled: !!itemId,
             retry: false,
             refetchOnWindowFocus: false,
+            keepPreviousData: true,
         }
     );
 };
@@ -91,6 +92,7 @@ export const useNodeByObjectId = (itemId?: string) => {
             enabled: !!itemId,
             retry: false,
             refetchOnWindowFocus: false,
+            keepPreviousData: true,
         }
     );
 };

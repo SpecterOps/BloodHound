@@ -17,7 +17,8 @@
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { MenuItem, Tooltip, TooltipProps, styled, tooltipClasses } from '@mui/material';
-import { NodeResponse, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
+import { useNotifications } from 'bh-shared-ui';
+import { useAppSelector } from 'src/store';
 
 const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
     <Tooltip {...props} classes={{ popper: className }} />
@@ -33,28 +34,28 @@ const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
     },
 }));
 
-const CopyMenuItem = () => {
+const CopyMenuItemV1 = () => {
     const { addNotification } = useNotifications();
 
-    const { selectedItemQuery } = useExploreSelectedItem();
+    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
 
     const handleCopyDisplayName = () => {
-        if (selectedItemQuery.data) {
-            navigator.clipboard.writeText(selectedItemQuery.data.label);
+        if (selectedNode) {
+            navigator.clipboard.writeText(selectedNode.name);
             addNotification(`Display name copied to clipboard`, 'copyToClipboard');
         }
     };
 
     const handleCopyObjectId = () => {
-        if (selectedItemQuery.data) {
-            navigator.clipboard.writeText((selectedItemQuery.data as NodeResponse).objectId);
+        if (selectedNode) {
+            navigator.clipboard.writeText(selectedNode.id);
             addNotification(`Object ID name copied to clipboard`, 'copyToClipboard');
         }
     };
 
     const handleCopyCypher = () => {
-        if (selectedItemQuery.data) {
-            const cypher = `MATCH (n:${selectedItemQuery.data.kind}) WHERE n.objectid = '${(selectedItemQuery.data as NodeResponse).objectId}' RETURN n`;
+        if (selectedNode) {
+            const cypher = `MATCH (n:${selectedNode.type}) WHERE n.objectid = '${selectedNode.id}' RETURN n`;
             navigator.clipboard.writeText(cypher);
             addNotification(`Cypher copied to clipboard`, 'copyToClipboard');
         }
@@ -79,4 +80,4 @@ const CopyMenuItem = () => {
     );
 };
 
-export default CopyMenuItem;
+export default CopyMenuItemV1;

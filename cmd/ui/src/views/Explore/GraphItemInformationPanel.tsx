@@ -1,3 +1,4 @@
+import { SxProps, useTheme } from '@mui/material';
 import { EntityKinds, isEdge, isNode, useExploreSelectedItem } from 'bh-shared-ui';
 import EdgeInfoPane from './EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from './EntityInfo/EntityInfoPanel';
@@ -5,14 +6,34 @@ import EntityInfoPanel from './EntityInfo/EntityInfoPanel';
 const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
 
-    if (!selectedItem) {
-        return null;
+    const theme = useTheme();
+
+    const infoPaneStyles: SxProps = {
+        bottom: 0,
+        top: 0,
+        marginBottom: theme.spacing(2),
+        marginTop: theme.spacing(2),
+        maxWidth: theme.spacing(50),
+        position: 'absolute',
+        right: theme.spacing(2),
+        width: theme.spacing(50),
+    };
+
+    if (!selectedItem || selectedItemQuery.isLoading) {
+        return <EntityInfoPanel sx={infoPaneStyles} selectedNode={null} />;
     }
 
     // todo better error and loading state handling
     if (selectedItemQuery.isLoading) return null;
 
-    if (selectedItemQuery.isError) return null;
+    if (selectedItemQuery.isError) {
+        return (
+            <EntityInfoPanel
+                sx={infoPaneStyles}
+                selectedNode={{ graphId: selectedItem, id: '', name: 'Unknown', type: 'Unknown' as EntityKinds }}
+            />
+        );
+    }
 
     if (isEdge(selectedItemQuery.data!)) {
         const selectedEdge = {
@@ -32,7 +53,7 @@ const GraphItemInformationPanel = () => {
                 type: selectedItemQuery.data.targetNode.kind,
             },
         };
-        return <EdgeInfoPane selectedEdge={selectedEdge} />;
+        return <EdgeInfoPane sx={infoPaneStyles} selectedEdge={selectedEdge} />;
     }
 
     if (isNode(selectedItemQuery.data!)) {
@@ -42,7 +63,7 @@ const GraphItemInformationPanel = () => {
             name: selectedItemQuery.data.label,
             type: selectedItemQuery.data.kind as EntityKinds,
         };
-        return <EntityInfoPanel selectedNode={selectedNode} />;
+        return <EntityInfoPanel sx={infoPaneStyles} selectedNode={selectedNode} />;
     }
 };
 
