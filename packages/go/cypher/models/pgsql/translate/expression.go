@@ -20,9 +20,134 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/specterops/bloodhound/cypher/models/cypher"
+
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/cypher/models/walk"
 )
+
+func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error {
+	if variable, isVariable := kindMatcher.Reference.(*cypher.Variable); !isVariable {
+		return fmt.Errorf("expected variable for kind matcher reference but found type: %T", kindMatcher.Reference)
+	} else if binding, resolved := s.scope.LookupString(variable.Symbol); !resolved {
+		return fmt.Errorf("unable to find identifier %s", variable.Symbol)
+	} else if kindIDs, err := s.kindMapper.MapKinds(s.ctx, kindMatcher.Kinds); err != nil {
+		s.SetError(fmt.Errorf("failed to translate kinds: %w", err))
+	} else if kindIDsLiteral, err := pgsql.AsLiteral(kindIDs); err != nil {
+		return err
+	} else {
+		switch binding.DataType {
+		case pgsql.NodeComposite, pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
+			s.treeTranslator.Push(pgsql.CompoundIdentifier{binding.Identifier, pgsql.ColumnKindIDs})
+			s.treeTranslator.Push(kindIDsLiteral)
+
+			if err := s.treeTranslator.PopPushOperator(s.scope, pgsql.OperatorPGArrayOverlap); err != nil {
+				s.SetError(err)
+			}
+
+		case pgsql.EdgeComposite, pgsql.ExpansionEdge:
+			s.treeTranslator.Push(pgsql.CompoundIdentifier{binding.Identifier, pgsql.ColumnKindID})
+			s.treeTranslator.Push(pgsql.NewAnyExpression(kindIDsLiteral))
+
+			if err := s.treeTranslator.PopPushOperator(s.scope, pgsql.OperatorEquals); err != nil {
+				s.SetError(err)
+			}
+
+		default:
+			return fmt.Errorf("unexpected kind matcher reference data type: %s", binding.DataType)
+		}
+	}
+
+	return nil
+}
+
+func unwrapParenthetical(parenthetical pgsql.Expression) pgsql.Expression {
+	next := parenthetical
+
+	for next != nil {
+		switch typedNext := next.(type) {
+		case pgsql.Parenthetical:
+			next = typedNext.Expression
+
+		default:
+			return next
+		}
+	}
+
+	return parenthetical
+}
+
+func (s *Translator) translatePropertyLookup(lookup *cypher.PropertyLookup) error {
+	if translatedAtom, err := s.treeTranslator.Pop(); err != nil {
+		return err
+	} else {
+		switch typedTranslatedAtom := translatedAtom.(type) {
+		case pgsql.Identifier:
+			if fieldIdentifierLiteral, err := pgsql.AsLiteral(lookup.Symbols[0]); err != nil {
+				return err
+			} else {
+				s.treeTranslator.Push(pgsql.CompoundIdentifier{typedTranslatedAtom, pgsql.ColumnProperties})
+				s.treeTranslator.Push(fieldIdentifierLiteral)
+
+				if err := s.treeTranslator.PopPushOperator(s.scope, pgsql.OperatorPropertyLookup); err != nil {
+					return err
+				}
+			}
+
+		case pgsql.FunctionCall:
+			if fieldIdentifierLiteral, err := pgsql.AsLiteral(lookup.Symbols[0]); err != nil {
+				return err
+			} else if componentName, typeOK := fieldIdentifierLiteral.Value.(string); !typeOK {
+				return fmt.Errorf("expected a string component name in translated literal but received type: %T", fieldIdentifierLiteral.Value)
+			} else {
+				switch typedTranslatedAtom.Function {
+				case pgsql.FunctionCurrentDate, pgsql.FunctionLocalTime, pgsql.FunctionCurrentTime, pgsql.FunctionLocalTimestamp, pgsql.FunctionNow:
+					switch componentName {
+					case cypher.ITTCEpochSeconds:
+						s.treeTranslator.Push(pgsql.FunctionCall{
+							Function: pgsql.FunctionExtract,
+							Parameters: []pgsql.Expression{pgsql.ProjectionFrom{
+								Projection: []pgsql.SelectItem{
+									pgsql.EpochIdentifier,
+								},
+								From: []pgsql.FromClause{{
+									Source: translatedAtom,
+								}},
+							}},
+							CastType: pgsql.Numeric,
+						})
+
+					case cypher.ITTCEpochMilliseconds:
+						s.treeTranslator.Push(pgsql.NewBinaryExpression(
+							pgsql.FunctionCall{
+								Function: pgsql.FunctionExtract,
+								Parameters: []pgsql.Expression{pgsql.ProjectionFrom{
+									Projection: []pgsql.SelectItem{
+										pgsql.EpochIdentifier,
+									},
+									From: []pgsql.FromClause{{
+										Source: translatedAtom,
+									}},
+								}},
+								CastType: pgsql.Numeric,
+							},
+							pgsql.OperatorMultiply,
+							pgsql.NewLiteral(1000, pgsql.Int4),
+						))
+
+					default:
+						return fmt.Errorf("unsupported date time instant type component %s from function call %s", componentName, typedTranslatedAtom.Function)
+					}
+
+				default:
+					return fmt.Errorf("unsupported instant type component %s from function call %s", componentName, typedTranslatedAtom.Function)
+				}
+			}
+		}
+	}
+
+	return nil
+}
 
 type PropertyLookup struct {
 	Reference pgsql.CompoundIdentifier
@@ -60,6 +185,17 @@ func decomposePropertyLookup(expression pgsql.Expression) (PropertyLookup, error
 			Reference: reference,
 			Field:     stringField,
 		}, nil
+	}
+}
+
+func translateCypherAssignmentOperator(operator cypher.AssignmentOperator) (pgsql.Operator, error) {
+	switch operator {
+	case cypher.OperatorAssignment:
+		return pgsql.OperatorAssignment, nil
+	case cypher.OperatorLabelAssignment:
+		return pgsql.OperatorKindAssignment, nil
+	default:
+		return pgsql.UnsetOperator, fmt.Errorf("unsupported assignment operator %s", operator)
 	}
 }
 
@@ -357,9 +493,9 @@ func newFunctionCallComparatorError(functionCall pgsql.FunctionCall, operator pg
 		// type conversion semantics in Cypher. As such, exposing the type specificity of coalesce to the
 		// user as a distinct error will help reduce the surprise of running on a non-Neo4j substrate.
 		return fmt.Errorf("coalesce has type %s but is being compared against type %s - ensure that all arguments in the coalesce function match the type of the other side of the comparison", functionCall.CastType, comparisonType)
-	default:
-		return fmt.Errorf("function call has return signature of type %s but is being compared using operator %s against type %s", functionCall.CastType, operator, comparisonType)
 	}
+
+	return nil
 }
 
 func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
