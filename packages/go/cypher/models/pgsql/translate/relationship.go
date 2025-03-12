@@ -122,7 +122,7 @@ func (s *Translator) translateRelationshipPatternToStep(bindingResult BindingRes
 			MaxDepth: models.PointerOptional(relationshipPattern.Range.EndIndex),
 		})
 
-		if expansionPathBinding, err := s.query.Scope.DefineNew(pgsql.ExpansionPath); err != nil {
+		if expansionPathBinding, err := s.scope.DefineNew(pgsql.ExpansionPath); err != nil {
 			return err
 		} else {
 			// Set the path binding in the expansion struct for easier referencing upstream

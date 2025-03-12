@@ -27,6 +27,7 @@ import {
     transformFlatGraphResponse,
     useAvailableDomains,
     useExploreGraph,
+    useExploreParams,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -45,10 +46,10 @@ import { discardChanges } from 'src/ducks/tierzero/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
-import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
+import ExploreSearchV2 from './ExploreSearch/ExploreSearchV2';
 
 const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
 
@@ -74,16 +75,19 @@ const GraphViewV2: FC = () => {
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-    const [columns, setColumns] = useState(columnsDefault);
+
     const [showNodeLabels, setShowNodeLabels] = useState(true);
     const [showEdgeLabels, setShowEdgeLabels] = useState(true);
 
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
     const { data, isLoading, isError } = useAvailableDomains();
+    const { exploreSearchTab } = useExploreParams();
 
     const sigmaChartRef = useRef<any>(null);
     const currentSearchAnchorElement = useRef(null);
+
+    const columns = exploreSearchTab === 'cypher' ? cypherSearchColumns : columnsDefault;
 
     useEffect(() => {
         let items: any = graphState.data;
@@ -165,10 +169,6 @@ const GraphViewV2: FC = () => {
         setContextMenu(null);
     };
 
-    const handleCypherTab = (tab: string) => {
-        tab === 'cypher' ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
-    };
-
     return (
         <Box
             sx={{
@@ -210,7 +210,7 @@ const GraphViewV2: FC = () => {
                         gap: 2,
                     }}
                     key={'exploreSearch'}>
-                    <ExploreSearch onTabChange={handleCypherTab} />
+                    <ExploreSearchV2 />
                     <Box
                         sx={{
                             pointerEvents: 'auto',
