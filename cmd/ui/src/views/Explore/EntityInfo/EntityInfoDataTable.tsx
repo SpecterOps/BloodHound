@@ -19,6 +19,8 @@ import {
     InfiniteScrollingTable,
     NODE_GRAPH_RENDER_LIMIT,
     abortEntitySectionRequest,
+    collapseNonSelectedSections,
+    managePanelSectionsParams,
     searchbarActions,
     useExploreParams,
     useFeatureFlag,
@@ -39,11 +41,11 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     endpoint,
     countLabel,
     sections,
-    parentSectionIndex,
+    allSectionsMap,
 }) => {
     const dispatch = useDispatch();
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
-    const { setExploreParams, expandedRelationships } = useExploreParams();
+    const { setExploreParams } = useExploreParams();
     const { expandedSections, toggleSection } = useEntityInfoPanelContext();
 
     const countQuery = useQuery(
@@ -58,38 +60,26 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         { refetchOnWindowFocus: false, retry: false }
     );
 
-    const setExpandedRelationshipsParams = () => {
-        let expandedRelationshipHelperArray: string[] = [];
-        const expandedRelationshipsLength = expandedRelationships!.length;
-        const listNewParamsOnly = [`${parentSectionIndex}-${label}`];
-        if (!expandedRelationshipsLength) {
-            expandedRelationshipHelperArray = listNewParamsOnly;
-        } else {
-            const parentIndexOfNested = parseInt(expandedRelationships!.at(-1)?.split('-')[0] as string);
-            const isNestedSameSection = parentIndexOfNested === parentSectionIndex;
-            if (expandedRelationshipsLength >= 2 && isNestedSameSection) {
-                expandedRelationships!.pop(); // Always remove the last one if more than two as it guarantees that we always leave the parent
-            }
-            const listWithExistingParams = [...expandedRelationships!, `${parentSectionIndex}-${label}`];
-            expandedRelationshipHelperArray = isNestedSameSection ? listWithExistingParams : listNewParamsOnly;
-        }
+    const setExpandedPanelSectionsParams = () => {
+        const updatedParams = managePanelSectionsParams(allSectionsMap as string[][], label);
+
         setExploreParams({
-            expandedRelationships: expandedRelationshipHelperArray,
+            expandedPanelSections: updatedParams,
             searchType: 'relationship',
             relationshipQueryType: queryKey,
-            relationshipQueryObjectId: id,
+            relationshipQueryItemId: id,
         });
     };
 
-    const handleOnChange = (label: string, isOpen: boolean) => {
+    const handleOnChange = (isOpen: boolean) => {
         handleCurrentSectionToggle();
-        handleSetGraph(label, isOpen);
+        handleSetGraph(isOpen);
     };
 
-    const handleSetGraph = async (label: string, isOpen: boolean) => {
+    const handleSetGraph = async (isOpen: boolean) => {
         if (!endpoint) {
             if (backButtonFlag?.enabled && isOpen) {
-                setExpandedRelationshipsParams();
+                setExpandedPanelSectionsParams();
             }
             return;
         }
@@ -97,7 +87,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         if (isOpen && countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
             abortEntitySectionRequest();
             if (backButtonFlag?.enabled) {
-                setExpandedRelationshipsParams();
+                setExpandedPanelSectionsParams();
                 return;
             }
             dispatch(setGraphLoading(true));
@@ -121,23 +111,9 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         }
     };
 
-    const isParentSection = (key: string) => {
-        const splitFirstExpandedRelationship = expandedRelationships?.at(0)?.split('-') as string[]; // Always check first index because it will always be parent if nesting is there
-        const checkKey = splitFirstExpandedRelationship[1] === key; // confirm if key/label is the parent one
-        const checkIndex = parseInt(splitFirstExpandedRelationship[0]) == parentSectionIndex; // confirm if its the same parent or if you went from one parent to another
-        return checkKey && checkIndex;
-    };
-
     const handleCurrentSectionToggle = () => {
-        if (backButtonFlag?.enabled) {
-            if (expandedSections && expandedRelationships!.length > 0) {
-                for (const [key] of Object.entries(expandedSections)) {
-                    // Closes if the key that is being evaluated is not a direct parent, is not object information and its not the same label that we are trying to open
-                    if (key !== 'Object Information' && !isParentSection(key) && key !== label) {
-                        expandedSections[key] = false;
-                    }
-                }
-            }
+        if (backButtonFlag?.enabled && allSectionsMap) {
+            collapseNonSelectedSections(expandedSections, allSectionsMap, label); // We want to keep only one open at a time
         }
         toggleSection(label);
     };
@@ -198,11 +174,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
             )}
             {sections &&
                 sections.map((nestedSection, nestedSectionIndex) => (
-                    <EntityInfoDataTable
-                        key={nestedSectionIndex}
-                        parentSectionIndex={parentSectionIndex}
-                        {...nestedSection}
-                    />
+                    <EntityInfoDataTable key={nestedSectionIndex} allSectionsMap={allSectionsMap} {...nestedSection} />
                 ))}
         </EntityInfoCollapsibleSection>
     );

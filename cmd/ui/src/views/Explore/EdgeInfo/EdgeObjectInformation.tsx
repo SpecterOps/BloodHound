@@ -23,7 +23,7 @@ import {
     apiClient,
     formatObjectInfoFields,
 } from 'bh-shared-ui';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { useQuery } from 'react-query';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 
@@ -31,6 +31,8 @@ const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | n
     `MATCH (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN r LIMIT 1`;
 
 const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
+    const [isExpanded, setIsExpanded] = useState(true);
+
     const {
         data: cypherResponse,
         isLoading,
@@ -73,8 +75,14 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
         ];
     }
 
+    const sectionLabel = 'Relationship Information';
+
+    const handleOnChange = () => {
+        setIsExpanded(!isExpanded);
+    };
+
     return (
-        <EdgeInfoCollapsibleSection section={'data'}>
+        <EdgeInfoCollapsibleSection isExpanded={isExpanded} onChange={handleOnChange} label={sectionLabel}>
             <FieldsContainer>
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>

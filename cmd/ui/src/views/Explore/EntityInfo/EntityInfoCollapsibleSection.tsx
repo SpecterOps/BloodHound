@@ -43,7 +43,7 @@ export const EntityInfoCollapsibleSection: React.FC<
     PropsWithChildren<{
         label?: string;
         count?: number;
-        onChange?: (label: string, isOpen: boolean) => void;
+        onChange?: (isOpen: boolean) => void;
         isLoading?: boolean;
         isError?: boolean;
         error?: any;
@@ -66,7 +66,7 @@ export const EntityInfoCollapsibleSection: React.FC<
         <Accordion
             expanded={isExpanded}
             onChange={(_e, expanded) => {
-                onChange(label, expanded);
+                onChange(expanded);
             }}
             disabled={disabled}
             TransitionProps={{ unmountOnExit: true }}

@@ -22,11 +22,10 @@ import {
     formatObjectInfoFields,
     useFetchEntityProperties,
 } from 'bh-shared-ui';
-import React from 'react';
+import React, { useState } from 'react';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
-import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
     const { entityProperties, informationAvailable, isLoading, isError } = useFetchEntityProperties({
@@ -34,19 +33,18 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
         nodeType,
         databaseId,
     });
-    const { expandedSections, setExpandedSections } = useEntityInfoPanelContext();
     const sectionLabel = 'Object Information';
+    const [isExpanded, setIsExpanded] = useState(true);
+
+    const handleOnChange = () => {
+        setIsExpanded(!isExpanded);
+    };
 
     if (isLoading) return <Skeleton data-testid='entity-object-information-skeleton' variant='text' />;
 
     if (isError || !informationAvailable)
         return (
-            <EntityInfoCollapsibleSection
-                isExpanded={!!expandedSections[sectionLabel]}
-                onChange={(label, isOpen) => {
-                    setExpandedSections({ ...expandedSections, [label]: !isOpen });
-                }}
-                label={sectionLabel}>
+            <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isExpanded} label={sectionLabel}>
                 <FieldsContainer>
                     <Alert severity='error'>Unable to load object information for this node.</Alert>
                 </FieldsContainer>
@@ -56,12 +54,7 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     const formattedObjectFields: EntityField[] = formatObjectInfoFields(entityProperties);
 
     return (
-        <EntityInfoCollapsibleSection
-            isExpanded={!!expandedSections[sectionLabel]}
-            onChange={(label, isOpen) => {
-                setExpandedSections({ ...expandedSections, [label]: isOpen });
-            }}
-            label={sectionLabel}>
+        <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isExpanded} label={sectionLabel}>
             <FieldsContainer>
                 <BasicObjectInfoFields {...entityProperties} />
                 <ObjectInfoFields fields={formattedObjectFields} />

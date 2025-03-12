@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Divider } from '@mui/material';
-import { ActiveDirectoryNodeKind, EntityKinds, allSections } from 'bh-shared-ui';
+import { ActiveDirectoryNodeKind, EntityKinds, allSections, createAllSectionsMap } from 'bh-shared-ui';
 import React from 'react';
 import { EntityInfoContentProps } from './EntityInfoContent';
 import EntityInfoDataTable from './EntityInfoDataTable';
@@ -33,7 +33,7 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
                     <Box padding={1}>
                         <Divider />
                     </Box>
-                    <EntityInfoDataTable parentSectionIndex={index} {...table} />
+                    <EntityInfoDataTable allSectionsMap={createAllSectionsMap(tables)} {...table} />
                 </React.Fragment>
             ))}
         </>

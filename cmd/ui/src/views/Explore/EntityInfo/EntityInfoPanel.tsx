@@ -18,11 +18,12 @@ import { Box, Paper, SxProps, Typography } from '@mui/material';
 import {
     NoEntitySelectedHeader,
     NoEntitySelectedMessage,
+    formatPanelSectionsParams,
     useExploreParams,
     useFeatureFlag,
     usePaneStyles,
 } from 'bh-shared-ui';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import usePreviousValue from 'src/hooks/usePreviousValue';
 import EntityInfoContent from './EntityInfoContent';
@@ -39,26 +40,13 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
     const { setExpandedSections, expandedSections } = useEntityInfoPanelContext();
-    const { expandedRelationships } = useExploreParams();
+    const { expandedPanelSections } = useExploreParams();
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
     const previousSelectedNode = usePreviousValue(selectedNode);
 
-    const formatRelationshipsParams = useCallback(() => {
-        return expandedRelationships?.reduce(
-            (queryParamObject: { [k: string]: boolean }, relationshipsLabel: string) => {
-                queryParamObject[relationshipsLabel.split('-')[1]] = true;
-                return queryParamObject;
-            },
-            {}
-        );
-    }, [expandedRelationships]);
-
     useEffect(() => {
-        if (previousSelectedNode?.id !== selectedNode?.id) {
-            let initialExpandedSections = { 'Object Information': true };
-            if (backButtonFlag?.enabled) {
-                initialExpandedSections = { ...initialExpandedSections, ...formatRelationshipsParams() };
-            }
+        if (backButtonFlag?.enabled && previousSelectedNode?.id !== selectedNode?.id && expandedPanelSections) {
+            const initialExpandedSections = { ...formatPanelSectionsParams(expandedPanelSections) };
             setExpandedSections(initialExpandedSections);
         }
     }, [
@@ -67,7 +55,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
         previousSelectedNode,
         selectedNode,
         backButtonFlag,
-        formatRelationshipsParams,
+        expandedPanelSections,
     ]);
 
     return (
