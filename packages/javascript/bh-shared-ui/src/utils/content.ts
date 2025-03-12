@@ -233,22 +233,22 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 {
                     id,
                     label: 'Key Readers',
-                    queryType: 'azkeyvault-vault_readers-key_readers',
+                    queryType: 'azkeyvault-key_readers',
                 },
                 {
                     id,
                     label: 'Certificate Readers',
-                    queryType: 'azkeyvault-vault_readers-certificate_readers',
+                    queryType: 'azkeyvault-certificate_readers',
                 },
                 {
                     id,
                     label: 'Secret Readers',
-                    queryType: 'azkeyvault-vault_readers-secret_readers',
+                    queryType: 'azkeyvault-secret_readers',
                 },
                 {
                     id,
                     label: 'All Readers',
-                    queryType: 'azkeyvault-vault_readers-all_readers',
+                    queryType: 'azkeyvault-all_readers',
                 },
             ],
         },
@@ -266,62 +266,62 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 {
                     id,
                     label: 'Descendant Management Groups',
-                    queryType: 'azmanagementgroup-descendant_objects-descendant_automation_accounts',
+                    queryType: 'azmanagementgroup-descendant_management_groups',
                 },
                 {
                     id,
                     label: 'Descendant Subscriptions',
-                    queryType: 'azmanagementgroup-descendant_objects-descendant_subscriptions',
+                    queryType: 'azmanagementgroup-descendant_subscriptions',
                 },
                 {
                     id,
                     label: 'Descendant Resource Groups',
-                    queryType: 'azmanagementgroup-descendant_objects-descendant_resource_groups',
+                    queryType: 'azmanagementgroup-descendant_resource_groups',
                 },
                 {
                     id,
                     label: 'Descendant VMs',
-                    queryType: 'azmanagementgroup-descendant_objects-descendant_vms',
+                    queryType: 'azmanagementgroup-descendant_vms',
                 },
                 {
                     id,
                     label: 'Descendant Managed Clusters',
-                    queryType: 'azmanagementgroup-descendant_objects-descendant_managed_clusters',
+                    queryType: 'azmanagementgroup-descendant_managed_clusters',
                 },
                 {
                     id,
                     label: 'Descendant VM Scale Sets',
-                    queryType: 'azmanagementgroup-descendant_objects-descendant_vm_scale_sets',
+                    queryType: 'azmanagementgroup-descendant_vm_scale_sets',
                 },
                 {
                     id,
                     label: 'Descendant Container Registries',
-                    queryType: 'azmanagementgroup-descendant_objects-descendant_container_registries',
+                    queryType: 'azmanagementgroup-descendant_container_registries',
                 },
                 {
                     id,
                     label: 'Descendant Web Apps',
-                    queryType: 'azmanagementgroup-descendant_objects-descendant_web_apps',
+                    queryType: 'azmanagementgroup-descendant_web_apps',
                 },
                 {
                     id,
                     label: 'Descendant Automation Accounts',
-                    queryType: 'azmanagementgroup-descendant_objects-descendant_automation_accounts',
+                    queryType: 'azmanagementgroup-descendant_automation_accounts',
                 },
                 {
                     id,
                     label: 'Descendant Key Vaults',
-                    queryType: 'azmanagementgroup-descendant_objects-descendant_key_vaults',
+                    queryType: 'azmanagementgroup-descendant_key_vaults',
                 },
                 {
                     id,
                     label: 'Descendant Function Apps',
-                    queryType: 'azmanagementgroup-descendant_objects-descendant_function_apps',
+                    queryType: 'azmanagementgroup-descendant_function_apps',
                 },
                 {
                     id,
                     label: 'Descendant Logic Apps',
-                    queryType: 'azmanagementgroup-descendant_objects-descendant_logic_apps',
+                    queryType: 'azmanagementgroup-descendant_logic_apps',
                 },
             ],
         },
@@ -339,47 +339,47 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 {
                     id,
                     label: 'Descendant VMs',
-                    queryType: 'azresourcegroup-descendant_objects-descendant_vms',
+                    queryType: 'azresourcegroup-descendant_vms',
                 },
                 {
                     id,
                     label: 'Descendant Managed Clusters',
-                    queryType: 'azresourcegroup-descendant_objects-descendant_managed_clusters',
+                    queryType: 'azresourcegroup-descendant_managed_clusters',
                 },
                 {
                     id,
                     label: 'Descendant VM Scale Sets',
-                    queryType: 'azresourcegroup-descendant_objects-descendant_vm_scale_sets',
+                    queryType: 'azresourcegroup-descendant_vm_scale_sets',
                 },
                 {
                     id,
                     label: 'Descendant Container Registries',
-                    queryType: 'azresourcegroup-descendant_objects-descendant_container_registries',
+                    queryType: 'azresourcegroup-descendant_container_registries',
                 },
                 {
                     id,
                     label: 'Descendant Automation Accounts',
-                    queryType: 'azresourcegroup-descendant_objects-descendant_automation_accounts',
+                    queryType: 'azresourcegroup-descendant_automation_accounts',
                 },
                 {
                     id,
                     label: 'Descendant Key Vaults',
-                    queryType: 'azresourcegroup-descendant_objects-descendant_key_vaults',
+                    queryType: 'azresourcegroup-descendant_key_vaults',
                 },
                 {
                     id,
                     label: 'Descendant Web Apps',
-                    queryType: 'azresourcegroup-descendant_objects-descendant_web_apps',
+                    queryType: 'azresourcegroup-descendant_web_apps',
                 },
                 {
                     id,
                     label: 'Descendant Function Apps',
-                    queryType: 'azresourcegroup-descendant_objects-descendant_function_apps',
+                    queryType: 'azresourcegroup-descendant_function_apps',
                 },
                 {
                     id,
                     label: 'Descendant Logic Apps',
-                    queryType: 'azresourcegroup-descendant_objects-descendant_logic_apps',
+                    queryType: 'azresourcegroup-descendant_logic_apps',
                 },
             ],
         },
@@ -502,87 +502,87 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 {
                     id,
                     label: 'Descendant Users',
-                    queryType: 'aztenant-descendant_objects-descendant_users',
+                    queryType: 'aztenant-descendant_users',
                 },
                 {
                     id,
                     label: 'Descendant Groups',
-                    queryType: 'aztenant-descendant_objects-descendant_groups',
+                    queryType: 'aztenant-descendant_groups',
                 },
                 {
                     id,
                     label: 'Descendant Management Groups',
-                    queryType: 'aztenant-descendant_objects-descendant_management_groups',
+                    queryType: 'aztenant-descendant_management_groups',
                 },
                 {
                     id,
                     label: 'Descendant Subscriptions',
-                    queryType: 'aztenant-descendant_objects-descendant_subscriptions',
+                    queryType: 'aztenant-descendant_subscriptions',
                 },
                 {
                     id,
                     label: 'Descendant Resource Groups',
-                    queryType: 'aztenant-descendant_objects-descendant_resource_groups',
+                    queryType: 'aztenant-descendant_resource_groups',
                 },
                 {
                     id,
                     label: 'Descendant VMs',
-                    queryType: 'aztenant-descendant_objects-descendant_vms',
+                    queryType: 'aztenant-descendant_vms',
                 },
                 {
                     id,
                     label: 'Descendant Managed Clusters',
-                    queryType: 'aztenant-descendant_objects-descendant_managed_clusters',
+                    queryType: 'aztenant-descendant_managed_clusters',
                 },
                 {
                     id,
                     label: 'Descendant VM Scale Sets',
-                    queryType: 'aztenant-descendant_objects-descendant_vm_scale_sets',
+                    queryType: 'aztenant-descendant_vm_scale_sets',
                 },
                 {
                     id,
                     label: 'Descendant Container Registries',
-                    queryType: 'aztenant-descendant_objects-descendant_container_registries',
+                    queryType: 'aztenant-descendant_container_registries',
                 },
                 {
                     id,
                     label: 'Descendant Web Apps',
-                    queryType: 'aztenant-descendant_objects-descendant_web_apps',
+                    queryType: 'aztenant-descendant_web_apps',
                 },
                 {
                     id,
                     label: 'Descendant Automation Accounts',
-                    queryType: 'aztenant-descendant_objects-descendant_automation_accounts',
+                    queryType: 'aztenant-descendant_automation_accounts',
                 },
                 {
                     id,
                     label: 'Descendant Key Vaults',
-                    queryType: 'aztenant-descendant_objects-descendant_key_vaults',
+                    queryType: 'aztenant-descendant_key_vaults',
                 },
                 {
                     id,
                     label: 'Descendant Function Apps',
-                    queryType: 'aztenant-descendant_objects-descendant_function_apps',
+                    queryType: 'aztenant-descendant_function_apps',
                 },
                 {
                     id,
                     label: 'Descendant Logic Apps',
-                    queryType: 'aztenant-descendant_objects-descendant_logic_apps',
+                    queryType: 'aztenant-descendant_logic_apps',
                 },
                 {
                     id,
                     label: 'Descendant App Registrations',
-                    queryType: 'aztenant-descendant_objects-descendant_app_registrations',
+                    queryType: 'aztenant-descendant_app_registrations',
                 },
                 {
                     id,
                     label: 'Descendant Service Principals',
-                    queryType: 'aztenant-descendant_objects-descendant_service_principals',
+                    queryType: 'aztenant-descendant_service_principals',
                 },
                 {
                     id,
                     label: 'Descendant Devices',
-                    queryType: 'aztenant-descendant_objects-descendant_devices',
+                    queryType: 'aztenant-descendant_devices',
                 },
             ],
         },
@@ -717,27 +717,27 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 {
                     id,
                     label: 'RDP Users',
-                    queryType: 'computer-inbound_execution_privileges-rdp_users',
+                    queryType: 'computer-rdp_users',
                 },
                 {
                     id,
                     label: 'PSRemote Users',
-                    queryType: 'computer-inbound_execution_privileges-psremote_users',
+                    queryType: 'computer-psremote_users',
                 },
                 {
                     id,
                     label: 'DCOM Users',
-                    queryType: 'computer-inbound_execution_privileges-dcom_users',
+                    queryType: 'computer-dcom_users',
                 },
                 {
                     id,
                     label: 'SQL Admin Users',
-                    queryType: 'computer-inbound_execution_privileges-sql_admin_users',
+                    queryType: 'computer-sql_admin_users',
                 },
                 {
                     id,
                     label: 'Constrained Delegation Users',
-                    queryType: 'computer-inbound_execution_privileges-constrained_delegation_users',
+                    queryType: 'computer-constrained_delegation_users',
                 },
             ],
         },
@@ -758,17 +758,17 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 {
                     id,
                     label: 'RDP Privileges',
-                    queryType: 'computer-outbound_execution_privileges-rdp_privileges',
+                    queryType: 'computer-rdp_privileges',
                 },
                 {
                     id,
                     label: 'PSRemote Rights',
-                    queryType: 'computer-outbound_execution_privileges-psremote_rights',
+                    queryType: 'computer-psremote_rights',
                 },
                 {
                     id,
                     label: 'DCOM Privileges',
-                    queryType: 'computer-outbound_execution_privileges-dcom_privileges',
+                    queryType: 'computer-dcom_privileges',
                 },
             ],
         },
@@ -791,22 +791,22 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 {
                     id,
                     label: 'Foreign Users',
-                    queryType: 'domain-foreign_members-foreign_users',
+                    queryType: 'domain-foreign_users',
                 },
                 {
                     id,
                     label: 'Foreign Groups',
-                    queryType: 'domain-foreign_members-foreign_groups',
+                    queryType: 'domain-foreign_groups',
                 },
                 {
                     id,
                     label: 'Foreign Admins',
-                    queryType: 'domain-foreign_members-foreign_admins',
+                    queryType: 'domain-foreign_admins',
                 },
                 {
                     id,
                     label: 'Foreign GPO Controllers',
-                    queryType: 'domain-foreign_members-foreign_gpo_controllers',
+                    queryType: 'domain-foreign_gpo_controllers',
                 },
             ],
         },
@@ -841,22 +841,22 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 {
                     id,
                     label: 'OUs',
-                    queryType: 'gpo-affected_objects-ous',
+                    queryType: 'gpo-ous',
                 },
                 {
                     id,
                     label: 'Computers',
-                    queryType: 'gpo-affected_objects-computers',
+                    queryType: 'gpo-computers',
                 },
                 {
                     id,
                     label: 'Users',
-                    queryType: 'gpo-affected_objects-users',
+                    queryType: 'gpo-users',
                 },
                 {
                     id,
                     label: 'Tier Zero Objects',
-                    queryType: 'gpo-affected_objects-tier_zero_objects',
+                    queryType: 'gpo-tier_zero_objects',
                 },
             ],
         },
@@ -894,17 +894,17 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 {
                     id,
                     label: 'RDP Privileges',
-                    queryType: 'group-execution_privileges-rdp_privileges',
+                    queryType: 'group-rdp_privileges',
                 },
                 {
                     id,
                     label: 'DCOM Privileges',
-                    queryType: 'group-execution_privileges-dcom_privileges',
+                    queryType: 'group-dcom_privileges',
                 },
                 {
                     id,
                     label: 'PSRemote Rights',
-                    queryType: 'group-execution_privileges-psremote_rights',
+                    queryType: 'group-psremote_rights',
                 },
             ],
         },
@@ -990,27 +990,27 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 {
                     id,
                     label: 'RDP Privileges',
-                    queryType: 'user-execution_privileges-rdp_privileges',
+                    queryType: 'user-rdp_privileges',
                 },
                 {
                     id,
                     label: 'PSRemote Privileges',
-                    queryType: 'user-execution_privileges-psremote_privileges',
+                    queryType: 'user-psremote_privileges',
                 },
                 {
                     id,
                     label: 'DCOM Privileges',
-                    queryType: 'user-execution_privileges-dcom_privileges',
+                    queryType: 'user-dcom_privileges',
                 },
                 {
                     id,
                     label: 'SQL Admin Rights',
-                    queryType: 'user-execution_privileges-sql_admin_rights',
+                    queryType: 'user-sql_admin_rights',
                 },
                 {
                     id,
                     label: 'Constrained Delegation Privileges',
-                    queryType: 'user-execution_privileges-constrained_delegation_privileges',
+                    queryType: 'user-constrained_delegation_privileges',
                 },
             ],
         },
@@ -1099,7 +1099,7 @@ export const entityRelationshipEndpoints = {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azkeyvault-vault_readers-key_readers': ({ id, counts, skip, limit, type }) =>
+    'azkeyvault-key_readers': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('key-vaults', id, 'key-readers', counts, skip, limit, type, {
                 signal: controller.signal,
@@ -1108,7 +1108,7 @@ export const entityRelationshipEndpoints = {
                 if (type !== 'graph') res.data.countLabel = 'Key Readers';
                 return res.data;
             }),
-    'azkeyvault-vault_readers-certificate_readers': ({ id, counts, skip, limit, type }) =>
+    'azkeyvault-certificate_readers': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('key-vaults', id, 'certificate-readers', counts, skip, limit, type, {
                 signal: controller.signal,
@@ -1117,7 +1117,7 @@ export const entityRelationshipEndpoints = {
                 if (type !== 'graph') res.data.countLabel = 'Certificate Readers';
                 return res.data;
             }),
-    'azkeyvault-vault_readers-secret_readers': ({ id, counts, skip, limit, type }) =>
+    'azkeyvault-secret_readers': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('key-vaults', id, 'secret-readers', counts, skip, limit, type, {
                 signal: controller.signal,
@@ -1126,7 +1126,7 @@ export const entityRelationshipEndpoints = {
                 if (type !== 'graph') res.data.countLabel = 'Secret Readers';
                 return res.data;
             }),
-    'azkeyvault-vault_readers-all_readers': ({ id, counts, skip, limit, type }) =>
+    'azkeyvault-all_readers': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('key-vaults', id, 'all-readers', counts, skip, limit, type, {
                 signal: controller.signal,
@@ -1141,73 +1141,73 @@ export const entityRelationshipEndpoints = {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azmanagementgroup-descendant_objects-descendant_management_groups': ({ id, counts, skip, limit, type }) =>
+    'azmanagementgroup-descendant_management_groups': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('management-groups', id, 'descendent-management-groups', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azmanagementgroup-descendant_objects-descendant_subscriptions': ({ id, counts, skip, limit, type }) =>
+    'azmanagementgroup-descendant_subscriptions': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('management-groups', id, 'descendent-subscriptions', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azmanagementgroup-descendant_objects-descendant_resource_groups': ({ id, counts, skip, limit, type }) =>
+    'azmanagementgroup-descendant_resource_groups': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('management-groups', id, 'descendent-resource-groups', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azmanagementgroup-descendant_objects-descendant_vms': ({ id, counts, skip, limit, type }) =>
+    'azmanagementgroup-descendant_vms': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('management-groups', id, 'descendent-virtual-machines', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azmanagementgroup-descendant_objects-descendant_managed_clusters': ({ id, counts, skip, limit, type }) =>
+    'azmanagementgroup-descendant_managed_clusters': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('management-groups', id, 'descendent-managed-clusters', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azmanagementgroup-descendant_objects-descendant_vm_scale_sets': ({ id, counts, skip, limit, type }) =>
+    'azmanagementgroup-descendant_vm_scale_sets': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('management-groups', id, 'descendent-vm-scale-sets', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azmanagementgroup-descendant_objects-descendant_container_registries': ({ id, counts, skip, limit, type }) =>
+    'azmanagementgroup-descendant_container_registries': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('management-groups', id, 'descendent-container-registries', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azmanagementgroup-descendant_objects-descendant_web_apps': ({ id, counts, skip, limit, type }) =>
+    'azmanagementgroup-descendant_web_apps': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('management-groups', id, 'descendent-web-apps', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azmanagementgroup-descendant_objects-descendant_automation_accounts': ({ id, counts, skip, limit, type }) =>
+    'azmanagementgroup-descendant_automation_accounts': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('management-groups', id, 'descendent-automation-accounts', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azmanagementgroup-descendant_objects-descendant_key_vaults': ({ id, counts, skip, limit, type }) =>
+    'azmanagementgroup-descendant_key_vaults': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('management-groups', id, 'descendent-key-vaults', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azmanagementgroup-descendant_objects-descendant_function_apps': ({ id, counts, skip, limit, type }) =>
+    'azmanagementgroup-descendant_function_apps': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('management-groups', id, 'descendent-function-apps', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azmanagementgroup-descendant_objects-descendant_logic_apps': ({ id, counts, skip, limit, type }) =>
+    'azmanagementgroup-descendant_logic_apps': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('management-groups', id, 'descendent-logic-apps', counts, skip, limit, type, {
                 signal: controller.signal,
@@ -1219,55 +1219,55 @@ export const entityRelationshipEndpoints = {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azresourcegroup-descendant_objects-descendant_vms': ({ id, counts, skip, limit, type }) =>
+    'azresourcegroup-descendant_vms': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('resource-groups', id, 'descendent-virtual-machines', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azresourcegroup-descendant_objects-descendant_managed_clusters': ({ id, counts, skip, limit, type }) =>
+    'azresourcegroup-descendant_managed_clusters': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('resource-groups', id, 'descendent-managed-clusters', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azresourcegroup-descendant_objects-descendant_vm_scale_sets': ({ id, counts, skip, limit, type }) =>
+    'azresourcegroup-descendant_vm_scale_sets': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('resource-groups', id, 'descendent-vm-scale-sets', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azresourcegroup-descendant_objects-descendant_container_registries': ({ id, counts, skip, limit, type }) =>
+    'azresourcegroup-descendant_container_registries': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('resource-groups', id, 'descendent-container-registries', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azresourcegroup-descendant_objects-descendant_automation_accounts': ({ id, counts, skip, limit, type }) =>
+    'azresourcegroup-descendant_automation_accounts': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('resource-groups', id, 'descendent-automation-accounts', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azresourcegroup-descendant_objects-descendant_key_vaults': ({ id, counts, skip, limit, type }) =>
+    'azresourcegroup-descendant_key_vaults': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('resource-groups', id, 'descendent-key-vaults', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azresourcegroup-descendant_objects-descendant_web_apps': ({ id, counts, skip, limit, type }) =>
+    'azresourcegroup-descendant_web_apps': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('resource-groups', id, 'descendent-web-apps', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azresourcegroup-descendant_objects-descendant_function_apps': ({ id, counts, skip, limit, type }) =>
+    'azresourcegroup-descendant_function_apps': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('resource-groups', id, 'descendent-function-apps', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'azresourcegroup-descendant_objects-descendant_logic_apps': ({ id, counts, skip, limit, type }) =>
+    'azresourcegroup-descendant_logic_apps': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('resource-groups', id, 'descendent-logic-apps', counts, skip, limit, type, {
                 signal: controller.signal,
@@ -1399,103 +1399,103 @@ export const entityRelationshipEndpoints = {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_users': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_users': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-users', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_groups': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_groups': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-groups', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_management_groups': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_management_groups': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-management-groups', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_subscriptions': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_subscriptions': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-subscriptions', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_resource_groups': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_resource_groups': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-resource-groups', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_vms': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_vms': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-virtual-machines', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_managed_clusters': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_managed_clusters': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-managed-clusters', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_vm_scale_sets': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_vm_scale_sets': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-vm-scale-sets', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_container_registries': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_container_registries': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-container-registries', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_web_apps': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_web_apps': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-web-apps', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_automation_accounts': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_automation_accounts': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-automation-accounts', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_key_vaults': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_key_vaults': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-key-vaults', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_function_apps': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_function_apps': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-function-apps', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_logic_apps': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_logic_apps': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-logic-apps', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_app_registrations': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_app_registrations': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-applications', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_service_principals': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_service_principals': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-service-principals', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
-    'aztenant-descendant_objects-descendant_devices': ({ id, counts, skip, limit, type }) =>
+    'aztenant-descendant_devices': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('tenants', id, 'descendent-devices', counts, skip, limit, type, {
                 signal: controller.signal,
@@ -1591,17 +1591,17 @@ export const entityRelationshipEndpoints = {
         apiClient.getComputerSessionsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'computer-local_admins': ({ id, skip, limit, type }) =>
         apiClient.getComputerAdminUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'computer-inbound_execution_privileges-rdp_users': ({ id, skip, limit, type }) =>
+    'computer-rdp_users': ({ id, skip, limit, type }) =>
         apiClient.getComputerRDPUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'computer-inbound_execution_privileges-psremote_users': ({ id, skip, limit, type }) =>
+    'computer-psremote_users': ({ id, skip, limit, type }) =>
         apiClient
             .getComputerPSRemoteUsersV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
-    'computer-inbound_execution_privileges-dcom_users': ({ id, skip, limit, type }) =>
+    'computer-dcom_users': ({ id, skip, limit, type }) =>
         apiClient.getComputerDCOMUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'computer-inbound_execution_privileges-sql_admin_users': ({ id, skip, limit, type }) =>
+    'computer-sql_admin_users': ({ id, skip, limit, type }) =>
         apiClient.getComputerSQLAdminsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'computer-inbound_execution_privileges-constrained_delegation_users': ({ id, skip, limit, type }) =>
+    'computer-constrained_delegation_users': ({ id, skip, limit, type }) =>
         apiClient
             .getComputerConstrainedDelegationRightsV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
@@ -1613,13 +1613,13 @@ export const entityRelationshipEndpoints = {
         apiClient
             .getComputerAdminRightsV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
-    'computer-outbound_execution_privileges-rdp_privileges': ({ id, skip, limit, type }) =>
+    'computer-rdp_privileges': ({ id, skip, limit, type }) =>
         apiClient.getComputerRDPRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'computer-outbound_execution_privileges-psremote_rights': ({ id, skip, limit, type }) =>
+    'computer-psremote_rights': ({ id, skip, limit, type }) =>
         apiClient
             .getComputerPSRemoteRightsV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
-    'computer-outbound_execution_privileges-dcom_privileges': ({ id, skip, limit, type }) =>
+    'computer-dcom_privileges': ({ id, skip, limit, type }) =>
         apiClient.getComputerDCOMRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'computer-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient
@@ -1629,17 +1629,17 @@ export const entityRelationshipEndpoints = {
         apiClient
             .getComputerControllablesV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
-    'domain-foreign_members-foreign_users': ({ id, skip, limit, type }) =>
+    'domain-foreign_users': ({ id, skip, limit, type }) =>
         apiClient.getDomainForeignUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'domain-foreign_members-foreign_groups': ({ id, skip, limit, type }) =>
+    'domain-foreign_groups': ({ id, skip, limit, type }) =>
         apiClient
             .getDomainForeignGroupsV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
-    'domain-foreign_members-foreign_admins': ({ id, skip, limit, type }) =>
+    'domain-foreign_admins': ({ id, skip, limit, type }) =>
         apiClient
             .getDomainForeignAdminsV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
-    'domain-foreign_members-foreign_gpo_controllers': ({ id, skip, limit, type }) =>
+    'domain-foreign_gpo_controllers': ({ id, skip, limit, type }) =>
         apiClient
             .getDomainForeignGPOControllersV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
@@ -1657,13 +1657,13 @@ export const entityRelationshipEndpoints = {
         apiClient
             .getEnterpriseCAControllersV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
-    'gpo-affected_objects-ous': ({ id, skip, limit, type }) =>
+    'gpo-ous': ({ id, skip, limit, type }) =>
         apiClient.getGPOOUsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'gpo-affected_objects-computers': ({ id, skip, limit, type }) =>
+    'gpo-computers': ({ id, skip, limit, type }) =>
         apiClient.getGPOComputersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'gpo-affected_objects-users': ({ id, skip, limit, type }) =>
+    'gpo-users': ({ id, skip, limit, type }) =>
         apiClient.getGPOUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'gpo-affected_objects-tier_zero_objects': ({ id, skip, limit, type }) =>
+    'gpo-tier_zero_objects': ({ id, skip, limit, type }) =>
         apiClient.getGPOTierZeroV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'gpo-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient.getGPOControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
@@ -1675,11 +1675,11 @@ export const entityRelationshipEndpoints = {
         apiClient.getGroupMembershipsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'group-local_admin_privileges': ({ id, skip, limit, type }) =>
         apiClient.getGroupAdminRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'group-execution_privileges-rdp_privileges': ({ id, skip, limit, type }) =>
+    'group-rdp_privileges': ({ id, skip, limit, type }) =>
         apiClient.getGroupRDPRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'group-execution_privileges-dcom_privileges': ({ id, skip, limit, type }) =>
+    'group-dcom_privileges': ({ id, skip, limit, type }) =>
         apiClient.getGroupDCOMRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'group-execution_privileges-psremote_rights': ({ id, skip, limit, type }) =>
+    'group-psremote_rights': ({ id, skip, limit, type }) =>
         apiClient
             .getGroupPSRemoteRightsV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
@@ -1715,15 +1715,15 @@ export const entityRelationshipEndpoints = {
         apiClient.getUserMembershipsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'user-local_admin_privileges': ({ id, skip, limit, type }) =>
         apiClient.getUserAdminRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'user-execution_privileges-rdp_privileges': ({ id, skip, limit, type }) =>
+    'user-rdp_privileges': ({ id, skip, limit, type }) =>
         apiClient.getUserRDPRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'user-execution_privileges-psremote_privileges': ({ id, skip, limit, type }) =>
+    'user-psremote_privileges': ({ id, skip, limit, type }) =>
         apiClient.getUserPSRemoteRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'user-execution_privileges-dcom_privileges': ({ id, skip, limit, type }) =>
+    'user-dcom_privileges': ({ id, skip, limit, type }) =>
         apiClient.getUserDCOMRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'user-execution_privileges-sql_admin_rights': ({ id, skip, limit, type }) =>
+    'user-sql_admin_rights': ({ id, skip, limit, type }) =>
         apiClient.getUserSQLAdminRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'user-execution_privileges-constrained_delegation_privileges': ({ id, skip, limit, type }) =>
+    'user-constrained_delegation_privileges': ({ id, skip, limit, type }) =>
         apiClient
             .getUserConstrainedDelegationRightsV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
