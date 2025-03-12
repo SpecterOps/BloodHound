@@ -8,7 +8,7 @@ const useContextMenuStateSwitch = (contextMenuNodeId?: string) => {
     const selectedNodeFromRedux = useAppSelector((state) => state.entityinfo.selectedNode);
 
     // context menu id could be derived not from redux
-    const { secondarySearch, setExploreParams } = useExploreParams();
+    const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
 
     if (flag?.enabled) {
         return {
@@ -23,10 +23,11 @@ const useContextMenuStateSwitch = (contextMenuNodeId?: string) => {
                 }
             },
             handleSetEndingNode: () => {
+                const searchType = primarySearch ? 'pathfinding' : 'node';
                 if (contextMenuNodeId) {
                     setExploreParams({
                         exploreSearchTab: 'pathfinding',
-                        searchType: 'pathfinding',
+                        searchType,
                         secondarySearch: contextMenuNodeId,
                     });
                 }
