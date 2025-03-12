@@ -749,7 +749,7 @@ func resetPassword(operation analysis.StatTrackedOperation[analysis.CreatePostRe
 							Kind:   azure.ResetPassword,
 						}
 
-						return !channels.Submit(ctx, outC, nextJob)
+						return channels.Submit(ctx, outC, nextJob)
 					})
 				}
 			}
@@ -771,17 +771,22 @@ func resetPasswordEndNodeBitmapForRole(role *graph.Node, roleAssignments RoleAss
 		case azure.UserAccountAdministratorRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
 			result.Or(roleAssignments.UsersWithRolesExclusive(UserAdministratorPasswordResetTargetRoles()...))
+			result.AndNot(roleAssignments.UsersWithRoleAssignableGroupMembership())
 		case azure.HelpdeskAdministratorRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
 			result.Or(roleAssignments.UsersWithRolesExclusive(HelpdeskAdministratorPasswordResetTargetRoles()...))
+			result.AndNot(roleAssignments.UsersWithRoleAssignableGroupMembership())
 		case azure.AuthenticationAdministratorRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
 			result.Or(roleAssignments.UsersWithRolesExclusive(AuthenticationAdministratorPasswordResetTargetRoles()...))
+			result.AndNot(roleAssignments.UsersWithRoleAssignableGroupMembership())
 		case azure.PasswordAdministratorRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
 			result.Or(roleAssignments.UsersWithRolesExclusive(PasswordAdministratorPasswordResetTargetRoles()...))
+			result.AndNot(roleAssignments.UsersWithRoleAssignableGroupMembership())
 		case azure.PartnerTier1SupportRole:
 			result.Or(roleAssignments.UsersWithoutRoles())
+			result.AndNot(roleAssignments.UsersWithRoleAssignableGroupMembership())
 		default:
 			return nil, fmt.Errorf("role node %d has unsupported role template id '%s'", role.ID, roleTemplateID)
 		}
@@ -799,7 +804,7 @@ func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation
 				Kind:   azure.GlobalAdmin,
 			}
 
-			return !channels.Submit(ctx, outC, nextJob)
+			return channels.Submit(ctx, outC, nextJob)
 		})
 
 		return nil
@@ -817,7 +822,7 @@ func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 				Kind:   azure.PrivilegedRoleAdmin,
 			}
 
-			return !channels.Submit(ctx, outC, nextJob)
+			return channels.Submit(ctx, outC, nextJob)
 		})
 
 		return nil
@@ -835,7 +840,7 @@ func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 				Kind:   azure.PrivilegedAuthAdmin,
 			}
 
-			return !channels.Submit(ctx, outC, nextJob)
+			return channels.Submit(ctx, outC, nextJob)
 		})
 
 		return nil
@@ -859,7 +864,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 					Kind:   azure.AddMembers,
 				}
 
-				return !channels.Submit(ctx, outC, nextJob)
+				return channels.Submit(ctx, outC, nextJob)
 			})
 
 			return nil
@@ -882,7 +887,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 						Kind:   azure.AddMembers,
 					}
 
-					return !channels.Submit(ctx, outC, nextJob)
+					return channels.Submit(ctx, outC, nextJob)
 				})
 			}
 

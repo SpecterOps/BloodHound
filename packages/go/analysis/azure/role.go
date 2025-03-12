@@ -88,8 +88,9 @@ func (s RoleAssignmentMap) HasRole(id graph.ID, roleTemplateIDs ...string) bool 
 }
 
 type RoleAssignments struct {
-	Principals graph.NodeKindSet
-	RoleMap    map[string]cardinality.Duplex[uint64]
+	Principals                    graph.NodeKindSet
+	RoleMap                       map[string]cardinality.Duplex[uint64]
+	RoleAssignableGroupMembership cardinality.Duplex[uint64]
 }
 
 func (s RoleAssignments) GetNodeKindSet(bm cardinality.Duplex[uint64]) graph.NodeKindSet {
@@ -140,6 +141,11 @@ func (s RoleAssignments) UsersWithRolesExclusive(roleTemplateIDs ...string) card
 	result := s.PrincipalsWithRolesExclusive(roleTemplateIDs...)
 	result.And(s.Users())
 	return result
+}
+
+func (s RoleAssignments) UsersWithRoleAssignableGroupMembership() cardinality.Duplex[uint64] {
+	// this field is a bitmap of all user IDs who are members of role assignable groups.
+	return s.RoleAssignableGroupMembership
 }
 
 // PrincipalsWithRole returns a roaring bitmap of principals that have been assigned one or more of the matching roles from list of role template IDs
@@ -194,8 +200,9 @@ func initTenantRoleAssignments(tx graph.Transaction, tenant *graph.Node) (RoleAs
 		return RoleAssignments{}, err
 	} else {
 		return RoleAssignments{
-			Principals: roleMembers.KindSet(),
-			RoleMap:    make(map[string]cardinality.Duplex[uint64]),
+			Principals:                    roleMembers.KindSet(),
+			RoleMap:                       make(map[string]cardinality.Duplex[uint64]),
+			RoleAssignableGroupMembership: cardinality.NewBitmap64(),
 		}, nil
 	}
 }
@@ -208,6 +215,15 @@ func TenantRoleAssignments(ctx context.Context, db graph.Database, tenant *graph
 		} else if roles, err := TenantRoles(tx, tenant); err != nil {
 			return err
 		} else {
+			// for each of the role assignable groups returned, fetch the users who are members
+			for _, group := range fetchedRoleAssignments.Principals.Get(azure.Group) {
+				if members, err := FetchRoleAssignableGroupMembersUsers(tx, group, 0, 0); err != nil {
+					return err
+				} else {
+					// set all users who have role assignable group membership
+					fetchedRoleAssignments.RoleAssignableGroupMembership.Or(members.IDBitmap())
+				}
+			}
 			return roles.KindSet().EachNode(func(node *graph.Node) error {
 				if roleTemplateID, err := node.Properties.Get(azure.RoleTemplateID.String()).String(); err != nil {
 					if !graph.IsErrPropertyNotFound(err) {
