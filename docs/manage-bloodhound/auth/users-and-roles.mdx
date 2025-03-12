@@ -1,0 +1,54 @@
+---
+title: Administering users and roles
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+## Purpose
+
+This article provides a summary of assignable roles that are available when creating new users in BloodHound.
+
+## Creating users
+
+Users are created through **Settings <Icon icon="gear"iconType="solid"/>** <Icon icon="arrow-right"iconType="solid"/> **Administration <Icon icon="arrow-right"iconType="solid"/>** **Manage Users**, and clicking the button **Create User**.
+
+The following properties must be set on each user:
+
+| **Property** | **Description** |
+| --- | --- |
+| Email Address | Text field for the user's email address. |
+| Principal Name | Text field for the username used for logging into BloodHound. Can be the same as email address. |
+| First Name | Text field for the user's first name. |
+| Last Name | Text field for the user's first name. |
+| Authentication Method | Drop-down selection for one of the available authentication methods to be used for the user.<br/><br/>* Username / Password - Built-in authentication via username and password, supports TOTP-based multi-factor authentication.<br/>* SAML - SAML 2.0-based Single-Sign-On as described in SAML in BloodHound Enterprise.<br/><br/>Read more in the article [SAML in BloodHound Enterprise](/manage-bloodhound/auth/saml). |
+| Initial Password | Text field for the user's initial password. |
+| Force Password Reset? | Selecting this check box forces the user to reset their password on the next logon. Must comply with password requirements:<br/><br/>* At least 12 characters long<br/>* Contain at least 1 lowercase character, 1 uppercase character, 1 number and 1 special character (!@#$%^&*) |
+| Role | Drop-down selection for one the available roles.|
+
+## User Role Definitions
+
+BloodHound offers multiple roles for access control. Each user must be assigned one role.
+
+
+|     | **Administrator** | **Power User** | **User** | **Read-only** | **Upload-only** |
+| --- | --- | --- | --- | --- | --- |
+| **Tenant Administration** |     |     |     |     |     |
+| View, Add, Remove, and Modify users | <Icon icon="xmark"iconType="solid"/>   | -   | -   | -   | -   |
+| View, Add, Remove, and Modify API keys | <Icon icon="xmark"iconType="solid"/>   | -   | -   | -   | -   |
+| View, Add, or Remove SAML provider configurations | <Icon icon="xmark"iconType="solid"/>   | -   | -   | -   | -   |
+| Clear the BloodHound database | <Icon icon="xmark"iconType="solid"/>   | -   | -   | -   | -   |
+| View audit log | <Icon icon="xmark"iconType="solid"/>   | -   | -   | -   | -   |
+| **Attack Path Analysis** |     |     |     |     |     |
+| View any available tenant data, including active Attack Paths \[BHE\], and explore the Graph | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>   | -   |
+| Mute Attack Path Impacted Principals \[BHE\] | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>   | -   | -   | -   |
+| Modify Tier Zero / High Value Members | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>   | -   | -   | -   |
+| **Collector Clients and File Ingest** |     |     |     |     |     |
+| Download collector installation packages | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>   | X   |
+| View collector client details \[BHE\] | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>   | -   | -   |
+| Run collector client on demand scan \[BHE\] | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>   | -   | -   | -   |
+| Add collector client \[BHE\] | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>   | -   | -   | -   |
+| Modify collector client \[BHE\] | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>   | -   | -   | -   |
+| Remove collector client \[BHE\] | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>  | -   | -   | -   |
+| Regenerate collector client credentials \[BHE\] | <Icon icon="xmark"iconType="solid"/>  | <Icon icon="xmark"iconType="solid"/>   | -   | -   | -   |
+| File ingest | <Icon icon="xmark"iconType="solid"/>   | <Icon icon="xmark"iconType="solid"/>  | -   | -   | <Icon icon="xmark"iconType="solid"/>   |
+

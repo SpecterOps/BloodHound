@@ -72,7 +72,7 @@ func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
 		itemProps[ad.SMBSigning.String()] = item.SmbInfo.SigningEnabled
 	}
 
-	if item.RegistryData.Collected {
+	if item.NTLMRegistryData.Collected {
 		/*
 			RestrictSendingNtlmTraffic is sent to us as an uint
 			The possible values are
@@ -80,7 +80,7 @@ func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
 				1: Audit All
 				2: Deny All
 		*/
-		if item.RegistryData.RestrictSendingNtlmTraffic == 0 {
+		if item.NTLMRegistryData.RestrictSendingNtlmTraffic == 0 {
 			itemProps[ad.RestrictOutboundNTLM.String()] = false
 		} else {
 			itemProps[ad.RestrictOutboundNTLM.String()] = true

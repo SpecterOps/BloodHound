@@ -1,0 +1,74 @@
+---
+title: OIDC in BloodHound
+description: 'BloodHound supports OIDC for Single Sign On to authenticate users to your tenant environment.'
+---
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+This integration only provides authentication; user creation and role management will still occur within BloodHound's "Manage Users" interface.
+
+You can configure multiple SSO providers within your tenant if you need to.
+
+This page provides the overall steps to configure an OIDC provider within BloodHound.
+
+## Order of Operations
+
+Currently, BloodHound requires the configuration of OIDC system in the following order:
+
+1.  Determine the Provider Name you will utilize for the SAML configuration.
+    * The exact value must be configured in both the Identity Provider and BloodHound.
+2.  Configure Identity Provider for BloodHound.
+    * You will need the Client ID and Issuer provided by your IDP to move foward.
+3.  Create the OIDC Configuration in BloodHound.
+4.  [Create new users or modify existing users](/manage-bloodhound/auth/users-and-roles) to utilize the newly created OIDC provider.
+    * You must ensure OIDC users do not share email with built-in or SAML users.
+
+## BloodHound Icons
+
+If your IDP supports custom icons for configured applications, please feel free to utilize either of the two logos below:
+
+* [Dark-colored icon](/assets/31630065613339.png)
+* [Light-colored icon](/assets/31630065618075.png)
+
+## Create the OIDC Configuration
+
+Before proceeding, please make sure you have set up an Identity Provider for BloodHound as described in the Order of Operations section.
+
+1.  While logged in as an Administrator, click on the gear icon in the top right, then click "Administration."
+<Frame>
+  <img src="/assets/image-2-9.png"/>
+</Frame>
+2.  Under the "Authentication" section, choose "SAML Configuration."
+<Frame>
+  <img src="/assets/image-2-10.png"/>
+</Frame>
+3.  Click "Create Provider," then "OIDC Provider."
+<Frame>
+  <img src="/assets/image-2-11.png"/>
+</Frame>
+4.  Give the OIDC provider the name you used in the (‘test-idp' in this example) and provide the Client ID and issuer from your IDP. Click "Submit."
+<Frame>
+  <img src="/assets/image-2-12.png"/>
+</Frame>
+5.  BloodHound will provide the URLs related to this new OIDC provider integration.
+
+## Configure Users for OIDC Authentication
+
+By default, all users will use a username and password via the built-in authentication service. When creating or modifying a user, you will be granted the option to change this setting. When you make a new OIDC user, you must ensure the OIDC user does not share email with any built-in users.
+
+1.  While logged in as an Administrator, click on the gear icon in the top right, then click "Administration."
+<Frame>
+  <img src="/assets/image-2-13.png"/>
+</Frame>
+2.  Under the "Authentication" section, choose "SAML Configuration."
+<Frame>
+  <img src="/assets/image-2-14.png"/>
+</Frame>
+3.  Locate the user you wish to configure for SAML authentication, click the hamburger menu button on the right side of the row, then "Update User."
+<Frame>
+  <img src="/assets/image-2-15.png"/>
+</Frame>
+4.  In the following dialog, modify the authentication method to "Single Sign-On," then select the appropriate SSO provider against which the user's account can authenticate.
+<Frame>
+  <img src="/assets/image-2-16.png"/>
+</Frame>
+5.  Click "Save."

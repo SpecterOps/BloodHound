@@ -1,0 +1,88 @@
+# Copyright 2025 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: azurehound-deployment
+  labels:
+    app: azurehound
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: azurehound
+  template:
+    metadata:
+      labels:
+        app: azurehound
+    spec:
+      containers:
+        - name: azurehound
+          image: ghcr.io/bloodhoundad/azurehound:latest
+          imagePullPolicy: IfNotPresent
+          args: ['start']
+          env:
+            # Azure Configuration
+            - name: AZUREHOUND_TENANT # The directory tenant that you want to request permission from. This can be in GUID or friendly name format.
+              value: '[ INSERT HERE ]'
+
+            - name: AZUREHOUND_APP # The Application Id that the Azure app registration portal assigned when the app was registered.
+              value: '[ INSERT HERE ]'
+
+            - name: AZUREHOUND_CERT # The path to the certificate uploaded to the app registration portal.
+              value: '/etc/azurehound/tls.crt'
+
+            - name: AZUREHOUND_KEY # The path to the key file for a certificate uploaded to the app registration portal.
+              value: '/etc/azurehound/tls.key'
+
+            - name: AZUREHOUND_KEYPASS # The passphrase for the key file, if any
+              valueFrom:
+                secretKeyRef:
+                  name: azurehound-secret
+                  key: keypass
+                  optional: true
+
+            # BloodHound Enterprise Configuration
+            - name: AZUREHOUND_INSTANCE # The BloodHound Enterprise instance URL.
+              value: '[ INSERT HERE ]'
+
+            - name: AZUREHOUND_TOKENID # The BloodHound Enterprise token ID.
+              valueFrom:
+                secretKeyRef:
+                  name: azurehound-secret
+                  key: tokenId
+
+            - name: AZUREHOUND_TOKEN # The BloodHound Enterprise token.
+              valueFrom:
+                secretKeyRef:
+                  name: azurehound-secret
+                  key: token
+
+            # Logging Configuration
+            - name: AZUREHOUND_JSON # Output logs as json
+              value: 'true'
+
+            - name: AZUREHOUND_VERBOSITY # Verbosity level [Min: -1 (logging disabled), Max: 2 (noisy)]
+              value: '0'
+
+          volumeMounts:
+            - name: tls
+              mountPath: '/etc/azurehound'
+      volumes:
+        - name: tls
+          secret:
+            secretName: azurehound-tls

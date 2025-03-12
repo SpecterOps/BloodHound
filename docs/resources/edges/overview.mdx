@@ -1,0 +1,33 @@
+---
+title: About BloodHound Edges
+description: "Edges are part of the graph construct and are represented as links/relationships that connect one node to another node."
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+ For example, the image below shows three User nodes (left side) connected to one Group node (right side), via the “MemberOf” edge, indicating the three users belong to the group:
+<Frame>
+  <img src="/assets/image-2-72.png"/>
+</Frame>
+
+The direction of the edge, indicated by the arrow, always indicates the direction of attack or privilege. From the above example, because all three users have a "MemberOf" edge pointing towards the group, all three users have the same privileges as the group.
+
+Clicking on an Edge's name/label in the graph shows its properties in the Entity Panel:
+
+<Frame>
+  <img src="/assets/image-2-73.png"/>
+</Frame>
+Edges have only a few properties, which always include the following:
+
+* Source Node
+* Target Node
+* Last Collected by BloodHound
+
+Each article in this section documents an individual edge, and each contains:
+
+* A description of the edge.
+* **Abuse Info:** How red teamers can use the privilege of the edge to obtain their goals.
+* **Opsec Considerations:** What red teamers should consider avoiding detection and thereby increasing **op**erational **sec**urity.
+* **References:** Links to publicly available sources used to create the above information.
+
+Note that edge names indicate what directory they apply to; all Azure and Entra ID edges are prefixed with "AZ", while Active Directory edges have no prefix.

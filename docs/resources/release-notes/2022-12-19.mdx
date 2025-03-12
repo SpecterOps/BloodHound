@@ -1,0 +1,60 @@
+---
+title: 2022-12-19 Release Notes
+---
+
+## Announcements
+
+### SpecterOps Holiday Support
+
+SpecterOps will be closed from December 23rd – January 6th for our annual company shutdown. Our team will be available for break-fix support during this time; however, we will not schedule any enablement conversations to allow our teams to relax and be with family during the holidays.
+
+For any support requests, please email support \[at\] specterops.io; this will route to a new centralized ticket system so that any of our team members may assist you. More details on the ticket system to follow in the new year.
+
+**During the holiday shutdown, all support requests must be sent to the support email to be actioned in a timely fashion; TAMs will have reminders of this in OOO messages, and a reminder will appear in your tenant.**
+
+### BloodHound Enterprise App on SplunkBase
+
+The BloodHound Enterprise App is now live on SplunkBase! Our Splunk app will let you pull data from your BloodHound Enterprise tenant into Splunk and includes a pre-configured dashboard, example queries for searching your data, and some pre-configured alerts that you can enable if you are so interested.
+
+You can learn more about the app and how to install it [here](/integrations/integrations/splunk).
+
+Thank you so much to everyone who helped us beta-test our Splunk app!
+
+## Summary
+
+* BloodHound Enterprise
+    * New and Improved Features - Improvements to Pathfinding logic and performance in Manage Clients and Finished Jobs Log pages.
+    * Bug Fixes - Fixed Tier Zero group modification, pathfinding unable to find a highlighted Attack Path, detection of timed-out collection jobs, and several possible dead-lock scenarios during ingest and analysis.
+* SharpHound Enterprise (v1.0.25 GA, v2.0.5 Early Access)
+    * New and Improved Features - Updated logging in SharpHound v2.0.5
+* AzureHound Enterprise (v1.2.2)
+    * _No release this week._
+
+### BloodHound Enterprise
+
+* Improved Functionality
+    * The introduction of User Rights Assignment collection added additional edges to the BloodHound Enterprise attack graph. These would occasionally appear within Pathfinding results and showed non-exploitable paths; we've updated the logic to filter these from future queries.
+    * Manage Clients and Finished Jobs Log pages have significantly increased performance; these pages should load near-instantly in all environments.
+* Bug Fixes
+    * Resolved an issue where clicking "Explore" on an Attack Path would result in a "Path not found" error.
+    * The Tier Zero group should once again be modifiable.
+    * Added an additional check to collections to reduce the chance that active collections get marked as "Timed Out."
+    * Resolved several dead-lock scenarios identified during ingest and analysis processes.
+    * The early access functionality required for SharpHound v2+ will now consistently appear.
+
+### SharpHound Enterprise (v1.0.25 GA, v2.0.4 Early Access)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.0.5_
+
+* New and Improved Features
+    * Added additional logging output to aid in troubleshooting collections
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the "User Rights Assignment Collection" experimental feature at the same time. Please contact your TAM or respond to this email for assistance.
+
+### AzureHound Enterprise (v1.2.2 GA)
+
+_Minimum version of AzureHound Service to support all current functionality: v1.2.2_
+
+No release this week.
+
+

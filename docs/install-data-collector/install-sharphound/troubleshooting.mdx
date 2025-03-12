@@ -1,0 +1,146 @@
+---
+title: Troubleshooting Local Collection Coverage
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+SharpHound collects data from domain-joined systems utilizing SMB/RPC on port 445/TCP and requires the account running SharpHound (e.g., the SharpHound Enterprise gMSA) to have local administrator membership on each system in scope, see [SharpHound Data Collection and Permissions](/collect-data/enterprise-collection/permissions).
+
+This article can assist in troubleshooting why a local collection is not successful for all systems in scope.
+
+## Computer status logfile
+The computer status logfile, named `compstatus.csv` contains information about the collection results for each system in the collection's scope.
+
+* SharpHound Enterprise: Generates one `compstatus.csv` per local collection job (Sessions and/or Local Groups) and stores it within the `log_archive` directory on the SharpHound Enterprise server. The default location for this is `%APPDATA%\\Roaming\\BloodHound Enterprise` - that is, App Data for the service account running the SharpHound Enterprise service. However, you may override this location within `settings.json`, see [SharpHound Enterprise Local Configuration](/install-data-collector/install-sharphound/local-configuration).
+
+
+* SharpHound Community Edition: Will generate `compstatus.csv` when run with the `DumpComputerStatus` flag.
+
+## Analyzing compstatus.csv
+
+The first step in troubleshooting local collection issues is by identifying and understanding errors in `compstatus.csv`.
+
+BloodHound Enterprise customers can reach out to their Technical Account Manager (TAM) for support in this analysis.
+
+Alternatively, you may do your own troubleshooting by utilizing the below example PowerShell commands and the process described below the code block.
+```json
+### Import data and get uniques without sorting them
+$stats_file = Import-Csv -Path 'FILE_PATH_HERE' | Group-Object ComputerName, Task, Status, IPAddress | ForEach-Object { $_.Group[0] }
+
+### Status Pivot Table - Exclude GetMembersInAlias as it's irrelevant for troubleshooting
+$stats_file | Where-Object {$_.Task -NotLike 'GetMembersInAlias -*'} | Group-Object Task, Status -NoElement | Format-Table -Autosize
+
+### Pivot table for failures only
+$stats_file |  Where-Object {$_.Status -ne "Success"} | Group-Object Task,Status -NoElement | Format-Table -Autosize
+
+### Which systems were unreachable on 445/TCP
+$stats_file | Where-Object {$_.Task -eq "ComputerAvailability" -and $_.Status -eq "PortNotOpen"}
+
+### IPv4 /24 subnets unreachable on 445/TCP
+$stats_file | Where-Object {$_.Task -eq "ComputerAvailability" -and $_.Status -eq "PortNotOpen" -and $_.IPAddress -match '^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'} | Group-Object {$_.IPAddress.Remove($_.IPAddress.LastIndexOf('.'))+'.0/24'} -NoElement | Sort-Object -property Count | Format-Table -Autosize
+
+### IPv4 /16 subnets unreachable on 445/TCP
+$stats_file | Where-Object {$_.Task -eq "ComputerAvailability" -and $_.Status -eq "PortNotOpen" -and $_.IPAddress -match '^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'} | Group-Object {($_.IPAddress.split(".")[0..1] -join ".") + ".0.0/16"} -NoElement | Sort-Object -property Count | Format-Table -Autosize
+
+### Which systems are missing permissions
+$stats_file | Where-Object {$_.Status -eq "ERROR_ACCESS_DENIED" -or $_.Status -eq "StatusAccessDenied"}
+```
+To understand and resolve the errors outputted by the commands, you must understand the process involved in SharpHound's local collection, described below.
+
+### Domain computer enumeration
+
+First, SharpHound queries a Domain Controller to list every enabled computer object in the domain. Every enumerated system will be represented by one or more lines in `compstatus.csv`.
+
+### ComputerAvailability
+
+Next, SharpHound performs the `ComputerAvailability` check, which filters out inactive computers, so that SharpHound only connects to active computers to collect Local Groups and Sessions later on in the process.
+
+Each active computer object is checked to see whether it is a Windows OS. Local collection is not supported for any OS besides Windows.
+
+If the system is not a Windows OS, SharpHound will not perform additional checks on the system.
+
+* If a system fails this check, `compstatus.csv` will contain a line for the system with the result `Task = ComputerAvailability` and `Status = NonWindowsOS`.
+
+
+* If a Windows system is incorrectly marked with `NonWindowsOS`; ensure that the system's AD computer object attribute `[operatingSystem](https://learn.microsoft.com/en-us/windows/win32/adschema/a-operatingsystem)` is set to a string representing a Windows OS.
+
+If the system is a Windows OS, SharpHound proceeds with the next set of checks:
+
+1.  Check if the system has changed it's password within the duration set for `ComputerPasswordResetWindow` in SharpHound's `settings.json`.
+    * If a system fails this check, `compstatus.csv` will contain a line for the system with the result `Task = ComputerAvailability` and `Status = PwdLastSetOutOfRange`.
+    * If an active system is incorrectly marked with `PwdLastSetOutOfRange`, try one of the following:
+        * Ensure that the `ComputerPasswordResetWindow` key in SharpHound's `settings.json` has a value corresponding to the computer's security policy `[Domain member: Maximum machine account password age](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/domain-member-maximum-machine-account-password-age)`. By default this value is 60 days. A description of the `ComputerPasswordResetWindow` value is found the article [SharpHound Enterprise Local Configuration](/install-data-collector/install-sharphound/local-configuration).
+        * Ensure that the system's password is changing as expected: Confirm that the system's AD computer object attribute `[pwdLastSet](https://learn.microsoft.com/en-us/windows/win32/adschema/a-pwdlastset)` has been changed within the period defined in the computer's security policy `Domain member: Maximum machine account password age`
+2.  Check if the system has TCP port 445 (SMB) open.
+    * If a system fails this check, `compstatus.csv` will contain a line for the system with the result `Task = ComputerAvailability` and `Status = PortNotOpen`.
+    * If an active system is incorrectly marked with `PortNotOpen`, try one of the following:
+        * Ensure that the system running SharpHound can reach the system checked on TCP port 445.
+            From the SharpHound system, run:
+```json
+    Test-NetConnection -ComputerName <HOST> -Port 445
+```
+            (replace `<HOST>` with the system's DNS name as seen in `compstatus.csv`).
+        * Ensure that the system running SharpHound can reach the system checked on TCP port 445 **within 500ms**.
+            From the SharpHound system, run:
+```json
+    Measure-Command { Test-NetConnection -ComputerName <HOST> -Port 445 }
+```
+            (replace `<HOST>` with the system's DNS name as seen in `compstatus.csv`).
+        * Ensure that the system's DNS name found in `compstatus.csv` can be resolved, and matches the system's DNS name in Active Directory.
+            From the SharpHound system, check the name can be resolved by running:
+```json
+    Resolve-DnsName -Name <HOST>
+```
+            (replace `<HOST>` with the system's DNS name as seen in `compstatus.csv`).
+        * Ensure that a network layer above TCP (e.g., SMB) is not being blocked by a security solution, such as an IDPS.
+
+After these steps, if the system is not available, no further collection attempts are made.
+
+If a system _is_ found available, `compstatus.csv` will contain a line for it with the result `Task = ComputerAvailability` and `Status = Success`.
+
+Next, SharpHound will start the actual collection of Sessions and/or Local Groups.
+
+### Local Groups
+
+This collection gathers two types of data points:
+
+1.  Local group memberships
+2.  User Rights Assignment
+
+**Local group memberships**
+
+First, SharpHound connects via RPC with `SamConnect`.
+
+* If unsuccessful, `compstatus.csv` will contain a line for the system with the result `Task = SamConnect` and a status depending on the error type.
+    * `Status = -1073610725` means SharpHound account is not in the system's local administrators group.
+    * `Status = StatusRpcServerUnavailable` means SharpHound cannot access RPC or SMB on the system. Ensure that the system running SharpHound can reach the system checked on SMB.
+* If successful, SharpHound continues with the method `GetMembersInAlias` as detailed below.
+
+Next, SharpHound connects via RPC with `GetMembersInAlias`.
+
+* If unsuccessful, `compstatus.csv` will contain a line for the system with the result `Task = GetMembersInAlias` and a status depending on the error type.
+* If successful `compstatus.csv` will contain one line per local group in system with the result `Task = GetMembersInAlias - <LOCAL GROUP NAME>` and "Status = Success'
+
+**User Rights Assignment**
+
+First, SharpHound connects via RPC with `LSAOpenPolicy`.
+
+* If unsuccessful, `compstatus.csv` will contain a line for the system with the result `Task = LSAOpenPolicy` and a status depending on the error type.
+    * `Status = StatusRpcServerUnavailable` means SharpHound cannot access RPC or SMB on the system. Ensure that the system running SharpHound can reach the system via SMB.
+* If successful, SharpHound continues with the method `LSAEnumerateAccountsWithUserRight` as detailed below.
+
+Next, sharpHound connects via RPC with `LSAEnumerateAccountsWithUserRight`.
+
+* If unsuccessful, `compstatus.csv` will contain a line for the system with the result `Task = LSAEnumerateAccountsWithUserRight` and a status depending on the error type.
+    * `Status = StatusAccessDenied` means SharpHound account is not in the Local Administrators group.
+* If successful, `compstatus.csv` will contain one line per local group in system with the result `Task = LSAEnumerateAccountsWithUserRight` and "Status = Success'
+
+### Sessions
+
+This collection gathers logon sessions via RPC with `NetWkstaUserEnum`.
+
+* If unsuccessful, `compstatus.csv` will contain a line for the system with the result `Task = NetWkstaUserEnum` and a status depending on the error type.
+    * `Status = ErrorAccessDenied` means SharpHound account is not in the Local Administrators group.
+    * `Status = 53` means SharpHound cannot access RPC or SMB on the system. Ensure that the system running SharpHound can reach the system via SMB.
+* If successful `compstatus.csv` will contain one line per local group with the result `Task = NetWkstaUserEnum` and "Status = Success'
+

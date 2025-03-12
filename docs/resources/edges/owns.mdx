@@ -1,0 +1,19 @@
+---
+title: AZOwns
+description: "The principal is granted owner rights on the principal."
+---
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+
+AZOwns targets resources in Entra ID (for example [AZGroup](/resources/nodes/az-group), [AZServicePrincipal](/resources/nodes/az-service-principal), and [AZDevice](/resources/nodes/az-device)) from various object-specific ownership.
+
+<Info>
+  **Note: The edges [AZOwner](/resources/edges/owner) and [AZOwns](/resources/edges/owns) are distinct as they each apply their own distinct identity and access management platform (AzureRM and Entra ID respectively) with distinct mechanics, abuse primitives, and remediation steps.**
+</Info>
+
+## Abuse Info
+
+Object ownership means almost all abuses are possible against the target object.
+
+## Opsec Considerations
+This depends on which abuse you perform, but in general Azure will create a log for each abuse action.

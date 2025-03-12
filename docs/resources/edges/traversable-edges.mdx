@@ -1,0 +1,96 @@
+---
+title: Traversable and Non-Traversable Edge Types
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+
+## Traversable Edges
+
+Most edges in BloodHound are traversable, representing a relationship between two nodes where the starting node can take control of the ending node to a degree that allows an attacker to abuse outgoing edges.
+
+For example, consider the ForceChangePassword edge:
+
+<Frame>
+  <img src="/assets/image-2-74.png"/>
+</Frame>
+
+The Service Desk group has permission to force change the password of Bob without knowing Bob’s current password. An attacker can abuse this to change the password, log in as Bob, and exploit Bob’s privileges. Traversable edges like ForceChangePassword facilitate graph traversal and enable the pathfinding logic in BloodHound.
+
+These are the traversable AD edge types in BloodHound:
+
+|     |     |     |
+| --- | --- | --- |
+| ADCSESC1 | AllowedToAct | HasSession |
+| ADCSESC10a | AllowedToDelegate | MemberOf |
+| ADCSESC10b | CanPSRemote | Owns |
+| ADCSESC13 | CanRDP | ReadGMSAPassword |
+| ADCSESC3 | CoerceToTGT | ReadLAPSPassword |
+| ADCSESC4 | Contains | SQLAdmin |
+| ADCSESC6a | DCFor | SyncedToEntraUser |
+| ADCSESC6b | DCSync | SyncLAPSPassword |
+| ADCSESC9a | DumpSMSAPassword | TrustedBy |
+| ADCSESC9b | ExecuteDCOM | WriteAccountRestrictions |
+| AddAllowedToAct | ForceChangePassword | WriteDacl |
+| AddKeyCredentialLink | GPLink | WriteGPLink |
+| AddMember | GenericAll | WriteOwner |
+| AddSelf | GenericWrite | WriteSPN |
+| AdminTo | GoldenCert |     |
+| AllExtendedRights | HasSIDHistory |     |
+
+These are the traversable Azure edge types in BloodHound:
+
+|     |     |     |
+| --- | --- | --- |
+| AZAKSContributor | AZGetSecrets | AZOwner |
+| AZAddMembers | AZGlobalAdmin | AZOwns |
+| AZAddOwner | AZHasRole | AZPrivilegedAuthAdmin |
+| AZAddSecret | AZKeyVaultContributor | AZPrivilegedRoleAdmin |
+| AZAppAdmin | AZLogicAppContributor | AZResetPassword |
+| AZAutomationContributor | AZMGAddMember | AZRunsAs |
+| AZAvereContributor | AZMGAddOwner | AZUserAccessAdministrator |
+| AZCloudAppAdmin | AZMGAddSecret | AZVMAdminLogin |
+| AZContains | AZMGGrantAppRoles | AZVMContributor |
+| AZContributor | AZMGGrantRole | AZWebsiteContributor |
+| AZExecuteCommand | AZManagedIdentity | SyncedToADUser |
+| AZGetCertificates | AZMemberOf |     |
+| AZGetKeys | AZNodeResourceGroup |     |
+
+## Non-Traversable Edges
+
+If you cannot abuse a given relationship between two nodes to take control of the end node, then the relationship is non-traversable. However, some non-traversable relationships can form a traversable relationship when combined. An example is the DCSync attack narrative. GetChanges and GetChangesAll permissions on the domain object combined enable you to perform the DCSync attack. GetChanges and GetChangesAll are non-traversable edges, and BloodHound uses them to produce the traversable DCSync edge in what we call the post-processing logic.
+
+Pathfinding includes only traversable edges. As a result, you might get a DCSync edge in a path like this:
+
+<Frame>
+  <img src="/assets/image-2-75.png"/>
+</Frame>
+
+But you will not see any GetChanges or GetChangesAll edge. However, you can use Cypher to reveal the GetChanges and GetChangeAll edges that the DCSync edge relies on:
+
+<Frame>
+  <img src="/assets/image-2-76.png"/>
+</Frame>
+
+
+These are the non-traversable AD edge types in BloodHound:
+
+|     |     |     |
+| --- | --- | --- |
+| DelegatedEnrollmentAgent | HostsCAService | PublishedTo |
+| Enroll | IssuedSignedBy | RemoteInteractiveLogonPrivilege |
+| EnrollOnBehalfOf | LocalToComputer | RootCAFor |
+| EnterpriseCAFor | ManageCA | TrustedForNTAuth |
+| ExtendedByPolicy | ManageCertificates | WritePKIEnrollmentFlag |
+| GetChanges | MemberOfLocalGroup | WritePKINameFlag |
+| GetChangesAll | NTAuthStoreFor |     |
+| GetChangesInFilteredSet | OIDGroupLink |     |
+
+These are the non-traversable Azure edge types in BloodHound:
+
+|     |     |
+| --- | --- |
+| AZMGAppRoleAssignment\_ReadWrite\_All | AZMGGroup\_ReadWrite\_All |
+| AZMGApplication\_ReadWrite\_All | AZMGRoleManagement\_ReadWrite\_Directory |
+| AZMGDirectory\_ReadWrite\_All | AZMGServicePrincipalEndpoint\_ReadWrite\_All |
+| AZMGGroupMember\_ReadWrite\_All |     |
