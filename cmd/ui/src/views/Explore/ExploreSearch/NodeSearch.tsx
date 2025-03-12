@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
-import { useNodeSearchSwitch } from './useNodeSearchSwitch';
+import { useNodeSearchSwitch } from './switches';
 
 const NodeSearch = () => {
     const { searchTerm, selectedItem, editSourceNode, selectSourceNode } = useNodeSearchSwitch();

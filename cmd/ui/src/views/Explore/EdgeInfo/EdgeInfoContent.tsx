@@ -21,6 +21,7 @@ import {
     EdgeSections,
     SelectedEdge,
     apiClient,
+    transformToFlatGraphResponse,
     useFetchEntityProperties,
 } from 'bh-shared-ui';
 import isEmpty from 'lodash/isEmpty';
@@ -28,7 +29,6 @@ import { Dispatch, FC, Fragment } from 'react';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { useAppDispatch } from 'src/store';
-import { transformToFlatGraphResponse } from 'src/utils';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 

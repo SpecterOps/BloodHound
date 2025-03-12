@@ -15,15 +15,30 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { AllEdgeTypes } from 'bh-shared-ui';
+import { AllEdgeTypes, EdgeCheckboxType, getInitialPathFilters } from 'bh-shared-ui';
+import { useState } from 'react';
 import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
 
+const INITIAL_FILTERS = getInitialPathFilters();
+const WrappedDialog = () => {
+    const [selectedFilters, setSelectedFilters] = useState<EdgeCheckboxType[]>(INITIAL_FILTERS);
+    return (
+        <EdgeFilteringDialog
+            isOpen
+            selectedFilters={selectedFilters}
+            handleCancel={vi.fn}
+            handleApply={vi.fn()}
+            handleUpdate={(filters) => setSelectedFilters(filters)}
+        />
+    );
+};
+
 describe('Pathfinding', () => {
     beforeEach(async () => {
         await act(async () => {
-            render(<EdgeFilteringDialog isOpen handleCancel={vi.fn} handleApply={vi.fn()} />);
+            render(<WrappedDialog />);
         });
     });
 
