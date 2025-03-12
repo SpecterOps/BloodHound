@@ -45,11 +45,9 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
     const previousSelectedNode = usePreviousValue(selectedNode);
 
     useEffect(() => {
-        if (previousSelectedNode?.id !== selectedNode?.id) {
-            if (backButtonFlag?.enabled && expandedRelationships) {
-                const initialExpandedSections = { ...formatRelationshipsParams(expandedRelationships) };
-                setExpandedSections(initialExpandedSections);
-            }
+        if (backButtonFlag?.enabled && previousSelectedNode?.id !== selectedNode?.id && expandedRelationships) {
+            const initialExpandedSections = { ...formatRelationshipsParams(expandedRelationships) };
+            setExpandedSections(initialExpandedSections);
         }
     }, [
         setExpandedSections,
