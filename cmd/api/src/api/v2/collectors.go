@@ -19,18 +19,18 @@ package v2
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/specterops/bloodhound/src/version"
-	"golang.org/x/exp/slices"
 	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/version"
 )
 
 const (
@@ -149,24 +149,13 @@ func (s *Resources) DownloadCollectorChecksumByVersion(response http.ResponseWri
 
 func (s *Resources) GetKennelManifest(response http.ResponseWriter, request *http.Request) {
 	var (
-		sharphoundUrl    = "https://api.github.com/repos/SpecterOps/SharpHound/releases?per_page=10"
-		sharphoundResult []GitHubRelease
-
-		azurehoundUrl    = "https://api.github.com/repos/SpecterOps/AzureHound/releases?per_page=10"
-		azurehoundResult []GitHubRelease
-
-		manifest = Manifest{}
+		sharphoundUrl = "https://api.github.com/repos/SpecterOps/SharpHound/releases?per_page=10"
+		azurehoundUrl = "https://api.github.com/repos/SpecterOps/AzureHound/releases?per_page=10"
+		manifest      = Manifest{}
 	)
 
-	if req, err := http.NewRequest("GET", sharphoundUrl, nil); err != nil {
-		slog.ErrorContext(request.Context(), "Failed creating new request", "error", err)
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-		return
-	} else if res, err := http.DefaultClient.Do(req); err != nil {
-		slog.ErrorContext(request.Context(), "Failed completing http request", "destination_url", sharphoundUrl, "error", err)
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-		return
-	} else if err := json.NewDecoder(res.Body).Decode(&sharphoundResult); err != nil {
+	if sharphoundResult, err := queryGithub(sharphoundUrl); err != nil {
+		slog.ErrorContext(request.Context(), "Failed querying github for sharphound assets", "error", err)
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		return
 	} else if releases, err := parseGithubResults(sharphoundResult); err != nil {
@@ -174,29 +163,20 @@ func (s *Resources) GetKennelManifest(response http.ResponseWriter, request *htt
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		return
 	} else {
-		slices.SortFunc(releases, func(a, b Release) bool {
-			return a.Version.LessThan(b.Version)
-		})
+		slices.SortFunc(releases, SortReleasesByVersionDesc)
 		manifest.Sharphound = releases[:min(5, len(releases))]
 	}
 
-	if req, err := http.NewRequest("GET", azurehoundUrl, nil); err != nil {
-		slog.ErrorContext(request.Context(), "Failed creating new request", "error", err)
+	if azurehoundResult, err := queryGithub(azurehoundUrl); err != nil {
+		slog.ErrorContext(request.Context(), "Failed querying github for azurehound assets", "error", err)
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		return
-	} else if res, err := http.DefaultClient.Do(req); err != nil {
-		slog.ErrorContext(request.Context(), "Failed completing http request", "destination_url", azurehoundUrl, "error", err)
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-	} else if err := json.NewDecoder(res.Body).Decode(&azurehoundResult); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if releases, err := parseGithubResults(azurehoundResult); err != nil {
 		slog.ErrorContext(request.Context(), "Failed parsing azurehound github releases", "error", err)
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		return
 	} else {
-		slices.SortFunc(releases, func(a, b Release) bool {
-			return a.Version.GreaterThan(b.Version)
-		})
+		slices.SortFunc(releases, SortReleasesByVersionDesc)
 		manifest.Azurehound = releases[:min(5, len(releases))]
 	}
 
@@ -210,12 +190,12 @@ type Manifest struct {
 
 type Release struct {
 	Version       version.Version `json:"version"`
-	VersionMeta   versionMeta     `json:"version_meta"`
+	VersionMeta   VersionMeta     `json:"version_meta"`
 	ReleaseDate   time.Time       `json:"release_date"`
 	ReleaseAssets []*ReleaseAsset `json:"release_assets"`
 }
 
-type versionMeta struct {
+type VersionMeta struct {
 	Major      int    `json:"major"`
 	Minor      int    `json:"minor"`
 	Patch      int    `json:"patch"`
@@ -230,59 +210,79 @@ type ReleaseAsset struct {
 	Arch                string `json:"arch"`
 }
 
-type GitHubRelease struct {
-	TagName     string    `json:"tag_name"`
-	Assets      []Asset   `json:"assets"`
-	PublishedAt time.Time `json:"published_at"`
+type githubRelease struct {
+	TagName     string        `json:"tag_name"`
+	Assets      []githubAsset `json:"assets"`
+	PublishedAt time.Time     `json:"published_at"`
 }
 
-type Asset struct {
+type githubAsset struct {
 	Name               string `json:"name"`
 	ContentType        string `json:"content_type"`
 	BrowserDownloadURL string `json:"browser_download_url"`
 }
 
-func parseGithubResults(githubReleases []GitHubRelease) ([]Release, error) {
+func SortReleasesByVersionDesc(a, b Release) int {
+	if a.Version.Equals(b.Version) {
+		return 0
+	} else if a.Version.LessThan(b.Version) {
+		return 1
+	} else {
+		return -1
+	}
+}
+
+func queryGithub(url string) ([]githubRelease, error) {
+	var result []githubRelease
+
+	if req, err := http.NewRequest("GET", url, nil); err != nil {
+		return nil, err
+	} else if res, err := http.DefaultClient.Do(req); err != nil {
+		return nil, err
+	} else if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func parseGithubResults(githubReleases []githubRelease) ([]Release, error) {
 	var (
 		releases = make([]Release, 0)
 	)
 
-	for _, githubRelease := range githubReleases {
+	for _, ghRelease := range githubReleases {
 		releaseAssets := make(map[string]*ReleaseAsset)
 
-		releaseVersion, err := version.Parse(githubRelease.TagName)
+		releaseVersion, err := version.Parse(ghRelease.TagName)
 		if err != nil {
 			continue
 		}
 
-		for _, asset := range githubRelease.Assets {
-			if strings.Contains(asset.Name, "debug") {
-				continue
-			}
-
-			if matches := releaseParsingRegex.FindAllStringSubmatch(asset.Name, 1); len(matches) != 1 {
+		for _, ghAsset := range ghRelease.Assets {
+			if matches := releaseParsingRegex.FindAllStringSubmatch(ghAsset.Name, 1); len(matches) != 1 {
 				continue
 			} else {
 				releaseParts := matches[0]
 
 				if releaseParts[shaCaptureGroup] == ".sha256" {
-					name := strings.TrimSuffix(asset.Name, ".sha256")
+					name := strings.TrimSuffix(ghAsset.Name, ".sha256")
 					releaseAsset, found := releaseAssets[name]
 					if !found {
 						releaseAsset = &ReleaseAsset{}
 						releaseAssets[name] = releaseAsset
 					}
 
-					releaseAsset.ChecksumDownloadUrl = asset.BrowserDownloadURL
+					releaseAsset.ChecksumDownloadUrl = ghAsset.BrowserDownloadURL
 				} else {
-					releaseAsset, found := releaseAssets[asset.Name]
+					releaseAsset, found := releaseAssets[ghAsset.Name]
 					if !found {
 						releaseAsset = &ReleaseAsset{}
-						releaseAssets[asset.Name] = releaseAsset
+						releaseAssets[ghAsset.Name] = releaseAsset
 					}
 
-					releaseAsset.Name = asset.Name
-					releaseAsset.DownloadUrl = asset.BrowserDownloadURL
+					releaseAsset.Name = ghAsset.Name
+					releaseAsset.DownloadUrl = ghAsset.BrowserDownloadURL
 					releaseAsset.Os = releaseParts[osCaptureGroup]
 					releaseAsset.Arch = releaseParts[archCaptureGroup]
 				}
@@ -300,8 +300,8 @@ func parseGithubResults(githubReleases []GitHubRelease) ([]Release, error) {
 
 		releases = append(releases, Release{
 			Version:       releaseVersion,
-			VersionMeta:   versionMeta(releaseVersion),
-			ReleaseDate:   githubRelease.PublishedAt,
+			VersionMeta:   VersionMeta(releaseVersion),
+			ReleaseDate:   ghRelease.PublishedAt,
 			ReleaseAssets: assetsList,
 		})
 	}

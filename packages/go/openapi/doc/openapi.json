@@ -2407,7 +2407,7 @@
         }
       }
     },
-    "/api/v2/kennel/manfest": {
+    "/api/v2/kennel/manifest": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
@@ -2450,7 +2450,7 @@
         }
       }
     },
-    "/api/v2/kennel/enterprise-manfest": {
+    "/api/v2/kennel/enterprise-manifest": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
