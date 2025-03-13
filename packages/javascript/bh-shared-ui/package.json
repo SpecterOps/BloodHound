@@ -34,6 +34,7 @@
         "memoize-one": "^6.0.0",
         "notistack": "^2.0.5",
         "prop-types": "^15.8.1",
+        "react-error-boundary": "^3.1.4",
         "react-hook-form": "^7.45.1",
         "react-immutable-proptypes": "^2.2.0",
         "react-query": "^3.39.3",
@@ -46,6 +47,7 @@
     "devDependencies": {
         "@emotion/react": "^11.10.4",
         "@emotion/styled": "^11.10.4",
+        "@faker-js/faker": "^7.3.0",
         "@mui/lab": "^5.0.0-alpha.136",
         "@mui/material": "^5.14.0",
         "@mui/styles": "^5.14.0",
