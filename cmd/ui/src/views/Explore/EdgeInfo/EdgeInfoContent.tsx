@@ -41,33 +41,30 @@ const getOnChange = async (
     dispatch: Dispatch<any>,
     sourceNodeId: number,
     targetNodeId: number,
-    selectedEdgeName: string,
-    isOpen: boolean
+    selectedEdgeName: string
 ) => {
-    if (isOpen) {
-        dispatch(setGraphLoading(true));
-        await apiClient
-            .getEdgeComposition(sourceNodeId, targetNodeId, selectedEdgeName)
-            .then((result) => {
-                if (isEmpty(result.data.data.nodes)) {
-                    throw new Error('empty result set');
-                }
-                const formattedData = transformToFlatGraphResponse(result.data);
+    dispatch(setGraphLoading(true));
+    await apiClient
+        .getEdgeComposition(sourceNodeId, targetNodeId, selectedEdgeName)
+        .then((result) => {
+            if (isEmpty(result.data.data.nodes)) {
+                throw new Error('empty result set');
+            }
+            const formattedData = transformToFlatGraphResponse(result.data);
 
-                dispatch(saveResponseForExport(formattedData));
-                dispatch(putGraphData(formattedData));
-            })
-            .catch((err) => {
-                if (err?.code === 'ERR_CANCELED') {
-                    return;
-                }
-                dispatch(putGraphError(err));
-                dispatch(addSnackbar('Query failed. Please try again.', 'edgeCompositionGraphQuery', {}));
-            })
-            .finally(() => {
-                dispatch(setGraphLoading(false));
-            });
-    }
+            dispatch(saveResponseForExport(formattedData));
+            dispatch(putGraphData(formattedData));
+        })
+        .catch((err) => {
+            if (err?.code === 'ERR_CANCELED') {
+                return;
+            }
+            dispatch(putGraphError(err));
+            dispatch(addSnackbar('Query failed. Please try again.', 'edgeCompositionGraphQuery', {}));
+        })
+        .finally(() => {
+            dispatch(setGraphLoading(false));
+        });
 };
 
 const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
@@ -117,13 +114,12 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                             if (backButtonFlag?.enabled) {
                                 setExpandedPanelSectionsParam();
                             }
-                            if (sendOnChange && !backButtonFlag?.enabled) {
+                            if (!backButtonFlag?.enabled && sendOnChange && isOpen) {
                                 getOnChange(
                                     dispatch,
                                     parseInt(`${sourceNode.id}`),
                                     parseInt(`${targetNode.id}`),
-                                    selectedEdge.name,
-                                    isOpen
+                                    selectedEdge.name
                                 );
                             }
                         };
