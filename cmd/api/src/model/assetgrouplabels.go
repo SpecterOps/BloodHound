@@ -43,9 +43,34 @@ type AssetGroupLabel struct {
 	DeletedBy        null.String `json:"deleted_by"`
 }
 
+func (AssetGroupLabel) TableName() string {
+	return "asset_group_labels"
+}
+
+func (s AssetGroupLabel) AuditData() AuditData {
+	return AuditData{
+		"id":                  s.ID,
+		"asset_group_tier_id": s.AssetGroupTierId,
+		"kind_id":             s.KindId,
+		"name":                s.Name,
+		"description":         s.Description,
+	}
+}
+
 type SelectorSeed struct {
 	Type  SelectorType `json:"type"`
 	Value string       `json:"value"`
+}
+
+func (SelectorSeed) TableName() string {
+	return "asset_group_label_selector_seeds"
+}
+
+func (s SelectorSeed) AuditData() AuditData {
+	return AuditData{
+		"type":  s.Type,
+		"value": s.Value,
+	}
 }
 
 type AssetGroupLabelSelector struct {
@@ -63,4 +88,19 @@ type AssetGroupLabelSelector struct {
 	IsDefault         bool      `json:"is_default"`
 
 	Seeds []SelectorSeed `json:"seeds" validate:"required" gorm:"-"`
+}
+
+func (AssetGroupLabelSelector) TableName() string {
+	return "asset_group_label_selectors"
+}
+
+func (s AssetGroupLabelSelector) AuditData() AuditData {
+	return AuditData{
+		"id":                   s.ID,
+		"asset_group_label_id": s.AssetGroupLabelId,
+		"name":                 s.Name,
+		"description":          s.Description,
+		"auto_certify":         s.AutoCertify,
+		"is_default":           s.IsDefault,
+	}
 }

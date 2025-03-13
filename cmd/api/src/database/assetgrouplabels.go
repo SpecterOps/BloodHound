@@ -44,9 +44,16 @@ type AssetGroupLabelSelectorData interface {
 }
 
 func (s *BloodhoundDB) CreateAssetGroupLabelSelector(ctx context.Context, assetGroupLabelId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupLabelSelector, error) {
-	var selector model.AssetGroupLabelSelector
+	var (
+		selector model.AssetGroupLabelSelector
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionCreateAssetGroupLabel,
+			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (asset_group_label_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify) VALUES (?, NOW(), ?, NOW(), ?, ?, ?, ?, ?, ?) RETURNING *", assetGroupSelectorTable),
 			assetGroupLabelId, userId, userId, name, description, isDefault, allowDisable, autoCertify).Scan(&selector); result.Error != nil {
 			return CheckError(result)
@@ -68,22 +75,24 @@ func (s *BloodhoundDB) CreateAssetGroupLabelSelector(ctx context.Context, assetG
 
 func (s *BloodhoundDB) GetAssetGroupLabel(ctx context.Context, assetGroupLabelId int) (model.AssetGroupLabel, error) {
 	var label model.AssetGroupLabel
-
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if result := tx.Raw(fmt.Sprintf("SELECT id, asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id = ?", assetGroupLabelTable), assetGroupLabelId).First(&label); result.Error != nil {
-			return CheckError(result)
-		}
-		return nil
-	}); err != nil {
-		return model.AssetGroupLabel{}, err
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id = ?", assetGroupLabelTable), assetGroupLabelId).First(&label); result.Error != nil {
+		return model.AssetGroupLabel{}, CheckError(result)
+	} else {
+		return label, nil
 	}
-	return label, nil
 }
 
 func (s *BloodhoundDB) CreateAssetGroupLabel(ctx context.Context, assetGroupTierId int, userId string, name string, description string) (model.AssetGroupLabel, error) {
-	var label model.AssetGroupLabel
+	var (
+		label model.AssetGroupLabel
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionCreateAssetGroupLabel,
+			Model:  &label, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		var kindId int
 		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (name) VALUES (?) ON CONFLICT (id) DO NOTHING RETURNING id", kindTable), fmt.Sprintf("Tag_%s", strings.ReplaceAll(name, " ", "_"))).Scan(&kindId); result.Error != nil {
 			return CheckError(result)
