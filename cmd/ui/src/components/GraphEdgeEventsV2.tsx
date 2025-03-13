@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSigma } from '@react-sigma/core';
-import { useExploreSelectedItem } from 'bh-shared-ui';
+import { collapseAllSections, useExploreSelectedItem, useFeatureFlag } from 'bh-shared-ui';
 import { FC, useCallback } from 'react';
 import {
     calculateEdgeDistanceForLabel,
@@ -26,11 +26,13 @@ import {
 import { getBackgroundBoundInfo, getSelfEdgeStartingPoint } from 'src/rendering/programs/edge-label';
 import { getControlPointsFromGroupSize } from 'src/rendering/programs/edge.self';
 import { bezier } from 'src/rendering/utils/bezier';
-import { useAppSelector } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 const GraphEdgeEvents: FC = () => {
     const graphState = useAppSelector((state) => state.explore);
     const { setSelectedItem: setExploreSelectedItem } = useExploreSelectedItem();
+    const backButtonFlagQuery = useFeatureFlag('back_button_support');
+    const dispatch = useAppDispatch();
 
     const sigma = useSigma();
     const canvases = sigma.getCanvases();
@@ -41,13 +43,15 @@ const GraphEdgeEvents: FC = () => {
 
     const onClickEdge = useCallback(
         (id: string) => {
+            if (backButtonFlagQuery.data?.enabled) {
+                setExploreSelectedItem(id);
+            }
             const exploreGraphId = sigma.getGraph().getEdgeAttribute(id, 'exploreGraphId');
             const selectedItem = graphState.chartProps.items?.[id] || graphState.chartProps.items?.[exploreGraphId];
+            dispatch(collapseAllSections());
             if (!selectedItem) return;
-
-            setExploreSelectedItem(exploreGraphId);
         },
-        [graphState.chartProps.items, sigma, setExploreSelectedItem]
+        [graphState.chartProps.items, sigma, setExploreSelectedItem, backButtonFlagQuery.data?.enabled, dispatch]
     );
 
     const handleEdgeEvents = useCallback(

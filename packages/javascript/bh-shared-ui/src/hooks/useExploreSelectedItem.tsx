@@ -29,6 +29,7 @@ export const useExploreSelectedItem = () => {
             if (itemId !== selectedItem)
                 setExploreParams({
                     selectedItem: itemId,
+                    expandedPanelSections: null,
                 });
         },
         [selectedItem, setExploreParams]

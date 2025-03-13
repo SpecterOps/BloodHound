@@ -48,6 +48,8 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
         if (backButtonFlag?.enabled && previousSelectedNode?.id !== selectedNode?.id && expandedPanelSections) {
             const initialExpandedSections = { ...formatPanelSectionsParams(expandedPanelSections) };
             setExpandedSections(initialExpandedSections);
+        } else if (!backButtonFlag?.enabled && previousSelectedNode?.id !== selectedNode?.id) {
+            setExpandedSections({});
         }
     }, [
         setExpandedSections,

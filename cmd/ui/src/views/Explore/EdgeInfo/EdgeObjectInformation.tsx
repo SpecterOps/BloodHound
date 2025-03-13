@@ -23,8 +23,9 @@ import {
     apiClient,
     formatObjectInfoFields,
 } from 'bh-shared-ui';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
+import usePreviousValue from 'src/hooks/usePreviousValue';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 
 const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | number, edgeKind: string): string =>
@@ -32,6 +33,14 @@ const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | n
 
 const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
     const [isExpanded, setIsExpanded] = useState(true);
+
+    const previousId = usePreviousValue(selectedEdge.id);
+
+    useEffect(() => {
+        if (previousId !== selectedEdge.id) {
+            setIsExpanded(true);
+        }
+    }, [previousId, selectedEdge.id]);
 
     const {
         data: cypherResponse,

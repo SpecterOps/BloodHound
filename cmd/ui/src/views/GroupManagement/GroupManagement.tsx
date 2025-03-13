@@ -23,6 +23,7 @@ import {
     Permission,
     TIER_ZERO_TAG,
     searchbarActions,
+    useExploreParams,
     useFeatureFlag,
     useNodeByObjectId,
     usePermissions,
@@ -47,6 +48,7 @@ const GroupManagement = () => {
     // Kept out of the shared UI due to diff between GraphNodeTypes across apps
     const [openNode, setOpenNode] = useState<SelectedNode | null>(null);
     const getGraphNodeByObjectId = useNodeByObjectId(openNode?.id);
+    const { setExploreParams } = useExploreParams();
 
     const { checkPermission } = usePermissions();
 
@@ -56,6 +58,9 @@ const GroupManagement = () => {
             type: member.primary_kind as EntityKinds,
             name: member.name,
         });
+        if (backButtonFlagQuery.data?.enabled) {
+            setExploreParams({ expandedPanelSections: null });
+        }
     };
 
     const handleShowNodeInExplore = () => {

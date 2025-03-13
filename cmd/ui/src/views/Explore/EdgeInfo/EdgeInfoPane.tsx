@@ -15,7 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps } from '@mui/material';
-import { EdgeSections, edgeSectionToggle, useExploreParams, useFeatureFlag, usePaneStyles } from 'bh-shared-ui';
+import {
+    EdgeSections,
+    collapseAllSections,
+    edgeSectionToggle,
+    useExploreParams,
+    useFeatureFlag,
+    usePaneStyles,
+} from 'bh-shared-ui';
 import React, { useEffect, useState } from 'react';
 import usePreviousValue from 'src/hooks/usePreviousValue';
 import { useAppDispatch } from 'src/store';
@@ -38,6 +45,8 @@ const EdgeInfoPane: React.FC<{ sx?: SxProps; selectedEdge?: any }> = ({ sx, sele
                     expanded: true,
                 })
             );
+        } else if (!backButtonFlag?.enabled && previousSelectedEdge?.id !== selectedEdge?.id) {
+            dispatch(collapseAllSections());
         }
     }, [expandedPanelSections, dispatch, backButtonFlag, previousSelectedEdge, selectedEdge]);
 

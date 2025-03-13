@@ -29,7 +29,6 @@ export type ExploreQueryParams = {
     searchType: SearchType | null;
     expandedPanelSections: string[] | null;
     selectedItem: string | null;
-    searchTab: string | null;
     relationshipQueryType: string | null;
     relationshipQueryItemId: string | null;
     pathFilters: EdgeCheckboxType['edgeType'][] | null;
@@ -74,7 +73,6 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         secondarySearch: searchParams.get('secondarySearch'),
         cypherSearch: searchParams.get('cypherSearch'),
         searchType: parseSearchType(searchParams.get('searchType')),
-        searchTab: parseSearchType(searchParams.get('searchTab')),
         expandedPanelSections: searchParams.getAll('expandedPanelSections'),
         selectedItem: searchParams.get('selectedItem'),
         relationshipQueryType: searchParams.get('relationshipQueryType'),
@@ -90,7 +88,6 @@ export const useExploreParams = (): UseExploreParamsReturn => {
                 'secondarySearch',
                 'cypherSearch',
                 'searchType',
-                'searchTab',
                 'expandedPanelSections',
                 'selectedItem',
                 'relationshipQueryType',

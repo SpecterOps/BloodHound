@@ -22,7 +22,8 @@ import {
     formatObjectInfoFields,
     useFetchEntityProperties,
 } from 'bh-shared-ui';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import usePreviousValue from 'src/hooks/usePreviousValue';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
@@ -33,8 +34,18 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
         nodeType,
         databaseId,
     });
-    const sectionLabel = 'Object Information';
+
     const [isExpanded, setIsExpanded] = useState(true);
+
+    const previousId = usePreviousValue(id);
+
+    useEffect(() => {
+        if (previousId !== id) {
+            setIsExpanded(true);
+        }
+    }, [previousId, id]);
+
+    const sectionLabel = 'Object Information';
 
     const handleOnChange = () => {
         setIsExpanded(!isExpanded);
