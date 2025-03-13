@@ -165,6 +165,7 @@ type Database interface {
 	DatapipeStatusData
 
 	// Asset Group Labels
+	AssetGroupHistoryData
 	AssetGroupLabelData
 	AssetGroupLabelSelectorData
 }
