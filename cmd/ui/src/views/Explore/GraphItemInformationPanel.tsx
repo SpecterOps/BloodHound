@@ -39,9 +39,6 @@ const GraphItemInformationPanel = () => {
         return <EntityInfoPanel sx={infoPaneStyles} selectedNode={null} />;
     }
 
-    // todo better error and loading state handling
-    if (selectedItemQuery.isLoading) return null;
-
     if (selectedItemQuery.isError) {
         return (
             <EntityInfoPanel
