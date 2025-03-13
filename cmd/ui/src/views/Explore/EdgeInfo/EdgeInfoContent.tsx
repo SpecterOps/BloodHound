@@ -37,33 +37,37 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 
-const getOnChange = (dispatch: Dispatch<any>, sourceNodeId: number, targetNodeId: number, selectedEdgeName: string) => {
-    return async (label: string, isOpen: boolean) => {
-        if (isOpen) {
-            dispatch(setGraphLoading(true));
-            await apiClient
-                .getEdgeComposition(sourceNodeId, targetNodeId, selectedEdgeName)
-                .then((result) => {
-                    if (isEmpty(result.data.data.nodes)) {
-                        throw new Error('empty result set');
-                    }
-                    const formattedData = transformToFlatGraphResponse(result.data);
+const getOnChange = async (
+    dispatch: Dispatch<any>,
+    sourceNodeId: number,
+    targetNodeId: number,
+    selectedEdgeName: string,
+    isOpen: boolean
+) => {
+    if (isOpen) {
+        dispatch(setGraphLoading(true));
+        await apiClient
+            .getEdgeComposition(sourceNodeId, targetNodeId, selectedEdgeName)
+            .then((result) => {
+                if (isEmpty(result.data.data.nodes)) {
+                    throw new Error('empty result set');
+                }
+                const formattedData = transformToFlatGraphResponse(result.data);
 
-                    dispatch(saveResponseForExport(formattedData));
-                    dispatch(putGraphData(formattedData));
-                })
-                .catch((err) => {
-                    if (err?.code === 'ERR_CANCELED') {
-                        return;
-                    }
-                    dispatch(putGraphError(err));
-                    dispatch(addSnackbar('Query failed. Please try again.', 'edgeCompositionGraphQuery', {}));
-                })
-                .finally(() => {
-                    dispatch(setGraphLoading(false));
-                });
-        }
-    };
+                dispatch(saveResponseForExport(formattedData));
+                dispatch(putGraphData(formattedData));
+            })
+            .catch((err) => {
+                if (err?.code === 'ERR_CANCELED') {
+                    return;
+                }
+                dispatch(putGraphError(err));
+                dispatch(addSnackbar('Query failed. Please try again.', 'edgeCompositionGraphQuery', {}));
+            })
+            .finally(() => {
+                dispatch(setGraphLoading(false));
+            });
+    }
 };
 
 const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
@@ -108,7 +112,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                             dispatch(edgeSectionToggle({ section: sectionKeyLabel, expanded: !isExpandedSection }));
                         };
 
-                        const handleOnChange = () => {
+                        const handleOnChange = (isOpen: boolean) => {
                             handleCurrentSectionToggle();
                             if (backButtonFlag?.enabled) {
                                 setExpandedPanelSectionsParam();
@@ -118,7 +122,8 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                     dispatch,
                                     parseInt(`${sourceNode.id}`),
                                     parseInt(`${targetNode.id}`),
-                                    selectedEdge.name
+                                    selectedEdge.name,
+                                    isOpen
                                 );
                             }
                         };
