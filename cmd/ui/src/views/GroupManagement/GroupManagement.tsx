@@ -67,8 +67,10 @@ const GroupManagement = () => {
             };
 
             if (backButtonFlagQuery.data?.enabled) {
-                // TODO: need to set additional node search query params here so that single node appears on explore page graph
-                navigate(ROUTE_EXPLORE + '?selectedItem=' + getGraphNodeByObjectId.data?.id);
+                navigate({
+                    pathname: ROUTE_EXPLORE,
+                    search: `?selectedItem=${getGraphNodeByObjectId.data?.id}&searchType=node&primarySearch=${openNode?.id}`,
+                });
             } else {
                 dispatch(searchbarActions.sourceNodeSelected(searchNode));
                 dispatch(setSelectedNode(openNode));
