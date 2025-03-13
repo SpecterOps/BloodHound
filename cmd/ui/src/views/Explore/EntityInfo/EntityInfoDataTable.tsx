@@ -120,7 +120,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
 
     const setNodeSearchParams = (item: SelectedNode) => {
         setExploreParams({
-            primarySearch: item.id ?? item.name,
+            primarySearch: item.id,
             searchType: 'node',
             exploreSearchTab: 'node',
         });
