@@ -19,6 +19,7 @@ package ein
 import (
 	"fmt"
 	"log/slog"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -56,7 +57,7 @@ func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
 	}
 }
 
-func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
+func ConvertComputerToNode(item Computer) IngestibleNode {
 	itemProps := item.Properties
 	if itemProps == nil {
 		itemProps = make(map[string]any)
@@ -90,8 +91,58 @@ func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
 		PropertyMap: itemProps,
-		Label:       itemType,
+		Label:       ad.Computer,
 	}
+}
+
+func ConvertEnterpriseCAToNode(item EnterpriseCA) IngestibleNode {
+	itemProps := item.Properties
+	if itemProps == nil {
+		itemProps = make(map[string]any)
+	}
+
+	convertOwnsEdgeToProperty(item.IngestBase, itemProps)
+
+	var (
+		hashedEnrollmentData = make([]string, 0)
+		hasCollectedData     bool
+	)
+
+	for _, endpoint := range item.HttpEnrollmentEndpoints {
+		if !endpoint.Collected {
+			continue
+		}
+
+		hasCollectedData = true
+
+		if endpoint.Result.ADCSWebEnrollmentHTTP {
+			hashedEnrollmentData = append(hashedEnrollmentData, hashEnrollmentEndpoint(endpoint.Result))
+		}
+
+		if endpoint.Result.ADCSWebEnrollmentHTTPS && !endpoint.Result.ADCSWebEnrollmentEPA {
+			hashedEnrollmentData = append(hashedEnrollmentData, hashEnrollmentEndpoint(endpoint.Result))
+		}
+	}
+
+	if len(hashedEnrollmentData) > 0 {
+		itemProps[ad.EnrollmentEndpoints.String()] = hashedEnrollmentData
+		itemProps[ad.HasVulnerableEndpoint.String()] = true
+	}
+
+	if hasCollectedData {
+		itemProps[ad.HasVulnerableEndpoint.String()] = false
+	}
+
+	return IngestibleNode{
+		ObjectID:    item.ObjectIdentifier,
+		PropertyMap: itemProps,
+		Label:       ad.EnterpriseCA,
+	}
+}
+
+func hashEnrollmentEndpoint(endpoint CAEnrollmentEndpoint) string {
+	encodedUrl := url.QueryEscape(endpoint.Url)
+	return fmt.Sprintf("%s|%t|%t|%t", encodedUrl, endpoint.ADCSWebEnrollmentHTTP, endpoint.ADCSWebEnrollmentHTTPS, endpoint.ADCSWebEnrollmentEPA)
 }
 
 // This function is to support our new method of doing Owns edges and makes older data sets backwards compatible

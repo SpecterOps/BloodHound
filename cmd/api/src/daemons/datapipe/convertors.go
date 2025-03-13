@@ -24,7 +24,7 @@ import (
 )
 
 func convertComputerData(computer ein.Computer, converted *ConvertedData) {
-	baseNodeProp := ein.ConvertComputerToNode(computer, ad.Computer)
+	baseNodeProp := ein.ConvertComputerToNode(computer)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, computer.Aces, computer.ObjectIdentifier, ad.Computer)...)
 	if primaryGroupRel := ein.ParsePrimaryGroup(computer.IngestBase, ad.Computer, computer.PrimaryGroupSID); primaryGroupRel.IsValid() {
 		converted.RelProps = append(converted.RelProps, primaryGroupRel)
@@ -168,7 +168,7 @@ func convertRootCAData(rootca ein.RootCA, converted *ConvertedData) {
 }
 
 func convertEnterpriseCAData(enterpriseca ein.EnterpriseCA, converted *ConvertedData) {
-	converted.NodeProps = append(converted.NodeProps, ein.ConvertObjectToNode(enterpriseca.IngestBase, ad.EnterpriseCA))
+	converted.NodeProps = append(converted.NodeProps, ein.ConvertEnterpriseCAToNode(enterpriseca))
 	converted.NodeProps = append(converted.NodeProps, ein.ParseCARegistryProperties(enterpriseca))
 	converted.RelProps = append(converted.RelProps, ein.ParseEnterpriseCAMiscData(enterpriseca)...)
 

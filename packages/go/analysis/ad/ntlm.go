@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/specterops/bloodhound/dawgs/traversal"
@@ -262,13 +264,7 @@ func coerceAndRelayNTLMtoADCSPath1Pattern(domainID graph.ID) traversal.PatternCo
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
-			query.Or(
-				query.Equals(query.EndProperty(ad.ADCSWebEnrollmentHTTP.String()), true),
-				query.And(
-					query.Equals(query.EndProperty(ad.ADCSWebEnrollmentHTTPS.String()), true),
-					query.Equals(query.EndProperty(ad.ADCSWebEnrollmentHTTPSEPA.String()), false),
-				),
-			),
+			query.Equals(query.EndProperty(ad.HasVulnerableEndpoint.String()), true),
 		)).
 		OutboundWithDepth(0, 0, query.And(
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
@@ -372,22 +368,38 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 	return nil
 }
 
+type HttpEndpoint struct {
+	URL      string
+	HTTP     bool
+	HTTPS    bool
+	HTTPSEPA bool
+}
+
+func decodeHttpEndpoint(endpoint string) (HttpEndpoint, error) {
+	s := strings.Split(endpoint, "|")
+	if len(s) != 4 {
+		return HttpEndpoint{}, fmt.Errorf("invalid split length: %s", endpoint)
+	} else if http, err := strconv.ParseBool(s[1]); err != nil {
+		return HttpEndpoint{}, err
+	} else if https, err := strconv.ParseBool(s[2]); err != nil {
+		return HttpEndpoint{}, err
+	} else if httpsepa, err := strconv.ParseBool(s[3]); err != nil {
+		return HttpEndpoint{}, err
+	} else {
+		return HttpEndpoint{
+			URL:      s[0],
+			HTTP:     http,
+			HTTPS:    https,
+			HTTPSEPA: httpsepa,
+		}, nil
+	}
+}
+
 func isEnterpriseCAValidForADCS(eca *graph.Node) (bool, error) {
-	if httpEnrollment, err := eca.Properties.Get(ad.ADCSWebEnrollmentHTTP.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
-		return false, err
-	} else if httpEnrollment {
-		return true, nil
-	} else if httpsEnrollment, err := eca.Properties.Get(ad.ADCSWebEnrollmentHTTPS.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
-		return false, err
-	} else if !httpsEnrollment {
-		return false, nil
-	} else if httpsEnrollmentEpa, err := eca.Properties.Get(ad.ADCSWebEnrollmentHTTPSEPA.String()).Bool(); err != nil {
-		if errors.Is(err, graph.ErrPropertyNotFound) {
-			return false, nil
-		}
+	if vulnerable, err := eca.Properties.Get(ad.HasVulnerableEndpoint.String()).Bool(); err != nil {
 		return false, err
 	} else {
-		return !httpsEnrollmentEpa, nil
+		return vulnerable, nil
 	}
 }
 
