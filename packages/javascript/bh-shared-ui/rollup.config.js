@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import typescript from '@rollup/plugin-typescript';
 import terser from '@rollup/plugin-terser';
+import typescript from '@rollup/plugin-typescript';
 import del from 'rollup-plugin-delete';
 
 export default {
@@ -36,6 +36,7 @@ export default {
         '@bloodhoundenterprise/doodleui',
         '@emotion/react',
         '@emotion/styled',
+        '@faker-js/faker',
         '@fortawesome/free-solid-svg-icons',
         '@fortawesome/fontawesome-svg-core',
         '@fortawesome/react-fontawesome',
@@ -47,6 +48,7 @@ export default {
         'clsx',
         'tailwind-merge',
         'memoize-one',
+        'react-error-boundary',
         'react-hook-form',
         'react-window-infinite-loader',
         'react-window',
@@ -63,6 +65,7 @@ export default {
         'prop-types',
         'immutable',
         'immer',
+        'msw',
         'react-immutable-proptypes',
         'lodash/toString',
         'lodash/cloneDeep',

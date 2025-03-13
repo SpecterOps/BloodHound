@@ -15,14 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
-import { DefaultTheme } from '@mui/styles';
-import makeStyles from '@mui/styles/makeStyles';
 import {
     AppNotifications,
     GenericErrorBoundaryFallback,
     MainNav,
     MainNavData,
     NotificationsProvider,
+    PrimaryNavItem,
     components,
     darkPalette,
     lightPalette,
@@ -30,6 +29,7 @@ import {
     typography,
     useFeatureFlags,
     useShowNavBar,
+    useStyles,
 } from 'bh-shared-ui';
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
@@ -49,13 +49,27 @@ import {
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
 
+const tierFlagToggle = (primaryNavList: PrimaryNavItem[], tierFlagEnabled?: boolean) => {
+    if (tierFlagEnabled) {
+        const groupManagementIndex = primaryNavList.findIndex((listItem) => {
+            return listItem.label === groupManagementNavItem.label;
+        });
+        primaryNavList.splice(groupManagementIndex, 1, tierManagementNavItem);
+    } else {
+        const tierManagementIndex = primaryNavList.findIndex((listItem) => {
+            return listItem.label === tierManagementNavItem.label;
+        });
+        primaryNavList.splice(tierManagementIndex, 1, groupManagementNavItem);
+    }
+};
+
 export const Inner: React.FC = () => {
     const dispatch = useAppDispatch();
+    const queryClient = useQueryClient();
+    const classes = useStyles();
+
     const authState = useAppSelector((state) => state.auth);
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
-    const darkMode = useAppSelector((state) => state.global.view.darkMode);
-
-    const queryClient = useQueryClient();
 
     const featureFlagsRes = useFeatureFlags({
         retry: false,
@@ -68,98 +82,6 @@ export const Inner: React.FC = () => {
         secondaryList: useMainNavSecondaryListData(),
     };
     const showNavBar = useShowNavBar(ROUTES);
-
-    const useStyles = makeStyles((theme: DefaultTheme) => ({
-        applicationContainer: {
-            display: 'flex',
-            position: 'relative',
-            flexDirection: 'column',
-            height: '100%',
-            overflow: 'hidden',
-            '@global': {
-                '.api-explorer .swagger-ui': {
-                    [`& a.nostyle,
-                    & div.renderedMarkdown > p,
-                    & .response-col_status,
-                    & .col_header,
-                    & div.parameter__name,
-                    & .parameter__in,
-                    & div.opblock-summary-description,
-                    & div > small,
-                    & li.tabitem,
-                    & .response-col_links,
-                    & .opblock-description-wrapper > p,
-                    & .btn-group > button,
-                    & textarea,
-                    & select,
-                    & .parameter__type,
-                    & .prop-format,
-                    `]: {
-                        color: theme.palette.color.primary,
-                    },
-                    ['& input, & textarea, & select, & .models, & .filter-container .operation-filter-input']: {
-                        backgroundColor: theme.palette.neutral.primary,
-                        border: `1px solid ${theme.palette.grey[700]}`,
-
-                        '&:hover': {
-                            borderColor: theme.palette.color.links,
-                        },
-                        '&:focus': {
-                            outline: `1px solid ${theme.palette.color.links}`,
-                        },
-                    },
-                    '& .models': {
-                        '& h4': {
-                            borderBottomColor: theme.palette.grey[700],
-                        },
-                        '& span, & table': {
-                            color: theme.palette.color.primary,
-                        },
-                        '& svg': {
-                            fill: theme.palette.color.primary,
-                        },
-                        '& model-box': {
-                            backgroundColor: theme.palette.neutral.primary,
-                        },
-                    },
-                    '& .parameter__name.required::after': {
-                        color: theme.palette.color.error,
-                    },
-                    '& .responses-inner': {
-                        [`& h4, & h5`]: {
-                            color: theme.palette.color.primary,
-                        },
-                    },
-                    '& svg': {
-                        fill: theme.palette.color.primary,
-                    },
-                    '& .opblock-deprecated': {
-                        '& .opblock-title_normal': {
-                            color: theme.palette.color.primary,
-                        },
-                    },
-                    '& .opblock-section-header': {
-                        backgroundColor: theme.palette.neutral.primary,
-                        '& h4, & .btn': {
-                            color: theme.palette.color.primary,
-                        },
-                    },
-                },
-            },
-        },
-        applicationHeader: {
-            flexGrow: 0,
-            zIndex: theme.zIndex.drawer + 1,
-        },
-        applicationContent: {
-            backgroundColor: theme.palette.neutral.primary,
-            flexGrow: 1,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-        },
-    }));
-
-    const classes = useStyles();
 
     // initialize authentication state and BHE client request/response handlers
     useEffect(() => {
@@ -178,7 +100,11 @@ export const Inner: React.FC = () => {
         if (!darkModeFeatureFlag?.enabled) {
             dispatch(setDarkMode(false));
         }
-    }, [dispatch, queryClient, featureFlagsRes.data, darkMode]);
+
+        // Change the nav item routing for group/tier management based on flag value
+        const tierManagementFlag = featureFlagsRes.data.find((flag) => flag.key === 'tier_management_engine');
+        tierFlagToggle(mainNavData.primaryList, tierManagementFlag?.enabled);
+    }, [dispatch, queryClient, featureFlagsRes.data, darkMode, mainNavData.primaryList]);
 
     // block rendering until authentication initialization is complete
     if (!authState.isInitialized) {

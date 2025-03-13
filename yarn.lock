@@ -4666,6 +4666,7 @@ __metadata:
     "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.15
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
+    "@faker-js/faker": ^7.3.0
     "@fortawesome/fontawesome-free": ^6.4.2
     "@fortawesome/fontawesome-svg-core": ^6.4.2
     "@fortawesome/free-solid-svg-icons": ^6.4.2
@@ -4710,6 +4711,7 @@ __metadata:
     prop-types: ^15.8.1
     react: ^18.2.0
     react-dom: ^18.2.0
+    react-error-boundary: ^3.1.4
     react-hook-form: ^7.45.1
     react-immutable-proptypes: ^2.2.0
     react-query: ^3.39.3

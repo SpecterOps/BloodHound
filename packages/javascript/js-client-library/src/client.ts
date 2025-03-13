@@ -17,9 +17,12 @@
 import axios, { AxiosInstance } from 'axios';
 import {
     ActiveDirectoryDataQualityResponse,
+    AssetGroupLabelResponse,
     AssetGroupMemberCountsResponse,
+    AssetGroupMemberResponse,
     AssetGroupMembersResponse,
     AssetGroupResponse,
+    AssetGroupSelectorResponse,
     AzureDataQualityResponse,
     BasicResponse,
     CreateAuthTokenResponse,
@@ -114,6 +117,27 @@ class BHEAPIClient {
     getAuditLogs = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/audit', options);
 
     /* asset groups */
+
+    getAssetGroupLabels = (options?: types.RequestOptions) =>
+        this.baseClient.get<AssetGroupLabelResponse>(`/api/v2/asset-group-labels`, options);
+
+    getAssetGroupSelectors = (assetGroupId: number, options?: types.RequestOptions) =>
+        this.baseClient.get<AssetGroupSelectorResponse>(
+            `/api/v2/asset-group-labels/${assetGroupId}/selectors`,
+            options
+        );
+
+    getAssetGroupLabelMembers = (assetGroupId: number, options?: types.RequestOptions) =>
+        this.baseClient.get<AssetGroupMemberResponse>(`/api/v2/asset-group-labels/${assetGroupId}/members`, options);
+
+    getAssetGroupSelectorMembers = (assetGroupId: number, selectorId: number, options?: types.RequestOptions) =>
+        this.baseClient.get<AssetGroupMemberResponse>(
+            `/api/v2/asset-group-labels/${assetGroupId}/selectors/${selectorId}/members`,
+            options
+        );
+
+    /* */
+
     createAssetGroup = (assetGroup: types.CreateAssetGroupRequest, options?: types.RequestOptions) =>
         this.baseClient.post('/api/v2/asset-groups', assetGroup, options);
 
