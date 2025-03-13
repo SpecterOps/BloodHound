@@ -34,7 +34,7 @@ const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
     },
 }));
 
-const CopyMenuItemV1 = () => {
+const CopyMenuItem = () => {
     const { addNotification } = useNotifications();
 
     const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
@@ -80,4 +80,4 @@ const CopyMenuItemV1 = () => {
     );
 };
 
-export default CopyMenuItemV1;
+export default CopyMenuItem;
