@@ -1,11 +1,3 @@
-parameters:
-  - name: asset_group_label_id
-    description: ID of the asset_group_label record to retrieve
-    in: path
-    required: true
-    schema:
-      type: integer
-      format: int
 get:
   operationId: GetAssetGroupLabelsSelectors
   summary: Get Asset Group Label selectors
@@ -13,7 +5,15 @@ get:
   tags:
     - Asset Group Management
     - Enterprise
-    - Community 
+    - Community
+  parameters:
+  - name: asset_group_label_id
+    description: ID of the asset_group_label record to retrieve
+    in: path
+    required: true
+    schema:
+      type: integer
+      format: int
   responses:
     200:
       description: OK

@@ -1,18 +1,12 @@
 allOf:
+  - $ref: './model.components.int32.id.yaml'
+  - $ref: './model.components.timestamps.yaml'
   - type: object
     properties:
-      object_id:
-        type: integer
       asset_group_label_id:
         type: integer
-      created_at:
-        type: string
-        format: date-time
       created_by:
         type: string
-      updated_at:
-        type: string
-        format: date-time
       updated_by:
         type: string
       disabled_at:

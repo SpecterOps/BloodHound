@@ -4429,18 +4429,6 @@
       }
     },
     "/api/v2/asset-group-labels/{asset_group_label_id}/selectors": {
-      "parameters": [
-        {
-          "name": "asset_group_label_id",
-          "description": "ID of the asset_group_label record to retrieve",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "integer",
-            "format": "int"
-          }
-        }
-      ],
       "get": {
         "operationId": "GetAssetGroupLabelsSelectors",
         "summary": "Get Asset Group Label selectors",
@@ -4449,6 +4437,18 @@
           "Asset Group Management",
           "Enterprise",
           "Community"
+        ],
+        "parameters": [
+          {
+            "name": "asset_group_label_id",
+            "description": "ID of the asset_group_label record to retrieve",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int"
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -15655,24 +15655,19 @@
       "model.asset-group-label-selector": {
         "allOf": [
           {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
             "type": "object",
             "properties": {
-              "object_id": {
-                "type": "integer"
-              },
               "asset_group_label_id": {
                 "type": "integer"
               },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              },
               "created_by": {
                 "type": "string"
-              },
-              "updated_at": {
-                "type": "string",
-                "format": "date-time"
               },
               "updated_by": {
                 "type": "string"
@@ -15708,9 +15703,6 @@
       },
       "model.asset-group-label-selectors": {
         "allOf": [
-          {
-            "$ref": "#/components/schemas/model.components.timestamps"
-          },
           {
             "type": "object",
             "properties": {

@@ -1,5 +1,4 @@
 allOf:
-  - $ref: './model.components.timestamps.yaml'
   - type: object
     properties:
       entries:
