@@ -63,7 +63,8 @@ func (s *Resources) CreateAssetGroupLabelSelector(response http.ResponseWriter, 
 	} else if _, err := s.DB.GetAssetGroupLabel(request.Context(), id); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupLabelId, request), response)
 	} else if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "unknown user", request), response)
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if validCypher, err := areCypherSelectorsValidCypher(s.GraphQuery, sel.Seeds); !validCypher {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("cypher is invalid: %v", err), request), response)
 	} else if selector, err := s.DB.CreateAssetGroupLabelSelector(request.Context(), id, actor.ID.String(), sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
