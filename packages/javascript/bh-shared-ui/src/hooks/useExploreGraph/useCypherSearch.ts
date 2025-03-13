@@ -13,10 +13,11 @@ export const useCypherSearch = () => {
         }
     }, [cypherSearch]);
 
-    const performSearch = () => {
+    // create query param with a query string if it is passed, and the field state otherwise
+    const performSearch = (query?: string) => {
         setExploreParams({
             searchType: 'cypher',
-            cypherSearch: btoa(cypherQuery),
+            cypherSearch: btoa(query ?? cypherQuery),
         });
     };
 

@@ -16,15 +16,9 @@
 
 import { Box, Tab, Tabs, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import {
-    PersonalSearchList,
-    PrebuiltSearchList,
-    CommonSearches as prebuiltSearchList,
-    searchbarActions,
-} from 'bh-shared-ui';
+import { PersonalSearchList, PrebuiltSearchList, CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { startCypherQuery } from 'src/ducks/explore/actions';
+import { useCypherSearchSwitch } from './switches';
 
 const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
@@ -49,9 +43,10 @@ const useStyles = makeStyles((theme) => ({
 
 const CommonSearches = () => {
     const classes = useStyles();
-    const dispatch = useDispatch();
 
     const [activeTab, setActiveTab] = useState(AD_TAB);
+
+    const { setCypherQuery, performSearch } = useCypherSearchSwitch();
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
         setActiveTab(newValue);
@@ -66,8 +61,8 @@ const CommonSearches = () => {
         .map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
 
     const handleClick = (query: string) => {
-        dispatch(searchbarActions.cypherQueryEdited(query));
-        dispatch(startCypherQuery(query));
+        setCypherQuery(query);
+        performSearch(query);
     };
 
     return (

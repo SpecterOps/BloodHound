@@ -15,7 +15,7 @@ export const useCypherSearchSwitch = () => {
         return {
             cypherQuery: reduxCypherQuery,
             setCypherQuery: (query: string) => dispatch(searchbarActions.cypherQueryEdited(query)),
-            performSearch: () => dispatch(searchbarActions.cypherSearch(reduxCypherQuery)),
+            performSearch: (query?: string) => dispatch(searchbarActions.cypherSearch(query ?? reduxCypherQuery)),
         };
     }
 };
