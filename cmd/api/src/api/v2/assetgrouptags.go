@@ -85,3 +85,20 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
 	}
 }
+
+func (s *Resources) GetAssetGroupLabelsSelectors(response http.ResponseWriter, request *http.Request) {
+
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selector")()
+
+	if rawAssetGroupLabelID, hasAssetGroupLabelID := mux.Vars(request)[api.URIPathVariableAssetGroupLabelID]; !hasAssetGroupLabelID {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrNoAssetGroupLabelId, request), response)
+	} else if assetGroupLabelID, err := strconv.Atoi(rawAssetGroupLabelID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupLabelId, request), response)
+	} else if _, err := s.DB.GetAssetGroupLabel(request.Context(), assetGroupLabelID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupLabelId, request), response)
+	} else if selectors, err := s.DB.GetAssetGroupLabelSelectors(request.Context(), assetGroupLabelID); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: selectors}, http.StatusOK, response)
+	}
+}
