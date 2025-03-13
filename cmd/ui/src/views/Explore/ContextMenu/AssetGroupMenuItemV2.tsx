@@ -23,7 +23,10 @@ import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/a
 import { toggleOwnedObjectNode, toggleTierZeroNode } from 'src/ducks/explore/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
-const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
+const AssetGroupMenuItemV2: FC<{ assetGroupId: number; assetGroupName: string }> = ({
+    assetGroupId,
+    assetGroupName,
+}) => {
     const { addNotification } = useNotifications();
     const dispatch = useAppDispatch();
 
@@ -74,14 +77,14 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     );
 
     const handleAddToAssetGroup = () => {
-        if (selectedItemQuery.data) {
-            mutation.mutate({ nodeId: (selectedItemQuery.data as NodeResponse).objectId, action: 'add' });
+        if (selectedItemQuery.data && 'objectId' in selectedItemQuery.data) {
+            mutation.mutate({ nodeId: selectedItemQuery.data.objectId, action: 'add' });
         }
     };
 
     const handleRemoveFromAssetGroup = () => {
-        if (selectedItemQuery.data) {
-            mutation.mutate({ nodeId: (selectedItemQuery.data as NodeResponse).objectId, action: 'remove' });
+        if (selectedItemQuery.data && 'objectId' in selectedItemQuery.data) {
+            mutation.mutate({ nodeId: selectedItemQuery.data.objectId, action: 'remove' });
         }
     };
 
@@ -160,4 +163,4 @@ const ConfirmationDialog: FC<{
     );
 };
 
-export default AssetGroupMenuItem;
+export default AssetGroupMenuItemV2;

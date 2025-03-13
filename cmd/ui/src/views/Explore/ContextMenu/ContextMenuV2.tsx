@@ -23,7 +23,7 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 import AssetGroupMenuItem from './AssetGroupMenuItemV2';
 import CopyMenuItem from './CopyMenuItemV2';
 
-const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; handleClose: () => void }> = ({
+const ContextMenuV2: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; handleClose: () => void }> = ({
     contextMenu,
     handleClose,
 }) => {
@@ -86,4 +86,4 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
     );
 };
 
-export default ContextMenu;
+export default ContextMenuV2;

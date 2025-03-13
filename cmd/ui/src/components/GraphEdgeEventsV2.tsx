@@ -28,7 +28,7 @@ import { getControlPointsFromGroupSize } from 'src/rendering/programs/edge.self'
 import { bezier } from 'src/rendering/utils/bezier';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
-const GraphEdgeEvents: FC = () => {
+const GraphEdgeEventsV2: FC = () => {
     const graphState = useAppSelector((state) => state.explore);
     const { setSelectedItem: setExploreSelectedItem } = useExploreSelectedItem();
     const backButtonFlagQuery = useFeatureFlag('back_button_support');
@@ -193,4 +193,4 @@ const GraphEdgeEvents: FC = () => {
     );
 };
 
-export default GraphEdgeEvents;
+export default GraphEdgeEventsV2;
