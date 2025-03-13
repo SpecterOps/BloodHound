@@ -14,6 +14,9 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- This table is normally created by dawgs, as defined in schema_up.sql
+-- We add it here to aid in unit testing since the asset group management feature 
+-- also depends on the kind table. 
 CREATE TABLE IF NOT EXISTS kind
 (
   id   SMALLSERIAL,
