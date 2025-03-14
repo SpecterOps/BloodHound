@@ -47,5 +47,53 @@ describe('useExploreGraph', () => {
             const query = context.getQueryConfig(paramOptions);
             expect(query?.queryKey).toContain('pathfinding');
         });
+
+        describe('relationship search queries', () => {
+            it('returns query config when searchType is relationship and all required params are passed', () => {
+                const paramOptions: Partial<ExploreQueryParams> = {
+                    searchType: 'relationship',
+                    relationshipQueryItemId: 'testId',
+                    relationshipQueryType: 'user-member_of',
+                };
+
+                const context = exploreGraphQueryFactory(paramOptions);
+                const query = context.getQueryConfig(paramOptions);
+
+                expect(query.enabled).toBeUndefined();
+                expect(query.queryKey).toContain('relationship');
+            });
+
+            it.each([
+                {
+                    relationshipQueryItemId: 'testId',
+                    relationshipQueryType: 'user-member_of',
+                },
+                {
+                    searchType: 'relationship',
+
+                    relationshipQueryType: 'user-member_of',
+                },
+                {
+                    searchType: 'relationship',
+                    relationshipQueryItemId: 'testId',
+                },
+            ])(
+                'returns disabled config when any required param is falsey',
+                ({ searchType, relationshipQueryItemId, relationshipQueryType }) => {
+                    {
+                        const paramOptions: Partial<ExploreQueryParams> = {
+                            searchType,
+                            relationshipQueryItemId,
+                            relationshipQueryType,
+                        } as any;
+
+                        const context = exploreGraphQueryFactory(paramOptions);
+                        const query = context.getQueryConfig(paramOptions);
+
+                        expect(query.enabled).toBeFalsy();
+                    }
+                }
+            );
+        });
     });
 });

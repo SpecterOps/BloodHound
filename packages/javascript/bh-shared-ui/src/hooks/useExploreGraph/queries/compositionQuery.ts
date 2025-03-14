@@ -17,7 +17,8 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
         };
     }
 
-    const [_, sourceId, edgeType, targetId] = relationshipQueryItemId.split('_'); // TODO: determined in entity panel effort
+    const [_, sourceId, edgeType, targetId] = relationshipQueryItemId.split('_'); // TODO: determined in entity panel work
+
     if (!sourceId || !edgeType || !targetId || isNaN(Number(sourceId)) || isNaN(Number(targetId)))
         return {
             enabled: false,

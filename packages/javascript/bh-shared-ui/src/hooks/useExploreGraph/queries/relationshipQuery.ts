@@ -5,7 +5,7 @@ import { ExploreGraphQuery, ExploreGraphQueryError, ExploreGraphQueryKey, Explor
 const relationshipSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { relationshipQueryType, relationshipQueryItemId, searchType } = paramOptions;
 
-    const isEdgeId = relationshipQueryItemId?.includes('_'); // TODO: tobe determined from entity panel work
+    const isEdgeId = relationshipQueryItemId?.includes('_'); // TODO: to be determined from entity panel work
 
     if (searchType !== 'relationship' || isEdgeId || !relationshipQueryItemId || !relationshipQueryType) {
         return {
