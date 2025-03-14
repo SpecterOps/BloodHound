@@ -64,45 +64,46 @@ Reach out to your point of contact for a discount code and register today: [htt
 
 # BloodHound v5.6.0 Release Notes
 
-## BloodHound Enterprise v5.6.0
+### BloodHound (v5.6.0)
+#### New and Improved Features
 
-### General Availability of AD Certificate Services Coverage
+* **General Availability of AD Certificate Services Coverage -** AD Certificate Services Attack Paths are now generally available to all BloodHound users. This release includes support for: GoldenCert, ESC1, ESC3, ESC6a, ESC9a, ESC10a (requires latest version of SharpHound)
+* **New "Power User" role -** BloodHound now includes an additional role as a bridge between "User" and "Administrator" for customers with users who should be able to modify the graph through file uploads or modifications of collectors but who should not be able to modify who can access the environment. For more, see [Administering users and roles](/manage-bloodhound/auth/users-and-roles).
+* **Filtering in Group Management** **-**The Group Management view will now let users filter for objects within an Asset Group based on object type and whether the object is a custom-assigned object.
+<Frame>
+  <img src="/assets/image-12.png" alt=""/>
+</Frame>
+* **Audit Log Enhancements - **BloodHound audit logs got a significant expansion, including the addition of logging failed actions, as well as including information such as the user's email address, and the source IP (including any proxies) in each record.
+* Improved accuracy in the "... where Domain Users can RDP" default cypher queries
+* _\[BHE Only\] _Analysis will now separate warnings from errors in completion, leading to more accurate completion of analysis in environments
 
-We're excited to announce the general availability of Active Directory Certificate Services (ADCS) Attack Path coverage in BloodHound Enterprise! This release includes:
+#### Bug Fixes
 
-- Full support for ADCS attack path detection and analysis
-- Enhanced visualization of certificate-based attack paths
-- Comprehensive documentation of ADCS-related security risks
+* Data Quality page fails to count Azure tenant objects in specific scenarios
+* Improved accuracy of the "count" responses from paginated API queries
+* Resolved a specific issue with SAML implementations resulting in inaccurate "NotAuthorized" responses
+* Resolved several role-privilege issues with BloodHound roles (The "User" role can no longer perform actions in the Manage Clients page, the "Upload Only" role can no longer view Experimental Features)
+* Moving from "Pathfinding" to "Search" on the "Explore" page will now properly disable pathfinding
+* Cursors will no longer jump to the end of the search fields on "Explore"
+* _\[BHE Only\] _TrustedBy edges should now reconcile appropriately
 
-For more information about administering users and roles, see [Administering users and roles](/manage-bloodhound/auth/users-and-roles).
+### SharpHound (v2.3.5 - BHE, v2.3.2 - CE)
 
-### New Features
+#### New and Improved Features
 
-- **ADCS Attack Path Coverage**: Complete support for detecting and analyzing ADCS-based attack paths
-- **Improved Performance**: Enhanced database query optimization
-- **UI Enhancements**: Better visualization of complex attack paths
+* **Additional support for ADCS collection capabilities _-_**SharpHound will now collect additional information required to analyze and generate ADCS Attack Paths.
 
-### Bug Fixes
+#### Bug Fixes
 
-- Fixed several issues with SAML authentication
-- Improved error handling for API requests
-- Resolved UI rendering inconsistencies
+* Resolved issues with hitting KERNELFAULT errors during collection
+* Improved handling and retries for LDAP ServerDown responses, preventing cross-trust collection
 
-## SharpHound v2.3.2
+### AzureHound (v2.1.7)
 
-### New Features
+#### New and Improved Features
 
-- **Enhanced ADCS Collection**: Improved collection of certificate templates and enrollment rights
-- **Better Performance**: Optimized collection routines
-- **Improved Logging**: More detailed collection status information
+* **Memory usage reduction -** AzureHound will now utilize significantly less memory when processing Azure group membership information
 
-### Bug Fixes
+#### Bug Fixes
 
-- Fixed an issue with group membership enumeration
-- Resolved memory usage during large collections
-- Improved error handling for network timeouts
-
-## AzureHound v2.1.6
-
-No new release for AzureHound in this version.
-
+* _\[BHE Only\]_ AzureHound will now properly respect the verbosity setting set in config.json

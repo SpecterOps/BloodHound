@@ -49,8 +49,8 @@ jobs:
       image_provenance: false
       build_outputs: type=image,push=false
       dockerfile: dockerfiles/bloodhound.Dockerfile
-      image_cache_from: type=registry,ref=ghcr.io/specterops/bloodhound:buildcache
-      image_cache_to: type=registry,ref=ghcr.io/specterops/bloodhound:buildcache,mode=max
+      image_cache_from: type=gha
+      image_cache_to: type=gha,mode=max
       build_args: |
         checkout_hash=${{ github.sha }}
 

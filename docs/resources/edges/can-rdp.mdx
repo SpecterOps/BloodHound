@@ -6,7 +6,7 @@ description: "Remote Desktop access allows you to enter an interactive session w
 <img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
 
 
-This edge is created when BloodHound finds that a principal has RDP access to a computer through the edges [MemberOfLocalGroup](/resources/edges/member-of-local-group) and [RemoteInteractiveLogonPrivilege](/resources/edges/remote-interactive-logon-privilege).
+This edge will be created under the condition that the user both has membership in Remote Desktop Users and is granted the URA SeRemoteInteractiveLogonRight.  Respectively these two are visualized in BloodHound by the edges [MemberOfLocalGroup](/resources/edges/member-of-local-group) and [RemoteInteractiveLogonRight](/resources/edges/remote-interactive-logon-right).
 
 <Info>
 **Note**
