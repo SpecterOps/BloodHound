@@ -59,55 +59,55 @@ func TestGraphQuery_PrepareCypherQuery(t *testing.T) {
 	)
 
 	t.Run("invalid cypher", func(t *testing.T) {
-		_, err := gq.PrepareCypherQuery(rawCypherInvalid)
+		_, err := gq.PrepareCypherQuery(rawCypherInvalid, queries.QueryComplexityLimitExplore)
 		assert.ErrorContains(t, err, "mismatched input 'derp'")
 	})
 
 	t.Run("valid cypher with mutation while mutations disabled", func(t *testing.T) {
-		_, err := gqMutDisable.PrepareCypherQuery(rawCypherMutation)
+		_, err := gqMutDisable.PrepareCypherQuery(rawCypherMutation, queries.QueryComplexityLimitExplore)
 		assert.ErrorContains(t, err, "not supported")
 	})
 
 	t.Run("valid cypher without mutation", func(t *testing.T) {
-		preparedQuery, err := gq.PrepareCypherQuery(rawCypherRead)
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherRead, queries.QueryComplexityLimitExplore)
 		require.Nil(t, err)
 		assert.Equal(t, preparedQuery.HasMutation, false)
 	})
 
 	t.Run("valid cypher with mutation", func(t *testing.T) {
-		preparedQuery, err := gq.PrepareCypherQuery(rawCypherMutation)
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherMutation, queries.QueryComplexityLimitExplore)
 		require.Nil(t, err)
 		assert.Equal(t, preparedQuery.HasMutation, true)
 	})
 
 	t.Run("valid cypher pathfinding with expansion", func(t *testing.T) {
-		preparedQuery, err := gq.PrepareCypherQuery(rawCypherPathfindingExpansion)
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherPathfindingExpansion, queries.QueryComplexityLimitExplore)
 		require.Nil(t, err)
 		assert.Equal(t, preparedQuery.HasMutation, false)
 	})
 
 	t.Run("valid cypher without mutation with expansion", func(t *testing.T) {
-		preparedQuery, err := gq.PrepareCypherQuery(rawCypherReadExpansion)
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherReadExpansion, queries.QueryComplexityLimitExplore)
 		require.Nil(t, err)
 		assert.Equal(t, preparedQuery.HasMutation, false)
 	})
 
 	t.Run("valid cypher with creation and expansion", func(t *testing.T) {
-		_, err := gq.PrepareCypherQuery(rawCypherCreationAndExpansion)
+		_, err := gq.PrepareCypherQuery(rawCypherCreationAndExpansion, queries.QueryComplexityLimitExplore)
 		assert.ErrorContains(t, err, "not supported")
 	})
 
 	t.Run("valid cypher with deletion and expansion", func(t *testing.T) {
-		_, err := gq.PrepareCypherQuery(rawCypherDeleteAndExpansion)
+		_, err := gq.PrepareCypherQuery(rawCypherDeleteAndExpansion, queries.QueryComplexityLimitExplore)
 		assert.ErrorContains(t, err, "not supported")
 	})
 	t.Run("valid cypher with updates and expansion", func(t *testing.T) {
-		_, err := gq.PrepareCypherQuery(rawCypherUpdateAndExpansion)
+		_, err := gq.PrepareCypherQuery(rawCypherUpdateAndExpansion, queries.QueryComplexityLimitExplore)
 		assert.ErrorContains(t, err, "not supported")
 	})
 
 	t.Run("valid cypher without mutation while mutations disabled", func(t *testing.T) {
-		preparedQuery, err := gq.PrepareCypherQuery(rawCypherRead)
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherRead, queries.QueryComplexityLimitExplore)
 		require.Nil(t, err)
 		assert.Equal(t, preparedQuery.HasMutation, false)
 	})
@@ -152,7 +152,7 @@ func TestGraphQuery_RawCypherQuery(t *testing.T) {
 			return nil
 		})
 
-		preparedQuery, err := gq.PrepareCypherQuery("match (n:Label) return n;")
+		preparedQuery, err := gq.PrepareCypherQuery("match (n:Label) return n;", queries.QueryComplexityLimitExplore)
 		require.Nil(t, err)
 
 		_, err = gq.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
@@ -202,7 +202,7 @@ func TestGraphQuery_RawCypherQuery(t *testing.T) {
 		// Therefore actual timeout = availableRuntime/reductionFactor : 900/4 = 225sec
 
 		outerBHCtxInst.Timeout = 0
-		preparedQuery, err := gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;")
+		preparedQuery, err := gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", queries.QueryComplexityLimitExplore)
 		require.Nil(t, err)
 		_, err = gq.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
 		require.Nil(t, err)
@@ -212,7 +212,7 @@ func TestGraphQuery_RawCypherQuery(t *testing.T) {
 		// This will be directly used as the config timeout, without any reduction factor
 		outerBHCtxInst.Timeout = time.Second * 5
 
-		preparedQuery, err = gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;")
+		preparedQuery, err = gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", queries.QueryComplexityLimitExplore)
 		require.Nil(t, err)
 
 		_, err = gq.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
@@ -223,7 +223,7 @@ func TestGraphQuery_RawCypherQuery(t *testing.T) {
 		mockGraphDB.EXPECT().WriteTransaction(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 		mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
 
-		preparedQuery, err := gq.PrepareCypherQuery("match (b) where b.name = 'harley' return b;")
+		preparedQuery, err := gq.PrepareCypherQuery("match (b) where b.name = 'harley' return b;", queries.QueryComplexityLimitExplore)
 		require.Nil(t, err)
 
 		_, err = gq.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
@@ -235,7 +235,7 @@ func TestGraphQuery_RawCypherQuery(t *testing.T) {
 		mockGraphDB.EXPECT().WriteTransaction(gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
 
 		qgWMut := queries.NewGraphQuery(mockGraphDB, cache.Cache{}, config.Configuration{EnableCypherMutations: true})
-		preparedQuery, err := qgWMut.PrepareCypherQuery("match (b) where b.name = 'bruce' remove b.prop return b;")
+		preparedQuery, err := qgWMut.PrepareCypherQuery("match (b) where b.name = 'bruce' remove b.prop return b;", queries.QueryComplexityLimitExplore)
 		require.Nil(t, err)
 
 		_, err = qgWMut.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
