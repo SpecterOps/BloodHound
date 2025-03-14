@@ -158,6 +158,9 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		// DEPRECATED: this has been changed to a PUT endpoint above, and must be removed for API V3
 		routerInst.POST(fmt.Sprintf("/api/v2/asset-groups/{%s}/selectors", api.URIPathVariableAssetGroupID), resources.UpdateAssetGroupSelectors).RequirePermissions(permissions.GraphDBWrite),
 
+		// Asset group management API
+		routerInst.POST(fmt.Sprintf("/api/v2/asset-group-labels/{%s}/selectors", api.URIPathVariableAssetGroupLabelID), resources.CreateAssetGroupLabelSelector).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBWrite),
+
 		//QA API
 		routerInst.GET("/api/v2/completeness", resources.GetDatabaseCompleteness).RequirePermissions(permissions.GraphDBRead),
 
@@ -301,8 +304,5 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		//TODO: Update the permission on this once we get something more concrete
 		routerInst.GET("/api/v2/analysis/status", resources.GetAnalysisRequest).RequirePermissions(permissions.GraphDBRead),
 		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
-
-		// Asset group API
-		routerInst.POST(fmt.Sprintf("/api/v2/asset-group-labels/{%s}/selectors", api.URIPathVariableAssetGroupLabelID), resources.CreateAssetGroupLabelSelector).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBWrite),
 	)
 }

@@ -13,6 +13,10 @@ const (
 )
 
 const (
+	AssetGroupHistoryActionCreateLabel AssetGroupHistoryAction = "CreateLabel"
+	AssetGroupHistoryActionUpdateLabel AssetGroupHistoryAction = "UpdateLabel"
+	AssetGroupHistoryActionDeleteLabel AssetGroupHistoryAction = "DeleteLabel"
+
 	AssetGroupHistoryActionCreateSelector AssetGroupHistoryAction = "CreateSelector"
 	AssetGroupHistoryActionUpdateSelector AssetGroupHistoryAction = "UpdateSelector"
 	AssetGroupHistoryActionDeleteSelector AssetGroupHistoryAction = "DeleteSelector"

@@ -17,8 +17,11 @@
 package model
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/database/types/null"
 )
 
@@ -34,7 +37,7 @@ type AssetGroupLabel struct {
 	AssetGroupTierId null.Int32  `json:"asset_group_tier_id"`
 	KindId           int         `json:"kind_id"`
 	Name             string      `json:"name"`
-	Description      string      `json:"description"`
+	Description      null.String `json:"description"`
 	CreatedAt        time.Time   `json:"created_at"`
 	CreatedBy        string      `json:"created_by"`
 	UpdatedAt        time.Time   `json:"updated_at"`
@@ -57,6 +60,10 @@ func (s AssetGroupLabel) AuditData() AuditData {
 	}
 }
 
+func (s AssetGroupLabel) ToKind() graph.Kind {
+	return graph.StringKind(fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_")))
+}
+
 type SelectorSeed struct {
 	Type  SelectorType `json:"type"`
 	Value string       `json:"value"`
@@ -74,18 +81,18 @@ func (s SelectorSeed) AuditData() AuditData {
 }
 
 type AssetGroupLabelSelector struct {
-	ID                int       `json:"id"`
-	AssetGroupLabelId int       `json:"asset_group_label_id"`
-	CreatedAt         time.Time `json:"created_at"`
-	CreatedBy         string    `json:"created_by"`
-	UpdatedAt         time.Time `json:"updated_at"`
-	UpdatedBy         string    `json:"updated_by"`
-	DisabledAt        null.Time `json:"disabled_at"`
-	DisabledBy        string    `json:"disabled_by"`
-	Name              string    `json:"name" validate:"required"`
-	Description       string    `json:"description"`
-	AutoCertify       bool      `json:"auto_certify"`
-	IsDefault         bool      `json:"is_default"`
+	ID                int         `json:"id"`
+	AssetGroupLabelId int         `json:"asset_group_label_id"`
+	CreatedAt         time.Time   `json:"created_at"`
+	CreatedBy         string      `json:"created_by"`
+	UpdatedAt         time.Time   `json:"updated_at"`
+	UpdatedBy         string      `json:"updated_by"`
+	DisabledAt        null.Time   `json:"disabled_at"`
+	DisabledBy        null.String `json:"disabled_by"`
+	Name              string      `json:"name" validate:"required"`
+	Description       string      `json:"description"`
+	AutoCertify       bool        `json:"auto_certify"`
+	IsDefault         bool        `json:"is_default"`
 
 	Seeds []SelectorSeed `json:"seeds" validate:"required" gorm:"-"`
 }

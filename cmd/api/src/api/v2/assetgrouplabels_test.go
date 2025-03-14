@@ -52,6 +52,8 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 			{
 				Name: "BadRequest",
 				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1")
 					apitest.BodyString(input, "{\"name\":[\"BadRequest\"]}")
 				},
 				Test: func(output apitest.Output) {
@@ -62,6 +64,8 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 			{
 				Name: "MissingName",
 				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1")
 					apitest.BodyStruct(input, model.AssetGroupLabelSelector{
 						Description: "Test selector description",
 						Seeds: []model.SelectorSeed{
@@ -79,6 +83,8 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 			{
 				Name: "MissingSeeds",
 				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1")
 					apitest.BodyStruct(input, model.AssetGroupLabelSelector{
 						Name:        "TestSelector",
 						Description: "Test selector description",
@@ -94,6 +100,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 			{
 				Name: "MissingUrlId",
 				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
 					apitest.BodyStruct(input, model.AssetGroupLabelSelector{
 						Name:        "TestSelector",
 						Description: "Test selector description",
@@ -106,12 +113,13 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
-					apitest.BodyContains(output, "no asset group label id specified in url")
+					apitest.BodyContains(output, "invalid asset group label id specified in url")
 				},
 			},
 			{
 				Name: "InvalidUrlId",
 				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "non-numeric")
 					apitest.BodyStruct(input, model.AssetGroupLabelSelector{
 						Name:        "TestSelector",

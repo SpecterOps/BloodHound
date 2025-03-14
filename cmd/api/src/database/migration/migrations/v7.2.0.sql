@@ -97,10 +97,10 @@ CREATE TABLE IF NOT EXISTS asset_group_label_selectors
     disabled_at timestamp with time zone,
     disabled_by text,
     name text NOT NULL,
-    description text,
-    is_default boolean,
-    allow_disable boolean,
-    auto_certify boolean,
+    description text NOT NULL DEFAULT '',
+    is_default boolean NOT NULL DEFAULT FALSE,
+    allow_disable boolean NOT NULL DEFAULT TRUE,
+    auto_certify boolean NOT NULL DEFAULT FALSE,
     PRIMARY KEY (id),
     CONSTRAINT fk_asset_group_labels_asset_group_selectors FOREIGN KEY (asset_group_label_id) REFERENCES asset_group_labels(id) ON DELETE CASCADE
 );

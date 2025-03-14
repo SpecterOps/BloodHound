@@ -19,7 +19,6 @@ package database
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
@@ -48,7 +47,7 @@ func (s *BloodhoundDB) CreateAssetGroupLabelSelector(ctx context.Context, assetG
 		selector model.AssetGroupLabelSelector
 
 		auditEntry = model.AuditEntry{
-			Action: model.AuditLogActionCreateAssetGroupLabel,
+			Action: model.AuditLogActionCreateAssetGroupLabelSelector,
 			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
@@ -88,7 +87,9 @@ func (s *BloodhoundDB) GetAssetGroupLabel(ctx context.Context, assetGroupLabelId
 
 func (s *BloodhoundDB) CreateAssetGroupLabel(ctx context.Context, assetGroupTierId int, userId string, name string, description string) (model.AssetGroupLabel, error) {
 	var (
-		label model.AssetGroupLabel
+		label = model.AssetGroupLabel{
+			Name: name,
+		}
 
 		auditEntry = model.AuditEntry{
 			Action: model.AuditLogActionCreateAssetGroupLabel,
@@ -98,11 +99,13 @@ func (s *BloodhoundDB) CreateAssetGroupLabel(ctx context.Context, assetGroupTier
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		var kindId int
-		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (name) VALUES (?) ON CONFLICT (id) DO NOTHING RETURNING id", kindTable), fmt.Sprintf("Tag_%s", strings.ReplaceAll(name, " ", "_"))).Scan(&kindId); result.Error != nil {
+		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (name) VALUES (?) ON CONFLICT (id) DO NOTHING RETURNING id", kindTable), label.ToKind()).Scan(&kindId); result.Error != nil {
 			return CheckError(result)
 		} else if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by) VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?) RETURNING *", assetGroupLabelTable),
 			assetGroupTierId, kindId, name, description, userId, userId).Scan(&label); result.Error != nil {
 			return CheckError(result)
+		} else if err := s.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateLabel, label.ID, "", ""); err != nil {
+			return err
 		}
 		return nil
 	}); err != nil {
