@@ -288,6 +288,7 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 							pgsql.OperatorEquals,
 							pgsql.NewAnyExpression(
 								pgsql.CompoundIdentifier{scope.CurrentFrame().Binding.Identifier, pgsql.ColumnPath},
+								pgsql.ExpansionPath,
 							),
 						),
 					},

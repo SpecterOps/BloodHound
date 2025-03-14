@@ -61,14 +61,14 @@ func leftNodeConstraint(edgeIdentifier, nodeIdentifier pgsql.Identifier, directi
 	}
 }
 
-func leftNodeTraversalStepConstraint(traversalStep *PatternSegment) (pgsql.Expression, error) {
+func leftNodeTraversalStepConstraint(traversalStep *TraversalStep) (pgsql.Expression, error) {
 	return leftNodeConstraint(
 		traversalStep.Edge.Identifier,
 		traversalStep.LeftNode.Identifier,
 		traversalStep.Direction)
 }
 
-func rightEdgeConstraint(segment *PatternSegment) (pgsql.Expression, error) {
+func rightEdgeConstraint(segment *TraversalStep) (pgsql.Expression, error) {
 	switch segment.Edge.DataType {
 	case pgsql.EdgeComposite:
 		switch segment.Direction {
@@ -181,7 +181,7 @@ func terminalNodeConstraint(edgeIdentifier, nodeIdentifier pgsql.Identifier, dir
 	}
 }
 
-func rightNodeTraversalStepConstraint(traversalStep *PatternSegment) (pgsql.Expression, error) {
+func rightNodeTraversalStepJoinCondition(traversalStep *TraversalStep) (pgsql.Expression, error) {
 	return terminalNodeConstraint(
 		traversalStep.Edge.Identifier,
 		traversalStep.RightNode.Identifier,
@@ -408,7 +408,7 @@ type PatternConstraints struct {
 //
 // In cases that match this heuristic, it's beneficial to begin the traversal with the most tightly constrained set
 // of nodes. To accomplish this we flip the order of the traversal step.
-func (s *PatternConstraints) OptimizePatternConstraintBalance(traversalStep *PatternSegment) {
+func (s *PatternConstraints) OptimizePatternConstraintBalance(traversalStep *TraversalStep) {
 	var (
 		// If the left node is previously bound (query knows a set of IDs) the left node is considered to sill be constrained
 		leftNodeHasConstraints  = traversalStep.LeftNodeBound || s.LeftNode.Expression != nil
@@ -434,7 +434,7 @@ const (
 	nonRecursivePattern = false
 )
 
-func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, traversalStep *PatternSegment, tracker *ConstraintTracker) (PatternConstraints, error) {
+func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, traversalStep *TraversalStep, tracker *ConstraintTracker) (PatternConstraints, error) {
 	var (
 		constraints PatternConstraints
 		err         error
@@ -442,10 +442,6 @@ func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, tr
 
 	// Even if this isn't the first traversal and the node may be already bound, this should result in an empty
 	// constraint instead of a nil value for `leftNode`
-	if constraints.LeftNode, err = tracker.ConsumeSet(pgsql.AsIdentifierSet(traversalStep.LeftNode.Identifier)); err != nil {
-		return constraints, err
-	}
-
 	if isFirstTraversalStep {
 		// If this is the first traversal step then the left node is just coming into scope
 		traversalStep.Frame.Export(traversalStep.LeftNode.Identifier)
@@ -453,6 +449,10 @@ func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, tr
 
 	// Track the identifiers visible at this frame to correctly assign the remaining constraints
 	knownBindings := traversalStep.Frame.Known()
+
+	if constraints.LeftNode, err = tracker.ConsumeSet(knownBindings); err != nil {
+		return constraints, err
+	}
 
 	if isRecursivePattern {
 		// The exclusion below is done at this step in the process since the recursive descent portion of an expansion
