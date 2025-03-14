@@ -28,7 +28,6 @@ const ContextMenuV2: FC<{
     handleClose: () => void;
 }> = ({ contextMenu, handleClose }) => {
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
-
     const { selectedItemQuery } = useExploreSelectedItem();
 
     const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);

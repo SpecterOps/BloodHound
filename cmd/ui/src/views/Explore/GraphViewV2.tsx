@@ -61,6 +61,7 @@ const GraphViewV2: FC = () => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
 
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
