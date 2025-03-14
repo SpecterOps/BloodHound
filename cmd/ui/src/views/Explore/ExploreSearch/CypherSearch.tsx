@@ -36,7 +36,6 @@ import { addSnackbar } from 'src/ducks/global/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import CommonSearches from './CommonSearches';
 import SaveQueryDialog from './SaveQueryDialog';
-import { useCypherSearchSwitch } from './switches';
 
 const useStyles = makeStyles((theme) => ({
     button: {
@@ -100,10 +99,16 @@ const schema = {
     ],
 };
 
-const CypherSearch = () => {
+type CypherSearchState = {
+    cypherQuery: string;
+    setCypherQuery: (query: string) => void;
+    performSearch: (query?: string) => void;
+};
+
+const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchState }) => {
     const classes = useStyles();
 
-    const { cypherQuery, setCypherQuery, performSearch } = useCypherSearchSwitch();
+    const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
     const createSavedQueryMutation = useCreateSavedQuery();
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
@@ -220,7 +225,7 @@ const CypherSearch = () => {
                 </Box>
 
                 <Box display={showCommonQueries ? 'initial' : 'none'} flexGrow={1} minHeight={0}>
-                    <CommonSearches />
+                    <CommonSearches onSetCypherQuery={setCypherQuery} onPerformCypherSearch={performSearch} />
                 </Box>
 
                 {showEgg && <EasterEgg />}

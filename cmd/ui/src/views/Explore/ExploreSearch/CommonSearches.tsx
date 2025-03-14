@@ -18,7 +18,6 @@ import { Box, Tab, Tabs, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { PersonalSearchList, PrebuiltSearchList, CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
 import { useState } from 'react';
-import { useCypherSearchSwitch } from './switches';
 
 const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
@@ -41,12 +40,15 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const CommonSearches = () => {
+type CommonSearchesProps = {
+    onSetCypherQuery: (query: string) => void;
+    onPerformCypherSearch: (query: string) => void;
+};
+
+const CommonSearches = ({ onSetCypherQuery, onPerformCypherSearch }: CommonSearchesProps) => {
     const classes = useStyles();
 
     const [activeTab, setActiveTab] = useState(AD_TAB);
-
-    const { setCypherQuery, performSearch } = useCypherSearchSwitch();
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
         setActiveTab(newValue);
@@ -61,8 +63,9 @@ const CommonSearches = () => {
         .map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
 
     const handleClick = (query: string) => {
-        setCypherQuery(query);
-        performSearch(query);
+        // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
+        onSetCypherQuery(query);
+        onPerformCypherSearch(query);
     };
 
     return (

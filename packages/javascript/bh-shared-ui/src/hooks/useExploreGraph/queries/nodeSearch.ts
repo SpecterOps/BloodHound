@@ -20,10 +20,13 @@ import { ExploreQueryParams } from '../../useExploreParams';
 import { ExploreGraphQuery, ExploreGraphQueryError, ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
 
 export const nodeSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
-    const { searchType, primarySearch, secondarySearch } = paramOptions;
+    const { searchType, primarySearch, secondarySearch, exploreSearchTab } = paramOptions;
 
     // Fall back to secondary term for the case where the first term in a pathfinding search is removed
-    const term = primarySearch ?? secondarySearch;
+    let term = primarySearch;
+    if (!term && exploreSearchTab === 'pathfinding') {
+        term = secondarySearch;
+    }
 
     if (!term || !searchType) {
         return { enabled: false };

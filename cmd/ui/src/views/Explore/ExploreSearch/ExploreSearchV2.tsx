@@ -18,7 +18,17 @@ import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/fr
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { ExploreQueryParams, ExploreSearchTab, Icon, MappedStringLiteral, cn, useExploreParams } from 'bh-shared-ui';
+import {
+    ExploreQueryParams,
+    ExploreSearchTab,
+    Icon,
+    MappedStringLiteral,
+    cn,
+    useCypherSearch,
+    useExploreParams,
+    useNodeSearch,
+    usePathfindingSearch,
+} from 'bh-shared-ui';
 import React, { useState } from 'react';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
@@ -59,7 +69,11 @@ const ExploreSearchV2: React.FC = () => {
 
     const matches = useMediaQuery(theme.breakpoints.down('md'));
 
-    const { exploreSearchTab, setExploreParams } = useExploreParams();
+    const { exploreSearchTab, cypherSearch, setExploreParams } = useExploreParams();
+
+    const nodeSearchState = useNodeSearch();
+    const pathfindingSearchState = usePathfindingSearch();
+    const cypherSearchState = useCypherSearch();
 
     const activeTab = getTab(exploreSearchTab);
 
@@ -67,17 +81,67 @@ const ExploreSearchV2: React.FC = () => {
 
     /* Event Handlers */
     const handleTabChange = (newTabIndex: number) => {
-        switch (newTabIndex) {
-            case 0:
-                setExploreParams({ searchType: 'node', exploreSearchTab: 'node' });
-                break;
-            case 1:
-                setExploreParams({ searchType: 'pathfinding', exploreSearchTab: 'pathfinding' });
-                break;
-            case 2:
-                setExploreParams({ searchType: 'cypher', exploreSearchTab: 'cypher' });
-                break;
+        const tabs = ['node', 'pathfinding', 'cypher'] as ExploreSearchTab[];
+        const nextTab = tabs[newTabIndex];
+
+        const teardownParams = teardownActiveTab(activeTab);
+        const setupParams = setupNextTab(nextTab);
+
+        setExploreParams({ ...teardownParams, ...setupParams });
+    };
+
+    // Clean up query params from previous tab, removing query params when the field has been edited since the last search
+    const teardownActiveTab = (tab: ExploreSearchTab): Partial<ExploreQueryParams> => {
+        const params: Partial<ExploreQueryParams> = {};
+
+        if (tab === 'node') {
+            if (!nodeSearchState.selectedItem) {
+                params.primarySearch = null;
+                pathfindingSearchState.handleSourceNodeEdited(nodeSearchState.searchTerm);
+            }
         }
+        if (tab === 'pathfinding') {
+            if (!pathfindingSearchState.sourceSelectedItem) {
+                params.primarySearch = null;
+                nodeSearchState.editSourceNode(pathfindingSearchState.sourceSearchTerm);
+            }
+            if (!pathfindingSearchState.destinationSelectedItem) {
+                params.secondarySearch = null;
+            }
+        }
+        if (tab === 'cypher') {
+            if (btoa(cypherSearchState.cypherQuery) !== cypherSearch) {
+                params.cypherSearch = null;
+            }
+        }
+        return params;
+    };
+
+    // Set up up query params for the incoming tab. should only update the query type if the query can be performed
+    const setupNextTab = (tab: ExploreSearchTab): Partial<ExploreQueryParams> => {
+        const params: Partial<ExploreQueryParams> = {};
+
+        if (tab === 'node') {
+            if (nodeSearchState.selectedItem) {
+                params.searchType = 'node';
+            }
+            params.exploreSearchTab = 'node';
+        }
+        if (tab === 'pathfinding') {
+            if (pathfindingSearchState.sourceSelectedItem && pathfindingSearchState.destinationSelectedItem) {
+                params.searchType = 'pathfinding';
+            } else if (pathfindingSearchState.sourceSelectedItem || pathfindingSearchState.destinationSelectedItem) {
+                params.searchType = 'node';
+            }
+            params.exploreSearchTab = 'pathfinding';
+        }
+        if (tab === 'cypher') {
+            if (btoa(cypherSearchState.cypherQuery) === cypherSearch) {
+                params.searchType = 'cypher';
+            }
+            params.exploreSearchTab = 'cypher';
+        }
+        return params;
     };
 
     return (
@@ -114,9 +178,9 @@ const ExploreSearchV2: React.FC = () => {
                     tabs={[
                         // This linting rule is disabled because the elements in this array do not require a key prop.
                         /* eslint-disable react/jsx-key */
-                        <NodeSearch />,
-                        <PathfindingSearch />,
-                        <CypherSearch />,
+                        <NodeSearch nodeSearchState={nodeSearchState} />,
+                        <PathfindingSearch pathfindingSearchState={pathfindingSearchState} />,
+                        <CypherSearch cypherSearchState={cypherSearchState} />,
                         /* eslint-enable react/jsx-key */
                     ]}
                     activeTab={tabMap[activeTab]}
