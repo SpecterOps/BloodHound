@@ -58,12 +58,14 @@ const GraphViewV2: FC = () => {
 
     const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
 
-    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
-    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-    const [contextMenuPosition, setContextMenuPosition] = useState<{ mouseX: number; mouseY: number } | null>(null);
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
+    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
+
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
+
+    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
     const exportableGraphState = useAppSelector((state) => state.explore.export);
 
@@ -134,15 +136,12 @@ const GraphViewV2: FC = () => {
     };
 
     const handleContextMenu = (event: SigmaNodeEventPayload) => {
-        const contextMenuNode = graphState.data?.[event.node];
-        if (!contextMenuNode) return;
-
-        setContextMenuPosition(contextMenuPosition === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
+        setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
         setSelectedItem(event.node);
     };
 
     const handleCloseContextMenu = () => {
-        setContextMenuPosition(null);
+        setContextMenu(null);
     };
 
     return (
@@ -218,7 +217,7 @@ const GraphViewV2: FC = () => {
                 </Popper>
             </div>
             <GraphItemInformationPanel />
-            <ContextMenuV2 contextMenu={contextMenuPosition} handleClose={handleCloseContextMenu} />
+            <ContextMenuV2 contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphState.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
         </div>

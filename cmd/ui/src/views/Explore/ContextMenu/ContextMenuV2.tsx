@@ -23,12 +23,10 @@ import { useAppSelector } from 'src/store';
 import AssetGroupMenuItemV2 from './AssetGroupMenuItemV2';
 import CopyMenuItemV2 from './CopyMenuItemV2';
 
-interface ContextMenuProps {
+const ContextMenuV2: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     handleClose: () => void;
-}
-
-const ContextMenuV2: FC<ContextMenuProps> = ({ contextMenu, handleClose }) => {
+}> = ({ contextMenu, handleClose }) => {
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
 
     const { selectedItemQuery } = useExploreSelectedItem();
