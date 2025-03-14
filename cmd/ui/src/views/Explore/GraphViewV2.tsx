@@ -25,7 +25,6 @@ import {
     setEdgeInfoOpen,
     setSelectedEdge,
     transformFlatGraphResponse,
-    transformToFlatGraphResponse,
     useAvailableDomains,
     useExploreGraph,
     useExploreParams,
@@ -97,7 +96,6 @@ const GraphViewV2: FC = () => {
         if (!items) items = {};
         // `items` may be empty, or it may contain an empty `nodes` object
         if (isEmpty(items) || isEmpty(items.nodes)) {
-            if (searchType === 'composition') items = transformToFlatGraphResponse(items);
             items = transformFlatGraphResponse(items);
         }
 

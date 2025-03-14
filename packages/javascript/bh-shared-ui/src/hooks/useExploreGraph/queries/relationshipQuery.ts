@@ -1,9 +1,7 @@
 import { ExploreQueryParams } from '../../useExploreParams';
-import { ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
+import { ExploreGraphQuery, ExploreGraphQueryError, ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
 
-const fakeEndpointMap: any = {};
-
-export const relationshipSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
+const relationshipSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { relationshipQueryType, relationshipQueryItemId, searchType } = paramOptions;
 
     const isEdgeId = relationshipQueryItemId?.includes('_'); // TODO: tobe determined from entity panel work
@@ -21,6 +19,19 @@ export const relationshipSearchGraphQuery = (paramOptions: Partial<ExploreQueryP
         queryFn: async () => endpoint({ id: relationshipQueryItemId, type: 'graph' }),
         refetchOnWindowFocus: false,
     };
+};
+
+const getRelationshipErrorMessage = (error: any): ExploreGraphQueryError => {
+    if (error?.response?.status) {
+        return { message: 'Relationship not found.', key: 'NodeSearchQueryFailure' };
+    } else {
+        return { message: 'An unknown error occurred.', key: 'NodeSearchUnknown' };
+    }
+};
+
+export const relationshipSearchQuery: ExploreGraphQuery = {
+    getQueryConfig: relationshipSearchGraphQuery,
+    getErrorMessage: getRelationshipErrorMessage,
 };
 
 /**

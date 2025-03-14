@@ -1,11 +1,14 @@
 import { apiClient } from '../../../utils/api';
 import { ExploreQueryParams } from '../../useExploreParams';
-import { ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
+import {
+    ExploreGraphQuery,
+    ExploreGraphQueryError,
+    ExploreGraphQueryKey,
+    ExploreGraphQueryOptions,
+    transformToFlatGraphResponse,
+} from './utils';
 
-// const selectedEdgeCypherQuery = (sourceId: string, targetId: string, edgeKind: string): string =>
-// `MATCH (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN r LIMIT 1`;
-
-export const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
+const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { relationshipQueryItemId, searchType } = paramOptions;
 
     if (searchType !== 'composition' || !relationshipQueryItemId) {
@@ -30,10 +33,23 @@ export const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
                 throw new Error('empty graph');
             }
 
-            return data;
+            return transformToFlatGraphResponse(data);
         },
         refetchOnWindowFocus: false,
     };
+};
+
+const getCompositionErrorMessage = (error: any): ExploreGraphQueryError => {
+    if (error?.response?.status) {
+        return { message: 'Composition not found.', key: 'NodeSearchQueryFailure' };
+    } else {
+        return { message: 'An unknown error occurred.', key: 'NodeSearchUnknown' };
+    }
+};
+
+export const compositionSearchQuery: ExploreGraphQuery = {
+    getQueryConfig: compositionSearchGraphQuery,
+    getErrorMessage: getCompositionErrorMessage,
 };
 
 /**
