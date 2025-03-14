@@ -70,7 +70,6 @@ describe('useExploreGraph', () => {
                 },
                 {
                     searchType: 'relationship',
-
                     relationshipQueryType: 'user-member_of',
                 },
                 {
@@ -85,6 +84,45 @@ describe('useExploreGraph', () => {
                             searchType,
                             relationshipQueryItemId,
                             relationshipQueryType,
+                        } as any;
+
+                        const context = exploreGraphQueryFactory(paramOptions);
+                        const query = context.getQueryConfig(paramOptions);
+
+                        expect(query.enabled).toBeFalsy();
+                    }
+                }
+            );
+        });
+
+        describe('composition search queries', () => {
+            it('returns query config when searchType is composition and all required params are passed', () => {
+                const paramOptions: Partial<ExploreQueryParams> = {
+                    searchType: 'composition',
+                    relationshipQueryItemId: 'rel_1234_member_5678', // TODO: update with changes from entity panel work
+                };
+
+                const context = exploreGraphQueryFactory(paramOptions);
+                const query = context.getQueryConfig(paramOptions);
+
+                expect(query.enabled).toBeUndefined();
+                expect(query.queryKey).toContain('composition');
+            });
+
+            it.each([
+                {
+                    relationshipQueryItemId: 'testId',
+                },
+                {
+                    searchType: 'relationship',
+                },
+            ])(
+                'returns disabled config when any required param is falsey',
+                ({ searchType, relationshipQueryItemId }) => {
+                    {
+                        const paramOptions: Partial<ExploreQueryParams> = {
+                            searchType,
+                            relationshipQueryItemId,
                         } as any;
 
                         const context = exploreGraphQueryFactory(paramOptions);
