@@ -24,6 +24,8 @@ import {
     isWebGLEnabled,
     setEdgeInfoOpen,
     setSelectedEdge,
+    transformFlatGraphResponse,
+    transformToFlatGraphResponse,
     useAvailableDomains,
     useExploreGraph,
     useExploreParams,
@@ -31,7 +33,7 @@ import {
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { FlatGraphResponse, GraphNodes } from 'js-client-library';
+import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
@@ -43,13 +45,12 @@ import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import { transformFlatGraphResponse, transformToFlatGraphResponse } from 'src/utils';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
-import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
+import ExploreSearchV2 from './ExploreSearch/ExploreSearchV2';
 
 const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
 
@@ -62,7 +63,7 @@ const GraphViewV2: FC = () => {
     const dispatch = useAppDispatch();
 
     const { searchType } = useExploreParams();
-    const newGraphState = useExploreGraph<FlatGraphResponse>();
+    const graphState = useExploreGraph();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exportableGraphState = useAppSelector((state) => state.explore.export);
@@ -76,20 +77,24 @@ const GraphViewV2: FC = () => {
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-    const [columns, setColumns] = useState(columnsDefault);
+
     const [showNodeLabels, setShowNodeLabels] = useState(true);
     const [showEdgeLabels, setShowEdgeLabels] = useState(true);
 
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
     const { data, isLoading, isError } = useAvailableDomains();
+    const { exploreSearchTab } = useExploreParams();
 
     const sigmaChartRef = useRef<any>(null);
     const currentSearchAnchorElement = useRef(null);
 
+    const columns = exploreSearchTab === 'cypher' ? cypherSearchColumns : columnsDefault;
+
     useEffect(() => {
-        let items: any = newGraphState.data;
-        if (!items) return;
+        let items: any = graphState.data;
+        if (!items && !graphState.isError) return;
+        if (!items) items = {};
         // `items` may be empty, or it may contain an empty `nodes` object
         if (isEmpty(items) || isEmpty(items.nodes)) {
             if (searchType === 'composition') items = transformToFlatGraphResponse(items);
@@ -103,7 +108,7 @@ const GraphViewV2: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [newGraphState.data, theme, darkMode, searchType]);
+    }, [graphState.data, theme, darkMode, graphState.isError, searchType]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {
@@ -139,7 +144,7 @@ const GraphViewV2: FC = () => {
 
     /* Event Handlers */
     const findNodeAndSelect = (id: string) => {
-        const selectedItem = newGraphState.data?.[id];
+        const selectedItem = graphState.data?.[id];
         if (selectedItem?.data?.nodetype) {
             dispatch(setSelectedEdge(null));
             dispatch(
@@ -167,10 +172,6 @@ const GraphViewV2: FC = () => {
 
     const handleCloseContextMenu = () => {
         setContextMenu(null);
-    };
-
-    const handleCypherTab = (tab: string) => {
-        tab === 'cypher' ? setColumns(cypherSearchColumns) : setColumns(columnsDefault);
     };
 
     return (
@@ -214,7 +215,7 @@ const GraphViewV2: FC = () => {
                         gap: 2,
                     }}
                     key={'exploreSearch'}>
-                    <ExploreSearch onTabChange={handleCypherTab} />
+                    <ExploreSearchV2 />
                     <Box
                         sx={{
                             pointerEvents: 'auto',
@@ -287,7 +288,7 @@ const GraphViewV2: FC = () => {
                 </Grid>
             </Grid>
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
-            <GraphProgress loading={newGraphState.isLoading} />
+            <GraphProgress loading={graphState.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
         </Box>
     );

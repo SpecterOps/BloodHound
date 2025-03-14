@@ -34,7 +34,7 @@ See all talks and sign up at [https://specterops.io/so-con/#talks](https://spect
     * New and Improved Features
         * Early access for ADCS Attack Paths!
         * Edge composition support
-        * _\[CE Only\]_ Modified default docker compose example to bind only to localhost for improved security defaults
+        * _\[CE Only\] _Modified default docker compose example to bind only to localhost for improved security defaults
 * **SharpHound (v2.3.2 - BHE, v2.3.0 - CE)**
     * New and Improved Features
         * Support for ADCS collection capabilities
@@ -45,10 +45,10 @@ See all talks and sign up at [https://specterops.io/so-con/#talks](https://spect
 
 #### New and Improved Features
 
-* **Early access support for ADCS Attack Paths -** Starting with Will Schroeder and Lee Chagolla-Christensen's research, it became clear that ADCS represents a massive attack surface within any Active Directory environment. Starting with this early access release, BloodHound will now natively support ADCS Attack Paths! This includes a significant number of new node and edge types, as well as the two post-processed edges representing escalation opportunity, ADCSESC1 and GoldenCert.
+* **Early access support for ADCS Attack Paths - **Starting with Will Schroeder and Lee Chagolla-Christensen's research, it became clear that ADCS represents a massive attack surface within any Active Directory environment. Starting with this early access release, BloodHound will now natively support ADCS Attack Paths! This includes a significant number of new node and edge types, as well as the two post-processed edges representing escalation opportunity, ADCSESC1 and GoldenCert.
 
     _Note: To analyze ADCS Attack Paths, you must first enable the Early Access setting under Administration and then perform and import a collection using SharpHound v2.3.0+._
-* **Edge composition support -** While not the first post-processed edges created based on behind-the-scenes logic, ADCS Attack Paths represent the most complexity represented in a single edge in BloodHound by a very large margin. To make this complexity clear, we have introduced a new feature to edge context menus called "Composition". Clicking on this panel will expand out the edges utilized by BloodHound during post-processing necessary to create the selected edge.
+* **Edge composition support - **While not the first post-processed edges created based on behind-the-scenes logic, ADCS Attack Paths represent the most complexity represented in a single edge in BloodHound by a very large margin. To make this complexity clear, we have introduced a new feature to edge context menus called "Composition". Clicking on this panel will expand out the edges utilized by BloodHound during post-processing necessary to create the selected edge.
 
     For now, this feature only supports the ADCSESC1 and GoldenCert edges; however, we will add support to other post-processed edges over time.
 <Frame>
@@ -64,57 +64,8 @@ See all talks and sign up at [https://specterops.io/so-con/#talks](https://spect
 
 #### New and Improved Features
 
-* **Support for ADCS collection capabilities -**SharpHound will now collect information required to analyze and generate ADCS Attack Paths.
+* **Support for ADCS collection capabilities _-_**SharpHound will now collect information required to analyze and generate ADCS Attack Paths.
 
 ### AzureHound (v2.1.6)
 
 _No new release._
-
-# BloodHound v5.4.0 Release Notes
-
-## BloodHound Enterprise v5.4.0
-
-### Early Access: AD Certificate Services Attack Paths
-
-We're excited to announce early access support for Active Directory Certificate Services (ADCS) Attack Paths in BloodHound Enterprise! This release includes:
-
-- Initial support for ESC1 attack path detection
-- Early access documentation for ADCS security risks
-- Foundation for future ADCS attack path coverage
-
-To enable ADCS Attack Path detection:
-
-1. Navigate to **Settings** > **Experimental Features**
-2. Enable **ADCS Attack Path Detection**
-3. Run a new collection with the latest SharpHound version
-
-### New Features
-
-- **Edge Composition Support**: Better visualization of complex relationships
-- **Improved Performance**: Enhanced database query optimization
-- **UI Enhancements**: Better visualization of attack paths
-
-### Bug Fixes
-
-- Fixed several issues with SAML authentication
-- Improved error handling for API requests
-- Resolved UI rendering inconsistencies
-
-## SharpHound v2.3.2 (BHE) / v2.3.0 (CE)
-
-### New Features
-
-- **ADCS Collection Support**: Added initial collection capabilities for certificate templates
-- **Better Performance**: Optimized collection routines
-- **Improved Logging**: More detailed collection status information
-
-### Bug Fixes
-
-- Fixed an issue with group membership enumeration
-- Resolved memory usage during large collections
-- Improved error handling for network timeouts
-
-## AzureHound v2.1.6
-
-No new release for AzureHound in this version.
-
