@@ -30,8 +30,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
+import { useInitialEnvironment } from 'src/hooks/useInitialEnvironment';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { useAppDispatch } from 'src/store';
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
 import { dataCollectionMessage } from '../QA/utils';
 
@@ -39,7 +40,7 @@ const GroupManagement = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
-    const globalDomain = useAppSelector((state) => state.global.options.domain);
+    const { data: environment } = useInitialEnvironment();
 
     // Kept out of the shared UI due to diff between GraphNodeTypes across apps
     const [openNode, setOpenNode] = useState<SelectedNode | null>(null);
@@ -82,7 +83,7 @@ const GroupManagement = () => {
 
     return (
         <GroupManagementContent
-            globalDomain={globalDomain}
+            globalEnvironment={environment ?? null}
             showExplorePageLink={!!openNode}
             tierZeroLabel={HIGH_VALUE_LABEL}
             tierZeroTag={TIER_ZERO_TAG}
