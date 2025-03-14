@@ -24,6 +24,38 @@ import * as bhSharedUI from 'bh-shared-ui';
 
 const useExploreParamsSpy = vi.spyOn(bhSharedUI, 'useExploreParams');
 
+const comboboxLookaheadOptions = {
+    data: [
+        {
+            name: 'admin',
+            objectid: '1',
+            type: 'User',
+        },
+        {
+            name: 'computer',
+            objectid: '2',
+            type: 'Computer',
+        },
+    ],
+};
+
+const server = setupServer(
+    rest.get('/api/v2/search', (req, res, ctx) => {
+        return res(ctx.json(comboboxLookaheadOptions));
+    }),
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
 vi.mock('react-router-dom', async () => {
     const actual = await vi.importActual('react-router-dom');
     let mockSearchParams = new URLSearchParams();
@@ -62,18 +94,6 @@ describe('ExploreSearch rendering per tab', async () => {
         expect(screen.getByRole('tab', { name: /search/i })).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: /pathfinding/i })).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: /cypher/i })).toBeInTheDocument();
-    });
-
-    it.each([
-        { name: 'Pathfinding', value: 'pathfinding' },
-        { name: 'Cypher', value: 'cypher' },
-    ])('should set searchType to $value when user clicks on $name tab ', async ({ name, value }) => {
-        const { user, setExploreParamsSpy } = await setup();
-        const pathfindingTab = screen.getByText(name);
-
-        await user.click(pathfindingTab);
-
-        expect(setExploreParamsSpy).toBeCalledWith({ exploreSearchTab: value, searchType: value });
     });
 
     it('should render the pathfinding search controls when searchType is pathfinding', async () => {
@@ -118,7 +138,7 @@ describe('ExploreSearch sets searchType on tab changing', async () => {
         await user.click(exploreSearchTab);
 
         expect(setExploreParamsSpy).toHaveBeenCalledTimes(1);
-        expect(setExploreParamsSpy).toHaveBeenCalledWith({ exploreSearchTab: 'node', searchType: 'node' });
+        expect(setExploreParamsSpy).toHaveBeenCalledWith(expect.objectContaining({ exploreSearchTab: 'node' }));
     });
 
     it('sets exploreSearchTab param to pathfinding when the user clicks the `pathfinding` tab', async () => {
@@ -128,10 +148,11 @@ describe('ExploreSearch sets searchType on tab changing', async () => {
         await user.click(pathfindingTab);
 
         expect(setExploreParamsSpy).toHaveBeenCalledTimes(1);
-        expect(setExploreParamsSpy).toHaveBeenCalledWith({
-            exploreSearchTab: 'pathfinding',
-            searchType: 'pathfinding',
-        });
+        expect(setExploreParamsSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                exploreSearchTab: 'pathfinding',
+            })
+        );
     });
 
     it('sets exploreSearchTab param to cypher when the user clicks the `cypher` tab', async () => {
@@ -141,7 +162,7 @@ describe('ExploreSearch sets searchType on tab changing', async () => {
         await user.click(cypherTab);
 
         expect(setExploreParamsSpy).toHaveBeenCalledTimes(1);
-        expect(setExploreParamsSpy).toHaveBeenCalledWith({ exploreSearchTab: 'cypher', searchType: 'cypher' });
+        expect(setExploreParamsSpy).toHaveBeenCalledWith(expect.objectContaining({ exploreSearchTab: 'cypher' }));
     });
 
     it('initializes search tab to node search if the exploreSearchTab is not a supported tab name on first render', async () => {
@@ -161,35 +182,6 @@ describe('ExploreSearch sets searchType on tab changing', async () => {
 
 describe('ExploreSearch interaction', () => {
     const user = userEvent.setup();
-
-    const comboboxLookaheadOptions = {
-        data: [
-            {
-                name: 'admin',
-                objectid: '1',
-                type: 'User',
-            },
-            {
-                name: 'computer',
-                objectid: '2',
-                type: 'Computer',
-            },
-        ],
-    };
-
-    const server = setupServer(
-        rest.get('/api/v2/search', (req, res, ctx) => {
-            return res(ctx.json(comboboxLookaheadOptions));
-        })
-    );
-
-    beforeEach(async () => {
-        await setup();
-    });
-
-    beforeAll(() => server.listen());
-    afterEach(() => server.resetHandlers());
-    afterAll(() => server.close());
 
     // The following tests require a router provider which is possible but that work has already been done in 5453
     // skipping these tests until that work has been completed so we dont replicate that work.

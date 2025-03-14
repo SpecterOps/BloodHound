@@ -17,11 +17,17 @@
 import userEvent from '@testing-library/user-event';
 import { act, render, screen } from 'src/test-utils';
 import CypherSearch from './CypherSearch';
+import { useCypherSearchSwitch } from './switches';
+
+const WrappedCypherSearch = () => {
+    const cypherSearchState = useCypherSearchSwitch();
+    return <CypherSearch cypherSearchState={cypherSearchState} />;
+};
 
 describe('CypherSearch', () => {
     beforeEach(async () => {
         await act(async () => {
-            render(<CypherSearch />);
+            render(<WrappedCypherSearch />);
         });
     });
     const user = userEvent.setup();

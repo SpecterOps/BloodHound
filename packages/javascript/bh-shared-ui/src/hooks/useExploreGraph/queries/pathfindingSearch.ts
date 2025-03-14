@@ -59,15 +59,15 @@ const getPathfindingErrorMessage = (error: any): ExploreGraphQueryError => {
         return {
             message:
                 'Calculating the requested Attack Path exceeded memory limitations due to the complexity of paths involved.',
-            key: 'shortestPathOutOfMemory',
+            key: 'ShortestPathOutOfMemory',
         };
     } else if (statusCode === 504) {
         return {
             message: 'The results took too long to compute, possibly due to the complexity of paths involved.',
-            key: 'shortestPathTimeout',
+            key: 'ShortestPathTimeout',
         };
     } else {
-        return { message: 'An unknown error occurred. Please try again.', key: 'shortestPathUnknown' };
+        return { message: 'An unknown error occurred. Please try again.', key: 'ShortestPathUnknown' };
     }
 };
 

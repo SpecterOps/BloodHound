@@ -15,12 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { apiClient, CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
+import { apiClient, CommonSearches as prebuiltSearchList, searchbarActions } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import * as actions from 'src/ducks/explore/actions';
 import { render, screen } from 'src/test-utils';
 import CommonSearches from './CommonSearches';
+import { useCypherSearchSwitch } from './switches';
 
 const server = setupServer(
     rest.get('/api/v2/saved-queries', (req, res, ctx) => {
@@ -55,9 +55,14 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
+const WrappedCommonSearches = () => {
+    const { setCypherQuery, performSearch } = useCypherSearchSwitch();
+    return <CommonSearches onSetCypherQuery={setCypherQuery} onPerformCypherSearch={performSearch} />;
+};
+
 describe('CommonSearches', () => {
     beforeEach(() => {
-        render(<CommonSearches />);
+        render(<WrappedCommonSearches />);
     });
 
     it('renders headers', () => {
@@ -110,7 +115,7 @@ describe('CommonSearches', () => {
     });
 
     it('handles a click on each list item', async () => {
-        const spy = jest.spyOn(actions, 'startCypherQuery');
+        const spy = jest.spyOn(searchbarActions, 'cypherSearch');
         const user = userEvent.setup();
 
         const adSearches = prebuiltSearchList.filter(({ category }) => category === 'Active Directory');

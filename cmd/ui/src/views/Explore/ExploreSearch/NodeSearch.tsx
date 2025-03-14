@@ -14,11 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { SearchValue } from 'bh-shared-ui';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
-import { useNodeSearchSwitch } from './switches';
 
-const NodeSearch = () => {
-    const { searchTerm, selectedItem, editSourceNode, selectSourceNode } = useNodeSearchSwitch();
+type NodeSearchState = {
+    searchTerm: string;
+    selectedItem: SearchValue | undefined;
+    editSourceNode: (edit: string) => void;
+    selectSourceNode: (selected: SearchValue) => void;
+};
+
+const NodeSearch = ({ nodeSearchState }: { nodeSearchState: NodeSearchState }) => {
+    const { searchTerm, selectedItem, editSourceNode, selectSourceNode } = nodeSearchState;
 
     return (
         <ExploreSearchCombobox

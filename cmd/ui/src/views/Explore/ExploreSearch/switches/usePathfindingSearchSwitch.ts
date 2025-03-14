@@ -14,16 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { searchbarActions, SearchValue, useFeatureFlag, usePathfindingSearch } from 'bh-shared-ui';
+import { searchbarActions, SearchValue } from 'bh-shared-ui';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 export const usePathfindingSearchSwitch = () => {
-    const { data: flag } = useFeatureFlag('back_button_support');
-
-    // New implementation
-    const pathfindingSearch = usePathfindingSearch();
-
-    // Old redux implementation
     const dispatch = useAppDispatch();
 
     const primary = useAppSelector((state) => state.search.primary);
@@ -49,18 +43,14 @@ export const usePathfindingSearchSwitch = () => {
         dispatch(searchbarActions.destinationNodeSelected(selected));
     };
 
-    if (flag?.enabled) {
-        return pathfindingSearch;
-    } else {
-        return {
-            sourceSearchTerm,
-            destinationSearchTerm,
-            sourceSelectedItem,
-            destinationSelectedItem,
-            handleSourceNodeEdited,
-            handleDestinationNodeEdited,
-            handleSourceNodeSelected,
-            handleDestinationNodeSelected,
-        };
-    }
+    return {
+        sourceSearchTerm,
+        destinationSearchTerm,
+        sourceSelectedItem,
+        destinationSelectedItem,
+        handleSourceNodeEdited,
+        handleDestinationNodeEdited,
+        handleSourceNodeSelected,
+        handleDestinationNodeSelected,
+    };
 };
