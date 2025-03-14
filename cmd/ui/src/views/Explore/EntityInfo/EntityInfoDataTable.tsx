@@ -19,6 +19,7 @@ import {
     InfiniteScrollingTable,
     NODE_GRAPH_RENDER_LIMIT,
     abortEntitySectionRequest,
+    entityRelationshipEndpoints,
     searchbarActions,
     transformFlatGraphResponse,
 } from 'bh-shared-ui';
@@ -28,16 +29,23 @@ import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } f
 import { addSnackbar } from 'src/ducks/global/actions';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
-const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, endpoint, countLabel, sections }) => {
+const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, queryType, countLabel, sections }) => {
     const dispatch = useDispatch();
 
+    const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
     const countQuery = useQuery(
         ['relatedCount', label, id],
         () => {
             if (endpoint) {
-                return endpoint({ skip: 0, limit: 128 });
+                return endpoint({ id, skip: 0, limit: 128 });
             }
-            if (sections) return Promise.all(sections.map((section) => section.endpoint?.({ skip: 0, limit: 128 })));
+            if (sections)
+                return Promise.all(
+                    sections.map((section) => {
+                        const endpoint = section.queryType ? entityRelationshipEndpoints[section.queryType] : undefined;
+                        return endpoint ? endpoint({ id, skip: 0, limit: 128 }) : Promise.resolve();
+                    })
+                );
             return Promise.reject('Invalid call data provided for relationship list query');
         },
         { refetchOnWindowFocus: false, retry: false }
@@ -51,7 +59,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
 
             dispatch(setGraphLoading(true));
 
-            await endpoint({ type: 'graph' })
+            await endpoint({ id, type: 'graph' })
                 .then((result) => {
                     const formattedData = transformFlatGraphResponse(result);
 
@@ -106,7 +114,11 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, en
             error={countQuery.error}
             onChange={handleOnChange}>
             {endpoint && (
-                <InfiniteScrollingTable itemCount={count} fetchDataCallback={endpoint} onClick={handleOnClick} />
+                <InfiniteScrollingTable
+                    itemCount={count}
+                    fetchDataCallback={(params) => endpoint({ id, ...params })}
+                    onClick={handleOnClick}
+                />
             )}
             {sections && sections.map((nestedSection, index) => <EntityInfoDataTable key={index} {...nestedSection} />)}
         </EntityInfoCollapsibleSection>

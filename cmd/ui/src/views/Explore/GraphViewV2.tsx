@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Grid, Popper, useTheme } from '@mui/material';
+import { Popper, SxProps, useTheme } from '@mui/material';
 import {
     EdgeInfoState,
     GraphProgress,
@@ -25,9 +25,8 @@ import {
     setEdgeInfoOpen,
     setSelectedEdge,
     transformFlatGraphResponse,
-    useAvailableDomains,
+    useAvailableEnvironments,
     useExploreGraph,
-    useExploreParams,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -50,12 +49,6 @@ import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearchV2 from './ExploreSearch/ExploreSearchV2';
-
-const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
-
-const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
-
-const columnStyles = { height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' };
 
 const GraphViewV2: FC = () => {
     const theme = useTheme();
@@ -82,13 +75,10 @@ const GraphViewV2: FC = () => {
 
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
-    const { data, isLoading, isError } = useAvailableDomains();
-    const { exploreSearchTab } = useExploreParams();
+    const { data, isLoading, isError } = useAvailableEnvironments();
 
     const sigmaChartRef = useRef<any>(null);
     const currentSearchAnchorElement = useRef(null);
-
-    const columns = exploreSearchTab === 'cypher' ? cypherSearchColumns : columnsDefault;
 
     useEffect(() => {
         let items: any = graphState.data;
@@ -126,9 +116,9 @@ const GraphViewV2: FC = () => {
 
     if (isLoading) {
         return (
-            <Box sx={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
+            <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
                 <GraphProgress loading={isLoading} />
-            </Box>
+            </div>
         );
     }
 
@@ -173,15 +163,22 @@ const GraphViewV2: FC = () => {
         setContextMenuNodeId(undefined);
     };
 
+    const infoPaneStyles: SxProps = {
+        bottom: 0,
+        top: 0,
+        marginBottom: theme.spacing(2),
+        marginTop: theme.spacing(2),
+        maxWidth: theme.spacing(50),
+        position: 'absolute',
+        right: theme.spacing(2),
+        width: theme.spacing(50),
+    };
+
     return (
-        <Box
-            sx={{
-                position: 'relative',
-                height: '100%',
-                width: '100%',
-                overflow: 'hidden',
-            }}
-            data-testid='explore'>
+        <div
+            className='relative h-full w-full overflow-hidden'
+            data-testid='explore'
+            onContextMenu={(e) => e.preventDefault()}>
             <SigmaChart
                 graph={graphologyGraph}
                 onClickNode={handleClickNode}
@@ -191,101 +188,69 @@ const GraphViewV2: FC = () => {
                 ref={sigmaChartRef}
             />
 
-            <Grid
-                container
-                direction='row'
-                justifyContent='space-between'
-                alignItems='flex-start'
-                sx={{
-                    position: 'relative',
-                    padding: theme.spacing(2),
-                    boxSizing: 'border-box',
-                    pointerEvents: 'none',
-                    height: '100%',
-                }}>
-                <Grid
-                    item
-                    {...columns}
-                    sx={{
-                        ...columnStyles,
-                        justifyContent: 'space-between',
-                        height: '100%',
-                        maxHeight: '100%',
-                        gap: 2,
-                    }}
-                    key={'exploreSearch'}>
-                    <ExploreSearchV2 />
-                    <Box
-                        sx={{
-                            pointerEvents: 'auto',
-                            width: '100%',
-                            position: 'relative',
+            <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
+                <ExploreSearchV2 />
+                <div className='flex gap-1 pointer-events-auto' ref={currentSearchAnchorElement}>
+                    <GraphButtons
+                        onExportJson={() => {
+                            exportToJson(exportableGraphState);
                         }}
-                        ref={currentSearchAnchorElement}>
-                        <GraphButtons
-                            onExportJson={() => {
-                                exportToJson(exportableGraphState);
+                        onReset={() => {
+                            sigmaChartRef.current?.resetCamera();
+                        }}
+                        onRunSequentialLayout={() => {
+                            sigmaChartRef.current?.runSequentialLayout();
+                        }}
+                        onRunStandardLayout={() => {
+                            sigmaChartRef.current?.runStandardLayout();
+                        }}
+                        onSearchCurrentResults={() => {
+                            toggleCurrentSearch();
+                        }}
+                        onToggleAllLabels={() => {
+                            if (!showNodeLabels || !showEdgeLabels) {
+                                setShowNodeLabels(true);
+                                setShowEdgeLabels(true);
+                            } else {
+                                setShowNodeLabels(false);
+                                setShowEdgeLabels(false);
+                            }
+                        }}
+                        onToggleNodeLabels={() => {
+                            setShowNodeLabels((prev) => !prev);
+                        }}
+                        onToggleEdgeLabels={() => {
+                            setShowEdgeLabels((prev) => !prev);
+                        }}
+                        showNodeLabels={showNodeLabels}
+                        showEdgeLabels={showEdgeLabels}
+                        isCurrentSearchOpen={false}
+                    />
+                </div>
+                <Popper
+                    open={currentSearchOpen}
+                    anchorEl={currentSearchAnchorElement.current}
+                    placement='top'
+                    disablePortal
+                    className='w-[90%] z-[1]'>
+                    <div className='pointer-events-auto' data-testid='explore_graph-controls'>
+                        <SearchCurrentNodes
+                            sx={{ padding: 1, marginBottom: 1 }}
+                            currentNodes={currentNodes || {}}
+                            onSelect={(node) => {
+                                handleClickNode?.(node.id);
+                                toggleCurrentSearch?.();
                             }}
-                            onReset={() => {
-                                sigmaChartRef.current?.resetCamera();
-                            }}
-                            onRunSequentialLayout={() => {
-                                sigmaChartRef.current?.runSequentialLayout();
-                            }}
-                            onRunStandardLayout={() => {
-                                sigmaChartRef.current?.runStandardLayout();
-                            }}
-                            onSearchCurrentResults={() => {
-                                toggleCurrentSearch();
-                            }}
-                            onToggleAllLabels={() => {
-                                if (!showNodeLabels || !showEdgeLabels) {
-                                    setShowNodeLabels(true);
-                                    setShowEdgeLabels(true);
-                                } else {
-                                    setShowNodeLabels(false);
-                                    setShowEdgeLabels(false);
-                                }
-                            }}
-                            onToggleNodeLabels={() => {
-                                setShowNodeLabels((prev) => !prev);
-                            }}
-                            onToggleEdgeLabels={() => {
-                                setShowEdgeLabels((prev) => !prev);
-                            }}
-                            showNodeLabels={showNodeLabels}
-                            showEdgeLabels={showEdgeLabels}
-                            isCurrentSearchOpen={false}
+                            onClose={toggleCurrentSearch}
                         />
-                        <Popper
-                            open={currentSearchOpen}
-                            anchorEl={currentSearchAnchorElement.current}
-                            placement='top'
-                            disablePortal
-                            sx={{
-                                width: '90%',
-                                zIndex: 1,
-                            }}>
-                            <SearchCurrentNodes
-                                sx={{ padding: 1, marginBottom: 1 }}
-                                currentNodes={currentNodes || {}}
-                                onSelect={(node) => {
-                                    handleClickNode?.(node.id);
-                                    toggleCurrentSearch?.();
-                                }}
-                                onClose={toggleCurrentSearch}
-                            />
-                        </Popper>
-                    </Box>
-                </Grid>
-                <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
-                    {edgeInfoState.open ? (
-                        <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} />
-                    ) : (
-                        <EntityInfoPanel selectedNode={selectedNode} />
-                    )}
-                </Grid>
-            </Grid>
+                    </div>
+                </Popper>
+            </div>
+            {edgeInfoState.open ? (
+                <EdgeInfoPane sx={infoPaneStyles} selectedEdge={edgeInfoState.selectedEdge} />
+            ) : (
+                <EntityInfoPanel sx={infoPaneStyles} selectedNode={selectedNode} />
+            )}
             <ContextMenu
                 contextMenuNodeId={contextMenuNodeId}
                 contextMenu={contextMenuPosition}
@@ -293,7 +258,7 @@ const GraphViewV2: FC = () => {
             />
             <GraphProgress loading={graphState.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
-        </Box>
+        </div>
     );
 };
 

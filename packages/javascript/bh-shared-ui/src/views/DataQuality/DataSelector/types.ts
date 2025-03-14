@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Domain } from 'js-client-library';
+import { Environment } from 'js-client-library';
 
 export type DomainPlatforms = 'active-directory-platform' | 'azure-platform';
-export type DataSelectorValueTypes = Domain['type'] | DomainPlatforms;
+export type DataSelectorValueTypes = Environment['type'] | DomainPlatforms;

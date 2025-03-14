@@ -9,7 +9,7 @@ Understand the terminology used in BloodHound software and documentation.
 
 ## Attack Path
 
-A sequence of [edges](#edge) that connect a principal to a target. Attack paths show how an attacker could potentially move from one principal to another through various permissions and relationships.
+Attack paths are chains of abusable privileges and user behaviors that create direct and indirect connections between computers and users. In BloodHound, attack paths are visualized in the [graph](#graph) by [nodes](#node) and [edges](#edge). Learn more in [What is Attack Path Management](https://bloodhoundenterprise.io/what-is-attack-path-management/).
 
 ## Attack Path Management (APM)
 
@@ -21,7 +21,7 @@ A choke point is a [privilege](#privilege) or user behavior (called [edges](#edg
 
 ## Cypher
 
-A graph query language used to search and analyze data in BloodHound. To learn more about using Cypher in BloodHound, see [Searching with Cypher](/analyze-data/bloodhound-gui/cypher-search).
+[Cypher](https://opencypher.org/) is a [graph](#graph) query language used to interact with BloodHound's database. It's similar to SQL for traditional databases. To use it, see [Searching with Cypher](/analyze-data/bloodhound-gui/cypher-search).
 
 ## Collector / Client
 
@@ -33,7 +33,7 @@ A directory of identities or an identity provider, like Active Directory (AD) an
 
 ## Edge
 
-A relationship between two [nodes](#node) in the graph. Edges represent different types of permissions or interactions between principals. See [About BloodHound Edges](/resources/edges/overview).
+An edge is part of the [graph](#graph) construct and represents a relationship between two [nodes](#node), indicating some form of interaction. See [About BloodHound Edges](/resources/edges/overview).
 
 ## Enterprise Access Model (EAM)
 
@@ -57,15 +57,7 @@ An attack path is based on identity/an already authenticated [principal](#princi
 
 ## Node
 
-A vertex in the graph representing an Active Directory or Azure object. Common node types include:
-
-- Users
-- Groups
-- Computers
-- Service Principals
-- Applications
-
-See [About BloodHound Nodes](/resources/nodes/overview).
+A node is part of the [graph](#graph) construct and refers to an entity in the network, such as a user, computer, group, or domain. Two nodes can be connected by an [edge](#edge). See [About BloodHound Nodes](/resources/nodes/overview).
 
 ## Principal
 

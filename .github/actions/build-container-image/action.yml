@@ -150,7 +150,7 @@ runs:
   steps:
     - uses: docker/login-action@v3
       name: Authenticate with DockerHub Registry
-      if: ${{ github.event.repository.fork == false }}
+      if: ${{ inputs.dockerhub_account != '' }}
       with:
         registry: docker.io
         username: ${{ inputs.dockerhub_account }}
@@ -158,6 +158,7 @@ runs:
 
     - uses: docker/login-action@v3
       name: Authenticate with GitHub Container Registry
+      if: ${{ inputs.ghcr_account != '' }}
       with:
         registry: ghcr.io
         username: ${{ inputs.ghcr_account }}

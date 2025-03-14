@@ -18,6 +18,7 @@ import { FC, ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useApiVersion, useIsMouseDragging } from '../../hooks';
 import { cn } from '../../utils';
+import { persistSearchParams } from '../../utils/searchParams/searchParams';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
 
 const MainNavLogoTextImage: FC<{
@@ -80,16 +81,19 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; hoverAct
     );
 };
 
-const MainNavItemLink: FC<{ route: string; children: ReactNode; hoverActive: boolean; testId: string }> = ({
-    route,
-    children,
-    hoverActive,
-    testId,
-}) => {
+const MainNavItemLink: FC<{
+    route: string;
+    children: ReactNode;
+    hoverActive: boolean;
+    testId: string;
+    supportedSearchParams: MainNavDataListItem['supportedSearchParams'];
+}> = ({ route, children, hoverActive, testId, supportedSearchParams }) => {
+    const search = supportedSearchParams ? persistSearchParams(supportedSearchParams).toString() : undefined;
+
     return (
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed
         <RouterLink
-            to={route as string}
+            to={{ pathname: route, search }}
             className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline cursor-default', {
                 'group-hover:w-full cursor-pointer': hoverActive,
             })}
@@ -188,6 +192,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             )}>
             <MainNavItemLink
                 route={mainNavData.logo.project.route}
+                supportedSearchParams={mainNavData.logo.supportedSearchParams}
                 testId='global_nav-home'
                 hoverActive={!isMouseDragging}>
                 <MainNavItemLabel
@@ -207,7 +212,8 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                             <MainNavItemLink
                                 route={listDataItem.route as string}
                                 hoverActive={!isMouseDragging}
-                                testId={listDataItem.testId}>
+                                testId={listDataItem.testId}
+                                supportedSearchParams={listDataItem.supportedSearchParams}>
                                 <MainNavItemLabel
                                     icon={listDataItem.icon}
                                     label={listDataItem.label}
@@ -227,7 +233,8 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                                 <MainNavItemLink
                                     route={listDataItem.route as string}
                                     hoverActive={!isMouseDragging}
-                                    testId={listDataItem.testId}>
+                                    testId={listDataItem.testId}
+                                    supportedSearchParams={listDataItem.supportedSearchParams}>
                                     <MainNavItemLabel
                                         icon={listDataItem.icon}
                                         label={listDataItem.label}
