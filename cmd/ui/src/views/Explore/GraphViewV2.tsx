@@ -61,7 +61,6 @@ const GraphViewV2: FC = () => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
 
-    const { searchType } = useExploreParams();
     const graphState = useExploreGraph();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
@@ -95,9 +94,7 @@ const GraphViewV2: FC = () => {
         if (!items && !graphState.isError) return;
         if (!items) items = {};
         // `items` may be empty, or it may contain an empty `nodes` object
-        if (isEmpty(items) || isEmpty(items.nodes)) {
-            items = transformFlatGraphResponse(items);
-        }
+        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
 
@@ -106,7 +103,7 @@ const GraphViewV2: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphState.data, theme, darkMode, graphState.isError, searchType]);
+    }, [graphState.data, theme, darkMode, graphState.isError]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {

@@ -18,7 +18,7 @@ import { RequestOptions } from 'js-client-library';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 import { apiClient } from './api';
 
-export type EntitySectionEndpointParams = {
+type EntitySectionEndpointParams = {
     id: string;
     counts?: boolean;
     skip?: number;

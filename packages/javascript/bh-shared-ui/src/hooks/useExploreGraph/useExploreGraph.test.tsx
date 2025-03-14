@@ -109,14 +109,7 @@ describe('useExploreGraph', () => {
                 expect(query.queryKey).toContain('composition');
             });
 
-            it.each([
-                {
-                    relationshipQueryItemId: 'testId',
-                },
-                {
-                    searchType: 'relationship',
-                },
-            ])(
+            it.each([{ relationshipQueryItemId: 'testId' }, { searchType: 'relationship' }])(
                 'returns disabled config when any required param is falsey',
                 ({ searchType, relationshipQueryItemId }) => {
                     {
