@@ -86,7 +86,7 @@ func TestDatabase_CreateAssetGroupLabel(t *testing.T) {
 	require.Equal(t, testName, label.Name)
 	require.Equal(t, testDescription, label.Description)
 
-	label, err = dbInst.GetAssetGroupLabel(testCtx, label.ID)
+	label, err = dbInst.GetAssetGroupLabelOrTier(testCtx, label.ID)
 	require.NoError(t, err)
 	require.Equal(t, tierId, int(label.AssetGroupTierId.Int32))
 	require.WithinDuration(t, time.Now(), label.CreatedAt, time.Second)
@@ -98,6 +98,6 @@ func TestDatabase_CreateAssetGroupLabel(t *testing.T) {
 	require.Equal(t, testName, label.Name)
 	require.Equal(t, testDescription, label.Description)
 
-	label, err = dbInst.GetAssetGroupLabel(testCtx, 1234)
+	label, err = dbInst.GetAssetGroupLabelOrTier(testCtx, 1234)
 	require.Error(t, err)
 }

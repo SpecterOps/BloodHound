@@ -32,7 +32,7 @@ const (
 	SelectorTypeCypher   SelectorType = 2
 )
 
-type AssetGroupLabel struct {
+type AssetGroupLabelOrTier struct {
 	ID               int         `json:"id"`
 	AssetGroupTierId null.Int32  `json:"asset_group_tier_id"`
 	KindId           int         `json:"kind_id"`
@@ -44,13 +44,22 @@ type AssetGroupLabel struct {
 	UpdatedBy        string      `json:"updated_by"`
 	DeletedAt        null.Time   `json:"deleted_at"`
 	DeletedBy        null.String `json:"deleted_by"`
+
+	Position     null.Int32 `json:"position"`
+	AllowCertify null.Bool  `json:"allow_certify"`
 }
 
-func (AssetGroupLabel) TableName() string {
+type AssetGroupTier struct {
+	ID           null.Int32 `json:"id" gorm:"primaryKey"`
+	Position     null.Int32
+	AllowCertify bool `json:"allow_certify"`
+}
+
+func (AssetGroupLabelOrTier) TableName() string {
 	return "asset_group_labels"
 }
 
-func (s AssetGroupLabel) AuditData() AuditData {
+func (s AssetGroupLabelOrTier) AuditData() AuditData {
 	return AuditData{
 		"id":                  s.ID,
 		"asset_group_tier_id": s.AssetGroupTierId,
@@ -60,7 +69,7 @@ func (s AssetGroupLabel) AuditData() AuditData {
 	}
 }
 
-func (s AssetGroupLabel) ToKind() graph.Kind {
+func (s AssetGroupLabelOrTier) ToKind() graph.Kind {
 	return graph.StringKind(fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_")))
 }
 

@@ -28,14 +28,15 @@ import (
 const (
 	kindTable                   = "kind"
 	assetGroupLabelTable        = "asset_group_labels"
+	assetGroupTierTable         = "asset_group_tiers"
 	assetGroupSelectorTable     = "asset_group_label_selectors"
 	assetGroupSelectorSeedTable = "asset_group_label_selector_seeds"
 )
 
 // AssetGroupLabelData defines the methods required to interact with the asset_group_labels table
 type AssetGroupLabelData interface {
-	CreateAssetGroupLabel(ctx context.Context, assetGroupTierId int, userId string, name string, description string) (model.AssetGroupLabel, error)
-	GetAssetGroupLabel(ctx context.Context, assetGroupLabelId int) (model.AssetGroupLabel, error)
+	CreateAssetGroupLabel(ctx context.Context, assetGroupTierId int, userId string, name string, description string) (model.AssetGroupLabelOrTier, error)
+	GetAssetGroupLabelOrTier(ctx context.Context, assetGroupLabelId int) (model.AssetGroupLabelOrTier, error)
 }
 
 // AssetGroupLabelSelectorData defines the methods required to interact with the asset_group_label_selectors and asset_group_label_selector_seeds tables
@@ -86,18 +87,15 @@ func (s *BloodhoundDB) CreateAssetGroupLabelSelector(ctx context.Context, assetG
 	return selector, nil
 }
 
-func (s *BloodhoundDB) GetAssetGroupLabel(ctx context.Context, assetGroupLabelId int) (model.AssetGroupLabel, error) {
-	var label model.AssetGroupLabel
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id = ?", assetGroupLabelTable), assetGroupLabelId).First(&label); result.Error != nil {
-		return model.AssetGroupLabel{}, CheckError(result)
-	} else {
-		return label, nil
-	}
+func (s *BloodhoundDB) GetAssetGroupLabelOrTier(ctx context.Context, assetGroupLabelId int) (model.AssetGroupLabelOrTier, error) {
+	var label model.AssetGroupLabelOrTier
+
+	return label, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT agl.id, agl.asset_group_tier_id, agl.kind_id, agl.name, agl.description, agl.created_at, agl.created_by, agl.updated_at, agl.updated_by, agl.deleted_at, agl.deleted_by, agt.position, agt.allow_certify FROM %s agl LEFT JOIN %s agt ON agt.id = agl.asset_group_tier_id WHERE agl.id = ?", assetGroupLabelTable, assetGroupTierTable), assetGroupLabelId).First(&label))
 }
 
-func (s *BloodhoundDB) CreateAssetGroupLabel(ctx context.Context, assetGroupTierId int, userId string, name string, description string) (model.AssetGroupLabel, error) {
+func (s *BloodhoundDB) CreateAssetGroupLabel(ctx context.Context, assetGroupTierId int, userId string, name string, description string) (model.AssetGroupLabelOrTier, error) {
 	var (
-		label = model.AssetGroupLabel{
+		label = model.AssetGroupLabelOrTier{
 			AssetGroupTierId: null.Int32From(int32(assetGroupTierId)),
 			CreatedBy:        userId,
 			UpdatedBy:        userId,
@@ -123,7 +121,7 @@ func (s *BloodhoundDB) CreateAssetGroupLabel(ctx context.Context, assetGroupTier
 		}
 		return nil
 	}); err != nil {
-		return model.AssetGroupLabel{}, err
+		return model.AssetGroupLabelOrTier{}, err
 	}
 	return label, nil
 }

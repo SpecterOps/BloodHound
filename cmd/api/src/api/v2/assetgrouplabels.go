@@ -59,7 +59,7 @@ func (s *Resources) CreateAssetGroupLabelSelector(response http.ResponseWriter, 
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 	} else if id, err := strconv.Atoi(actorIdStr); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupLabelId, request), response)
-	} else if _, err := s.DB.GetAssetGroupLabel(request.Context(), id); err != nil {
+	} else if _, err := s.DB.GetAssetGroupLabelOrTier(request.Context(), id); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
@@ -70,5 +70,22 @@ func (s *Resources) CreateAssetGroupLabelSelector(response http.ResponseWriter, 
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
+	}
+}
+
+type getAssetLabelOrTierResponse struct {
+	LabelOrTier model.AssetGroupLabelOrTier `json:"label"`
+}
+
+// Gets Asset Group Tier Or Label details
+func (s *Resources) GetTierOrLabelDetails(response http.ResponseWriter, request *http.Request) {
+	rawProviderID := mux.Vars(request)[api.URIPathVariableTierOrLabelID]
+
+	if tierOrLabelID, err := strconv.ParseInt(rawProviderID, 10, 32); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if assetGroupLabelOrTier, err := s.DB.GetAssetGroupLabelOrTier(request.Context(), int(tierOrLabelID)); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		api.WriteBasicResponse(request.Context(), getAssetLabelOrTierResponse{LabelOrTier: assetGroupLabelOrTier}, http.StatusOK, response)
 	}
 }

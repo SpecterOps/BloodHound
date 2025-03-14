@@ -184,10 +184,10 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupHistoryRecord(arg0, arg1, ar
 }
 
 // CreateAssetGroupLabel mocks base method.
-func (m *MockDatabase) CreateAssetGroupLabel(arg0 context.Context, arg1 int, arg2, arg3, arg4 string) (model.AssetGroupLabel, error) {
+func (m *MockDatabase) CreateAssetGroupLabel(arg0 context.Context, arg1 int, arg2, arg3, arg4 string) (model.AssetGroupLabelOrTier, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAssetGroupLabel", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(model.AssetGroupLabel)
+	ret0, _ := ret[0].(model.AssetGroupLabelOrTier)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -959,19 +959,19 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupHistoryRecords(arg0 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupHistoryRecords", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupHistoryRecords), arg0)
 }
 
-// GetAssetGroupLabel mocks base method.
-func (m *MockDatabase) GetAssetGroupLabel(arg0 context.Context, arg1 int) (model.AssetGroupLabel, error) {
+// GetAssetGroupLabelOrTier mocks base method.
+func (m *MockDatabase) GetAssetGroupLabelOrTier(arg0 context.Context, arg1 int) (model.AssetGroupLabelOrTier, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAssetGroupLabel", arg0, arg1)
-	ret0, _ := ret[0].(model.AssetGroupLabel)
+	ret := m.ctrl.Call(m, "GetAssetGroupLabelOrTier", arg0, arg1)
+	ret0, _ := ret[0].(model.AssetGroupLabelOrTier)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetAssetGroupLabel indicates an expected call of GetAssetGroupLabel.
-func (mr *MockDatabaseMockRecorder) GetAssetGroupLabel(arg0, arg1 interface{}) *gomock.Call {
+// GetAssetGroupLabelOrTier indicates an expected call of GetAssetGroupLabelOrTier.
+func (mr *MockDatabaseMockRecorder) GetAssetGroupLabelOrTier(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupLabel", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupLabel), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupLabelOrTier", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupLabelOrTier), arg0, arg1)
 }
 
 // GetAssetGroupSelector mocks base method.

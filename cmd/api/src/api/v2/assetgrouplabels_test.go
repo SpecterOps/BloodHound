@@ -152,8 +152,8 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 					})
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetAssetGroupLabel(gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupLabel{}, errors.New("entity not found")).Times(1)
+					mockDB.EXPECT().GetAssetGroupLabelOrTier(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupLabelOrTier{}, errors.New("entity not found")).Times(1)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -179,8 +179,8 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 					mockDB.EXPECT().
 						CreateAssetGroupLabelSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupLabelSelector{}, errors.New("failure")).Times(1)
-					mockDB.EXPECT().GetAssetGroupLabel(gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupLabel{}, nil).Times(1)
+					mockDB.EXPECT().GetAssetGroupLabelOrTier(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupLabelOrTier{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -206,8 +206,8 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 					mockDB.EXPECT().
 						CreateAssetGroupLabelSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupLabelSelector{Name: "TestSelector"}, nil).Times(1)
-					mockDB.EXPECT().GetAssetGroupLabel(gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupLabel{}, nil).Times(1)
+					mockDB.EXPECT().GetAssetGroupLabelOrTier(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupLabelOrTier{}, nil).Times(1)
 
 					mockGraphDb.EXPECT().
 						PrepareCypherQuery(gomock.Any(), gomock.Any()).
