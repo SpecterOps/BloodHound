@@ -166,3 +166,83 @@ I am short and stout.
 - Here is my ladle.
 - Here is my spout.
 ```
+
+### 7.6 Detailed Proposal
+
+Following either the optional [considerations section](#75-considerations) or the required [motivation & goals section](#74-motivation--goals) begins the bulk of the proposal's content. Each section must begin with a [second-level heading](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#headings) containing the next sequential section number followed by an appropriate title. Each section may contain several subsections titled with [third-level headings](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#headings) with sequential sub-section numbering (e.g., 4.1, 4.2, 4.3). The organization of the proposal's sections and subsections is at the discretion of the primary author and reviewers.
+
+#### 7.6.1 Example
+
+``` markdown
+## 4. Versioning
+
+All releases conform to the [Semantic Versioning Specification](semver.org).
+
+### 4.1 Release Candidates
+
+Release candidates are published with the pre-release suffix `-rc` and a non-zero number corresponding to the number of attempts made to produce a stable release. For example, `v1.2.0-rc1`, `v1.2.0-rc2`, etc..
+
+## 5. Release Schedule & Support
+
+### 5.1 Major and Minor Releases
+
+Major and minor releases are delivered semi-continuously on a schedule internally managed by the BloodHound Product and Engineering teams. However, end-users can anticipate a new release at the end of a given release iteration. For example, at the time of this writing a release iteration is considered three weeks; therefore, at the end of a three-week release iteration a new major or minor version will be generally available.
+
+### 5.2 Hotfix/Patch Releases
+
+Hotfix or patched versions are released off-schedule at the discretion of the BloodHound Product and Engineering teams. Hotfix or patched versions are published to address critical defects that can be fixed and sufficiently tested ahead of the next major or minor release.
+
+### 5.3 Support
+
+Due to the nature of the product's continuous delivery cycle, only the latest release is actively supported during a given release iteration. For example, if a critical defect has been identified and the BloodHound Product and Engineering teams agree to author a hotfix/patch release, the fix will exist in the patched version and subsequent versions, however, the fix will not get backported to any earlier version that has the same defect.
+```
+
+## 8. Style & Formatting Guidelines
+
+### 8.1 Clarity & Brevity
+
+Write in a straightforward, plain-English style, avoiding jargon unless it is well defined in the same document or appropriately referenced.
+
+### 8.2 Headings & Subheadings
+
+Use clear headings for each major section. All sections must be numbered for easy cross-referencing and anchor linking.
+
+### 8.3 Diagrams & Tables
+
+Include flowcharts, sequence diagrams, architecture diagrams, tables, etc. where helpful. Visual aids can make processes easier to understand.
+
+### 8.4 References
+
+#### 8.4.1 External documents
+
+Leverage inline or reference links when referencing external documents. Do not depend on any configured [autolinks](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/configuring-autolinks-to-reference-external-resources).
+
+##### 8.4.1.1 Example
+
+``` markdown
+This is an inline link to [this repository](https://github.com/SpecterOps/BloodHound).
+
+This is a reference link to [this repository][1] and another link to the [SpecterOps website][2].
+
+[1]: https://github.com/SpecterOps/BloodHound
+[2]: https://specterops.io
+```
+
+#### 8.4.2 Internal references
+
+Link directly to any section that has a heading using automatically generated anchor links. To determine the anchor link for a section use the following rules:
+
+- Letters are converted to lower-case.
+- Spaces are replaced by hyphens (`-`). All other whitespace, punctuation, or special characters are removed.
+- Leading and trailing whitespace characters are removed.
+- Any text formatting is removed, leaving only the contents.
+
+More information can be found in [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986#section-3.5).
+
+## 9. Images
+
+Images may be embedded into a RFC when appropriate. Any image that may be shared across multiple RFCs must be stored in a directory named `images`, a sibling to the RFC documents. Any image that is specific to a RFC must be stored in a directory that is a sibling to the RFC document and include [the RFC filename](#62-storage) without the `md` extension (e.g `bh-rfc-0-images`).
+
+## 10. Maintenance & Updates
+
+Approved RFCs may be updated directly to address typos and to make small clarifications. However, all other changes should be considered in a new RFC to supersede the existing one. Once a RFC is approved that supersedes another, the previous RFC must have its status updated to **SUPERSEDED BY <new RFC identifier>** and should remain accessible for historical reference.
