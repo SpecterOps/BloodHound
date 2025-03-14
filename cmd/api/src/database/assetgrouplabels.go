@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
 )
@@ -97,7 +98,11 @@ func (s *BloodhoundDB) GetAssetGroupLabel(ctx context.Context, assetGroupLabelId
 func (s *BloodhoundDB) CreateAssetGroupLabel(ctx context.Context, assetGroupTierId int, userId string, name string, description string) (model.AssetGroupLabel, error) {
 	var (
 		label = model.AssetGroupLabel{
-			Name: name,
+			AssetGroupTierId: null.Int32From(int32(assetGroupTierId)),
+			CreatedBy:        userId,
+			UpdatedBy:        userId,
+			Name:             name,
+			Description:      null.StringFrom(description),
 		}
 
 		auditEntry = model.AuditEntry{
