@@ -23,14 +23,25 @@ import {
     apiClient,
     formatObjectInfoFields,
 } from 'bh-shared-ui';
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
+import usePreviousValue from 'src/hooks/usePreviousValue';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 
 const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | number, edgeKind: string): string =>
     `MATCH (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN r LIMIT 1`;
 
 const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
+    const [isExpanded, setIsExpanded] = useState(true);
+
+    const previousId = usePreviousValue(selectedEdge.id);
+
+    useEffect(() => {
+        if (previousId !== selectedEdge.id) {
+            setIsExpanded(true);
+        }
+    }, [previousId, selectedEdge.id]);
+
     const {
         data: cypherResponse,
         isLoading,
@@ -73,8 +84,14 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
         ];
     }
 
+    const sectionLabel = 'Relationship Information';
+
+    const handleOnChange = () => {
+        setIsExpanded(!isExpanded);
+    };
+
     return (
-        <EdgeInfoCollapsibleSection section={'data'}>
+        <EdgeInfoCollapsibleSection isExpanded={isExpanded} onChange={handleOnChange} label={sectionLabel}>
             <FieldsContainer>
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>
