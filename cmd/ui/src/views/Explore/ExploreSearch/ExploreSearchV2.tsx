@@ -69,7 +69,7 @@ const ExploreSearchV2: React.FC = () => {
 
     const matches = useMediaQuery(theme.breakpoints.down('md'));
 
-    const { exploreSearchTab, cypherSearch, setExploreParams } = useExploreParams();
+    const { exploreSearchTab, setExploreParams } = useExploreParams();
 
     const nodeSearchState = useNodeSearch();
     const pathfindingSearchState = usePathfindingSearch();
@@ -110,7 +110,7 @@ const ExploreSearchV2: React.FC = () => {
             }
         }
         if (tab === 'cypher') {
-            if (btoa(cypherSearchState.cypherQuery) !== cypherSearch) {
+            if (!cypherSearchState.cypherQuery) {
                 params.cypherSearch = null;
             }
         }
@@ -136,9 +136,8 @@ const ExploreSearchV2: React.FC = () => {
             params.exploreSearchTab = 'pathfinding';
         }
         if (tab === 'cypher') {
-            if (btoa(cypherSearchState.cypherQuery) === cypherSearch) {
-                params.searchType = 'cypher';
-            }
+            params.searchType = 'cypher';
+            params.cypherSearch = btoa(cypherSearchState.cypherQuery);
             params.exploreSearchTab = 'cypher';
         }
         return params;
