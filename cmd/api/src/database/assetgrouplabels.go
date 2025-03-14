@@ -65,11 +65,15 @@ func (s *BloodhoundDB) CreateAssetGroupLabelSelector(ctx context.Context, assetG
 					selector.Seeds = append(selector.Seeds, model.SelectorSeed{Type: seed.Type, Value: seed.Value})
 				}
 			}
+			if err := s.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateSelector, assetGroupLabelId, "", ""); err != nil {
+				return err
+			}
 		}
 		return nil
 	}); err != nil {
 		return model.AssetGroupLabelSelector{}, err
 	}
+
 	return selector, nil
 }
 

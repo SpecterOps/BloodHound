@@ -34,10 +34,10 @@ import (
 )
 
 // Checks that any cypher selectors are valid cypher and not too complex.
-func areCypherSelectorsValidCypher(graph queries.Graph, seeds []model.SelectorSeed) (bool, error) {
+func areCypherSelectorSeedsValid(graph queries.Graph, seeds []model.SelectorSeed) (bool, error) {
 	for _, seed := range seeds {
 		if seed.Type == model.SelectorTypeCypher {
-			if _, err := graph.PrepareCypherQuery(seed.Value, queries.MaxSelectorQueryComplexityWeight); err != nil {
+			if _, err := graph.PrepareCypherQuery(seed.Value, queries.QueryComplexityLimitSelector); err != nil {
 				return false, err
 			}
 		}
@@ -65,7 +65,7 @@ func (s *Resources) CreateAssetGroupLabelSelector(response http.ResponseWriter, 
 	} else if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
-	} else if validCypher, err := areCypherSelectorsValidCypher(s.GraphQuery, sel.Seeds); !validCypher {
+	} else if validCypher, err := areCypherSelectorSeedsValid(s.GraphQuery, sel.Seeds); !validCypher {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("cypher is invalid: %v", err), request), response)
 	} else if selector, err := s.DB.CreateAssetGroupLabelSelector(request.Context(), id, actor.ID.String(), sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
 		api.HandleDatabaseError(request, response, err)

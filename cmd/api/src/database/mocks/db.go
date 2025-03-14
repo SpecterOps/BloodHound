@@ -169,6 +169,20 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupCollection(arg0, arg1, arg2 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupCollection", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupCollection), arg0, arg1, arg2)
 }
 
+// CreateAssetGroupHistoryRecord mocks base method.
+func (m *MockDatabase) CreateAssetGroupHistoryRecord(arg0 context.Context, arg1, arg2 string, arg3 model.AssetGroupHistoryAction, arg4 int, arg5, arg6 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAssetGroupHistoryRecord", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateAssetGroupHistoryRecord indicates an expected call of CreateAssetGroupHistoryRecord.
+func (mr *MockDatabaseMockRecorder) CreateAssetGroupHistoryRecord(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupHistoryRecord", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupHistoryRecord), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+}
+
 // CreateAssetGroupLabel mocks base method.
 func (m *MockDatabase) CreateAssetGroupLabel(arg0 context.Context, arg1 int, arg2, arg3, arg4 string) (model.AssetGroupLabel, error) {
 	m.ctrl.T.Helper()
@@ -928,6 +942,21 @@ func (m *MockDatabase) GetAssetGroupCollections(arg0 context.Context, arg1 int32
 func (mr *MockDatabaseMockRecorder) GetAssetGroupCollections(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupCollections), arg0, arg1, arg2, arg3)
+}
+
+// GetAssetGroupHistoryRecords mocks base method.
+func (m *MockDatabase) GetAssetGroupHistoryRecords(arg0 context.Context) ([]model.AssetGroupHistory, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAssetGroupHistoryRecords", arg0)
+	ret0, _ := ret[0].([]model.AssetGroupHistory)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAssetGroupHistoryRecords indicates an expected call of GetAssetGroupHistoryRecords.
+func (mr *MockDatabaseMockRecorder) GetAssetGroupHistoryRecords(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupHistoryRecords", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupHistoryRecords), arg0)
 }
 
 // GetAssetGroupLabel mocks base method.

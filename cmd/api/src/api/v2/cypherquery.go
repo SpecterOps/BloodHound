@@ -52,7 +52,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	if preparedQuery, err = s.GraphQuery.PrepareCypherQuery(payload.Query, queries.MaxQueryComplexityWeightAllowed); err != nil {
+	if preparedQuery, err = s.GraphQuery.PrepareCypherQuery(payload.Query, queries.QueryComplexityLimitExplore); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
 	}

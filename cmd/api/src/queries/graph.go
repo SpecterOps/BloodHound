@@ -60,8 +60,8 @@ const (
 	SearchTypeExact SearchType = "exact"
 	SearchTypeFuzzy SearchType = "fuzzy"
 
-	MaxSelectorQueryComplexityWeight = 25
-	MaxQueryComplexityWeightAllowed  = 50
+	QueryComplexityLimitSelector = 25
+	QueryComplexityLimitExplore  = 50
 )
 
 var (

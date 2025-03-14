@@ -15,8 +15,9 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 -- This table is normally created by dawgs, as defined in schema_up.sql
--- We add it here to aid in unit testing since the asset group management feature 
--- also depends on the kind table. 
+-- We add it here to maintain a new FK to asset_group_labels below regardless 
+-- of graph driver selected. Any future changes to the schema should be reflected
+-- in `schema_up.sql` as well
 CREATE TABLE IF NOT EXISTS kind
 (
   id   SMALLSERIAL,
@@ -58,11 +59,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS agl_name_unique_index ON asset_group_labels (n
     WHERE deleted_at IS NULL;
 
 -- Create tier xero record
-INSERT INTO kind (name) VALUES ('TierZero') ON CONFLICT DO NOTHING;
-INSERT INTO asset_group_tiers (id, position, allow_certify) VALUES (1, 0, false) ON CONFLICT DO NOTHING;
-INSERT INTO asset_group_labels (name, asset_group_tier_id, kind_id, description, created_by, created_at, updated_by, updated_at)
-    VALUES ('Tier Zero', 1, (SELECT id FROM kind WHERE name = 'TierZero'), 'Tier Zero', 'SYSTEM', current_timestamp, 'SYSTEM', current_timestamp)
-    ON CONFLICT DO NOTHING;
+WITH inserted_kind AS (
+INSERT INTO kind (name) VALUES ('Tag_Tier_Zero') ON CONFLICT DO NOTHING
+  RETURNING id),
+  inserted_tier AS (
+INSERT INTO asset_group_tiers (id, position, allow_certify) VALUES (1, 0, false) ON CONFLICT DO NOTHING
+  RETURNING id)
+INSERT INTO asset_group_labels (id, name, asset_group_tier_id, kind_id, description, created_by, created_at, updated_by, updated_at)
+  VALUES (1, 'Tier Zero', (SELECT id FROM inserted_tier), (SELECT id FROM inserted_kind), 'Tier Zero', 'SYSTEM', current_timestamp, 'SYSTEM', current_timestamp)
+  ON CONFLICT (id) DO UPDATE SET kind_id = (SELECT id FROM inserted_kind) WHERE (SELECT id FROM inserted_kind) IS NOT NULL;
 
 -- Add asset_group_history tables
 CREATE TABLE IF NOT EXISTS asset_group_history
