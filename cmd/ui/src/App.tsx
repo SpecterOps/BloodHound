@@ -21,6 +21,7 @@ import {
     AppNotifications,
     GenericErrorBoundaryFallback,
     MainNav,
+    MainNavData,
     NotificationsProvider,
     components,
     darkPalette,
@@ -41,8 +42,8 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import Content from 'src/views/Content';
 import {
-    MainNavPrimaryListData,
     useMainNavLogoData,
+    useMainNavPrimaryListData,
     useMainNavSecondaryListData,
 } from './components/MainNav/MainNavData';
 import Notifier from './components/Notifier';
@@ -61,9 +62,9 @@ export const Inner: React.FC = () => {
         enabled: !!(authState.isInitialized && fullyAuthenticated),
     });
 
-    const mainNavData = {
+    const mainNavData: MainNavData = {
         logo: useMainNavLogoData(),
-        primaryList: MainNavPrimaryListData,
+        primaryList: useMainNavPrimaryListData(),
         secondaryList: useMainNavSecondaryListData(),
     };
     const showNavBar = useShowNavBar(ROUTES);

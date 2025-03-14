@@ -15,13 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { MappedStringLiteral } from '../..';
+import { EdgeCheckboxType, MappedStringLiteral } from '../..';
 import { EntityInfoDataTableProps } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
-type SearchType = 'node' | 'pathfinding' | 'cypher' | 'relationship' | 'composition';
+export type ExploreSearchTab = 'node' | 'pathfinding' | 'cypher';
+type SearchType = ExploreSearchTab | 'relationship' | 'composition';
 
 export type ExploreQueryParams = {
+    exploreSearchTab: ExploreSearchTab | null;
     primarySearch: string | null;
     secondarySearch: string | null;
     cypherSearch: string | null;
@@ -29,12 +31,24 @@ export type ExploreQueryParams = {
     graphSelection: string | null;
     panelSelection: string | null;
     expandedRelationships: EntityInfoDataTableProps['label'][] | null;
+    pathFilters: EdgeCheckboxType['edgeType'][] | null;
 };
 
-export const acceptedSearchTypes = {
+export const acceptedExploreSearchTabs = {
     node: 'node',
     pathfinding: 'pathfinding',
     cypher: 'cypher',
+} satisfies MappedStringLiteral<ExploreSearchTab, ExploreSearchTab>;
+
+export const parseSearchTab = (paramValue: string | null): ExploreSearchTab | null => {
+    if (paramValue && paramValue in acceptedExploreSearchTabs) {
+        return paramValue as ExploreSearchTab;
+    }
+    return null;
+};
+
+export const acceptedSearchTypes = {
+    ...acceptedExploreSearchTabs,
     relationship: 'relationship',
     composition: 'composition',
 } satisfies MappedStringLiteral<SearchType, SearchType>;
@@ -54,6 +68,7 @@ export const useExploreParams = (): UseExploreParamsReturn => {
     const [searchParams, setSearchParams] = useSearchParams();
 
     return {
+        exploreSearchTab: parseSearchTab(searchParams.get('exploreSearchTab')),
         primarySearch: searchParams.get('primarySearch'),
         secondarySearch: searchParams.get('secondarySearch'),
         cypherSearch: searchParams.get('cypherSearch'),
@@ -61,11 +76,13 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         graphSelection: searchParams.get('graphSelection'),
         panelSelection: searchParams.get('panelSelection'),
         expandedRelationships: searchParams.getAll('expandedRelationship'),
+        pathFilters: searchParams.getAll('pathFilters'),
         // react doesnt like this because it doesnt know the params needed for the function factory return function.
         // but the params needed are not needed in the deps array
         // eslint-disable-next-line react-hooks/exhaustive-deps
         setExploreParams: useCallback(
             setParamsFactory(setSearchParams, [
+                'exploreSearchTab',
                 'primarySearch',
                 'secondarySearch',
                 'cypherSearch',
@@ -73,6 +90,7 @@ export const useExploreParams = (): UseExploreParamsReturn => {
                 'graphSelection',
                 'panelSelection',
                 'expandedRelationships',
+                'pathFilters',
             ]),
             [setSearchParams]
         ),

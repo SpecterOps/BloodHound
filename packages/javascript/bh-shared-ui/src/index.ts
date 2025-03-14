@@ -65,6 +65,8 @@ export * from './constants';
 
 export * from './graphSchema';
 
+export * from './edgeTypes';
+
 export * from './views';
 
 export * from './store';
