@@ -20,14 +20,12 @@ import { UseQueryOptions } from 'react-query';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { useAppSelector } from 'src/store';
 
-type QueryOptions = Omit<
-    UseQueryOptions<Environment[], unknown, Environment | undefined, string[]>,
-    'queryFn' | 'onError' | 'onSuccess'
->;
-
 interface UseInitialEnvironmentParams {
     handleInitialEnvironment?: (env: Environment | null) => void;
-    queryOptions?: QueryOptions;
+    queryOptions?: Omit<
+        UseQueryOptions<Environment[], unknown, Environment | undefined, string[]>,
+        'queryFn' | 'onError' | 'onSuccess'
+    >;
 }
 
 // Future Dev: when we implement deep linking support for selected domain in BHE, move this to shared-ui and rip out the reducer logic (including stateUpdater)
