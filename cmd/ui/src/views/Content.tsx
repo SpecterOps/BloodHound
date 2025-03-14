@@ -16,14 +16,14 @@
 
 import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { GenericErrorBoundaryFallback, apiClient } from 'bh-shared-ui';
+import { GenericErrorBoundaryFallback } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
-import { fetchAssetGroups, setDomain } from 'src/ducks/global/actions';
+import { fetchAssetGroups } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
@@ -48,30 +48,6 @@ const Content: React.FC = () => {
             dispatch(ListAssetGroups());
         }
     }, [authState, isFullyAuthenticated, dispatch]);
-
-    useEffect(() => {
-        if (isFullyAuthenticated) {
-            const ctrl = new AbortController();
-            apiClient
-                .getAvailableDomains({ signal: ctrl.signal })
-                .then((result) => {
-                    const collectedDomains = result.data.data
-                        // omit uncollected domains
-                        .filter((domain: any) => domain.collected)
-                        // sort by impactValue descending
-                        .sort((a: any, b: any) => b.impactValue - a.impactValue);
-                    if (collectedDomains.length > 0) {
-                        dispatch(setDomain(collectedDomains[0]));
-                    } else {
-                        dispatch(setDomain(null));
-                    }
-                })
-                .catch(() => {
-                    dispatch(setDomain(null));
-                });
-            return () => ctrl.abort();
-        }
-    }, [isFullyAuthenticated, dispatch]);
 
     return (
         <Box className={classes.content}>

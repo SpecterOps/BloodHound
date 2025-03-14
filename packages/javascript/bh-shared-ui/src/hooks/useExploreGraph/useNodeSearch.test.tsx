@@ -14,27 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { BrowserRouter } from 'react-router-dom';
 import { act, renderHook } from '../../test-utils';
 import { useNodeSearch } from './useNodeSearch';
 
 const TEST_STRING_1 = 'Test1';
 const TEST_STRING_2 = 'test2';
 
-const queryClient = new QueryClient();
-
-const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-        <BrowserRouter>{children}</BrowserRouter>
-    </QueryClientProvider>
-);
-
 // Skipping these for now since we will be bringing in the history package in another PR to make testing query param changes easier
 describe.skip('useNodeSearch', () => {
     it('stores the state of a search term without modifying the query params', () => {
-        const hook = renderHook(() => useNodeSearch(), { wrapper });
+        const hook = renderHook(() => useNodeSearch());
 
         expect(window.location.search).toBe('');
 
@@ -45,7 +34,7 @@ describe.skip('useNodeSearch', () => {
     });
 
     it("upon selecting a source node, updates the URL with a searchType of 'node' and primarySearch of the node's objectid", () => {
-        const hook = renderHook(() => useNodeSearch(), { wrapper });
+        const hook = renderHook(() => useNodeSearch());
 
         act(() => hook.result.current.selectSourceNode({ name: TEST_STRING_1, objectid: TEST_STRING_2 }));
 
@@ -54,7 +43,7 @@ describe.skip('useNodeSearch', () => {
     });
 
     it('does not add a query param if the search term is empty', () => {
-        const hook = renderHook(() => useNodeSearch(), { wrapper });
+        const hook = renderHook(() => useNodeSearch());
 
         act(() => hook.result.current.selectSourceNode({ name: '', objectid: '' }));
 
