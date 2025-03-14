@@ -75,7 +75,7 @@ const GroupManagement = () => {
             if (backButtonFlagQuery.data?.enabled) {
                 navigate({
                     pathname: ROUTE_EXPLORE,
-                    search: `?selectedItem=${getGraphNodeByObjectId.data?.id}&searchType=node&primarySearch=${openNode?.id}`,
+                    search: `?selectedItem=${getGraphNodeByObjectId.data?.id}&searchType=node&primarySearch=${openNode?.id}&exploreSearchTab=node`,
                 });
             } else {
                 dispatch(searchbarActions.sourceNodeSelected(searchNode));
