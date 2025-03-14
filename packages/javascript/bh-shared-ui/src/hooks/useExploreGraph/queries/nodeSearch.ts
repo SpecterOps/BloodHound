@@ -35,7 +35,9 @@ export const nodeSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
     return {
         queryKey: [ExploreGraphQueryKey, searchType, term],
         queryFn: ({ signal }) =>
-            apiClient.getSearchResult(term, 'exact', { signal }).then((res) => res.data.data as FlatGraphResponse),
+            apiClient
+                .getSearchResult(term ?? '', 'exact', { signal })
+                .then((res) => res.data.data as FlatGraphResponse),
         retry: false,
         enabled: !!(searchType && term),
     };
