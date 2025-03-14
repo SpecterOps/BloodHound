@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Notification } from 'bh-shared-ui';
-import { Domain } from 'js-client-library';
+import { Environment } from 'js-client-library';
 import { SnackbarKey } from 'notistack';
 
 const GLOBAL_ADD_SNACKBAR = 'app/global/ADDSNACKBAR';
@@ -47,7 +47,7 @@ export interface GlobalViewState {
 }
 
 export interface GlobalOptionsState {
-    domain: Domain | null;
+    domain: Environment | null;
     assetGroups: any[];
     assetGroupIndex: number | null;
     assetGroupEdit: number | null;
@@ -81,7 +81,7 @@ export type GlobalViewActionTypes = AddSnackbarAction | RemoveSnackbarAction | C
 
 export interface SetDomainAction {
     type: typeof GLOBAL_SET_DOMAIN;
-    domain: Domain | null;
+    domain: Environment | null;
 }
 
 export interface FetchAssetGroupsAction {

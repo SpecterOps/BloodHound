@@ -17,8 +17,8 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { BrowserRouter } from 'react-router-dom';
 import { render, screen, within } from '../../test-utils';
+import { GloballySupportedSearchParams } from '../../utils/searchParams';
 import { AppIcon } from '../AppIcon';
 import MainNav from './MainNav';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
@@ -42,6 +42,7 @@ const MainNavLogoData: MainNavLogoDataObject = {
             altText: 'BHE Text Logo',
         },
     },
+    supportedSearchParams: GloballySupportedSearchParams,
 };
 const MainNavPrimaryListData: MainNavDataListItem[] = [
     {
@@ -49,6 +50,7 @@ const MainNavPrimaryListData: MainNavDataListItem[] = [
         icon: <AppIcon.LineChart size={24} />,
         route: '/test',
         testId: 'global_nav-test-link',
+        supportedSearchParams: GloballySupportedSearchParams,
     },
 ];
 
@@ -60,6 +62,7 @@ const MainNavSecondaryListData: MainNavDataListItem[] = [
         icon: <AppIcon.LineChart size={24} />,
         functionHandler: handleClick,
         testId: 'global_nav-test-action',
+        supportedSearchParams: GloballySupportedSearchParams,
     },
 ];
 
@@ -94,11 +97,7 @@ describe('MainNav', () => {
     const user = userEvent.setup();
 
     beforeEach(() => {
-        render(
-            <BrowserRouter>
-                <MainNav mainNavData={mainNavData} />
-            </BrowserRouter>
-        );
+        render(<MainNav mainNavData={mainNavData} />);
     });
     it('should render a nav element with logo, two lists, a version number and a powered by', () => {
         expect(screen.getByRole('navigation')).toBeInTheDocument();

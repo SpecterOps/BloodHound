@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Domain } from 'js-client-library';
+import { Environment } from 'js-client-library';
 import { OptionsObject, SnackbarKey } from 'notistack';
 import * as types from './types';
 
@@ -64,7 +64,7 @@ export const setExpanded = (expanded: { [key: string]: symbol[] }): types.Global
     };
 };
 
-export const setDomain = (domain: Domain | null): types.GlobalOptionsActionTypes => {
+export const setDomain = (domain: Environment | null): types.GlobalOptionsActionTypes => {
     return {
         type: types.GLOBAL_SET_DOMAIN,
         domain,
