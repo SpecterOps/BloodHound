@@ -20,13 +20,14 @@ import {
     ActiveDirectoryPlatformInfo,
     AzurePlatformInfo,
     DataSelector,
-    DataSelectorValueTypes,
     DomainInfo,
+    LoadingOverlay,
     PageWithTitle,
+    SelectedEnvironment,
     TenantInfo,
 } from 'bh-shared-ui';
 import { useEffect, useState } from 'react';
-import { useAppSelector } from 'src/store';
+import { useInitialEnvironment } from 'src/hooks/useInitialEnvironment';
 import { dataCollectionMessage } from './utils';
 
 const useStyles = makeStyles((theme) => ({
@@ -37,29 +38,38 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const QualityAssurance: React.FC = () => {
-    const domain = useAppSelector((state) => state.global.options.domain);
-    const [contextType, setContextType] = useState<DataSelectorValueTypes | null>(domain?.type || null);
-    const [contextId, setContextId] = useState(domain?.id || null);
+const QualityAssuranceV2: React.FC = () => {
+    const { data: initialEnvironment, isLoading } = useInitialEnvironment();
+
+    const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | null>(
+        initialEnvironment ?? null
+    );
     const [dataError, setDataError] = useState(false);
     const classes = useStyles();
 
+    const environment = selectedEnvironment ?? initialEnvironment;
+    console.log(environment);
+
     useEffect(() => {
         setDataError(false);
-    }, [contextId, contextType]);
+    }, [environment?.type, environment?.id]);
 
     const dataErrorHandler = () => {
         setDataError(true);
     };
 
     const getStatsComponent = () => {
-        switch (contextType) {
+        const contextId = environment?.id;
+
+        switch (environment?.type) {
             case 'active-directory':
-                return <DomainInfo contextId={contextId!} onDataError={dataErrorHandler} />;
+                if (!contextId) return null;
+                return <DomainInfo contextId={contextId} onDataError={dataErrorHandler} />;
             case 'active-directory-platform':
                 return <ActiveDirectoryPlatformInfo onDataError={dataErrorHandler} />;
             case 'azure':
-                return <TenantInfo contextId={contextId!} onDataError={dataErrorHandler} />;
+                if (!contextId) return null;
+                return <TenantInfo contextId={contextId} onDataError={dataErrorHandler} />;
             case 'azure-platform':
                 return <AzurePlatformInfo onDataError={dataErrorHandler} />;
             default:
@@ -67,29 +77,40 @@ const QualityAssurance: React.FC = () => {
         }
     };
 
-    const domainErrorMessage = <>Domains unavailable. {dataCollectionMessage}</>;
+    const environmentErrorMessage = <>Environments unavailable. {dataCollectionMessage}</>;
 
-    if (!contextType || (!contextId && (contextType === 'active-directory' || contextType === 'azure'))) {
+    if (isLoading) {
         return (
             <PageWithTitle
                 title='Data Quality'
                 data-testid='data-quality'
                 pageDescription={
-                    <Typography variant='body2' paragraph>
-                        Understand the data collected within BloodHound broken down by environment and principal type.
-                    </Typography>
-                }>
+                    <>
+                        <QualityAssuranceDescription />
+                        <LoadingOverlay loading />
+                    </>
+                }
+            />
+        );
+    }
+
+    if (
+        !environment?.type ||
+        (!environment?.id && (environment?.type === 'active-directory' || environment?.type === 'azure'))
+    ) {
+        return (
+            <PageWithTitle
+                title='Data Quality'
+                data-testid='data-quality'
+                pageDescription={<QualityAssuranceDescription />}>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                     <DataSelector
                         value={{
-                            type: contextType,
-                            id: contextId,
+                            type: environment?.type ?? null,
+                            id: environment?.id ?? null,
                         }}
-                        errorMessage={domainErrorMessage}
-                        onChange={({ type, id }) => {
-                            setContextType(type);
-                            setContextId(id);
-                        }}
+                        errorMessage={environmentErrorMessage}
+                        onChange={(selection) => setSelectedEnvironment(selection)}
                     />
                 </Box>
                 <Alert severity='info'>
@@ -105,22 +126,12 @@ const QualityAssurance: React.FC = () => {
         <PageWithTitle
             title='Data Quality'
             data-testid='data-quality'
-            pageDescription={
-                <Typography variant='body2' paragraph>
-                    Understand the data collected within BloodHound broken down by environment and principal type.
-                </Typography>
-            }>
+            pageDescription={<QualityAssuranceDescription />}>
             <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                 <DataSelector
-                    value={{
-                        type: contextType,
-                        id: contextId,
-                    }}
-                    errorMessage={domainErrorMessage}
-                    onChange={({ type, id }) => {
-                        setContextType(type);
-                        setContextId(id);
-                    }}
+                    value={selectedEnvironment || initialEnvironment || { type: null, id: null }}
+                    errorMessage={environmentErrorMessage}
+                    onChange={(selection) => setSelectedEnvironment({ ...selection })}
                 />
             </Box>
             {dataError && (
@@ -148,4 +159,10 @@ const QualityAssurance: React.FC = () => {
     );
 };
 
-export default QualityAssurance;
+export default QualityAssuranceV2;
+
+const QualityAssuranceDescription = () => (
+    <Typography variant='body2' paragraph>
+        Understand the data collected within BloodHound broken down by environment and principal type.
+    </Typography>
+);

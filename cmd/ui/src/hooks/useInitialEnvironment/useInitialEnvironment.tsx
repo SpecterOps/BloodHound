@@ -14,56 +14,48 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useAvailableEnvironments, useEnvironmentParams, useFeatureFlag, useMatchingPaths } from 'bh-shared-ui';
+import { useAvailableEnvironments } from 'bh-shared-ui';
 import { Environment } from 'js-client-library';
-import { useCallback } from 'react';
+import { UseQueryOptions } from 'react-query';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
-import { setDomain } from 'src/ducks/global/actions';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { useAppSelector } from 'src/store';
+
+type QueryOptions = Omit<
+    UseQueryOptions<Environment[], unknown, Environment | undefined, string[]>,
+    'queryFn' | 'onError' | 'onSuccess'
+>;
+
+interface UseInitialEnvironmentParams {
+    handleInitialEnvironment?: (env: Environment | null) => void;
+    queryOptions?: QueryOptions;
+}
 
 // Future Dev: when we implement deep linking support for selected domain in BHE, move this to shared-ui and rip out the reducer logic (including stateUpdater)
-export const useInitialEnvironment = (envSupportedRoutes: string[]) => {
-    const authState = useAppSelector((state) => state.auth);
+export const useInitialEnvironment = (params?: UseInitialEnvironmentParams) => {
+    const { handleInitialEnvironment, queryOptions = {} } = params ?? {};
+    const { enabled: queryEnabled = true, queryKey = [], ...restOfQueryOptions } = queryOptions;
+
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
-    const reduxEnvironment = useAppSelector((state) => state.global.options.domain);
 
-    const { data: flag } = useFeatureFlag('back_button_support', {
-        enabled: !!authState.isInitialized && isFullyAuthenticated,
-    });
-    const dispatch = useAppDispatch();
-
-    const { environmentId, setEnvironmentParams } = useEnvironmentParams();
-    const environmentSupportedRoute = useMatchingPaths(envSupportedRoutes);
-    const currentEnvironmentId = flag?.enabled ? environmentId : reduxEnvironment?.id;
-
-    const stateUpdater = useCallback(
-        (environment: Environment | null) => {
-            if (flag?.enabled) {
-                setEnvironmentParams({ environmentId: environment?.id });
-            } else {
-                dispatch(setDomain(environment));
-            }
-        },
-        [dispatch, flag, setEnvironmentParams]
-    );
-
-    useAvailableEnvironments({
-        queryKey: ['initial-environment', `current-environment-${currentEnvironmentId}`],
+    return useAvailableEnvironments({
+        queryKey: ['initial-environment', ...queryKey],
         // set initial environment/tenant once user is authenticated
-        enabled: isFullyAuthenticated && environmentSupportedRoute,
-        onError: () => stateUpdater(null),
-        onSuccess: (availableEnvironments) => {
-            if (!availableEnvironments?.length || currentEnvironmentId) return;
+        enabled: isFullyAuthenticated && queryEnabled,
+        select: (availableEnvironments) => {
+            if (!availableEnvironments?.length) return;
 
             const collectedEnvironments = availableEnvironments
                 ?.filter((environment: Environment) => environment.collected) // omit uncollected environments
                 .sort((a: Environment, b: Environment) => b.impactValue - a.impactValue); // sort by impactValue descending
 
-            if (collectedEnvironments?.length) {
-                stateUpdater(collectedEnvironments[0]);
-            } else {
-                stateUpdater(null);
+            const initialEnvironment = collectedEnvironments[0];
+
+            if (handleInitialEnvironment) {
+                handleInitialEnvironment(initialEnvironment);
             }
+
+            return initialEnvironment;
         },
+        ...restOfQueryOptions,
     });
 };

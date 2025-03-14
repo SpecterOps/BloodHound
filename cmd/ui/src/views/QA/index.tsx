@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import QualityAssurance from './QAFeatureToggle';
+import QualityAssurance from './QA';
 
 export default QualityAssurance;
