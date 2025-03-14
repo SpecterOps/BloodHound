@@ -14,20 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Grid, Popper, useTheme } from '@mui/material';
+import { Popper, useTheme } from '@mui/material';
 import {
-    EdgeInfoState,
     GraphProgress,
     SearchCurrentNodes,
     WebGLDisabledAlert,
     exportToJson,
     isWebGLEnabled,
-    setEdgeInfoOpen,
-    setSelectedEdge,
     transformFlatGraphResponse,
-    useAvailableDomains,
+    useAvailableEnvironments,
     useExploreGraph,
-    useExploreParams,
+    useExploreSelectedItem,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -39,60 +36,57 @@ import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
-import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
-import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
-import ContextMenu from './ContextMenu/ContextMenu';
+import ContextMenuV2 from './ContextMenu/ContextMenuV2';
 import ExploreSearchV2 from './ExploreSearch/ExploreSearchV2';
-
-const columnsDefault = { xs: 6, md: 5, lg: 4, xl: 3 };
-
-const cypherSearchColumns = { xs: 6, md: 6, lg: 6, xl: 4 };
-
-const columnStyles = { height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' };
+import GraphItemInformationPanel from './GraphItemInformationPanel';
 
 const GraphViewV2: FC = () => {
+    /* Hooks */
     const theme = useTheme();
+
     const dispatch = useAppDispatch();
 
     const graphState = useExploreGraph();
 
-    const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const exportableGraphState = useAppSelector((state) => state.explore.export);
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
-    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
-
-    // Associated with T0 edit panel, to be removed
     const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
+
     const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
 
-    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
-    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
-    const [showNodeLabels, setShowNodeLabels] = useState(true);
-    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+
+    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
 
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
-    const { data, isLoading, isError } = useAvailableDomains();
-    const { exploreSearchTab } = useExploreParams();
+    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+
+    const exportableGraphState = useAppSelector((state) => state.explore.export);
+
+    const { data, isLoading, isError } = useAvailableEnvironments();
 
     const sigmaChartRef = useRef<any>(null);
+
     const currentSearchAnchorElement = useRef(null);
 
-    const columns = exploreSearchTab === 'cypher' ? cypherSearchColumns : columnsDefault;
+    const [showNodeLabels, setShowNodeLabels] = useState(true);
+
+    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+
+    const { setSelectedItem } = useExploreSelectedItem();
 
     useEffect(() => {
         let items: any = graphState.data;
         if (!items && !graphState.isError) return;
         if (!items) items = {};
+
         // `items` may be empty, or it may contain an empty `nodes` object
         if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
 
@@ -125,9 +119,9 @@ const GraphViewV2: FC = () => {
 
     if (isLoading) {
         return (
-            <Box sx={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden' }} data-testid='explore'>
+            <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
                 <GraphProgress loading={isLoading} />
-            </Box>
+            </div>
         );
     }
 
@@ -138,31 +132,13 @@ const GraphViewV2: FC = () => {
     }
 
     /* Event Handlers */
-    const findNodeAndSelect = (id: string) => {
-        const selectedItem = graphState.data?.[id];
-        if (selectedItem?.data?.nodetype) {
-            dispatch(setSelectedEdge(null));
-            dispatch(
-                setSelectedNode({
-                    id: selectedItem.data.objectid,
-                    type: selectedItem.data.nodetype,
-                    name: selectedItem.data.name,
-                    graphId: id,
-                })
-            );
-        }
-    };
-
     const handleClickNode = (id: string) => {
-        dispatch(setEdgeInfoOpen(false));
-        dispatch(setEntityInfoOpen(true));
-        findNodeAndSelect(id);
+        setSelectedItem(id);
     };
 
     const handleContextMenu = (event: SigmaNodeEventPayload) => {
         setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
-        const nodeId = event.node;
-        findNodeAndSelect(nodeId);
+        setSelectedItem(event.node);
     };
 
     const handleCloseContextMenu = () => {
@@ -170,14 +146,10 @@ const GraphViewV2: FC = () => {
     };
 
     return (
-        <Box
-            sx={{
-                position: 'relative',
-                height: '100%',
-                width: '100%',
-                overflow: 'hidden',
-            }}
-            data-testid='explore'>
+        <div
+            className='relative h-full w-full overflow-hidden'
+            data-testid='explore'
+            onContextMenu={(e) => e.preventDefault()}>
             <SigmaChart
                 graph={graphologyGraph}
                 onClickNode={handleClickNode}
@@ -187,105 +159,69 @@ const GraphViewV2: FC = () => {
                 ref={sigmaChartRef}
             />
 
-            <Grid
-                container
-                direction='row'
-                justifyContent='space-between'
-                alignItems='flex-start'
-                sx={{
-                    position: 'relative',
-                    padding: theme.spacing(2),
-                    boxSizing: 'border-box',
-                    pointerEvents: 'none',
-                    height: '100%',
-                }}>
-                <Grid
-                    item
-                    {...columns}
-                    sx={{
-                        ...columnStyles,
-                        justifyContent: 'space-between',
-                        height: '100%',
-                        maxHeight: '100%',
-                        gap: 2,
-                    }}
-                    key={'exploreSearch'}>
-                    <ExploreSearchV2 />
-                    <Box
-                        sx={{
-                            pointerEvents: 'auto',
-                            width: '100%',
-                            position: 'relative',
+            <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
+                <ExploreSearchV2 />
+                <div className='flex gap-1 pointer-events-auto' ref={currentSearchAnchorElement}>
+                    <GraphButtons
+                        onExportJson={() => {
+                            exportToJson(exportableGraphState);
                         }}
-                        ref={currentSearchAnchorElement}>
-                        <GraphButtons
-                            onExportJson={() => {
-                                exportToJson(exportableGraphState);
+                        onReset={() => {
+                            sigmaChartRef.current?.resetCamera();
+                        }}
+                        onRunSequentialLayout={() => {
+                            sigmaChartRef.current?.runSequentialLayout();
+                        }}
+                        onRunStandardLayout={() => {
+                            sigmaChartRef.current?.runStandardLayout();
+                        }}
+                        onSearchCurrentResults={() => {
+                            toggleCurrentSearch();
+                        }}
+                        onToggleAllLabels={() => {
+                            if (!showNodeLabels || !showEdgeLabels) {
+                                setShowNodeLabels(true);
+                                setShowEdgeLabels(true);
+                            } else {
+                                setShowNodeLabels(false);
+                                setShowEdgeLabels(false);
+                            }
+                        }}
+                        onToggleNodeLabels={() => {
+                            setShowNodeLabels((prev) => !prev);
+                        }}
+                        onToggleEdgeLabels={() => {
+                            setShowEdgeLabels((prev) => !prev);
+                        }}
+                        showNodeLabels={showNodeLabels}
+                        showEdgeLabels={showEdgeLabels}
+                        isCurrentSearchOpen={false}
+                    />
+                </div>
+                <Popper
+                    open={currentSearchOpen}
+                    anchorEl={currentSearchAnchorElement.current}
+                    placement='top'
+                    disablePortal
+                    className='w-[90%] z-[1]'>
+                    <div className='pointer-events-auto' data-testid='explore_graph-controls'>
+                        <SearchCurrentNodes
+                            sx={{ padding: 1, marginBottom: 1 }}
+                            currentNodes={currentNodes || {}}
+                            onSelect={(node) => {
+                                handleClickNode?.(node.id);
+                                toggleCurrentSearch?.();
                             }}
-                            onReset={() => {
-                                sigmaChartRef.current?.resetCamera();
-                            }}
-                            onRunSequentialLayout={() => {
-                                sigmaChartRef.current?.runSequentialLayout();
-                            }}
-                            onRunStandardLayout={() => {
-                                sigmaChartRef.current?.runStandardLayout();
-                            }}
-                            onSearchCurrentResults={() => {
-                                toggleCurrentSearch();
-                            }}
-                            onToggleAllLabels={() => {
-                                if (!showNodeLabels || !showEdgeLabels) {
-                                    setShowNodeLabels(true);
-                                    setShowEdgeLabels(true);
-                                } else {
-                                    setShowNodeLabels(false);
-                                    setShowEdgeLabels(false);
-                                }
-                            }}
-                            onToggleNodeLabels={() => {
-                                setShowNodeLabels((prev) => !prev);
-                            }}
-                            onToggleEdgeLabels={() => {
-                                setShowEdgeLabels((prev) => !prev);
-                            }}
-                            showNodeLabels={showNodeLabels}
-                            showEdgeLabels={showEdgeLabels}
-                            isCurrentSearchOpen={false}
+                            onClose={toggleCurrentSearch}
                         />
-                        <Popper
-                            open={currentSearchOpen}
-                            anchorEl={currentSearchAnchorElement.current}
-                            placement='top'
-                            disablePortal
-                            sx={{
-                                width: '90%',
-                                zIndex: 1,
-                            }}>
-                            <SearchCurrentNodes
-                                sx={{ padding: 1, marginBottom: 1 }}
-                                currentNodes={currentNodes || {}}
-                                onSelect={(node) => {
-                                    handleClickNode?.(node.id);
-                                    toggleCurrentSearch?.();
-                                }}
-                                onClose={toggleCurrentSearch}
-                            />
-                        </Popper>
-                    </Box>
-                </Grid>
-                <Grid item {...columnsDefault} sx={columnStyles} key={'info'}>
-                    {edgeInfoState.open ? (
-                        <EdgeInfoPane selectedEdge={edgeInfoState.selectedEdge} />
-                    ) : (
-                        <EntityInfoPanel selectedNode={selectedNode} />
-                    )}
-                </Grid>
-            </Grid>
-            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
+                    </div>
+                </Popper>
+            </div>
+            <GraphItemInformationPanel />
+            <ContextMenuV2 contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphState.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
-        </Box>
+        </div>
     );
 };
 
