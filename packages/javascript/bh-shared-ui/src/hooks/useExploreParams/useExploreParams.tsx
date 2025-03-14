@@ -16,7 +16,6 @@
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { EdgeCheckboxType, MappedStringLiteral } from '../..';
-import { EntityInfoDataTableProps } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
 export type ExploreSearchTab = 'node' | 'pathfinding' | 'cypher';
@@ -28,9 +27,10 @@ export type ExploreQueryParams = {
     secondarySearch: string | null;
     cypherSearch: string | null;
     searchType: SearchType | null;
-    graphSelection: string | null;
-    panelSelection: string | null;
-    expandedRelationships: EntityInfoDataTableProps['label'][] | null;
+    expandedPanelSections: string[] | null;
+    selectedItem: string | null;
+    relationshipQueryType: string | null;
+    relationshipQueryItemId: string | null;
     pathFilters: EdgeCheckboxType['edgeType'][] | null;
 };
 
@@ -73,9 +73,10 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         secondarySearch: searchParams.get('secondarySearch'),
         cypherSearch: searchParams.get('cypherSearch'),
         searchType: parseSearchType(searchParams.get('searchType')),
-        graphSelection: searchParams.get('graphSelection'),
-        panelSelection: searchParams.get('panelSelection'),
-        expandedRelationships: searchParams.getAll('expandedRelationship'),
+        expandedPanelSections: searchParams.getAll('expandedPanelSections'),
+        selectedItem: searchParams.get('selectedItem'),
+        relationshipQueryType: searchParams.get('relationshipQueryType'),
+        relationshipQueryItemId: searchParams.get('relationshipQueryObjectId'),
         pathFilters: searchParams.getAll('pathFilters'),
         // react doesnt like this because it doesnt know the params needed for the function factory return function.
         // but the params needed are not needed in the deps array
@@ -87,9 +88,10 @@ export const useExploreParams = (): UseExploreParamsReturn => {
                 'secondarySearch',
                 'cypherSearch',
                 'searchType',
-                'graphSelection',
-                'panelSelection',
-                'expandedRelationships',
+                'expandedPanelSections',
+                'selectedItem',
+                'relationshipQueryType',
+                'relationshipQueryItemId',
                 'pathFilters',
             ]),
             [setSearchParams]

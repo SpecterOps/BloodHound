@@ -34,6 +34,8 @@ export * from './useFetchEntityProperties';
 
 export * from './useFileIngest';
 
+export * from './useGraphItem';
+
 export * from './useMountEffect';
 
 export * from './usePermissions';
@@ -45,6 +47,8 @@ export * from './useSearch';
 export * from './useExploreParams';
 
 export * from './useExploreGraph';
+
+export * from './useExploreSelectedItem';
 
 export * from './useShowNavBar';
 
