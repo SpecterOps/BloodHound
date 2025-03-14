@@ -17,8 +17,6 @@
 import { useAvailableEnvironments } from 'bh-shared-ui';
 import { Environment } from 'js-client-library';
 import { UseQueryOptions } from 'react-query';
-import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
-import { useAppSelector } from 'src/store';
 
 export interface UseInitialEnvironmentParams {
     handleInitialEnvironment?: (env: Environment | null) => void;
@@ -31,14 +29,11 @@ export interface UseInitialEnvironmentParams {
 // Future Dev: when we implement deep linking support for selected domain in BHE, move this to shared-ui and rip out the reducer logic (including stateUpdater)
 export const useInitialEnvironment = (params?: UseInitialEnvironmentParams) => {
     const { handleInitialEnvironment, queryOptions = {} } = params ?? {};
-    const { enabled: queryEnabled = true, queryKey = [], ...restOfQueryOptions } = queryOptions;
-
-    const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const { queryKey = [], ...restOfQueryOptions } = queryOptions;
 
     return useAvailableEnvironments({
         queryKey: ['initial-environment', ...queryKey],
         // set initial environment/tenant once user is authenticated
-        enabled: isFullyAuthenticated && queryEnabled,
         select: (availableEnvironments) => {
             if (!availableEnvironments?.length) return;
 

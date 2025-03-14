@@ -48,7 +48,6 @@ const QualityAssuranceV2: React.FC = () => {
     const classes = useStyles();
 
     const environment = selectedEnvironment ?? initialEnvironment;
-    console.log(environment);
 
     useEffect(() => {
         setDataError(false);

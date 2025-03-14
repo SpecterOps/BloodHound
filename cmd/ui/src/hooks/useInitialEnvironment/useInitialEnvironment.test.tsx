@@ -17,9 +17,8 @@
 import * as bhSharedUi from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import * as authSlice from 'src/ducks/auth/authSlice';
 import { renderHook, waitFor } from 'src/test-utils';
-import { UseInitialEnvironmentParams, useInitialEnvironment } from './useInitialEnvironment';
+import { useInitialEnvironment } from './useInitialEnvironment';
 const useAvailableEnvironmentsSpy = vi.spyOn(bhSharedUi, 'useAvailableEnvironments');
 
 const fakeEnvironmentA = {
@@ -61,29 +60,17 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('useInitialEnvironment', async () => {
-    const setup = (hookParams?: UseInitialEnvironmentParams, authed = true) => {
-        const fullyAuthenticatedSelectorSpy = vi.spyOn(authSlice, 'fullyAuthenticatedSelector');
-        // hard code user as fully authenticated
-        fullyAuthenticatedSelectorSpy.mockReturnValue(authed);
-
-        renderHook(() => useInitialEnvironment(hookParams));
-    };
     it('calls handleInitialEnvironment with the highest impactValue as the initial environment', async () => {
         const mockHandleInitialEnv = vi.fn();
-        setup({ handleInitialEnvironment: mockHandleInitialEnv });
+        renderHook(() => useInitialEnvironment({ handleInitialEnvironment: mockHandleInitialEnv }));
 
         await waitFor(() => expect(mockHandleInitialEnv).toBeCalledWith(fakeEnvironmentA));
     });
     it('disables useAvailableEnvironment and does not attempt calling handleInitialEnvironment if queryOptions.enabled', async () => {
         const mockHandleInitialEnv = vi.fn();
-        setup({ handleInitialEnvironment: mockHandleInitialEnv, queryOptions: { enabled: false } });
-
-        expect(useAvailableEnvironmentsSpy).toBeCalledWith(expect.objectContaining({ enabled: false }));
-        await waitFor(() => expect(mockHandleInitialEnv).not.toBeCalled());
-    });
-    it('disables useAvailableEnvironment if use is not authed', async () => {
-        const mockHandleInitialEnv = vi.fn();
-        setup({ handleInitialEnvironment: mockHandleInitialEnv }, false);
+        renderHook(() =>
+            useInitialEnvironment({ handleInitialEnvironment: mockHandleInitialEnv, queryOptions: { enabled: false } })
+        );
 
         expect(useAvailableEnvironmentsSpy).toBeCalledWith(expect.objectContaining({ enabled: false }));
         await waitFor(() => expect(mockHandleInitialEnv).not.toBeCalled());
