@@ -27,5 +27,6 @@ export * from './panelSectionsParams';
 export * from './parseItemId';
 export * from './passwd';
 export * from './permissions';
+export * from './searchParams';
 export * from './theme';
 export * from './user';

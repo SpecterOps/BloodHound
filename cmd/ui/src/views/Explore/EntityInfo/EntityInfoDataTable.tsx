@@ -19,6 +19,7 @@ import {
     InfiniteScrollingTable,
     NODE_GRAPH_RENDER_LIMIT,
     abortEntitySectionRequest,
+    entityRelationshipEndpoints,
     getOpenExpandedPanelSections,
     searchbarActions,
     transformFlatGraphResponse,
@@ -36,8 +37,7 @@ import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     id,
     label,
-    queryKey,
-    endpoint,
+    queryType,
     countLabel,
     sections,
     parentLabels = [],
@@ -47,13 +47,20 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     const { setExploreParams, expandedPanelSections } = useExploreParams();
     const { expandedSections, setExpandedSections, toggleSection } = useEntityInfoPanelContext();
 
+    const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
     const countQuery = useQuery(
         ['relatedCount', label, id],
         () => {
             if (endpoint) {
-                return endpoint({ skip: 0, limit: 128 });
+                return endpoint({ id, skip: 0, limit: 128 });
             }
-            if (sections) return Promise.all(sections.map((section) => section.endpoint?.({ skip: 0, limit: 128 })));
+            if (sections)
+                return Promise.all(
+                    sections.map((section) => {
+                        const endpoint = section.queryType ? entityRelationshipEndpoints[section.queryType] : undefined;
+                        return endpoint ? endpoint({ id, skip: 0, limit: 128 }) : Promise.resolve();
+                    })
+                );
             return Promise.reject('Invalid call data provided for relationship list query');
         },
         { refetchOnWindowFocus: false, retry: false }
@@ -65,7 +72,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         setExploreParams({
             expandedPanelSections: labelList,
             searchType: 'relationship',
-            relationshipQueryType: queryKey,
+            relationshipQueryType: queryType,
             relationshipQueryItemId: id,
         });
     };
@@ -90,7 +97,8 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
                 return;
             }
             dispatch(setGraphLoading(true));
-            await endpoint({ type: 'graph' })
+
+            await endpoint({ id, type: 'graph' })
                 .then((result) => {
                     const formattedData = transformFlatGraphResponse(result);
 
@@ -172,7 +180,11 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
             error={countQuery.error}
             onChange={handleOnChange}>
             {endpoint && (
-                <InfiniteScrollingTable itemCount={count} fetchDataCallback={endpoint} onClick={handleOnClick} />
+                <InfiniteScrollingTable
+                    itemCount={count}
+                    fetchDataCallback={(params) => endpoint({ id, ...params })}
+                    onClick={handleOnClick}
+                />
             )}
             {sections &&
                 sections.map((nestedSection, nestedSectionIndex) => (

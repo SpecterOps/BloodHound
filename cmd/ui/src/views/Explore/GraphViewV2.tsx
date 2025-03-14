@@ -22,7 +22,7 @@ import {
     exportToJson,
     isWebGLEnabled,
     transformFlatGraphResponse,
-    useAvailableDomains,
+    useAvailableEnvironments,
     useExploreGraph,
     useExploreSelectedItem,
     useToggle,
@@ -40,10 +40,10 @@ import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenuV2 from './ContextMenu/ContextMenuV2';
+import ExploreSearchV2 from './ExploreSearch/ExploreSearchV2';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 
 const GraphViewV2: FC = () => {
@@ -66,11 +66,11 @@ const GraphViewV2: FC = () => {
 
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
-    const { data, isLoading, isError } = useAvailableDomains();
-
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
     const exportableGraphState = useAppSelector((state) => state.explore.export);
+
+    const { data, isLoading, isError } = useAvailableEnvironments();
 
     const sigmaChartRef = useRef<any>(null);
 
@@ -160,7 +160,7 @@ const GraphViewV2: FC = () => {
             />
 
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
-                <ExploreSearch />
+                <ExploreSearchV2 />
                 <div className='flex gap-1 pointer-events-auto' ref={currentSearchAnchorElement}>
                     <GraphButtons
                         onExportJson={() => {

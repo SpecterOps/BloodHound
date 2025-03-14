@@ -1,19 +1,30 @@
 ---
-title: AZOwns
-description: "The principal is granted owner rights on the principal."
+title: Owns
 ---
-<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
 
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/>
 
-AZOwns targets resources in Entra ID (for example [AZGroup](/resources/nodes/az-group), [AZServicePrincipal](/resources/nodes/az-service-principal), and [AZDevice](/resources/nodes/az-device)) from various object-specific ownership.
+Object owners retain the ability to modify object security descriptors, regardless of permissions on the object’s DACL
 
-<Info>
-  **Note: The edges [AZOwner](/resources/edges/owner) and [AZOwns](/resources/edges/owns) are distinct as they each apply their own distinct identity and access management platform (AzureRM and Entra ID respectively) with distinct mechanics, abuse primitives, and remediation steps.**
-</Info>
+This clip shows an example of abusing object ownership:
 
-## Abuse Info
+<iframe id="youtube-5688" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Player for 2 11 BloodHound Head to Tail Andy Robbins Rohan Vazarkar" width="100%" height="420" src="https://www.youtube.com/embed/fqYoOoghqdE?autoplay=0&amp;controls=0&amp;disablekb=1&amp;playsinline=1&amp;cc_load_policy=0&amp;cc_lang_pref=auto&amp;widget_referrer=https%3A%2F%2Fsupport.bloodhoundenterprise.io%2Fhc%2Fen-us%2Farticles%2FOwns&amp;rel=0&amp;showinfo=0&amp;iv_load_policy=3&amp;modestbranding=1&amp;customControls=true&amp;noCookie=false&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fsupport.bloodhoundenterprise.io&amp;widgetid=1" data-gtm-yt-inspected-6="true"></iframe>
 
-Object ownership means almost all abuses are possible against the target object.
+Abuse Info[](#heading-1)
+------------------------
 
-## Opsec Considerations
-This depends on which abuse you perform, but in general Azure will create a log for each abuse action.
+With ownership of the object, you may modify the DACL of the object however you wish. For more information about that, see the WriteDacl edge section.
+
+Opsec Considerations[](#heading-2)
+----------------------------------
+
+This depends on the target object and how to take advantage of this privilege.
+
+When using the PowerView functions, keep in mind that PowerShell v5 introduced several security mechanisms that make it much easier for defenders to see what’s going on with PowerShell in their network, such as script block logging and AMSI. You can bypass those security mechanisms by downgrading to PowerShell v2, which all PowerView functions support.
+
+Modifying permissions on an object will generate 4670 and 4662 events on the domain controller that handled the request.
+
+References[](#heading-3)
+------------------------
+
+* [https://www.youtube.com/watch?v=z8thoG7gPd0](https://www.youtube.com/watch?v=z8thoG7gPd0)

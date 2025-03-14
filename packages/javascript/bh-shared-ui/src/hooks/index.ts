@@ -14,8 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as useAvailableDomains } from './useAvailableDomains';
-
 export { default as useOnClickOutside } from './useOnClickOutside';
 
 export { default as useDebouncedValue } from './useDebouncedValue';
@@ -23,6 +21,8 @@ export { default as useDebouncedValue } from './useDebouncedValue';
 export { default as useToggle } from './useToggle';
 
 export { default as useApiVersion } from './useApiVersion';
+
+export * from './useAvailableEnvironments';
 
 export * from './useConfiguration';
 
@@ -53,3 +53,7 @@ export * from './useExploreSelectedItem';
 export * from './useShowNavBar';
 
 export * from './useIsMouseDragging';
+
+export * from './useEnvironmentParams';
+
+export * from './useMatchingPaths';

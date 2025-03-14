@@ -16,7 +16,7 @@
 
 import { DataSelectorValueTypes } from '../../views/DataQuality/DataSelector/types';
 
-export type SelectedDomain = {
+export type SelectedEnvironment = {
     id: string | null;
     type: DataSelectorValueTypes | null;
 };
