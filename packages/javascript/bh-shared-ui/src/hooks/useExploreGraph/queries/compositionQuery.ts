@@ -71,6 +71,7 @@ export const compositionSearchQuery: ExploreGraphQuery = {
 
 /**
  * TODO:
- * edge panel can only open one accordion at a time? no?
- * dont refetch graph on clicking in the window
+ * use parseId on selectedItem
+ * what should these errors be
+ * better tests
  */

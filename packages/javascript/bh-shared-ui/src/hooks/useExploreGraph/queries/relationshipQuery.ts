@@ -53,5 +53,7 @@ export const relationshipSearchQuery: ExploreGraphQuery = {
 
 /**
  * TODO:
- * how can we test
+ * use parseId on selectedItem
+ * what should these errors be
+ * better tests
  */
