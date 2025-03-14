@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { setupWorker } from 'msw';
-// import handlers from './handlers';
+import handlers from './handlers';
 
 // This configures a Service Worker with the given request handlers.
-export const worker = setupWorker();
+export const worker = setupWorker(...handlers.deepLinking);
