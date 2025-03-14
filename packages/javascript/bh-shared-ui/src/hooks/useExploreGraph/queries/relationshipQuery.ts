@@ -1,3 +1,4 @@
+import { entityRelationshipEndpoints } from '../../../utils/content';
 import { ExploreQueryParams } from '../../useExploreParams';
 import { ExploreGraphQuery, ExploreGraphQueryError, ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
 
@@ -12,7 +13,7 @@ const relationshipSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>)
         };
     }
 
-    const endpoint = fakeEndpointMap[relationshipQueryType];
+    const endpoint = entityRelationshipEndpoints[relationshipQueryType];
 
     return {
         queryKey: [ExploreGraphQueryKey, searchType, relationshipQueryItemId, relationshipQueryType],
@@ -37,5 +38,4 @@ export const relationshipSearchQuery: ExploreGraphQuery = {
 /**
  * TODO:
  * how can we test
- *   make sure the right endpoint it ran with the correct params
  */
