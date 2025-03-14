@@ -44,7 +44,16 @@ type AssetGroupLabelSelectorData interface {
 
 func (s *BloodhoundDB) CreateAssetGroupLabelSelector(ctx context.Context, assetGroupLabelId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupLabelSelector, error) {
 	var (
-		selector model.AssetGroupLabelSelector
+		selector = model.AssetGroupLabelSelector{
+			AssetGroupLabelId: assetGroupLabelId,
+			CreatedBy:         userId,
+			UpdatedBy:         userId,
+			Name:              name,
+			Description:       description,
+			IsDefault:         isDefault,
+			AllowDisable:      allowDisable,
+			AutoCertify:       autoCertify,
+		}
 
 		auditEntry = model.AuditEntry{
 			Action: model.AuditLogActionCreateAssetGroupLabelSelector,
@@ -53,12 +62,12 @@ func (s *BloodhoundDB) CreateAssetGroupLabelSelector(ctx context.Context, assetG
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (asset_group_label_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify) VALUES (?, NOW(), ?, NOW(), ?, ?, ?, ?, ?, ?) RETURNING *", assetGroupSelectorTable),
+		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (asset_group_label_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify) VALUES (?, NOW(), ?, NOW(), ?, ?, ?, ?, ?, ?) RETURNING *", selector.TableName()),
 			assetGroupLabelId, userId, userId, name, description, isDefault, allowDisable, autoCertify).Scan(&selector); result.Error != nil {
 			return CheckError(result)
 		} else {
 			for _, seed := range seeds {
-				if result := tx.Exec(fmt.Sprintf("INSERT INTO %s (selector_id, type, value) VALUES (?, ?, ?)", assetGroupSelectorSeedTable), selector.ID, seed.Type, seed.Value); result.Error != nil {
+				if result := tx.Exec(fmt.Sprintf("INSERT INTO %s (selector_id, type, value) VALUES (?, ?, ?)", seed.TableName()), selector.ID, seed.Type, seed.Value); result.Error != nil {
 					return CheckError(result)
 				} else {
 					selector.Seeds = append(selector.Seeds, model.SelectorSeed{Type: seed.Type, Value: seed.Value})

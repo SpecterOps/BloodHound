@@ -93,6 +93,7 @@ type AssetGroupLabelSelector struct {
 	Description       string      `json:"description"`
 	AutoCertify       bool        `json:"auto_certify"`
 	IsDefault         bool        `json:"is_default"`
+	AllowDisable      bool        `json:"allow_disable"`
 
 	Seeds []SelectorSeed `json:"seeds" validate:"required" gorm:"-"`
 }
