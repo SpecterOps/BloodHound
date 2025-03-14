@@ -21,12 +21,12 @@ import {
     abortEntitySectionRequest,
     entityRelationshipEndpoints,
     searchbarActions,
+    transformFlatGraphResponse,
 } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
 import { useDispatch } from 'react-redux';
 import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
 import { addSnackbar } from 'src/ducks/global/actions';
-import { transformFlatGraphResponse } from 'src/utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({ id, label, queryType, countLabel, sections }) => {

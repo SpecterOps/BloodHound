@@ -24,6 +24,7 @@ import {
     isWebGLEnabled,
     setEdgeInfoOpen,
     setSelectedEdge,
+    transformFlatGraphResponse,
     useAvailableDomains,
     useExploreGraph,
     useExploreParams,
@@ -31,7 +32,7 @@ import {
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { FlatGraphResponse, GraphNodes } from 'js-client-library';
+import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
@@ -43,7 +44,6 @@ import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import { transformFlatGraphResponse } from 'src/utils';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import usePrompt from 'src/views/Explore/NavigationAlert';
@@ -61,7 +61,7 @@ const GraphViewV2: FC = () => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
 
-    const newGraphState = useExploreGraph<FlatGraphResponse>();
+    const graphState = useExploreGraph();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exportableGraphState = useAppSelector((state) => state.explore.export);
@@ -90,8 +90,9 @@ const GraphViewV2: FC = () => {
     const columns = exploreSearchTab === 'cypher' ? cypherSearchColumns : columnsDefault;
 
     useEffect(() => {
-        let items: any = newGraphState.data;
-        if (!items) return;
+        let items: any = graphState.data;
+        if (!items && !graphState.isError) return;
+        if (!items) items = {};
         // `items` may be empty, or it may contain an empty `nodes` object
         if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
 
@@ -102,7 +103,7 @@ const GraphViewV2: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [newGraphState.data, theme, darkMode]);
+    }, [graphState.data, theme, darkMode, graphState.isError]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {
@@ -138,7 +139,7 @@ const GraphViewV2: FC = () => {
 
     /* Event Handlers */
     const findNodeAndSelect = (id: string) => {
-        const selectedItem = newGraphState.data?.[id];
+        const selectedItem = graphState.data?.[id];
         if (selectedItem?.data?.nodetype) {
             dispatch(setSelectedEdge(null));
             dispatch(
@@ -282,7 +283,7 @@ const GraphViewV2: FC = () => {
                 </Grid>
             </Grid>
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
-            <GraphProgress loading={newGraphState.isLoading} />
+            <GraphProgress loading={graphState.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
         </Box>
     );
