@@ -20,7 +20,7 @@ import { UseQueryOptions } from 'react-query';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { useAppSelector } from 'src/store';
 
-interface UseInitialEnvironmentParams {
+export interface UseInitialEnvironmentParams {
     handleInitialEnvironment?: (env: Environment | null) => void;
     queryOptions?: Omit<
         UseQueryOptions<Environment[], unknown, Environment | undefined, string[]>,

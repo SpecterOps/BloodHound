@@ -14,18 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DeepPartial } from 'bh-shared-ui';
-import { createMemoryHistory } from 'history';
-import { Environment } from 'js-client-library';
+import * as bhSharedUi from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import * as authSlice from 'src/ducks/auth/authSlice';
-import * as globalActions from 'src/ducks/global/actions';
-import { AppState } from 'src/store';
 import { renderHook, waitFor } from 'src/test-utils';
-import { useInitialEnvironment } from './useInitialEnvironment';
-
-const setDomainSpy = vi.spyOn(globalActions, 'setDomain');
+import { UseInitialEnvironmentParams, useInitialEnvironment } from './useInitialEnvironment';
+const useAvailableEnvironmentsSpy = vi.spyOn(bhSharedUi, 'useAvailableEnvironments');
 
 const fakeEnvironmentA = {
     type: 'active-directory',
@@ -66,56 +61,31 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('useInitialEnvironment', async () => {
-    const envSupportedPage = '/graphview';
-    const setup = (initialEntry?: string, initialState?: DeepPartial<AppState>) => {
+    const setup = (hookParams?: UseInitialEnvironmentParams, authed = true) => {
         const fullyAuthenticatedSelectorSpy = vi.spyOn(authSlice, 'fullyAuthenticatedSelector');
         // hard code user as fully authenticated
-        fullyAuthenticatedSelectorSpy.mockReturnValue(true);
+        fullyAuthenticatedSelectorSpy.mockReturnValue(authed);
 
-        const history = createMemoryHistory({ initialEntries: [initialEntry ?? envSupportedPage] });
-
-        renderHook(() => useInitialEnvironment([envSupportedPage]), {
-            history,
-            initialState: {
-                auth: {
-                    ...authSlice.initialState,
-                    isInitialized: true,
-                },
-                ...initialState,
-            },
-        });
-
-        return { history };
+        renderHook(() => useInitialEnvironment(hookParams));
     };
-    it('attempts to set the environmentId search param with the highest impactValue as the initial environment', async () => {
-        const { history } = setup();
+    it('calls handleInitialEnvironment with the highest impactValue as the initial environment', async () => {
+        const mockHandleInitialEnv = vi.fn();
+        setup({ handleInitialEnvironment: mockHandleInitialEnv });
 
-        await waitFor(() => expect(history.location.search).toContain(`environmentId=${fakeEnvironmentA.id}`));
+        await waitFor(() => expect(mockHandleInitialEnv).toBeCalledWith(fakeEnvironmentA));
     });
-    it('sets redux global.info.domain if back_button_support feature flag is disabled', async () => {
-        server.use(
-            rest.get(`/api/v2/features`, (req, res, ctx) => {
-                return res(ctx.json({ ...backButtonSupportFF, enabled: false }));
-            })
-        );
+    it('disables useAvailableEnvironment and does not attempt calling handleInitialEnvironment if queryOptions.enabled', async () => {
+        const mockHandleInitialEnv = vi.fn();
+        setup({ handleInitialEnvironment: mockHandleInitialEnv, queryOptions: { enabled: false } });
 
-        setup();
-
-        await waitFor(() => expect(setDomainSpy).toBeCalledWith(fakeEnvironmentA));
+        expect(useAvailableEnvironmentsSpy).toBeCalledWith(expect.objectContaining({ enabled: false }));
+        await waitFor(() => expect(mockHandleInitialEnv).not.toBeCalled());
     });
-    it('does not set initial environment if current route is not an env supported route', async () => {
-        const { history } = setup('/not-graphview');
+    it('disables useAvailableEnvironment if use is not authed', async () => {
+        const mockHandleInitialEnv = vi.fn();
+        setup({ handleInitialEnvironment: mockHandleInitialEnv }, false);
 
-        await waitFor(() => expect(history.location.search).toBe(''));
-    });
-    it('does not attempt setting a default environment if environmentId is set already', async () => {
-        const { history } = setup(`?environmentId=${fakeEnvironmentB.id}`);
-
-        await waitFor(() => expect(history.location.search).toContain(`environmentId=${fakeEnvironmentB.id}`));
-    });
-    it('not attempt setting a default environment if domain.id is set already', async () => {
-        setup(envSupportedPage, { global: { options: { domain: fakeEnvironmentB as Environment } } });
-
-        await waitFor(() => expect(setDomainSpy).not.toBeCalledWith(fakeEnvironmentA));
+        expect(useAvailableEnvironmentsSpy).toBeCalledWith(expect.objectContaining({ enabled: false }));
+        await waitFor(() => expect(mockHandleInitialEnv).not.toBeCalled());
     });
 });
