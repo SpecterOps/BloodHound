@@ -48,7 +48,7 @@ const GraphItemInformationPanel = () => {
         );
     }
 
-    if (isEdge(selectedItemQuery.data!)) {
+    if (selectedItemQuery.data && isEdge(selectedItemQuery.data)) {
         const selectedEdge = {
             id: selectedItem as string,
             name: selectedItemQuery.data.label || '',
@@ -69,7 +69,7 @@ const GraphItemInformationPanel = () => {
         return <EdgeInfoPane sx={infoPaneStyles} selectedEdge={selectedEdge} />;
     }
 
-    if (isNode(selectedItemQuery.data!)) {
+    if (selectedItemQuery.data && isNode(selectedItemQuery.data)) {
         const selectedNode = {
             graphId: selectedItem,
             id: selectedItemQuery.data.objectId,
