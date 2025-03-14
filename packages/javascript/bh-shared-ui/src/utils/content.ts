@@ -31,7 +31,7 @@ export interface EntityInfoDataTableProps {
     endpoint?: ({ counts, skip, limit, type }: EntitySectionEndpointParams) => Promise<any>;
     countLabel?: string;
     sections?: EntityInfoDataTableProps[];
-    allSectionsMap?: string[][];
+    parentLabels?: string[];
     queryKey?: string;
 }
 

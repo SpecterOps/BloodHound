@@ -19,8 +19,7 @@ import {
     InfiniteScrollingTable,
     NODE_GRAPH_RENDER_LIMIT,
     abortEntitySectionRequest,
-    collapseNonSelectedSections,
-    managePanelSectionsParams,
+    getOpenExpandedPanelSections,
     searchbarActions,
     transformFlatGraphResponse,
     useExploreParams,
@@ -41,12 +40,12 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     endpoint,
     countLabel,
     sections,
-    allSectionsMap,
+    parentLabels = [],
 }) => {
     const dispatch = useDispatch();
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
-    const { setExploreParams } = useExploreParams();
-    const { expandedSections, toggleSection } = useEntityInfoPanelContext();
+    const { setExploreParams, expandedPanelSections } = useExploreParams();
+    const { expandedSections, setExpandedSections, toggleSection } = useEntityInfoPanelContext();
 
     const countQuery = useQuery(
         ['relatedCount', label, id],
@@ -61,10 +60,10 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     );
 
     const setExpandedPanelSectionsParams = () => {
-        const updatedParams = managePanelSectionsParams(allSectionsMap as string[][], label);
+        const labelList = [...(parentLabels as string[]), label];
 
         setExploreParams({
-            expandedPanelSections: updatedParams,
+            expandedPanelSections: labelList,
             searchType: 'relationship',
             relationshipQueryType: queryKey,
             relationshipQueryItemId: id,
@@ -112,10 +111,13 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     };
 
     const handleCurrentSectionToggle = () => {
-        if (backButtonFlag?.enabled && allSectionsMap) {
-            collapseNonSelectedSections(expandedSections, allSectionsMap, label); // We want to keep only one open at a time
+        if (backButtonFlag?.enabled) {
+            setExpandedSections(
+                getOpenExpandedPanelSections(expandedPanelSections as string[], parentLabels as string[], label)
+            );
+        } else {
+            toggleSection(label);
         }
-        toggleSection(label);
     };
 
     const setNodeSearchParams = (item: SelectedNode) => {
@@ -174,7 +176,11 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
             )}
             {sections &&
                 sections.map((nestedSection, nestedSectionIndex) => (
-                    <EntityInfoDataTable key={nestedSectionIndex} allSectionsMap={allSectionsMap} {...nestedSection} />
+                    <EntityInfoDataTable
+                        key={nestedSectionIndex}
+                        parentLabels={[...(parentLabels as string[]), label]}
+                        {...nestedSection}
+                    />
                 ))}
         </EntityInfoCollapsibleSection>
     );

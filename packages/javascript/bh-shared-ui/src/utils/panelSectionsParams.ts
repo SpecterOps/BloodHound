@@ -14,56 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { EntityInfoDataTableProps } from './content';
-
-// Excluding top section with object information
-export const createAllSectionsMap = (sectionsData: EntityInfoDataTableProps[]) => {
-    return sectionsData.map((sectionItem: EntityInfoDataTableProps) => {
-        const allSectionsMap: string[] = [sectionItem.label];
-        // subsections for nested items
-        if (sectionItem.sections) {
-            const listWithSubItems = sectionItem.sections.map(
-                (nestedItem: EntityInfoDataTableProps) => nestedItem.label
-            );
-            listWithSubItems.forEach((nestedItemString: string) => {
-                allSectionsMap.push(nestedItemString);
-            });
-        }
-        return allSectionsMap;
-    });
-};
-
-// Helps in determining if its a nested label
-const findLabelLocation = (allSectionsMap: string[][], label: string) => {
-    const filteredArray: string[] = allSectionsMap!.find((nestedArray: string[]) =>
-        nestedArray.includes(label)
-    ) as string[];
-    const index = filteredArray.indexOf(label);
-    return { filteredArray, index };
-};
-
-const isParentOfLabel = (allSectionsMap: string[][], label: string, key: string) => {
-    const { filteredArray, index } = findLabelLocation(allSectionsMap, label);
-    if (index > 0) {
-        return key === filteredArray[0];
-    }
-    return false;
-};
-
-export const collapseNonSelectedSections = (
-    expandedSections: { [k: string]: boolean },
-    allSectionsMap: string[][],
-    label: string
-) => {
-    for (const [key] of Object.entries(expandedSections)) {
-        const isNotParentOfSection = !isParentOfLabel(allSectionsMap, label, key);
-        const isNotClickedSection = key !== label; // to not interfere with normal toggle flow
-        if (isNotParentOfSection && isNotClickedSection) {
-            expandedSections[key] = false;
-        }
-    }
-};
-
 // From string array to object
 export const formatPanelSectionsParams = (expandedPanelSections: string[]) => {
     return expandedPanelSections?.reduce((queryParamObject: { [k: string]: boolean }, label: string) => {
@@ -72,11 +22,19 @@ export const formatPanelSectionsParams = (expandedPanelSections: string[]) => {
     }, {});
 };
 
-// Generates the param to add based on the label
-export const managePanelSectionsParams = (allSectionsMap: string[][], label: string) => {
-    const updatedParams: string[] = [];
-    const { filteredArray, index } = findLabelLocation(allSectionsMap, label);
-    updatedParams.push(label);
-    if (index > 0) updatedParams.unshift(filteredArray[0]);
-    return updatedParams;
+export const getOpenExpandedPanelSections = (
+    expandedPanelSections: string[],
+    parentLabels: string[],
+    label: string
+) => {
+    const labelInSectionOpen = expandedPanelSections?.includes(label);
+    const toggleOpenSections = labelInSectionOpen ? parentLabels : [...parentLabels, label];
+    const toggleOpenSectionsMap = toggleOpenSections?.reduce(
+        (expandedSectionsMap: Record<string, boolean>, sectionLabel: string) => {
+            expandedSectionsMap[sectionLabel] = true;
+            return expandedSectionsMap;
+        },
+        {}
+    );
+    return toggleOpenSectionsMap;
 };
