@@ -61,12 +61,9 @@ const GraphViewV2: FC = () => {
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
     const [contextMenuPosition, setContextMenuPosition] = useState<{ mouseX: number; mouseY: number } | null>(null);
-    const [contextMenuNodeId, setContextMenuNodeId] = useState<string>();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
-
-    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
     const exportableGraphState = useAppSelector((state) => state.explore.export);
 
@@ -141,12 +138,11 @@ const GraphViewV2: FC = () => {
         if (!contextMenuNode) return;
 
         setContextMenuPosition(contextMenuPosition === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
-        setContextMenuNodeId(contextMenuNode.data.objectid);
+        setSelectedItem(event.node);
     };
 
     const handleCloseContextMenu = () => {
         setContextMenuPosition(null);
-        setContextMenuNodeId(undefined);
     };
 
     return (
@@ -222,7 +218,7 @@ const GraphViewV2: FC = () => {
                 </Popper>
             </div>
             <GraphItemInformationPanel />
-            <ContextMenuV2 contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
+            <ContextMenuV2 contextMenu={contextMenuPosition} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphState.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
         </div>
