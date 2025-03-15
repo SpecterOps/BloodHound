@@ -49,6 +49,8 @@ const (
 	URIPathVariableApplicationConfigurationParameter = "parameter"
 	URIPathVariableAssetGroupID                      = "asset_group_id"
 	URIPathVariableAssetGroupSelectorID              = "asset_group_selector_id"
+	URIPathVariableAssetGroupLabelID                 = "asset_group_label_id"
+	URIPathVariableAssetGroupLabelSelectorID         = "asset_group_label_selector_id"
 	URIPathVariableAttackPathID                      = "attack_path_id"
 	URIPathVariableClientID                          = "client_id"
 	URIPathVariableDataType                          = "data_type"
@@ -68,4 +70,5 @@ const (
 	URIPathVariableSavedQueryID                      = "saved_query_id"
 	URIPathVariableSSOProviderID                     = "sso_provider_id"
 	URIPathVariableSSOProviderSlug                   = "sso_provider_slug"
+	URIPathVariableTierOrLabelID                     = "tier_label_id"
 )

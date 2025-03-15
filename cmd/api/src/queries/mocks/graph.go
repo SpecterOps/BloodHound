@@ -239,18 +239,18 @@ func (mr *MockGraphMockRecorder) GetNodesByKind(arg0 interface{}, arg1 ...interf
 }
 
 // PrepareCypherQuery mocks base method.
-func (m *MockGraph) PrepareCypherQuery(arg0 string) (queries.PreparedQuery, error) {
+func (m *MockGraph) PrepareCypherQuery(arg0 string, arg1 int64) (queries.PreparedQuery, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PrepareCypherQuery", arg0)
+	ret := m.ctrl.Call(m, "PrepareCypherQuery", arg0, arg1)
 	ret0, _ := ret[0].(queries.PreparedQuery)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PrepareCypherQuery indicates an expected call of PrepareCypherQuery.
-func (mr *MockGraphMockRecorder) PrepareCypherQuery(arg0 interface{}) *gomock.Call {
+func (mr *MockGraphMockRecorder) PrepareCypherQuery(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareCypherQuery", reflect.TypeOf((*MockGraph)(nil).PrepareCypherQuery), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareCypherQuery", reflect.TypeOf((*MockGraph)(nil).PrepareCypherQuery), arg0, arg1)
 }
 
 // RawCypherQuery mocks base method.
