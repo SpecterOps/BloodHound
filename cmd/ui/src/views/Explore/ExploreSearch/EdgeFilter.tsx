@@ -17,59 +17,38 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { faFilter } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import makeStyles from '@mui/styles/makeStyles';
-import { EdgeCheckboxType, searchbarActions } from 'bh-shared-ui';
-import { useRef, useState } from 'react';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { useState } from 'react';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
-
-const useStyles = makeStyles((theme) => ({
-    pathfindingButton: {
-        height: '25px',
-        width: '25px',
-        minWidth: '25px',
-        borderRadius: theme.shape.borderRadius,
-        borderColor: 'rgba(0,0,0,0.23)',
-        color: theme.palette.common.white,
-        padding: 0,
-    },
-}));
+import { usePathfindingFilterSwitch } from './switches';
 
 const EdgeFilter = () => {
-    const classes = useStyles();
-    const dispatch = useAppDispatch();
-
     const [isOpenDialog, setIsOpenDialog] = useState(false);
 
-    const initialFilterState = useRef<EdgeCheckboxType[]>([]);
-    const pathFilters = useAppSelector((state) => state.search.pathFilters);
-
-    const handlePathfindingSearch = () => {
-        dispatch(searchbarActions.pathfindingSearch());
-    };
+    const { selectedFilters, initialize, handleApplyFilters, handleUpdateFilters, handleCancelFilters } =
+        usePathfindingFilterSwitch();
 
     return (
         <>
             <Button
-                className={classes.pathfindingButton}
+                className={'h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25 text-white'}
                 onClick={() => {
                     setIsOpenDialog(true);
                     // what is the initial state of edge filters?  save it
-                    initialFilterState.current = pathFilters;
+                    initialize();
                 }}>
                 <FontAwesomeIcon icon={faFilter} />
             </Button>
             <EdgeFilteringDialog
                 isOpen={isOpenDialog}
-                handleCancel={() => {
-                    setIsOpenDialog(false);
-
-                    // rollback changes made in dialog.
-                    dispatch(searchbarActions.pathFiltersSaved(initialFilterState.current));
-                }}
+                selectedFilters={selectedFilters}
                 handleApply={() => {
                     setIsOpenDialog(false);
-                    handlePathfindingSearch();
+                    handleApplyFilters();
+                }}
+                handleUpdate={handleUpdateFilters}
+                handleCancel={() => {
+                    setIsOpenDialog(false);
+                    handleCancelFilters();
                 }}
             />
         </>

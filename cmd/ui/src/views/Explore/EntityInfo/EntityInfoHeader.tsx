@@ -17,7 +17,7 @@
 import { faAngleDoubleUp, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Typography } from '@mui/material';
-import { EntityKinds, Icon, NodeIcon, useHeaderStyles } from 'bh-shared-ui';
+import { Icon, NodeIcon, useHeaderStyles } from 'bh-shared-ui';
 import React from 'react';
 import { useEntityInfoPanelContext } from 'src/views/Explore/EntityInfo/EntityInfoPanelContext';
 
@@ -25,7 +25,7 @@ interface HeaderProps {
     expanded: boolean;
     name: string;
     onToggleExpanded: (expanded: boolean) => void;
-    nodeType?: EntityKinds;
+    nodeType?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expanded }) => {

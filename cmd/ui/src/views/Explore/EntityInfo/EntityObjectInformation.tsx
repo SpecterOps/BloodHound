@@ -22,7 +22,8 @@ import {
     formatObjectInfoFields,
     useFetchEntityProperties,
 } from 'bh-shared-ui';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import usePreviousValue from 'src/hooks/usePreviousValue';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
@@ -34,11 +35,27 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
         databaseId,
     });
 
+    const [isExpanded, setIsExpanded] = useState(true);
+
+    const previousId = usePreviousValue(id);
+
+    useEffect(() => {
+        if (previousId !== id) {
+            setIsExpanded(true);
+        }
+    }, [previousId, id]);
+
+    const sectionLabel = 'Object Information';
+
+    const handleOnChange = () => {
+        setIsExpanded(!isExpanded);
+    };
+
     if (isLoading) return <Skeleton data-testid='entity-object-information-skeleton' variant='text' />;
 
     if (isError || !informationAvailable)
         return (
-            <EntityInfoCollapsibleSection label='Object Information'>
+            <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isExpanded} label={sectionLabel}>
                 <FieldsContainer>
                     <Alert severity='error'>Unable to load object information for this node.</Alert>
                 </FieldsContainer>
@@ -48,7 +65,7 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     const formattedObjectFields: EntityField[] = formatObjectInfoFields(entityProperties);
 
     return (
-        <EntityInfoCollapsibleSection label='Object Information'>
+        <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isExpanded} label={sectionLabel}>
             <FieldsContainer>
                 <BasicObjectInfoFields {...entityProperties} />
                 <ObjectInfoFields fields={formattedObjectFields} />

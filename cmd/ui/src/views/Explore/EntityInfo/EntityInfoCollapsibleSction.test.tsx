@@ -27,6 +27,7 @@ describe('EntityInfoCollapsibleSection', () => {
         const testOnChange = vi.fn();
         const testIsLoading = false;
         const testIsError = true;
+        const isExpanded = true;
         const error = {};
 
         render(
@@ -38,6 +39,7 @@ describe('EntityInfoCollapsibleSection', () => {
                     isLoading={testIsLoading}
                     isError={testIsError}
                     error={error}
+                    isExpanded={isExpanded}
                 />
             </EntityInfoPanelContextProvider>
         );

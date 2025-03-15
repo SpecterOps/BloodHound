@@ -14,7 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryRelationshipKind, AzureRelationshipKind, apiClient } from 'bh-shared-ui';
+import {
+    ActiveDirectoryRelationshipKind,
+    AzureRelationshipKind,
+    apiClient,
+    transformFlatGraphResponse,
+    transformToFlatGraphResponse,
+} from 'bh-shared-ui';
 import { SagaIterator } from 'redux-saga';
 import { all, call, fork, put, takeLatest } from 'redux-saga/effects';
 import { putGraphData, putGraphError, putGraphVars, saveResponseForExport } from 'src/ducks/explore/actions';
@@ -31,7 +37,6 @@ import {
 } from 'src/ducks/explore/types';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { getLinksIndex, getNodesIndex } from 'src/ducks/graph/graphutils';
-import { transformFlatGraphResponse, transformToFlatGraphResponse } from 'src/utils';
 
 function* graphQueryWatcher(): SagaIterator {
     yield takeLatest(GRAPH_START, graphQueryWorker);

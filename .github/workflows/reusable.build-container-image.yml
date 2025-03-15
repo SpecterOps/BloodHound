@@ -195,7 +195,7 @@ jobs:
       # TODO: don't pull actions but instead reference them from the source repo
       # May need to adjust repo actions permissions to allow access from other org repos
       # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#allowing-access-to-components-in-a-private-repository
-      - if: ${{ github.repository != 'SpecterOps/BloodHound' && github.event.repository.fork == false }}
+      - if: ${{ github.repository != 'SpecterOps/BloodHound' }}
         name: Checkout Reusable Workflows and Composite Actions
         uses: actions/checkout@v4
         with:

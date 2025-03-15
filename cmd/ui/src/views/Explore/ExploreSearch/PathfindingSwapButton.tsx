@@ -17,41 +17,24 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import makeStyles from '@mui/styles/makeStyles';
-import { searchbarActions } from 'bh-shared-ui';
 import { useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from 'src/store';
-
-const useStyles = makeStyles((theme) => ({
-    swapButton: {
-        height: '25px',
-        width: '25px',
-        minWidth: '25px',
-        borderRadius: theme.shape.borderRadius,
-        borderColor: 'rgba(0,0,0,0.23)',
-        color: theme.palette.common.white,
-        padding: 0,
-    },
-}));
+import { usePathfindingSearchSwitch } from './switches';
 
 const PathfindingSwapButton = () => {
-    const classes = useStyles();
-    const dispatch = useAppDispatch();
-
-    const { primary, secondary } = useAppSelector((state) => state.search);
+    const { sourceSelectedItem, destinationSelectedItem, handleSourceNodeSelected, handleDestinationNodeSelected } =
+        usePathfindingSearchSwitch();
 
     const swapPathfindingInputs = useCallback(() => {
-        const newSourceNode = secondary.value;
-        const newDestinationNode = primary.value;
-
-        dispatch(searchbarActions.sourceNodeSelected(newSourceNode));
-        dispatch(searchbarActions.destinationNodeSelected(newDestinationNode));
-    }, [primary, secondary, dispatch]);
+        if (sourceSelectedItem && destinationSelectedItem) {
+            handleSourceNodeSelected(destinationSelectedItem);
+            handleDestinationNodeSelected(sourceSelectedItem);
+        }
+    }, [sourceSelectedItem, destinationSelectedItem, handleSourceNodeSelected, handleDestinationNodeSelected]);
 
     return (
         <Button
-            className={classes.swapButton}
-            disabled={!primary?.value || !secondary?.value}
+            className='h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25 text-white'
+            disabled={!sourceSelectedItem || !destinationSelectedItem}
             onClick={swapPathfindingInputs}>
             <FontAwesomeIcon icon={faExchangeAlt} className='fa-rotate-90' />
         </Button>

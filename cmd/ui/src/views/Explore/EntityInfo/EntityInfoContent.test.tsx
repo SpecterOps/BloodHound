@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import userEvent from '@testing-library/user-event';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -82,7 +81,6 @@ describe('EntityInfoContent', () => {
 describe('EntityObjectInformation', () => {
     it('Calls the `Base` endpoint for a LocalGroup type node', async () => {
         const testId = '1';
-        const user = userEvent.setup();
 
         render(
             <EntityInfoPanelContextProvider>
@@ -92,14 +90,11 @@ describe('EntityObjectInformation', () => {
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
-        await user.click(screen.getByText('Object Information'));
-
         expect(await screen.findByText('test')).toBeInTheDocument();
     });
 
     it('Calls the `Base` endpoint for a LocalUser type node', async () => {
         const testId = '1';
-        const user = userEvent.setup();
 
         render(
             <EntityInfoPanelContextProvider>
@@ -109,14 +104,11 @@ describe('EntityObjectInformation', () => {
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
-        await user.click(screen.getByText('Object Information'));
-
         expect(await screen.findByText('test')).toBeInTheDocument();
     });
 
     it('Calls the cypher search endpoint for a node with a type that is not in our schema', async () => {
         const testId = '1';
-        const user = userEvent.setup();
 
         render(
             <EntityInfoPanelContextProvider>
@@ -125,8 +117,6 @@ describe('EntityObjectInformation', () => {
         );
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
-
-        await user.click(screen.getByText('Object Information'));
 
         expect(await screen.findByText('unknown kind')).toBeInTheDocument();
     });

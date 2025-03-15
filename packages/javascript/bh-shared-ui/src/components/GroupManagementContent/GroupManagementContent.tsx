@@ -28,11 +28,10 @@ import AssetGroupFilters from '../AssetGroupFilters';
 import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
 import AssetGroupMemberList from '../AssetGroupMemberList';
 import DropdownSelector, { DropdownOption } from '../DropdownSelector';
-import { SelectedDomain } from './types';
+import { SelectedEnvironment } from './types';
 
-// Top level layout and shared logic for the Group Management page
-const GroupManagementContent: FC<{
-    globalDomain: SelectedDomain | null;
+interface GroupManagementContentProps {
+    globalEnvironment: SelectedEnvironment | null;
     showExplorePageLink: boolean;
     tierZeroLabel: string;
     tierZeroTag: string;
@@ -42,8 +41,11 @@ const GroupManagementContent: FC<{
     onClickMember: (member: AssetGroupMember) => void;
     mapAssetGroups: (assetGroups: AssetGroup[]) => DropdownOption[];
     userHasEditPermissions: boolean;
-}> = ({
-    globalDomain,
+}
+
+// Top level layout and shared logic for the Group Management page
+const GroupManagementContent: FC<GroupManagementContentProps> = ({
+    globalEnvironment,
     showExplorePageLink,
     tierZeroLabel,
     tierZeroTag,
@@ -56,7 +58,7 @@ const GroupManagementContent: FC<{
 }) => {
     const theme = useTheme();
 
-    const [selectedDomain, setSelectedDomain] = useState<SelectedDomain | null>(null);
+    const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | null>(null);
     const [selectedAssetGroupId, setSelectedAssetGroupId] = useState<number | null>(null);
     const [filterParams, setFilterParams] = useState<AssetGroupMemberParams>({});
 
@@ -82,7 +84,7 @@ const GroupManagementContent: FC<{
             filterParams.environment_kind,
             selectedAssetGroup,
         ],
-        enabled: !!selectedAssetGroupId,
+        enabled: !!(selectedAssetGroupId && filterParams.environment_id && filterParams.environment_kind),
         queryFn: ({ signal }) =>
             apiClient
                 .getAssetGroupMembersCount(
@@ -119,7 +121,7 @@ const GroupManagementContent: FC<{
 
     // Start building a filter query for members that gets passed down to AssetGroupMemberList to make the request
     useEffect(() => {
-        const filterDomain = selectedDomain || globalDomain;
+        const filterDomain = selectedEnvironment || globalEnvironment;
         const filter: AssetGroupMemberParams = {};
         if (filterDomain?.type === 'active-directory-platform') {
             filter.environment_kind = 'eq:Domain';
@@ -129,7 +131,7 @@ const GroupManagementContent: FC<{
             filter.environment_id = `eq:${filterDomain?.id}`;
         }
         setFilterParams(filter);
-    }, [selectedDomain, globalDomain, selectedAssetGroupId]);
+    }, [selectedEnvironment, globalEnvironment, selectedAssetGroupId]);
 
     const selectorLabelStyles = { display: { xs: 'none', xl: 'flex' } };
 
@@ -155,9 +157,11 @@ const GroupManagementContent: FC<{
                             </Grid>
                             <Grid item xs={12} xl={8}>
                                 <DataSelector
-                                    value={selectedDomain || globalDomain || { type: null, id: null }}
+                                    value={selectedEnvironment || globalEnvironment || { type: null, id: null }}
                                     errorMessage={domainSelectorErrorMessage}
-                                    onChange={(selection: SelectedDomain) => setSelectedDomain({ ...selection })}
+                                    onChange={(selection: SelectedEnvironment) =>
+                                        setSelectedEnvironment({ ...selection })
+                                    }
                                     fullWidth={true}
                                 />
                             </Grid>
