@@ -2,9 +2,8 @@
 title: GenericWrite
 ---
 
-<Frame>
-  <img src="/assets/image-2-1.png"/>
-</Frame>
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
 
 Generic Write access grants you the ability to write to any non-protected attribute on the target object, including "members" for a group, and "servicePrincipalNames" for a user.
 
@@ -34,11 +33,11 @@ This edge can be a false positive in rare scenarios. If you have GenericWrite on
 
 **OU**
 
-If the target is an OU, you can write to the gpLink attribute of the OU. See the [WriteGPLink](/resources/edges/write-gp-link) edge documentation for details.
+You can compromise child users and computers of the OU by abusing write access to the gPLink attribute of the OU. See the [WriteGPLink](/resources/edges/write-gp-link) edge documentation for details.
 
 **Domain**
 
-If the target is a domain, you can write to the gpLink attribute of the domain. See the [WriteGPLink](/resources/edges/write-gp-link) edge documentation for details.
+You can compromise users and computers of the domain by abusing write access to the gPLink attribute of the domain. See the [WriteGPLink](/resources/edges/write-gp-link) edge documentation for details.
 
 **CertTemplate**
 
