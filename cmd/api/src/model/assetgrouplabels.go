@@ -32,35 +32,46 @@ const (
 	SelectorTypeCypher   SelectorType = 2
 )
 
-type AssetGroupLabel struct {
-	ID               int         `json:"id"`
-	AssetGroupTierId null.Int32  `json:"asset_group_tier_id"`
-	KindId           int         `json:"kind_id"`
-	Name             string      `json:"name"`
-	Description      string      `json:"description"`
-	CreatedAt        time.Time   `json:"created_at"`
-	CreatedBy        string      `json:"created_by"`
-	UpdatedAt        time.Time   `json:"updated_at"`
-	UpdatedBy        string      `json:"updated_by"`
-	DeletedAt        null.Time   `json:"deleted_at"`
-	DeletedBy        null.String `json:"deleted_by"`
+type AssetGroupTagType int
+
+const (
+	AssetGroupTagTypeTier  AssetGroupTagType = 1
+	AssetGroupTagTypeLabel AssetGroupTagType = 2
+)
+
+type AssetGroupTag struct {
+	ID           int               `json:"id"`
+	Type         AssetGroupTagType `json:"type"`
+	KindId       int               `json:"kind_id"`
+	Name         string            `json:"name"`
+	Description  string            `json:"description"`
+	CreatedAt    time.Time         `json:"created_at"`
+	CreatedBy    string            `json:"created_by"`
+	UpdatedAt    time.Time         `json:"updated_at"`
+	UpdatedBy    string            `json:"updated_by"`
+	DeletedAt    null.Time         `json:"deleted_at"`
+	DeletedBy    null.String       `json:"deleted_by"`
+	Position     null.Int32        `json:"position"`
+	AllowCertify null.Bool         `json:"allow_certify"`
 }
 
-func (AssetGroupLabel) TableName() string {
-	return "asset_group_labels"
+func (AssetGroupTag) TableName() string {
+	return "asset_group_tags"
 }
 
-func (s AssetGroupLabel) AuditData() AuditData {
+func (s AssetGroupTag) AuditData() AuditData {
 	return AuditData{
-		"id":                  s.ID,
-		"asset_group_tier_id": s.AssetGroupTierId,
-		"kind_id":             s.KindId,
-		"name":                s.Name,
-		"description":         s.Description,
+		"id":            s.ID,
+		"type":          s.Type,
+		"kind_id":       s.KindId,
+		"name":          s.Name,
+		"description":   s.Description,
+		"position":      s.Position,
+		"allow_certify": s.AllowCertify,
 	}
 }
 
-func (s AssetGroupLabel) ToKind() graph.Kind {
+func (s AssetGroupTag) ToKind() graph.Kind {
 	return graph.StringKind(fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_")))
 }
 
@@ -70,7 +81,7 @@ type SelectorSeed struct {
 }
 
 func (SelectorSeed) TableName() string {
-	return "asset_group_label_selector_seeds"
+	return "asset_group_tag_selector_seeds"
 }
 
 func (s SelectorSeed) AuditData() AuditData {
@@ -80,35 +91,35 @@ func (s SelectorSeed) AuditData() AuditData {
 	}
 }
 
-type AssetGroupLabelSelector struct {
-	ID                int         `json:"id"`
-	AssetGroupLabelId int         `json:"asset_group_label_id"`
-	CreatedAt         time.Time   `json:"created_at"`
-	CreatedBy         string      `json:"created_by"`
-	UpdatedAt         time.Time   `json:"updated_at"`
-	UpdatedBy         string      `json:"updated_by"`
-	DisabledAt        null.Time   `json:"disabled_at"`
-	DisabledBy        null.String `json:"disabled_by"`
-	Name              string      `json:"name" validate:"required"`
-	Description       string      `json:"description"`
-	AutoCertify       bool        `json:"auto_certify"`
-	IsDefault         bool        `json:"is_default"`
-	AllowDisable      bool        `json:"allow_disable"`
+type AssetGroupTagSelector struct {
+	ID              int         `json:"id"`
+	AssetGroupTagId int         `json:"asset_group_tag_id"`
+	CreatedAt       time.Time   `json:"created_at"`
+	CreatedBy       string      `json:"created_by"`
+	UpdatedAt       time.Time   `json:"updated_at"`
+	UpdatedBy       string      `json:"updated_by"`
+	DisabledAt      null.Time   `json:"disabled_at"`
+	DisabledBy      null.String `json:"disabled_by"`
+	Name            string      `json:"name" validate:"required"`
+	Description     string      `json:"description"`
+	AutoCertify     bool        `json:"auto_certify"`
+	IsDefault       bool        `json:"is_default"`
+	AllowDisable    bool        `json:"allow_disable"`
 
 	Seeds []SelectorSeed `json:"seeds" validate:"required" gorm:"-"`
 }
 
-func (AssetGroupLabelSelector) TableName() string {
-	return "asset_group_label_selectors"
+func (AssetGroupTagSelector) TableName() string {
+	return "asset_group_tag_selectors"
 }
 
-func (s AssetGroupLabelSelector) AuditData() AuditData {
+func (s AssetGroupTagSelector) AuditData() AuditData {
 	return AuditData{
-		"id":                   s.ID,
-		"asset_group_label_id": s.AssetGroupLabelId,
-		"name":                 s.Name,
-		"description":          s.Description,
-		"auto_certify":         s.AutoCertify,
-		"is_default":           s.IsDefault,
+		"id":                 s.ID,
+		"asset_group_tag_id": s.AssetGroupTagId,
+		"name":               s.Name,
+		"description":        s.Description,
+		"auto_certify":       s.AutoCertify,
+		"is_default":         s.IsDefault,
 	}
 }

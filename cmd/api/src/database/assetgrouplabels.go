@@ -20,40 +20,36 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
 )
 
 const (
-	kindTable                   = "kind"
-	assetGroupLabelTable        = "asset_group_labels"
-	assetGroupSelectorTable     = "asset_group_label_selectors"
-	assetGroupSelectorSeedTable = "asset_group_label_selector_seeds"
+	kindTable = "kind"
 )
 
-// AssetGroupLabelData defines the methods required to interact with the asset_group_labels table
-type AssetGroupLabelData interface {
-	CreateAssetGroupLabel(ctx context.Context, assetGroupTierId int, userId string, name string, description string) (model.AssetGroupLabel, error)
-	GetAssetGroupLabel(ctx context.Context, assetGroupLabelId int) (model.AssetGroupLabel, error)
+// AssetGroupTagData defines the methods required to interact with the asset_group_tags table
+type AssetGroupTagData interface {
+	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string) (model.AssetGroupTag, error)
+	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
 }
 
-// AssetGroupLabelSelectorData defines the methods required to interact with the asset_group_label_selectors and asset_group_label_selector_seeds tables
-type AssetGroupLabelSelectorData interface {
-	CreateAssetGroupLabelSelector(ctx context.Context, assetGroupLabelId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupLabelSelector, error)
+// AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
+type AssetGroupTagSelectorData interface {
+	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
 }
 
-func (s *BloodhoundDB) CreateAssetGroupLabelSelector(ctx context.Context, assetGroupLabelId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupLabelSelector, error) {
+func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
 	var (
-		selector = model.AssetGroupLabelSelector{
-			AssetGroupLabelId: assetGroupLabelId,
-			CreatedBy:         userId,
-			UpdatedBy:         userId,
-			Name:              name,
-			Description:       description,
-			IsDefault:         isDefault,
-			AllowDisable:      allowDisable,
-			AutoCertify:       autoCertify,
+		selector = model.AssetGroupTagSelector{
+			AssetGroupTagId: assetGroupTagId,
+			CreatedBy:       userId,
+			UpdatedBy:       userId,
+			Name:            name,
+			Description:     description,
+			IsDefault:       isDefault,
+			AllowDisable:    allowDisable,
+			AutoCertify:     autoCertify,
 		}
 
 		auditEntry = model.AuditEntry{
@@ -63,8 +59,9 @@ func (s *BloodhoundDB) CreateAssetGroupLabelSelector(ctx context.Context, assetG
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (asset_group_label_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify) VALUES (?, NOW(), ?, NOW(), ?, ?, ?, ?, ?, ?) RETURNING *", selector.TableName()),
-			assetGroupLabelId, userId, userId, name, description, isDefault, allowDisable, autoCertify).Scan(&selector); result.Error != nil {
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify) VALUES (?, NOW(), ?, NOW(), ?, ?, ?, ?, ?, ?) RETURNING *", selector.TableName()),
+			assetGroupTagId, userId, userId, name, description, isDefault, allowDisable, autoCertify).Scan(&selector); result.Error != nil {
 			return CheckError(result)
 		} else {
 			for _, seed := range seeds {
@@ -74,57 +71,58 @@ func (s *BloodhoundDB) CreateAssetGroupLabelSelector(ctx context.Context, assetG
 					selector.Seeds = append(selector.Seeds, model.SelectorSeed{Type: seed.Type, Value: seed.Value})
 				}
 			}
-			if err := s.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateSelector, assetGroupLabelId, "", ""); err != nil {
+			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateSelector, assetGroupTagId, "", ""); err != nil {
 				return err
 			}
 		}
 		return nil
 	}); err != nil {
-		return model.AssetGroupLabelSelector{}, err
+		return model.AssetGroupTagSelector{}, err
 	}
 
 	return selector, nil
 }
 
-func (s *BloodhoundDB) GetAssetGroupLabel(ctx context.Context, assetGroupLabelId int) (model.AssetGroupLabel, error) {
-	var label model.AssetGroupLabel
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id = ?", label.TableName()), assetGroupLabelId).First(&label); result.Error != nil {
-		return model.AssetGroupLabel{}, CheckError(result)
+func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error) {
+	var tag model.AssetGroupTag
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id = ?", tag.TableName()), assetGroupTagId).First(&tag); result.Error != nil {
+		return model.AssetGroupTag{}, CheckError(result)
 	} else {
-		return label, nil
+		return tag, nil
 	}
 }
 
-func (s *BloodhoundDB) CreateAssetGroupLabel(ctx context.Context, assetGroupTierId int, userId string, name string, description string) (model.AssetGroupLabel, error) {
+func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string) (model.AssetGroupTag, error) {
 	var (
-		label = model.AssetGroupLabel{
-			AssetGroupTierId: null.Int32From(int32(assetGroupTierId)),
-			CreatedBy:        userId,
-			UpdatedBy:        userId,
-			Name:             name,
-			Description:      description,
+		tag = model.AssetGroupTag{
+			Type:        tagType,
+			CreatedBy:   userId,
+			UpdatedBy:   userId,
+			Name:        name,
+			Description: description,
 		}
 
 		auditEntry = model.AuditEntry{
 			Action: model.AuditLogActionCreateAssetGroupLabel,
-			Model:  &label, // Pointer is required to ensure success log contains updated fields after transaction
+			Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+
 		var kindId int
-		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (name) VALUES (?) RETURNING id", kindTable), label.ToKind()).Scan(&kindId); result.Error != nil {
+		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (name) VALUES (?) RETURNING id", kindTable), tag.ToKind()).Scan(&kindId); result.Error != nil {
 			return CheckError(result)
-		} else if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by) VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?) RETURNING *", label.TableName()),
-			assetGroupTierId, kindId, name, description, userId, userId).Scan(&label); result.Error != nil {
+		} else if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by) VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?) RETURNING *", tag.TableName()),
+			tagType, kindId, name, description, userId, userId).Scan(&tag); result.Error != nil {
 			return CheckError(result)
-		}
-		if err := s.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateLabel, label.ID, "", ""); err != nil {
+		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateLabel, tag.ID, "", ""); err != nil {
 			return err
 		}
 		return nil
 	}); err != nil {
-		return model.AssetGroupLabel{}, err
+		return model.AssetGroupTag{}, err
 	}
-	return label, nil
+	return tag, nil
 }

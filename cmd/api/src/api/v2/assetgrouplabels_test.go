@@ -66,7 +66,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1")
-					apitest.BodyStruct(input, model.AssetGroupLabelSelector{
+					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Description: "Test selector description",
 						Seeds: []model.SelectorSeed{
 							{Type: 0, Value: "this should be a string of cypher"},
@@ -85,7 +85,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1")
-					apitest.BodyStruct(input, model.AssetGroupLabelSelector{
+					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Name:        "TestSelector",
 						Description: "Test selector description",
 						IsDefault:   false,
@@ -101,7 +101,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				Name: "MissingUrlId",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
-					apitest.BodyStruct(input, model.AssetGroupLabelSelector{
+					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Name:        "TestSelector",
 						Description: "Test selector description",
 						Seeds: []model.SelectorSeed{
@@ -121,7 +121,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "non-numeric")
-					apitest.BodyStruct(input, model.AssetGroupLabelSelector{
+					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Name:        "TestSelector",
 						Description: "Test selector description",
 						Seeds: []model.SelectorSeed{
@@ -141,7 +141,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1234")
-					apitest.BodyStruct(input, model.AssetGroupLabelSelector{
+					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Name:        "TestSelector",
 						Description: "Test selector description",
 						Seeds: []model.SelectorSeed{
@@ -153,7 +153,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetAssetGroupLabel(gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupLabel{}, errors.New("entity not found")).Times(1)
+						Return(model.AssetGroupTag{}, errors.New("entity not found")).Times(1)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -165,7 +165,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1")
-					apitest.BodyStruct(input, model.AssetGroupLabelSelector{
+					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Name:        "TestSelector",
 						Description: "Test selector description",
 						Seeds: []model.SelectorSeed{
@@ -178,9 +178,9 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						CreateAssetGroupLabelSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupLabelSelector{}, errors.New("failure")).Times(1)
+						Return(model.AssetGroupTagSelector{}, errors.New("failure")).Times(1)
 					mockDB.EXPECT().GetAssetGroupLabel(gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupLabel{}, nil).Times(1)
+						Return(model.AssetGroupTag{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -192,7 +192,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1")
-					apitest.BodyStruct(input, model.AssetGroupLabelSelector{
+					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Name:        "TestSelector",
 						Description: "Test selector description",
 						Seeds: []model.SelectorSeed{
@@ -205,9 +205,9 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						CreateAssetGroupLabelSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupLabelSelector{Name: "TestSelector"}, nil).Times(1)
+						Return(model.AssetGroupTagSelector{Name: "TestSelector"}, nil).Times(1)
 					mockDB.EXPECT().GetAssetGroupLabel(gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupLabel{}, nil).Times(1)
+						Return(model.AssetGroupTag{}, nil).Times(1)
 
 					mockGraphDb.EXPECT().
 						PrepareCypherQuery(gomock.Any(), gomock.Any()).

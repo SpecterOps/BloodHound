@@ -166,8 +166,8 @@ type Database interface {
 
 	// Asset Group Labels
 	AssetGroupHistoryData
-	AssetGroupLabelData
-	AssetGroupLabelSelectorData
+	AssetGroupTagData
+	AssetGroupTagSelectorData
 }
 
 type BloodhoundDB struct {

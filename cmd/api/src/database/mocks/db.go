@@ -184,10 +184,10 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupHistoryRecord(arg0, arg1, ar
 }
 
 // CreateAssetGroupLabel mocks base method.
-func (m *MockDatabase) CreateAssetGroupLabel(arg0 context.Context, arg1 int, arg2, arg3, arg4 string) (model.AssetGroupLabel, error) {
+func (m *MockDatabase) CreateAssetGroupLabel(arg0 context.Context, arg1 int, arg2, arg3, arg4 string) (model.AssetGroupTag, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAssetGroupLabel", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(model.AssetGroupLabel)
+	ret0, _ := ret[0].(model.AssetGroupTag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -199,10 +199,10 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupLabel(arg0, arg1, arg2, arg3
 }
 
 // CreateAssetGroupLabelSelector mocks base method.
-func (m *MockDatabase) CreateAssetGroupLabelSelector(arg0 context.Context, arg1 int, arg2, arg3, arg4 string, arg5, arg6, arg7 bool, arg8 []model.SelectorSeed) (model.AssetGroupLabelSelector, error) {
+func (m *MockDatabase) CreateAssetGroupLabelSelector(arg0 context.Context, arg1 int, arg2, arg3, arg4 string, arg5, arg6, arg7 bool, arg8 []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAssetGroupLabelSelector", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-	ret0, _ := ret[0].(model.AssetGroupLabelSelector)
+	ret0, _ := ret[0].(model.AssetGroupTagSelector)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -960,10 +960,10 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupHistoryRecords(arg0 interface{}
 }
 
 // GetAssetGroupLabel mocks base method.
-func (m *MockDatabase) GetAssetGroupLabel(arg0 context.Context, arg1 int) (model.AssetGroupLabel, error) {
+func (m *MockDatabase) GetAssetGroupLabel(arg0 context.Context, arg1 int) (model.AssetGroupTag, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAssetGroupLabel", arg0, arg1)
-	ret0, _ := ret[0].(model.AssetGroupLabel)
+	ret0, _ := ret[0].(model.AssetGroupTag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

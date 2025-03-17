@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDatabase_CreateAssetGroupLabelSelector(t *testing.T) {
+func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
@@ -44,9 +44,9 @@ func TestDatabase_CreateAssetGroupLabelSelector(t *testing.T) {
 		}
 	)
 
-	selector, err := dbInst.CreateAssetGroupLabelSelector(testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
 	require.NoError(t, err)
-	require.Equal(t, 1, selector.AssetGroupLabelId)
+	require.Equal(t, 1, selector.AssetGroupTagId)
 	require.WithinDuration(t, time.Now(), selector.CreatedAt, time.Second)
 	require.Equal(t, testActor, selector.CreatedBy)
 	require.WithinDuration(t, time.Now(), selector.UpdatedAt, time.Second)
@@ -68,36 +68,40 @@ func TestDatabase_CreateAssetGroupLabel(t *testing.T) {
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
-		tierId          = 1
+		tagType         = model.AssetGroupTagTypeTier
 		testActor       = "test_actor"
-		testName        = "test label name"
-		testDescription = "test label description"
+		testName        = "test tag name"
+		testDescription = "test tag description"
 	)
 
-	label, err := dbInst.CreateAssetGroupLabel(testCtx, tierId, testActor, testName, testDescription)
-	require.NoError(t, err)
-	require.Equal(t, tierId, int(label.AssetGroupTierId.Int32))
-	require.WithinDuration(t, time.Now(), label.CreatedAt, time.Second)
-	require.Equal(t, testActor, label.CreatedBy)
-	require.WithinDuration(t, time.Now(), label.UpdatedAt, time.Second)
-	require.Equal(t, testActor, label.UpdatedBy)
-	require.Empty(t, label.DeletedAt)
-	require.Empty(t, label.DeletedBy)
-	require.Equal(t, testName, label.Name)
-	require.Equal(t, testDescription, label.Description)
+	t.Run("successfully creates tag", func(t *testing.T) {
+		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagType, testActor, testName, testDescription)
+		require.NoError(t, err)
+		require.Equal(t, tagType, tag.Type)
+		require.WithinDuration(t, time.Now(), tag.CreatedAt, time.Second)
+		require.Equal(t, testActor, tag.CreatedBy)
+		require.WithinDuration(t, time.Now(), tag.UpdatedAt, time.Second)
+		require.Equal(t, testActor, tag.UpdatedBy)
+		require.Empty(t, tag.DeletedAt)
+		require.Empty(t, tag.DeletedBy)
+		require.Equal(t, testName, tag.Name)
+		require.Equal(t, testDescription, tag.Description)
 
-	label, err = dbInst.GetAssetGroupLabel(testCtx, label.ID)
-	require.NoError(t, err)
-	require.Equal(t, tierId, int(label.AssetGroupTierId.Int32))
-	require.WithinDuration(t, time.Now(), label.CreatedAt, time.Second)
-	require.Equal(t, testActor, label.CreatedBy)
-	require.WithinDuration(t, time.Now(), label.UpdatedAt, time.Second)
-	require.Equal(t, testActor, label.UpdatedBy)
-	require.Empty(t, label.DeletedAt)
-	require.Empty(t, label.DeletedBy)
-	require.Equal(t, testName, label.Name)
-	require.Equal(t, testDescription, label.Description)
+		tag, err = dbInst.GetAssetGroupTag(testCtx, tag.ID)
+		require.NoError(t, err)
+		require.Equal(t, tagType, tag.Type)
+		require.WithinDuration(t, time.Now(), tag.CreatedAt, time.Second)
+		require.Equal(t, testActor, tag.CreatedBy)
+		require.WithinDuration(t, time.Now(), tag.UpdatedAt, time.Second)
+		require.Equal(t, testActor, tag.UpdatedBy)
+		require.Empty(t, tag.DeletedAt)
+		require.Empty(t, tag.DeletedBy)
+		require.Equal(t, testName, tag.Name)
+		require.Equal(t, testDescription, tag.Description)
+	})
 
-	label, err = dbInst.GetAssetGroupLabel(testCtx, 1234)
-	require.Error(t, err)
+	t.Run("Non existant tag erros out", func(t *testing.T) {
+		_, err := dbInst.GetAssetGroupTag(testCtx, 1234)
+		require.Error(t, err)
+	})
 }
