@@ -8978,7 +8978,7 @@ func (s *CoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.Domain1)
 
 	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domain2Sid, false, true)
-	s.Domain2.Properties.Set(ad.FunctionalLevel.String(), "2016")
+	s.Domain2.Properties.Set(ad.FunctionalLevel.String(), "2008")
 	graphTestContext.UpdateNode(s.Domain2)
 
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
@@ -8994,16 +8994,18 @@ func (s *CoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
 	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group4%s", adAnalysis.ProtectedUsersSuffix))
 	s.Group4.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN1")
+	graphTestContext.UpdateNode(s.Group4)
 
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain2Sid)
 
 	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain2Sid)
 	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group6%s", adAnalysis.ProtectedUsersSuffix))
 	s.Group6.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN2")
+	graphTestContext.UpdateNode(s.Group6)
 
 	s.Group7 = graphTestContext.NewActiveDirectoryGroup("Group7", domain2Sid)
 	s.Group8 = graphTestContext.NewActiveDirectoryGroup("Group8", domain2Sid)
-	graphTestContext.NewRelationship(s.Group1, s.Computer2, ad.CoerceAndRelayNTLMToSMB)
+
 	graphTestContext.NewRelationship(s.Computer1, s.Computer2, ad.AdminTo)
 	graphTestContext.NewRelationship(s.Computer1, s.Group4, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Computer3, s.Group5, ad.MemberOf)
@@ -9014,7 +9016,6 @@ func (s *CoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group8, s.Computer9, ad.AdminTo)
 	graphTestContext.NewRelationship(s.Computer8, s.Group7, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group7, s.Group8, ad.MemberOf)
-	graphTestContext.NewRelationship(s.Group2, s.Computer9, ad.CoerceAndRelayNTLMToSMB)
 	graphTestContext.NewRelationship(s.Computer10, s.Computer6, ad.AdminTo)
 }
 
