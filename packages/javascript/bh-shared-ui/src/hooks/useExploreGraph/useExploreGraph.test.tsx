@@ -99,7 +99,7 @@ describe('useExploreGraph', () => {
             it('returns query config when searchType is composition and all required params are passed', () => {
                 const paramOptions: Partial<ExploreQueryParams> = {
                     searchType: 'composition',
-                    relationshipQueryItemId: 'rel_1234_member_5678', // TODO: update with changes from entity panel work
+                    relationshipQueryItemId: 'rel_1234_member_5678',
                 };
 
                 const context = exploreGraphQueryFactory(paramOptions);
@@ -125,6 +125,18 @@ describe('useExploreGraph', () => {
                     }
                 }
             );
+
+            it('returns disabled if relationshipQueryItemId does not have a matching sourceId, edgeType, targetId', () => {
+                const paramOptions: Partial<ExploreQueryParams> = {
+                    searchType: 'composition',
+                    relationshipQueryItemId: 'rel_broken-member_5678',
+                };
+
+                const context = exploreGraphQueryFactory(paramOptions);
+                const query = context.getQueryConfig(paramOptions);
+
+                expect(query.enabled).toBeFalsy();
+            });
         });
     });
 });

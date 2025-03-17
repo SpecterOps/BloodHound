@@ -18,8 +18,8 @@ import { useQuery } from 'react-query';
 import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
 import { ExploreGraphQuery, fallbackQuery, nodeSearchQuery, pathfindingSearchQuery } from './queries';
-import { compositionSearchQuery } from './queries/compositionQuery';
-import { relationshipSearchQuery } from './queries/relationshipQuery';
+import { compositionSearchQuery } from './queries/compositionSearch';
+import { relationshipSearchQuery } from './queries/relationshipSearch';
 
 export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery {
     switch (paramOptions.searchType) {
