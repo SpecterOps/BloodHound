@@ -59,8 +59,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS agl_name_unique_index ON asset_group_tags (nam
 -- Create tier xero record
 WITH inserted_kind AS (
 INSERT INTO kind (name) VALUES ('Tag_Tier_Zero') ON CONFLICT DO NOTHING
-  RETURNING id),
-  inserted_tier AS (
+  RETURNING id)
 INSERT INTO asset_group_tags (name, type, kind_id, description, created_by, created_at, updated_by, updated_at)
   VALUES ('Tier Zero', 1, (SELECT id FROM inserted_kind), 'Tier Zero', 'SYSTEM', current_timestamp, 'SYSTEM', current_timestamp)
   ON CONFLICT DO NOTHING;

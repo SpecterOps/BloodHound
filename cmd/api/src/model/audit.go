@@ -82,8 +82,8 @@ const (
 
 	AuditLogActionUpdateParameter AuditLogAction = "UpdateParameter"
 
-	AuditLogActionCreateAssetGroupLabel         AuditLogAction = "CreateAssetGroupLabel"
-	AuditLogActionCreateAssetGroupLabelSelector AuditLogAction = "CreateAssetGroupLabelSelector"
+	AuditLogActionCreateAssetGroupTag         AuditLogAction = "CreateAssetGroupTag"
+	AuditLogActionCreateAssetGroupTagSelector AuditLogAction = "CreateAssetGroupTagSelector"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration

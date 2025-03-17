@@ -53,7 +53,7 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGro
 		}
 
 		auditEntry = model.AuditEntry{
-			Action: model.AuditLogActionCreateAssetGroupLabelSelector,
+			Action: model.AuditLogActionCreateAssetGroupTagSelector,
 			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
@@ -85,7 +85,7 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGro
 
 func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error) {
 	var tag model.AssetGroupTag
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id = ?", tag.TableName()), assetGroupTagId).First(&tag); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id = ?", tag.TableName()), assetGroupTagId).First(&tag); result.Error != nil {
 		return model.AssetGroupTag{}, CheckError(result)
 	} else {
 		return tag, nil
@@ -103,7 +103,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 		}
 
 		auditEntry = model.AuditEntry{
-			Action: model.AuditLogActionCreateAssetGroupLabel,
+			Action: model.AuditLogActionCreateAssetGroupTag,
 			Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
@@ -117,7 +117,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 		} else if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by) VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?) RETURNING *", tag.TableName()),
 			tagType, kindId, name, description, userId, userId).Scan(&tag); result.Error != nil {
 			return CheckError(result)
-		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateLabel, tag.ID, "", ""); err != nil {
+		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateTag, tag.ID, "", ""); err != nil {
 			return err
 		}
 		return nil

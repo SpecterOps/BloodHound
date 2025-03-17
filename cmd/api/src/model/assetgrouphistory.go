@@ -29,9 +29,9 @@ const (
 )
 
 const (
-	AssetGroupHistoryActionCreateLabel AssetGroupHistoryAction = "CreateLabel"
-	AssetGroupHistoryActionUpdateLabel AssetGroupHistoryAction = "UpdateLabel"
-	AssetGroupHistoryActionDeleteLabel AssetGroupHistoryAction = "DeleteLabel"
+	AssetGroupHistoryActionCreateTag AssetGroupHistoryAction = "CreateTag"
+	AssetGroupHistoryActionUpdateTag AssetGroupHistoryAction = "UpdateTag"
+	AssetGroupHistoryActionDeleteTag AssetGroupHistoryAction = "DeleteTag"
 
 	AssetGroupHistoryActionCreateSelector AssetGroupHistoryAction = "CreateSelector"
 	AssetGroupHistoryActionUpdateSelector AssetGroupHistoryAction = "UpdateSelector"
@@ -40,12 +40,12 @@ const (
 
 // AssetGroupHistory is the record of CRUD changes associated with v2 of the asset groups feature
 type AssetGroupHistory struct {
-	ID                int64                   `json:"id" gorm:"primaryKey"`
-	CreatedAt         time.Time               `json:"created_at"`
-	Actor             string                  `json:"actor"`
-	Action            AssetGroupHistoryAction `json:"action"`
-	Target            string                  `json:"target"`
-	AssetGroupLabelId int                     `json:"assetGroupLabelId"`
-	EnvironmentId     null.String             `json:"environmentId"`
-	Note              null.String             `json:"note"`
+	ID              int64                   `json:"id" gorm:"primaryKey"`
+	CreatedAt       time.Time               `json:"created_at"`
+	Actor           string                  `json:"actor"`
+	Action          AssetGroupHistoryAction `json:"action"`
+	Target          string                  `json:"target"`
+	AssetGroupTagId int                     `json:"asset_group_tag_id"`
+	EnvironmentId   null.String             `json:"environment_id"`
+	Note            null.String             `json:"note"`
 }

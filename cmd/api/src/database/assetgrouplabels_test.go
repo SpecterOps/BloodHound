@@ -62,9 +62,14 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 		require.Equal(t, seed.Type, selector.Seeds[idx].Type)
 		require.Equal(t, seed.Value, selector.Seeds[idx].Value)
 	}
+
+	history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+	require.NoError(t, err)
+	require.Len(t, history, 1)
+	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, history[0].Action)
 }
 
-func TestDatabase_CreateAssetGroupLabel(t *testing.T) {
+func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
@@ -98,10 +103,17 @@ func TestDatabase_CreateAssetGroupLabel(t *testing.T) {
 		require.Empty(t, tag.DeletedBy)
 		require.Equal(t, testName, tag.Name)
 		require.Equal(t, testDescription, tag.Description)
+
+		// verify history record was also created
+		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+		require.NoError(t, err)
+		require.Len(t, history, 1)
+		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
 	})
 
 	t.Run("Non existant tag erros out", func(t *testing.T) {
 		_, err := dbInst.GetAssetGroupTag(testCtx, 1234)
 		require.Error(t, err)
 	})
+
 }
