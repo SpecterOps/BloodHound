@@ -67,7 +67,7 @@ type batch struct {
 }
 
 func newBatch(ctx context.Context, conn *pgxpool.Conn, schemaManager *SchemaManager, cfg *Config) (*batch, error) {
-	if tx, err := newTransaction(ctx, conn, schemaManager, cfg); err != nil {
+	if tx, err := newTransactionWrapper(ctx, conn, schemaManager, cfg, false); err != nil {
 		return nil, err
 	} else {
 		return &batch{
@@ -106,7 +106,7 @@ func (s *batch) UpdateNodeBy(update graph.NodeUpdate) error {
 }
 
 func (s *batch) flushNodeDeleteBuffer() error {
-	if _, err := s.innerTransaction.tx.Exec(s.ctx, deleteNodeWithIDStatement, s.nodeDeletionBuffer); err != nil {
+	if _, err := s.innerTransaction.conn.Exec(s.ctx, deleteNodeWithIDStatement, s.nodeDeletionBuffer); err != nil {
 		return err
 	}
 
@@ -115,7 +115,7 @@ func (s *batch) flushNodeDeleteBuffer() error {
 }
 
 func (s *batch) flushRelationshipDeleteBuffer() error {
-	if _, err := s.innerTransaction.tx.Exec(s.ctx, deleteEdgeWithIDStatement, s.relationshipDeletionBuffer); err != nil {
+	if _, err := s.innerTransaction.conn.Exec(s.ctx, deleteEdgeWithIDStatement, s.relationshipDeletionBuffer); err != nil {
 		return err
 	}
 
@@ -177,7 +177,7 @@ func (s *batch) flushNodeCreateBufferWithIDs() error {
 
 	if graphTarget, err := s.innerTransaction.getTargetGraph(); err != nil {
 		return err
-	} else if _, err := s.innerTransaction.tx.Exec(s.ctx, createNodeWithIDBatchStatement, graphTarget.ID, nodeIDs, kindIDSlices, properties); err != nil {
+	} else if _, err := s.innerTransaction.conn.Exec(s.ctx, createNodeWithIDBatchStatement, graphTarget.ID, nodeIDs, kindIDSlices, properties); err != nil {
 		return err
 	}
 
@@ -211,7 +211,7 @@ func (s *batch) flushNodeCreateBufferWithoutIDs() error {
 
 	if graphTarget, err := s.innerTransaction.getTargetGraph(); err != nil {
 		return err
-	} else if _, err := s.innerTransaction.tx.Exec(s.ctx, createNodeWithoutIDBatchStatement, graphTarget.ID, kindIDSlices, properties); err != nil {
+	} else if _, err := s.innerTransaction.conn.Exec(s.ctx, createNodeWithoutIDBatchStatement, graphTarget.ID, kindIDSlices, properties); err != nil {
 		return err
 	}
 
@@ -231,7 +231,7 @@ func (s *batch) flushNodeUpsertBatch(updates *sql.NodeUpdateBatch) error {
 	} else {
 		query := sql.FormatNodeUpsert(graphTarget, updates.IdentityProperties)
 
-		if rows, err := s.innerTransaction.tx.Query(s.ctx, query, parameters.Format(graphTarget)...); err != nil {
+		if rows, err := s.innerTransaction.conn.Query(s.ctx, query, parameters.Format(graphTarget)...); err != nil {
 			return err
 		} else {
 			defer rows.Close()
@@ -382,7 +382,7 @@ func (s *batch) flushRelationshipUpdateByBuffer(updates *sql.RelationshipUpdateB
 	} else {
 		query := sql.FormatRelationshipPartitionUpsert(graphTarget, updates.IdentityProperties)
 
-		if _, err := s.innerTransaction.tx.Exec(s.ctx, query, parameters.Format(graphTarget)...); err != nil {
+		if _, err := s.innerTransaction.conn.Exec(s.ctx, query, parameters.Format(graphTarget)...); err != nil {
 			return err
 		}
 	}
@@ -501,7 +501,7 @@ func (s *batch) flushRelationshipCreateBuffer() error {
 		return err
 	} else if graphTarget, err := s.innerTransaction.getTargetGraph(); err != nil {
 		return err
-	} else if _, err := s.innerTransaction.tx.Exec(s.ctx, createEdgeBatchStatement, graphTarget.ID, createBatch.startIDs, createBatch.endIDs, createBatch.edgeKindIDs, createBatch.edgePropertyBags); err != nil {
+	} else if _, err := s.innerTransaction.conn.Exec(s.ctx, createEdgeBatchStatement, graphTarget.ID, createBatch.startIDs, createBatch.endIDs, createBatch.edgeKindIDs, createBatch.edgePropertyBags); err != nil {
 		slog.Info(fmt.Sprintf("Num merged property bags: %d - Num edge keys: %d - StartID batch size: %d", len(batchBuilder.edgePropertiesIndex), len(batchBuilder.keyToEdgeID), len(batchBuilder.relationshipUpdateBatch.startIDs)))
 		return err
 	}

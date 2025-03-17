@@ -320,7 +320,7 @@ type Computer struct {
 	UnconstrainedDelegation bool
 	SmbInfo                 SMBSigningAPIResult
 	IsWebClientRunning      BoolAPIResult
-	RegistryData            RegistryDataAPIResult
+	NTLMRegistryData        RegistryDataAPIResult
 }
 
 type OU struct {

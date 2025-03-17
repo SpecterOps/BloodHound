@@ -16,7 +16,7 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient } from 'react-query';
 import { renderHook, waitFor } from '../../test-utils';
 import { Permission } from '../../utils';
 import { usePermissions } from './usePermissions';
@@ -43,10 +43,6 @@ const allPermissions = [
 ];
 
 const queryClient = new QueryClient();
-
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-);
 
 const server = setupServer(
     rest.get(`/api/v2/self`, async (_req, res, ctx) => {
@@ -83,7 +79,7 @@ describe('usePermissions', () => {
                 );
             })
         );
-        const { result } = renderHook(() => usePermissions(), { wrapper });
+        const { result } = renderHook(() => usePermissions());
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         const has = result.current.checkPermission(Permission.CLIENTS_MANAGE);
@@ -115,7 +111,7 @@ describe('usePermissions', () => {
                 );
             })
         );
-        const { result } = renderHook(() => usePermissions(), { wrapper });
+        const { result } = renderHook(() => usePermissions());
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         const hasAll = result.current.checkAllPermissions(allPermissions);
@@ -141,7 +137,7 @@ describe('usePermissions', () => {
                 );
             })
         );
-        const { result } = renderHook(() => usePermissions(), { wrapper });
+        const { result } = renderHook(() => usePermissions());
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         const has = result.current.checkPermission(Permission.AUTH_CREATE_TOKEN);
@@ -169,7 +165,7 @@ describe('usePermissions', () => {
                 );
             })
         );
-        const { result } = renderHook(() => usePermissions(), { wrapper });
+        const { result } = renderHook(() => usePermissions());
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         const hasAll = result.current.checkAllPermissions(allPermissions);
@@ -199,7 +195,7 @@ describe('usePermissions', () => {
                 );
             })
         );
-        const { result } = renderHook(() => usePermissions(), { wrapper });
+        const { result } = renderHook(() => usePermissions());
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         const userPermissionsResult = result.current.getUserPermissions();

@@ -46,6 +46,13 @@ describe('Pathfinding: interaction', () => {
     const server = setupServer(
         rest.get('/api/v2/search', (req, res, ctx) => {
             return res(ctx.json(comboboxLookaheadOptions));
+        }),
+        rest.get('/api/v2/features', (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: [],
+                })
+            );
         })
     );
 

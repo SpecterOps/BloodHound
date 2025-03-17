@@ -40,11 +40,6 @@ import (
 
 // PostNTLM is the initial function used to execute our NTLM analysis
 func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, adcsCache ADCSCache, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
-	// NTLM must be enabled through the feature flag
-	if !ntlmEnabled {
-		return nil, nil
-	}
-
 	var (
 		adcsComputerCache       = make(map[string]cardinality.Duplex[uint64])
 		operation               = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
@@ -52,6 +47,12 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		// compositionChannel      = make(chan analysis.CompositionInfo)
 		protectedUsersCache = make(map[string]cardinality.Duplex[uint64])
 	)
+
+	// NTLM must be enabled through the feature flag
+	if !ntlmEnabled {
+		operation.Done()
+		return &operation.Stats, nil
+	}
 
 	// This is a POC on how to pipe composition info up through the operations
 	// go func() {
