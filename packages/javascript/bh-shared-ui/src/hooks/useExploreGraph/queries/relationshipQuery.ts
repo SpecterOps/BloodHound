@@ -45,12 +45,8 @@ const relationshipSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>)
     };
 };
 
-const getRelationshipErrorMessage = (error: any): ExploreGraphQueryError => {
-    if (error?.response?.status) {
-        return { message: 'Relationship not found.', key: 'NodeSearchQueryFailure' };
-    } else {
-        return { message: 'An unknown error occurred.', key: 'NodeSearchUnknown' };
-    }
+const getRelationshipErrorMessage = (): ExploreGraphQueryError => {
+    return { message: 'Query failed. Please try again.', key: 'nodeRelationshipGraphQuery' };
 };
 
 export const relationshipSearchQuery: ExploreGraphQuery = {
@@ -60,7 +56,5 @@ export const relationshipSearchQuery: ExploreGraphQuery = {
 
 /**
  * TODO:
- * use parseId on selectedItem
- * what should these errors be
  * better tests
  */

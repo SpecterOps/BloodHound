@@ -50,26 +50,22 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
 
     return {
         queryKey: [ExploreGraphQueryKey, searchType, relationshipQueryItemId],
-        queryFn: async () => {
-            const res = await apiClient.getEdgeComposition(Number(sourceId), Number(targetId), edgeType);
+        queryFn: ({ signal }) =>
+            apiClient.getEdgeComposition(Number(sourceId), Number(targetId), edgeType, { signal }).then((res) => {
+                const data = res.data;
+                const we = 'wa';
+                if (we) {
+                    throw new Error('empty result set');
+                }
 
-            const data = res.data;
-            if (!data.data.nodes) {
-                throw new Error('empty graph');
-            }
-
-            return transformToFlatGraphResponse(data);
-        },
+                return transformToFlatGraphResponse(data);
+            }),
         refetchOnWindowFocus: false,
     };
 };
 
-const getCompositionErrorMessage = (error: any): ExploreGraphQueryError => {
-    if (error?.response?.status) {
-        return { message: 'Composition not found.', key: 'NodeSearchQueryFailure' };
-    } else {
-        return { message: 'An unknown error occurred.', key: 'NodeSearchUnknown' };
-    }
+const getCompositionErrorMessage = (): ExploreGraphQueryError => {
+    return { message: 'Query failed. Please try again.', key: 'edgeCompositionGraphQuery' };
 };
 
 export const compositionSearchQuery: ExploreGraphQuery = {
@@ -79,7 +75,5 @@ export const compositionSearchQuery: ExploreGraphQuery = {
 
 /**
  * TODO:
- * use parseId on selectedItem
- * what should these errors be
  * better tests
  */
