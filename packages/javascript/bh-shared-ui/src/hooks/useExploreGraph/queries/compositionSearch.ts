@@ -53,8 +53,7 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
         queryFn: ({ signal }) =>
             apiClient.getEdgeComposition(Number(sourceId), Number(targetId), edgeType, { signal }).then((res) => {
                 const data = res.data;
-                const we = 'wa';
-                if (we) {
+                if (!data.data.nodes) {
                     throw new Error('empty result set');
                 }
 
@@ -72,8 +71,3 @@ export const compositionSearchQuery: ExploreGraphQuery = {
     getQueryConfig: compositionSearchGraphQuery,
     getErrorMessage: getCompositionErrorMessage,
 };
-
-/**
- * TODO:
- * better tests
- */

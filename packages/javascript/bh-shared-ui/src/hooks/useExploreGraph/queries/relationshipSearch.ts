@@ -53,8 +53,3 @@ export const relationshipSearchQuery: ExploreGraphQuery = {
     getQueryConfig: relationshipSearchGraphQuery,
     getErrorMessage: getRelationshipErrorMessage,
 };
-
-/**
- * TODO:
- * better tests
- */
