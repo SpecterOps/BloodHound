@@ -14,13 +14,26 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const parseItemId = (itemId: string) => {
+interface ParsedQueryItem {
+    itemType: 'edge' | 'node';
+    cypherQuery: string;
+    sourceId?: string;
+    targetId?: string;
+    edgeType?: string;
+}
+
+export const parseItemId = (itemId: string): ParsedQueryItem => {
     // Edge identifiers can be either `rel_<sourceNodeId>_<edgeKind>_<targetNodeId>`...
     let match = itemId.match(/^(?:rel_)?(\d+)_(.+)_(\d+)$/);
     if (match) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const [_rel, sourceId, edgeType, targetId] = match;
         return {
             itemType: 'edge',
-            cypherQuery: `MATCH p=(s)-[r:${match[2]}]->(t) WHERE ID(s) = ${match[1]} AND ID(t) = ${match[3]}  RETURN p LIMIT 1`,
+            cypherQuery: `MATCH p=(s)-[r:${edgeType}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId}  RETURN p LIMIT 1`,
+            sourceId,
+            targetId,
+            edgeType,
         };
     }
 

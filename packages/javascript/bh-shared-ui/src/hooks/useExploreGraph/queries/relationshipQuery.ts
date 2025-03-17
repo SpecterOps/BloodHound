@@ -15,15 +15,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { entityRelationshipEndpoints } from '../../../utils/content';
+import { parseItemId } from '../../../utils/parseItemId';
 import { ExploreQueryParams } from '../../useExploreParams';
 import { ExploreGraphQuery, ExploreGraphQueryError, ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
 
 const relationshipSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { relationshipQueryType, relationshipQueryItemId, searchType } = paramOptions;
 
-    const isEdgeId = relationshipQueryItemId?.includes('_'); // TODO: to be determined from entity panel work
+    if (searchType !== 'relationship' || !relationshipQueryItemId || !relationshipQueryType) {
+        return {
+            enabled: false,
+        };
+    }
 
-    if (searchType !== 'relationship' || isEdgeId || !relationshipQueryItemId || !relationshipQueryType) {
+    const parsedQueryItemId = parseItemId(relationshipQueryItemId);
+
+    if (parsedQueryItemId.itemType !== 'node') {
         return {
             enabled: false,
         };

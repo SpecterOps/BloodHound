@@ -85,7 +85,7 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         expandedPanelSections: searchParams.getAll('expandedPanelSections'),
         selectedItem: searchParams.get('selectedItem'),
         relationshipQueryType: parseRelationshipQueryType(searchParams.get('relationshipQueryType')),
-        relationshipQueryItemId: searchParams.get('relationshipQueryObjectId'),
+        relationshipQueryItemId: searchParams.get('relationshipQueryItemId'),
         pathFilters: searchParams.getAll('pathFilters'),
         // react doesnt like this because it doesnt know the params needed for the function factory return function.
         // but the params needed are not needed in the deps array

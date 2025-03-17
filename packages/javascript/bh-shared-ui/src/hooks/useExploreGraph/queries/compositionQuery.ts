@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { apiClient } from '../../../utils/api';
+import { parseItemId } from '../../../utils/parseItemId';
 import { ExploreQueryParams } from '../../useExploreParams';
 import {
     ExploreGraphQuery,
@@ -33,9 +34,16 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
         };
     }
 
-    const [_, sourceId, edgeType, targetId] = relationshipQueryItemId.split('_'); // TODO: determined in entity panel work
+    const { itemType, sourceId, edgeType, targetId } = parseItemId(relationshipQueryItemId);
 
-    if (!sourceId || !edgeType || !targetId || isNaN(Number(sourceId)) || isNaN(Number(targetId)))
+    if (
+        itemType !== 'edge' ||
+        !sourceId ||
+        !edgeType ||
+        !targetId ||
+        isNaN(Number(sourceId)) ||
+        isNaN(Number(targetId))
+    )
         return {
             enabled: false,
         };
