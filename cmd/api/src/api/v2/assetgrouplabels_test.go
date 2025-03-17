@@ -156,8 +156,8 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 						Return(model.AssetGroupLabel{}, errors.New("entity not found")).Times(1)
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusBadRequest)
-					apitest.BodyContains(output, "invalid asset group label id specified in url")
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, api.ErrorResponseDetailsInternalServerError)
 				},
 			},
 			{

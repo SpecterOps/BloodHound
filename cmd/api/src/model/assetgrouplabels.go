@@ -37,7 +37,7 @@ type AssetGroupLabel struct {
 	AssetGroupTierId null.Int32  `json:"asset_group_tier_id"`
 	KindId           int         `json:"kind_id"`
 	Name             string      `json:"name"`
-	Description      null.String `json:"description"`
+	Description      string      `json:"description"`
 	CreatedAt        time.Time   `json:"created_at"`
 	CreatedBy        string      `json:"created_by"`
 	UpdatedAt        time.Time   `json:"updated_at"`

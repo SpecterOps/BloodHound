@@ -88,7 +88,7 @@ func (s *BloodhoundDB) CreateAssetGroupLabelSelector(ctx context.Context, assetG
 
 func (s *BloodhoundDB) GetAssetGroupLabel(ctx context.Context, assetGroupLabelId int) (model.AssetGroupLabel, error) {
 	var label model.AssetGroupLabel
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id = ?", assetGroupLabelTable), assetGroupLabelId).First(&label); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id = ?", label.TableName()), assetGroupLabelId).First(&label); result.Error != nil {
 		return model.AssetGroupLabel{}, CheckError(result)
 	} else {
 		return label, nil
@@ -102,7 +102,7 @@ func (s *BloodhoundDB) CreateAssetGroupLabel(ctx context.Context, assetGroupTier
 			CreatedBy:        userId,
 			UpdatedBy:        userId,
 			Name:             name,
-			Description:      null.StringFrom(description),
+			Description:      description,
 		}
 
 		auditEntry = model.AuditEntry{
@@ -113,12 +113,13 @@ func (s *BloodhoundDB) CreateAssetGroupLabel(ctx context.Context, assetGroupTier
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		var kindId int
-		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (name) VALUES (?) ON CONFLICT (id) DO NOTHING RETURNING id", kindTable), label.ToKind()).Scan(&kindId); result.Error != nil {
+		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (name) VALUES (?) RETURNING id", kindTable), label.ToKind()).Scan(&kindId); result.Error != nil {
 			return CheckError(result)
-		} else if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by) VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?) RETURNING *", assetGroupLabelTable),
+		} else if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (asset_group_tier_id, kind_id, name, description, created_at, created_by, updated_at, updated_by) VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?) RETURNING *", label.TableName()),
 			assetGroupTierId, kindId, name, description, userId, userId).Scan(&label); result.Error != nil {
 			return CheckError(result)
-		} else if err := s.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateLabel, label.ID, "", ""); err != nil {
+		}
+		if err := s.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateLabel, label.ID, "", ""); err != nil {
 			return err
 		}
 		return nil

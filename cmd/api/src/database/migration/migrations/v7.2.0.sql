@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS asset_group_labels
     asset_group_tier_id int,
     kind_id smallint,
     name text NOT NULL,
-    description text,
+    description text NOT NULL DEFAULT '',
     created_at timestamp with time zone,
     created_by text,
     updated_at timestamp with time zone,
@@ -74,6 +74,11 @@ INSERT INTO asset_group_tiers (id, position, allow_certify) VALUES (1, 0, false)
 INSERT INTO asset_group_labels (id, name, asset_group_tier_id, kind_id, description, created_by, created_at, updated_by, updated_at)
   VALUES (1, 'Tier Zero', (SELECT id FROM inserted_tier), (SELECT id FROM inserted_kind), 'Tier Zero', 'SYSTEM', current_timestamp, 'SYSTEM', current_timestamp)
   ON CONFLICT (id) DO UPDATE SET kind_id = (SELECT id FROM inserted_kind) WHERE (SELECT id FROM inserted_kind) IS NOT NULL;
+
+-- set sequence value to 2
+SELECT setval('asset_group_tiers_id_seq', 2, false);
+SELECT setval('asset_group_labels_id_seq', 2, false);
+
 
 -- Add asset_group_history tables
 CREATE TABLE IF NOT EXISTS asset_group_history
