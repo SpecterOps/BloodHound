@@ -31,7 +31,7 @@ const RelayTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) =
     const dispatch = useDispatch();
 
     const handleOnClick = (item: any) => {
-        let node = nodesArray[item];
+        const node = nodesArray[item];
         dispatch(
             searchbarActions.sourceNodeSelected({
                 objectid: node.objectId,
