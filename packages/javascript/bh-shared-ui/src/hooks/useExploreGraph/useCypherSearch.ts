@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useExploreParams } from '../useExploreParams';
+import { decodeCypherQuery, encodeCypherQuery } from './utils';
 
 export const useCypherSearch = () => {
     const [cypherQuery, setCypherQuery] = useState<string>('');
@@ -8,7 +9,7 @@ export const useCypherSearch = () => {
 
     useEffect(() => {
         if (cypherSearch) {
-            const decoded = atob(cypherSearch);
+            const decoded = decodeCypherQuery(cypherSearch);
             setCypherQuery(decoded);
         }
     }, [cypherSearch]);
@@ -17,7 +18,7 @@ export const useCypherSearch = () => {
     const performSearch = (query?: string) => {
         setExploreParams({
             searchType: 'cypher',
-            cypherSearch: btoa(query ?? cypherQuery),
+            cypherSearch: encodeCypherQuery(query ?? cypherQuery),
         });
     };
 

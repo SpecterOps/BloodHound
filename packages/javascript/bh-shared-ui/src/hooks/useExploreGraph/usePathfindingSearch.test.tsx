@@ -14,44 +14,100 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { renderHook, waitFor } from '../../test-utils';
+import { createMemoryHistory } from 'history';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import { act, renderHook, waitFor } from '../../test-utils';
 import { usePathfindingSearch } from './usePathfindingSearch';
 
 const TEST_STRING_1 = 'Test1';
 const TEST_STRING_2 = 'test2';
 
-// Skipping these for now since we will be bringing in the history package in another PR to make testing query param changes easier
-describe.skip('usePathfindingSearch', () => {
+const server = setupServer(
+    rest.get('/api/v2/search', (req, res, ctx) => {
+        const url = new URL(req.url);
+        const searchTerm = url.searchParams.get('q');
+
+        return res(ctx.json({ data: [{ name: searchTerm, objectid: searchTerm }] }));
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+describe('usePathfindingSearch', () => {
     it('stores the state of source and destination terms without modifying query params', async () => {
-        const hook = renderHook(() => usePathfindingSearch());
+        const history = createMemoryHistory();
+        const hook = renderHook(() => usePathfindingSearch(), { history });
 
-        expect(window.location.search).toBe('');
+        expect(history.location.search).toBe('');
 
-        await waitFor(() => hook.result.current.handleSourceNodeEdited(TEST_STRING_1));
-        await waitFor(() => hook.result.current.handleDestinationNodeEdited(TEST_STRING_2));
+        await act(async () => hook.result.current.handleSourceNodeEdited(TEST_STRING_1));
+        await act(async () => hook.result.current.handleDestinationNodeEdited(TEST_STRING_2));
 
         expect(hook.result.current.sourceSearchTerm).toBe(TEST_STRING_1);
         expect(hook.result.current.destinationSearchTerm).toBe(TEST_STRING_2);
-        expect(window.location.search).toBe('');
+        expect(history.location.search).toBe('');
     });
-    it("upon selecting just a source node, updates the URL with a searchType of 'node' and primarySearch of the node's objectid", async () => {
-        const hook = renderHook(() => usePathfindingSearch());
 
-        await waitFor(() =>
+    it("upon selecting just a source node, updates the URL with a searchType of 'node' and primarySearch of the node's objectid", async () => {
+        const history = createMemoryHistory();
+        const hook = renderHook(() => usePathfindingSearch(), { history });
+
+        await act(async () =>
             hook.result.current.handleSourceNodeSelected({ name: TEST_STRING_1, objectid: TEST_STRING_2 })
         );
 
-        expect(window.location.search).toContain(`primarySearch=${TEST_STRING_2}`);
-        expect(window.location.search).toContain('searchType=node');
+        expect(history.location.search).toContain(`primarySearch=${TEST_STRING_2}`);
+        expect(history.location.search).toContain('searchType=node');
     });
-    it("upon selecting just a destinations node, updates the URL with a searchType of 'node' and secondarySearch of the node's objectid", async () => {
-        const hook = renderHook(() => usePathfindingSearch());
 
-        await waitFor(() =>
+    it("upon selecting just a destination node, updates the URL with a searchType of 'node' and secondarySearch of the node's objectid", async () => {
+        const history = createMemoryHistory();
+        const hook = renderHook(() => usePathfindingSearch(), { history });
+
+        await act(async () =>
             hook.result.current.handleDestinationNodeSelected({ name: TEST_STRING_1, objectid: TEST_STRING_2 })
         );
 
-        expect(window.location.search).toContain(`secondarySearch=${TEST_STRING_2}`);
-        expect(window.location.search).toContain('searchType=node');
+        expect(history.location.search).toContain(`secondarySearch=${TEST_STRING_2}`);
+        expect(history.location.search).toContain('searchType=node');
+    });
+
+    it("upon selecting a source and destination node, updates the URL with a searchType of 'pathfinding' and the object ids for the source and destination nodes", async () => {
+        const history = createMemoryHistory();
+        const hook = renderHook(() => usePathfindingSearch(), { history });
+
+        await act(async () =>
+            hook.result.current.handleSourceNodeSelected({ name: TEST_STRING_1, objectid: TEST_STRING_1 })
+        );
+        await act(async () =>
+            hook.result.current.handleDestinationNodeSelected({ name: TEST_STRING_2, objectid: TEST_STRING_2 })
+        );
+
+        expect(history.location.search).toContain(`primarySearch=${TEST_STRING_1}`);
+        expect(history.location.search).toContain(`secondarySearch=${TEST_STRING_2}`);
+        expect(history.location.search).toContain('searchType=pathfinding');
+    });
+
+    it('populates the source and destination node fields when query params are passed', async () => {
+        const url = `?primarySearch=${TEST_STRING_1}&secondarySearch=${TEST_STRING_2}&searchType=pathfinding`;
+        const history = createMemoryHistory({ initialEntries: [url] });
+
+        const hook = renderHook(() => usePathfindingSearch(), { history });
+
+        await waitFor(() => expect(hook.result.current.sourceSearchTerm).toEqual(TEST_STRING_1));
+        await waitFor(() => expect(hook.result.current.destinationSearchTerm).toEqual(TEST_STRING_2));
+
+        await waitFor(() =>
+            expect(hook.result.current.sourceSelectedItem).toEqual({ name: TEST_STRING_1, objectid: TEST_STRING_1 })
+        );
+        await waitFor(() =>
+            expect(hook.result.current.destinationSelectedItem).toEqual({
+                name: TEST_STRING_2,
+                objectid: TEST_STRING_2,
+            })
+        );
     });
 });

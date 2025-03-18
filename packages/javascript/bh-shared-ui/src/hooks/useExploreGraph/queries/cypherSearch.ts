@@ -1,5 +1,6 @@
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
+import { decodeCypherQuery } from '../utils';
 import {
     ExploreGraphQuery,
     ExploreGraphQueryError,
@@ -15,7 +16,7 @@ export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>
         return { enabled: false };
     }
 
-    const decoded = atob(cypherSearch);
+    const decoded = decodeCypherQuery(cypherSearch);
 
     return {
         queryKey: [ExploreGraphQueryKey, searchType, cypherSearch],

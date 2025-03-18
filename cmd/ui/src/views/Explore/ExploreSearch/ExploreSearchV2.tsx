@@ -24,6 +24,7 @@ import {
     Icon,
     MappedStringLiteral,
     cn,
+    encodeCypherQuery,
     useCypherSearch,
     useExploreParams,
     useNodeSearch,
@@ -137,7 +138,7 @@ const ExploreSearchV2: React.FC = () => {
         }
         if (tab === 'cypher') {
             params.searchType = 'cypher';
-            params.cypherSearch = btoa(cypherSearchState.cypherQuery);
+            params.cypherSearch = encodeCypherQuery(cypherSearchState.cypherQuery);
             params.exploreSearchTab = 'cypher';
         }
         return params;
