@@ -64,6 +64,17 @@ const server = setupServer(
     rest.get('/api/v2/asset-groups/1/members/counts', (req, res, ctx) => {
         return res(ctx.json(memberCounts));
     }),
+    rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+        return res(
+            ctx.status(200),
+            ctx.json({
+                data: {
+                    edges: [],
+                    nodes: [],
+                },
+            })
+        );
+    }),
     rest.get('*', (req, res, ctx) => res(ctx.json({ data: [] })))
 );
 

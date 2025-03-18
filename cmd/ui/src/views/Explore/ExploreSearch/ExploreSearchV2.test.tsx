@@ -36,6 +36,20 @@ vi.mock('react-router-dom', async () => {
     };
 });
 
+const server = setupServer(
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
 const setup = async (exploreSearchTab = 'node') => {
     const setExploreParamsSpy = vi.fn();
     useExploreParamsSpy.mockReturnValue({
@@ -177,19 +191,11 @@ describe('ExploreSearch interaction', () => {
         ],
     };
 
-    const server = setupServer(
+    server.use(
         rest.get('/api/v2/search', (req, res, ctx) => {
             return res(ctx.json(comboboxLookaheadOptions));
         })
     );
-
-    beforeEach(async () => {
-        await setup();
-    });
-
-    beforeAll(() => server.listen());
-    afterEach(() => server.resetHandlers());
-    afterAll(() => server.close());
 
     // The following tests require a router provider which is possible but that work has already been done in 5453
     // skipping these tests until that work has been completed so we dont replicate that work.
