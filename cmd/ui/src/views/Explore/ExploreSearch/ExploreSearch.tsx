@@ -24,6 +24,7 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
+import { useCypherSearchSwitch, useNodeSearchSwitch, usePathfindingSearchSwitch } from './switches';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -67,6 +68,10 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
     const activeTab = tabNameMap[tabKey];
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
+
+    const nodeSearchState = useNodeSearchSwitch();
+    const pathfindingSearchState = usePathfindingSearchSwitch();
+    const cypherSearchState = useCypherSearchSwitch();
 
     /* Event Handlers */
     const handleTabChange = (newTabIndex: number) => {
@@ -120,9 +125,9 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
                     tabs={[
                         // This linting rule is disabled because the elements in this array do not require a key prop.
                         /* eslint-disable react/jsx-key */
-                        <NodeSearch />,
-                        <PathfindingSearch />,
-                        <CypherSearch />,
+                        <NodeSearch nodeSearchState={nodeSearchState} />,
+                        <PathfindingSearch pathfindingSearchState={pathfindingSearchState} />,
+                        <CypherSearch cypherSearchState={cypherSearchState} />,
                         /* eslint-enable react/jsx-key */
                     ]}
                     activeTab={activeTab}

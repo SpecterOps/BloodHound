@@ -17,7 +17,13 @@
 import { useQuery } from 'react-query';
 import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
-import { ExploreGraphQuery, fallbackQuery, nodeSearchQuery, pathfindingSearchQuery } from './queries';
+import {
+    ExploreGraphQuery,
+    cypherSearchQuery,
+    fallbackQuery,
+    nodeSearchQuery,
+    pathfindingSearchQuery,
+} from './queries';
 
 export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery {
     switch (paramOptions.searchType) {
@@ -25,8 +31,8 @@ export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParam
             return nodeSearchQuery;
         case 'pathfinding':
             return pathfindingSearchQuery;
-        // case 'cypher':
-        //     return {};
+        case 'cypher':
+            return cypherSearchQuery;
         // case 'relationship':
         //     return {};
         // case 'composition':

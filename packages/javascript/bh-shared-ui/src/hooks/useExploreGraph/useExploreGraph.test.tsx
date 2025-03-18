@@ -47,5 +47,17 @@ describe('useExploreGraph', () => {
             const query = context.getQueryConfig(paramOptions);
             expect(query?.queryKey).toContain('pathfinding');
         });
+
+        it('runs a cypher search when the query param is set to "cypher"', () => {
+            const paramOptions: Partial<ExploreQueryParams> = {
+                searchType: 'cypher',
+                cypherSearch: 'test1',
+            };
+
+            const context = exploreGraphQueryFactory(paramOptions);
+
+            const query = context.getQueryConfig(paramOptions);
+            expect(query?.queryKey).toContain('cypher');
+        });
     });
 });
