@@ -66,6 +66,14 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         { refetchOnWindowFocus: false, retry: false }
     );
 
+    const removeExpandedPanelSectionParams = () => {
+        const labelList = parentLabels || [];
+
+        setExploreParams({
+            expandedPanelSections: labelList,
+        });
+    };
+
     const setExpandedPanelSectionsParams = () => {
         const labelList = [...(parentLabels as string[]), label];
 
@@ -83,38 +91,41 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     };
 
     const handleSetGraph = async (isOpen: boolean) => {
-        if (!endpoint) {
-            if (backButtonFlag?.enabled && isOpen) {
-                setExpandedPanelSectionsParams();
-            }
-            return;
-        }
+        if (isOpen) {
+            if (!endpoint) {
+                if (backButtonFlag?.enabled) {
+                    setExpandedPanelSectionsParams();
+                }
+            } else if (countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
+                abortEntitySectionRequest();
+                if (backButtonFlag?.enabled) {
+                    setExpandedPanelSectionsParams();
+                    return;
+                }
+                dispatch(setGraphLoading(true));
 
-        if (isOpen && countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
-            abortEntitySectionRequest();
+                await endpoint({ id, type: 'graph' })
+                    .then((result) => {
+                        const formattedData = transformFlatGraphResponse(result);
+
+                        dispatch(saveResponseForExport(formattedData));
+                        dispatch(putGraphData(result));
+                    })
+                    .catch((err) => {
+                        if (err?.code === 'ERR_CANCELED') {
+                            return;
+                        }
+                        dispatch(putGraphError(err));
+                        dispatch(addSnackbar('Query failed. Please try again.', 'nodeRelationshipGraphQuery', {}));
+                    })
+                    .finally(() => {
+                        dispatch(setGraphLoading(false));
+                    });
+            }
+        } else {
             if (backButtonFlag?.enabled) {
-                setExpandedPanelSectionsParams();
-                return;
+                removeExpandedPanelSectionParams();
             }
-            dispatch(setGraphLoading(true));
-
-            await endpoint({ id, type: 'graph' })
-                .then((result) => {
-                    const formattedData = transformFlatGraphResponse(result);
-
-                    dispatch(saveResponseForExport(formattedData));
-                    dispatch(putGraphData(result));
-                })
-                .catch((err) => {
-                    if (err?.code === 'ERR_CANCELED') {
-                        return;
-                    }
-                    dispatch(putGraphError(err));
-                    dispatch(addSnackbar('Query failed. Please try again.', 'nodeRelationshipGraphQuery', {}));
-                })
-                .finally(() => {
-                    dispatch(setGraphLoading(false));
-                });
         }
     };
 
