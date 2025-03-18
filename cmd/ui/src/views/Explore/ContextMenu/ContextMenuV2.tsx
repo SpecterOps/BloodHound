@@ -16,7 +16,7 @@
 
 import { Menu, MenuItem } from '@mui/material';
 
-import { Permission, useExploreParams, useExploreSelectedItem, usePermissions } from 'bh-shared-ui';
+import { Permission, isNode, useExploreParams, useExploreSelectedItem, usePermissions } from 'bh-shared-ui';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
@@ -37,12 +37,12 @@ const ContextMenuV2: FC<{
 
     const handleSetStartingNode = () => {
         const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && 'object_id' in selectedItemData) {
+        if (selectedItemData && isNode(selectedItemData)) {
             const searchType = secondarySearch ? 'pathfinding' : 'node';
             setExploreParams({
                 exploreSearchTab: 'pathfinding',
                 searchType,
-                primarySearch: selectedItemData.object_id as string,
+                primarySearch: selectedItemData?.objectId as string,
             });
         }
     };
@@ -50,11 +50,11 @@ const ContextMenuV2: FC<{
     const handleSetEndingNode = () => {
         const searchType = primarySearch ? 'pathfinding' : 'node';
         const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && 'object_id' in selectedItemData) {
+        if (selectedItemData && isNode(selectedItemData)) {
             setExploreParams({
                 exploreSearchTab: 'pathfinding',
                 searchType,
-                secondarySearch: selectedItemData.object_id as string,
+                secondarySearch: selectedItemData?.objectId as string,
             });
         }
     };

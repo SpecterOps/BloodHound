@@ -16,28 +16,25 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
-import { NodeResponse, apiClient, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
+import { NodeResponse, apiClient, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
-import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { toggleOwnedObjectNode, toggleTierZeroNode } from 'src/ducks/explore/actions';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
+import { useAppSelector } from 'src/store';
 
 const AssetGroupMenuItemV2: FC<{ assetGroupId: number; assetGroupName: string }> = ({
     assetGroupId,
     assetGroupName,
 }) => {
     const { addNotification } = useNotifications();
-    const dispatch = useAppDispatch();
+    const { refetch } = useExploreGraph();
 
     const [open, setOpen] = useState(false);
 
     const { selectedItemQuery } = useExploreSelectedItem();
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
-    const ownedObjectAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
 
     const isMenuItemForTierZero = assetGroupId === tierZeroAssetGroupId;
-    const isMenuItemForOwnedObject = assetGroupId === ownedObjectAssetGroupId;
 
     const mutation = useMutation({
         mutationFn: ({ nodeId, action }: { nodeId: string; action: 'add' | 'remove' }) => {
@@ -50,14 +47,7 @@ const AssetGroupMenuItemV2: FC<{ assetGroupId: number; assetGroupName: string }>
             ]);
         },
         onSuccess: () => {
-            if (selectedItemQuery.data?.id) {
-                if (isMenuItemForTierZero) {
-                    dispatch(toggleTierZeroNode(selectedItemQuery.data.id));
-                } else if (isMenuItemForOwnedObject) {
-                    dispatch(toggleOwnedObjectNode(selectedItemQuery.data.id));
-                }
-            }
-
+            refetch();
             addNotification('Update successful.', 'AssetGroupUpdateSuccess');
         },
         onError: (error: any) => {
