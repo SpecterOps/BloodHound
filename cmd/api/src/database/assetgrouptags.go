@@ -61,7 +61,11 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGro
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
-		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify) VALUES (?, NOW(), ?, NOW(), ?, ?, ?, ?, ?, ?) RETURNING *", selector.TableName()),
+		if result := tx.Raw(fmt.Sprintf(`
+			INSERT INTO %s (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify) 
+			VALUES (?, NOW(), ?, NOW(), ?, ?, ?, ?, ?, ?) 
+			RETURNING id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify`,
+			selector.TableName()),
 			assetGroupTagId, userId, userId, name, description, isDefault, allowDisable, autoCertify).Scan(&selector); result.Error != nil {
 			return CheckError(result)
 		} else {
@@ -122,7 +126,11 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 		var kindId int
 		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (name) VALUES (?) RETURNING id", kindTable), tag.ToKind()).Scan(&kindId); result.Error != nil {
 			return CheckError(result)
-		} else if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify) VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?, ?, ?) RETURNING *", tag.TableName()),
+		} else if result := tx.Raw(fmt.Sprintf(`
+			INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify) 
+			VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?, ?, ?) 
+			RETURNING id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by, position, require_certify`,
+			tag.TableName()),
 			tagType, kindId, name, description, userId, userId, position, requireCertify).Scan(&tag); result.Error != nil {
 			return CheckError(result)
 		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateTag, tag.ID, "", ""); err != nil {
