@@ -32,7 +32,7 @@ interface GraphButtonsProps {
     showNodeLabels: boolean;
     showEdgeLabels: boolean;
     isCurrentSearchOpen: boolean;
-    isDisabledJsonExport: boolean;
+    isJsonExportDisabled: boolean;
 }
 
 const GraphButtons: FC<GraphButtonsProps> = ({
@@ -47,7 +47,7 @@ const GraphButtons: FC<GraphButtonsProps> = ({
     showNodeLabels,
     showEdgeLabels,
     isCurrentSearchOpen,
-    isDisabledJsonExport,
+    isJsonExportDisabled,
 }) => {
     return (
         <>
@@ -67,7 +67,7 @@ const GraphButtons: FC<GraphButtonsProps> = ({
             </GraphMenu>
 
             <GraphMenu label='Export'>
-                <MenuItem onClick={onExportJson} disabled={isDisabledJsonExport}>
+                <MenuItem onClick={onExportJson} disabled={isJsonExportDisabled}>
                     JSON
                 </MenuItem>
             </GraphMenu>
