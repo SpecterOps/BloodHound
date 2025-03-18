@@ -19,7 +19,6 @@ package ein
 import (
 	"fmt"
 	"log/slog"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -155,11 +154,6 @@ func ConvertEnterpriseCAToNode(item EnterpriseCA) IngestibleNode {
 		PropertyMap: itemProps,
 		Label:       ad.EnterpriseCA,
 	}
-}
-
-func hashEnrollmentEndpoint(endpoint CAEnrollmentEndpoint) string {
-	encodedUrl := url.QueryEscape(endpoint.Url)
-	return fmt.Sprintf("%s|%t|%t|%t", encodedUrl, endpoint.ADCSWebEnrollmentHTTP, endpoint.ADCSWebEnrollmentHTTPS, endpoint.ADCSWebEnrollmentEPA)
 }
 
 // This function is to support our new method of doing Owns edges and makes older data sets backwards compatible
