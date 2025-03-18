@@ -67,10 +67,8 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     );
 
     const removeExpandedPanelSectionParams = () => {
-        const labelList = parentLabels || [];
-
         setExploreParams({
-            expandedPanelSections: labelList,
+            expandedPanelSections: parentLabels,
         });
     };
 
