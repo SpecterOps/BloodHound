@@ -15,50 +15,39 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery } from 'react-query';
-import { useNotifications } from '../../providers/NotificationProvider/hooks';
-import { ExploreQueryParams, useExploreParams } from '../useExploreParams/useExploreParams';
-import { ExploreGraphQueryOptions, GraphItemMutationFn, nodeSearchGraphQuery } from './search-modes';
+import { useNotifications } from '../../providers';
+import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
+import { ExploreGraphQuery, fallbackQuery, nodeSearchQuery, pathfindingSearchQuery } from './queries';
 
-export function getExploreGraphQuery(
-    addNotification: ReturnType<typeof useNotifications>['addNotification'],
-    paramOptions: Partial<ExploreQueryParams>,
-    mutateResponse?: GraphItemMutationFn
-): ExploreGraphQueryOptions {
+export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery {
     switch (paramOptions.searchType) {
         case 'node':
-            return nodeSearchGraphQuery(addNotification, paramOptions, mutateResponse);
+            return nodeSearchQuery;
         case 'pathfinding':
-            return {};
-        case 'cypher':
-            return {};
-        case 'relationship':
-            return {};
-        case 'composition':
-            return {};
+            return pathfindingSearchQuery;
+        // case 'cypher':
+        //     return {};
+        // case 'relationship':
+        //     return {};
+        // case 'composition':
+        //     return {};
         default:
-            return { enabled: false };
+            return fallbackQuery;
     }
-    // else some unidentified type, display error, set to node-search
 }
 
-// Consumer of query params example
-export const useExploreGraph = <T,>(mutateResponse?: GraphItemMutationFn) => {
+// Hook for maintaining the top level graph query powering the explore page
+export const useExploreGraph = () => {
+    const params = useExploreParams();
     const { addNotification } = useNotifications();
 
-    const { primarySearch, secondarySearch, cypherSearch, searchType } = useExploreParams();
+    const query = exploreGraphQueryFactory(params);
 
-    const queryConfig = getExploreGraphQuery(
-        addNotification,
-        {
-            primarySearch,
-            secondarySearch,
-            cypherSearch,
-            searchType,
+    return useQuery({
+        ...query.getQueryConfig(params),
+        onError: (error: any) => {
+            const { message, key } = query.getErrorMessage(error);
+            addNotification(message, key);
         },
-        mutateResponse
-    );
-
-    const { data, isLoading, isError } = useQuery(queryConfig);
-
-    return { data: data as T, isLoading, isError };
+    });
 };

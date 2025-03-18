@@ -14,28 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SearchValue, SourceNodeEditedAction, SourceNodeSelectedAction, searchbarActions } from 'bh-shared-ui';
-import { useAppDispatch, useAppSelector } from 'src/store';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
+import { useNodeSearchSwitch } from './switches';
 
 const NodeSearch = () => {
-    const dispatch = useAppDispatch();
-
-    const primary = useAppSelector((state) => state.search.primary);
-    const { searchTerm, value: selectedItem } = primary;
-
-    const handleNodeEdited = (edit: string): SourceNodeEditedAction =>
-        dispatch(searchbarActions.sourceNodeEdited(edit));
-    const handleNodeSelected = (selected?: SearchValue): SourceNodeSelectedAction =>
-        dispatch(searchbarActions.sourceNodeSelected(selected));
+    const { searchTerm, selectedItem, editSourceNode, selectSourceNode } = useNodeSearchSwitch();
 
     return (
         <ExploreSearchCombobox
             labelText={'Search Nodes'}
             inputValue={searchTerm}
             selectedItem={selectedItem || null}
-            handleNodeEdited={handleNodeEdited}
-            handleNodeSelected={handleNodeSelected}
+            handleNodeEdited={editSourceNode}
+            handleNodeSelected={selectSourceNode}
         />
     );
 };

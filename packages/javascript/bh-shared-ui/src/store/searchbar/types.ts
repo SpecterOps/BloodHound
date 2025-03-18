@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { EdgeCheckboxType } from '../../edgeTypes';
 import { SearchResult } from '../../hooks/useSearch';
 import { EntityKinds } from '../../utils/content';
-import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/edgeTypes';
 
 const SEARCH_RESET = 'app/search/RESET';
 const CYPHER_QUERY_EDITED = 'app/search/CYPHER_QUERY_EDITED';

@@ -17,41 +17,13 @@
 import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, useTheme } from '@mui/material';
-import {
-    DestinationNodeEditedAction,
-    DestinationNodeSelectedAction,
-    SearchValue,
-    SourceNodeEditedAction,
-    SourceNodeSelectedAction,
-    searchbarActions,
-} from 'bh-shared-ui';
-import { useAppDispatch, useAppSelector } from 'src/store';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import EdgeFilter from './EdgeFilter';
 import PathfindingSwapButton from './PathfindingSwapButton';
+import { usePathfindingSearchSwitch } from './switches';
 
 const PathfindingSearch = () => {
-    const dispatch = useAppDispatch();
-
-    const primary = useAppSelector((state) => state.search.primary);
-    const secondary = useAppSelector((state) => state.search.secondary);
-
-    const { searchTerm: sourceInputValue, value: sourceSelectedItem } = primary;
-    const { searchTerm: destinationInputValue, value: destinationSelectedItem } = secondary;
-
-    const handleSourceNodeEdited = (edit: string): SourceNodeEditedAction =>
-        dispatch(searchbarActions.sourceNodeEdited(edit));
-
-    const handleDestinationNodeEdited = (edit: string): DestinationNodeEditedAction =>
-        dispatch(searchbarActions.destinationNodeEdited(edit));
-
-    const handleSourceNodeSelected = (selected: SearchValue): SourceNodeSelectedAction => {
-        const doPathfindSearch = !!destinationSelectedItem;
-        return dispatch(searchbarActions.sourceNodeSelected(selected, doPathfindSearch));
-    };
-
-    const handleDestinationNodeSelected = (selected: SearchValue): DestinationNodeSelectedAction =>
-        dispatch(searchbarActions.destinationNodeSelected(selected));
+    const pathfinding = usePathfindingSearchSwitch();
 
     return (
         <Box display={'flex'} alignItems={'center'} gap={1}>
@@ -59,17 +31,17 @@ const PathfindingSearch = () => {
 
             <Box flexGrow={1} gap={1} display={'flex'} flexDirection={'column'}>
                 <ExploreSearchCombobox
-                    handleNodeEdited={handleSourceNodeEdited}
-                    handleNodeSelected={handleSourceNodeSelected}
-                    inputValue={sourceInputValue}
-                    selectedItem={sourceSelectedItem || null}
+                    handleNodeEdited={pathfinding.handleSourceNodeEdited}
+                    handleNodeSelected={pathfinding.handleSourceNodeSelected}
+                    inputValue={pathfinding.sourceSearchTerm}
+                    selectedItem={pathfinding.sourceSelectedItem || null}
                     labelText='Start Node'
                 />
                 <ExploreSearchCombobox
-                    handleNodeEdited={handleDestinationNodeEdited}
-                    handleNodeSelected={handleDestinationNodeSelected}
-                    inputValue={destinationInputValue}
-                    selectedItem={destinationSelectedItem || null}
+                    handleNodeEdited={pathfinding.handleDestinationNodeEdited}
+                    handleNodeSelected={pathfinding.handleDestinationNodeSelected}
+                    inputValue={pathfinding.destinationSearchTerm}
+                    selectedItem={pathfinding.destinationSelectedItem || null}
                     labelText='Destination Node'
                 />
             </Box>
