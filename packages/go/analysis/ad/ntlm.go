@@ -22,8 +22,6 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
-	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/specterops/bloodhound/dawgs/traversal"
@@ -367,33 +365,6 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 	}
 
 	return nil
-}
-
-type HttpEndpoint struct {
-	URL      string
-	HTTP     bool
-	HTTPS    bool
-	HTTPSEPA bool
-}
-
-func decodeHttpEndpoint(endpoint string) (HttpEndpoint, error) {
-	s := strings.Split(endpoint, "|")
-	if len(s) != 4 {
-		return HttpEndpoint{}, fmt.Errorf("invalid split length: %s", endpoint)
-	} else if http, err := strconv.ParseBool(s[1]); err != nil {
-		return HttpEndpoint{}, err
-	} else if https, err := strconv.ParseBool(s[2]); err != nil {
-		return HttpEndpoint{}, err
-	} else if httpsepa, err := strconv.ParseBool(s[3]); err != nil {
-		return HttpEndpoint{}, err
-	} else {
-		return HttpEndpoint{
-			URL:      s[0],
-			HTTP:     http,
-			HTTPS:    https,
-			HTTPSEPA: httpsepa,
-		}, nil
-	}
 }
 
 func isEnterpriseCAValidForADCS(eca *graph.Node) (bool, error) {
