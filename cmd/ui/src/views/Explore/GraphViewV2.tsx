@@ -14,19 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Popper, SxProps, useTheme } from '@mui/material';
+import { Popper, useTheme } from '@mui/material';
 import {
-    EdgeInfoState,
     GraphProgress,
     SearchCurrentNodes,
     WebGLDisabledAlert,
     exportToJson,
     isWebGLEnabled,
-    setEdgeInfoOpen,
-    setSelectedEdge,
     transformFlatGraphResponse,
     useAvailableEnvironments,
     useExploreGraph,
+    useExploreSelectedItem,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -38,51 +36,57 @@ import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
-import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
-import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
-import ContextMenu from './ContextMenu/ContextMenu';
+import ContextMenuV2 from './ContextMenu/ContextMenuV2';
 import ExploreSearchV2 from './ExploreSearch/ExploreSearchV2';
+import GraphItemInformationPanel from './GraphItemInformationPanel';
 
 const GraphViewV2: FC = () => {
+    /* Hooks */
     const theme = useTheme();
+
     const dispatch = useAppDispatch();
 
     const graphState = useExploreGraph();
 
-    const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const exportableGraphState = useAppSelector((state) => state.explore.export);
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
-    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
-
-    // Associated with T0 edit panel, to be removed
     const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
+
     const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
 
-    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
-    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
-    const [showNodeLabels, setShowNodeLabels] = useState(true);
-    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+
+    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
 
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
+
+    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+
+    const exportableGraphState = useAppSelector((state) => state.explore.export);
 
     const { data, isLoading, isError } = useAvailableEnvironments();
 
     const sigmaChartRef = useRef<any>(null);
+
     const currentSearchAnchorElement = useRef(null);
+
+    const [showNodeLabels, setShowNodeLabels] = useState(true);
+
+    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+
+    const { setSelectedItem } = useExploreSelectedItem();
 
     useEffect(() => {
         let items: any = graphState.data;
         if (!items && !graphState.isError) return;
         if (!items) items = {};
+
         // `items` may be empty, or it may contain an empty `nodes` object
         if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
 
@@ -128,46 +132,17 @@ const GraphViewV2: FC = () => {
     }
 
     /* Event Handlers */
-    const findNodeAndSelect = (id: string) => {
-        const selectedItem = graphState.data?.[id];
-        if (selectedItem?.data?.nodetype) {
-            dispatch(setSelectedEdge(null));
-            dispatch(
-                setSelectedNode({
-                    id: selectedItem.data.objectid,
-                    type: selectedItem.data.nodetype,
-                    name: selectedItem.data.name,
-                    graphId: id,
-                })
-            );
-        }
-    };
-
     const handleClickNode = (id: string) => {
-        dispatch(setEdgeInfoOpen(false));
-        dispatch(setEntityInfoOpen(true));
-        findNodeAndSelect(id);
+        setSelectedItem(id);
     };
 
     const handleContextMenu = (event: SigmaNodeEventPayload) => {
         setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
-        const nodeId = event.node;
-        findNodeAndSelect(nodeId);
+        setSelectedItem(event.node);
     };
 
     const handleCloseContextMenu = () => {
         setContextMenu(null);
-    };
-
-    const infoPaneStyles: SxProps = {
-        bottom: 0,
-        top: 0,
-        marginBottom: theme.spacing(2),
-        marginTop: theme.spacing(2),
-        maxWidth: theme.spacing(50),
-        position: 'absolute',
-        right: theme.spacing(2),
-        width: theme.spacing(50),
     };
 
     return (
@@ -242,12 +217,8 @@ const GraphViewV2: FC = () => {
                     </div>
                 </Popper>
             </div>
-            {edgeInfoState.open ? (
-                <EdgeInfoPane sx={infoPaneStyles} selectedEdge={edgeInfoState.selectedEdge} />
-            ) : (
-                <EntityInfoPanel sx={infoPaneStyles} selectedNode={selectedNode} />
-            )}
-            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
+            <GraphItemInformationPanel />
+            <ContextMenuV2 contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphState.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
         </div>

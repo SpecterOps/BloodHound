@@ -23,6 +23,9 @@ import {
     Permission,
     TIER_ZERO_TAG,
     searchbarActions,
+    useExploreParams,
+    useFeatureFlag,
+    useNodeByObjectId,
     usePermissions,
 } from 'bh-shared-ui';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
@@ -39,11 +42,14 @@ import { dataCollectionMessage } from '../QA/utils';
 const GroupManagement = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+    const backButtonFlagQuery = useFeatureFlag('back_button_support');
 
     const { data: environment } = useInitialEnvironment();
 
     // Kept out of the shared UI due to diff between GraphNodeTypes across apps
     const [openNode, setOpenNode] = useState<SelectedNode | null>(null);
+    const getGraphNodeByObjectId = useNodeByObjectId(openNode?.id);
+    const { setExploreParams } = useExploreParams();
 
     const { checkPermission } = usePermissions();
 
@@ -53,6 +59,9 @@ const GroupManagement = () => {
             type: member.primary_kind as EntityKinds,
             name: member.name,
         });
+        if (backButtonFlagQuery.data?.enabled) {
+            setExploreParams({ expandedPanelSections: null });
+        }
     };
 
     const handleShowNodeInExplore = () => {
@@ -62,10 +71,17 @@ const GroupManagement = () => {
                 label: openNode.name,
                 ...openNode,
             };
-            dispatch(searchbarActions.sourceNodeSelected(searchNode));
-            dispatch(setSelectedNode(openNode));
 
-            navigate(ROUTE_EXPLORE);
+            if (backButtonFlagQuery.data?.enabled) {
+                navigate({
+                    pathname: ROUTE_EXPLORE,
+                    search: `?selectedItem=${getGraphNodeByObjectId.data?.id}&searchType=node&primarySearch=${openNode?.id}&exploreSearchTab=node`,
+                });
+            } else {
+                dispatch(searchbarActions.sourceNodeSelected(searchNode));
+                dispatch(setSelectedNode(openNode));
+                navigate(ROUTE_EXPLORE);
+            }
         }
     };
 
