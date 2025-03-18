@@ -60,8 +60,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS agl_name_unique_index ON asset_group_tags (nam
 WITH inserted_kind AS (
 INSERT INTO kind (name) VALUES ('Tag_Tier_Zero') ON CONFLICT DO NOTHING
   RETURNING id)
-INSERT INTO asset_group_tags (name, type, kind_id, description, created_by, created_at, updated_by, updated_at)
-  VALUES ('Tier Zero', 1, (SELECT id FROM inserted_kind), 'Tier Zero', 'SYSTEM', current_timestamp, 'SYSTEM', current_timestamp)
+INSERT INTO asset_group_tags (name, type, kind_id, description, created_by, created_at, updated_by, updated_at, position, allow_certify)
+  VALUES ('Tier Zero', 1, (SELECT id FROM inserted_kind), 'Tier Zero', 'SYSTEM', current_timestamp, 'SYSTEM', current_timestamp, 1, FALSE)
   ON CONFLICT DO NOTHING;
 
 -- Add asset_group_history tables

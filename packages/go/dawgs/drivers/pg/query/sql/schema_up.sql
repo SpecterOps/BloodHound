@@ -79,7 +79,7 @@ create table if not exists graph
 
 -- The kind table contains name to ID mappings for graph kinds. Storage of these types is necessary to maintain search
 -- capability of a database without the origin application that generated it. 
--- To support FK in asset_group_labels table, the kind table is now maintained by the stepwise migration files.
+-- To support FK in asset_group_tags table, the kind table is now maintained by the stepwise migration files.
 -- Any schema updates here should be reflected in a stepwise migration file as well. 
 create table if not exists kind
 (
