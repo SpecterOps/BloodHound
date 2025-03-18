@@ -17,7 +17,13 @@
 import { entityRelationshipEndpoints } from '../../../utils/content';
 import { parseItemId } from '../../../utils/parseItemId';
 import { ExploreQueryParams } from '../../useExploreParams';
-import { ExploreGraphQuery, ExploreGraphQueryError, ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
+import {
+    ExploreGraphQuery,
+    ExploreGraphQueryError,
+    ExploreGraphQueryKey,
+    ExploreGraphQueryOptions,
+    sharedGraphQueryOptions,
+} from './utils';
 
 const relationshipSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { relationshipQueryType, relationshipQueryItemId, searchType } = paramOptions;
@@ -39,9 +45,9 @@ const relationshipSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>)
     const endpoint = entityRelationshipEndpoints[relationshipQueryType];
 
     return {
+        ...sharedGraphQueryOptions,
         queryKey: [ExploreGraphQueryKey, searchType, relationshipQueryItemId, relationshipQueryType],
         queryFn: async () => endpoint({ id: relationshipQueryItemId, type: 'graph' }),
-        refetchOnWindowFocus: false,
     };
 };
 
