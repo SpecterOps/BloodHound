@@ -17,11 +17,11 @@
 import { Alert, Box, Skeleton, Typography } from '@mui/material';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
+import { useDispatch } from 'react-redux';
+import { searchbarActions } from '../../../store';
 import { apiClient } from '../../../utils';
 import VirtualizedNodeList, { VirtualizedNodeListItem } from '../../VirtualizedNodeList';
 import { EdgeInfoProps } from '../index';
-import {useDispatch} from "react-redux";
-import {searchbarActions} from "../../../store";
 
 const RelayTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
     const { data, isLoading, isError } = useQuery(['relayTargets', sourceDBId, targetDBId, edgeName], () =>
@@ -31,7 +31,7 @@ const RelayTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) =
     const dispatch = useDispatch();
 
     const handleOnClick = (item: any) => {
-        let node = nodesArray[item]
+        let node = nodesArray[item];
         dispatch(
             searchbarActions.sourceNodeSelected({
                 objectid: node.objectId,
@@ -40,16 +40,15 @@ const RelayTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) =
             })
         );
 
-        dispatch(searchbarActions.tabChanged("primary"))
+        dispatch(searchbarActions.tabChanged('primary'));
     };
 
     const nodesArray: VirtualizedNodeListItem[] = Object.values(data?.data.nodes || {}).map((node) => ({
         name: node.label,
         objectId: node.objectId,
         kind: node.kind,
-        onClick: handleOnClick
+        onClick: handleOnClick,
     }));
-
 
     return (
         <>
