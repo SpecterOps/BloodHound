@@ -17,25 +17,17 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useCallback } from 'react';
-import { usePathfindingSearchSwitch } from './switches';
 
-const PathfindingSwapButton = () => {
-    const { sourceSelectedItem, destinationSelectedItem, handleSourceNodeSelected, handleDestinationNodeSelected } =
-        usePathfindingSearchSwitch();
-
-    const swapPathfindingInputs = useCallback(() => {
-        if (sourceSelectedItem && destinationSelectedItem) {
-            handleSourceNodeSelected(destinationSelectedItem);
-            handleDestinationNodeSelected(sourceSelectedItem);
-        }
-    }, [sourceSelectedItem, destinationSelectedItem, handleSourceNodeSelected, handleDestinationNodeSelected]);
-
+type PathfindingSwapButtonProps = {
+    disabled?: boolean;
+    onSwapPathfindingInputs: () => void;
+};
+const PathfindingSwapButton = ({ disabled, onSwapPathfindingInputs }: PathfindingSwapButtonProps) => {
     return (
         <Button
             className='h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25 text-white'
-            disabled={!sourceSelectedItem || !destinationSelectedItem}
-            onClick={swapPathfindingInputs}>
+            disabled={disabled}
+            onClick={onSwapPathfindingInputs}>
             <FontAwesomeIcon icon={faExchangeAlt} className='fa-rotate-90' />
         </Button>
     );

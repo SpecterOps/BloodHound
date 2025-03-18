@@ -14,50 +14,69 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { BrowserRouter } from 'react-router-dom';
-import { act, renderHook } from '../../test-utils';
+import { createMemoryHistory } from 'history';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import { act, renderHook, waitFor } from '../../test-utils';
 import { useNodeSearch } from './useNodeSearch';
 
 const TEST_STRING_1 = 'Test1';
 const TEST_STRING_2 = 'test2';
 
-const queryClient = new QueryClient();
+const server = setupServer(
+    rest.get('/api/v2/search', (req, res, ctx) => {
+        const url = new URL(req.url);
+        const searchTerm = url.searchParams.get('q');
 
-const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-        <BrowserRouter>{children}</BrowserRouter>
-    </QueryClientProvider>
+        return res(ctx.json({ data: [{ name: searchTerm, objectid: searchTerm }] }));
+    })
 );
 
-// Skipping these for now since we will be bringing in the history package in another PR to make testing query param changes easier
-describe.skip('useNodeSearch', () => {
-    it('stores the state of a search term without modifying the query params', () => {
-        const hook = renderHook(() => useNodeSearch(), { wrapper });
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
-        expect(window.location.search).toBe('');
+describe('useNodeSearch', () => {
+    it('stores the state of a search term without modifying the query params', async () => {
+        const history = createMemoryHistory();
+        const hook = renderHook(() => useNodeSearch(), { history });
 
-        act(() => hook.result.current.editSourceNode(TEST_STRING_1));
+        expect(history.location.search).toBe('');
+
+        await act(async () => hook.result.current.editSourceNode(TEST_STRING_1));
 
         expect(hook.result.current.searchTerm).toBe(TEST_STRING_1);
-        expect(window.location.search).toBe('');
+        expect(history.location.search).toBe('');
     });
 
-    it("upon selecting a source node, updates the URL with a searchType of 'node' and primarySearch of the node's objectid", () => {
-        const hook = renderHook(() => useNodeSearch(), { wrapper });
+    it("upon selecting a source node, updates the URL with a searchType of 'node' and primarySearch of the node's objectid", async () => {
+        const history = createMemoryHistory();
+        const hook = renderHook(() => useNodeSearch(), { history });
 
-        act(() => hook.result.current.selectSourceNode({ name: TEST_STRING_1, objectid: TEST_STRING_2 }));
+        await act(async () => hook.result.current.selectSourceNode({ name: TEST_STRING_1, objectid: TEST_STRING_2 }));
 
-        expect(window.location.search).toContain(`primarySearch=${TEST_STRING_2}`);
-        expect(window.location.search).toContain('searchType=node');
+        expect(history.location.search).toContain(`primarySearch=${TEST_STRING_2}`);
+        expect(history.location.search).toContain('searchType=node');
     });
 
-    it('does not add a query param if the search term is empty', () => {
-        const hook = renderHook(() => useNodeSearch(), { wrapper });
+    it('does not add a query param if the search term is empty', async () => {
+        const history = createMemoryHistory();
+        const hook = renderHook(() => useNodeSearch(), { history });
 
-        act(() => hook.result.current.selectSourceNode({ name: '', objectid: '' }));
+        await act(async () => hook.result.current.selectSourceNode({ name: '', objectid: '' }));
 
-        expect(window.location.search).not.toContain('primarySearch');
+        expect(history.location.search).not.toContain('primarySearch');
+    });
+
+    it("populates the node search field when the 'primarySearch' query param is set", async () => {
+        const url = `?primarySearch=${TEST_STRING_1}&searchType=node`;
+        const history = createMemoryHistory({ initialEntries: [url] });
+
+        const hook = renderHook(() => useNodeSearch(), { history });
+
+        await waitFor(() => expect(hook.result.current.searchTerm).toEqual(TEST_STRING_1));
+        await waitFor(() =>
+            expect(hook.result.current.selectedItem).toEqual({ name: TEST_STRING_1, objectid: TEST_STRING_1 })
+        );
     });
 });

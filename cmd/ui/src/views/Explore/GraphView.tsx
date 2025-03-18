@@ -25,7 +25,7 @@ import {
     setEdgeInfoOpen,
     setSelectedEdge,
     transformFlatGraphResponse,
-    useAvailableDomains,
+    useAvailableEnvironments,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -70,7 +70,7 @@ const GraphView: FC = () => {
 
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
-    const { data, isLoading, isError } = useAvailableDomains();
+    const { data, isLoading, isError } = useAvailableEnvironments();
 
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
@@ -229,6 +229,7 @@ const GraphView: FC = () => {
                         showNodeLabels={showNodeLabels}
                         showEdgeLabels={showEdgeLabels}
                         isCurrentSearchOpen={false}
+                        isJsonExportDisabled={isEmpty(exportableGraphState)}
                     />
                 </div>
                 <Popper

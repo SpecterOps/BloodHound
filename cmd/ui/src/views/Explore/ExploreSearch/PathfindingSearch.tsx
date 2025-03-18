@@ -17,13 +17,40 @@
 import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, useTheme } from '@mui/material';
+import { SearchValue } from 'bh-shared-ui';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import EdgeFilter from './EdgeFilter';
 import PathfindingSwapButton from './PathfindingSwapButton';
-import { usePathfindingSearchSwitch } from './switches';
 
-const PathfindingSearch = () => {
-    const pathfinding = usePathfindingSearchSwitch();
+type PathfindingSearchState = {
+    sourceSearchTerm: string;
+    destinationSearchTerm: string;
+    sourceSelectedItem: SearchValue | undefined;
+    destinationSelectedItem: SearchValue | undefined;
+    handleSourceNodeEdited: (edit: string) => void;
+    handleDestinationNodeEdited: (edit: string) => void;
+    handleSourceNodeSelected: (selected: SearchValue) => void;
+    handleDestinationNodeSelected: (selected: SearchValue) => void;
+};
+
+const PathfindingSearch = ({ pathfindingSearchState }: { pathfindingSearchState: PathfindingSearchState }) => {
+    const {
+        sourceSearchTerm,
+        destinationSearchTerm,
+        sourceSelectedItem,
+        destinationSelectedItem,
+        handleSourceNodeEdited,
+        handleDestinationNodeEdited,
+        handleSourceNodeSelected,
+        handleDestinationNodeSelected,
+    } = pathfindingSearchState;
+
+    const handleSwapPathfindingInputs = () => {
+        if (sourceSelectedItem && destinationSelectedItem) {
+            handleSourceNodeSelected(destinationSelectedItem);
+            handleDestinationNodeSelected(sourceSelectedItem);
+        }
+    };
 
     return (
         <Box display={'flex'} alignItems={'center'} gap={1}>
@@ -31,22 +58,25 @@ const PathfindingSearch = () => {
 
             <Box flexGrow={1} gap={1} display={'flex'} flexDirection={'column'}>
                 <ExploreSearchCombobox
-                    handleNodeEdited={pathfinding.handleSourceNodeEdited}
-                    handleNodeSelected={pathfinding.handleSourceNodeSelected}
-                    inputValue={pathfinding.sourceSearchTerm}
-                    selectedItem={pathfinding.sourceSelectedItem || null}
+                    handleNodeEdited={handleSourceNodeEdited}
+                    handleNodeSelected={handleSourceNodeSelected}
+                    inputValue={sourceSearchTerm}
+                    selectedItem={sourceSelectedItem || null}
                     labelText='Start Node'
                 />
                 <ExploreSearchCombobox
-                    handleNodeEdited={pathfinding.handleDestinationNodeEdited}
-                    handleNodeSelected={pathfinding.handleDestinationNodeSelected}
-                    inputValue={pathfinding.destinationSearchTerm}
-                    selectedItem={pathfinding.destinationSelectedItem || null}
+                    handleNodeEdited={handleDestinationNodeEdited}
+                    handleNodeSelected={handleDestinationNodeSelected}
+                    inputValue={destinationSearchTerm}
+                    selectedItem={destinationSelectedItem || null}
                     labelText='Destination Node'
                 />
             </Box>
 
-            <PathfindingSwapButton />
+            <PathfindingSwapButton
+                disabled={!sourceSelectedItem || !destinationSelectedItem}
+                onSwapPathfindingInputs={handleSwapPathfindingInputs}
+            />
             <EdgeFilter />
         </Box>
     );
