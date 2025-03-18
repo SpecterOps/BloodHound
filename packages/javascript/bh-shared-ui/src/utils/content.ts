@@ -31,6 +31,7 @@ export interface EntityInfoDataTableProps {
     label: string;
     countLabel?: string;
     sections?: EntityInfoDataTableProps[];
+    parentLabels?: string[];
     queryType?: keyof typeof entityRelationshipEndpoints;
 }
 
