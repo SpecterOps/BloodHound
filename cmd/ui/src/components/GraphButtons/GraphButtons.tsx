@@ -18,9 +18,7 @@ import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { MenuItem } from '@mui/material';
 import { GraphButton, GraphMenu } from 'bh-shared-ui';
-import isEmpty from 'lodash/isEmpty';
 import { FC } from 'react';
-import { useAppSelector } from 'src/store';
 
 interface GraphButtonsProps {
     onReset: () => void;
@@ -34,6 +32,7 @@ interface GraphButtonsProps {
     showNodeLabels: boolean;
     showEdgeLabels: boolean;
     isCurrentSearchOpen: boolean;
+    isDisabledJsonExport: boolean;
 }
 
 const GraphButtons: FC<GraphButtonsProps> = ({
@@ -48,9 +47,8 @@ const GraphButtons: FC<GraphButtonsProps> = ({
     showNodeLabels,
     showEdgeLabels,
     isCurrentSearchOpen,
+    isDisabledJsonExport,
 }) => {
-    const exportableGraphState = useAppSelector((state) => state.explore.export);
-
     return (
         <>
             <GraphButton onClick={onReset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
@@ -69,7 +67,7 @@ const GraphButtons: FC<GraphButtonsProps> = ({
             </GraphMenu>
 
             <GraphMenu label='Export'>
-                <MenuItem onClick={onExportJson} disabled={isEmpty(exportableGraphState)}>
+                <MenuItem onClick={onExportJson} disabled={isDisabledJsonExport}>
                     JSON
                 </MenuItem>
             </GraphMenu>
