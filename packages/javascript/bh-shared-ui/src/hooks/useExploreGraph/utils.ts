@@ -53,3 +53,16 @@ export const getInitialPathFilters = (): EdgeCheckboxType[] => {
 
     return initialPathFilters;
 };
+
+export const encodeCypherQuery = (query: string) => {
+    return btoa(query);
+};
+
+export const decodeCypherQuery = (base64: string) => {
+    try {
+        const decoded = atob(base64);
+        return decoded;
+    } catch (err) {
+        return '';
+    }
+};

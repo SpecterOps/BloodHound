@@ -14,29 +14,33 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen } from 'src/test-utils';
 import ExploreSearch from './ExploreSearchV2';
 
-import * as bhSharedUI from 'bh-shared-ui';
+import userEvent from '@testing-library/user-event';
+import { createMemoryHistory } from 'history';
 
-const useExploreParamsSpy = vi.spyOn(bhSharedUI, 'useExploreParams');
-
-vi.mock('react-router-dom', async () => {
-    const actual = await vi.importActual('react-router-dom');
-    let mockSearchParams = new URLSearchParams();
-    const setSearchParams = (newParams: Record<string, string>) => {
-        mockSearchParams = new URLSearchParams(newParams);
-    };
-    return {
-        ...actual,
-        useSearchParams: () => [mockSearchParams, setSearchParams],
-    };
-});
+const comboboxLookaheadOptions = {
+    data: [
+        {
+            name: 'admin',
+            objectid: '1',
+            type: 'User',
+        },
+        {
+            name: 'computer',
+            objectid: '2',
+            type: 'Computer',
+        },
+    ],
+};
 
 const server = setupServer(
+    rest.get('/api/v2/search', (req, res, ctx) => {
+        return res(ctx.json(comboboxLookaheadOptions));
+    }),
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(
             ctx.json({
@@ -50,20 +54,18 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-const setup = async (exploreSearchTab = 'node') => {
-    const setExploreParamsSpy = vi.fn();
-    useExploreParamsSpy.mockReturnValue({
-        setExploreParams: setExploreParamsSpy,
-        exploreSearchTab,
-    } as any);
+const setup = async (exploreSearchTab?: string) => {
+    const history = createMemoryHistory({
+        initialEntries: exploreSearchTab ? [`/?exploreSearchTab=${exploreSearchTab}`] : ['/'],
+    });
 
     const screen = await act(async () => {
-        return render(<ExploreSearch />);
+        return render(<ExploreSearch />, { history });
     });
 
     const user = userEvent.setup();
 
-    return { screen, user, setExploreParamsSpy };
+    return { screen, user, history };
 };
 
 // Example
@@ -76,18 +78,6 @@ describe('ExploreSearch rendering per tab', async () => {
         expect(screen.getByRole('tab', { name: /search/i })).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: /pathfinding/i })).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: /cypher/i })).toBeInTheDocument();
-    });
-
-    it.each([
-        { name: 'Pathfinding', value: 'pathfinding' },
-        { name: 'Cypher', value: 'cypher' },
-    ])('should set searchType to $value when user clicks on $name tab ', async ({ name, value }) => {
-        const { user, setExploreParamsSpy } = await setup();
-        const pathfindingTab = screen.getByText(name);
-
-        await user.click(pathfindingTab);
-
-        expect(setExploreParamsSpy).toBeCalledWith({ exploreSearchTab: value, searchType: value });
     });
 
     it('should render the pathfinding search controls when searchType is pathfinding', async () => {
@@ -126,36 +116,30 @@ describe('ExploreSearch rendering per tab', async () => {
 
 describe('ExploreSearch sets searchType on tab changing', async () => {
     it('sets exploreSearchTab param to node when the user clicks the `Search` tab', async () => {
-        const { screen, user, setExploreParamsSpy } = await setup('pathfinding');
+        const { screen, user, history } = await setup('pathfinding');
 
         const exploreSearchTab = screen.getByRole('tab', { name: /search/i });
         await user.click(exploreSearchTab);
 
-        expect(setExploreParamsSpy).toHaveBeenCalledTimes(1);
-        expect(setExploreParamsSpy).toHaveBeenCalledWith({ exploreSearchTab: 'node', searchType: 'node' });
+        expect(history.location.search).toContain('exploreSearchTab=node');
     });
 
     it('sets exploreSearchTab param to pathfinding when the user clicks the `pathfinding` tab', async () => {
-        const { screen, user, setExploreParamsSpy } = await setup();
+        const { screen, user, history } = await setup();
 
         const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
         await user.click(pathfindingTab);
 
-        expect(setExploreParamsSpy).toHaveBeenCalledTimes(1);
-        expect(setExploreParamsSpy).toHaveBeenCalledWith({
-            exploreSearchTab: 'pathfinding',
-            searchType: 'pathfinding',
-        });
+        expect(history.location.search).toContain('exploreSearchTab=pathfinding');
     });
 
     it('sets exploreSearchTab param to cypher when the user clicks the `cypher` tab', async () => {
-        const { screen, user, setExploreParamsSpy } = await setup();
+        const { screen, user, history } = await setup();
 
         const cypherTab = screen.getByRole('tab', { name: /cypher/i });
         await user.click(cypherTab);
 
-        expect(setExploreParamsSpy).toHaveBeenCalledTimes(1);
-        expect(setExploreParamsSpy).toHaveBeenCalledWith({ exploreSearchTab: 'cypher', searchType: 'cypher' });
+        expect(history.location.search).toContain('exploreSearchTab=cypher');
     });
 
     it('initializes search tab to node search if the exploreSearchTab is not a supported tab name on first render', async () => {
@@ -173,35 +157,13 @@ describe('ExploreSearch sets searchType on tab changing', async () => {
     });
 });
 
+// Clicking a new tab in these tests cause a query param update but not an actual tab change -- maybe a bad interaction
+// between createMemoryHistory and useExploreParams
 describe('ExploreSearch interaction', () => {
-    const user = userEvent.setup();
-
-    const comboboxLookaheadOptions = {
-        data: [
-            {
-                name: 'admin',
-                objectid: '1',
-                type: 'User',
-            },
-            {
-                name: 'computer',
-                objectid: '2',
-                type: 'Computer',
-            },
-        ],
-    };
-
-    server.use(
-        rest.get('/api/v2/search', (req, res, ctx) => {
-            return res(ctx.json(comboboxLookaheadOptions));
-        })
-    );
-
-    // The following tests require a router provider which is possible but that work has already been done in 5453
-    // skipping these tests until that work has been completed so we dont replicate that work.
     it.todo(
         'when user performs a single node search, the selected node carries over to the `start node` input field on the pathfinding tab',
         async () => {
+            const { screen, user } = await setup();
             const searchInput = screen.getByPlaceholderText('Search Nodes');
             const userSuppliedSearchTerm = 'admin';
             await user.type(searchInput, userSuppliedSearchTerm);
@@ -212,7 +174,8 @@ describe('ExploreSearch interaction', () => {
             expect(searchInput).toHaveValue(userSuppliedSearchTerm);
 
             const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
-            await user.click(pathfindingTab);
+            await act(async () => user.click(pathfindingTab));
+
             const startNodeInputField = screen.getByPlaceholderText(/start node/i);
             expect(startNodeInputField).toHaveValue(userSuppliedSearchTerm);
         }
@@ -221,6 +184,7 @@ describe('ExploreSearch interaction', () => {
     it.todo(
         'when user performs a pathfinding search, the selection for the start node is carried over to the `search` tab',
         async () => {
+            const { screen, user } = await setup();
             const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
             await user.click(pathfindingTab);
 
