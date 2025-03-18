@@ -47,9 +47,9 @@ func areCypherSelectorSeedsValid(graph queries.Graph, seeds []model.SelectorSeed
 
 func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		err        error
-		sel        model.AssetGroupTagSelector
-		actorIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		err      error
+		sel      model.AssetGroupTagSelector
+		tagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 	)
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Create")()
 
@@ -57,7 +57,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if errs := validation.Validate(sel); len(errs) > 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
-	} else if id, err := strconv.Atoi(actorIdStr); err != nil {
+	} else if id, err := strconv.Atoi(tagIdStr); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupTagId, request), response)
 	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), id); err != nil {
 		api.HandleDatabaseError(request, response, err)
