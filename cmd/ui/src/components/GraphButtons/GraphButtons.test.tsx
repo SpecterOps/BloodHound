@@ -34,6 +34,7 @@ describe('GraphLayoutButtons', () => {
         const testShowNodeLabels = true;
         const testShowEdgeLabels = true;
         const testIsCurrentSearchOpen = false;
+        const isJsonExportDisabled = false;
         render(
             <SigmaContainer>
                 <GraphButtons
@@ -48,6 +49,7 @@ describe('GraphLayoutButtons', () => {
                     showNodeLabels={testShowNodeLabels}
                     showEdgeLabels={testShowEdgeLabels}
                     isCurrentSearchOpen={testIsCurrentSearchOpen}
+                    isJsonExportDisabled={isJsonExportDisabled}
                 />
             </SigmaContainer>
         );
