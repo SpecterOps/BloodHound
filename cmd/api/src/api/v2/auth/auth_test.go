@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -3166,57 +3167,141 @@ func TestActivateMFA_Success(t *testing.T) {
 	}
 }
 
+// Can only replace a field value at the root of the JSON object
+// if field does not exist in jsonString, will effectively no-op
+func replaceFieldValueInJsonString(jsonString string, field string, value any) (string, error) {
+	var unmarshaled map[string]any
+	err := json.Unmarshal([]byte(jsonString), &unmarshaled)
+	if err != nil {
+		return "", err
+	}
+
+	if _, exists := unmarshaled[field]; exists {
+		unmarshaled[field] = value
+	}
+
+	modifiedJson, err := json.Marshal(unmarshaled)
+	if err != nil {
+		return "", err
+	}
+
+	return string(modifiedJson), nil
+}
+
 // Steel Thread Demo
 func TestManagementResource_CreateAuthToken(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
 	const endpointUrl = "/api/v2/tokens"
 
-	var (
-		resources, mockDB  = apitest.NewAuthManagementResource(mockCtrl)
-		createUserTokenReq = v2.CreateUserToken{
-			TokenName: "",
-			UserID:    "",
-		}
-		_, adminCtx = createAdminUser(t)
-		router      = createRouter(endpointUrl, resources.CreateAuthToken, "POST")
-	)
-
 	t.Run("User not logged in", func(tc *testing.T) {
-		if req, err := http.NewRequest("POST", endpointUrl, bytes.NewReader([]byte("{}"))); err != nil {
-			tc.Fatal(err)
-		} else {
-			rec := httptest.NewRecorder()
-			router.ServeHTTP(rec, req)
-			require.Equal(tc, http.StatusInternalServerError, rec.Code)
-		}
+		mockCtrl := gomock.NewController(tc)
+		defer mockCtrl.Finish()
+
+		resources, _ := apitest.NewAuthManagementResource(mockCtrl)
+		router := createRouter(endpointUrl, resources.CreateAuthToken, "POST")
+
+		payload := map[string]any{}
+		b, err := json.Marshal(payload)
+		require.NoError(tc, err)
+
+		req, err := http.NewRequest("POST", endpointUrl, bytes.NewReader(b))
+		require.NoError(tc, err)
+
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(tc, http.StatusInternalServerError, rec.Code)
+		expectedResponse := `{
+			"http_status": 500,
+			"timestamp": "0001-01-01T00:00:00Z",
+			"request_id": "",
+			"errors": [
+				{
+					"context": "",
+					"message": "an internal error has occurred that is preventing the service from servicing this request"
+				}
+			]
+		}`
+
+		responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(rec.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+		require.NoError(tc, err)
+		assert.JSONEq(tc, expectedResponse, responseBodyWithDefaultTimestamp)
 	})
 
 	t.Run("Request invalid", func(tc *testing.T) {
-		if req, err := http.NewRequestWithContext(adminCtx, "POST", endpointUrl, bytes.NewReader([]byte("{"))); err != nil {
-			tc.Fatal(err)
-		} else {
-			rec := httptest.NewRecorder()
-			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-			router.ServeHTTP(rec, req)
-			require.Equal(tc, http.StatusBadRequest, rec.Code)
-		}
+		mockCtrl := gomock.NewController(tc)
+		defer mockCtrl.Finish()
+
+		resources, _ := apitest.NewAuthManagementResource(mockCtrl)
+		_, adminCtx := createAdminUser(tc)
+		router := createRouter(endpointUrl, resources.CreateAuthToken, "POST")
+
+		req, err := http.NewRequestWithContext(adminCtx, "POST", endpointUrl, bytes.NewReader([]byte("{")))
+		require.NoError(tc, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(tc, http.StatusBadRequest, rec.Code)
+		expectedResponse := `{
+			"http_status": 400,
+			"timestamp": "0001-01-01T00:00:00Z",
+			"request_id": "",
+			"errors": [
+				{
+					"context": "",
+					"message": "error unmarshalling JSON payload"
+				}
+			]
+		}`
+
+		responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(rec.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+		require.NoError(tc, err)
+		assert.JSONEq(tc, expectedResponse, responseBodyWithDefaultTimestamp)
 	})
 
 	t.Run("User lookup failed", func(tc *testing.T) {
-		if b, err := json.Marshal(createUserTokenReq); err != nil {
-			tc.Fatal(err)
-		} else if req, err := http.NewRequestWithContext(adminCtx, "POST", endpointUrl, bytes.NewReader(b)); err != nil {
-			tc.Fatal(err)
-		} else {
-			rec := httptest.NewRecorder()
-			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-			mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, errors.New("user not found"))
+		mockCtrl := gomock.NewController(tc)
+		defer mockCtrl.Finish()
 
-			router.ServeHTTP(rec, req)
-			require.Equal(tc, http.StatusInternalServerError, rec.Code)
+		resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+		_, adminCtx := createAdminUser(tc)
+		router := createRouter(endpointUrl, resources.CreateAuthToken, "POST")
+
+		payload := map[string]any{
+			"token_name": "",
+			"user_id":    "",
 		}
+
+		b, err := json.Marshal(payload)
+		require.NoError(tc, err)
+
+		req, err := http.NewRequestWithContext(adminCtx, "POST", endpointUrl, bytes.NewReader(b))
+		require.NoError(tc, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, errors.New("user not found"))
+
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(tc, http.StatusInternalServerError, rec.Code)
+		expectedResponse := `{
+			"http_status": 500,
+			"timestamp": "0001-01-01T00:00:00Z",
+			"request_id": "",
+			"errors": [
+				{
+					"context": "",
+					"message": "an internal error has occurred that is preventing the service from servicing this request"
+				}
+			]
+		}`
+
+		responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(rec.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+		require.NoError(tc, err)
+		assert.JSONEq(tc, expectedResponse, responseBodyWithDefaultTimestamp)
 	})
 
 	t.Run("User not allowed to create token", func(tc *testing.T) {
@@ -3242,12 +3327,12 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 
 		otherUserID := "00000000-1111-2222-3333-444444444444"
 
-		tokenRequest := v2.CreateUserToken{
-			UserID:    otherUserID,
-			TokenName: "test token",
+		payload := map[string]any{
+			"user_id":    otherUserID,
+			"token_name": "test token",
 		}
 
-		b, err := json.Marshal(tokenRequest)
+		b, err := json.Marshal(payload)
 		require.NoError(tc, err)
 
 		req, err := http.NewRequestWithContext(regularUserContext, "POST", endpointUrl, bytes.NewReader(b))
@@ -3258,7 +3343,22 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 		rec := httptest.NewRecorder()
 		localRouter.ServeHTTP(rec, req)
 
-		require.Equal(tc, http.StatusForbidden, rec.Code)
+		assert.Equal(tc, http.StatusForbidden, rec.Code)
+		expectedResponse := `{
+			"http_status": 403,
+			"timestamp": "0001-01-01T00:00:00Z",
+			"request_id": "",
+			"errors": [
+				{
+					"context": "",
+					"message": "missing permission to create tokens for other users"
+				}
+			]
+		}`
+
+		responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(rec.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+		require.NoError(tc, err)
+		assert.JSONEq(tc, expectedResponse, responseBodyWithDefaultTimestamp)
 	})
 
 	t.Run("Failed to create token", func(tc *testing.T) {
@@ -3272,12 +3372,12 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 
 		emptyContext := context.Background()
 
-		tokenRequest := v2.CreateUserToken{
-			UserID:    admin.ID.String(),
-			TokenName: "test token",
+		payload := map[string]any{
+			"user_id":    admin.ID.String(),
+			"token_name": "test token",
 		}
 
-		b, err := json.Marshal(tokenRequest)
+		b, err := json.Marshal(payload)
 		require.NoError(tc, err)
 
 		req, err := http.NewRequestWithContext(emptyContext, "POST", endpointUrl, bytes.NewReader(b))
@@ -3288,7 +3388,22 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 		rec := httptest.NewRecorder()
 		localRouter.ServeHTTP(rec, req)
 
-		require.Equal(tc, http.StatusInternalServerError, rec.Code)
+		assert.Equal(tc, http.StatusInternalServerError, rec.Code)
+		expectedResponse := `{
+			"http_status": 500,
+			"timestamp": "0001-01-01T00:00:00Z",
+			"request_id": "",
+			"errors": [
+				{
+					"context": "",
+					"message": "an internal error has occurred that is preventing the service from servicing this request"
+				}
+			]
+		}`
+
+		responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(rec.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+		require.NoError(tc, err)
+		assert.JSONEq(tc, expectedResponse, responseBodyWithDefaultTimestamp)
 	})
 
 	t.Run("Failed to store token", func(tc *testing.T) {
@@ -3300,45 +3415,58 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 
 		admin, adminContext := createAdminUser(tc)
 
-		tokenRequest := v2.CreateUserToken{
-			UserID:    admin.ID.String(),
-			TokenName: "test token",
+		payload := map[string]any{
+			"user_id":    admin.ID.String(),
+			"token_name": "test token",
 		}
 
 		mockDB.EXPECT().GetUser(gomock.Any(), admin.ID).Return(admin, nil)
-
 		mockDB.EXPECT().CreateAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, errors.New("failed to store token"))
 
-		if b, err := json.Marshal(tokenRequest); err != nil {
-			tc.Fatal(err)
-		} else if req, err := http.NewRequestWithContext(adminContext, "POST", endpointUrl, bytes.NewReader(b)); err != nil {
-			tc.Fatal(err)
-		} else {
-			rec := httptest.NewRecorder()
-			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		b, err := json.Marshal(payload)
+		require.NoError(tc, err)
 
-			router.ServeHTTP(rec, req)
-			require.Equal(tc, http.StatusInternalServerError, rec.Code)
-		}
+		req, err := http.NewRequestWithContext(adminContext, "POST", endpointUrl, bytes.NewReader(b))
+		require.NoError(tc, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(tc, http.StatusInternalServerError, rec.Code)
+		expectedResponse := `{
+			"http_status": 500,
+			"timestamp": "0001-01-01T00:00:00Z",
+			"request_id": "",
+			"errors": [
+				{
+					"context": "",
+					"message": "an internal error has occurred that is preventing the service from servicing this request"
+				}
+			]
+		}`
+
+		responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(rec.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+		require.NoError(tc, err)
+		assert.JSONEq(tc, expectedResponse, responseBodyWithDefaultTimestamp)
 	})
 
-	t.Run("Success", func(tc *testing.T) {
-		localMockCtrl := gomock.NewController(tc)
-		defer localMockCtrl.Finish()
+	t.Run("Success with data wrapper", func(tc *testing.T) {
+		mockCtrl := gomock.NewController(tc)
+		defer mockCtrl.Finish()
 
-		localResources, localMockDB := apitest.NewAuthManagementResource(localMockCtrl)
-		localRouter := createRouter(endpointUrl, localResources.CreateAuthToken, "POST")
+		resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+		router := createRouter(endpointUrl, resources.CreateAuthToken, "POST")
 
 		admin, adminContext := createAdminUser(tc)
 
-		tokenRequest := v2.CreateUserToken{
-			UserID:    admin.ID.String(),
-			TokenName: "test token",
+		payload := map[string]any{
+			"user_id":    admin.ID.String(),
+			"token_name": "test token",
 		}
 
-		localMockDB.EXPECT().GetUser(gomock.Any(), admin.ID).Return(admin, nil)
-
-		matchAuthToken := gomock.Any()
+		mockDB.EXPECT().GetUser(gomock.Any(), admin.ID).Return(admin, nil)
 
 		expectedToken := model.AuthToken{
 			UserID:     uuid.NullUUID{UUID: admin.ID, Valid: true},
@@ -3347,33 +3475,27 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 			Key:        "test-key",
 		}
 
-		localMockDB.EXPECT().CreateAuthToken(gomock.Any(), matchAuthToken).Return(expectedToken, nil)
+		mockDB.EXPECT().CreateAuthToken(gomock.Any(), gomock.Any()).Return(expectedToken, nil)
 
-		if b, err := json.Marshal(tokenRequest); err != nil {
-			tc.Fatal(err)
-		} else if req, err := http.NewRequestWithContext(adminContext, "POST", endpointUrl, bytes.NewReader(b)); err != nil {
-			tc.Fatal(err)
-		} else {
-			rec := httptest.NewRecorder()
-			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		b, err := json.Marshal(payload)
+		require.NoError(tc, err)
 
-			localRouter.ServeHTTP(rec, req)
-			require.Equal(tc, http.StatusOK, rec.Code)
+		req, err := http.NewRequestWithContext(adminContext, "POST", endpointUrl, bytes.NewReader(b))
+		require.NoError(tc, err)
 
-			var responseWrapper struct {
-				Data model.AuthToken `json:"data"`
-			}
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-			if err := json.Unmarshal(rec.Body.Bytes(), &responseWrapper); err != nil {
-				var responseToken model.AuthToken
-				if err := json.Unmarshal(rec.Body.Bytes(), &responseToken); err != nil {
-					tc.Fatal("Failed to unmarshal response:", err)
-				}
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
 
-				require.Equal(tc, expectedToken.Name.String, responseToken.Name.String)
-			} else {
-				require.Equal(tc, expectedToken.Name.String, responseWrapper.Data.Name.String)
-			}
+		assert.Equal(tc, http.StatusOK, rec.Code)
+
+		var responseWrapper struct {
+			Data model.AuthToken `json:"data"`
 		}
+
+		err = json.Unmarshal(rec.Body.Bytes(), &responseWrapper)
+		require.NoError(tc, err)
+		assert.Equal(tc, expectedToken.Name.String, responseWrapper.Data.Name.String)
 	})
 }
