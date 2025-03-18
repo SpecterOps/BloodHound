@@ -90,13 +90,13 @@ func (s *Resources) GetAssetGroupLabelsSelectors(response http.ResponseWriter, r
 
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selector")()
 
-	if rawAssetGroupLabelID, hasAssetGroupLabelID := mux.Vars(request)[api.URIPathVariableAssetGroupLabelID]; !hasAssetGroupLabelID {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrNoAssetGroupLabelId, request), response)
-	} else if assetGroupLabelID, err := strconv.Atoi(rawAssetGroupLabelID); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupLabelId, request), response)
-	} else if _, err := s.DB.GetAssetGroupLabel(request.Context(), assetGroupLabelID); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupLabelId, request), response)
-	} else if selectors, err := s.DB.GetAssetGroupLabelSelectors(request.Context(), assetGroupLabelID); err != nil {
+	if rawAssetGroupTagID, hasAssetGroupTagID := mux.Vars(request)[api.URIPathVariableAssetGroupTagID]; !hasAssetGroupTagID {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrNoAssetGroupTagId, request), response)
+	} else if assetGroupTagID, err := strconv.Atoi(rawAssetGroupTagID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupTagId, request), response)
+	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selectors, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), assetGroupTagID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: selectors}, http.StatusOK, response)
