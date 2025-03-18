@@ -500,7 +500,16 @@ func GetVulnerableEnterpriseCAsForRelayNTLMtoADCS(ctx context.Context, db graph.
 	if composition, err := GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, db, edge); err != nil {
 		return graph.NodeSet{}, err
 	} else {
-		nodes.AddSet(composition.AllNodes().ContainingNodeKinds(ad.EnterpriseCA))
+		for _, node := range composition.AllNodes().ContainingNodeKinds(ad.EnterpriseCA) {
+			if vuln, err := node.Properties.Get(ad.HasVulnerableEndpoint.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
+				continue
+			} else if err != nil {
+				slog.ErrorContext(ctx, fmt.Sprintf("error getting hasvulnerableendpoint from node %d", node.ID))
+			} else if vuln {
+				nodes.Add(node)
+			}
+		}
+
 		return nodes, nil
 	}
 
