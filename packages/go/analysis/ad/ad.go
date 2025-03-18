@@ -516,6 +516,8 @@ func GetRelayTargets(ctx context.Context, db graph.Database, edge *graph.Relatio
 			nodeSet, err = GetVulnerableDomainControllersForRelayNTLMtoLDAP(ctx, db, edge)
 		case ad.CoerceAndRelayNTLMToLDAPS:
 			nodeSet, err = GetVulnerableDomainControllersForRelayNTLMtoLDAPS(ctx, db, edge)
+		case ad.CoerceAndRelayNTLMToADCS:
+			nodeSet, err = GetVulnerableEnterpriseCAsForRelayNTLMtoADCS(ctx, db, edge)
 		}
 		return err
 	}); err != nil {

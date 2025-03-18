@@ -866,11 +866,18 @@ IsDC: types.#StringEnum & {
 	representation: "isdc"
 }
 
-EnrollmentEndpoints: types.#StringEnum & {
-	symbol: "EnrollmentEndpoints"
+HTTPEnrollmentEndpoints: types.#StringEnum & {
+	symbol: "HTTPEnrollmentEndpoints"
 	schema: "ad"
-	name:"Enrollment Endpoints"
-	representation: "enrollmentendpoints"
+	name:"HTTP Enrollment Endpoints"
+	representation: "httpenrollmentendpoints"
+}
+
+HTTPSEnrollmentEndpoints: types.#StringEnum & {
+	symbol: "HTTPSEnrollmentEndpoints"
+	schema: "ad"
+	name:"HTTPS Enrollment Endpoints"
+	representation: "httpsenrollmentendpoints"
 }
 
 HasVulnerableEndpoint: types.#StringEnum & {
@@ -998,7 +1005,8 @@ Properties: [
 	LDAPSAvailable,
 	LDAPSEPA,
 	IsDC,
-	EnrollmentEndpoints,
+	HTTPEnrollmentEndpoints,
+	HTTPSEnrollmentEndpoints,
 	HasVulnerableEndpoint
 ]
 

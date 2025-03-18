@@ -104,8 +104,9 @@ func ConvertEnterpriseCAToNode(item EnterpriseCA) IngestibleNode {
 	convertOwnsEdgeToProperty(item.IngestBase, itemProps)
 
 	var (
-		hashedEnrollmentData = make([]string, 0)
-		hasCollectedData     bool
+		httpEndpoints    = make([]string, 0)
+		httpsEndpoints   = make([]string, 0)
+		hasCollectedData bool
 	)
 
 	for _, endpoint := range item.HttpEnrollmentEndpoints {
@@ -116,20 +117,26 @@ func ConvertEnterpriseCAToNode(item EnterpriseCA) IngestibleNode {
 		hasCollectedData = true
 
 		if endpoint.Result.ADCSWebEnrollmentHTTP {
-			hashedEnrollmentData = append(hashedEnrollmentData, hashEnrollmentEndpoint(endpoint.Result))
+			httpEndpoints = append(httpEndpoints, endpoint.Result.Url)
 		}
 
 		if endpoint.Result.ADCSWebEnrollmentHTTPS && !endpoint.Result.ADCSWebEnrollmentEPA {
-			hashedEnrollmentData = append(hashedEnrollmentData, hashEnrollmentEndpoint(endpoint.Result))
+			httpsEndpoints = append(httpsEndpoints, endpoint.Result.Url)
 		}
 	}
 
-	if len(hashedEnrollmentData) > 0 {
-		itemProps[ad.EnrollmentEndpoints.String()] = hashedEnrollmentData
+	if len(httpEndpoints) > 0 && len(httpsEndpoints) > 0 {
+		itemProps[ad.HTTPEnrollmentEndpoints.String()] = httpEndpoints
+		itemProps[ad.HTTPSEnrollmentEndpoints.String()] = httpsEndpoints
 		itemProps[ad.HasVulnerableEndpoint.String()] = true
-	}
-
-	if hasCollectedData {
+	} else if len(httpsEndpoints) > 0 {
+		itemProps[ad.HTTPSEnrollmentEndpoints.String()] = httpsEndpoints
+		itemProps[ad.HasVulnerableEndpoint.String()] = true
+	} else if len(httpEndpoints) > 0 {
+		itemProps[ad.HTTPSEnrollmentEndpoints.String()] = httpsEndpoints
+		itemProps[ad.HasVulnerableEndpoint.String()] = true
+	} else if hasCollectedData {
+		//If we have collected data but no endpoints, we can mark this enterprise CA as not having a vulnerable endpoint
 		itemProps[ad.HasVulnerableEndpoint.String()] = false
 	}
 

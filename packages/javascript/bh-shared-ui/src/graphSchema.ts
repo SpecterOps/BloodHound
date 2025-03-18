@@ -441,7 +441,8 @@ export enum ActiveDirectoryKindProperties {
     LDAPSAvailable = 'ldapsavailable',
     LDAPSEPA = 'ldapsepa',
     IsDC = 'isdc',
-    EnrollmentEndpoints = 'enrollmentendpoints',
+    HTTPEnrollmentEndpoints = 'httpenrollmentendpoints',
+    HTTPSEnrollmentEndpoints = 'httpsenrollmentendpoints',
     HasVulnerableEndpoint = 'hasvulnerableendpoint',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
@@ -678,8 +679,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'LDAPS EPA';
         case ActiveDirectoryKindProperties.IsDC:
             return 'Is Domain Controller';
-        case ActiveDirectoryKindProperties.EnrollmentEndpoints:
-            return 'Enrollment Endpoints';
+        case ActiveDirectoryKindProperties.HTTPEnrollmentEndpoints:
+            return 'HTTP Enrollment Endpoints';
+        case ActiveDirectoryKindProperties.HTTPSEnrollmentEndpoints:
+            return 'HTTPS Enrollment Endpoints';
         case ActiveDirectoryKindProperties.HasVulnerableEndpoint:
             return 'Has Vulnerable Endpoint';
         default:
