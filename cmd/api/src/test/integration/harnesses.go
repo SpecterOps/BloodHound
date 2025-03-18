@@ -19,7 +19,6 @@ package integration
 import (
 	"fmt"
 	"math/rand"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -8912,8 +8911,10 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 
 	endpoints := make([]string, 0)
 	u := "https://test.com"
-	endpoints = append(endpoints, fmt.Sprintf("%s|%t|%t|%t", url.QueryEscape(u), true, false, false))
+	endpoints = append(endpoints, u)
 
+	s.EnterpriseCA1.Properties.Set(ad.HTTPEnrollmentEndpoints.String(), endpoints)
+	s.EnterpriseCA1.Properties.Set(ad.HasVulnerableEndpoint.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA1)
 	s.Computer.Properties.Set(ad.WebClientRunning.String(), true)
 	graphTestContext.UpdateNode(s.Computer)

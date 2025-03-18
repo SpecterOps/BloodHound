@@ -88,6 +88,16 @@ func ConvertComputerToNode(item Computer) IngestibleNode {
 		}
 	}
 
+	if ldapEnabled, ok := itemProps["ldapenabled"]; ok {
+		delete(itemProps, "ldapenabled")
+		itemProps[ad.LDAPAvailable.String()] = ldapEnabled
+	}
+
+	if ldapsEnabled, ok := itemProps["ldapsenabled"]; ok {
+		delete(itemProps, "ldapsenabled")
+		itemProps[ad.LDAPSAvailable.String()] = ldapsEnabled
+	}
+
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
 		PropertyMap: itemProps,
