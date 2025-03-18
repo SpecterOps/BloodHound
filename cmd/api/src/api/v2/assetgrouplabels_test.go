@@ -31,7 +31,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
+func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 	var (
 		mockCtrl      = gomock.NewController(t)
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
@@ -47,13 +47,13 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	apitest.
-		NewHarness(t, resourcesInst.CreateAssetGroupLabelSelector).
+		NewHarness(t, resourcesInst.CreateAssetGroupTagSelector).
 		Run([]apitest.Case{
 			{
 				Name: "BadRequest",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
-					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 					apitest.BodyString(input, "{\"name\":[\"BadRequest\"]}")
 				},
 				Test: func(output apitest.Output) {
@@ -65,7 +65,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				Name: "MissingName",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
-					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Description: "Test selector description",
 						Seeds: []model.SelectorSeed{
@@ -84,7 +84,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				Name: "MissingSeeds",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
-					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Name:        "TestSelector",
 						Description: "Test selector description",
@@ -113,14 +113,14 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
-					apitest.BodyContains(output, "invalid asset group label id specified in url")
+					apitest.BodyContains(output, "invalid asset group tag id specified in url")
 				},
 			},
 			{
 				Name: "InvalidUrlId",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
-					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "non-numeric")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "non-numeric")
 					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Name:        "TestSelector",
 						Description: "Test selector description",
@@ -133,14 +133,14 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
-					apitest.BodyContains(output, "invalid asset group label id specified in url")
+					apitest.BodyContains(output, "invalid asset group tag id specified in url")
 				},
 			},
 			{
-				Name: "NonExistantLabelUrlId",
+				Name: "NonExistantTagUrlId",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
-					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1234")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1234")
 					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Name:        "TestSelector",
 						Description: "Test selector description",
@@ -152,7 +152,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 					})
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetAssetGroupLabel(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, errors.New("entity not found")).Times(1)
 				},
 				Test: func(output apitest.Output) {
@@ -164,7 +164,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				Name: "DatabaseError",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
-					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Name:        "TestSelector",
 						Description: "Test selector description",
@@ -177,9 +177,9 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						CreateAssetGroupLabelSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						CreateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTagSelector{}, errors.New("failure")).Times(1)
-					mockDB.EXPECT().GetAssetGroupLabel(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
@@ -191,7 +191,7 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
-					apitest.SetURLVar(input, api.URIPathVariableAssetGroupLabelID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Name:        "TestSelector",
 						Description: "Test selector description",
@@ -204,9 +204,9 @@ func TestResources_CreateAssetGroupLabelSelector(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						CreateAssetGroupLabelSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						CreateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTagSelector{Name: "TestSelector"}, nil).Times(1)
-					mockDB.EXPECT().GetAssetGroupLabel(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)
 
 					mockGraphDb.EXPECT().

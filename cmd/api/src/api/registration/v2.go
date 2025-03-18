@@ -159,7 +159,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.POST(fmt.Sprintf("/api/v2/asset-groups/{%s}/selectors", api.URIPathVariableAssetGroupID), resources.UpdateAssetGroupSelectors).RequirePermissions(permissions.GraphDBWrite),
 
 		// Asset group management API
-		routerInst.POST(fmt.Sprintf("/api/v2/asset-group-labels/{%s}/selectors", api.URIPathVariableAssetGroupLabelID), resources.CreateAssetGroupLabelSelector).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBWrite),
+		routerInst.POST(fmt.Sprintf("/api/v2/asset-group-tags/{%s}/selectors", api.URIPathVariableAssetGroupTagID), resources.CreateAssetGroupTagSelector).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBWrite),
 
 		//QA API
 		routerInst.GET("/api/v2/completeness", resources.GetDatabaseCompleteness).RequirePermissions(permissions.GraphDBRead),

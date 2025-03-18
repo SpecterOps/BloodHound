@@ -85,7 +85,7 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGro
 
 func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error) {
 	var tag model.AssetGroupTag
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id = ?", tag.TableName()), assetGroupTagId).First(&tag); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id = ? AND deleted_at IS NULL", tag.TableName()), assetGroupTagId).First(&tag); result.Error != nil {
 		return model.AssetGroupTag{}, CheckError(result)
 	} else {
 		return tag, nil
