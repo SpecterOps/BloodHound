@@ -87,45 +87,45 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
 
     const handleOnChange = (isOpen: boolean) => {
         handleCurrentSectionToggle();
-        handleSetGraph(isOpen);
-    };
-
-    const handleSetGraph = async (isOpen: boolean) => {
         if (isOpen) {
-            if (!endpoint) {
-                if (backButtonFlag?.enabled) {
-                    setExpandedPanelSectionsParams();
-                }
-            } else if (countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
-                abortEntitySectionRequest();
-                if (backButtonFlag?.enabled) {
-                    setExpandedPanelSectionsParams();
-                    return;
-                }
-                dispatch(setGraphLoading(true));
-
-                await endpoint({ id, type: 'graph' })
-                    .then((result) => {
-                        const formattedData = transformFlatGraphResponse(result);
-
-                        dispatch(saveResponseForExport(formattedData));
-                        dispatch(putGraphData(result));
-                    })
-                    .catch((err) => {
-                        if (err?.code === 'ERR_CANCELED') {
-                            return;
-                        }
-                        dispatch(putGraphError(err));
-                        dispatch(addSnackbar('Query failed. Please try again.', 'nodeRelationshipGraphQuery', {}));
-                    })
-                    .finally(() => {
-                        dispatch(setGraphLoading(false));
-                    });
-            }
+            handleSetGraph();
         } else {
             if (backButtonFlag?.enabled) {
                 removeExpandedPanelSectionParams();
             }
+        }
+    };
+
+    const handleSetGraph = async () => {
+        if (!endpoint) {
+            if (backButtonFlag?.enabled) {
+                setExpandedPanelSectionsParams();
+            }
+        } else if (countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
+            abortEntitySectionRequest();
+            if (backButtonFlag?.enabled) {
+                setExpandedPanelSectionsParams();
+                return;
+            }
+            dispatch(setGraphLoading(true));
+
+            await endpoint({ id, type: 'graph' })
+                .then((result) => {
+                    const formattedData = transformFlatGraphResponse(result);
+
+                    dispatch(saveResponseForExport(formattedData));
+                    dispatch(putGraphData(result));
+                })
+                .catch((err) => {
+                    if (err?.code === 'ERR_CANCELED') {
+                        return;
+                    }
+                    dispatch(putGraphError(err));
+                    dispatch(addSnackbar('Query failed. Please try again.', 'nodeRelationshipGraphQuery', {}));
+                })
+                .finally(() => {
+                    dispatch(setGraphLoading(false));
+                });
         }
     };
 
