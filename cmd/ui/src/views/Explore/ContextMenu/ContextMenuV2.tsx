@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -16,18 +16,18 @@
 
 import { Menu, MenuItem } from '@mui/material';
 
-import { NodeResponse, Permission, searchbarActions, useExploreSelectedItem, usePermissions } from 'bh-shared-ui';
+import { Permission, isNode, useExploreParams, useExploreSelectedItem, usePermissions } from 'bh-shared-ui';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { useAppDispatch, useAppSelector } from 'src/store';
-import AssetGroupMenuItem from './AssetGroupMenuItemV2';
-import CopyMenuItem from './CopyMenuItemV2';
+import { useAppSelector } from 'src/store';
+import AssetGroupMenuItemV2 from './AssetGroupMenuItemV2';
+import CopyMenuItemV2 from './CopyMenuItemV2';
 
-const ContextMenuV2: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; handleClose: () => void }> = ({
-    contextMenu,
-    handleClose,
-}) => {
-    const dispatch = useAppDispatch();
+const ContextMenuV2: FC<{
+    contextMenu: { mouseX: number; mouseY: number } | null;
+    handleClose: () => void;
+}> = ({ contextMenu, handleClose }) => {
+    const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
     const { selectedItemQuery } = useExploreSelectedItem();
 
     const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
@@ -36,31 +36,26 @@ const ContextMenuV2: FC<{ contextMenu: { mouseX: number; mouseY: number } | null
     const { checkPermission } = usePermissions();
 
     const handleSetStartingNode = () => {
-        if (selectedItemQuery.data) {
-            dispatch(searchbarActions.tabChanged('secondary'));
-            dispatch(
-                searchbarActions.sourceNodeSelected(
-                    {
-                        name: selectedItemQuery.data.label,
-                        objectid: (selectedItemQuery.data as NodeResponse).objectId,
-                        type: selectedItemQuery.data.kind,
-                    },
-                    true
-                )
-            );
+        const selectedItemData = selectedItemQuery.data;
+        if (selectedItemData && isNode(selectedItemData)) {
+            const searchType = secondarySearch ? 'pathfinding' : 'node';
+            setExploreParams({
+                exploreSearchTab: 'pathfinding',
+                searchType,
+                primarySearch: selectedItemData?.objectId as string,
+            });
         }
     };
 
     const handleSetEndingNode = () => {
-        if (selectedItemQuery.data) {
-            dispatch(searchbarActions.tabChanged('secondary'));
-            dispatch(
-                searchbarActions.destinationNodeSelected({
-                    name: selectedItemQuery.data.label,
-                    objectid: (selectedItemQuery.data as NodeResponse).objectId,
-                    type: selectedItemQuery.data.kind,
-                })
-            );
+        const searchType = primarySearch ? 'pathfinding' : 'node';
+        const selectedItemData = selectedItemQuery.data;
+        if (selectedItemData && isNode(selectedItemData)) {
+            setExploreParams({
+                exploreSearchTab: 'pathfinding',
+                searchType,
+                secondarySearch: selectedItemData?.objectId as string,
+            });
         }
     };
 
@@ -74,14 +69,18 @@ const ContextMenuV2: FC<{ contextMenu: { mouseX: number; mouseY: number } | null
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
 
             {checkPermission(Permission.GRAPH_DB_WRITE) && [
-                <AssetGroupMenuItem
+                <AssetGroupMenuItemV2
                     key={tierZeroAssetGroupId}
                     assetGroupId={tierZeroAssetGroupId}
                     assetGroupName='High Value'
                 />,
-                <AssetGroupMenuItem key={ownedAssetGroupId} assetGroupId={ownedAssetGroupId} assetGroupName='Owned' />,
+                <AssetGroupMenuItemV2
+                    key={ownedAssetGroupId}
+                    assetGroupId={ownedAssetGroupId}
+                    assetGroupName='Owned'
+                />,
             ]}
-            <CopyMenuItem />
+            <CopyMenuItemV2 />
         </Menu>
     );
 };
