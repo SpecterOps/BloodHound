@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export * from './compositionSearch';
 export * from './cypherSearch';
 export * from './fallback';
 export * from './nodeSearch';
 export * from './pathfindingSearch';
+export * from './relationshipSearch';
 export * from './utils';

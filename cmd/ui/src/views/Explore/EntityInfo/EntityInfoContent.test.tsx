@@ -57,6 +57,13 @@ const server = setupServer(
                 },
             })
         );
+    }),
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 
