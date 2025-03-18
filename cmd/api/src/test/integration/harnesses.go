@@ -9584,7 +9584,6 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 
 type CoerceAndRelayNTLMToLDAPSelfRelay struct {
 	Computer1 *graph.Node
-	Computer2 *graph.Node
 	Domain1   *graph.Node
 	Group1    *graph.Node
 	Group2    *graph.Node
@@ -9613,7 +9612,6 @@ func (s *CoerceAndRelayNTLMToLDAPSelfRelay) Setup(graphTestContext *GraphTestCon
 	graphTestContext.UpdateNode(s.Group2)
 
 	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
-	graphTestContext.NewRelationship(s.Computer2, s.Group1, ad.MemberOf)
 }
 
 type CoerceAndRelayNTLMToLDAPS struct {
@@ -9757,6 +9755,38 @@ func (s *CoerceAndRelayNTLMToLDAPS) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer12, s.Domain3, ad.DCFor)
 }
 
+type CoerceAndRelayNTLMToLDAPSSelfRelay struct {
+	Computer1 *graph.Node
+	Domain1   *graph.Node
+	Group1    *graph.Node
+	Group2    *graph.Node
+}
+
+func (s *CoerceAndRelayNTLMToLDAPSSelfRelay) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set(ad.IsDC.String(), true)
+	s.Computer1.Properties.Set(ad.LDAPSEPA.String(), false)
+	s.Computer1.Properties.Set(ad.LDAPSAvailable.String(), true)
+	s.Computer1.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer1)
+
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domain1Sid, false, true)
+	s.Domain1.Properties.Set(ad.FunctionalLevel.String(), "2016")
+	graphTestContext.UpdateNode(s.Domain1)
+
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1-%s%s", domain1Sid, adAnalysis.ProtectedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group1)
+
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain1Sid)
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2-%s%s", domain1Sid, adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group2)
+
+	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -9863,6 +9893,7 @@ type HarnessDetails struct {
 	NTLMCoerceAndRelayNTLMToLDAPS                   CoerceAndRelayNTLMToLDAPS
 	NTLMCoerceAndRelayNTLMToADCS                    CoerceAndRelayNTLMtoADCS
 	NTLMCoerceAndRelayToLDAPSelfRelay               CoerceAndRelayNTLMToLDAPSelfRelay
+	NTLMCoerceAndRelayToLDAPSSelfRelay              CoerceAndRelayNTLMToLDAPSSelfRelay
 	NTLMCoerceAndRelayNTLMToSMBSelfRelay            CoerceAndRelayNTLMToSMBSelfRelay
 	OwnsWriteOwnerPriorCollectorVersions            OwnsWriteOwnerPriorCollectorVersions
 }

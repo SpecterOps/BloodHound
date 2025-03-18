@@ -561,6 +561,60 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 
 	t.Run("NTLMCoerceAndRelayNTLMToLDAPS Self Relay Does Not Create Edge", func(t *testing.T) {
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.NTLMCoerceAndRelayToLDAPSSelfRelay.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
+			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToLDAPS - Self Relay")
+
+			groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			require.NoError(t, err)
+
+			ldapSigningCache, err := ad2.FetchLDAPSigningCache(testContext.Context(), db)
+			require.NoError(t, err)
+
+			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, groupExpansions)
+			require.NoError(t, err)
+
+			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				for _, computer := range computers {
+					innerComputer := computer
+					domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
+					require.NoError(t, err)
+
+					if authenticatedUserID, ok := authenticatedUsers[domainSid]; !ok {
+						t.Fatalf("authenticated user not found for %s", domainSid)
+					} else if protectedUsersForDomain, ok := protectedUsersCache[domainSid]; !ok {
+						continue
+					} else if ldapSigningForDomain, ok := ldapSigningCache[domainSid]; !ok {
+						continue
+					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
+						continue
+					} else if err = ad2.PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserID, ldapSigningCache); err != nil {
+						t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToLDAPS.String(), err)
+					}
+				}
+				return nil
+			})
+			require.NoError(t, err)
+
+			err = operation.Done()
+			require.NoError(t, err)
+
+			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+				if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+					return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToLDAPS)
+				})); err != nil {
+					t.Fatalf("error fetching NTLM to LDAPS edges in integration test; %v", err)
+				} else {
+					require.Len(t, results, 0)
+				}
+				return nil
+			})
+		})
+	})
+
+	t.Run("NTLMCoerceAndRelayNTLMToLDAP Self Relay Does Not Create Edge", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayToLDAPSelfRelay.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
@@ -604,7 +658,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 				if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 					return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToLDAP)
 				})); err != nil {
-					t.Fatalf("error fetching NTLM to LDAPS edges in integration test; %v", err)
+					t.Fatalf("error fetching NTLM to LDAP edges in integration test; %v", err)
 				} else {
 					require.Len(t, results, 0)
 				}

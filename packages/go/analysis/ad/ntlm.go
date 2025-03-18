@@ -344,7 +344,14 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 						return nil
 					}
 
+					checkedCerts := make([]graph.ID, 0)
 					for _, certTemplate := range publishedCertTemplates {
+						if slices.Contains(checkedCerts, certTemplate.ID) {
+							continue
+						} else {
+							checkedCerts = append(checkedCerts, certTemplate.ID)
+						}
+
 						if valid, err := isCertTemplateValidForADCSRelay(certTemplate); err != nil {
 							slog.ErrorContext(ctx, fmt.Sprintf("Error validating cert template %d for NTLM ADCS relay: %v", certTemplate.ID, err))
 							continue
@@ -640,7 +647,7 @@ func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob
 					outC <- analysis.CreatePostRelationshipJob{
 						FromID: authenticatedUserGroupID,
 						ToID:   computer.ID,
-						Kind:   ad.CoerceAndRelayNTLMToLDAP,
+						Kind:   ad.CoerceAndRelayNTLMToLDAPS,
 					}
 				} else if len(signingCache.relayableToDCLDAPS) > 1 {
 					outC <- analysis.CreatePostRelationshipJob{
