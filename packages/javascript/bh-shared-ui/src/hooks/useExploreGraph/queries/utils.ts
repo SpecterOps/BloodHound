@@ -37,6 +37,11 @@ export const ExploreGraphQueryKey = 'explore-graph-query';
 export const INITIAL_FILTERS = getInitialPathFilters();
 export const INITIAL_FILTER_TYPES = extractEdgeTypes(INITIAL_FILTERS);
 
+export const sharedGraphQueryOptions: ExploreGraphQueryOptions = {
+    retry: false,
+    refetchOnWindowFocus: false,
+};
+
 // Converts between two different respresentations of graph data returned by our API for endpoints that feed the explore page
 export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData => {
     const result: GraphData = {

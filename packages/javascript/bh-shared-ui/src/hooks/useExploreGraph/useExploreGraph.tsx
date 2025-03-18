@@ -19,10 +19,12 @@ import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
 import {
     ExploreGraphQuery,
+    compositionSearchQuery,
     cypherSearchQuery,
     fallbackQuery,
     nodeSearchQuery,
     pathfindingSearchQuery,
+    relationshipSearchQuery,
 } from './queries';
 
 export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery {
@@ -33,10 +35,10 @@ export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParam
             return pathfindingSearchQuery;
         case 'cypher':
             return cypherSearchQuery;
-        // case 'relationship':
-        //     return {};
-        // case 'composition':
-        //     return {};
+        case 'relationship':
+            return relationshipSearchQuery;
+        case 'composition':
+            return compositionSearchQuery;
         default:
             return fallbackQuery;
     }
