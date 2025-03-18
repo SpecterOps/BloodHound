@@ -43,10 +43,10 @@ describe('useNodeSearch', () => {
         expect(window.location.search).toBe('');
     });
 
-    it("upon selecting a source node, updates the URL with a searchType of 'node' and primarySearch of the node's objectid", () => {
+    it("upon selecting a source node, updates the URL with a searchType of 'node' and primarySearch of the node's objectid", async () => {
         const hook = renderHook(() => useNodeSearch(), { wrapper });
 
-        act(() => hook.result.current.selectSourceNode({ name: TEST_STRING_1, objectid: TEST_STRING_2 }));
+        await act(async () => hook.result.current.selectSourceNode({ name: TEST_STRING_1, objectid: TEST_STRING_2 }));
 
         expect(window.location.search).toContain(`primarySearch=${TEST_STRING_2}`);
         expect(window.location.search).toContain('searchType=node');
