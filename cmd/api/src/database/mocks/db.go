@@ -27,6 +27,7 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	database "github.com/specterops/bloodhound/src/database"
+	null "github.com/specterops/bloodhound/src/database/types/null"
 	model "github.com/specterops/bloodhound/src/model"
 	appcfg "github.com/specterops/bloodhound/src/model/appcfg"
 	gomock "go.uber.org/mock/gomock"
@@ -184,18 +185,18 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupHistoryRecord(arg0, arg1, ar
 }
 
 // CreateAssetGroupTag mocks base method.
-func (m *MockDatabase) CreateAssetGroupTag(arg0 context.Context, arg1 model.AssetGroupTagType, arg2, arg3, arg4 string) (model.AssetGroupTag, error) {
+func (m *MockDatabase) CreateAssetGroupTag(arg0 context.Context, arg1 model.AssetGroupTagType, arg2, arg3, arg4 string, arg5 null.Int32, arg6 null.Bool) (model.AssetGroupTag, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAssetGroupTag", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "CreateAssetGroupTag", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(model.AssetGroupTag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAssetGroupTag indicates an expected call of CreateAssetGroupTag.
-func (mr *MockDatabaseMockRecorder) CreateAssetGroupTag(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAssetGroupTag(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupTag), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupTag), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // CreateAssetGroupTagSelector mocks base method.

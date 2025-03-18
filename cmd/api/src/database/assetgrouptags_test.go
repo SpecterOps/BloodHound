@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
@@ -77,10 +78,12 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		testActor       = "test_actor"
 		testName        = "test tag name"
 		testDescription = "test tag description"
+		position        = null.Int32{}
+		requireCertify  = null.Bool{}
 	)
 
 	t.Run("successfully creates tag", func(t *testing.T) {
-		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagType, testActor, testName, testDescription)
+		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagType, testActor, testName, testDescription, position, requireCertify)
 		require.NoError(t, err)
 		require.Equal(t, tagType, tag.Type)
 		require.WithinDuration(t, time.Now(), tag.CreatedAt, time.Second)
@@ -91,6 +94,8 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Empty(t, tag.DeletedBy)
 		require.Equal(t, testName, tag.Name)
 		require.Equal(t, testDescription, tag.Description)
+		require.Equal(t, null.Int32{}, tag.Position)
+		require.Equal(t, null.Bool{}, tag.RequireCertify)
 
 		tag, err = dbInst.GetAssetGroupTag(testCtx, tag.ID)
 		require.NoError(t, err)
@@ -103,6 +108,8 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Empty(t, tag.DeletedBy)
 		require.Equal(t, testName, tag.Name)
 		require.Equal(t, testDescription, tag.Description)
+		require.Equal(t, null.Int32{}, tag.Position)
+		require.Equal(t, null.Bool{}, tag.RequireCertify)
 
 		// verify history record was also created
 		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)

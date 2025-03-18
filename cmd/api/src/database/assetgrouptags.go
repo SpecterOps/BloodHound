@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
 )
@@ -30,7 +31,7 @@ const (
 
 // AssetGroupTagData defines the methods required to interact with the asset_group_tags table
 type AssetGroupTagData interface {
-	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string) (model.AssetGroupTag, error)
+	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error)
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
 }
 
@@ -85,21 +86,23 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGro
 
 func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error) {
 	var tag model.AssetGroupTag
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id = ? AND deleted_at IS NULL", tag.TableName()), assetGroupTagId).First(&tag); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by, position, require_certify FROM %s WHERE id = ? AND deleted_at IS NULL", tag.TableName()), assetGroupTagId).First(&tag); result.Error != nil {
 		return model.AssetGroupTag{}, CheckError(result)
 	} else {
 		return tag, nil
 	}
 }
 
-func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string) (model.AssetGroupTag, error) {
+func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error) {
 	var (
 		tag = model.AssetGroupTag{
-			Type:        tagType,
-			CreatedBy:   userId,
-			UpdatedBy:   userId,
-			Name:        name,
-			Description: description,
+			Type:           tagType,
+			CreatedBy:      userId,
+			UpdatedBy:      userId,
+			Name:           name,
+			Description:    description,
+			Position:       position,
+			RequireCertify: requireCertify,
 		}
 
 		auditEntry = model.AuditEntry{
@@ -108,14 +111,19 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 		}
 	)
 
+	if tagType == model.AssetGroupTagTypeLabel {
+		position = null.Int32{}
+		requireCertify = null.Bool{}
+	}
+
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
 
 		var kindId int
 		if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (name) VALUES (?) RETURNING id", kindTable), tag.ToKind()).Scan(&kindId); result.Error != nil {
 			return CheckError(result)
-		} else if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by) VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?) RETURNING *", tag.TableName()),
-			tagType, kindId, name, description, userId, userId).Scan(&tag); result.Error != nil {
+		} else if result := tx.Raw(fmt.Sprintf("INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify) VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?, ?, ?) RETURNING *", tag.TableName()),
+			tagType, kindId, name, description, userId, userId, position, requireCertify).Scan(&tag); result.Error != nil {
 			return CheckError(result)
 		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateTag, tag.ID, "", ""); err != nil {
 			return err
