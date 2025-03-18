@@ -31,7 +31,7 @@ const fakeSelectedItemId = 'abc';
 mockSelectedItemQuery.mockReturnValue({
     selectedItemQuery: {
         data: {
-            object_id: fakeSelectedItemId,
+            objectId: fakeSelectedItemId,
         },
     },
 } as any);
@@ -131,7 +131,7 @@ describe('ContextMenuV2', async () => {
         expect(addToHighValueOption).toBeNull();
     });
 
-    it('sets a primarySearch=id and searchType-node when secondarySearch is falsey', async () => {
+    it('sets a primarySearch=id and searchType=node when secondarySearch is falsey', async () => {
         const { user, mockSetExploreParams } = await setup(undefined);
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
