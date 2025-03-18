@@ -46,6 +46,7 @@ import (
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
@@ -3498,4 +3499,72 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 		require.NoError(tc, err)
 		assert.Equal(tc, expectedToken.Name.String, responseWrapper.Data.Name.String)
 	})
+}
+
+// Matrix testing pattern example for future reference
+func TestManagementResource_CreateAuthToken_Matrix(t *testing.T) {
+	type TestData struct {
+		testName             string
+		expectedResponseBody string
+		expectedResponseCode int
+		setupMocks           func(*testing.T, mocks.MockDatabase, *http.Request)
+		payload              map[string]any
+		userContext          func(*testing.T) (model.User, context.Context)
+	}
+
+	testData := []TestData{
+		{
+			testName:             "Request invalid",
+			expectedResponseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"error unmarshalling JSON payload"}]}`,
+			expectedResponseCode: http.StatusBadRequest,
+			payload:              nil, // Will be handled specially in the test
+			userContext: func(t *testing.T) (model.User, context.Context) {
+				admin, adminCtx := createAdminUser(t)
+				return admin, adminCtx
+			},
+			setupMocks: func(t *testing.T, db mocks.MockDatabase, req *http.Request) {
+			},
+		},
+		// Add additional test cases here
+	}
+
+	for _, testArgs := range testData {
+		t.Run(testArgs.testName, func(tc *testing.T) {
+			// Setup
+			mockCtrl := gomock.NewController(tc)
+			defer mockCtrl.Finish()
+
+			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+			const endpointUrl = "/api/v2/tokens"
+			router := createRouter(endpointUrl, resources.CreateAuthToken, "POST")
+
+			_, ctx := testArgs.userContext(tc)
+
+			var req *http.Request
+			var err error
+
+			if testArgs.payload == nil {
+				req, err = http.NewRequestWithContext(ctx, "POST", endpointUrl, bytes.NewReader([]byte("{")))
+			} else {
+				b, err := json.Marshal(testArgs.payload)
+				require.NoError(tc, err)
+				req, err = http.NewRequestWithContext(ctx, "POST", endpointUrl, bytes.NewReader(b))
+			}
+			require.NoError(tc, err)
+
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+			testArgs.setupMocks(tc, *mockDB, req)
+
+			// Act
+			response := httptest.NewRecorder()
+			router.ServeHTTP(response, req)
+
+			// Assert
+			responseBodyWithDefaultTimestamp, err := replaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+			require.NoError(tc, err)
+			assert.Equal(tc, testArgs.expectedResponseCode, response.Code)
+			assert.JSONEq(tc, testArgs.expectedResponseBody, responseBodyWithDefaultTimestamp)
+		})
+	}
 }
