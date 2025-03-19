@@ -18,6 +18,7 @@ package translate
 
 import (
 	"errors"
+
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/cypher/models/pgsql/format"
@@ -278,7 +279,7 @@ func (s *ExpansionBuilder) prepareBackwardFrontPrimerQuery(expansionModel *Expan
 						},
 						From: []pgsql.FromClause{{
 							Source: pgsql.TableReference{
-								Name:    pgsql.TableEdge.AsCompoundIdentifier(),
+								Name: pgsql.TableEdge.AsCompoundIdentifier(),
 							},
 						}},
 						Where: pgd.Equals(
@@ -364,7 +365,7 @@ func (s *ExpansionBuilder) prepareBackwardFrontRecursiveQuery(expansionModel *Ex
 						},
 						From: []pgsql.FromClause{{
 							Source: pgsql.TableReference{
-								Name:    pgsql.TableEdge.AsCompoundIdentifier(),
+								Name: pgsql.TableEdge.AsCompoundIdentifier(),
 							},
 						}},
 						Where: pgd.Equals(
