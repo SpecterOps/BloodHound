@@ -91,6 +91,10 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                         const sendOnChange =
                             EdgeCompositionRelationships.includes(selectedEdge.name) && section[0] === 'composition';
 
+                        const isExpandedPanelSection = backButtonFlag?.enabled
+                            ? (expandedPanelSections as string[]).includes(sectionKeyLabel)
+                            : isExpandedSection;
+
                         const setExpandedPanelSectionsParam = () => {
                             setExploreParams({
                                 expandedPanelSections: [sectionKeyLabel],
@@ -105,12 +109,6 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                             setExploreParams({
                                 expandedPanelSections: [],
                             });
-                        };
-
-                        const setIsExpandedPanelSection = () => {
-                            return backButtonFlag?.enabled
-                                ? (expandedPanelSections as string[]).includes(sectionKeyLabel)
-                                : isExpandedSection;
                         };
 
                         const handleOnChange = (isOpen: boolean) => {
@@ -142,7 +140,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                 </Box>
                                 <EdgeInfoCollapsibleSection
                                     label={EdgeSections[sectionKeyLabel]}
-                                    isExpanded={setIsExpandedPanelSection()}
+                                    isExpanded={isExpandedPanelSection}
                                     onChange={handleOnChange}>
                                     <Section
                                         edgeName={selectedEdge.name}
