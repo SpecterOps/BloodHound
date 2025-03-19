@@ -151,7 +151,6 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 
 func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	var (
-		startNode  *graph.Node
 		endNode    *graph.Node
 		domainNode *graph.Node
 
@@ -165,9 +164,7 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var err error
-		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
-			return err
-		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
+		if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
 			return err
 		} else {
 			return nil
@@ -187,7 +184,7 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 	}
 
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
+		Root: endNode,
 		Driver: coerceAndRelayNTLMtoADCSPath1Pattern(domainNode.ID).Do(func(terminal *graph.PathSegment) error {
 			var enterpriseCANode *graph.Node
 			terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
@@ -209,7 +206,7 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 	}
 
 	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: startNode,
+		Root: endNode,
 		Driver: coerceAndRelayNTLMtoADCSPath2Pattern(domainNode.ID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
 			enterpriseCANode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
@@ -382,7 +379,7 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 								}
 							} else if len(computerEnrollers) > 0 {
 
-								// TODO: If the Domain node's functionallevel proerty is NOT "2012" or earlier, filter out computer which are members of the Proctected Users group
+								// TODO: If the Domain node's functionallevel proerty is NOT "2012" or earlier, filter out computer which are members of the Protected Users group
 								// The Domain functionallevel check in Cypher: `(d:Domain) WHERE NOT d.functionallevel IN ["2000 Mixed/Native", "2003 Interim", "2003", "2008", "2008 R2", "2012"]`
 								// The Protected Users group can be identified by having the same DomainSID as the computer, and the group objectid ends with "-525".
 								// The group membership may be through group nesting.
@@ -645,8 +642,7 @@ func GetVulnerableDomainControllersForRelayNTLMtoLDAPS(ctx context.Context, db g
 // PostCoerceAndRelayNTLMToLDAP creates edges where an authenticated user group, for a given domain, is able to target the provided computer.
 // This will create either a CoerceAndRelayNTLMToLDAP or CoerceAndRelayNTLMToLDAPS edges, depending on the ldapSigning property of the domain
 func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob, computer *graph.Node, authenticatedUserGroupID graph.ID, ldapSigningCache map[string]LDAPSigningCache) error {
-	// restrictoutboundntlm must be set to false and webclientrunning must be set to true for the computer's properties
-	// in order for this attack path to be viable
+	// webclientrunning must be set to true for the computer's properties in order for this attack path to be viable
 	// If the property is not found, we will assume false
 	if webClientRunning, err := computer.Properties.Get(ad.WebClientRunning.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
 		return err

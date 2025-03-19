@@ -168,8 +168,10 @@ func convertRootCAData(rootca ein.RootCA, converted *ConvertedData) {
 }
 
 func convertEnterpriseCAData(enterpriseca ein.EnterpriseCA, converted *ConvertedData) {
+	baseNodeProp := ein.ConvertEnterpriseCAToNode(enterpriseca)
 	converted.NodeProps = append(converted.NodeProps, ein.ConvertEnterpriseCAToNode(enterpriseca))
 	converted.NodeProps = append(converted.NodeProps, ein.ParseCARegistryProperties(enterpriseca))
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, enterpriseca.Aces, enterpriseca.ObjectIdentifier, ad.EnterpriseCA)...)
 	converted.RelProps = append(converted.RelProps, ein.ParseEnterpriseCAMiscData(enterpriseca)...)
 
 	if rel := ein.ParseObjectContainer(enterpriseca.IngestBase, ad.EnterpriseCA); rel.IsValid() {
