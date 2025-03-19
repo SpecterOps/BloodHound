@@ -30,7 +30,7 @@ const General: FC<EdgeInfoProps> = () => {
             </Typography>
 
             <Typography variant='body2'>
-                Click on Relay Targets to view the certificate templates and vulnerable enterprise CA servers that
+                Click on Relay Targets to view vulnerable enterprise CA servers that
                 enable certificate enrollment for the target computer.
             </Typography>
         </>

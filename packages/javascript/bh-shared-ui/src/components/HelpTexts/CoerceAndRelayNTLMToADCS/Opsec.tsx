@@ -22,6 +22,7 @@ const Opsec: FC = () => {
         <>
             <Typography variant='body2'>
                 <b>Detection of NTLM Relay</b>
+                <br />
                 NTLM relayed authentications can be detected by login events where the IP address does not match the
                 computer’s actual IP address. This detection technique is described in the blog post:{' '}
                 <a href={'https://posts.bluraven.io/detecting-ntlm-relay-attacks-d92e99e68fb9'}>
@@ -32,6 +33,7 @@ const Opsec: FC = () => {
 
             <Typography variant={'body2'}>
                 <b>Detection of Certificate Usage</b>
+                <br/>
                 Authentication using the obtained certificate is another detection opportunity. If Kerberos
                 authentication is used, a domain controller will generate Windows Event ID 4768 ("A Kerberos
                 authentication ticket (TGT) was requested"). This event will include the attacker’s IP address rather
