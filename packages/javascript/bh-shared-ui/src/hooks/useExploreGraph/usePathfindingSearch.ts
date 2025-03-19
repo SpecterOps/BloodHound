@@ -110,7 +110,6 @@ export const usePathfindingSearch = () => {
 
     const handleSwapPathfindingInputs = () => {
         if (sourceSelectedItem && destinationSelectedItem) {
-            console.log('setting params: ', destinationSelectedItem, sourceSelectedItem);
             setExploreParams({
                 searchType: 'pathfinding',
                 primarySearch: destinationSelectedItem.objectid,
