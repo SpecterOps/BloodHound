@@ -285,7 +285,7 @@ func RewriteFrameBindings(scope *Scope, expression pgsql.Expression) error {
 		return nil
 	}
 
-	return walk.WalkPgSQL(expression, &FrameBindingRewriter{
+	return walk.PgSQL(expression, &FrameBindingRewriter{
 		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[pgsql.SyntaxNode](),
 		scope:               scope,
 	})

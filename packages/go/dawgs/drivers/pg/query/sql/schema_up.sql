@@ -492,9 +492,12 @@ begin
 
   raise notice 'Expansion step % - Available Root Paths % - Num satisfied: %', forward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
 
+  -- Return all satisfied paths from the next frontier, if any
   if exists(select 1 from next_front r where r.satisfied) then
-    -- Return all satisfied paths from the next front
     return query select * from next_front r where r.satisfied;
+
+    -- This second return is not an error. This closes this function's result set and the return above will
+    -- be treated as a yield and continue execution once the results cursor is exhausted.
     return;
   end if;
 
@@ -550,59 +553,67 @@ begin
   -- Defines three tables to represent pathspace of the recursive expansion
   perform create_bidirectional_pathspace_tables();
 
-  -- Populate the root front first with its primer query
+  -- Populate the forward frontier first with its primer query
   forward_front_depth = forward_front_depth + 1;
   execute forward_primer;
 
-  raise notice 'Expansion step % - Available Root Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+  raise notice 'Forward expansion as step % - Available Root Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
 
   -- Early check to make sure there's something to expand toward from the backward frontier
   if not exists(select 1 from next_front) then
     return;
   end if;
 
+  -- Return all satisfied paths from the next frontier, if any
   if exists(select 1 from next_front r where r.satisfied) then
-    -- Return all satisfied paths from the next front
     return query select * from next_front r where r.satisfied;
+
+    -- This second return is not an error. This closes this function's result set and the return above will
+    -- be treated as a yield and continue execution once the results cursor is exhausted.
     return;
   end if;
 
-  -- Swap the next_front table into the forward_front
+  -- Swap the next frontier to the forward frontier
   perform swap_forward_front();
 
   -- Populate the terminal front next with its primer query
   backward_front_depth = backward_front_depth + 1;
   execute backward_primer;
 
-  raise notice 'Expansion step % - Available Terminal Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+  raise notice 'Backward expansion as step % - Available Terminal Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
 
-  -- Check to see if the two fronts meet somewhere in the middle
-  if exists(select 1
-            from next_front t
-                   join forward_front r on r.next_id = t.next_id) then
-    -- Zip the path arrays together treating the matches as satisfied
-    return query select r.root_id, t.root_id, r.depth + t.depth, true, false, r.path || t.path
-                 from next_front t
-                        join forward_front r on r.next_id = t.next_id;
-    return;
-  end if;
-
-  -- Swap the next_front table into the backward_front
+  -- Swap the next frontier to the backward frontier
   perform swap_backward_front();
 
   while forward_front_depth + backward_front_depth < max_depth and
         exists(select 1 from forward_front) and exists(select 1 from backward_front)
     loop
+      -- Check to see if the two frontiers meet somewhere in the middle
+      if exists(select 1
+                from forward_front f
+                       join backward_front b on f.next_id = b.next_id) then
+        -- Zip the path arrays together treating the matches as satisfied
+        return query select f.root_id,
+                            b.root_id,
+                            f.depth + b.depth,
+                            true,
+                            false,
+                            f.path || b.path
+                     from forward_front f
+                            join backward_front b on f.next_id = b.next_id;
+        return;
+      end if;
+
+      -- Check to expand the smaller of the two frontiers
       if (select count(*) from forward_front) < (select count(*) from backward_front) then
-        -- Populate the next front with the recursive root front query
+        -- Populate the next frontier with the recursive forward front query
         forward_front_depth = forward_front_depth + 1;
         execute forward_recursive;
 
-        raise notice 'Expansion step % - Available Root Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+        raise notice 'Forward expansion as step % - Available Root Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
 
-        -- Check to see if the root front is satisfied
+        -- Check to see if the next frontier is satisfied
         if exists(select 1 from next_front r where r.satisfied) then
-          -- Return all satisfied paths from the next front
           return query select * from next_front r where r.satisfied;
           exit;
         end if;
@@ -610,24 +621,15 @@ begin
         -- Swap the next_front table into the forward_front
         perform swap_forward_front();
       else
-        -- Populate the next front with the recursive terminal front query
+        -- Populate the next frontier with the recursive backward front query
         backward_front_depth = backward_front_depth + 1;
         execute backward_recursive;
 
-        raise notice 'Expansion step % - Available Terminal Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+        raise notice 'Backward expansion as step % - Available Terminal Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
 
-        -- Check to see if the two fronts meet somewhere in the middle
-        if exists(select 1
-                  from next_front t
-                  where t.satisfied
-                  union
-                  select 1
-                  from next_front t
-                         join forward_front r on r.next_id = t.next_id) then
-          -- Zip the path arrays together treating the matches as satisfied
-          return query select r.root_id, t.root_id, r.depth + t.depth, true, false, r.path || t.path
-                       from next_front t
-                              join forward_front r on r.next_id = t.next_id;
+        -- Check to see if the next frontier is satisfied
+        if exists(select 1 from next_front r where r.satisfied) then
+          return query select * from next_front r where r.satisfied;
           exit;
         end if;
 

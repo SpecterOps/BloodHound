@@ -191,7 +191,7 @@ func rightNodeTraversalStepJoinCondition(traversalStep *TraversalStep) (pgsql.Ex
 func isSyntaxNodeSatisfied(syntaxNode pgsql.SyntaxNode) (bool, error) {
 	var (
 		satisfied = true
-		err       = walk.WalkPgSQL(syntaxNode, walk.NewSimpleVisitor[pgsql.SyntaxNode](
+		err       = walk.PgSQL(syntaxNode, walk.NewSimpleVisitor[pgsql.SyntaxNode](
 			func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
 				switch typedNode := node.(type) {
 				case pgsql.SyntaxNodeFuture:
@@ -401,6 +401,50 @@ type PatternConstraints struct {
 	RightNode *Constraint
 }
 
+// MeasureSelectivity attempts to measure how selective (i.e. how narrow) the query expression passed in is. This is
+// a simple heuristic that is best-effort for attempting to find which side of a traversal step ()-[]->() is more
+// selective.
+//
+// The boolean parameter owningIdentifierBound is intended to represent if the identifier the expression constraints
+// is part of a materialized set of nodes where the entity IDs of each are known at time of query. In this case the
+// bound component is considered to be highly-selective.
+//
+// The numbers are all magic values selected based on implementor's perception of selectivity of certain operators.
+func MeasureSelectivity(owningIdentifierBound bool, expression pgsql.Expression) (int, error) {
+	var (
+		selectivity = 0
+	)
+
+	if owningIdentifierBound {
+		selectivity += 1000
+	}
+
+	return selectivity, walk.PgSQL(expression, walk.NewSimpleVisitor[pgsql.SyntaxNode](func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+		switch typedNode := node.(type) {
+		case *pgsql.BinaryExpression:
+			switch typedNode.Operator {
+			case pgsql.OperatorOr:
+				selectivity -= 10
+
+			case pgsql.OperatorNotEquals:
+				selectivity += 1
+
+			case pgsql.OperatorAnd:
+				selectivity += 5
+
+			case pgsql.OperatorLessThan, pgsql.OperatorGreaterThan, pgsql.OperatorLessThanOrEqualTo, pgsql.OperatorGreaterThanOrEqualTo:
+				selectivity += 10
+
+			case pgsql.OperatorLike, pgsql.OperatorILike, pgsql.OperatorRegexMatch, pgsql.OperatorSimilarTo:
+				selectivity += 20
+
+			case pgsql.OperatorIn, pgsql.OperatorEquals, pgsql.OperatorIs, pgsql.OperatorPGArrayOverlap, pgsql.OperatorArrayOverlap:
+				selectivity += 30
+			}
+		}
+	}))
+}
+
 // OptimizePatternConstraintBalance considers the constraints that apply to a pattern segment's bound identifiers.
 //
 // If only the right side of the pattern segment is constrained, this could result in an imbalanced expansion where one side
@@ -408,19 +452,19 @@ type PatternConstraints struct {
 //
 // In cases that match this heuristic, it's beneficial to begin the traversal with the most tightly constrained set
 // of nodes. To accomplish this we flip the order of the traversal step.
-func (s *PatternConstraints) OptimizePatternConstraintBalance(traversalStep *TraversalStep) {
-	var (
-		// If the left node is previously bound (query knows a set of IDs) the left node is considered to sill be constrained
-		leftNodeHasConstraints  = traversalStep.LeftNodeBound || s.LeftNode.Expression != nil
-		rightNodeHasConstraints = s.RightNode.Expression != nil
-	)
-
-	// (a)-[*..]->(b:Constraint)
-	// (a)<-[*..]-(b:Constraint)
-	if !leftNodeHasConstraints && rightNodeHasConstraints {
+func (s *PatternConstraints) OptimizePatternConstraintBalance(traversalStep *TraversalStep) error {
+	if leftNodeSelectivity, err := MeasureSelectivity(traversalStep.LeftNodeBound, s.LeftNode.Expression); err != nil {
+		return err
+	} else if rightNodeSelectivity, err := MeasureSelectivity(traversalStep.RightNodeBound, s.RightNode.Expression); err != nil {
+		return err
+	} else if rightNodeSelectivity > leftNodeSelectivity {
+		// (a)-[*..]->(b:Constraint)
+		// (a)<-[*..]-(b:Constraint)
 		traversalStep.FlipNodes()
 		s.FlipNodes()
 	}
+
+	return nil
 }
 
 func (s *PatternConstraints) FlipNodes() {

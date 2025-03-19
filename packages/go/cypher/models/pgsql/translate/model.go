@@ -587,7 +587,7 @@ func SymbolsFor(node pgsql.SyntaxNode) (*Symbols, error) {
 		table: map[string]any{},
 	}
 
-	return instance, walk.WalkPgSQL(node, walk.NewSimpleVisitor[pgsql.SyntaxNode](func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+	return instance, walk.PgSQL(node, walk.NewSimpleVisitor[pgsql.SyntaxNode](func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
 		switch typedNode := node.(type) {
 		case pgsql.Identifier:
 			instance.AddIdentifier(typedNode)

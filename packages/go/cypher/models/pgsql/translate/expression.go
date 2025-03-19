@@ -202,7 +202,7 @@ func translateCypherAssignmentOperator(operator cypher.AssignmentOperator) (pgsq
 func ExtractSyntaxNodeReferences(root pgsql.SyntaxNode) (*pgsql.IdentifierSet, error) {
 	dependencies := pgsql.NewIdentifierSet()
 
-	return dependencies, walk.WalkPgSQL(root, walk.NewSimpleVisitor[pgsql.SyntaxNode](
+	return dependencies, walk.PgSQL(root, walk.NewSimpleVisitor[pgsql.SyntaxNode](
 		func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
 			switch typedNode := node.(type) {
 			case pgsql.Identifier:

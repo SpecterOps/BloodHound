@@ -24,7 +24,7 @@ import (
 	"github.com/specterops/bloodhound/cypher/models/pgsql/pgd"
 )
 
-const translateDefaultMaxTraversalDepth int64 = 10
+const translateDefaultMaxTraversalDepth int64 = 15
 
 func expansionEdgeJoinCondition(traversalStep *TraversalStep) (pgsql.Expression, error) {
 	return pgd.Equals(
