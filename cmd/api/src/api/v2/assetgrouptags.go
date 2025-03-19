@@ -52,7 +52,7 @@ func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) erro
 		}
 		if seed.Type == model.SelectorTypeCypher {
 			if _, err := graph.PrepareCypherQuery(seed.Value, queries.QueryComplexityLimitSelector); err != nil {
-				return err
+				return fmt.Errorf("cypher is invalid: %v", err)
 			}
 		}
 	}
@@ -78,7 +78,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if err := validateSelectorSeeds(s.GraphQuery, sel.Seeds); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("cypher is invalid: %v", err), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor.ID.String(), sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {

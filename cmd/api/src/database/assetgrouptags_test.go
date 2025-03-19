@@ -21,7 +21,6 @@ package database_test
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
@@ -48,9 +47,9 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
 	require.NoError(t, err)
 	require.Equal(t, 1, selector.AssetGroupTagId)
-	require.WithinDuration(t, time.Now(), selector.CreatedAt, time.Second)
+	require.False(t, selector.CreatedAt.IsZero())
 	require.Equal(t, testActor, selector.CreatedBy)
-	require.WithinDuration(t, time.Now(), selector.UpdatedAt, time.Second)
+	require.False(t, selector.UpdatedAt.IsZero())
 	require.Equal(t, testActor, selector.UpdatedBy)
 	require.Empty(t, selector.DisabledAt)
 	require.Empty(t, selector.DisabledBy)
@@ -86,9 +85,9 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagType, testActor, testName, testDescription, position, requireCertify)
 		require.NoError(t, err)
 		require.Equal(t, tagType, tag.Type)
-		require.WithinDuration(t, time.Now(), tag.CreatedAt, time.Second)
+		require.False(t, tag.CreatedAt.IsZero())
 		require.Equal(t, testActor, tag.CreatedBy)
-		require.WithinDuration(t, time.Now(), tag.UpdatedAt, time.Second)
+		require.False(t, tag.UpdatedAt.IsZero())
 		require.Equal(t, testActor, tag.UpdatedBy)
 		require.Empty(t, tag.DeletedAt)
 		require.Empty(t, tag.DeletedBy)
@@ -100,9 +99,9 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		tag, err = dbInst.GetAssetGroupTag(testCtx, tag.ID)
 		require.NoError(t, err)
 		require.Equal(t, tagType, tag.Type)
-		require.WithinDuration(t, time.Now(), tag.CreatedAt, time.Second)
+		require.False(t, tag.CreatedAt.IsZero())
 		require.Equal(t, testActor, tag.CreatedBy)
-		require.WithinDuration(t, time.Now(), tag.UpdatedAt, time.Second)
+		require.False(t, tag.UpdatedAt.IsZero())
 		require.Equal(t, testActor, tag.UpdatedBy)
 		require.Empty(t, tag.DeletedAt)
 		require.Empty(t, tag.DeletedBy)

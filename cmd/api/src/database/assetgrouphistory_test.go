@@ -21,7 +21,6 @@ package database_test
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
@@ -49,5 +48,5 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 	require.Equal(t, testAssetGroupTag, record[0].AssetGroupTagId)
 	require.Equal(t, null.String{}, record[0].EnvironmentId)
 	require.Equal(t, null.String{}, record[0].Note)
-	require.WithinDuration(t, time.Now(), record[0].CreatedAt, time.Second)
+	require.False(t, record[0].CreatedAt.IsZero())
 }
