@@ -48,7 +48,7 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCS")
-		_, _, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
+		expansions, _, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
 
 		cache := ad2.NewADCSCache()
@@ -64,7 +64,7 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 			computerCache, err := fetchComputerCache(db, innerDomain)
 			require.NoError(t, err)
 
-			err = ad2.PostCoerceAndRelayNTLMToADCS(cache, operation, authenticatedUsers, computerCache)
+			err = ad2.PostCoerceAndRelayNTLMToADCS(cache, operation, expansions, authenticatedUsers, computerCache)
 			require.NoError(t, err)
 		}
 
@@ -99,7 +99,7 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Composition Test - CoerceAndRelayNTLMToADCS")
-		_, _, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
+		expansions, _, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
 
 		cache := ad2.NewADCSCache()
@@ -115,7 +115,7 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 			computerCache, err := fetchComputerCache(db, innerDomain)
 			require.NoError(t, err)
 
-			err = ad2.PostCoerceAndRelayNTLMToADCS(cache, operation, authenticatedUsers, computerCache)
+			err = ad2.PostCoerceAndRelayNTLMToADCS(cache, operation, expansions, authenticatedUsers, computerCache)
 			require.NoError(t, err)
 		}
 
