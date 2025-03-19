@@ -229,6 +229,7 @@ const GraphView: FC = () => {
                         showNodeLabels={showNodeLabels}
                         showEdgeLabels={showEdgeLabels}
                         isCurrentSearchOpen={false}
+                        isJsonExportDisabled={isEmpty(exportableGraphState)}
                     />
                 </div>
                 <Popper

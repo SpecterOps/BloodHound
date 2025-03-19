@@ -21,6 +21,7 @@ import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
 import PathfindingSearch from './PathfindingSearch';
+import { usePathfindingSearchSwitch } from './switches';
 
 describe('Pathfinding: interaction', () => {
     const comboboxLookaheadOptions = {
@@ -56,9 +57,14 @@ describe('Pathfinding: interaction', () => {
         })
     );
 
+    const WrappedPathfindingSearch = () => {
+        const pathfindingSearchState = usePathfindingSearchSwitch();
+        return <PathfindingSearch pathfindingSearchState={pathfindingSearchState} />;
+    };
+
     beforeEach(async () => {
         await act(async () => {
-            render(<PathfindingSearch />);
+            render(<WrappedPathfindingSearch />);
         });
     });
 

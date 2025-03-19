@@ -16,15 +16,8 @@
 
 import { Box, Tab, Tabs, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import {
-    PersonalSearchList,
-    PrebuiltSearchList,
-    CommonSearches as prebuiltSearchList,
-    searchbarActions,
-} from 'bh-shared-ui';
+import { PersonalSearchList, PrebuiltSearchList, CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { startCypherQuery } from 'src/ducks/explore/actions';
 
 const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
@@ -47,9 +40,13 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const CommonSearches = () => {
+type CommonSearchesProps = {
+    onSetCypherQuery: (query: string) => void;
+    onPerformCypherSearch: (query: string) => void;
+};
+
+const CommonSearches = ({ onSetCypherQuery, onPerformCypherSearch }: CommonSearchesProps) => {
     const classes = useStyles();
-    const dispatch = useDispatch();
 
     const [activeTab, setActiveTab] = useState(AD_TAB);
 
@@ -66,8 +63,9 @@ const CommonSearches = () => {
         .map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
 
     const handleClick = (query: string) => {
-        dispatch(searchbarActions.cypherQueryEdited(query));
-        dispatch(startCypherQuery(query));
+        // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
+        onSetCypherQuery(query);
+        onPerformCypherSearch(query);
     };
 
     return (

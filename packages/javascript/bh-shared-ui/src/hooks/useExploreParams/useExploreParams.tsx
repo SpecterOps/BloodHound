@@ -15,7 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { EdgeCheckboxType, MappedStringLiteral } from '../..';
+import { EdgeCheckboxType } from '../../edgeTypes';
+import { MappedStringLiteral } from '../../types';
+import { EntityRelationshipQueryTypes, entityRelationshipEndpoints } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
 export type ExploreSearchTab = 'node' | 'pathfinding' | 'cypher';
@@ -29,7 +31,7 @@ export type ExploreQueryParams = {
     searchType: SearchType | null;
     expandedPanelSections: string[] | null;
     selectedItem: string | null;
-    relationshipQueryType: string | null;
+    relationshipQueryType: EntityRelationshipQueryTypes | null;
     relationshipQueryItemId: string | null;
     pathFilters: EdgeCheckboxType['edgeType'][] | null;
 };
@@ -60,6 +62,13 @@ export const parseSearchType = (paramValue: string | null): SearchType | null =>
     return null;
 };
 
+export const parseRelationshipQueryType = (paramValue: string | null): EntityRelationshipQueryTypes | null => {
+    if (paramValue && paramValue in entityRelationshipEndpoints) {
+        return paramValue as EntityRelationshipQueryTypes;
+    }
+    return null;
+};
+
 interface UseExploreParamsReturn extends ExploreQueryParams {
     setExploreParams: (params: Partial<ExploreQueryParams>) => void;
 }
@@ -75,8 +84,8 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         searchType: parseSearchType(searchParams.get('searchType')),
         expandedPanelSections: searchParams.getAll('expandedPanelSections'),
         selectedItem: searchParams.get('selectedItem'),
-        relationshipQueryType: searchParams.get('relationshipQueryType'),
-        relationshipQueryItemId: searchParams.get('relationshipQueryObjectId'),
+        relationshipQueryType: parseRelationshipQueryType(searchParams.get('relationshipQueryType')),
+        relationshipQueryItemId: searchParams.get('relationshipQueryItemId'),
         pathFilters: searchParams.getAll('pathFilters'),
         // react doesnt like this because it doesnt know the params needed for the function factory return function.
         // but the params needed are not needed in the deps array

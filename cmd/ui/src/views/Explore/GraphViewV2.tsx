@@ -68,8 +68,6 @@ const GraphViewV2: FC = () => {
 
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
-    const exportableGraphState = useAppSelector((state) => state.explore.export);
-
     const { data, isLoading, isError } = useAvailableEnvironments();
 
     const sigmaChartRef = useRef<any>(null);
@@ -79,6 +77,8 @@ const GraphViewV2: FC = () => {
     const [showNodeLabels, setShowNodeLabels] = useState(true);
 
     const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+
+    const [exportJsonData, setExportJsonData] = useState();
 
     const { setSelectedItem } = useExploreSelectedItem();
 
@@ -93,6 +93,7 @@ const GraphViewV2: FC = () => {
         const graph = new MultiDirectedGraph();
 
         initGraph(graph, items, theme, darkMode);
+        setExportJsonData(items);
 
         setCurrentNodes(items.nodes);
 
@@ -164,7 +165,7 @@ const GraphViewV2: FC = () => {
                 <div className='flex gap-1 pointer-events-auto' ref={currentSearchAnchorElement}>
                     <GraphButtons
                         onExportJson={() => {
-                            exportToJson(exportableGraphState);
+                            exportToJson(exportJsonData);
                         }}
                         onReset={() => {
                             sigmaChartRef.current?.resetCamera();
@@ -196,6 +197,7 @@ const GraphViewV2: FC = () => {
                         showNodeLabels={showNodeLabels}
                         showEdgeLabels={showEdgeLabels}
                         isCurrentSearchOpen={false}
+                        isJsonExportDisabled={isEmpty(exportJsonData)}
                     />
                 </div>
                 <Popper
