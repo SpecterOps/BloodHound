@@ -43,6 +43,13 @@ export const usePathfindingSearchSwitch = () => {
         dispatch(searchbarActions.destinationNodeSelected(selected));
     };
 
+    const handleSwapPathfindingInputs = () => {
+        if (sourceSelectedItem && destinationSelectedItem) {
+            handleSourceNodeSelected(destinationSelectedItem);
+            handleDestinationNodeSelected(sourceSelectedItem);
+        }
+    };
+
     return {
         sourceSearchTerm,
         destinationSearchTerm,
@@ -52,5 +59,6 @@ export const usePathfindingSearchSwitch = () => {
         handleDestinationNodeEdited,
         handleSourceNodeSelected,
         handleDestinationNodeSelected,
+        handleSwapPathfindingInputs,
     };
 };
