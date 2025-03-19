@@ -37,9 +37,19 @@ const (
 	ErrInvalidAssetGroupTagId = "invalid asset group tag id specified in url"
 )
 
-// Checks that any cypher selectors are valid cypher and not too complex.
-func areCypherSelectorSeedsValid(graph queries.Graph, seeds []model.SelectorSeed) error {
+// Checks that the selector seeds are valid.
+func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) error {
+	// all seeds must be of the same type
+	seedType := seeds[0].Type
+
+	if seedType != model.SelectorTypeObjectId && seedType != model.SelectorTypeCypher {
+		return fmt.Errorf("invalid seed type %v", seedType)
+	}
+
 	for _, seed := range seeds {
+		if seed.Type != seedType {
+			return fmt.Errorf("all seeds must be of the same type")
+		}
 		if seed.Type == model.SelectorTypeCypher {
 			if _, err := graph.PrepareCypherQuery(seed.Value, queries.QueryComplexityLimitSelector); err != nil {
 				return err
@@ -67,7 +77,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 	} else if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
-	} else if err := areCypherSelectorSeedsValid(s.GraphQuery, sel.Seeds); err != nil {
+	} else if err := validateSelectorSeeds(s.GraphQuery, sel.Seeds); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("cypher is invalid: %v", err), request), response)
 	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor.ID.String(), sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
 		api.HandleDatabaseError(request, response, err)

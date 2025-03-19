@@ -21,6 +21,7 @@ package database_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
@@ -30,11 +31,13 @@ import (
 
 func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 	var (
-		dbInst  = integration.SetupDB(t)
-		testCtx = context.Background()
+		dbInst            = integration.SetupDB(t)
+		testCtx           = context.Background()
+		testTarget        = "test target"
+		testAssetGroupTag = 1
 	)
 
-	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, model.AssetGroupActorSystem, "", model.AssetGroupHistoryActionDeleteSelector, 1, null.String{}, null.String{})
+	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, model.AssetGroupActorSystem, testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
 	require.NoError(t, err)
 
 	record, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
@@ -42,4 +45,9 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 	require.Len(t, record, 1)
 	require.Equal(t, model.AssetGroupHistoryActionDeleteSelector, record[0].Action)
 	require.Equal(t, model.AssetGroupActorSystem, record[0].Actor)
+	require.Equal(t, testTarget, record[0].Target)
+	require.Equal(t, testAssetGroupTag, record[0].AssetGroupTagId)
+	require.Equal(t, null.String{}, record[0].EnvironmentId)
+	require.Equal(t, null.String{}, record[0].Note)
+	require.WithinDuration(t, time.Now(), record[0].CreatedAt, time.Second)
 }

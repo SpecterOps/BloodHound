@@ -31,7 +31,7 @@ type AssetGroupHistoryData interface {
 }
 
 func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actor, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
-	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("INSERT INTO %s (actor, target, action, asset_group_tag_id, environment_id, note) VALUES (?, ?, ?, ?, ?, ?)", (model.AssetGroupHistory{}).TableName()),
+	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("INSERT INTO %s (actor, target, action, asset_group_tag_id, environment_id, note, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())", (model.AssetGroupHistory{}).TableName()),
 		actor, target, action, assetGroupTagId, environmentId, note))
 }
 
