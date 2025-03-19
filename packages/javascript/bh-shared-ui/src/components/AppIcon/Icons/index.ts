@@ -39,3 +39,4 @@ export * from './SortEmpty';
 export * from './TierZero';
 export * from './User';
 export * from './UserCog';
+export * from './VerticalEllipsis';

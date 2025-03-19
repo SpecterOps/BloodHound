@@ -1,32 +1,16 @@
-// Copyright 2025 Specter Ops, Inc.
-//
-// Licensed under the Apache License, Version 2.0
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// SPDX-License-Identifier: Apache-2.0
-
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetLabel, AssetSelector, SelectorNode } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
-import { AppIcon, CreateMenu } from '../../../components';
-import { ActiveDirectoryNodeKind } from '../../../graphSchema';
-import { ROUTE_TIER_MANAGEMENT_CREATE, ROUTE_TIER_MANAGEMENT_EDIT } from '../../../routes';
-import { apiClient } from '../../../utils';
+import { AppIcon, CreateMenu } from '../../components';
+import { ActiveDirectoryNodeKind } from '../../graphSchema';
+import { ROUTE_TIER_MANAGEMENT_CREATE, ROUTE_TIER_MANAGEMENT_EDIT } from '../../routes';
+import { apiClient } from '../../utils';
+import DynamicDetails from './Details/DynamicDetails';
+import EntityInfoPanel from './Details/EntityInfo/EntityInfoPanel';
+import ObjectCountPanel from './Details/ObjectCountPanel';
 import { DetailsList } from './DetailsList';
-import DynamicDetails from './DynamicDetails';
-import EntityInfoPanel from './EntityInfo/EntityInfoPanel';
-import { MembersList } from './MembersList';
 
 const innerDetail = (
     selectedObjectId: number | null,
@@ -96,7 +80,7 @@ const SelectedDetails: FC<SelectedDetailsProps> = ({ type, cypher, data }) => {
             return (
                 <>
                     <DynamicDetails data={data} />
-                    {/* <ObjectCountPanel /> */}
+                    <ObjectCountPanel data={data} />
                 </>
             );
     }
@@ -105,7 +89,7 @@ const SelectedDetails: FC<SelectedDetailsProps> = ({ type, cypher, data }) => {
         <>
             <DynamicDetails data={data} />
             {/* <div>{`Dynamic Details - ${type}-${id}`}</div> */}
-            {/* <ObjectCountPanel /> */}
+            <ObjectCountPanel data={data} />
         </>
     );
 };
@@ -117,28 +101,40 @@ const Details: FC = () => {
     const [showCypher, setShowCypher] = useState(false);
     const navigate = useNavigate();
 
-    const labelsQuery = useQuery(['asset-group-labels'], () => {
-        return apiClient.getAssetGroupLabels().then((res) => {
-            return res.data.data['asset_group_labels'];
-        });
-    });
-
-    const selectorsQuery = useQuery(['asset-group-selectors', selectedTier], () => {
-        return apiClient.getAssetGroupSelectors(selectedTier).then((res) => {
-            return res.data.data['selectors'];
-        });
-    });
-
-    const objectsQuery = useQuery(['asset-group-members', selectedTier, selectedSelector], async () => {
-        if (selectedSelector === null)
-            return apiClient.getAssetGroupLabelMembers(selectedTier, 0, 1).then((res) => {
-                return res.data.count;
+    const labelsQuery = useQuery(
+        ['asset-group-labels'],
+        () => {
+            return apiClient.getAssetGroupLabels().then((res) => {
+                return res.data.data['asset_group_labels'];
             });
+        },
+        { cacheTime: Infinity, keepPreviousData: true, staleTime: Infinity }
+    );
 
-        return apiClient.getAssetGroupSelectorMembers(selectedTier, selectedSelector, 0, 1).then((res) => {
-            return res.data.count;
-        });
-    });
+    const selectorsQuery = useQuery(
+        ['asset-group-selectors', selectedTier],
+        () => {
+            return apiClient.getAssetGroupSelectors(selectedTier).then((res) => {
+                return res.data.data['selectors'];
+            });
+        },
+        { cacheTime: Infinity, keepPreviousData: true, staleTime: Infinity }
+    );
+
+    const objectsQuery = useQuery(
+        ['asset-group-members', selectedTier, selectedSelector],
+        async () => {
+            if (selectedSelector === null)
+                return apiClient.getAssetGroupLabelMembers(selectedTier).then((res) => {
+                    return res.data.data['members'];
+                });
+
+            return apiClient.getAssetGroupSelectorMembers(selectedTier, selectedSelector).then((res) => {
+                return res.data.data['members'];
+            });
+        },
+        { cacheTime: Infinity, keepPreviousData: true, staleTime: Infinity }
+    );
 
     const disableEditButton =
         selectedObject !== null ||
@@ -149,7 +145,7 @@ const Details: FC = () => {
         selectedObject,
         selectedSelector,
         selectedTier,
-        [],
+        objectsQuery.data || [],
         labelsQuery.data || [],
         selectorsQuery.data || []
     );
@@ -158,7 +154,7 @@ const Details: FC = () => {
         <div>
             <div className='flex mt-6'>
                 <div className='flex justify-around basis-2/3'>
-                    <div className='flex justify-start gap-4 items-center basis-2/3 invisible'>
+                    <div className='flex justify-start gap-4 items-center basis-2/3'>
                         <CreateMenu
                             createMenuTitle='Create'
                             menuItems={[
@@ -218,7 +214,7 @@ const Details: FC = () => {
             </div>
             <div className='flex gap-8 mt-4'>
                 <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg'>
-                    <div className='min-h-96 grow-0 basis-1/3'>
+                    <div className='grow min-h-96'>
                         <DetailsList
                             title='Tiers'
                             listQuery={labelsQuery}
@@ -231,12 +227,12 @@ const Details: FC = () => {
                             }}
                         />
                     </div>
-                    <div className='border-neutral-light-3 dark:border-neutral-dark-3 min-h-96 grow-0 basis-1/3'>
+                    <div className='border-neutral-light-3 dark:border-neutral-dark-3 grow min-h-96'>
                         <DetailsList
                             title='Selectors'
                             listQuery={selectorsQuery}
                             selected={selectedSelector}
-                            onSelect={(id: number | null) => {
+                            onSelect={(id) => {
                                 setSelectedSelector(id);
 
                                 const selected = selectorsQuery.data?.find((item) => {
@@ -247,18 +243,20 @@ const Details: FC = () => {
 
                                 setSelectedObject(null);
                             }}
+                            sortable
                         />
                     </div>
-                    <div className='min-h-96 grow-0 basis-1/3'>
-                        <MembersList
-                            itemCount={objectsQuery.data}
-                            onClick={(id) => {
+                    <div className='grow min-h-96'>
+                        <DetailsList
+                            title='Objects'
+                            listQuery={objectsQuery}
+                            selected={selectedObject}
+                            onSelect={(id) => {
                                 setSelectedObject(id);
                                 setShowCypher(false);
                             }}
-                            selected={selectedObject}
-                            selectedSelector={selectedSelector}
-                            selectedTier={selectedTier}
+                            sortable
+                            nodeIcon
                         />
                     </div>
                 </div>
