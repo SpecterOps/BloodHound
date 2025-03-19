@@ -33,6 +33,10 @@ import (
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
+const (
+	ErrInvalidAssetGroupTagId = "invalid asset group tag id specified in url"
+)
+
 // Checks that any cypher selectors are valid cypher and not too complex.
 func areCypherSelectorSeedsValid(graph queries.Graph, seeds []model.SelectorSeed) (bool, error) {
 	for _, seed := range seeds {
@@ -47,26 +51,25 @@ func areCypherSelectorSeedsValid(graph queries.Graph, seeds []model.SelectorSeed
 
 func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		err      error
-		sel      model.AssetGroupTagSelector
-		tagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		sel           model.AssetGroupTagSelector
+		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 	)
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Create")()
 
-	if err = json.NewDecoder(request.Body).Decode(&sel); err != nil {
+	if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
+	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if err := json.NewDecoder(request.Body).Decode(&sel); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if errs := validation.Validate(sel); len(errs) > 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
-	} else if id, err := strconv.Atoi(tagIdStr); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupTagId, request), response)
-	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), id); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if validCypher, err := areCypherSelectorSeedsValid(s.GraphQuery, sel.Seeds); !validCypher {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("cypher is invalid: %v", err), request), response)
-	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), id, actor.ID.String(), sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
+	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor.ID.String(), sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)

@@ -21,14 +21,13 @@ import (
 )
 
 const (
-	ErrorParseParams          = "unable to parse request parameters"
-	ErrorDecodeParams         = "unable to decode request parameters"
-	ErrNoDomainId             = "no domain id specified in url"
-	ErrorNoFindingType        = "no finding type specified"
-	ErrorInvalidFindingType   = "invalid finding type specified: %v"
-	ErrorInvalidRFC3339       = "invalid RFC-3339 datetime format: %v"
-	ErrorNoDataType           = "no data type specified in url"
-	ErrInvalidAssetGroupTagId = "invalid asset group tag id specified in url"
+	ErrorParseParams        = "unable to parse request parameters"
+	ErrorDecodeParams       = "unable to decode request parameters"
+	ErrNoDomainId           = "no domain id specified in url"
+	ErrorNoFindingType      = "no finding type specified"
+	ErrorInvalidFindingType = "invalid finding type specified: %v"
+	ErrorInvalidRFC3339     = "invalid RFC-3339 datetime format: %v"
+	ErrorNoDataType         = "no data type specified in url"
 )
 
 type RiskAcceptRequest struct {
