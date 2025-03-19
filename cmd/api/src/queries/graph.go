@@ -60,7 +60,8 @@ const (
 	SearchTypeExact SearchType = "exact"
 	SearchTypeFuzzy SearchType = "fuzzy"
 
-	MaxQueryComplexityWeightAllowed = 50
+	QueryComplexityLimitSelector = 25
+	QueryComplexityLimitExplore  = 50
 )
 
 var (
@@ -143,7 +144,7 @@ type Graph interface {
 	ValidateOUs(ctx context.Context, ous []string) ([]string, error)
 	BatchNodeUpdate(ctx context.Context, nodeUpdate graph.NodeUpdate) error
 	RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
-	PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
+	PrepareCypherQuery(rawCypher string, queryComplexityLimit int64) (PreparedQuery, error)
 	UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error
 }
 
@@ -365,7 +366,7 @@ type PreparedQuery struct {
 	HasMutation   bool
 }
 
-func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error) {
+func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit int64) (PreparedQuery, error) {
 	var (
 		cypherFilters = []frontend.Visitor{
 			&frontend.ExplicitProcedureInvocationFilter{},
@@ -399,10 +400,10 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string) (PreparedQuery, error)
 		return graphQuery, err
 	} else if err = s.strippedCypherEmitter.Write(queryModel, strippedQueryBuffer); err != nil {
 		return graphQuery, err
-	} else if !s.DisableCypherComplexityLimit && complexityMeasure.Weight > MaxQueryComplexityWeightAllowed {
+	} else if !s.DisableCypherComplexityLimit && complexityMeasure.Weight > queryComplexityLimit {
 		// log query details if it is rejected due to high complexity
 		slog.Error(
-			fmt.Sprintf("Query rejected. Query weight: %d. Maximum allowed weight: %d", complexityMeasure.Weight, MaxQueryComplexityWeightAllowed),
+			fmt.Sprintf("Query rejected. Query weight: %d. Maximum allowed weight: %d", complexityMeasure.Weight, queryComplexityLimit),
 			"query", strippedQueryBuffer.String(),
 		)
 
