@@ -90,20 +90,19 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         });
     };
 
-    const setExpandedPanelSection = () => {
+    const setIsExpandedPanelSection = () => {
         return backButtonFlag?.enabled
             ? (expandedPanelSections as string[]).includes(label)
             : !!expandedSections[label];
     };
 
     const handleOnChange = (isOpen: boolean) => {
-        if (!backButtonFlag?.enabled) handleCurrentSectionToggle();
-        if (isOpen) {
-            handleSetGraph();
+        if (backButtonFlag?.enabled) {
+            if (isOpen) handleSetGraph();
+            else removeExpandedPanelSectionParams();
         } else {
-            if (backButtonFlag?.enabled) {
-                removeExpandedPanelSectionParams();
-            }
+            handleCurrentSectionToggle();
+            if (isOpen) handleSetGraph();
         }
     };
 
@@ -190,7 +189,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         <EntityInfoCollapsibleSection
             label={label}
             count={count}
-            isExpanded={setExpandedPanelSection()}
+            isExpanded={setIsExpandedPanelSection()}
             isLoading={countQuery.isLoading}
             isError={countQuery.isError}
             error={countQuery.error}
