@@ -18,12 +18,13 @@ package v2
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/src/api"
 	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/src/api"
 )
 
 const (
