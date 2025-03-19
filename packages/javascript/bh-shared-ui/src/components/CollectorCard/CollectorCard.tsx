@@ -17,14 +17,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, RiskBadge } from '@bloodhoundenterprise/doodleui';
 import { Box, Link, Typography } from '@mui/material';
 import React from 'react';
+import { cn } from '../../utils';
 
 export type LabelType = 'latest' | 'prerelease';
 
-type CollectorType = 'sharphoundEnterprise' | 'sharphound' | 'azurehound';
+export type CollectorType = 'sharphoundEnterprise' | 'sharphound' | 'azurehound';
 
-const COLLECTOR_TYPE: { [key in CollectorType]: string } = {
+export const COLLECTOR_TYPE_LABEL: { [key in CollectorType]: string } = {
     sharphoundEnterprise: 'SharpHound Enterprise',
-    sharphound: 'SharpHound Community Edition',
+    sharphound: 'SharpHound Community',
     azurehound: 'AzureHound',
 };
 
@@ -36,12 +37,13 @@ interface CollectorDownloadFile {
     onClickDownloadChecksum: () => void;
 }
 
-interface CollectorCardProps {
+interface CollectorCardProps extends React.HTMLAttributes<HTMLDivElement> {
     collectorType: CollectorType;
     version: string;
     timestamp: number;
     downloadArtifacts: CollectorDownloadFile[];
     label?: LabelType;
+    isLatest?: boolean;
     isPrerelease?: boolean;
 }
 
@@ -51,17 +53,19 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
     timestamp,
     downloadArtifacts,
     label = undefined,
+    isLatest = false,
     isPrerelease = false,
+    ...rest
 }) => {
     const date = new Date(timestamp);
 
     return (
-        <Card>
+        <Card {...rest} className={cn(rest.className, { 'bg-neutral-light-3 dark:bg-neutral-dark-5': isLatest })}>
             <CardHeader>
                 <Box display='flex' flexDirection='row' alignItems='center' gap='1rem'>
                     <CardTitle>{`${version}`.trim().toUpperCase()}</CardTitle>
                     {isPrerelease && <Typography variant='caption'>(pre-release)</Typography>}
-                    {label && <CollectorLabel label={label} />}
+                    {label && <CollectorLabel label={label} isPrerelease={isPrerelease} />}
                     <CardDescription>
                         {`${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`}
                     </CardDescription>
@@ -76,14 +80,14 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
                                     component='button'
                                     variant='body1'
                                     onClick={collector.onClickDownload}
-                                    title={`Download ${COLLECTOR_TYPE[collectorType]} ${version} ${collector.os} ${collector.arch}`.trim()}>
+                                    title={`Download ${COLLECTOR_TYPE_LABEL[collectorType]} ${version} ${collector.os} ${collector.arch}`.trim()}>
                                     {collector.fileName}
                                 </Link>
                                 <Link
                                     component='button'
                                     variant='body1'
                                     onClick={collector.onClickDownloadChecksum}
-                                    title={`Download ${COLLECTOR_TYPE[collectorType]} ${version} ${collector.os} ${collector.arch} Checksum`.trim()}>
+                                    title={`Download ${COLLECTOR_TYPE_LABEL[collectorType]} ${version} ${collector.os} ${collector.arch} Checksum`.trim()}>
                                     (checksum)
                                 </Link>
                             </Box>

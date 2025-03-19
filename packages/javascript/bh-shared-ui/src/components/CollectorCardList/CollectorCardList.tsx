@@ -14,8 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, useTheme } from '@mui/material';
-import CollectorCard, { LabelType } from '../CollectorCard';
+import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from '@bloodhoundenterprise/doodleui';
+import { Box, Typography, useTheme } from '@mui/material';
+import { useState } from 'react';
+import { CaretDown, CaretUp } from '../AppIcon/Icons';
+import CollectorCard, { COLLECTOR_TYPE_LABEL, CollectorType, LabelType } from '../CollectorCard';
 
 interface CollectorDownloadFile {
     fileName: string;
@@ -26,7 +29,7 @@ interface CollectorDownloadFile {
 }
 
 interface CollectorCardProps {
-    collectorType: 'sharphound' | 'azurehound';
+    collectorType: CollectorType;
     version: string;
     timestamp: number;
     downloadArtifacts: CollectorDownloadFile[];
@@ -41,21 +44,83 @@ interface CollectorCardListProps {
 const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors }) => {
     const theme = useTheme();
 
+    // Few enough collectors that this isn't worth memoizing
+    // And the only state is theme
+    const sortedCollectors = collectors.toSorted((a, b) =>
+        b.version.toLowerCase().localeCompare(a.version.toLowerCase())
+    );
+    const latestStable = sortedCollectors.filter((c) => !c.isPrerelease)[0];
+    const latestPrerelease = sortedCollectors.filter(
+        // Is prerelease and version is greater than latest stable
+        (c) => c.isPrerelease && c.version.toLowerCase().localeCompare(latestStable.version.toLowerCase()) > 0
+    )[0];
+    const olderVersions = sortedCollectors.filter(
+        (c) => !c.isPrerelease && c !== latestStable && c !== latestPrerelease
+    );
+
     return (
-        <Box display='grid' rowGap={theme.spacing(2)}>
-            {collectors.map((collector, index) => (
-                <Box key={index}>
+        <Box display='flex' flexDirection='column' gap={theme.spacing(2)}>
+            <Typography variant='h6'>{COLLECTOR_TYPE_LABEL[latestStable.collectorType]}</Typography>
+            <Box display='flex' flexDirection='row' gap={theme.spacing(2)}>
+                <CollectorCard
+                    className='w-full'
+                    collectorType={latestStable.collectorType}
+                    version={latestStable.version}
+                    timestamp={latestStable.timestamp}
+                    label={latestStable.label}
+                    isLatest={true}
+                    isPrerelease={latestStable.isPrerelease}
+                    downloadArtifacts={latestStable.downloadArtifacts}
+                />
+                {latestPrerelease && (
                     <CollectorCard
-                        collectorType={collector.collectorType}
-                        version={collector.version}
-                        timestamp={collector.timestamp}
-                        label={collector.label}
-                        isPrerelease={collector.isPrerelease}
-                        downloadArtifacts={collector.downloadArtifacts}
+                        className='w-full'
+                        collectorType={latestPrerelease.collectorType}
+                        version={latestPrerelease.version}
+                        timestamp={latestPrerelease.timestamp}
+                        label={latestPrerelease.label}
+                        isPrerelease={latestPrerelease.isPrerelease}
+                        downloadArtifacts={latestPrerelease.downloadArtifacts}
                     />
-                </Box>
-            ))}
+                )}
+            </Box>
+            {olderVersions.length > 0 && <OlderVersionsList collectors={olderVersions} />}
         </Box>
+    );
+};
+
+const OlderVersionsList: React.FC<CollectorCardListProps> = ({ collectors }) => {
+    const theme = useTheme();
+    const [expanded, setExpanded] = useState(false);
+
+    return (
+        <Accordion type='single' onValueChange={() => setExpanded((x) => !x)} collapsible>
+            <AccordionItem value='older-versions' className='bg-neutral-light-0 dark:bg-neutral-dark-1'>
+                <AccordionHeader>
+                    <Box display='flex' flexDirection='row' gap={1}>
+                        {expanded ? <CaretUp /> : <CaretDown />}
+                        Older Versions
+                    </Box>
+                </AccordionHeader>
+                <AccordionContent>
+                    <Box display='flex' flexDirection='column' gap={theme.spacing(2)}>
+                        {collectors.map((collector) => (
+                            <CollectorCard
+                                key={collector.version}
+                                className='w-full'
+                                collectorType={collector.collectorType}
+                                version={collector.version}
+                                timestamp={collector.timestamp}
+                                label={collector.label}
+                                isLatest={false}
+                                isPrerelease={collector.isPrerelease}
+                                downloadArtifacts={collector.downloadArtifacts}
+                            />
+                        ))}
+                    </Box>
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
     );
 };
 
