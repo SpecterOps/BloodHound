@@ -66,6 +66,12 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         { refetchOnWindowFocus: false, retry: false }
     );
 
+    const removeExpandedPanelSectionParams = () => {
+        setExploreParams({
+            expandedPanelSections: parentLabels,
+        });
+    };
+
     const setExpandedPanelSectionsParams = () => {
         const labelList = [...(parentLabels as string[]), label];
 
@@ -79,18 +85,21 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
 
     const handleOnChange = (isOpen: boolean) => {
         handleCurrentSectionToggle();
-        handleSetGraph(isOpen);
+        if (isOpen) {
+            handleSetGraph();
+        } else {
+            if (backButtonFlag?.enabled) {
+                removeExpandedPanelSectionParams();
+            }
+        }
     };
 
-    const handleSetGraph = async (isOpen: boolean) => {
+    const handleSetGraph = async () => {
         if (!endpoint) {
-            if (backButtonFlag?.enabled && isOpen) {
+            if (backButtonFlag?.enabled) {
                 setExpandedPanelSectionsParams();
             }
-            return;
-        }
-
-        if (isOpen && countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
+        } else if (countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
             abortEntitySectionRequest();
             if (backButtonFlag?.enabled) {
                 setExpandedPanelSectionsParams();
