@@ -97,8 +97,8 @@ CREATE TABLE IF NOT EXISTS asset_group_tag_selectors
 -- Add asset_group_tag_selector_seeds table
 CREATE TABLE IF NOT EXISTS asset_group_tag_selector_seeds
 (
-    selector_id int,
-    type int,
-    value text,
+    selector_id int NOT NULL,
+    type int NOT NULL,
+    value text NOT NULL,
     CONSTRAINT fk_asset_group_tag_selectors_asset_group_tag_selector_seeds FOREIGN KEY (selector_id) REFERENCES asset_group_tag_selectors(id) ON DELETE CASCADE
 );

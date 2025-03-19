@@ -34,12 +34,12 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 		testCtx = context.Background()
 	)
 
-	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, model.AssetGroupHistoryActorSystem, "", model.AssetGroupHistoryActionDeleteSelector, 1, null.String{}, null.String{})
+	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, model.AssetGroupActorSystem, "", model.AssetGroupHistoryActionDeleteSelector, 1, null.String{}, null.String{})
 	require.NoError(t, err)
 
 	record, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
 	require.NoError(t, err)
 	require.Len(t, record, 1)
 	require.Equal(t, model.AssetGroupHistoryActionDeleteSelector, record[0].Action)
-	require.Equal(t, model.AssetGroupHistoryActorSystem, record[0].Actor)
+	require.Equal(t, model.AssetGroupActorSystem, record[0].Actor)
 }

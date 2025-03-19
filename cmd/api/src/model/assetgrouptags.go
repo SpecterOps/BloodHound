@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	AssetGroupHistoryActorSystem = "SYSTEM"
+	AssetGroupActorSystem = "SYSTEM"
 )
 
 type SelectorType int

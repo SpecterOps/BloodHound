@@ -130,7 +130,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 		} else if result := tx.Raw(fmt.Sprintf(`
 			INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify) 
 			VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?, ?, ?) 
-			RETURNING id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by, position, require_certify`,
+			RETURNING id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify`,
 			tag.TableName()),
 			tagType, kindId, name, description, userId, userId, position, requireCertify).Scan(&tag); result.Error != nil {
 			return CheckError(result)
