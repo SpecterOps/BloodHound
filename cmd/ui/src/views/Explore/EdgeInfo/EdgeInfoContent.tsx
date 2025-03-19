@@ -95,9 +95,10 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                         const setExpandedPanelSectionsParam = () => {
                             setExploreParams({
                                 expandedPanelSections: [sectionKeyLabel],
-                                ...(sectionKeyLabel === 'composition'
-                                    ? { searchType: 'composition', relationshipQueryItemId: selectedItem }
-                                    : { searchType: null }),
+                                ...(sectionKeyLabel === 'composition' && {
+                                    searchType: 'composition',
+                                    relationshipQueryItemId: selectedItem,
+                                }),
                             });
                         };
 
