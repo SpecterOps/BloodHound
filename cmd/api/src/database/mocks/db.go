@@ -171,7 +171,7 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupCollection(arg0, arg1, arg2 
 }
 
 // CreateAssetGroupHistoryRecord mocks base method.
-func (m *MockDatabase) CreateAssetGroupHistoryRecord(arg0 context.Context, arg1, arg2 string, arg3 model.AssetGroupHistoryAction, arg4 int, arg5, arg6 string) error {
+func (m *MockDatabase) CreateAssetGroupHistoryRecord(arg0 context.Context, arg1, arg2 string, arg3 model.AssetGroupHistoryAction, arg4 int, arg5, arg6 null.String) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAssetGroupHistoryRecord", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(error)

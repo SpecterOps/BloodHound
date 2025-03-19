@@ -25,6 +25,10 @@ import (
 	"github.com/specterops/bloodhound/src/database/types/null"
 )
 
+const (
+	AssetGroupHistoryActorSystem = "SYSTEM"
+)
+
 type SelectorType int
 
 const (

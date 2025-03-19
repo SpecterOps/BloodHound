@@ -22,6 +22,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
@@ -33,7 +34,7 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 		testCtx = context.Background()
 	)
 
-	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, model.AssetGroupHistoryActorSystem, "", model.AssetGroupHistoryActionDeleteSelector, 1, "", "")
+	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, model.AssetGroupHistoryActorSystem, "", model.AssetGroupHistoryActionDeleteSelector, 1, null.String{}, null.String{})
 	require.NoError(t, err)
 
 	record, err := dbInst.GetAssetGroupHistoryRecords(testCtx)

@@ -25,10 +25,6 @@ import (
 type AssetGroupHistoryAction string
 
 const (
-	AssetGroupHistoryActorSystem = "SYSTEM"
-)
-
-const (
 	AssetGroupHistoryActionCreateTag AssetGroupHistoryAction = "CreateTag"
 	AssetGroupHistoryActionUpdateTag AssetGroupHistoryAction = "UpdateTag"
 	AssetGroupHistoryActionDeleteTag AssetGroupHistoryAction = "DeleteTag"
@@ -48,4 +44,21 @@ type AssetGroupHistory struct {
 	AssetGroupTagId int                     `json:"asset_group_tag_id"`
 	EnvironmentId   null.String             `json:"environment_id"`
 	Note            null.String             `json:"note"`
+}
+
+func (AssetGroupHistory) TableName() string {
+	return "asset_group_history"
+}
+
+func (s AssetGroupHistory) AuditData() AuditData {
+	return AuditData{
+		"id":                 s.ID,
+		"created_at":         s.CreatedAt,
+		"actor":              s.Actor,
+		"action":             s.Action,
+		"target":             s.Target,
+		"asset_group_tag_id": s.AssetGroupTagId,
+		"environment_id":     s.EnvironmentId,
+		"note":               s.Note,
+	}
 }
