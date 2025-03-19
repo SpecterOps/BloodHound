@@ -115,10 +115,8 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 		}
 	)
 
-	if tagType == model.AssetGroupTagTypeLabel {
-		if position.Valid || requireCertify.Valid {
-			return model.AssetGroupTag{}, fmt.Errorf("position and requireCertify must be null for a label")
-		}
+	if tagType != model.AssetGroupTagTypeTier && (position.Valid || requireCertify.Valid) {
+		return model.AssetGroupTag{}, fmt.Errorf("position and require_certify are limited to tiers only")
 	}
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
