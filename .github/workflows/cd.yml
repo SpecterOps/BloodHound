@@ -35,9 +35,9 @@ jobs:
       image_provenance: mode=max
       build_outputs: type=image,push=true
       dockerfile: dockerfiles/bloodhound.Dockerfile
-      image_cache_from: type=registry,ref=ghcr.io/specterops/bloodhound:buildcache
-      image_cache_to: type=registry,ref=ghcr.io/specterops/bloodhound:buildcache,mode=max
-      image_flavor: ${{ (github.ref_name == 'main' || contains(github.ref_name, '-rc')) && 'latest=false' }}
+      image_cache_from: type=gha
+      image_cache_to: type=gha,mode=max
+      image_flavor: latest=${{ (github.ref_name == 'main' || contains(github.ref_name, '-rc')) == false }}
       image_tags: |
         type=edge,branch=main
         type=semver,pattern={{version}}

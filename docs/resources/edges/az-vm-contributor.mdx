@@ -1,0 +1,24 @@
+---
+title: AZVMContributor
+description: "The Virtual Machine contributor role grants almost all abusable privileges against Virtual Machines."
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+
+## Abuse Info
+The Virtual Machine Contributor role allows you to run SYSTEM commands on the VM
+
+Via PowerZure:
+
+* [Invoke-AzureRunCommand](https://powerzure.readthedocs.io/en/latest/Functions/operational.html#invoke-azureruncommand)
+* [Invoke-AzureRunMSBuild](https://powerzure.readthedocs.io/en/latest/Functions/operational.html#invoke-azurerunmsbuild)
+* [Invoke-AzureRunProgram](https://powerzure.readthedocs.io/en/latest/Functions/operational.html#invoke-azurerunprogram)
+
+## Opsec Considerations
+
+Because you’ll be running a command as the SYSTEM user on the Virtual Machine, the same opsec considerations for running malicious commands on any system should be taken into account: command line logging, PowerShell script block logging, EDR, etc.
+
+## References
+
+* [https://blog.netspi.com/running-powershell-scripts-on-azure-vms/](https://blog.netspi.com/running-powershell-scripts-on-azure-vms/)

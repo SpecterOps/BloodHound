@@ -1,0 +1,72 @@
+---
+title: AZMGAddOwner
+description: "This edge is created during post-processing."
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+
+ It is created against all App Registrations and Service Principals within the same tenant when a Service Principal has the following MS Graph app role:
+
+* Application.ReadWrite.All
+
+It is also created against all Azure Service Principals when a Service Principal has the following MS Graph app role:
+
+* ServicePrincipalEndpoint.ReadWrite.All
+
+It is also created against all Azure security groups that are not role eligible when a Service Principal has one of the following MS Graph app roles:
+
+* Directory.ReadWrite.All
+* Group.ReadWrite.All
+
+Finally, it is created against all Azure security groups and all Azure App Registrations when a Service Principal has the following MS Graph app role:
+
+* RoleManagement.ReadWrite.Directory
+
+You will not see these privileges when auditing permissions against any of the mentioned objects when you use Microsoft tooling, including the Azure portal and the MS Graph API itself.
+
+## Abuse Info
+You can use BARK to add a new owner to the target object. The BARK function you use will depend on the target object type, but all of the functions follow a similar syntax.
+
+These functions require you to supply an MS Graph-scoped JWT associated with the Service Principal that has the privilege to add a new owner to the target object. There are several ways to acquire a JWT. For example, you may use BARK’s Get-MSGraphTokenWithClientCredentials to acquire an MS Graph-scoped JWT by supplying a Service Principal Client ID and secret:
+
+```bash
+$MGToken = Get-MSGraphTokenWithClientCredentials `
+    -ClientID "34c7f844-b6d7-47f3-b1b8-720e0ecba49c" `
+    -ClientSecret "asdf..." `
+    -TenantName "contoso.onmicrosoft.com"
+```
+To add a new owner to a Service Principal, use BARK’s New-ServicePrincipalOwner function:
+
+```bash
+New-ServicePrincipalOwner `
+    -ServicePrincipalObjectId "082cf9b3-24e2-427b-bcde-88ffdccb5fad" `
+    -NewOwnerObjectId "cea271c4-7b01-4f57-932d-99d752bbbc60" `
+    -Token $Token
+```
+To add a new owner to an App Registration, use BARK’s New-AppOwner function:
+
+```bash
+New-AppOwner `
+    -AppObjectId "52114a0d-fa5b-4ee5-9a29-2ba048d46eee" `
+    -NewOwnerObjectId "cea271c4-7b01-4f57-932d-99d752bbbc60" `
+    -Token $Token
+```
+To add a new owner to a Group, use BARK’s New-GroupOwner function:
+
+```bash
+New-AppOwner `
+    -GroupObjectId "352032bf-161d-4788-b77c-b6f935339770" `
+    -NewOwnerObjectId "cea271c4-7b01-4f57-932d-99d752bbbc60" `
+    -Token $Token
+```
+
+## Opsec Considerations
+
+Any time you add an owner to any Azure object, the AzureAD audit logs will create an event logging who added an owner to what object, as well as what the new owner added to the object was.
+
+## References
+
+* [https://attack.mitre.org/techniques/T1098/](https://attack.mitre.org/techniques/T1098/)
+* [https://posts.specterops.io/azure-privilege-escalation-via-service-principal-abuse-210ae2be2a5](https://posts.specterops.io/azure-privilege-escalation-via-service-principal-abuse-210ae2be2a5)
+* [https://github.com/BloodHoundAD/BARK](https://github.com/BloodHoundAD/BARK)

@@ -15,13 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { GlyphIconInfo, apiClient } from 'bh-shared-ui';
-import { FlatGraphResponse, GraphData, GraphResponse, StyledGraphEdge, StyledGraphNode } from 'js-client-library';
 import identity from 'lodash/identity';
 import throttle from 'lodash/throttle';
 import { Coordinates } from 'sigma/types';
 import { logout } from 'src/ducks/auth/authSlice';
 import { addSnackbar } from 'src/ducks/global/actions';
-import { isLink, isNode } from 'src/ducks/graph/utils';
 import { Glyph } from 'src/rendering/programs/node.glyphs';
 import { store } from 'src/store';
 
@@ -151,90 +149,3 @@ export type EdgeParams = {
     controlInViewport?: Coordinates;
     forceLabel?: boolean;
 } & ThemedLabels;
-
-const getLastSeenValue = (object: any): string => {
-    if (object.lastSeen) return object.lastSeen;
-    if (object.data) {
-        if (object.data.lastSeen) return object.data.lastSeen;
-        if (object.data.lastseen) return object.data.lastseen;
-    }
-
-    return '';
-};
-
-export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData => {
-    const result: GraphData = {
-        nodes: {},
-        edges: [],
-    };
-
-    for (const [key, item] of Object.entries(graph)) {
-        if (isNode(item)) {
-            const node = item as StyledGraphNode;
-            const lastSeen = getLastSeenValue(node);
-            result.nodes[key] = {
-                label: node.label.text || '',
-                kind: node.data.nodetype,
-                objectId: node.data.objectid,
-                isTierZero: !!(node.data.system_tags && node.data.system_tags.indexOf('admin_tier_0') !== -1),
-                isOwnedObject: !!(node.data.system_tags && node.data.system_tags.indexOf('owned') !== -1),
-                lastSeen: lastSeen,
-            };
-        } else if (isLink(item)) {
-            const edge = item as StyledGraphEdge;
-            const lastSeen = getLastSeenValue(edge);
-            result.edges.push({
-                impactPercent: edge.data ? edge.data.composite_risk_impact_percent : undefined,
-                source: edge.id1,
-                target: edge.id2,
-                label: edge.label.text || '',
-                kind: edge.label.text || '',
-                lastSeen: lastSeen,
-                exploreGraphId: key || `${edge.id1}_${edge.label.text}_${edge.id2}`,
-                data: { ...(edge.data || {}), lastseen: lastSeen },
-            });
-        }
-    }
-
-    return result;
-};
-
-export const transformToFlatGraphResponse = (graph: GraphResponse) => {
-    const result: any = {};
-    for (const [key, value] of Object.entries(graph.data.nodes)) {
-        const lastSeen = getLastSeenValue(value);
-        // Check and add needed system_tags to node
-        const tags = [];
-        {
-            value.isTierZero ? tags.push('admin_tier_0') : null;
-        }
-        {
-            value.isOwnedObject ? tags.push('owned') : null;
-        }
-        result[key] = {
-            label: {
-                text: value.label,
-            },
-            data: {
-                nodetype: value.kind,
-                name: value.label,
-                objectid: value.objectId,
-                system_tags: tags.join(' '),
-                lastseen: lastSeen,
-            },
-        };
-    }
-    for (const edge of graph.data.edges) {
-        const lastSeen = getLastSeenValue(edge);
-        result[`${edge.source}_${edge.kind}_${edge.target}`] = {
-            id1: edge.source,
-            id2: edge.target,
-            label: {
-                text: edge.label,
-            },
-            lastSeen: lastSeen,
-            data: { ...(edge.data || {}), lastseen: lastSeen },
-        };
-    }
-    return result;
-};

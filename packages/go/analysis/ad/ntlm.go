@@ -38,11 +38,6 @@ import (
 
 // PostNTLM is the initial function used to execute our NTLM analysis
 func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, adcsCache ADCSCache, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
-	// NTLM must be enabled through the feature flag
-	if !ntlmEnabled {
-		return nil, nil
-	}
-
 	var (
 		adcsComputerCache       = make(map[string]cardinality.Duplex[uint64])
 		operation               = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
@@ -50,6 +45,12 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		// compositionChannel      = make(chan analysis.CompositionInfo)
 		protectedUsersCache = make(map[string]cardinality.Duplex[uint64])
 	)
+
+	// NTLM must be enabled through the feature flag
+	if !ntlmEnabled {
+		operation.Done()
+		return &operation.Stats, nil
+	}
 
 	// This is a POC on how to pipe composition info up through the operations
 	// go func() {
@@ -343,7 +344,14 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 						return nil
 					}
 
+					checkedCerts := make([]graph.ID, 0)
 					for _, certTemplate := range publishedCertTemplates {
+						if slices.Contains(checkedCerts, certTemplate.ID) {
+							continue
+						} else {
+							checkedCerts = append(checkedCerts, certTemplate.ID)
+						}
+
 						if valid, err := isCertTemplateValidForADCSRelay(certTemplate); err != nil {
 							slog.ErrorContext(ctx, fmt.Sprintf("Error validating cert template %d for NTLM ADCS relay: %v", certTemplate.ID, err))
 							continue
@@ -486,11 +494,17 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 				allAdminGroups.Or(expandedGroups.Cardinality(group.Uint64()))
 			}
 
-			// Fetch nodes where the node id is in our allAdminGroups bitmap and are of type Computer
+			currentComputerID, err := computer.Properties.Get(common.ObjectID.String()).String()
+			if err != nil {
+				return err
+			}
+
+			// Fetch nodes where the node id is in our allAdminGroups bitmap, are of type Computer, and are not the target computer
 			if computerIds, err := ops.FetchNodeIDs(tx.Nodes().Filter(
 				query.And(
 					query.InIDs(query.Node(), graph.DuplexToGraphIDs(allAdminGroups)...),
 					query.Kind(query.Node(), ad.Computer),
+					query.Not(query.Equals(query.NodeProperty(common.ObjectID.String()), currentComputerID)),
 				),
 			)); err != nil {
 				return err
@@ -590,7 +604,7 @@ func GetVulnerableDomainControllersForRelayNTLMtoLDAPS(ctx context.Context, db g
 
 // PostCoerceAndRelayNTLMToLDAP creates edges where an authenticated user group, for a given domain, is able to target the provided computer.
 // This will create either a CoerceAndRelayNTLMToLDAP or CoerceAndRelayNTLMToLDAPS edges, depending on the ldapSigning property of the domain
-func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob, computer *graph.Node, authenticatedUserID graph.ID, ldapSigningCache map[string]LDAPSigningCache) error {
+func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob, computer *graph.Node, authenticatedUserGroupID graph.ID, ldapSigningCache map[string]LDAPSigningCache) error {
 	// restrictoutboundntlm must be set to false and webclientrunning must be set to true for the computer's properties
 	// in order for this attack path to be viable
 	// If the property is not found, we will assume false
@@ -614,17 +628,30 @@ func PostCoerceAndRelayNTLMToLDAP(outC chan<- analysis.CreatePostRelationshipJob
 			} else {
 				// We will create relationships from the AuthenticatedUsers group to the vulnerable computer,
 				// for both LDAP and LDAPS scenarios, assuming the passed in signingCache has any vulnerable paths
-				if len(signingCache.relayableToDCLDAP) > 0 {
+				// We also ignore instances where the computer is relaying to itself
+				if len(signingCache.relayableToDCLDAP) == 1 && signingCache.relayableToDCLDAP[0] != computer.ID {
 					outC <- analysis.CreatePostRelationshipJob{
-						FromID: authenticatedUserID,
+						FromID: authenticatedUserGroupID,
+						ToID:   computer.ID,
+						Kind:   ad.CoerceAndRelayNTLMToLDAP,
+					}
+				} else if len(signingCache.relayableToDCLDAP) > 1 {
+					outC <- analysis.CreatePostRelationshipJob{
+						FromID: authenticatedUserGroupID,
 						ToID:   computer.ID,
 						Kind:   ad.CoerceAndRelayNTLMToLDAP,
 					}
 				}
 
-				if len(signingCache.relayableToDCLDAPS) > 0 {
+				if len(signingCache.relayableToDCLDAPS) == 1 && signingCache.relayableToDCLDAPS[0] != computer.ID {
 					outC <- analysis.CreatePostRelationshipJob{
-						FromID: authenticatedUserID,
+						FromID: authenticatedUserGroupID,
+						ToID:   computer.ID,
+						Kind:   ad.CoerceAndRelayNTLMToLDAPS,
+					}
+				} else if len(signingCache.relayableToDCLDAPS) > 1 {
+					outC <- analysis.CreatePostRelationshipJob{
+						FromID: authenticatedUserGroupID,
 						ToID:   computer.ID,
 						Kind:   ad.CoerceAndRelayNTLMToLDAPS,
 					}

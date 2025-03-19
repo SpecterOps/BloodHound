@@ -21,6 +21,7 @@ import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
 import PathfindingSearch from './PathfindingSearch';
+import { usePathfindingSearchSwitch } from './switches';
 
 describe('Pathfinding: interaction', () => {
     const comboboxLookaheadOptions = {
@@ -46,12 +47,24 @@ describe('Pathfinding: interaction', () => {
     const server = setupServer(
         rest.get('/api/v2/search', (req, res, ctx) => {
             return res(ctx.json(comboboxLookaheadOptions));
+        }),
+        rest.get('/api/v2/features', (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: [],
+                })
+            );
         })
     );
 
+    const WrappedPathfindingSearch = () => {
+        const pathfindingSearchState = usePathfindingSearchSwitch();
+        return <PathfindingSearch pathfindingSearchState={pathfindingSearchState} />;
+    };
+
     beforeEach(async () => {
         await act(async () => {
-            render(<PathfindingSearch />);
+            render(<WrappedPathfindingSearch />);
         });
     });
 

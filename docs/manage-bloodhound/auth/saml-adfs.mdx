@@ -3,9 +3,7 @@ title: "SAML: ADFS Configuration"
 description: "This document provides instructions for creating an application within ADFS for compatibility with BloodHound Enterprise."
 ---
 
-<Frame>
-  <img src="/assets/image-2-1.png"/>
-</Frame>
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
 
 For general instructions on adding a SAML provider to BloodHound Enterprise or for configuring users to utilize a SAML provider, see [SAML in BloodHound Enterprise](/manage-bloodhound/auth/saml).
 
@@ -13,19 +11,19 @@ See [SAML Order of Operations and Quick Reference](/manage-bloodhound/auth/saml)
 
 ## Create an Application
 
-1.  In the AD FS management console, right-click on Relaying Party Trust and click "Add Relaying Party Trust".
+1.  In the AD FS management console, right-click on Relaying Party Trust and click “Add Relaying Party Trust”.
 <Frame>
   <img src="/assets/image-2-25.png"/>
 </Frame>
-2.  Choose "Claims aware" and click "Start".
+2.  Choose “Claims aware” and click “Start”.
 <Frame>
   <img src="/assets/image-2-26.png"/>
 </Frame>
-3.  Insert the metadata URL based on your chosen name and click "Next."
+3.  Insert the metadata URL based on your chosen name and click “Next.”
 <Frame>
   <img src="/assets/image-2-27.png"/>
 </Frame>
-4.  Enter the preferred display name and click "Next."
+4.  Enter the preferred display name and click “Next.”
 <Frame>
   <img src="/assets/image-2-28.png"/>
 </Frame>
@@ -33,26 +31,26 @@ See [SAML Order of Operations and Quick Reference](/manage-bloodhound/auth/saml)
 <Frame>
   <img src="/assets/image-2-29.png"/>
 </Frame>
-6.  Review the information presented and click "Next".
+6.  Review the information presented and click “Next”.
 <Frame>
   <img src="/assets/image-2-30.png"/>
 </Frame>
-7.  Leave the "Configure claims issuance policy for this application" box checked and click "Close".
+7.  Leave the “Configure claims issuance policy for this application” box checked and click “Close”.
 <Frame>
   <img src="/assets/image-2-31.png"/>
 </Frame>
 
 ## Complete SAML Integration Configuration
 
-1.  On the "Edit Claim Issuance Policy" dialog box, click "Add Rule...".
+1.  On the “Edit Claim Issuance Policy” dialog box, click “Add Rule…”.
 <Frame>
   <img src="/assets/image-2-32.png"/>
 </Frame>
-2.  Choose "Send LDAP Attributes as Claims" and click "Next".
+2.  Choose “Send LDAP Attributes as Claims” and click “Next.
 <Frame>
   <img src="/assets/image-2-33.png"/>
 </Frame>
-3.  Fill out the following and click "Finish".
+3.  Fill out the following and click “Finish”.
 
     LDAP Attribute: E-Mail-Addresses
     Outgoing Claim Type : E-Mail Address
@@ -60,24 +58,24 @@ See [SAML Order of Operations and Quick Reference](/manage-bloodhound/auth/saml)
 <Frame>
   <img src="/assets/image-2-34.png"/>
 </Frame>
-4.  Click "Add Rule" to add another claim rule.
+4.  Click “Add Rule” to add another claim rule.
 <Frame>
   <img src="/assets/image-2-35.png"/>
 </Frame>
-5.  Choose "Transform and Incoming Claim" and click "Next".
+5.  Choose “Transform and Incoming Claim” and click “Next”.
 <Frame>
   <img src="/assets/image-2-36.png"/>
 </Frame>
-6.  Fill out the following and click "Finish".
+6.  Fill out the following and click “Finish”.
 
     Incoming claim type: E-Mail Address
     Outgoing claim type: Name ID
     Outgoing name ID format: Email
-    Choose "Pass through all claim values"
+    Choose “Pass through all claim values”
 <Frame>
   <img src="/assets/image-2-37.png"/>
 </Frame>
-7.  Click "Apply".
+7.  Click “Apply”.
 <Frame>
   <img src="/assets/image-2-38.png"/>
 </Frame>

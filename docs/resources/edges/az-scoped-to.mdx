@@ -1,0 +1,15 @@
+---
+title: AZScopedTo
+description: "Is used to distinguish whether an EntraID (AzureAD) admin role such as Application Administrator or Cloud Application Administrator is scoped to the tenant or to a particular app registration or service principal."
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+
+## Abuse Info
+
+When a principal has such a role scoped to the tenant, they gain control of all app registrations and service principals in the tenant. If a principal has the same role scoped to individual objects, they only gain control of those particular objects. This is unique to just a handful of roles, but custom roles can also work this way.
+
+## Opsec Considerations
+
+This will depend on which particular abuse you perform, but in general Azure will create a log event for each abuse.

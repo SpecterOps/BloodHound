@@ -24,7 +24,8 @@ import {
     isWebGLEnabled,
     setEdgeInfoOpen,
     setSelectedEdge,
-    useAvailableDomains,
+    transformFlatGraphResponse,
+    useAvailableEnvironments,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -42,7 +43,6 @@ import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import { transformFlatGraphResponse } from 'src/utils';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
 import ExploreSearch from 'src/views/Explore/ExploreSearch';
@@ -70,7 +70,7 @@ const GraphView: FC = () => {
 
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
-    const { data, isLoading, isError } = useAvailableDomains();
+    const { data, isLoading, isError } = useAvailableEnvironments();
 
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
@@ -229,6 +229,7 @@ const GraphView: FC = () => {
                         showNodeLabels={showNodeLabels}
                         showEdgeLabels={showEdgeLabels}
                         isCurrentSearchOpen={false}
+                        isJsonExportDisabled={isEmpty(exportableGraphState)}
                     />
                 </div>
                 <Popper

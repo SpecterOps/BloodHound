@@ -14,27 +14,140 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import * as modes from './search-modes';
-import { getExploreGraphQuery } from './useExploreGraph';
-
-const nodeSearchGraphQuerySpy = vi.spyOn(modes, 'nodeSearchGraphQuery');
+import { ExploreQueryParams } from '../useExploreParams';
+import { exploreGraphQueryFactory } from './useExploreGraph';
 
 describe('useExploreGraph', () => {
-    describe('getExploreGraphQuery', () => {
+    describe('exploreGraphQueryFactory', () => {
         it('returns {enabled: false} if there is not a match on the switch statement', () => {
-            const mockAddNotification = vi.fn();
-            const actual = getExploreGraphQuery(mockAddNotification, {
+            const paramOptions = {
                 searchType: 'noMatch',
-            } as any);
-
-            expect(actual).toStrictEqual({ enabled: false });
+            } as any;
+            const queryContext = exploreGraphQueryFactory(paramOptions);
+            const config = queryContext.getQueryConfig(paramOptions);
+            expect(config).toStrictEqual({ enabled: false });
         });
-        it('runs nodeSearchGraphQuery when search type is node', () => {
-            const mockAddNotification = vi.fn();
-            const paramOptions = { searchType: 'node', primarySearch: 'test1' } as any;
-            getExploreGraphQuery(mockAddNotification, paramOptions);
 
-            expect(nodeSearchGraphQuerySpy).toBeCalledWith(mockAddNotification, paramOptions, undefined);
+        it('runs a node search when the query param is set to "node"', () => {
+            const paramOptions: Partial<ExploreQueryParams> = { searchType: 'node', primarySearch: 'test1' };
+            const context = exploreGraphQueryFactory(paramOptions);
+
+            const query = context.getQueryConfig(paramOptions);
+            expect(query?.queryKey).toContain('node');
+        });
+
+        it('runs a pathfinding search when the query param is set to "pathfinding"', () => {
+            const paramOptions: Partial<ExploreQueryParams> = {
+                searchType: 'pathfinding',
+                primarySearch: 'test1',
+                secondarySearch: 'test2',
+            };
+            const context = exploreGraphQueryFactory(paramOptions);
+
+            const query = context.getQueryConfig(paramOptions);
+            expect(query?.queryKey).toContain('pathfinding');
+        });
+
+        describe('relationship search queries', () => {
+            it('returns query config when searchType is relationship and all required params are passed', () => {
+                const paramOptions: Partial<ExploreQueryParams> = {
+                    searchType: 'relationship',
+                    relationshipQueryItemId: 'testId',
+                    relationshipQueryType: 'user-member_of',
+                };
+
+                const context = exploreGraphQueryFactory(paramOptions);
+                const query = context.getQueryConfig(paramOptions);
+
+                expect(query.enabled).toBeUndefined();
+                expect(query.queryKey).toContain('relationship');
+            });
+
+            it.each([
+                {
+                    relationshipQueryItemId: 'testId',
+                    relationshipQueryType: 'user-member_of',
+                },
+                {
+                    searchType: 'relationship',
+                    relationshipQueryType: 'user-member_of',
+                },
+                {
+                    searchType: 'relationship',
+                    relationshipQueryItemId: 'testId',
+                },
+            ])(
+                'returns disabled config when any required param is falsey',
+                ({ searchType, relationshipQueryItemId, relationshipQueryType }) => {
+                    {
+                        const paramOptions: Partial<ExploreQueryParams> = {
+                            searchType,
+                            relationshipQueryItemId,
+                            relationshipQueryType,
+                        } as any;
+
+                        const context = exploreGraphQueryFactory(paramOptions);
+                        const query = context.getQueryConfig(paramOptions);
+
+                        expect(query.enabled).toBeFalsy();
+                    }
+                }
+            );
+        });
+
+        describe('composition search queries', () => {
+            it('returns query config when searchType is composition and all required params are passed', () => {
+                const paramOptions: Partial<ExploreQueryParams> = {
+                    searchType: 'composition',
+                    relationshipQueryItemId: 'rel_1234_member_5678',
+                };
+
+                const context = exploreGraphQueryFactory(paramOptions);
+                const query = context.getQueryConfig(paramOptions);
+
+                expect(query.enabled).toBeUndefined();
+                expect(query.queryKey).toContain('composition');
+            });
+
+            it.each([{ relationshipQueryItemId: 'testId' }, { searchType: 'relationship' }])(
+                'returns disabled config when any required param is falsey',
+                ({ searchType, relationshipQueryItemId }) => {
+                    {
+                        const paramOptions: Partial<ExploreQueryParams> = {
+                            searchType,
+                            relationshipQueryItemId,
+                        } as any;
+
+                        const context = exploreGraphQueryFactory(paramOptions);
+                        const query = context.getQueryConfig(paramOptions);
+
+                        expect(query.enabled).toBeFalsy();
+                    }
+                }
+            );
+
+            it('returns disabled if relationshipQueryItemId does not have a matching sourceId, edgeType, targetId', () => {
+                const paramOptions: Partial<ExploreQueryParams> = {
+                    searchType: 'composition',
+                    relationshipQueryItemId: 'rel_broken-member_5678',
+                };
+
+                const context = exploreGraphQueryFactory(paramOptions);
+                const query = context.getQueryConfig(paramOptions);
+
+                expect(query.enabled).toBeFalsy();
+            });
+        });
+        it('runs a cypher search when the query param is set to "cypher"', () => {
+            const paramOptions: Partial<ExploreQueryParams> = {
+                searchType: 'cypher',
+                cypherSearch: 'test1',
+            };
+
+            const context = exploreGraphQueryFactory(paramOptions);
+
+            const query = context.getQueryConfig(paramOptions);
+            expect(query?.queryKey).toContain('cypher');
         });
     });
 });
