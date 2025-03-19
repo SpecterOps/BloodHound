@@ -14,12 +14,6 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
--- Set `back_button_support` feature flag as user updatable
-UPDATE feature_flags SET user_updatable = true WHERE key = 'back_button_support';
-
--- Specify the `back_button_support` feature flag is currently only for BHCE users
-UPDATE feature_flags SET description = 'Enable users to quickly navigate between views in a wider range of scenarios by utilizing the browser navigation buttons. Currently for BloodHound Community Edition users only.' WHERE key = 'back_button_support';
-
 -- This table is normally created by dawgs, as defined in schema_up.sql
 -- We add it here to maintain a new FK to asset_group_tags below regardless 
 -- of graph driver selected. Any future changes to the schema should be reflected
