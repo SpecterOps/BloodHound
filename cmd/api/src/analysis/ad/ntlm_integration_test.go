@@ -21,6 +21,8 @@ package ad_test
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"testing"
 
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -442,6 +444,8 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 						continue
 					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
 						continue
+					} else if webClientRunning, err := innerComputer.Properties.Get(ad.WebClientRunning.String()).Bool(); webClientRunning {
+						continue
 					} else if err = ad2.PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserID, ldapSigningCache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToLDAP.String(), err)
 					}
@@ -464,6 +468,9 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 					for _, result := range results {
 						start, end, err := ops.FetchRelationshipNodes(tx, result)
 						require.NoError(t, err)
+
+						slog.Info(fmt.Sprintf("%v", start.Properties.Map[common.Name.String()]))
+						slog.Info(fmt.Sprintf("%v", end.Properties.Map[common.Name.String()]))
 
 						dcSet, err := ad2.GetVulnerableDomainControllersForRelayNTLMtoLDAP(context.Background(), db, result)
 						require.NoError(t, err)
