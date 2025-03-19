@@ -60,12 +60,10 @@ func (s *Translator) translateRelationshipPattern(relationshipPattern *cypher.Re
 		if len(relationshipPattern.Kinds) > 0 {
 			if kindIDs, err := s.kindMapper.MapKinds(s.ctx, relationshipPattern.Kinds); err != nil {
 				return fmt.Errorf("failed to translate kinds: %w", err)
-			} else if kindIDsLiteral, err := pgsql.AsLiteral(kindIDs); err != nil {
-				return err
 			} else if err := s.treeTranslator.Constrain(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), pgsql.NewBinaryExpression(
 				pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnKindID},
 				pgsql.OperatorEquals,
-				pgsql.NewAnyExpression(kindIDsLiteral),
+				pgsql.NewAnyExpressionHinted(pgsql.NewLiteral(kindIDs, pgsql.Int2Array)),
 			)); err != nil {
 				return err
 			}
@@ -77,7 +75,7 @@ func (s *Translator) translateRelationshipPattern(relationshipPattern *cypher.Re
 
 func (s *Translator) translateRelationshipPatternToStep(bindingResult BindingResult, part *PatternPart, relationshipPattern *cypher.RelationshipPattern) error {
 	var (
-		expansion      models.Optional[Expansion]
+		expansion      models.Optional[*Expansion]
 		numSteps       = len(part.TraversalSteps)
 		currentStep    = part.TraversalSteps[numSteps-1]
 		isContinuation = currentStep.Edge != nil
@@ -87,7 +85,7 @@ func (s *Translator) translateRelationshipPatternToStep(bindingResult BindingRes
 		if isContinuation {
 			// This is a traversal continuation so copy the right node identifier of the preceding step and then
 			// add the new step
-			nextStep := &PatternSegment{
+			nextStep := &TraversalStep{
 				Edge:      bindingResult.Binding,
 				Direction: relationshipPattern.Direction,
 			}
@@ -117,22 +115,25 @@ func (s *Translator) translateRelationshipPatternToStep(bindingResult BindingRes
 			currentStep.LeftNode.DataType = pgsql.ExpansionRootNode
 		}
 
-		expansion = models.ValueOptional(Expansion{
-			MinDepth: models.PointerOptional(relationshipPattern.Range.StartIndex),
-			MaxDepth: models.PointerOptional(relationshipPattern.Range.EndIndex),
-		})
-
 		if expansionPathBinding, err := s.scope.DefineNew(pgsql.ExpansionPath); err != nil {
 			return err
 		} else {
+			// Set up the new expansion model here
+			newExpansion := NewExpansionModel()
+
+			newExpansion.MinDepth = models.PointerOptional(relationshipPattern.Range.StartIndex)
+			newExpansion.MaxDepth = models.PointerOptional(relationshipPattern.Range.EndIndex)
+
 			// Set the path binding in the expansion struct for easier referencing upstream
-			expansion.Value.PathBinding = expansionPathBinding
+			newExpansion.PathBinding = expansionPathBinding
 
 			if part.PatternBinding.Set {
 				// If there's a bound pattern track this expansion's path as a dependency of the
 				// pattern identifier
 				part.PatternBinding.Value.DependOn(expansionPathBinding)
 			}
+
+			expansion = models.ValueOptional(newExpansion)
 		}
 	} else if part.PatternBinding.Set {
 		// If there's a bound pattern track this edge as a dependency of the pattern identifier
@@ -142,7 +143,7 @@ func (s *Translator) translateRelationshipPatternToStep(bindingResult BindingRes
 	if isContinuation {
 		// This is a traversal continuation so copy the right node identifier of the preceding step and then
 		// add the new step
-		part.TraversalSteps = append(part.TraversalSteps, &PatternSegment{
+		part.TraversalSteps = append(part.TraversalSteps, &TraversalStep{
 			Edge:          bindingResult.Binding,
 			Direction:     relationshipPattern.Direction,
 			LeftNode:      currentStep.RightNode,

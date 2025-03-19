@@ -395,7 +395,7 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 				exprStack = append(exprStack, typedNextExpr.Expression)
 			}
 
-		case pgsql.AnyExpression:
+		case *pgsql.AnyExpression:
 			exprStack = append(exprStack, pgsql.FormattingLiteral(")"))
 			exprStack = append(exprStack, typedNextExpr.Expression)
 			exprStack = append(exprStack, pgsql.FormattingLiteral("any ("))
