@@ -822,7 +822,7 @@ func (s ManagementResource) EnrollMFA(response http.ResponseWriter, request *htt
 	payload := MFAEnrollmentRequest{}
 
 	if err := request.ParseForm(); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, v2.ErrorParseParams, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorParseParams, request), response)
 	} else if userId, err := uuid.FromString(rawUserId); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
@@ -862,7 +862,7 @@ func (s ManagementResource) DisenrollMFA(response http.ResponseWriter, request *
 	payload := MFAEnrollmentRequest{}
 
 	if err := request.ParseForm(); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, v2.ErrorParseParams, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorParseParams, request), response)
 	} else if userId, err := uuid.FromString(rawUserId); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
@@ -910,7 +910,7 @@ func (s ManagementResource) GetMFAActivationStatus(response http.ResponseWriter,
 	rawUserId := mux.Vars(request)[api.URIPathVariableUserID]
 
 	if err := request.ParseForm(); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, v2.ErrorParseParams, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorParseParams, request), response)
 	} else if userId, err := uuid.FromString(rawUserId); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if user, err := s.db.GetUser(request.Context(), userId); err != nil {
@@ -934,7 +934,7 @@ func (s ManagementResource) ActivateMFA(response http.ResponseWriter, request *h
 	payload := MFAActivationRequest{}
 
 	if err := request.ParseForm(); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, v2.ErrorParseParams, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorParseParams, request), response)
 	} else if userId, err := uuid.FromString(rawUserId); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {

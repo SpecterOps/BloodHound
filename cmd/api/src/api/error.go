@@ -77,6 +77,13 @@ const (
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"
 )
 
+const (
+	ErrorParseParams    = "unable to parse request parameters"
+	ErrorDecodeParams   = "unable to decode request parameters"
+	ErrorNoDomainId     = "no domain id specified in url"
+	ErrorInvalidRFC3339 = "invalid RFC-3339 datetime format: %v"
+)
+
 func IsErrorResponse(response *http.Response) bool {
 	return response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices
 }
