@@ -20,7 +20,6 @@ import {
     NODE_GRAPH_RENDER_LIMIT,
     abortEntitySectionRequest,
     entityRelationshipEndpoints,
-    getOpenExpandedPanelSections,
     searchbarActions,
     transformFlatGraphResponse,
     useExploreParams,
@@ -45,7 +44,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     const dispatch = useDispatch();
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
     const { setExploreParams, expandedPanelSections } = useExploreParams();
-    const { expandedSections, setExpandedSections, toggleSection } = useEntityInfoPanelContext();
+    const { expandedSections, toggleSection } = useEntityInfoPanelContext();
 
     const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
     const countQuery = useQuery(
@@ -72,6 +71,14 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         });
     };
 
+    const setParentExpandedSectionParam = () => {
+        const labelList = [...(parentLabels as string[]), label];
+
+        setExploreParams({
+            expandedPanelSections: labelList,
+        });
+    };
+
     const setExpandedPanelSectionsParams = () => {
         const labelList = [...(parentLabels as string[]), label];
 
@@ -83,8 +90,14 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         });
     };
 
+    const setExpandedPanelSection = () => {
+        return backButtonFlag?.enabled
+            ? (expandedPanelSections as string[]).includes(label)
+            : !!expandedSections[label];
+    };
+
     const handleOnChange = (isOpen: boolean) => {
-        handleCurrentSectionToggle();
+        if (!backButtonFlag?.enabled) handleCurrentSectionToggle();
         if (isOpen) {
             handleSetGraph();
         } else {
@@ -97,7 +110,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     const handleSetGraph = async () => {
         if (!endpoint) {
             if (backButtonFlag?.enabled) {
-                setExpandedPanelSectionsParams();
+                setParentExpandedSectionParam();
             }
         } else if (countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
             abortEntitySectionRequest();
@@ -128,13 +141,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     };
 
     const handleCurrentSectionToggle = () => {
-        if (backButtonFlag?.enabled) {
-            setExpandedSections(
-                getOpenExpandedPanelSections(expandedPanelSections as string[], parentLabels as string[], label)
-            );
-        } else {
-            toggleSection(label);
-        }
+        toggleSection(label);
     };
 
     const setNodeSearchParams = (item: SelectedNode) => {
@@ -183,7 +190,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         <EntityInfoCollapsibleSection
             label={label}
             count={count}
-            isExpanded={!!expandedSections[label]}
+            isExpanded={setExpandedPanelSection()}
             isLoading={countQuery.isLoading}
             isError={countQuery.isError}
             error={countQuery.error}
