@@ -74,7 +74,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Description: "Test selector description",
 						Seeds: []model.SelectorSeed{
-							{Type: 0, Value: "this should be a string of cypher"},
+							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
 						},
 						IsDefault:   false,
 						AutoCertify: false,
@@ -118,7 +118,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 						Name:        "TestSelector",
 						Description: "Test selector description",
 						Seeds: []model.SelectorSeed{
-							{Type: 0, Value: "this should be a string of cypher"},
+							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
 						},
 						IsDefault:   false,
 						AutoCertify: false,
@@ -138,7 +138,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 						Name:        "TestSelector",
 						Description: "Test selector description",
 						Seeds: []model.SelectorSeed{
-							{Type: 0, Value: "this should be a string of cypher"},
+							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
 						},
 						IsDefault:   false,
 						AutoCertify: false,
@@ -158,7 +158,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 						Name:        "TestSelector",
 						Description: "Test selector description",
 						Seeds: []model.SelectorSeed{
-							{Type: 0, Value: "this should be a string of cypher"},
+							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
 						},
 						IsDefault:   false,
 						AutoCertify: false,
@@ -182,13 +182,16 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 						Name:        "TestSelector",
 						Description: "Test selector description",
 						Seeds: []model.SelectorSeed{
-							{Type: 0, Value: "this should be a string of cypher"},
+							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
 						},
 						IsDefault:   false,
 						AutoCertify: false,
 					})
 				},
 				Setup: func() {
+					mockGraphDb.EXPECT().
+						PrepareCypherQuery(gomock.Any(), gomock.Any()).
+						Return(queries.PreparedQuery{}, nil).Times(1)
 					mockDB.EXPECT().
 						CreateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTagSelector{}, errors.New("failure")).Times(1)
@@ -222,6 +225,29 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 						PrepareCypherQuery(gomock.Any(), gomock.Any()).
 						Return(queries.PreparedQuery{}, queries.ErrCypherQueryTooComplex).Times(1)
 
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
+				Name: "InvalidSeedType",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.BodyStruct(input, model.AssetGroupTagSelector{
+						Name:        "TestSelector",
+						Description: "Test selector description",
+						Seeds: []model.SelectorSeed{
+							{Type: 0, Value: ""},
+						},
+						IsDefault:   false,
+						AutoCertify: false,
+					})
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)

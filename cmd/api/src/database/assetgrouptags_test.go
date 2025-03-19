@@ -117,7 +117,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
 	})
 
-	t.Run("Non existant tag erros out", func(t *testing.T) {
+	t.Run("Non existant tag errors out", func(t *testing.T) {
 		_, err := dbInst.GetAssetGroupTag(testCtx, 1234)
 		require.Error(t, err)
 	})
