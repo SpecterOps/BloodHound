@@ -22,6 +22,7 @@ import {
     ExploreGraphQueryKey,
     ExploreGraphQueryOptions,
     INITIAL_FILTER_TYPES,
+    sharedGraphQueryOptions,
     transformToFlatGraphResponse,
 } from './utils';
 
@@ -40,13 +41,13 @@ export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
     const filter = pathFilters?.length ? createPathFilterString(pathFilters) : DEFAULT_FILTERS;
 
     return {
+        ...sharedGraphQueryOptions,
         queryKey: [ExploreGraphQueryKey, searchType, primarySearch, secondarySearch, filter],
         queryFn: ({ signal }) => {
             return apiClient
                 .getShortestPathV2(primarySearch, secondarySearch, filter, { signal })
                 .then((res) => transformToFlatGraphResponse(res.data));
         },
-        retry: false,
         enabled: !!(searchType && primarySearch && secondarySearch),
     };
 };
