@@ -15,18 +15,27 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, useTheme } from '@mui/material';
-import CollectorCard from '../CollectorCard';
+import CollectorCard, { LabelType } from '../CollectorCard';
+
+interface CollectorDownloadFile {
+    fileName: string;
+    os: string;
+    arch: string;
+    onClickDownload: () => void;
+    onClickDownloadChecksum: () => void;
+}
+
+interface CollectorCardProps {
+    collectorType: 'sharphound' | 'azurehound';
+    version: string;
+    timestamp: number;
+    downloadArtifacts: CollectorDownloadFile[];
+    label?: LabelType;
+    isPrerelease?: boolean;
+}
 
 interface CollectorCardListProps {
-    collectors: {
-        collectorType: 'sharphound' | 'azurehound';
-        version: string;
-        checksum: string;
-        isLatest: boolean;
-        isDeprecated: boolean;
-        onClickDownload: (collectorType: 'sharphound' | 'azurehound', version: string) => void;
-        onClickDownloadChecksum: (collectorType: 'sharphound' | 'azurehound', version: string) => void;
-    }[];
+    collectors: CollectorCardProps[];
 }
 
 const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors }) => {
@@ -39,11 +48,10 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors }) => 
                     <CollectorCard
                         collectorType={collector.collectorType}
                         version={collector.version}
-                        checksum={collector.checksum}
-                        isLatest={collector.isLatest}
-                        isDeprecated={collector.isDeprecated}
-                        onClickDownload={collector.onClickDownload}
-                        onClickDownloadChecksum={collector.onClickDownloadChecksum}
+                        timestamp={collector.timestamp}
+                        label={collector.label}
+                        isPrerelease={collector.isPrerelease}
+                        downloadArtifacts={collector.downloadArtifacts}
                     />
                 </Box>
             ))}
