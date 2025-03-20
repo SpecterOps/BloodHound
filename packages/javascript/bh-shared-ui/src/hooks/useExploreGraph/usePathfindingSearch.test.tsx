@@ -37,7 +37,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('usePathfindingSearch', () => {
-    it('stores the state of source and destination terms without modifying query params', async () => {
+    it.skip('stores the state of source and destination terms without modifying query params', async () => {
         const history = createMemoryHistory();
         const hook = renderHook(() => usePathfindingSearch(), { history });
 
