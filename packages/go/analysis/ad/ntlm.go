@@ -478,7 +478,7 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 					query.InIDs(query.Node(), graph.DuplexToGraphIDs(allAdminGroups)...),
 					query.Kind(query.Node(), ad.Computer),
 					query.Not(query.Equals(query.NodeProperty(common.ObjectID.String()), currentComputerID)),
-					query.Not(query.Equals(query.NodeProperty(ad.RestrictOutboundNTLM.String()), true)), //This implicitly avoid null cases as well
+					query.Not(query.Equals(query.NodeProperty(ad.RestrictOutboundNTLM.String()), true)), // This implicitly avoid null cases as well
 				),
 			)); err != nil {
 				return err
@@ -599,7 +599,7 @@ func GetVulnerableDomainControllersForRelayNTLMtoLDAPS(ctx context.Context, db g
 	}
 }
 
-func GetVulnerableDomainControllersForRelayNTLMToSMB(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
+func GetVulnerableComputersForRelayNTLMToSMB(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
 	var (
 		startNode *graph.Node
 		nodes     graph.NodeSet
@@ -626,10 +626,6 @@ func GetVulnerableDomainControllersForRelayNTLMToSMB(ctx context.Context, db gra
 				query.Kind(query.Node(), ad.Computer),
 				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainsid),
 				query.Equals(query.NodeProperty(ad.SMBSigning.String()), false),
-				query.Or(
-					query.Equals(query.NodeProperty(ad.RestrictOutboundNTLM.String()), false),
-					query.IsNull(query.NodeProperty(ad.RestrictOutboundNTLM.String())),
-				),
 			),
 		))
 

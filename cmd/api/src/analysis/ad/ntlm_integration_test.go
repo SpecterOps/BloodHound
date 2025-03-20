@@ -176,25 +176,25 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 			compositionCounter := analysis.NewCompositionCounter()
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			for _, computer := range computers {
-				innerComputer := computer
-				domainSid, _ := innerComputer.Properties.Get(ad.DomainSID.String()).String()
+				for _, computer := range computers {
+					innerComputer := computer
+					domainSid, _ := innerComputer.Properties.Get(ad.DomainSID.String()).String()
 
-				if authenticatedUserID, ok := authenticatedUsers[domainSid]; !ok {
-					t.Fatalf("authenticated user not found for %s", domainSid)
-				} else if protectedUsersForDomain, ok := protectedUsersCache[domainSid]; !ok {
-					continue
-				} else if ldapSigningForDomain, ok := ldapSigningCache[domainSid]; !ok {
-					continue
-				} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
-					continue
-				} else if err = ad2.PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID, &compositionCounter); err != nil {
-					t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToSMB.String(), err)
+					if authenticatedUserID, ok := authenticatedUsers[domainSid]; !ok {
+						t.Fatalf("authenticated user not found for %s", domainSid)
+					} else if protectedUsersForDomain, ok := protectedUsersCache[domainSid]; !ok {
+						continue
+					} else if ldapSigningForDomain, ok := ldapSigningCache[domainSid]; !ok {
+						continue
+					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
+						continue
+					} else if err = ad2.PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID, &compositionCounter); err != nil {
+						t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToSMB.String(), err)
+					}
 				}
-			}
-			return nil
-		})
-		require.NoError(t, err)
+				return nil
+			})
+			require.NoError(t, err)
 
 			err = operation.Done()
 			require.NoError(t, err)
@@ -341,7 +341,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching NTLM to SMB edge in integration test: %v", err)
 			} else {
-				relayTargets, err := ad2.GetVulnerableDomainControllersForRelayNTLMToSMB(context.Background(), db, edge)
+				relayTargets, err := ad2.GetVulnerableComputersForRelayNTLMToSMB(context.Background(), db, edge)
 				require.NoError(t, err)
 
 				require.Len(t, relayTargets, 1)
@@ -360,7 +360,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching NTLM to SMB edge in integration test: %v", err)
 			} else {
-				relayTargets, err := ad2.GetVulnerableDomainControllersForRelayNTLMToSMB(context.Background(), db, edge)
+				relayTargets, err := ad2.GetVulnerableComputersForRelayNTLMToSMB(context.Background(), db, edge)
 				require.NoError(t, err)
 
 				require.Len(t, relayTargets, 1)
