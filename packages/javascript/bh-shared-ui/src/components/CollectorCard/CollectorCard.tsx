@@ -24,9 +24,9 @@ export type LabelType = 'latest' | 'prerelease';
 export type CollectorType = 'sharphoundEnterprise' | 'sharphound' | 'azurehound';
 
 export const COLLECTOR_TYPE_LABEL: { [key in CollectorType]: string } = {
-    sharphoundEnterprise: 'SharpHound Enterprise',
-    sharphound: 'SharpHound Community',
-    azurehound: 'AzureHound',
+    sharphoundEnterprise: 'Sharphound Enterprise',
+    sharphound: 'Sharphound Community',
+    azurehound: 'Azurehound',
 };
 
 interface CollectorDownloadFile {
@@ -55,14 +55,14 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
     label = undefined,
     isLatest = false,
     isPrerelease = false,
-    ...rest
+    ...props
 }) => {
     const date = new Date(timestamp);
 
     return (
-        <Card {...rest} className={cn(rest.className, { 'bg-neutral-light-3 dark:bg-neutral-dark-5': isLatest })}>
+        <Card {...props} className={cn(props.className, { 'bg-neutral-light-3 dark:bg-neutral-dark-5': isLatest })}>
             <CardHeader>
-                <Box display='flex' flexDirection='row' alignItems='center' gap='1rem'>
+                <Box display='flex' flexDirection='row' alignItems='center' overflow='hidden' gap='1rem'>
                     <CardTitle>{`${version}`.trim().toUpperCase()}</CardTitle>
                     {isPrerelease && <Typography variant='caption'>(pre-release)</Typography>}
                     {label && <CollectorLabel label={label} isPrerelease={isPrerelease} />}
@@ -75,12 +75,14 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
                 <ul>
                     {downloadArtifacts.map((collector) => (
                         <li key={collector.fileName}>
-                            <Box display='flex' flexDirection='row' width='100%' justifyContent='space-between'>
+                            <Box display='flex' flexDirection='row' justifyContent='space-between' gap='2rem'>
                                 <Link
                                     component='button'
                                     variant='body1'
                                     onClick={collector.onClickDownload}
-                                    title={`Download ${COLLECTOR_TYPE_LABEL[collectorType]} ${version} ${collector.os} ${collector.arch}`.trim()}>
+                                    title={`Download ${COLLECTOR_TYPE_LABEL[collectorType]} ${version} ${collector.os} ${collector.arch}`.trim()}
+                                    textOverflow='ellipsis'
+                                    noWrap>
                                     {collector.fileName}
                                 </Link>
                                 <Link
