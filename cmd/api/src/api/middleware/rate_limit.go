@@ -99,7 +99,7 @@ func DefaultRateLimitMiddleware(db database.Database) mux.MiddlewareFunc {
 }
 
 // RateLimitMiddleware is a function for creating rate limiting middleware
-// with a particular time limit for a router/route
+// with a particular limit for a router/route
 //
 // Usage:
 //
