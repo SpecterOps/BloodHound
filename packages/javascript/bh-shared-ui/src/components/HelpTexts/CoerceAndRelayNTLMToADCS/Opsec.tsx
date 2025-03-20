@@ -33,7 +33,7 @@ const Opsec: FC = () => {
 
             <Typography variant={'body2'}>
                 <b>Detection of Certificate Usage</b>
-                <br/>
+                <br />
                 Authentication using the obtained certificate is another detection opportunity. If Kerberos
                 authentication is used, a domain controller will generate Windows Event ID 4768 ("A Kerberos
                 authentication ticket (TGT) was requested"). This event will include the attacker’s IP address rather
