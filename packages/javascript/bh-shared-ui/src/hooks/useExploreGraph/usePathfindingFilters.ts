@@ -30,6 +30,8 @@ export const usePathfindingFilters = () => {
         if (pathFilters?.length) {
             const mapped = mapParamsToFilters(pathFilters, INITIAL_FILTERS);
             updateSelectedFilters(mapped);
+        } else {
+            updateSelectedFilters(INITIAL_FILTERS);
         }
     };
 
@@ -47,7 +49,7 @@ export const usePathfindingFilters = () => {
     };
 
     const handleCancelFilters = () => {
-        const previous = pathFilters ? mapParamsToFilters(pathFilters, INITIAL_FILTERS) : INITIAL_FILTERS;
+        const previous = pathFilters?.length ? mapParamsToFilters(pathFilters, INITIAL_FILTERS) : INITIAL_FILTERS;
         updateSelectedFilters(previous);
     };
 
