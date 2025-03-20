@@ -80,7 +80,7 @@ func TestGetADDataQualityStats_Failure(t *testing.T) {
 			},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
 			},
 		},
 		{
@@ -92,7 +92,7 @@ func TestGetADDataQualityStats_Failure(t *testing.T) {
 			},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
 			},
 		},
 		{
@@ -318,7 +318,7 @@ func TestGetAzureDataQualityStats_Failure(t *testing.T) {
 			},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
 			},
 		},
 		{
@@ -330,7 +330,7 @@ func TestGetAzureDataQualityStats_Failure(t *testing.T) {
 			},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
 			},
 		},
 		{
@@ -567,7 +567,7 @@ func TestGetPlatformAggregateStats_Failure(t *testing.T) {
 			},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
 			},
 		},
 		{
@@ -579,7 +579,7 @@ func TestGetPlatformAggregateStats_Failure(t *testing.T) {
 			},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
 			},
 		},
 		{
@@ -640,7 +640,7 @@ func TestGetPlatformAggregateStats_Failure(t *testing.T) {
 			},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
 			},
 		},
 		{
@@ -652,7 +652,7 @@ func TestGetPlatformAggregateStats_Failure(t *testing.T) {
 			},
 			api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
 			},
 		},
 		{
