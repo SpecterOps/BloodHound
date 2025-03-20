@@ -48,6 +48,9 @@ export const usePathfindingSearch = () => {
                 setSourceSearchTerm(matchedNode.name);
                 setSourceSelectedItem(matchedNode);
             }
+        } else {
+            setSourceSearchTerm('');
+            setSourceSelectedItem(undefined);
         }
     }, [primarySearch, sourceSearchData]);
 
@@ -59,6 +62,9 @@ export const usePathfindingSearch = () => {
                 setDestinationSearchTerm(matchedNode.name);
                 setDestinationSelectedItem(matchedNode);
             }
+        } else {
+            setDestinationSearchTerm('');
+            setDestinationSelectedItem(undefined);
         }
     }, [secondarySearch, destinationSearchData]);
 
