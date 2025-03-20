@@ -51,7 +51,7 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 
 		instance := limiter.New(store, rate)
 
-		return middleware.RateLimitMiddleware(resources.Config, instance)
+		return middleware.RateLimitMiddleware(resources.DB, instance)
 	},
 		// Login resource
 		routerInst.POST("/api/v2/login", func(response http.ResponseWriter, request *http.Request) {
@@ -60,7 +60,7 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 	)
 
 	router.With(func() mux.MiddlewareFunc {
-		return middleware.DefaultRateLimitMiddleware(resources.Config)
+		return middleware.DefaultRateLimitMiddleware(resources.DB)
 	},
 		// Login resources
 		routerInst.GET("/api/v2/self", managementResource.GetSelf),
@@ -141,7 +141,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
 
 	router.With(func() mux.MiddlewareFunc {
-		return middleware.DefaultRateLimitMiddleware(resources.Config)
+		return middleware.DefaultRateLimitMiddleware(resources.DB)
 	},
 		// Version API
 		routerInst.GET("/api/version", v2.GetVersion).RequireAuth(),

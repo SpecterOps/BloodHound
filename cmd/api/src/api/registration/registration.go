@@ -62,7 +62,7 @@ func RegisterFossRoutes(
 	authorizer auth.Authorizer,
 ) {
 	router.With(func() mux.MiddlewareFunc {
-		return middleware.DefaultRateLimitMiddleware(cfg)
+		return middleware.DefaultRateLimitMiddleware(rdms)
 	},
 		// Health Endpoint
 		routerInst.GET("/health", func(response http.ResponseWriter, _ *http.Request) {

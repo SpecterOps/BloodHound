@@ -24,10 +24,11 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api/middleware"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/stretchr/testify/require"
+	"github.com/specterops/bloodhound/src/database/mocks"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
+	"go.uber.org/mock/gomock"
 )
 
 func TestRateLimitMiddleware(t *testing.T) {
@@ -40,12 +41,13 @@ func TestRateLimitMiddleware(t *testing.T) {
 	store := memory.NewStore()
 	instance := limiter.New(store, rate)
 
-	cfg, err := config.NewDefaultConfiguration()
-	require.Nil(t, err)
+	mockCtl := gomock.NewController(t)
+	mockDB := mocks.NewMockDatabase(mockCtl)
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.TrustedProxiesConfig).Return(appcfg.Parameter{}, nil).AnyTimes()
 
 	testHandler := &CountingHandler{}
 	router := mux.NewRouter()
-	router.Use(middleware.RateLimitMiddleware(cfg, instance))
+	router.Use(middleware.RateLimitMiddleware(mockDB, instance))
 	router.Handle("/teapot", testHandler)
 
 	if req, err := http.NewRequest("GET", "/teapot", nil); err != nil {
@@ -68,11 +70,12 @@ func TestRateLimitMiddleware(t *testing.T) {
 func TestDefaultRateLimitMiddleware(t *testing.T) {
 	testHandler := &CountingHandler{}
 
-	cfg, err := config.NewDefaultConfiguration()
-	require.Nil(t, err)
+	mockCtl := gomock.NewController(t)
+	mockDB := mocks.NewMockDatabase(mockCtl)
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.TrustedProxiesConfig).Return(appcfg.Parameter{}, nil).AnyTimes()
 
 	router := mux.NewRouter()
-	router.Use(middleware.DefaultRateLimitMiddleware(cfg))
+	router.Use(middleware.DefaultRateLimitMiddleware(mockDB))
 	router.Handle("/teapot", testHandler)
 
 	if req, err := http.NewRequest("GET", "/teapot", nil); err != nil {

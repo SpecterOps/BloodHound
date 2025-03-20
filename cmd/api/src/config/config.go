@@ -166,7 +166,6 @@ type Configuration struct {
 	FedRAMPEULAText              string                    `json:"fedramp_eula_text"` // Enterprise only
 	EnableTextLogger             bool                      `json:"enable_text_logger"`
 	RecreateDefaultAdmin         bool                      `json:"recreate_default_admin"`
-	TrustedProxies               int                       `json:"trusted_proxies"`
 }
 
 func (s Configuration) AuthSessionTTL() time.Duration {

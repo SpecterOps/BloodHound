@@ -25,7 +25,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/middleware/stdlib"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
@@ -37,10 +38,12 @@ const DefaultRateLimit = 55
 // RateLimitMiddleware is a convenience function for creating rate limiting middleware
 //
 //	router.Use(RateLimitMiddleware(limiter))
-func RateLimitMiddleware(cfg config.Configuration, limiter *limiter.Limiter) mux.MiddlewareFunc {
+func RateLimitMiddleware(db database.Database, limiter *limiter.Limiter) mux.MiddlewareFunc {
+
 	ipGetter := stdlib.WithKeyGetter(
 		func(r *http.Request) string {
 			var remoteIP string
+			trustedProxies := appcfg.GetTrustedProxiesParameters(r.Context(), db)
 
 			if host, _, err := net.SplitHostPort(r.RemoteAddr); err != nil {
 				slog.WarnContext(r.Context(), fmt.Sprintf("Error parsing remoteAddress '%s': %s", r.RemoteAddr, err))
@@ -49,20 +52,25 @@ func RateLimitMiddleware(cfg config.Configuration, limiter *limiter.Limiter) mux
 				remoteIP = host
 			}
 
-			if cfg.TrustedProxies == 0 {
+			if trustedProxies == 0 {
+				slog.DebugContext(r.Context(), "Using direct remote IP Address for rate limiting", "IP Address", remoteIP)
 				return remoteIP
 			} else if xff := r.Header.Get("X-Forwarded-For"); xff == "" {
+				slog.DebugContext(r.Context(), "Expected X-Forwarded-For header for rate limiting but none found. Defaulted to remote IP Address", "IP Address", remoteIP)
 				return remoteIP
 			} else {
 				ips := strings.Split(xff, ",")
 
-				idxIP := len(ips) - cfg.TrustedProxies
+				idxIP := len(ips) - trustedProxies
 				if idxIP < 0 {
 					slog.WarnContext(r.Context(), "Not enough IPs in X-Forwarded-For, defaulting to first IP")
 					idxIP = 0
 				}
 
-				return strings.TrimSpace(ips[idxIP])
+				finalIP := strings.TrimSpace(ips[idxIP])
+
+				slog.DebugContext(r.Context(), "Found client IP Address for rate limiting in XFF", "IP Address", finalIP, "X-Forwarded-For", xff)
+				return finalIP
 			}
 		},
 	)
@@ -90,7 +98,7 @@ func RemoveRateLimitHeadersMiddleware(next http.Handler) http.Handler {
 // Usage:
 //
 //	router.Use(DefaultRateLimitMiddleware())
-func DefaultRateLimitMiddleware(cfg config.Configuration) mux.MiddlewareFunc {
+func DefaultRateLimitMiddleware(db database.Database) mux.MiddlewareFunc {
 	rate := limiter.Rate{
 		Period: 1 * time.Second,
 		Limit:  DefaultRateLimit,
@@ -100,5 +108,5 @@ func DefaultRateLimitMiddleware(cfg config.Configuration) mux.MiddlewareFunc {
 
 	instance := limiter.New(store, rate)
 
-	return RateLimitMiddleware(cfg, instance)
+	return RateLimitMiddleware(db, instance)
 }

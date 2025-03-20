@@ -83,7 +83,6 @@ func NewDefaultConfiguration() (Configuration, error) {
 				LastName:      "User",
 				ExpireNow:     true,
 			},
-			TrustedProxies: 0,
 		}, nil
 	}
 }

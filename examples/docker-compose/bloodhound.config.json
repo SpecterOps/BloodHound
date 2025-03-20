@@ -7,7 +7,6 @@
   "log_level": "INFO",
   "log_path": "bloodhound.log",
   "graph_driver": "neo4j",
-  "trusted_proxies": 0,
   "tls": {
     "cert_file": "",
     "key_file": ""

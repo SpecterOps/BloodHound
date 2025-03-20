@@ -22,9 +22,8 @@ UPDATE feature_flags SET description = 'Enable users to quickly navigate between
 
 -- Add trusted_proxies
 INSERT INTO parameters (key, name, description, value, created_at, updated_at)
-VALUES ('auth.trusted_proxies', 'Trusted Proxies',
+VALUES ('http.trusted_proxies', 'Trusted Proxies',
         'This configuration parameter defines the number of trusted reverse proxies for enforcing our current rate limiting middleware',
-        '{
-          "enabled": true
-        }', current_timestamp, current_timestamp)
+        '{"trusted_proxies": 0}', 
+        current_timestamp, current_timestamp)
 ON CONFLICT DO NOTHING;
