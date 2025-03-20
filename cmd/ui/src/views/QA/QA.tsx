@@ -39,7 +39,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const QualityAssuranceV2: React.FC = () => {
-    const { data: initialEnvironment, isLoading } = useInitialEnvironment();
+    const { data: initialEnvironment, isLoading } = useInitialEnvironment({ orderBy: 'name' });
 
     const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | null>(
         initialEnvironment ?? null
