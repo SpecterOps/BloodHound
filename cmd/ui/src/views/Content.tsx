@@ -16,7 +16,7 @@
 
 import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { mapRoutes, useFeatureFlags } from 'bh-shared-ui';
+import { mapRoutes, useFeatureFlag } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
 import { Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
@@ -40,9 +40,9 @@ const Content: React.FC = () => {
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
-    const tierManagementFlag = useFeatureFlags({
+    const tierManagementFlag = useFeatureFlag('tier_management_engine', {
         enabled: !!authState.isInitialized && isFullyAuthenticated,
-    }).data?.find((flag) => flag.key === 'tier_management_engine');
+    }).data;
     const mapTierRoutes = tierManagementFlag?.enabled;
 
     useEffect(() => {
