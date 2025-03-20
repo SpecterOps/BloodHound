@@ -46,7 +46,7 @@
             ]
           },
           {
-            "group": "Install Data Collector",
+            "group": "Install a Data Collector",
             "pages": [
               "install-data-collector/overview",
               {
@@ -157,7 +157,6 @@
               {
                 "group": "Securing BloodHound and collectors",
                 "pages": [
-                  "manage-bloodhound/securing-bloodhound-and-collectors/overview",
                   "manage-bloodhound/securing-bloodhound-and-collectors/sharphound-hardening"
                 ]
               }
@@ -232,6 +231,8 @@
               {
                 "group": "Edges",
                 "pages": [
+                  "resources/edges/overview",
+                  "resources/edges/traversable-edges",
                   "resources/edges/adcs-esc1",
                   "resources/edges/adcs-esc10a",
                   "resources/edges/adcs-esc10b",
@@ -326,7 +327,6 @@
                   "resources/edges/member-of-local-group",
                   "resources/edges/nt-auth-store-for",
                   "resources/edges/oid-group-link",
-                  "resources/edges/overview",
                   "resources/edges/owns",
                   "resources/edges/published-to",
                   "resources/edges/read-gmsa-password",
@@ -337,7 +337,6 @@
                   "resources/edges/sync-laps-password",
                   "resources/edges/synced-to-ad-user",
                   "resources/edges/synced-to-entra-user",
-                  "resources/edges/traversable-edges",
                   "resources/edges/trusted-by",
                   "resources/edges/trusted-for-nt-auth",
                   "resources/edges/write-account-restrictions",
