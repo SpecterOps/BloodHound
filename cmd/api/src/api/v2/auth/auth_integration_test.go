@@ -17,7 +17,7 @@
 //go:build serial_integration
 // +build serial_integration
 
-package v2_test
+package auth_test
 
 import (
 	"errors"
