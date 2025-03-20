@@ -8909,7 +8909,12 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
 
-	s.EnterpriseCA1.Properties.Set(ad.ADCSWebEnrollmentHTTP.String(), true)
+	endpoints := make([]string, 0)
+	u := "https://test.com"
+	endpoints = append(endpoints, u)
+
+	s.EnterpriseCA1.Properties.Set(ad.HTTPEnrollmentEndpoints.String(), endpoints)
+	s.EnterpriseCA1.Properties.Set(ad.HasVulnerableEndpoint.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA1)
 	s.Computer.Properties.Set(ad.WebClientRunning.String(), true)
 	graphTestContext.UpdateNode(s.Computer)

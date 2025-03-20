@@ -110,4 +110,20 @@ describe('usePathfindingSearch', () => {
             })
         );
     });
+
+    it('allows a consumer to swap the values of the two inputs and update the query params accordingly', async () => {
+        const url = `?primarySearch=${TEST_STRING_1}&secondarySearch=${TEST_STRING_2}&searchType=pathfinding`;
+        const history = createMemoryHistory({ initialEntries: [url] });
+
+        const hook = renderHook(() => usePathfindingSearch(), { history });
+
+        await waitFor(() => expect(hook.result.current.sourceSearchTerm).toEqual(TEST_STRING_1));
+        await waitFor(() => expect(hook.result.current.destinationSearchTerm).toEqual(TEST_STRING_2));
+
+        await act(async () => hook.result.current.handleSwapPathfindingInputs());
+
+        expect(history.location.search).toContain(`primarySearch=${TEST_STRING_2}`);
+        expect(history.location.search).toContain(`secondarySearch=${TEST_STRING_1}`);
+        expect(history.location.search).toContain('searchType=pathfinding');
+    });
 });

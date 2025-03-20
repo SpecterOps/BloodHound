@@ -114,7 +114,7 @@ func (s *TranslationTestCase) WriteTo(output io.Writer, kindMapper pgsql.KindMap
 		return err
 	} else {
 		if len(s.CypherParams) > 0 {
-			if err := walk.WalkCypher(regularQuery, walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+			if err := walk.Cypher(regularQuery, walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
 				switch typedNode := node.(type) {
 				case *cypher.Parameter:
 					if value, hasValue := s.CypherParams[typedNode.Symbol]; hasValue {
@@ -166,7 +166,7 @@ func (s *TranslationTestCase) Assert(t *testing.T, expectedSQL string, kindMappe
 		t.Fatalf("Failed to compile cypher query: %s - %v", s.Cypher, err)
 	} else {
 		if s.CypherParams != nil {
-			if err := walk.WalkCypher(regularQuery, walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+			if err := walk.Cypher(regularQuery, walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
 				switch typedNode := node.(type) {
 				case *cypher.Parameter:
 					if value, hasValue := s.CypherParams[typedNode.Symbol]; hasValue {
