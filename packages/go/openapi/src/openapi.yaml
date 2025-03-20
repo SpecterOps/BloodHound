@@ -80,7 +80,7 @@ info:
 
     For more documentation about how to work with authentication in the API, including examples
     of how to generate an API token in the BloodHound UI, please refer to this support doc:
-    [Working with the BloodHound API](https://support.bloodhoundenterprise.io/hc/en-us/articles/11311053342619-Working-with-the-BloodHound-API).
+    [Working with the BloodHound API](https://bloodhound.specterops.io/integrations/bloodhound-api/working-with-api).
 
     #### Signed Request Pseudo-code Example
 

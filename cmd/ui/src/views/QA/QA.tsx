@@ -141,7 +141,7 @@ const QualityAssuranceV2: React.FC = () => {
                         <Link
                             target='_blank'
                             href={
-                                'https://support.bloodhoundenterprise.io/hc/en-us/categories/9270370014875-Data-Collection'
+                                'https://bloodhound.specterops.io/collect-data/overview'
                             }>
                             Data Collection
                         </Link>{' '}
