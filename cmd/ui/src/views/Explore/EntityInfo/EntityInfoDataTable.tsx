@@ -20,7 +20,6 @@ import {
     NODE_GRAPH_RENDER_LIMIT,
     abortEntitySectionRequest,
     entityRelationshipEndpoints,
-    getOpenExpandedPanelSections,
     searchbarActions,
     transformFlatGraphResponse,
     useExploreParams,
@@ -45,9 +44,12 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     const dispatch = useDispatch();
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
     const { setExploreParams, expandedPanelSections } = useExploreParams();
-    const { expandedSections, setExpandedSections, toggleSection } = useEntityInfoPanelContext();
+    const { expandedSections, toggleSection } = useEntityInfoPanelContext();
 
     const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
+    const isExpandedPanelSection = backButtonFlag?.enabled
+        ? (expandedPanelSections as string[]).includes(label)
+        : !!expandedSections[label];
     const countQuery = useQuery(
         ['relatedCount', label, id],
         () => {
@@ -65,10 +67,19 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         },
         { refetchOnWindowFocus: false, retry: false }
     );
+    const isUnderRenderLimit = countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT;
 
     const removeExpandedPanelSectionParams = () => {
         setExploreParams({
             expandedPanelSections: parentLabels,
+        });
+    };
+
+    const setParentExpandedSectionParam = () => {
+        const labelList = [...(parentLabels as string[]), label];
+
+        setExploreParams({
+            expandedPanelSections: labelList,
         });
     };
 
@@ -84,27 +95,24 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     };
 
     const handleOnChange = (isOpen: boolean) => {
-        handleCurrentSectionToggle();
-        if (isOpen) {
-            handleSetGraph();
+        if (backButtonFlag?.enabled) {
+            if (isOpen) handleSetV2Graph();
+            else removeExpandedPanelSectionParams();
         } else {
-            if (backButtonFlag?.enabled) {
-                removeExpandedPanelSectionParams();
-            }
+            toggleSection(label);
+            if (isOpen) handleSetV1Graph();
+        }
+    };
+    const handleSetV2Graph = async () => {
+        if (!endpoint) setParentExpandedSectionParam();
+        if (endpoint && isUnderRenderLimit) {
+            setExpandedPanelSectionsParams();
         }
     };
 
-    const handleSetGraph = async () => {
-        if (!endpoint) {
-            if (backButtonFlag?.enabled) {
-                setExpandedPanelSectionsParams();
-            }
-        } else if (countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT) {
+    const handleSetV1Graph = async () => {
+        if (endpoint && isUnderRenderLimit) {
             abortEntitySectionRequest();
-            if (backButtonFlag?.enabled) {
-                setExpandedPanelSectionsParams();
-                return;
-            }
             dispatch(setGraphLoading(true));
 
             await endpoint({ id, type: 'graph' })
@@ -124,16 +132,6 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
                 .finally(() => {
                     dispatch(setGraphLoading(false));
                 });
-        }
-    };
-
-    const handleCurrentSectionToggle = () => {
-        if (backButtonFlag?.enabled) {
-            setExpandedSections(
-                getOpenExpandedPanelSections(expandedPanelSections as string[], parentLabels as string[], label)
-            );
-        } else {
-            toggleSection(label);
         }
     };
 
@@ -183,7 +181,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         <EntityInfoCollapsibleSection
             label={label}
             count={count}
-            isExpanded={!!expandedSections[label]}
+            isExpanded={isExpandedPanelSection}
             isLoading={countQuery.isLoading}
             isError={countQuery.isError}
             error={countQuery.error}
