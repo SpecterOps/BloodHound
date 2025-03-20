@@ -135,9 +135,9 @@ func TestParameters_GetAllConfigurationParameter(t *testing.T) {
 	)
 	parameters, err := dbInst.GetAllConfigurationParameters(testCtx)
 	require.Nil(t, err)
-	require.Len(t, parameters, 6)
+	require.Len(t, parameters, 7)
 	for _, parameter := range parameters {
-		if parameter.Key != appcfg.ScheduledAnalysis {
+		if parameter.Key != appcfg.ScheduledAnalysis && parameter.Key != appcfg.TrustedProxiesConfig {
 			require.True(t, parameter.IsValidKey(parameter.Key))
 		}
 	}
