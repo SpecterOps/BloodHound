@@ -19,7 +19,7 @@ import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { useDispatch } from 'react-redux';
 import { searchbarActions } from '../../../store';
-import { apiClient } from '../../../utils';
+import { apiClient } from '../../../utils/api';
 import VirtualizedNodeList, { VirtualizedNodeListItem } from '../../VirtualizedNodeList';
 import { EdgeInfoProps } from '../index';
 

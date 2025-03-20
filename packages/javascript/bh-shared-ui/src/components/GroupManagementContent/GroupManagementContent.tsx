@@ -84,7 +84,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
             filterParams.environment_kind,
             selectedAssetGroup,
         ],
-        enabled: !!(selectedAssetGroupId && filterParams.environment_id && filterParams.environment_kind),
+        enabled: !!selectedAssetGroupId,
         queryFn: ({ signal }) =>
             apiClient
                 .getAssetGroupMembersCount(
