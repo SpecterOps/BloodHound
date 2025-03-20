@@ -436,46 +436,6 @@ func isCertTemplateValidForADCSRelay(ct *graph.Node) (bool, error) {
 	}
 }
 
-func GetCoerceAndRelayNTLMtoSMBComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
-	var (
-		endNode *graph.Node
-		paths   = graph.PathSet{}
-	)
-
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		var err error
-		if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
-			return err
-		} else if paths, err = ops.TraversePaths(tx, ops.TraversalPlan{
-			Root:      endNode,
-			Direction: graph.DirectionInbound,
-			BranchQuery: func() graph.Criteria {
-				return query.KindIn(query.Relationship(), ad.MemberOf, ad.AdminTo)
-			},
-			DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-				if segment.Depth() > 1 && segment.Trunk.Node.Kinds.ContainsOneOf(ad.Computer, ad.User) {
-					return false
-				}
-
-				return true
-			},
-			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-				return segment.Node.Kinds.ContainsOneOf(ad.Computer)
-			},
-			Skip:  0,
-			Limit: 0,
-		}); err != nil {
-			return err
-		} else {
-			return nil
-		}
-	}); err != nil {
-		return nil, err
-	}
-
-	return paths, nil
-}
-
 // PostCoerceAndRelayNTLMToSMB creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
 // Comprised solely of adminTo and memberOf edges
 func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, computer *graph.Node, authenticatedUserID graph.ID, compositionCounter *analysis.CompositionCounter) error {
@@ -518,7 +478,7 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 					query.InIDs(query.Node(), graph.DuplexToGraphIDs(allAdminGroups)...),
 					query.Kind(query.Node(), ad.Computer),
 					query.Not(query.Equals(query.NodeProperty(common.ObjectID.String()), currentComputerID)),
-					query.Not(query.Equals(query.NodeProperty(ad.RestrictOutboundNTLM.String()), true)), //This implicitly avoid null cases as well
+					query.Not(query.Equals(query.NodeProperty(ad.RestrictOutboundNTLM.String()), true)), // This implicitly avoid null cases as well
 				),
 			)); err != nil {
 				return err
@@ -628,6 +588,44 @@ func GetVulnerableDomainControllersForRelayNTLMtoLDAPS(ctx context.Context, db g
 				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainsid),
 				query.Equals(query.NodeProperty(ad.LDAPSEPA.String()), false),
 				query.Equals(query.NodeProperty(ad.LDAPSAvailable.String()), true),
+			),
+		))
+
+		return ierr
+	}); err != nil {
+		return nil, err
+	} else {
+		return nodes, nil
+	}
+}
+
+func GetVulnerableComputersForRelayNTLMToSMB(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
+	var (
+		startNode *graph.Node
+		nodes     graph.NodeSet
+	)
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	}
+
+	if domainsid, err := startNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", startNode.ID, err))
+		return nil, err
+	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var ierr error
+		nodes, ierr = ops.FetchNodeSet(tx.Nodes().Filter(
+			query.And(
+				query.Kind(query.Node(), ad.Computer),
+				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainsid),
+				query.Equals(query.NodeProperty(ad.SMBSigning.String()), false),
 			),
 		))
 
