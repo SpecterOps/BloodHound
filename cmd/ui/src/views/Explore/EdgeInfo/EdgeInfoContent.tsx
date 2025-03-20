@@ -22,7 +22,6 @@ import {
     EdgeSections,
     SelectedEdge,
     apiClient,
-    collapseAllSections,
     edgeSectionToggle,
     transformToFlatGraphResponse,
     useExploreParams,
@@ -71,7 +70,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
     const theme = useTheme();
     const dispatch = useAppDispatch();
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
-    const { setExploreParams, selectedItem } = useExploreParams();
+    const { setExploreParams, selectedItem, expandedPanelSections } = useExploreParams();
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
     const { objectId, type } = targetNode;
@@ -92,33 +91,44 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                         const sendOnChange =
                             EdgeCompositionRelationships.includes(selectedEdge.name) && section[0] === 'composition';
 
+                        const isExpandedPanelSection = backButtonFlag?.enabled
+                            ? (expandedPanelSections as string[]).includes(sectionKeyLabel)
+                            : isExpandedSection;
+
                         const setExpandedPanelSectionsParam = () => {
                             setExploreParams({
                                 expandedPanelSections: [sectionKeyLabel],
-                                ...(sectionKeyLabel === 'composition'
-                                    ? { searchType: 'composition', relationshipQueryItemId: selectedItem }
-                                    : { searchType: null }),
+                                ...(sectionKeyLabel === 'composition' && {
+                                    searchType: 'composition',
+                                    relationshipQueryItemId: selectedItem,
+                                }),
                             });
                         };
 
-                        const handleCurrentSectionToggle = () => {
-                            if (backButtonFlag?.enabled) {
-                                dispatch(collapseAllSections()); // Doesn't affect edge informational panel because its no longer connected to expanded sections remove comment after bhe deep linking
-                            }
-                            dispatch(edgeSectionToggle({ section: sectionKeyLabel, expanded: !isExpandedSection }));
+                        const removeExpandedPanelSectionParams = () => {
+                            setExploreParams({
+                                expandedPanelSections: [],
+                            });
                         };
 
                         const handleOnChange = (isOpen: boolean) => {
-                            handleCurrentSectionToggle();
                             if (backButtonFlag?.enabled) {
-                                setExpandedPanelSectionsParam();
-                            }
-                            if (!backButtonFlag?.enabled && sendOnChange && isOpen) {
-                                getOnChange(
-                                    dispatch,
-                                    parseInt(`${sourceNode.id}`),
-                                    parseInt(`${targetNode.id}`),
-                                    selectedEdge.name
+                                if (isOpen) setExpandedPanelSectionsParam();
+                                else removeExpandedPanelSectionParams();
+                            } else {
+                                if (isOpen && sendOnChange) {
+                                    getOnChange(
+                                        dispatch,
+                                        parseInt(`${sourceNode.id}`),
+                                        parseInt(`${targetNode.id}`),
+                                        selectedEdge.name
+                                    );
+                                }
+                                dispatch(
+                                    edgeSectionToggle({
+                                        section: sectionKeyLabel,
+                                        expanded: !isExpandedSection,
+                                    })
                                 );
                             }
                         };
@@ -130,7 +140,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                 </Box>
                                 <EdgeInfoCollapsibleSection
                                     label={EdgeSections[sectionKeyLabel]}
-                                    isExpanded={isExpandedSection}
+                                    isExpanded={isExpandedPanelSection}
                                     onChange={handleOnChange}>
                                     <Section
                                         edgeName={selectedEdge.name}
