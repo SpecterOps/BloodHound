@@ -29,6 +29,12 @@ export const COLLECTOR_TYPE_LABEL: { [key in CollectorType]: string } = {
     azurehound: 'Azurehound',
 };
 
+export const COLLECTOR_SHORT_LABEL: { [key in CollectorType]: string } = {
+    sharphoundEnterprise: 'SHE',
+    sharphound: 'SH',
+    azurehound: 'AH',
+};
+
 interface CollectorDownloadFile {
     fileName: string;
     os: string;
@@ -40,8 +46,8 @@ interface CollectorDownloadFile {
 interface CollectorCardProps extends React.HTMLAttributes<HTMLDivElement> {
     collectorType: CollectorType;
     version: string;
-    timestamp: number;
     downloadArtifacts: CollectorDownloadFile[];
+    timestamp?: number;
     label?: LabelType;
     isLatest?: boolean;
     isPrerelease?: boolean;
@@ -50,14 +56,14 @@ interface CollectorCardProps extends React.HTMLAttributes<HTMLDivElement> {
 const CollectorCard: React.FC<CollectorCardProps> = ({
     collectorType,
     version,
-    timestamp,
     downloadArtifacts,
+    timestamp = undefined,
     label = undefined,
     isLatest = false,
     isPrerelease = false,
     ...rest
 }) => {
-    const date = new Date(timestamp);
+    const date = timestamp ? new Date(timestamp) : null;
 
     return (
         <Card {...rest} className={cn(rest.className, { 'bg-neutral-light-3 dark:bg-neutral-dark-5': isLatest })}>
@@ -66,16 +72,16 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
                     <CardTitle>{`${version}`.trim().toUpperCase()}</CardTitle>
                     {isPrerelease && <Typography variant='caption'>(pre-release)</Typography>}
                     {label && <CollectorLabel label={label} isPrerelease={isPrerelease} />}
-                    <CardDescription>
+                    {date && <CardDescription>
                         {`${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`}
-                    </CardDescription>
+                    </CardDescription>}
                 </Box>
             </CardHeader>
             <CardContent>
                 <ul>
                     {downloadArtifacts.map((collector) => (
                         <li key={collector.fileName}>
-                            <Box display='flex' flexDirection='row' justifyContent='space-between' gap='2rem'>
+                            <Box display='flex' flexDirection='row'>
                                 <Link
                                     component='button'
                                     variant='body1'
@@ -85,6 +91,7 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
                                     noWrap>
                                     {collector.fileName}
                                 </Link>
+                                <DashedFlexConnector />
                                 <Link
                                     component='button'
                                     variant='body1'
@@ -116,5 +123,10 @@ const CollectorLabel: React.FC<CollectorLabelProps> = ({ label, isPrerelease = f
         <RiskBadge type='labeled' label={label} outlined={false} color={color} title={label} className={darkColor} />
     );
 };
+
+// Sometimes you just need a dashed line connecting two underlined text elements together
+const DashedFlexConnector: React.FC = () => {
+    return <div className="flex-1 decoration-neutral-light-5 decoration-dashed underline whitespace-nowrap min-w-0 text-clip overflow-hidden pointer-events-none select-none">{"\u00A0".repeat(1000)}</div>;
+}
 
 export default CollectorCard;

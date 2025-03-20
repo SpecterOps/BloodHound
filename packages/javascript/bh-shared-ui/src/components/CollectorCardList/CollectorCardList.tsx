@@ -18,10 +18,9 @@ import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from '@bl
 import { Box, Typography, useTheme } from '@mui/material';
 import { useState } from 'react';
 import { CaretDown, CaretUp } from '../AppIcon/Icons';
-import CollectorCard, { COLLECTOR_TYPE_LABEL, CollectorType, LabelType } from '../CollectorCard';
+import CollectorCard, { COLLECTOR_SHORT_LABEL, COLLECTOR_TYPE_LABEL, CollectorType, LabelType } from '../CollectorCard';
 
 interface CollectorDownloadFile {
-    fileName: string;
     os: string;
     arch: string;
     onClickDownload: () => void;
@@ -31,8 +30,8 @@ interface CollectorDownloadFile {
 interface CollectorCardProps {
     collectorType: CollectorType;
     version: string;
-    timestamp: number;
     downloadArtifacts: CollectorDownloadFile[];
+    timestamp?: number;
     label?: LabelType;
     isPrerelease?: boolean;
 }
@@ -64,24 +63,24 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors }) => 
             <Typography variant='h6'>{COLLECTOR_TYPE_LABEL[latestStable.collectorType]}</Typography>
             <Box display='flex' flexDirection='row' gap={theme.spacing(2)}>
                 <CollectorCard
-                    className='flex-1 h-full min-w-0'
+                    className='flex-1 min-w-0'
                     collectorType={latestStable.collectorType}
                     version={latestStable.version}
                     timestamp={latestStable.timestamp}
                     label={latestStable.label}
                     isLatest={true}
                     isPrerelease={latestStable.isPrerelease}
-                    downloadArtifacts={latestStable.downloadArtifacts}
+                    downloadArtifacts={latestStable.downloadArtifacts.map(artifact => {return {fileName: `${COLLECTOR_SHORT_LABEL[latestStable.collectorType]} ${latestStable.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
                 />
                 {latestPrerelease && (
                     <CollectorCard
-                        className='flex-1 h-full min-w-0'
+                        className='flex-1 min-w-0'
                         collectorType={latestPrerelease.collectorType}
                         version={latestPrerelease.version}
                         timestamp={latestPrerelease.timestamp}
                         label={latestPrerelease.label}
                         isPrerelease={latestPrerelease.isPrerelease}
-                        downloadArtifacts={latestPrerelease.downloadArtifacts}
+                        downloadArtifacts={latestPrerelease.downloadArtifacts.map(artifact => {return {fileName: `${COLLECTOR_SHORT_LABEL[latestPrerelease.collectorType]} ${latestPrerelease.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
                     />
                 )}
             </Box>
@@ -115,7 +114,7 @@ const OlderVersionsList: React.FC<CollectorCardListProps> = ({ collectors }) => 
                                 label={collector.label}
                                 isLatest={false}
                                 isPrerelease={collector.isPrerelease}
-                                downloadArtifacts={collector.downloadArtifacts}
+                                downloadArtifacts={collector.downloadArtifacts.map(artifact => {return {fileName: `${COLLECTOR_SHORT_LABEL[collector.collectorType]} ${collector.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
                             />
                         ))}
                     </Box>
