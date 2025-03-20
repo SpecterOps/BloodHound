@@ -24,7 +24,6 @@ export const useCypherSearch = () => {
     const { cypherSearch, setExploreParams } = useExploreParams();
 
     useEffect(() => {
-        console.log(cypherSearch);
         if (cypherSearch) {
             const decoded = decodeCypherQuery(cypherSearch);
             setCypherQuery(decoded);
