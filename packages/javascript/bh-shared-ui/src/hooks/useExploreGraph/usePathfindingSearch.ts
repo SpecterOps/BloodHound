@@ -108,6 +108,16 @@ export const usePathfindingSearch = () => {
         }
     };
 
+    const handleSwapPathfindingInputs = () => {
+        if (sourceSelectedItem && destinationSelectedItem) {
+            setExploreParams({
+                searchType: 'pathfinding',
+                primarySearch: destinationSelectedItem.objectid,
+                secondarySearch: sourceSelectedItem.objectid,
+            });
+        }
+    };
+
     // Handle changes internal to the search form that should not trigger a graph query. Each param should sync independently
     const handleSourceNodeEdited = (edit: string) => {
         setSourceSelectedItem(undefined);
@@ -128,5 +138,6 @@ export const usePathfindingSearch = () => {
         handleSourceNodeSelected,
         handleDestinationNodeEdited,
         handleDestinationNodeSelected,
+        handleSwapPathfindingInputs,
     };
 };
