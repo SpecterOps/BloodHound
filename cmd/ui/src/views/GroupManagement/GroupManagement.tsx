@@ -44,7 +44,7 @@ const GroupManagement = () => {
     const navigate = useNavigate();
     const backButtonFlagQuery = useFeatureFlag('back_button_support');
 
-    const { data: environment } = useInitialEnvironment();
+    const { data: environment } = useInitialEnvironment({ orderBy: 'name' });
 
     // Kept out of the shared UI due to diff between GraphNodeTypes across apps
     const [openNode, setOpenNode] = useState<SelectedNode | null>(null);
