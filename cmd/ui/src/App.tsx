@@ -21,7 +21,6 @@ import {
     MainNav,
     MainNavData,
     NotificationsProvider,
-    PrimaryNavItem,
     components,
     darkPalette,
     lightPalette,
@@ -31,6 +30,7 @@ import {
     useShowNavBar,
     useStyles,
 } from 'bh-shared-ui';
+import { MainNavDataListItem } from 'bh-shared-ui/dist/components/Navigation/types';
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -42,6 +42,8 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import Content from 'src/views/Content';
 import {
+    groupManagementNavItem,
+    tierManagementNavItem,
     useMainNavLogoData,
     useMainNavPrimaryListData,
     useMainNavSecondaryListData,
@@ -49,7 +51,7 @@ import {
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
 
-const tierFlagToggle = (primaryNavList: PrimaryNavItem[], tierFlagEnabled?: boolean) => {
+const tierFlagToggle = (primaryNavList: MainNavDataListItem[], tierFlagEnabled?: boolean) => {
     if (tierFlagEnabled) {
         const groupManagementIndex = primaryNavList.findIndex((listItem) => {
             return listItem.label === groupManagementNavItem.label;
@@ -104,7 +106,7 @@ export const Inner: React.FC = () => {
         // Change the nav item routing for group/tier management based on flag value
         const tierManagementFlag = featureFlagsRes.data.find((flag) => flag.key === 'tier_management_engine');
         tierFlagToggle(mainNavData.primaryList, tierManagementFlag?.enabled);
-    }, [dispatch, queryClient, featureFlagsRes.data, darkMode, mainNavData.primaryList]);
+    }, [dispatch, queryClient, featureFlagsRes.data, mainNavData.primaryList]);
 
     // block rendering until authentication initialization is complete
     if (!authState.isInitialized) {
