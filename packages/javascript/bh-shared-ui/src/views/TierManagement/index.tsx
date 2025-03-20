@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
-import Details from './Details';
+import Details from './Details/Details';
 
 export const TierManagement: FC = () => {
     return (
@@ -28,7 +28,7 @@ export const TierManagement: FC = () => {
             </p>
 
             <div className='flex flex-col'>
-                <div className='flex gap-4 mt-6'>
+                <div className='flex gap-4 mt-6 invisible'>
                     <div className='text-lg underline'>Tiers</div>
                     <div className='text-lg'>Labels</div>
                     <div className='text-lg'>Certifications</div>

@@ -127,13 +127,38 @@ class BHEAPIClient {
             options
         );
 
-    getAssetGroupLabelMembers = (assetGroupId: number, options?: types.RequestOptions) =>
-        this.baseClient.get<AssetGroupMemberResponse>(`/api/v2/asset-group-labels/${assetGroupId}/members`, options);
+    getAssetGroupLabelMembers = (assetGroupId: number, skip: number, limit: number, options?: types.RequestOptions) =>
+        this.baseClient.get<AssetGroupMemberResponse>(
+            `/api/v2/asset-group-labels/${assetGroupId}/members`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                    },
+                },
+                options
+            )
+        );
 
-    getAssetGroupSelectorMembers = (assetGroupId: number, selectorId: number, options?: types.RequestOptions) =>
+    getAssetGroupSelectorMembers = (
+        assetGroupId: number,
+        selectorId: number,
+        skip: number,
+        limit: number,
+        options?: types.RequestOptions
+    ) =>
         this.baseClient.get<AssetGroupMemberResponse>(
             `/api/v2/asset-group-labels/${assetGroupId}/selectors/${selectorId}/members`,
-            options
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                    },
+                },
+                options
+            )
         );
 
     /* */

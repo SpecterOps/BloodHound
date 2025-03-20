@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { UseQueryResult } from 'react-query';
-import { render, screen } from '../../test-utils';
-import { EntityKinds } from '../../utils';
+import { render, screen } from '../../../test-utils';
+import { EntityKinds } from '../../../utils';
 import { DetailsList } from './DetailsList';
 
 const testQuery = {
@@ -65,20 +65,6 @@ describe('List', async () => {
 
         expect(await screen.findByTestId('tier-management_details_test-list_static-order')).toBeInTheDocument();
         expect(screen.queryByText('app-icon-sort-empty')).not.toBeInTheDocument();
-    });
-
-    it('renders with a node icon if specified', async () => {
-        render(<DetailsList title='Test' listQuery={testQuery} selected={1} onSelect={() => {}} nodeIcon />);
-
-        // 'question' is associated with the `faQuestion` icon that we render when the node type is unknown
-        // three of them render because there are 3 list items
-        expect(await screen.findAllByText('question')).toHaveLength(3);
-    });
-
-    it('renders without a node icon by default', async () => {
-        render(<DetailsList title='Test' listQuery={testQuery} selected={1} onSelect={() => {}} />);
-
-        expect(screen.queryAllByText('question')).toHaveLength(0);
     });
 
     it('handles rendering a selected item', async () => {

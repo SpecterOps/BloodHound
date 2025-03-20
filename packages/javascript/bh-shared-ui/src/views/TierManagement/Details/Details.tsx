@@ -18,10 +18,11 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { FC, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
-import { AppIcon, CreateMenu } from '../../components';
-import { ROUTE_TIER_MANAGEMENT_CREATE, ROUTE_TIER_MANAGEMENT_EDIT } from '../../routes';
-import { apiClient } from '../../utils';
+import { AppIcon, CreateMenu } from '../../../components';
+import { ROUTE_TIER_MANAGEMENT_CREATE, ROUTE_TIER_MANAGEMENT_EDIT } from '../../../routes';
+import { apiClient } from '../../../utils';
 import { DetailsList } from './DetailsList';
+import { MembersList } from './MembersList';
 
 const innerDetail = (
     selectedObject: number | null,
@@ -81,40 +82,28 @@ const Details: FC = () => {
     const [showCypher, setShowCypher] = useState(false);
     const navigate = useNavigate();
 
-    const labelsQuery = useQuery(
-        ['asset-group-labels'],
-        () => {
-            return apiClient.getAssetGroupLabels().then((res) => {
-                return res.data.data['asset_group_labels'];
-            });
-        },
-        { cacheTime: Infinity, keepPreviousData: true, staleTime: Infinity }
-    );
+    const labelsQuery = useQuery(['asset-group-labels'], () => {
+        return apiClient.getAssetGroupLabels().then((res) => {
+            return res.data.data['asset_group_labels'];
+        });
+    });
 
-    const selectorsQuery = useQuery(
-        ['asset-group-selectors', selectedTier],
-        () => {
-            return apiClient.getAssetGroupSelectors(selectedTier).then((res) => {
-                return res.data.data['selectors'];
-            });
-        },
-        { cacheTime: Infinity, keepPreviousData: true, staleTime: Infinity }
-    );
+    const selectorsQuery = useQuery(['asset-group-selectors', selectedTier], () => {
+        return apiClient.getAssetGroupSelectors(selectedTier).then((res) => {
+            return res.data.data['selectors'];
+        });
+    });
 
-    const objectsQuery = useQuery(
-        ['asset-group-members', selectedTier, selectedSelector],
-        async () => {
-            if (selectedSelector === null)
-                return apiClient.getAssetGroupLabelMembers(selectedTier).then((res) => {
-                    return res.data.data['members'];
-                });
-
-            return apiClient.getAssetGroupSelectorMembers(selectedTier, selectedSelector).then((res) => {
-                return res.data.data['members'];
+    const objectsQuery = useQuery(['asset-group-members', selectedTier, selectedSelector], async () => {
+        if (selectedSelector === null)
+            return apiClient.getAssetGroupLabelMembers(selectedTier, 0, 1).then((res) => {
+                return res.data.count;
             });
-        },
-        { cacheTime: Infinity, keepPreviousData: true, staleTime: Infinity }
-    );
+
+        return apiClient.getAssetGroupSelectorMembers(selectedTier, selectedSelector, 0, 1).then((res) => {
+            return res.data.count;
+        });
+    });
 
     const disableEditButton =
         selectedObject !== null ||
@@ -127,7 +116,7 @@ const Details: FC = () => {
         <div>
             <div className='flex mt-6'>
                 <div className='flex justify-around basis-2/3'>
-                    <div className='flex justify-start gap-4 items-center basis-2/3'>
+                    <div className='flex justify-start gap-4 items-center basis-2/3 invisible'>
                         <CreateMenu
                             createMenuTitle='Create'
                             menuItems={[
@@ -187,7 +176,7 @@ const Details: FC = () => {
             </div>
             <div className='flex gap-8 mt-4'>
                 <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg'>
-                    <div className='grow min-h-96'>
+                    <div className='min-h-96 grow-0 basis-1/3'>
                         <DetailsList
                             title='Tiers'
                             listQuery={labelsQuery}
@@ -200,12 +189,12 @@ const Details: FC = () => {
                             }}
                         />
                     </div>
-                    <div className='border-neutral-light-3 dark:border-neutral-dark-3 grow min-h-96'>
+                    <div className='border-neutral-light-3 dark:border-neutral-dark-3 min-h-96 grow-0 basis-1/3'>
                         <DetailsList
                             title='Selectors'
                             listQuery={selectorsQuery}
                             selected={selectedSelector}
-                            onSelect={(id) => {
+                            onSelect={(id: number | null) => {
                                 setSelectedSelector(id);
 
                                 const selected = selectorsQuery.data?.find((item) => {
@@ -219,17 +208,16 @@ const Details: FC = () => {
                             sortable
                         />
                     </div>
-                    <div className='grow min-h-96'>
-                        <DetailsList
-                            title='Objects'
-                            listQuery={objectsQuery}
-                            selected={selectedObject}
-                            onSelect={(id) => {
+                    <div className='min-h-96 grow-0 basis-1/3'>
+                        <MembersList
+                            itemCount={objectsQuery.data || 1000}
+                            onClick={(id) => {
                                 setSelectedObject(id);
                                 setShowCypher(false);
                             }}
-                            sortable
-                            nodeIcon
+                            selected={selectedObject}
+                            selectedSelector={selectedSelector}
+                            selectedTier={selectedTier}
                         />
                     </div>
                 </div>

@@ -87,17 +87,29 @@ export const createSelectorSeeds = (count: number = 10, selectorId: number = 0) 
     return data;
 };
 
-export const createSelectorNodes = (count: number = 10, selectorId: number) => {
+export const createSelectorNodes = (
+    assetGroupId: number,
+    selectorId: number | undefined,
+    skip: number,
+    limit: number,
+    count: number
+) => {
     const data: SelectorNode[] = [];
 
-    for (let i = 0; i < count; i++) {
+    for (let i = skip; i < skip + limit; i++) {
+        if (i === count) break;
+
+        const name = Number.isNaN(selectorId)
+            ? `tier-${assetGroupId - 1}-object-${i}`
+            : `tier-${assetGroupId - 1}-selector-${selectorId}-object-${i}`;
+
         data.push({
-            selector_id: selectorId,
+            selector_id: selectorId || 0,
             node_id: i,
             id: i,
             certified: faker.datatype.number({ min: -1, max: 2 }) as CertifiedValues,
             certified_by: faker.internet.email(),
-            name: `selector-${selectorId}-object-${i}`,
+            name: name,
         });
     }
 

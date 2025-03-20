@@ -16,8 +16,8 @@
 
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
-import { tierHandlers } from '../../mocks/handlers';
-import { act, render, screen, waitFor, within } from '../../test-utils';
+import { tierHandlers } from '../../../mocks/handlers';
+import { act, render, screen, waitFor, within } from '../../../test-utils';
 import Details from './Details';
 
 const server = setupServer(...tierHandlers);
@@ -44,7 +44,7 @@ describe('Details', async () => {
 
         expect(await screen.findByTestId('tier-management_details_tiers-list')).toBeInTheDocument();
         expect(await screen.findByTestId('tier-management_details_selectors-list')).toBeInTheDocument();
-        expect(await screen.findByTestId('tier-management_details_objects-list')).toBeInTheDocument();
+        expect(await screen.findByTestId('tier-management_details_members-list')).toBeInTheDocument();
 
         expect(screen.getByRole('button', { name: /Create/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Edit/ })).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('Details', async () => {
         const selectors = await screen.findByTestId('tier-management_details_selectors-list');
         const selectorsListItems = within(selectors).getAllByRole('listitem');
 
-        const objects = await screen.findByTestId('tier-management_details_objects-list');
+        const objects = await screen.findByTestId('tier-management_details_members-list');
         const objectsListItems = within(objects).getAllByRole('listitem');
 
         expect(await screen.findByTestId('tier-management_details_tiers-list')).toBeInTheDocument();
@@ -85,7 +85,7 @@ describe('Details', async () => {
 
         const editButton = screen.getByRole('button', { name: /Edit/ });
 
-        const object5 = await screen.findByText('selector-0-object-5');
+        const object5 = await screen.findByText('tier-0-object-5');
 
         const selectors = await screen.findByTestId('tier-management_details_selectors-list');
         const selectorsListItems = within(selectors).getAllByRole('listitem');
@@ -101,7 +101,7 @@ describe('Details', async () => {
         // The Tier Zero tier is still selected when selecting an object that is within it
         expect(screen.getByTestId('tier-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
         expect(
-            await screen.findByTestId('tier-management_details_objects-list_active-objects-item-5')
+            await screen.findByTestId('tier-management_details_members-list_active-members-item-5')
         ).toBeInTheDocument();
 
         // No selector is selected
@@ -117,7 +117,7 @@ describe('Details', async () => {
 
         const selector7 = await screen.findByText('tier-0-selector-7');
 
-        const objects = await screen.findByTestId('tier-management_details_objects-list');
+        const objects = await screen.findByTestId('tier-management_details_members-list');
         const objectsListItems = within(objects).getAllByRole('listitem');
         // Selecting a selector will enable the Edit button from a disabled state
         await act(async () => {
@@ -151,7 +151,7 @@ describe('Details', async () => {
         const selectors = await screen.findByTestId('tier-management_details_selectors-list');
         const selectorsListItems = within(selectors).getAllByRole('listitem');
 
-        const objects = await screen.findByTestId('tier-management_details_objects-list');
+        const objects = await screen.findByTestId('tier-management_details_members-list');
         const objectsListItems = within(objects).getAllByRole('listitem');
 
         await act(async () => {
@@ -162,14 +162,14 @@ describe('Details', async () => {
             await screen.findByTestId('tier-management_details_selectors-list_active-selectors-item-7')
         ).toBeInTheDocument();
 
-        const object3 = await screen.findByText('selector-7-object-3');
+        const object7 = await screen.findByText('tier-0-selector-7-object-7');
 
         await act(async () => {
-            user.click(object3);
+            user.click(object7);
         });
         // The selector now displays as selected
         expect(
-            await screen.findByTestId('tier-management_details_objects-list_active-objects-item-3')
+            await screen.findByTestId('tier-management_details_members-list_active-members-item-7')
         ).toBeInTheDocument();
 
         await act(async () => {
