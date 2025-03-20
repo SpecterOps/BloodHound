@@ -64,7 +64,7 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors }) => 
             <Typography variant='h6'>{COLLECTOR_TYPE_LABEL[latestStable.collectorType]}</Typography>
             <Box display='flex' flexDirection='row' gap={theme.spacing(2)}>
                 <CollectorCard
-                    className='flex-1 min-w-0'
+                    className='flex-1 h-full min-w-0'
                     collectorType={latestStable.collectorType}
                     version={latestStable.version}
                     timestamp={latestStable.timestamp}
@@ -75,7 +75,7 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors }) => 
                 />
                 {latestPrerelease && (
                     <CollectorCard
-                        className='flex-1 min-w-0'
+                        className='flex-1 h-full min-w-0'
                         collectorType={latestPrerelease.collectorType}
                         version={latestPrerelease.version}
                         timestamp={latestPrerelease.timestamp}

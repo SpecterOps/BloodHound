@@ -55,12 +55,12 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
     label = undefined,
     isLatest = false,
     isPrerelease = false,
-    ...props
+    ...rest
 }) => {
     const date = new Date(timestamp);
 
     return (
-        <Card {...props} className={cn(props.className, { 'bg-neutral-light-3 dark:bg-neutral-dark-5': isLatest })}>
+        <Card {...rest} className={cn(rest.className, { 'bg-neutral-light-3 dark:bg-neutral-dark-5': isLatest })}>
             <CardHeader>
                 <Box display='flex' flexDirection='row' alignItems='center' overflow='hidden' gap='1rem'>
                     <CardTitle>{`${version}`.trim().toUpperCase()}</CardTitle>
@@ -107,9 +107,14 @@ interface CollectorLabelProps {
 }
 
 const CollectorLabel: React.FC<CollectorLabelProps> = ({ label, isPrerelease = false }) => {
+    // RiskBadge isn't set up out the gate to accomodate dark mode
+    // so we improvise
     const color = isPrerelease ? 'rgba(243, 96, 54, 0.25)' : 'rgba(51, 49, 143, 0.15)';
+    const darkColor = isPrerelease ? 'dark:bg-violet-600/50' : 'dark:bg-sky-500/50';
 
-    return <RiskBadge type='labeled' label={label} outlined={false} color={color} title={label} />;
+    return (
+        <RiskBadge type='labeled' label={label} outlined={false} color={color} title={label} className={darkColor} />
+    );
 };
 
 export default CollectorCard;
