@@ -21,7 +21,7 @@ import { UseQueryOptions } from 'react-query';
 
 export interface UseInitialEnvironmentParams {
     /** orderBy alphabetical in CE, we will use impactValue for BHE */
-    orderBy: 'impactValue' | 'name';
+    orderBy?: 'impactValue' | 'name';
     handleInitialEnvironment?: (env: Environment | null) => void;
     queryOptions?: Omit<
         UseQueryOptions<Environment[], unknown, Environment | undefined, string[]>,
@@ -31,7 +31,7 @@ export interface UseInitialEnvironmentParams {
 
 // Future Dev: when we implement deep linking support for selected domain in BHE, move this to shared-ui and rip out the reducer logic (including stateUpdater)
 export const useInitialEnvironment = (options: UseInitialEnvironmentParams) => {
-    const { orderBy: _orderBy, handleInitialEnvironment, queryOptions = {} } = options ?? { orderBy: 'impactValue' };
+    const { orderBy: _orderBy = 'impactValue', handleInitialEnvironment, queryOptions = {} } = options ?? {};
     const { queryKey = [], ...restOfQueryOptions } = queryOptions;
 
     return useAvailableEnvironments({
@@ -44,7 +44,8 @@ export const useInitialEnvironment = (options: UseInitialEnvironmentParams) => {
                 (environment: Environment) => environment.collected
             );
 
-            const sorted: Environment[] = orderBy(collectedEnvironments, [_orderBy], ['asc']);
+            const direction = (_orderBy ?? 'impactValue') === 'name' ? 'asc' : 'desc';
+            const sorted: Environment[] = orderBy(collectedEnvironments, [_orderBy], [direction]);
 
             const initialEnvironment = sorted[0];
 
