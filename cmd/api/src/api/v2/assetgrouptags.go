@@ -35,6 +35,7 @@ import (
 
 const (
 	ErrInvalidAssetGroupTagId = "invalid asset group tag id specified in url"
+	ErrNoAssetGroupTagId      = "no asset group tag id specified in url"
 )
 
 // Checks that the selector seeds are valid.
@@ -91,7 +92,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selector")()
 
 	if rawAssetGroupTagID, hasAssetGroupTagID := mux.Vars(request)[api.URIPathVariableAssetGroupTagID]; !hasAssetGroupTagID {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrNoAssetGroupTagId, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrNoAssetGroupTagId, request), response)
 	} else if assetGroupTagID, err := strconv.Atoi(rawAssetGroupTagID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupTagId, request), response)
 	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
