@@ -86,7 +86,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 	}
 }
 
-func (s *Resources) GetAssetGroupLabelsSelectors(response http.ResponseWriter, request *http.Request) {
+func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, request *http.Request) {
 
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selector")()
 
