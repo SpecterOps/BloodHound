@@ -20,26 +20,16 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api/middleware"
 	"github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/ulule/limiter/v3"
-	"github.com/ulule/limiter/v3/drivers/store/memory"
 	"go.uber.org/mock/gomock"
 )
 
 func TestRateLimitMiddleware(t *testing.T) {
 	allowedReqsPerSecond := 5
-	rate := limiter.Rate{
-		Period: 1 * time.Second,
-		Limit:  int64(allowedReqsPerSecond),
-	}
-
-	store := memory.NewStore()
-	instance := limiter.New(store, rate)
 
 	mockCtl := gomock.NewController(t)
 	mockDB := mocks.NewMockDatabase(mockCtl)
@@ -47,14 +37,12 @@ func TestRateLimitMiddleware(t *testing.T) {
 
 	testHandler := &CountingHandler{}
 	router := mux.NewRouter()
-	router.Use(middleware.RateLimitMiddleware(mockDB, instance))
+	router.Use(middleware.RateLimitMiddleware(mockDB, int64(allowedReqsPerSecond)))
 	router.Handle("/teapot", testHandler)
 
 	if req, err := http.NewRequest("GET", "/teapot", nil); err != nil {
 		t.Fatal(err)
 	} else {
-		req.Header.Set("X-Real-IP", "8.8.8.8")
-
 		// simulate exceeding the limit as fast as possible
 		for i := 0; i <= allowedReqsPerSecond; i++ {
 			rr := httptest.NewRecorder()
@@ -81,8 +69,6 @@ func TestDefaultRateLimitMiddleware(t *testing.T) {
 	if req, err := http.NewRequest("GET", "/teapot", nil); err != nil {
 		t.Fatal(err)
 	} else {
-		req.Header.Set("X-Real-IP", "8.8.8.8")
-
 		// simulate exceeding the limit as fast as possible
 		for i := 0; i <= middleware.DefaultRateLimit; i++ {
 			rr := httptest.NewRecorder()

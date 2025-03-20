@@ -35,11 +35,7 @@ import (
 // DefaultRateLimit is the default number of allowed requests per second
 const DefaultRateLimit = 55
 
-// RateLimitMiddleware is a convenience function for creating rate limiting middleware
-//
-//	router.Use(RateLimitMiddleware(limiter))
-func RateLimitMiddleware(db database.Database, limiter *limiter.Limiter) mux.MiddlewareFunc {
-
+func rateLimitMiddleware(db database.Database, limiter *limiter.Limiter) mux.MiddlewareFunc {
 	ipGetter := stdlib.WithKeyGetter(
 		func(r *http.Request) string {
 			var remoteIP string
@@ -52,7 +48,7 @@ func RateLimitMiddleware(db database.Database, limiter *limiter.Limiter) mux.Mid
 				remoteIP = host
 			}
 
-			if trustedProxies == 0 {
+			if trustedProxies <= 0 {
 				slog.DebugContext(r.Context(), "Using direct remote IP Address for rate limiting", "IP Address", remoteIP)
 				return remoteIP
 			} else if xff := r.Header.Get("X-Forwarded-For"); xff == "" {
@@ -63,7 +59,7 @@ func RateLimitMiddleware(db database.Database, limiter *limiter.Limiter) mux.Mid
 
 				idxIP := len(ips) - trustedProxies
 				if idxIP < 0 {
-					slog.WarnContext(r.Context(), "Not enough IPs in X-Forwarded-For, defaulting to first IP")
+					slog.WarnContext(r.Context(), "Not enough IPs in X-Forwarded-For, defaulting to first IP", "X-Forwarded-For", xff)
 					idxIP = 0
 				}
 
@@ -78,12 +74,12 @@ func RateLimitMiddleware(db database.Database, limiter *limiter.Limiter) mux.Mid
 	middleware := stdlib.NewMiddleware(limiter, ipGetter)
 
 	return func(next http.Handler) http.Handler {
-		return middleware.Handler(RemoveRateLimitHeadersMiddleware(next))
+		return middleware.Handler(removeRateLimitHeadersMiddleware(next))
 	}
 }
 
 // RemoveRateLimitHeadersMiddleware removes rate limit headers that we do not want appearing in our responses
-func RemoveRateLimitHeadersMiddleware(next http.Handler) http.Handler {
+func removeRateLimitHeadersMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		response.Header().Del("X-RateLimit-Limit")
 		response.Header().Del("X-RateLimit-Remaining")
@@ -97,16 +93,26 @@ func RemoveRateLimitHeadersMiddleware(next http.Handler) http.Handler {
 //
 // Usage:
 //
-//	router.Use(DefaultRateLimitMiddleware())
+//	router.Use(DefaultRateLimitMiddleware(db))
 func DefaultRateLimitMiddleware(db database.Database) mux.MiddlewareFunc {
+	return RateLimitMiddleware(db, DefaultRateLimit)
+}
+
+// RateLimitMiddleware is a function for creating rate limiting middleware
+// with a particular time limit for a router/route
+//
+// Usage:
+//
+//	router.Use(RateLimitMiddleware(db, 1))
+func RateLimitMiddleware(db database.Database, limit int64) mux.MiddlewareFunc {
 	rate := limiter.Rate{
 		Period: 1 * time.Second,
-		Limit:  DefaultRateLimit,
+		Limit:  limit,
 	}
 
 	store := memory.NewStore()
 
 	instance := limiter.New(store, rate)
 
-	return RateLimitMiddleware(db, instance)
+	return rateLimitMiddleware(db, instance)
 }
