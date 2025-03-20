@@ -427,7 +427,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 						continue
 					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
 						continue
-					} else if webClientRunning, err := innerComputer.Properties.Get(ad.WebClientRunning.String()).Bool(); webClientRunning {
+					} else if webClientRunning, _ := innerComputer.Properties.Get(ad.WebClientRunning.String()).Bool(); webClientRunning {
 						continue
 					} else if err = ad2.PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserID, ldapSigningCache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToLDAP.String(), err)
