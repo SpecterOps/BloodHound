@@ -14,90 +14,113 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { faDownload } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Link, Paper, Typography } from '@mui/material';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, RiskBadge } from '@bloodhoundenterprise/doodleui';
+import { Box, Link, Typography } from '@mui/material';
+import React from 'react';
+import { CollectorType } from 'js-client-library/src/types';
+import { cn } from '../../utils';
 
-interface CollectorCardProps {
-    collectorType: 'sharphound' | 'azurehound';
-    version: string;
-    checksum: string;
-    onClickDownload?: (collectorType: 'sharphound' | 'azurehound', version: string) => void;
-    onClickDownloadChecksum?: (collectorType: 'sharphound' | 'azurehound', version: string) => void;
-    isLatest?: boolean;
-    isDeprecated?: boolean;
+export type LabelType = 'latest' | 'prerelease';
+
+export const COLLECTOR_TYPE_LABEL: { [key in CollectorType]: string } = {
+    sharphound_enterprise: 'Sharphound Enterprise',
+    sharphound: 'Sharphound Community',
+    azurehound: 'Azurehound',
+};
+
+interface CollectorDownloadFile {
+    fileName: string;
+    os: string;
+    arch: string;
+    onClickDownload: () => void;
+    onClickDownloadChecksum: () => void;
 }
 
-const COLLECTOR_TYPE = {
-    sharphound: 'SharpHound',
-    azurehound: 'AzureHound',
-};
+interface CollectorCardProps extends React.HTMLAttributes<HTMLDivElement> {
+    collectorType: CollectorType;
+    version: string;
+    downloadArtifacts: CollectorDownloadFile[];
+    timestamp?: number;
+    label?: LabelType;
+    isPrerelease?: boolean;
+    needsUnderlineOffset?: boolean;
+}
 
 const CollectorCard: React.FC<CollectorCardProps> = ({
     collectorType,
     version,
-    checksum,
-    onClickDownload = () => {},
-    onClickDownloadChecksum = () => {},
-    isLatest = false,
-    isDeprecated = false,
+    downloadArtifacts,
+    timestamp = undefined,
+    label = undefined,
+    isPrerelease = false,
+    needsUnderlineOffset = false,
+    ...rest
 }) => {
-    const handleOnClickDownload = () => {
-        onClickDownload(collectorType, version);
-    };
-
-    const handleOnClickDownloadChecksum = () => {
-        onClickDownloadChecksum(collectorType, version);
-    };
+    const date = timestamp ? new Date(timestamp) : null;
 
     return (
-        <Paper>
-            <Box p={2} display='flex' justifyContent='space-between' flexWrap='wrap' style={{ rowGap: '1rem' }}>
-                <Box overflow='hidden'>
-                    <Typography variant='h6'>
-                        {`${COLLECTOR_TYPE[collectorType]} ${version} ${getLabel(isLatest, isDeprecated)}`.trim()}
-                    </Typography>
-                    <Typography variant='body1'>
-                        {'SHA-256: '}
-                        <Link
-                            component='button'
-                            variant='body1'
-                            onClick={handleOnClickDownloadChecksum}
-                            title='Download Checksum'
-                            style={{ verticalAlign: 'baseline' }}>
-                            {checksum}
-                        </Link>
-                    </Typography>
+        <Card {...rest}>
+            <CardHeader>
+                <Box display='flex' flexDirection='row' alignItems='center' overflow='hidden' gap='1rem'>
+                    <CardTitle>{`${version}`.trim().toUpperCase()}</CardTitle>
+                    {isPrerelease && <Typography variant='caption'>(pre-release)</Typography>}
+                    {label && <CollectorLabel label={label} isPrerelease={isPrerelease} />}
+                    {date && <CardDescription>
+                        {`${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`}
+                    </CardDescription>}
                 </Box>
-                <Box>
-                    <Button
-                        aria-label={`Download ${COLLECTOR_TYPE[collectorType]} ${version} (.zip)`}
-                        variant='tertiary'
-                        onClick={handleOnClickDownload}>
-                        <FontAwesomeIcon
-                            aria-hidden='true'
-                            size='lg'
-                            icon={faDownload}
-                            fixedWidth
-                            style={{ marginRight: '8px', marginLeft: '-4px' }}
-                        />{' '}
-                        {`Download ${COLLECTOR_TYPE[collectorType]} ${version} (.zip)`}
-                    </Button>
-                </Box>
-            </Box>
-        </Paper>
+            </CardHeader>
+            <CardContent>
+                <ul>
+                    {downloadArtifacts.map((collector) => (
+                        <li key={collector.fileName}>
+                            <Box display='flex' flexDirection='row'>
+                                <Link
+                                    component='button'
+                                    variant='body1'
+                                    onClick={collector.onClickDownload}
+                                    title={`Download ${COLLECTOR_TYPE_LABEL[collectorType]} ${version} ${collector.os} ${collector.arch}`.trim()}
+                                    textOverflow='ellipsis'
+                                    noWrap>
+                                    {collector.fileName}
+                                </Link>
+                                <DashedFlexConnector offset={needsUnderlineOffset} />
+                                <Link
+                                    component='button'
+                                    variant='body1'
+                                    onClick={collector.onClickDownloadChecksum}
+                                    title={`Download ${COLLECTOR_TYPE_LABEL[collectorType]} ${version} ${collector.os} ${collector.arch} Checksum`.trim()}>
+                                    (checksum)
+                                </Link>
+                            </Box>
+                        </li>
+                    ))}
+                </ul>
+            </CardContent>
+        </Card>
     );
 };
 
-const getLabel = (isLatest: boolean, isDeprecated: boolean): string => {
-    if (isDeprecated) {
-        return '(Deprecated)';
-    } else if (isLatest) {
-        return '(Latest)';
-    } else {
-        return '';
-    }
+interface CollectorLabelProps {
+    label: LabelType;
+    isPrerelease?: boolean;
+}
+
+const CollectorLabel: React.FC<CollectorLabelProps> = ({ label, isPrerelease = false }) => {
+    // RiskBadge isn't set up out the gate to accomodate dark mode
+    // so we improvise
+    const color = isPrerelease ? 'rgba(243, 96, 54, 0.25)' : 'rgba(51, 49, 143, 0.15)';
+    const darkColor = isPrerelease ? 'dark:bg-[#02C577]' : 'dark:bg-[#33318F]';
+
+    return (
+        <RiskBadge type='labeled' label={label} outlined={false} color={color} title={label} className={darkColor} />
+    );
 };
+
+// Sometimes you just need a dashed line connecting two underlined text elements together
+// Sometimes you need that dashed line to be slightly offset
+const DashedFlexConnector: React.FC<{ offset?: boolean }> = ({ offset }) => {
+    return <div className={cn("flex-1 min-w-0 decoration-dashed decoration-neutral-light-5 underline whitespace-nowrap text-clip overflow-hidden pointer-events-none select-none aria-hidden:", { 'underline-offset-4': offset })}>{"\u00A0".repeat(500)}</div>;
+}
 
 export default CollectorCard;
