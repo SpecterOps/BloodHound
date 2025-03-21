@@ -247,6 +247,61 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
+						CreateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTagSelector{Name: "TestSelector"}, nil).Times(1)
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil).Times(1)
+
+					mockGraphDb.EXPECT().
+						PrepareCypherQuery(gomock.Any(), gomock.Any()).
+						Return(queries.PreparedQuery{}, nil).Times(1)
+
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusCreated)
+				},
+			},
+		})
+}
+
+func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
+	var (
+		mockCtrl      = gomock.NewController(t)
+		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
+		resourcesInst = v2.Resources{
+			DB: mockDB,
+		}
+	)
+	defer mockCtrl.Finish()
+
+	apitest.
+		NewHarness(t, resourcesInst.GetAssetGroupTagSelectors).
+		Run([]apitest.Case{
+			{
+				Name: "Bad Request - No Asset Group Tag ID",
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "no asset group tag id specified in url")
+				},
+			},
+			{
+				Name: "Bad Request - Invalid Asset Group Tag ID",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "foo")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "invalid asset group tag id specified in url")
+				},
+			},
+			{
+				Name: "DB error - GetAssetGroupTag",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					// apitest.SetURLVar(input, api.URIPathVariableAssetGroupSelectorType, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, database.ErrNotFound).Times(1)
 				},
@@ -289,8 +344,8 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						CreateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupTagSelector{Name: "TestSelector"}, nil).Times(1)
+						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any()).
+						Return([]model.AssetGroupTagSelector{{Name: "Test1", AssetGroupTagId: 1}}, nil).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)
 
@@ -300,7 +355,34 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusCreated)
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, "Test1")
+				},
+			},
+			{
+				Name: "Success - Selector Types",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.QueryParameterAssetGroupSelectorType, "2")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any()).
+						Return([]model.AssetGroupTagSelector{
+							{
+								Name:            "Test1",
+								AssetGroupTagId: 1,
+								Seeds: []model.SelectorSeed{
+									{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
+								},
+							},
+						}, nil).Times(1)
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil).Times(1)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, "Test1")
 				},
 			},
 		})

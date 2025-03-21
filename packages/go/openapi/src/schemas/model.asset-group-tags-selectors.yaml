@@ -15,30 +15,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 allOf:
-  - $ref: './model.components.int32.id.yaml'
-  - $ref: './model.components.timestamps.yaml'
   - type: object
     properties:
-      asset_group_label_id:
-        type: integer
-      created_by:
-        type: string
-      updated_by:
-        type: string
-      disabled_at:
-        type: string
-        format: date-time
-      disabled_by:
-        type: string
-      name:
-        type: string
-      description:
-        type: string
-      is_default:
-        type: boolean
-      auto-certify:
-        type: boolean
-      seeds:
+      entries:
         type: array
+        readOnly: true
         items:
-          $ref: './../schemas/model.asset-group-label-selector-seed.yaml'
+          $ref: './model.asset-group-tags-selector.yaml'

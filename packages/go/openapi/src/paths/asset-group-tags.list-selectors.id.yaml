@@ -15,18 +15,25 @@
 # SPDX-License-Identifier: Apache-2.0
 
 get:
-  operationId: GetAssetGroupLabelsSelectors
-  summary: Get Asset Group Label selectors
+  operationId: GetAssetGroupTagSelectors
+  summary: Get Asset Group Tag selectors
   description: Get a list of selectors for this group.
   tags:
     - Asset Group Management
     - Enterprise
     - Community
   parameters:
-  - name: asset_group_label_id
-    description: ID of the asset_group_label record to retrieve
+  - name: asset_group_tag_id
+    description: ID of the asset_group_tag record to retrieve
     in: path
     required: true
+    schema:
+      type: integer
+      format: int
+  - name: type
+    description: Type of selector. Either ObjectID = 1 or Cypher = 2
+    in: query
+    required: false
     schema:
       type: integer
       format: int
@@ -42,7 +49,7 @@ get:
                   data:
                     type: array
                     items:
-                      $ref: './../schemas/model.asset-group-label-selectors.yaml'
+                      $ref: './../schemas/model.asset-group-tags-selectors.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

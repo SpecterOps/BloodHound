@@ -17,6 +17,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -126,4 +127,46 @@ func (s AssetGroupTagSelector) AuditData() AuditData {
 		"auto_certify":       s.AutoCertify,
 		"is_default":         s.IsDefault,
 	}
+}
+
+func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"type":        {Equals, NotEquals},
+		"disabled_at": {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"updated_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+	}
+}
+
+func (s AssetGroupTagSelector) GetFilterableColumns() []string {
+	var columns = make([]string, 0)
+	for column := range s.ValidFilters() {
+		columns = append(columns, column)
+	}
+	return columns
+}
+
+func (s AssetGroupTagSelector) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
+	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
+		return []string{}, errors.New(ErrResponseDetailsColumnNotFilterable)
+	} else {
+		var stringPredicates = make([]string, 0)
+		for _, predicate := range predicates {
+			stringPredicates = append(stringPredicates, string(predicate))
+		}
+		return stringPredicates, nil
+	}
+}
+
+func (s AssetGroupTagSelector) IsString(column string) bool {
+	switch column {
+	case "type":
+		return true
+	default:
+		return false
+	}
+}
+
+type ListSelectorsResponse struct {
+	Selectors []AssetGroupTagSelector `json:"selectors"`
 }

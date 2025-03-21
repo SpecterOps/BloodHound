@@ -114,6 +114,8 @@ func (s *BloodhoundDB) GetAllAssetGroups(ctx context.Context, order string, filt
 
 	if filter.SQLString != "" {
 		result = result.Where(filter.SQLString, filter.Params...)
+		fmt.Println(filter.SQLString)
+		fmt.Println(filter.Params...)
 	}
 
 	if result = result.Find(&assetGroups); errors.Is(result.Error, gorm.ErrRecordNotFound) {

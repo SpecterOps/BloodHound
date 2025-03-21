@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/utils/validation"
+	"gorm.io/gorm/utils"
 )
 
 const (
@@ -88,8 +89,34 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 }
 
 func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, request *http.Request) {
+	var (
+		queryParams           = request.URL.Query()
+		rawSelectorTypeString = queryParams[api.QueryParameterAssetGroupSelectorType]
+		assetGroupSelector    = model.AssetGroupTagSelector{}
+	)
 
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selector")()
+
+	queryParameterFilterParser := model.NewQueryParameterFilterParser()
+	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+		return
+	} else {
+		for name, filters := range queryFilters {
+			if validPredicates, err := assetGroupSelector.GetValidFilterPredicatesAsStrings(name); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for i, filter := range filters {
+					if !utils.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+					queryFilters[name][i].IsStringData = assetGroupSelector.IsString(filter.Name)
+				}
+			}
+		}
+	}
 
 	if rawAssetGroupTagID, hasAssetGroupTagID := mux.Vars(request)[api.URIPathVariableAssetGroupTagID]; !hasAssetGroupTagID {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrNoAssetGroupTagId, request), response)
@@ -99,6 +126,25 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 		api.HandleDatabaseError(request, response, err)
 	} else if selectors, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), assetGroupTagID); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if len(rawSelectorTypeString) != 0 {
+		for _, selType := range rawSelectorTypeString {
+			if selectorTypeInt, err := strconv.Atoi(selType); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupTagId, request), response)
+			} else if selectorTypeInt != 0 {
+				var typeSelectors []model.AssetGroupTagSelector
+				for _, selector := range selectors {
+					for _, seed := range selector.Seeds {
+						if seed.Type == model.SelectorTypeObjectId {
+							typeSelectors = append(typeSelectors, selector)
+						} else {
+							typeSelectors = append(typeSelectors, selector)
+						}
+					}
+				}
+				api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: typeSelectors}, http.StatusOK, response)
+			}
+		}
+
 	} else {
 		api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: selectors}, http.StatusOK, response)
 	}
