@@ -64,7 +64,6 @@ CREATE TABLE public.ad_data_quality_aggregations (
 );
 
 
-ALTER TABLE public.ad_data_quality_aggregations OWNER TO bloodhound;
 
 --
 -- Name: ad_data_quality_aggregations_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -79,7 +78,6 @@ CREATE SEQUENCE public.ad_data_quality_aggregations_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ad_data_quality_aggregations_id_seq OWNER TO bloodhound;
 
 --
 -- Name: ad_data_quality_aggregations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -118,7 +116,6 @@ CREATE TABLE public.ad_data_quality_stats (
 );
 
 
-ALTER TABLE public.ad_data_quality_stats OWNER TO bloodhound;
 
 --
 -- Name: ad_data_quality_stats_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -133,7 +130,6 @@ CREATE SEQUENCE public.ad_data_quality_stats_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ad_data_quality_stats_id_seq OWNER TO bloodhound;
 
 --
 -- Name: ad_data_quality_stats_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -155,7 +151,6 @@ CREATE TABLE public.analysis_request_switch (
 );
 
 
-ALTER TABLE public.analysis_request_switch OWNER TO bloodhound;
 
 --
 -- Name: asset_group_collection_entries; Type: TABLE; Schema: public; Owner: bloodhound
@@ -172,7 +167,6 @@ CREATE TABLE public.asset_group_collection_entries (
 );
 
 
-ALTER TABLE public.asset_group_collection_entries OWNER TO bloodhound;
 
 --
 -- Name: asset_group_collection_entries_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -186,7 +180,6 @@ CREATE SEQUENCE public.asset_group_collection_entries_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.asset_group_collection_entries_id_seq OWNER TO bloodhound;
 
 --
 -- Name: asset_group_collection_entries_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -207,7 +200,6 @@ CREATE TABLE public.asset_group_collections (
 );
 
 
-ALTER TABLE public.asset_group_collections OWNER TO bloodhound;
 
 --
 -- Name: asset_group_collections_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -221,7 +213,6 @@ CREATE SEQUENCE public.asset_group_collections_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.asset_group_collections_id_seq OWNER TO bloodhound;
 
 --
 -- Name: asset_group_collections_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -245,7 +236,6 @@ CREATE TABLE public.asset_group_selectors (
 );
 
 
-ALTER TABLE public.asset_group_selectors OWNER TO bloodhound;
 
 --
 -- Name: asset_group_selectors_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -260,7 +250,6 @@ CREATE SEQUENCE public.asset_group_selectors_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.asset_group_selectors_id_seq OWNER TO bloodhound;
 
 --
 -- Name: asset_group_selectors_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -283,7 +272,6 @@ CREATE TABLE public.asset_groups (
 );
 
 
-ALTER TABLE public.asset_groups OWNER TO bloodhound;
 
 --
 -- Name: asset_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -298,7 +286,6 @@ CREATE SEQUENCE public.asset_groups_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.asset_groups_id_seq OWNER TO bloodhound;
 
 --
 -- Name: asset_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -327,7 +314,6 @@ CREATE TABLE public.audit_logs (
 );
 
 
-ALTER TABLE public.audit_logs OWNER TO bloodhound;
 
 --
 -- Name: audit_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -341,7 +327,6 @@ CREATE SEQUENCE public.audit_logs_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.audit_logs_id_seq OWNER TO bloodhound;
 
 --
 -- Name: audit_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -367,7 +352,6 @@ CREATE TABLE public.auth_secrets (
 );
 
 
-ALTER TABLE public.auth_secrets OWNER TO bloodhound;
 
 --
 -- Name: auth_secrets_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -382,7 +366,6 @@ CREATE SEQUENCE public.auth_secrets_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.auth_secrets_id_seq OWNER TO bloodhound;
 
 --
 -- Name: auth_secrets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -408,7 +391,6 @@ CREATE TABLE public.auth_tokens (
 );
 
 
-ALTER TABLE public.auth_tokens OWNER TO bloodhound;
 
 --
 -- Name: azure_data_quality_aggregations; Type: TABLE; Schema: public; Owner: bloodhound
@@ -441,7 +423,6 @@ CREATE TABLE public.azure_data_quality_aggregations (
 );
 
 
-ALTER TABLE public.azure_data_quality_aggregations OWNER TO bloodhound;
 
 --
 -- Name: azure_data_quality_aggregations_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -456,7 +437,6 @@ CREATE SEQUENCE public.azure_data_quality_aggregations_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.azure_data_quality_aggregations_id_seq OWNER TO bloodhound;
 
 --
 -- Name: azure_data_quality_aggregations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -496,7 +476,6 @@ CREATE TABLE public.azure_data_quality_stats (
 );
 
 
-ALTER TABLE public.azure_data_quality_stats OWNER TO bloodhound;
 
 --
 -- Name: azure_data_quality_stats_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -511,7 +490,6 @@ CREATE SEQUENCE public.azure_data_quality_stats_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.azure_data_quality_stats_id_seq OWNER TO bloodhound;
 
 --
 -- Name: azure_data_quality_stats_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -529,7 +507,6 @@ CREATE TABLE public.database_switch (
 );
 
 
-ALTER TABLE public.database_switch OWNER TO bloodhound;
 
 --
 -- Name: datapipe_status; Type: TABLE; Schema: public; Owner: bloodhound
@@ -544,7 +521,6 @@ CREATE TABLE public.datapipe_status (
 );
 
 
-ALTER TABLE public.datapipe_status OWNER TO bloodhound;
 
 --
 -- Name: domain_collection_results; Type: TABLE; Schema: public; Owner: bloodhound
@@ -568,7 +544,6 @@ CREATE TABLE public.domain_collection_results (
 );
 
 
-ALTER TABLE public.domain_collection_results OWNER TO bloodhound;
 
 --
 -- Name: domain_collection_results_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -582,7 +557,6 @@ CREATE SEQUENCE public.domain_collection_results_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.domain_collection_results_id_seq OWNER TO bloodhound;
 
 --
 -- Name: domain_collection_results_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -607,7 +581,6 @@ CREATE TABLE public.feature_flags (
 );
 
 
-ALTER TABLE public.feature_flags OWNER TO bloodhound;
 
 --
 -- Name: feature_flags_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -622,7 +595,6 @@ CREATE SEQUENCE public.feature_flags_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_flags_id_seq OWNER TO bloodhound;
 
 --
 -- Name: feature_flags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -651,7 +623,6 @@ CREATE TABLE public.file_upload_jobs (
 );
 
 
-ALTER TABLE public.file_upload_jobs OWNER TO bloodhound;
 
 --
 -- Name: file_upload_jobs_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -665,7 +636,6 @@ CREATE SEQUENCE public.file_upload_jobs_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.file_upload_jobs_id_seq OWNER TO bloodhound;
 
 --
 -- Name: file_upload_jobs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -689,7 +659,6 @@ CREATE TABLE public.ingest_tasks (
 );
 
 
-ALTER TABLE public.ingest_tasks OWNER TO bloodhound;
 
 --
 -- Name: ingest_tasks_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -703,7 +672,6 @@ CREATE SEQUENCE public.ingest_tasks_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ingest_tasks_id_seq OWNER TO bloodhound;
 
 --
 -- Name: ingest_tasks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -723,7 +691,6 @@ CREATE TABLE public.installations (
 );
 
 
-ALTER TABLE public.installations OWNER TO bloodhound;
 
 --
 -- Name: migrations; Type: TABLE; Schema: public; Owner: bloodhound
@@ -738,7 +705,6 @@ CREATE TABLE public.migrations (
 );
 
 
-ALTER TABLE public.migrations OWNER TO bloodhound;
 
 --
 -- Name: migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -753,7 +719,6 @@ CREATE SEQUENCE public.migrations_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.migrations_id_seq OWNER TO bloodhound;
 
 --
 -- Name: migrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -777,7 +742,6 @@ CREATE TABLE public.parameters (
 );
 
 
-ALTER TABLE public.parameters OWNER TO bloodhound;
 
 --
 -- Name: parameters_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -792,7 +756,6 @@ CREATE SEQUENCE public.parameters_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.parameters_id_seq OWNER TO bloodhound;
 
 --
 -- Name: parameters_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -814,7 +777,6 @@ CREATE TABLE public.permissions (
 );
 
 
-ALTER TABLE public.permissions OWNER TO bloodhound;
 
 --
 -- Name: permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -829,7 +791,6 @@ CREATE SEQUENCE public.permissions_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.permissions_id_seq OWNER TO bloodhound;
 
 --
 -- Name: permissions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -851,7 +812,6 @@ CREATE TABLE public.roles (
 );
 
 
-ALTER TABLE public.roles OWNER TO bloodhound;
 
 --
 -- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -866,7 +826,6 @@ CREATE SEQUENCE public.roles_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.roles_id_seq OWNER TO bloodhound;
 
 --
 -- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -885,7 +844,6 @@ CREATE TABLE public.roles_permissions (
 );
 
 
-ALTER TABLE public.roles_permissions OWNER TO bloodhound;
 
 --
 -- Name: saml_providers; Type: TABLE; Schema: public; Owner: bloodhound
@@ -904,7 +862,6 @@ CREATE TABLE public.saml_providers (
 );
 
 
-ALTER TABLE public.saml_providers OWNER TO bloodhound;
 
 --
 -- Name: saml_providers_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -919,7 +876,6 @@ CREATE SEQUENCE public.saml_providers_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.saml_providers_id_seq OWNER TO bloodhound;
 
 --
 -- Name: saml_providers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -943,7 +899,6 @@ CREATE TABLE public.saved_queries (
 );
 
 
-ALTER TABLE public.saved_queries OWNER TO bloodhound;
 
 --
 -- Name: saved_queries_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -957,7 +912,6 @@ CREATE SEQUENCE public.saved_queries_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.saved_queries_id_seq OWNER TO bloodhound;
 
 --
 -- Name: saved_queries_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -980,7 +934,6 @@ CREATE TABLE public.saved_queries_permissions (
 );
 
 
-ALTER TABLE public.saved_queries_permissions OWNER TO bloodhound;
 
 --
 -- Name: saved_queries_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -994,7 +947,6 @@ CREATE SEQUENCE public.saved_queries_permissions_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.saved_queries_permissions_id_seq OWNER TO bloodhound;
 
 --
 -- Name: saved_queries_permissions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -1015,7 +967,6 @@ CREATE SEQUENCE public.saved_queries_permissions_query_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.saved_queries_permissions_query_id_seq OWNER TO bloodhound;
 
 --
 -- Name: saved_queries_permissions_query_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -1040,7 +991,6 @@ CREATE TABLE public.user_sessions (
 );
 
 
-ALTER TABLE public.user_sessions OWNER TO bloodhound;
 
 --
 -- Name: user_sessions_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -1054,7 +1004,6 @@ CREATE SEQUENCE public.user_sessions_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.user_sessions_id_seq OWNER TO bloodhound;
 
 --
 -- Name: user_sessions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -1082,7 +1031,6 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO bloodhound;
 
 --
 -- Name: users_roles; Type: TABLE; Schema: public; Owner: bloodhound
@@ -1094,7 +1042,6 @@ CREATE TABLE public.users_roles (
 );
 
 
-ALTER TABLE public.users_roles OWNER TO bloodhound;
 
 --
 -- Name: ad_data_quality_aggregations id; Type: DEFAULT; Schema: public; Owner: bloodhound
