@@ -16,23 +16,17 @@
 
 import { apiClient } from 'bh-shared-ui';
 import { RequestOptions } from 'js-client-library';
-import { useQuery } from 'react-query';
-
-export type CollectorType = 'sharphound' | 'azurehound';
-
-export const COLLECTOR_TYPE: Record<CollectorType, string> = {
-    sharphound: 'SharpHound',
-    azurehound: 'AzureHound',
-};
+import * as types from 'js-client-library/src/types';
+import { useQuery, UseQueryResult } from 'react-query';
 
 export const collectorKeys = {
     all: ['collectors'] as const,
-    listByType: (type: CollectorType) => [...collectorKeys.all, type] as const,
+    listByType: (type: types.CollectorType) => [...collectorKeys.all, type] as const,
     detail: (userId: number) => [...collectorKeys.all, userId] as const,
 };
 
-export const getCollectorsByType = (type: CollectorType, options?: RequestOptions) =>
-    apiClient.getCollectors(type, options).then((res) => res.data);
+export const getCollectorsByType = (type: types.CollectorType, options?: RequestOptions): types.GetCollectorsResponse =>
+    apiClient.getCollectors(type, options).then((res: { data: types.GetCollectorsResponse }) => res.data);
 
-export const useGetCollectorsByType = (type: CollectorType) =>
-    useQuery(collectorKeys.listByType(type), ({ signal }) => getCollectorsByType(type, { signal }));
+export const useGetCollectorsByType = (type: types.CollectorType): UseQueryResult<types.GetCollectorsResponse> =>
+    useQuery<types.GetCollectorsResponse>(collectorKeys.listByType(type), ({ signal }) => getCollectorsByType(type, { signal }));
