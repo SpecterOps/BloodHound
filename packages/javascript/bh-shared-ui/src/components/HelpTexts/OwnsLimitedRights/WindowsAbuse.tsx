@@ -26,7 +26,7 @@ const WindowsAbuse: FC = () => {
                 <br />
                 <br />
                 Please refer to the abuse info for the specific privileges granted to OWNER RIGHTS at
-                https://support.bloodhoundenterprise.io/hc/en-us/articles/17224136169371-About-BloodHound-Edges
+                https://bloodhound.specterops.io/home/articles/17224136169371-About-BloodHound-Edges
             </Typography>
         </>
     );
