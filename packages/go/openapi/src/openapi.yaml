@@ -268,7 +268,7 @@ paths:
     $ref: './paths/collectors.collectors.type.tag.checksum.yaml'
 
   /api/v2/kennel/enterprise-manifest:
-    $ref: './paths/kennel.enterprise-manfiest.type.yaml'
+    $ref: './paths/kennel.enterprise-manifest.type.yaml'
   /api/v2/kennel/download/{asset_name}:
     $ref: './paths/kennel.download.type.yaml'
 
