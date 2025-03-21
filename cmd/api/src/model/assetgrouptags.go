@@ -43,6 +43,15 @@ const (
 	AssetGroupTagTypeLabel AssetGroupTagType = 2
 )
 
+type AssetGroupCertification int
+
+const (
+	AssetGroupCertificationRevoked AssetGroupCertification = -1
+	AssetGroupCertificationNone    AssetGroupCertification = 0
+	AssetGroupCertificationManual  AssetGroupCertification = 1
+	AssetGroupCertificationAuto    AssetGroupCertification = 2
+)
+
 type AssetGroupTag struct {
 	ID             int               `json:"id"`
 	Type           AssetGroupTagType `json:"type"`
@@ -77,6 +86,17 @@ func (s AssetGroupTag) AuditData() AuditData {
 
 func (s AssetGroupTag) ToKind() graph.Kind {
 	return graph.StringKind(fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_")))
+}
+
+func (s AssetGroupTag) ToType() string {
+	switch s.Type {
+	case AssetGroupTagTypeTier:
+		return "tier"
+	case AssetGroupTagTypeLabel:
+		return "label"
+	default:
+		return "unknown tag type"
+	}
 }
 
 type SelectorSeed struct {
@@ -126,4 +146,15 @@ func (s AssetGroupTagSelector) AuditData() AuditData {
 		"auto_certify":       s.AutoCertify,
 		"is_default":         s.IsDefault,
 	}
+}
+
+type AssetGroupSelectorNode struct {
+	SelectorId  int                     `json:"selector_id"`
+	NodeId      graph.ID                `json:"node_id"`
+	Certified   AssetGroupCertification `json:"certified"`
+	CertifiedBy null.String             `json:"certified_by"`
+}
+
+func (s AssetGroupSelectorNode) TableName() string {
+	return "asset_group_tag_selector_nodes"
 }
