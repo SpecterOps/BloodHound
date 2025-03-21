@@ -72,7 +72,6 @@ func SetGraphDriver(ctx context.Context, cfg config.Configuration, driverName st
 
 func LookupGraphDriver(ctx context.Context, cfg config.Configuration) (string, error) {
 	driverName := cfg.GraphDriver
-
 	if pgxConn, err := newPostgresqlConnection(ctx, cfg); err != nil {
 		return "", err
 	} else {

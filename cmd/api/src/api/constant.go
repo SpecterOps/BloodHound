@@ -39,11 +39,12 @@ const (
 	FormParameterCode  = "code"
 
 	// Query parameters
-	QueryParameterSortBy         = "sort_by"
-	QueryParameterHydrateCounts  = "counts"
-	QueryParameterHydrateDomains = "hydrate_domains"
-	QueryParameterHydrateOUs     = "hydrate_ous"
-	QueryParameterScope          = "scope"
+	QueryParameterSortBy                 = "sort_by"
+	QueryParameterHydrateCounts          = "counts"
+	QueryParameterHydrateDomains         = "hydrate_domains"
+	QueryParameterHydrateOUs             = "hydrate_ous"
+	QueryParameterScope                  = "scope"
+	QueryParameterAssetGroupSelectorType = "type"
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"
