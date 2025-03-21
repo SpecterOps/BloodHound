@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import {
     ActiveDirectoryDataQualityResponse,
     AssetGroupMemberCountsResponse,
@@ -808,6 +808,9 @@ class BHEAPIClient {
     getCollectors = (collectorType: 'sharphound' | 'azurehound', options?: types.RequestOptions) =>
         this.baseClient.get<types.GetCollectorsResponse>(`/api/v2/collectors/${collectorType}`, options);
 
+    getEnterpriseCollectors = (options?: types.RequestOptions): Promise<AxiosResponse<types.GetEnterpriseCollectorsResponse>> =>
+        this.baseClient.get<types.GetEnterpriseCollectorsResponse>('/api/v2/kennel/enterprise-manifest', options);
+
     downloadCollector = (collectorType: 'sharphound' | 'azurehound', version: string, options?: types.RequestOptions) =>
         this.baseClient.get(
             `/api/v2/collectors/${collectorType}/${version}`,
@@ -826,6 +829,17 @@ class BHEAPIClient {
     ) =>
         this.baseClient.get(
             `/api/v2/collectors/${collectorType}/${version}/checksum`,
+            Object.assign(
+                {
+                    responseType: 'blob',
+                },
+                options
+            )
+        );
+
+    downloadEnterpriseCollectorAsset = (fileName: string, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/kennel/download/${fileName}`,
             Object.assign(
                 {
                     responseType: 'blob',

@@ -18,7 +18,14 @@ import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from '@bl
 import { Box, Typography, useTheme } from '@mui/material';
 import { useState } from 'react';
 import { CaretDown, CaretUp } from '../AppIcon/Icons';
-import CollectorCard, { COLLECTOR_SHORT_LABEL, COLLECTOR_TYPE_LABEL, CollectorType, LabelType } from '../CollectorCard';
+import CollectorCard, { COLLECTOR_TYPE_LABEL, LabelType } from '../CollectorCard';
+import { CollectorType } from 'js-client-library/src/types';
+
+const COLLECTOR_SHORT_LABEL: { [key in CollectorType]: string } = {
+    sharphound_enterprise: 'SHE',
+    sharphound: 'SH',
+    azurehound: 'AH',
+};
 
 interface CollectorDownloadFile {
     os: string;
@@ -38,9 +45,10 @@ interface CollectorCardProps {
 
 interface CollectorCardListProps {
     collectors: CollectorCardProps[];
+    noLabels?: boolean;
 }
 
-const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors }) => {
+const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors, noLabels = false }) => {
     const theme = useTheme();
 
     // Few enough collectors that this isn't worth memoizing
@@ -63,12 +71,11 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors }) => 
             <Typography variant='h6'>{COLLECTOR_TYPE_LABEL[latestStable.collectorType]}</Typography>
             <Box display='flex' flexDirection='row' gap={theme.spacing(2)}>
                 <CollectorCard
-                    className='flex-1 min-w-0'
+                    className='flex-1 min-w-0 bg-neutral-light-3 dark:bg-neutral-dark-5'
                     collectorType={latestStable.collectorType}
                     version={latestStable.version}
                     timestamp={latestStable.timestamp}
-                    label={latestStable.label}
-                    isLatest={true}
+                    label={noLabels ? undefined : 'latest'}
                     isPrerelease={latestStable.isPrerelease}
                     downloadArtifacts={latestStable.downloadArtifacts.map(artifact => {return {fileName: `${COLLECTOR_SHORT_LABEL[latestStable.collectorType]} ${latestStable.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
                 />
@@ -78,18 +85,18 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors }) => 
                         collectorType={latestPrerelease.collectorType}
                         version={latestPrerelease.version}
                         timestamp={latestPrerelease.timestamp}
-                        label={latestPrerelease.label}
+                        label={noLabels ? undefined : latestPrerelease.label}
                         isPrerelease={latestPrerelease.isPrerelease}
                         downloadArtifacts={latestPrerelease.downloadArtifacts.map(artifact => {return {fileName: `${COLLECTOR_SHORT_LABEL[latestPrerelease.collectorType]} ${latestPrerelease.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
                     />
                 )}
             </Box>
-            {olderVersions.length > 0 && <OlderVersionsList collectors={olderVersions} />}
+            {olderVersions.length > 0 && <OlderVersionsList collectors={olderVersions} noLabels />}
         </Box>
     );
 };
 
-const OlderVersionsList: React.FC<CollectorCardListProps> = ({ collectors }) => {
+const OlderVersionsList: React.FC<CollectorCardListProps> = ({ collectors, noLabels = false }) => {
     const theme = useTheme();
     const [expanded, setExpanded] = useState(false);
 
@@ -111,10 +118,10 @@ const OlderVersionsList: React.FC<CollectorCardListProps> = ({ collectors }) => 
                                 collectorType={collector.collectorType}
                                 version={collector.version}
                                 timestamp={collector.timestamp}
-                                label={collector.label}
-                                isLatest={false}
+                                label={noLabels ? undefined : collector.label}
                                 isPrerelease={collector.isPrerelease}
                                 downloadArtifacts={collector.downloadArtifacts.map(artifact => {return {fileName: `${COLLECTOR_SHORT_LABEL[collector.collectorType]} ${collector.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
+                                needsUnderlineOffset
                             />
                         ))}
                     </Box>

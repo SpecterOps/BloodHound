@@ -17,22 +17,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, RiskBadge } from '@bloodhoundenterprise/doodleui';
 import { Box, Link, Typography } from '@mui/material';
 import React from 'react';
+import { CollectorType } from 'js-client-library/src/types';
 import { cn } from '../../utils';
 
 export type LabelType = 'latest' | 'prerelease';
 
-export type CollectorType = 'sharphoundEnterprise' | 'sharphound' | 'azurehound';
-
 export const COLLECTOR_TYPE_LABEL: { [key in CollectorType]: string } = {
-    sharphoundEnterprise: 'Sharphound Enterprise',
+    sharphound_enterprise: 'Sharphound Enterprise',
     sharphound: 'Sharphound Community',
     azurehound: 'Azurehound',
-};
-
-export const COLLECTOR_SHORT_LABEL: { [key in CollectorType]: string } = {
-    sharphoundEnterprise: 'SHE',
-    sharphound: 'SH',
-    azurehound: 'AH',
 };
 
 interface CollectorDownloadFile {
@@ -49,8 +42,8 @@ interface CollectorCardProps extends React.HTMLAttributes<HTMLDivElement> {
     downloadArtifacts: CollectorDownloadFile[];
     timestamp?: number;
     label?: LabelType;
-    isLatest?: boolean;
     isPrerelease?: boolean;
+    needsUnderlineOffset?: boolean;
 }
 
 const CollectorCard: React.FC<CollectorCardProps> = ({
@@ -59,14 +52,14 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
     downloadArtifacts,
     timestamp = undefined,
     label = undefined,
-    isLatest = false,
     isPrerelease = false,
+    needsUnderlineOffset = false,
     ...rest
 }) => {
     const date = timestamp ? new Date(timestamp) : null;
 
     return (
-        <Card {...rest} className={cn(rest.className, { 'bg-neutral-light-3 dark:bg-neutral-dark-5': isLatest })}>
+        <Card {...rest}>
             <CardHeader>
                 <Box display='flex' flexDirection='row' alignItems='center' overflow='hidden' gap='1rem'>
                     <CardTitle>{`${version}`.trim().toUpperCase()}</CardTitle>
@@ -91,7 +84,7 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
                                     noWrap>
                                     {collector.fileName}
                                 </Link>
-                                <DashedFlexConnector />
+                                <DashedFlexConnector offset={needsUnderlineOffset} />
                                 <Link
                                     component='button'
                                     variant='body1'
@@ -117,7 +110,7 @@ const CollectorLabel: React.FC<CollectorLabelProps> = ({ label, isPrerelease = f
     // RiskBadge isn't set up out the gate to accomodate dark mode
     // so we improvise
     const color = isPrerelease ? 'rgba(243, 96, 54, 0.25)' : 'rgba(51, 49, 143, 0.15)';
-    const darkColor = isPrerelease ? 'dark:bg-violet-600/50' : 'dark:bg-sky-500/50';
+    const darkColor = isPrerelease ? 'dark:bg-[#02C577]' : 'dark:bg-[#33318F]';
 
     return (
         <RiskBadge type='labeled' label={label} outlined={false} color={color} title={label} className={darkColor} />
@@ -125,8 +118,9 @@ const CollectorLabel: React.FC<CollectorLabelProps> = ({ label, isPrerelease = f
 };
 
 // Sometimes you just need a dashed line connecting two underlined text elements together
-const DashedFlexConnector: React.FC = () => {
-    return <div className="flex-1 decoration-neutral-light-5 decoration-dashed underline whitespace-nowrap min-w-0 text-clip overflow-hidden pointer-events-none select-none">{"\u00A0".repeat(1000)}</div>;
+// Sometimes you need that dashed line to be slightly offset
+const DashedFlexConnector: React.FC<{ offset?: boolean }> = ({ offset }) => {
+    return <div className={cn("flex-1 min-w-0 decoration-dashed decoration-neutral-light-5 underline whitespace-nowrap text-clip overflow-hidden pointer-events-none select-none aria-hidden:", { 'underline-offset-4': offset })}>{"\u00A0".repeat(500)}</div>;
 }
 
 export default CollectorCard;
