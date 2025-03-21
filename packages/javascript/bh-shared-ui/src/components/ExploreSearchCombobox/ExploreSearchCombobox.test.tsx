@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { ActiveDirectoryNodeKind } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { act, render, screen, within } from 'src/test-utils';
 import ExploreSearchCombobox from '.';
+import { ActiveDirectoryNodeKind } from '../../graphSchema';
+import { act, render, screen, within } from '../../test-utils';
 
 const testSearchResults = {
     data: [

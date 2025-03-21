@@ -15,16 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { List, ListItem, ListItemText, Paper, TextField, useTheme } from '@mui/material';
-import {
-    NodeIcon,
-    SearchResult,
-    SearchResultItem,
-    SearchValue,
-    getEmptyResultsText,
-    getKeywordAndTypeValues,
-    useSearch,
-} from 'bh-shared-ui';
 import { useCombobox } from 'downshift';
+import { SearchResult, getEmptyResultsText, getKeywordAndTypeValues, useSearch } from '../../hooks';
+import { SearchValue } from '../../store';
+import NodeIcon from '../NodeIcon';
+import SearchResultItem from '../SearchResultItem';
 
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
