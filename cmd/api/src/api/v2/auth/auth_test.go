@@ -1943,8 +1943,8 @@ func TestManagementResource_DeleteUser_UserCannotSelfDelete(t *testing.T) {
 				ID: 1,
 			},
 		}
+		endpoint = "/api/v2/bloodhound-users"
 	)
-	endpoint := "/api/v2/bloodhound-users"
 
 	defer mockCtrl.Finish()
 
@@ -2004,10 +2004,17 @@ func TestManagementResource_DeleteUser_GetUserError(t *testing.T) {
 }
 
 func TestManagementResource_DeleteUser_DeleteUserError(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
+	var (
+		mockCtrl  = gomock.NewController(t)
+		adminRole = model.Role{
+			Serial: model.Serial{
+				ID: 1,
+			},
+		}
+		endpoint = "/api/v2/bloodhound-users"
+	)
 
-	endpoint := "/api/v2/bloodhound-users"
+	defer mockCtrl.Finish()
 
 	userID, err := uuid.NewV4()
 	require.Nil(t, err)
@@ -2019,13 +2026,16 @@ func TestManagementResource_DeleteUser_DeleteUserError(t *testing.T) {
 		},
 	}
 
+	adminUser := model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword"), Unique: model.Unique{ID: must.NewUUIDv4()}, Roles: model.Roles{adminRole}}
+
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetUser(gomock.Any(), userID).Return(user, nil)
 	mockDB.EXPECT().DeleteUser(gomock.Any(), user).Return(fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
-	require.Nil(t, err)
+	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx.AuthCtx.Owner = adminUser
+	req, err := http.NewRequestWithContext(bhCtx.ConstructGoContext(), "DELETE", endpoint, nil)
+	require.NoError(t, err)
 
 	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID.String()})
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -2038,10 +2048,16 @@ func TestManagementResource_DeleteUser_DeleteUserError(t *testing.T) {
 }
 
 func TestManagementResource_DeleteUser_Success(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
+	var (
+		mockCtrl  = gomock.NewController(t)
+		adminRole = model.Role{
+			Serial: model.Serial{
+				ID: 1,
+			},
+		}
+		endpoint = "/api/v2/bloodhound-users"
+	)
 	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/bloodhound-users"
 
 	userID, err := uuid.NewV4()
 	require.Nil(t, err)
@@ -2057,9 +2073,12 @@ func TestManagementResource_DeleteUser_Success(t *testing.T) {
 	mockDB.EXPECT().GetUser(gomock.Any(), userID).Return(user, nil)
 	mockDB.EXPECT().DeleteUser(gomock.Any(), user).Return(nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
-	require.Nil(t, err)
+	adminUser := model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword"), Unique: model.Unique{ID: must.NewUUIDv4()}, Roles: model.Roles{adminRole}}
+
+	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx.AuthCtx.Owner = adminUser
+	req, err := http.NewRequestWithContext(bhCtx.ConstructGoContext(), "DELETE", endpoint, nil)
+	require.NoError(t, err)
 
 	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID.String()})
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
