@@ -888,6 +888,9 @@
   "integrations": {
     "ga4": {
       "measurementId": "G-V9WNXTYFYH"
+    },
+   "plausible": {
+     "domain": "bloodhound.specterops.io"
     }
   },
   "fonts": {
