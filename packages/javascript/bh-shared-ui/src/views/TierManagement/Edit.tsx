@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './factories';
-export * from './handlers';
-export * from './webgl';
+import { FC } from 'react';
+import { useLocation } from 'react-router-dom';
+
+export const Edit: FC = () => {
+    const { state } = useLocation();
+
+    return (
+        <div>
+            <h1>Edit</h1>
+            <h2>
+                Type: {state.type}
+                <br />
+                ID: {state.id}
+            </h2>
+        </div>
+    );
+};

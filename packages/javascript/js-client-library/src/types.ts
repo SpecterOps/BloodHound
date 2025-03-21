@@ -55,6 +55,81 @@ export interface AssetGroupMemberParams {
     limit?: number;
 }
 
+type System = 'SYSTEM';
+
+type ISO_DATE_STRING = string;
+
+interface Created {
+    created_at: ISO_DATE_STRING;
+    created_by: string | System;
+}
+
+interface Updated {
+    updated_at: ISO_DATE_STRING;
+    updated_by: string | System;
+}
+
+interface Deleted {
+    deleted_at: ISO_DATE_STRING;
+    deleted_by: string;
+}
+
+interface Disabled {
+    disabled_at: ISO_DATE_STRING;
+    disabled_by: string;
+}
+
+export interface AssetLabel extends Created, Updated, Deleted {
+    id: number;
+    name: string;
+    kind_id: number;
+    asset_group_tier_id: number | null;
+    description: string;
+    count: number;
+}
+
+export type SeedTypeValues = 0 | 1;
+
+export const SeedTypes: Record<SeedTypeValues, string> = {
+    0: 'objectId',
+    1: 'cypher',
+};
+
+export interface AssetSelector extends Created, Updated, Disabled {
+    id: number;
+    asset_group_label_id: number | null;
+    name: string;
+    description: string;
+    is_default: boolean;
+    auto_certify: boolean;
+    count: number;
+    seeds: SelectorSeed[];
+}
+
+export interface SelectorSeed {
+    selector_id: number;
+    type: SeedTypeValues;
+    value: string;
+}
+
+export type CertifiedValues = -1 | 0 | 1 | 2;
+
+export const Certified: Record<CertifiedValues, string> = {
+    '-1': 'Manually not certified (revoked)',
+    0: 'No certification (only automatically tagged if certify is enabled',
+    1: 'Manually certified',
+    2: 'Auto certified (automatically tagged)',
+} as const;
+
+export interface SelectorNode {
+    selector_id: number;
+    node_id: number;
+    certified: CertifiedValues;
+    certified_by: string | System;
+    id: number;
+    name: string;
+}
+
 export interface CreateSharpHoundClientRequest {
     domain_controller: string;
     name: string;

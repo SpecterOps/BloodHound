@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Switch } from '@bloodhoundenterprise/doodleui';
-import { AppIcon, GloballySupportedSearchParams, MainNavData, useFeatureFlag } from 'bh-shared-ui';
+import { AppIcon, GloballySupportedSearchParams, MainNavData, PrimaryNavItem, useFeatureFlag } from 'bh-shared-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
@@ -54,6 +54,20 @@ export const useMainNavLogoData = (): MainNavData['logo'] => {
         },
         supportedSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
     };
+};
+
+export const groupManagementNavItem: PrimaryNavItem = {
+    label: 'Group Management',
+    icon: <AppIcon.Diamond size={24} />,
+    route: routes.ROUTE_GROUP_MANAGEMENT,
+    testId: 'global_nav-group-management',
+};
+
+export const tierManagementNavItem: PrimaryNavItem = {
+    label: 'Tier Management',
+    icon: <AppIcon.Diamond size={24} />,
+    route: routes.ROUTE_TIER_MANAGEMENT,
+    testId: 'global_nav-tier-management',
 };
 
 export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
