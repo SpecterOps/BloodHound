@@ -1261,356 +1261,298 @@ ALTER TABLE ONLY public.user_sessions ALTER COLUMN id SET DEFAULT nextval('publi
 -- Data for Name: ad_data_quality_aggregations; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.ad_data_quality_aggregations (domains, users, groups, computers, ous, containers, gpos, acls, sessions, relationships, session_completeness, local_group_completeness, run_id, id, created_at, updated_at, aiacas, rootcas, enterprisecas, ntauthstores, certtemplates, issuancepolicies) FROM stdin;
-\.
 
 
 --
 -- Data for Name: ad_data_quality_stats; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.ad_data_quality_stats (domain_sid, users, groups, computers, ous, containers, gpos, acls, sessions, relationships, session_completeness, local_group_completeness, run_id, id, created_at, updated_at, aiacas, rootcas, enterprisecas, ntauthstores, certtemplates, issuancepolicies) FROM stdin;
-\.
 
 
 --
 -- Data for Name: analysis_request_switch; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.analysis_request_switch (singleton, request_type, requested_by, requested_at) FROM stdin;
-\.
 
 
 --
 -- Data for Name: asset_group_collection_entries; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.asset_group_collection_entries (asset_group_collection_id, object_id, node_label, properties, id, created_at, updated_at) FROM stdin;
-\.
 
 
 --
 -- Data for Name: asset_group_collections; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.asset_group_collections (asset_group_id, id, created_at, updated_at) FROM stdin;
-\.
+INSERT INTO public.asset_group_collections VALUES (1, 1, '2025-03-21 15:44:17.351144+00', '2025-03-21 15:44:17.351144+00');
+INSERT INTO public.asset_group_collections VALUES (2, 2, '2025-03-21 15:44:17.356203+00', '2025-03-21 15:44:17.356203+00');
 
 
 --
 -- Data for Name: asset_group_selectors; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.asset_group_selectors (asset_group_id, name, selector, system_selector, id, created_at, updated_at) FROM stdin;
-\.
 
 
 --
 -- Data for Name: asset_groups; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.asset_groups (name, tag, system_group, id, created_at, updated_at) FROM stdin;
-Admin Tier Zero	admin_tier_0	t	1	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-Owned	owned	t	2	2025-03-19 18:14:12.219797+00	2025-03-19 18:14:12.219797+00
-\.
+INSERT INTO public.asset_groups VALUES ('Admin Tier Zero', 'admin_tier_0', true, 1, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.asset_groups VALUES ('Owned', 'owned', true, 2, '2025-03-21 15:44:05.051393+00', '2025-03-21 15:44:05.051393+00');
 
 
 --
 -- Data for Name: audit_logs; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.audit_logs (id, created_at, actor_id, actor_name, action, fields, request_id, actor_email, source_ip_address, status, commit_id) FROM stdin;
-\.
 
 
 --
 -- Data for Name: auth_secrets; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.auth_secrets (user_id, digest, digest_method, expires_at, totp_secret, totp_activated, id, created_at, updated_at) FROM stdin;
-47dd420a-a7a1-4915-a66b-b07bdee6e713	$argon2id$v=19$m=1048576,t=1,p=8$LUYDDVTmiGSxuxovC0e+Vw==$ZU1+fl/8PdNIDxYQgLALvA==	argon2	2025-06-17 18:14:12.465698+00		f	1	2025-03-19 18:14:12.468264+00	2025-03-19 18:14:12.468264+00
-\.
+INSERT INTO public.auth_secrets VALUES ('27426d61-2956-4db6-b2ee-6495906193ca', '$argon2id$v=19$m=1048576,t=1,p=8$5MZolTSmFAmm8zrf5IOrcA==$kxcHlz2OJJH46gHy7mFIuQ==', 'argon2', '2025-06-19 15:44:05.338694+00', '', false, 1, '2025-03-21 15:44:05.342087+00', '2025-03-21 15:44:05.342087+00');
 
 
 --
 -- Data for Name: auth_tokens; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.auth_tokens (user_id, client_id, name, key, hmac_method, last_access, id, created_at, updated_at) FROM stdin;
-\.
 
 
 --
 -- Data for Name: azure_data_quality_aggregations; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.azure_data_quality_aggregations (tenants, users, groups, apps, service_principals, devices, management_groups, subscriptions, resource_groups, vms, key_vaults, relationships, run_id, id, created_at, updated_at, automation_accounts, container_registries, function_apps, logic_apps, managed_clusters, vm_scale_sets, web_apps) FROM stdin;
-\.
 
 
 --
 -- Data for Name: azure_data_quality_stats; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.azure_data_quality_stats (tenant_id, users, groups, apps, service_principals, devices, management_groups, subscriptions, resource_groups, vms, key_vaults, relationships, run_id, id, created_at, updated_at, automation_accounts, container_registries, function_apps, logic_apps, managed_clusters, vm_scale_sets, web_apps) FROM stdin;
-\.
 
 
 --
 -- Data for Name: database_switch; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.database_switch (driver) FROM stdin;
-\.
 
 
 --
 -- Data for Name: datapipe_status; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.datapipe_status (singleton, status, updated_at, last_complete_analysis_at) FROM stdin;
-t	idle	2025-03-19 18:14:12.247995+00	\N
-\.
+INSERT INTO public.datapipe_status VALUES (true, 'idle', '2025-03-21 15:44:36.538369+00', '2025-03-21 15:44:17.37934+00');
 
 
 --
 -- Data for Name: domain_collection_results; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.domain_collection_results (job_id, domain_name, success, message, user_count, group_count, computer_count, gpo_count, ou_count, container_count, deleted_count, id, created_at, updated_at) FROM stdin;
-\.
 
 
 --
 -- Data for Name: feature_flags; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.feature_flags (id, created_at, updated_at, key, name, description, enabled, user_updatable) FROM stdin;
-1	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00	butterfly_analysis	Enhanced Asset Inbound-Outbound Exposure Analysis	Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.	f	f
-2	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00	enable_saml_sso	SAML Single Sign-On Support	Enables SSO authentication flows and administration panels to third party SAML identity providers.	t	f
-3	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00	scope_collection_by_ou	Enable SharpHound OU Scoped Collections	Enables scoping SharpHound collections to specific lists of OUs.	t	f
-4	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00	azure_support	Enable Azure Support	Enables Azure support.	t	f
-6	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00	entity_panel_cache	Enable application level caching	Enables the use of application level caching for entity panel queries	t	f
-7	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00	adcs	Enable collection and processing of Active Directory Certificate Services Data	Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.	f	f
-9	2025-03-19 18:14:12.255937+00	2025-03-19 18:14:12.255937+00	pg_migration_dual_ingest	PostgreSQL Migration Dual Ingest	Enables dual ingest pathing for both Neo4j and PostgreSQL.	f	f
-10	2025-03-19 18:14:12.256348+00	2025-03-19 18:14:12.256348+00	clear_graph_data	Clear Graph Data	Enables the ability to delete all nodes and edges from the graph database.	t	f
-11	2025-03-19 18:14:12.256348+00	2025-03-19 18:14:12.256348+00	risk_exposure_new_calculation	Use new tier zero risk exposure calculation	Enables the use of new tier zero risk exposure metatree metrics.	f	f
-12	2025-03-19 18:14:12.256348+00	2025-03-19 18:14:12.256348+00	fedramp_eula	FedRAMP EULA	Enables showing the FedRAMP EULA on every login. (Enterprise only)	f	f
-13	2025-03-19 18:14:12.256348+00	2025-03-19 18:14:12.256348+00	auto_tag_t0_parent_objects	Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero	Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.	t	t
-14	2025-03-19 18:14:12.263971+00	2025-03-19 18:14:12.263971+00	oidc_support	OIDC Support	Enables OpenID Connect authentication support for SSO Authentication.	f	f
-8	2025-03-19 18:14:12.252443+00	2025-03-19 18:14:12.252443+00	dark_mode	Dark Mode	Allows users to enable or disable dark mode via a toggle in the settings menu	t	f
-\.
+INSERT INTO public.feature_flags VALUES (1, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00', 'butterfly_analysis', 'Enhanced Asset Inbound-Outbound Exposure Analysis', 'Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.', false, false);
+INSERT INTO public.feature_flags VALUES (2, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00', 'enable_saml_sso', 'SAML Single Sign-On Support', 'Enables SSO authentication flows and administration panels to third party SAML identity providers.', true, false);
+INSERT INTO public.feature_flags VALUES (3, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00', 'scope_collection_by_ou', 'Enable SharpHound OU Scoped Collections', 'Enables scoping SharpHound collections to specific lists of OUs.', true, false);
+INSERT INTO public.feature_flags VALUES (4, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00', 'azure_support', 'Enable Azure Support', 'Enables Azure support.', true, false);
+INSERT INTO public.feature_flags VALUES (6, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00', 'entity_panel_cache', 'Enable application level caching', 'Enables the use of application level caching for entity panel queries', true, false);
+INSERT INTO public.feature_flags VALUES (7, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00', 'adcs', 'Enable collection and processing of Active Directory Certificate Services Data', 'Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.', false, false);
+INSERT INTO public.feature_flags VALUES (9, '2025-03-21 15:44:05.119852+00', '2025-03-21 15:44:05.119852+00', 'pg_migration_dual_ingest', 'PostgreSQL Migration Dual Ingest', 'Enables dual ingest pathing for both Neo4j and PostgreSQL.', false, false);
+INSERT INTO public.feature_flags VALUES (10, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00', 'clear_graph_data', 'Clear Graph Data', 'Enables the ability to delete all nodes and edges from the graph database.', true, false);
+INSERT INTO public.feature_flags VALUES (11, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00', 'risk_exposure_new_calculation', 'Use new tier zero risk exposure calculation', 'Enables the use of new tier zero risk exposure metatree metrics.', false, false);
+INSERT INTO public.feature_flags VALUES (12, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00', 'fedramp_eula', 'FedRAMP EULA', 'Enables showing the FedRAMP EULA on every login. (Enterprise only)', false, false);
+INSERT INTO public.feature_flags VALUES (13, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00', 'auto_tag_t0_parent_objects', 'Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero', 'Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.', true, true);
+INSERT INTO public.feature_flags VALUES (14, '2025-03-21 15:44:05.128157+00', '2025-03-21 15:44:05.128157+00', 'oidc_support', 'OIDC Support', 'Enables OpenID Connect authentication support for SSO Authentication.', false, false);
+INSERT INTO public.feature_flags VALUES (8, '2025-03-21 15:44:05.116063+00', '2025-03-21 15:44:05.116063+00', 'dark_mode', 'Dark Mode', 'Allows users to enable or disable dark mode via a toggle in the settings menu', true, false);
 
 
 --
 -- Data for Name: file_upload_jobs; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.file_upload_jobs (user_id, user_email_address, status, status_message, start_time, end_time, last_ingest, id, created_at, updated_at, total_files, failed_files) FROM stdin;
-\.
 
 
 --
 -- Data for Name: ingest_tasks; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.ingest_tasks (file_name, request_guid, task_id, id, created_at, updated_at, file_type) FROM stdin;
-\.
 
 
 --
 -- Data for Name: installations; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.installations (id, created_at, updated_at) FROM stdin;
-74fab259-7829-4e06-85d4-b79ff89fe165	2025-03-19 18:14:12.466349+00	2025-03-19 18:14:12.466349+00
-\.
+INSERT INTO public.installations VALUES ('1f80b2e9-a9bb-4c48-aac1-5cc1db073aff', '2025-03-21 15:44:05.339566+00', '2025-03-21 15:44:05.339566+00');
 
 
 --
 -- Data for Name: migrations; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.migrations (id, updated_at, major, minor, patch) FROM stdin;
-1	2025-03-19 18:14:12.218348+00	0	0	0
-2	2025-03-19 18:14:12.219994+00	5	1	1
-3	2025-03-19 18:14:12.221431+00	5	3	0
-4	2025-03-19 18:14:12.228431+00	5	3	1
-5	2025-03-19 18:14:12.230872+00	5	4	0
-6	2025-03-19 18:14:12.23187+00	5	5	0
-7	2025-03-19 18:14:12.234046+00	5	6	0
-8	2025-03-19 18:14:12.234631+00	5	8	0
-9	2025-03-19 18:14:12.235725+00	5	8	1
-10	2025-03-19 18:14:12.245783+00	5	8	2
-11	2025-03-19 18:14:12.247621+00	5	11	0
-12	2025-03-19 18:14:12.252176+00	5	12	0
-13	2025-03-19 18:14:12.252602+00	5	13	0
-14	2025-03-19 18:14:12.2555+00	5	13	1
-15	2025-03-19 18:14:12.256079+00	5	14	0
-16	2025-03-19 18:14:12.263026+00	5	15	0
-17	2025-03-19 18:14:12.265713+00	6	0	0
-\.
+INSERT INTO public.migrations VALUES (1, '2025-03-21 15:44:05.047072+00', 0, 0, 0);
+INSERT INTO public.migrations VALUES (2, '2025-03-21 15:44:05.051744+00', 5, 1, 1);
+INSERT INTO public.migrations VALUES (3, '2025-03-21 15:44:05.056277+00', 5, 3, 0);
+INSERT INTO public.migrations VALUES (4, '2025-03-21 15:44:05.07519+00', 5, 3, 1);
+INSERT INTO public.migrations VALUES (5, '2025-03-21 15:44:05.077872+00', 5, 4, 0);
+INSERT INTO public.migrations VALUES (6, '2025-03-21 15:44:05.079079+00', 5, 5, 0);
+INSERT INTO public.migrations VALUES (7, '2025-03-21 15:44:05.085324+00', 5, 6, 0);
+INSERT INTO public.migrations VALUES (8, '2025-03-21 15:44:05.085967+00', 5, 8, 0);
+INSERT INTO public.migrations VALUES (9, '2025-03-21 15:44:05.087173+00', 5, 8, 1);
+INSERT INTO public.migrations VALUES (10, '2025-03-21 15:44:05.107744+00', 5, 8, 2);
+INSERT INTO public.migrations VALUES (11, '2025-03-21 15:44:05.111186+00', 5, 11, 0);
+INSERT INTO public.migrations VALUES (12, '2025-03-21 15:44:05.115712+00', 5, 12, 0);
+INSERT INTO public.migrations VALUES (13, '2025-03-21 15:44:05.116256+00', 5, 13, 0);
+INSERT INTO public.migrations VALUES (14, '2025-03-21 15:44:05.119365+00', 5, 13, 1);
+INSERT INTO public.migrations VALUES (15, '2025-03-21 15:44:05.119997+00', 5, 14, 0);
+INSERT INTO public.migrations VALUES (16, '2025-03-21 15:44:05.127448+00', 5, 15, 0);
+INSERT INTO public.migrations VALUES (17, '2025-03-21 15:44:05.129176+00', 6, 0, 0);
 
 
 --
 -- Data for Name: parameters; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.parameters (key, name, description, value, id, created_at, updated_at) FROM stdin;
-auth.password_expiration_window	Local Auth Password Expiry Window	This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601.	{"duration": "P90D"}	1	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-neo4j.configuration	Neo4j Configuration Parameters	This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J.	{"batch_write_size": 20000, "write_flush_size": 100000}	2	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-analysis.citrix_rdp_support	Citrix RDP Support	This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a 'Direct Access Users' local group will assume that Citrix is installed and CanRDP edges will require membership of both 'Direct Access Users' and 'Remote Desktop Users' local groups on the computer.	{"enabled": false}	3	2025-03-19 18:14:12.263971+00	2025-03-19 18:14:12.263971+00
-prune.ttl	Prune Retention TTL Configuration Parameters	This configuration parameter sets the retention TTLs during analysis pruning.	{"base_ttl": "P7D", "has_session_edge_ttl": "P3D"}	4	2025-03-19 18:14:12.263971+00	2025-03-19 18:14:12.263971+00
-analysis.reconciliation	Reconciliation	This configuration parameter enables / disables reconciliation during analysis.	{"enabled": true}	5	2025-03-19 18:14:12.263971+00	2025-03-19 18:14:12.263971+00
-\.
+INSERT INTO public.parameters VALUES ('auth.password_expiration_window', 'Local Auth Password Expiry Window', 'This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601.', '{"duration": "P90D"}', 1, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.parameters VALUES ('neo4j.configuration', 'Neo4j Configuration Parameters', 'This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J.', '{"batch_write_size": 20000, "write_flush_size": 100000}', 2, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.parameters VALUES ('analysis.citrix_rdp_support', 'Citrix RDP Support', 'This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a ''Direct Access Users'' local group will assume that Citrix is installed and CanRDP edges will require membership of both ''Direct Access Users'' and ''Remote Desktop Users'' local groups on the computer.', '{"enabled": false}', 3, '2025-03-21 15:44:05.128157+00', '2025-03-21 15:44:05.128157+00');
+INSERT INTO public.parameters VALUES ('prune.ttl', 'Prune Retention TTL Configuration Parameters', 'This configuration parameter sets the retention TTLs during analysis pruning.', '{"base_ttl": "P7D", "has_session_edge_ttl": "P3D"}', 4, '2025-03-21 15:44:05.128157+00', '2025-03-21 15:44:05.128157+00');
+INSERT INTO public.parameters VALUES ('analysis.reconciliation', 'Reconciliation', 'This configuration parameter enables / disables reconciliation during analysis.', '{"enabled": true}', 5, '2025-03-21 15:44:05.128157+00', '2025-03-21 15:44:05.128157+00');
 
 
 --
 -- Data for Name: permissions; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.permissions (authority, name, id, created_at, updated_at) FROM stdin;
-app	ReadAppConfig	1	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-app	WriteAppConfig	2	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-risks	GenerateReport	3	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-risks	ManageRisks	4	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-auth	CreateToken	5	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-auth	ManageAppConfig	6	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-auth	ManageProviders	7	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-auth	ManageSelf	8	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-auth	ManageUsers	9	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-clients	Manage	10	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-clients	Tasking	11	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-collection	ManageJobs	12	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-graphdb	Read	13	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-graphdb	Write	14	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-saved_queries	Read	15	2025-03-19 18:14:12.256348+00	2025-03-19 18:14:12.256348+00
-saved_queries	Write	16	2025-03-19 18:14:12.256348+00	2025-03-19 18:14:12.256348+00
-clients	Read	17	2025-03-19 18:14:12.256348+00	2025-03-19 18:14:12.256348+00
-db	Wipe	18	2025-03-19 18:14:12.256348+00	2025-03-19 18:14:12.256348+00
-graphdb	Mutate	19	2025-03-19 18:14:12.256348+00	2025-03-19 18:14:12.256348+00
-\.
+INSERT INTO public.permissions VALUES ('app', 'ReadAppConfig', 1, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('app', 'WriteAppConfig', 2, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('risks', 'GenerateReport', 3, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('risks', 'ManageRisks', 4, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('auth', 'CreateToken', 5, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('auth', 'ManageAppConfig', 6, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('auth', 'ManageProviders', 7, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('auth', 'ManageSelf', 8, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('auth', 'ManageUsers', 9, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('clients', 'Manage', 10, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('clients', 'Tasking', 11, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('collection', 'ManageJobs', 12, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('graphdb', 'Read', 13, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('graphdb', 'Write', 14, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.permissions VALUES ('saved_queries', 'Read', 15, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00');
+INSERT INTO public.permissions VALUES ('saved_queries', 'Write', 16, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00');
+INSERT INTO public.permissions VALUES ('clients', 'Read', 17, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00');
+INSERT INTO public.permissions VALUES ('db', 'Wipe', 18, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00');
+INSERT INTO public.permissions VALUES ('graphdb', 'Mutate', 19, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00');
 
 
 --
 -- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.roles (name, description, id, created_at, updated_at) FROM stdin;
-Administrator	Can manage users, clients, and application configuration	1	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-User	Can read data, modify asset group memberships	2	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-Read-Only	Used for integrations	3	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-Upload-Only	Used for data collection clients, can post data but cannot read data	4	2025-03-19 18:14:12.155626+00	2025-03-19 18:14:12.155626+00
-Power User	Can upload data, manage clients, and perform any action a User can	5	2025-03-19 18:14:12.256348+00	2025-03-19 18:14:12.256348+00
-\.
+INSERT INTO public.roles VALUES ('Administrator', 'Can manage users, clients, and application configuration', 1, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.roles VALUES ('User', 'Can read data, modify asset group memberships', 2, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.roles VALUES ('Read-Only', 'Used for integrations', 3, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.roles VALUES ('Upload-Only', 'Used for data collection clients, can post data but cannot read data', 4, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
+INSERT INTO public.roles VALUES ('Power User', 'Can upload data, manage clients, and perform any action a User can', 5, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00');
 
 
 --
 -- Data for Name: roles_permissions; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.roles_permissions (role_id, permission_id) FROM stdin;
-1	1
-1	2
-1	3
-1	4
-1	5
-1	6
-1	7
-1	8
-1	9
-1	10
-1	11
-1	12
-1	13
-1	14
-2	1
-2	3
-2	5
-2	8
-2	13
-3	1
-3	3
-3	8
-3	13
-4	11
-4	14
-1	15
-1	16
-1	17
-1	18
-1	19
-2	15
-2	16
-2	17
-3	5
-5	1
-5	2
-5	3
-5	4
-5	5
-5	8
-5	10
-5	17
-5	11
-5	12
-5	14
-5	13
-5	15
-5	16
-5	19
-3	15
-\.
+INSERT INTO public.roles_permissions VALUES (1, 1);
+INSERT INTO public.roles_permissions VALUES (1, 2);
+INSERT INTO public.roles_permissions VALUES (1, 3);
+INSERT INTO public.roles_permissions VALUES (1, 4);
+INSERT INTO public.roles_permissions VALUES (1, 5);
+INSERT INTO public.roles_permissions VALUES (1, 6);
+INSERT INTO public.roles_permissions VALUES (1, 7);
+INSERT INTO public.roles_permissions VALUES (1, 8);
+INSERT INTO public.roles_permissions VALUES (1, 9);
+INSERT INTO public.roles_permissions VALUES (1, 10);
+INSERT INTO public.roles_permissions VALUES (1, 11);
+INSERT INTO public.roles_permissions VALUES (1, 12);
+INSERT INTO public.roles_permissions VALUES (1, 13);
+INSERT INTO public.roles_permissions VALUES (1, 14);
+INSERT INTO public.roles_permissions VALUES (2, 1);
+INSERT INTO public.roles_permissions VALUES (2, 3);
+INSERT INTO public.roles_permissions VALUES (2, 5);
+INSERT INTO public.roles_permissions VALUES (2, 8);
+INSERT INTO public.roles_permissions VALUES (2, 13);
+INSERT INTO public.roles_permissions VALUES (3, 1);
+INSERT INTO public.roles_permissions VALUES (3, 3);
+INSERT INTO public.roles_permissions VALUES (3, 8);
+INSERT INTO public.roles_permissions VALUES (3, 13);
+INSERT INTO public.roles_permissions VALUES (4, 11);
+INSERT INTO public.roles_permissions VALUES (4, 14);
+INSERT INTO public.roles_permissions VALUES (1, 15);
+INSERT INTO public.roles_permissions VALUES (1, 16);
+INSERT INTO public.roles_permissions VALUES (1, 17);
+INSERT INTO public.roles_permissions VALUES (1, 18);
+INSERT INTO public.roles_permissions VALUES (1, 19);
+INSERT INTO public.roles_permissions VALUES (2, 15);
+INSERT INTO public.roles_permissions VALUES (2, 16);
+INSERT INTO public.roles_permissions VALUES (2, 17);
+INSERT INTO public.roles_permissions VALUES (3, 5);
+INSERT INTO public.roles_permissions VALUES (5, 1);
+INSERT INTO public.roles_permissions VALUES (5, 2);
+INSERT INTO public.roles_permissions VALUES (5, 3);
+INSERT INTO public.roles_permissions VALUES (5, 4);
+INSERT INTO public.roles_permissions VALUES (5, 5);
+INSERT INTO public.roles_permissions VALUES (5, 8);
+INSERT INTO public.roles_permissions VALUES (5, 10);
+INSERT INTO public.roles_permissions VALUES (5, 17);
+INSERT INTO public.roles_permissions VALUES (5, 11);
+INSERT INTO public.roles_permissions VALUES (5, 12);
+INSERT INTO public.roles_permissions VALUES (5, 14);
+INSERT INTO public.roles_permissions VALUES (5, 13);
+INSERT INTO public.roles_permissions VALUES (5, 15);
+INSERT INTO public.roles_permissions VALUES (5, 16);
+INSERT INTO public.roles_permissions VALUES (5, 19);
+INSERT INTO public.roles_permissions VALUES (3, 15);
 
 
 --
 -- Data for Name: saml_providers; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.saml_providers (name, display_name, issuer_uri, single_sign_on_uri, metadata_xml, ous, id, created_at, updated_at) FROM stdin;
-\.
 
 
 --
 -- Data for Name: saved_queries; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.saved_queries (user_id, name, query, id, created_at, updated_at, description) FROM stdin;
-\.
 
 
 --
 -- Data for Name: saved_queries_permissions; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.saved_queries_permissions (id, shared_to_user_id, query_id, public, created_at, updated_at) FROM stdin;
-\.
 
 
 --
 -- Data for Name: user_sessions; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.user_sessions (user_id, auth_provider_type, auth_provider_id, expires_at, id, created_at, updated_at, flags) FROM stdin;
-\.
 
 
 --
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.users (saml_provider_id, first_name, last_name, email_address, principal_name, last_login, is_disabled, eula_accepted, id, created_at, updated_at) FROM stdin;
-\N	BloodHound	Dev	spam@example.com	admin	0001-01-01 00:00:00+00	f	f	47dd420a-a7a1-4915-a66b-b07bdee6e713	2025-03-19 18:14:12.466972+00	2025-03-19 18:14:12.466972+00
-\.
+INSERT INTO public.users VALUES (NULL, 'BloodHound', 'Dev', 'spam@example.com', 'admin', '0001-01-01 00:00:00+00', false, false, '27426d61-2956-4db6-b2ee-6495906193ca', '2025-03-21 15:44:05.340337+00', '2025-03-21 15:44:05.340337+00');
 
 
 --
 -- Data for Name: users_roles; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-COPY public.users_roles (user_id, role_id) FROM stdin;
-47dd420a-a7a1-4915-a66b-b07bdee6e713	1
-\.
+INSERT INTO public.users_roles VALUES ('27426d61-2956-4db6-b2ee-6495906193ca', 1);
 
 
 --
@@ -1638,7 +1580,7 @@ SELECT pg_catalog.setval('public.asset_group_collection_entries_id_seq', 1, fals
 -- Name: asset_group_collections_id_seq; Type: SEQUENCE SET; Schema: public; Owner: bloodhound
 --
 
-SELECT pg_catalog.setval('public.asset_group_collections_id_seq', 1, false);
+SELECT pg_catalog.setval('public.asset_group_collections_id_seq', 2, true);
 
 
 --
