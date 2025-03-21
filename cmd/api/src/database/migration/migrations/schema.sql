@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.2 (Debian 13.2-1.pgdg100+1)
+-- Dumped from database version 14.17 (Homebrew)
 -- Dumped by pg_dump version 14.17 (Homebrew)
 
 SET statement_timeout = 0;
@@ -21,13 +21,6 @@ SET row_security = off;
 --
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
-
-
---
--- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION pg_trgm IS 'text similarity measurement and index searching based on trigrams';
 
 
 SET default_tablespace = '';
@@ -64,6 +57,7 @@ CREATE TABLE public.ad_data_quality_aggregations (
 );
 
 
+ALTER TABLE public.ad_data_quality_aggregations OWNER TO bloodhound;
 
 --
 -- Name: ad_data_quality_aggregations_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -78,6 +72,7 @@ CREATE SEQUENCE public.ad_data_quality_aggregations_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.ad_data_quality_aggregations_id_seq OWNER TO bloodhound;
 
 --
 -- Name: ad_data_quality_aggregations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -116,6 +111,7 @@ CREATE TABLE public.ad_data_quality_stats (
 );
 
 
+ALTER TABLE public.ad_data_quality_stats OWNER TO bloodhound;
 
 --
 -- Name: ad_data_quality_stats_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -130,6 +126,7 @@ CREATE SEQUENCE public.ad_data_quality_stats_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.ad_data_quality_stats_id_seq OWNER TO bloodhound;
 
 --
 -- Name: ad_data_quality_stats_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -151,6 +148,7 @@ CREATE TABLE public.analysis_request_switch (
 );
 
 
+ALTER TABLE public.analysis_request_switch OWNER TO bloodhound;
 
 --
 -- Name: asset_group_collection_entries; Type: TABLE; Schema: public; Owner: bloodhound
@@ -167,6 +165,7 @@ CREATE TABLE public.asset_group_collection_entries (
 );
 
 
+ALTER TABLE public.asset_group_collection_entries OWNER TO bloodhound;
 
 --
 -- Name: asset_group_collection_entries_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -180,6 +179,7 @@ CREATE SEQUENCE public.asset_group_collection_entries_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.asset_group_collection_entries_id_seq OWNER TO bloodhound;
 
 --
 -- Name: asset_group_collection_entries_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -200,6 +200,7 @@ CREATE TABLE public.asset_group_collections (
 );
 
 
+ALTER TABLE public.asset_group_collections OWNER TO bloodhound;
 
 --
 -- Name: asset_group_collections_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -213,6 +214,7 @@ CREATE SEQUENCE public.asset_group_collections_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.asset_group_collections_id_seq OWNER TO bloodhound;
 
 --
 -- Name: asset_group_collections_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -236,6 +238,7 @@ CREATE TABLE public.asset_group_selectors (
 );
 
 
+ALTER TABLE public.asset_group_selectors OWNER TO bloodhound;
 
 --
 -- Name: asset_group_selectors_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -250,6 +253,7 @@ CREATE SEQUENCE public.asset_group_selectors_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.asset_group_selectors_id_seq OWNER TO bloodhound;
 
 --
 -- Name: asset_group_selectors_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -272,6 +276,7 @@ CREATE TABLE public.asset_groups (
 );
 
 
+ALTER TABLE public.asset_groups OWNER TO bloodhound;
 
 --
 -- Name: asset_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -286,6 +291,7 @@ CREATE SEQUENCE public.asset_groups_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.asset_groups_id_seq OWNER TO bloodhound;
 
 --
 -- Name: asset_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -314,6 +320,7 @@ CREATE TABLE public.audit_logs (
 );
 
 
+ALTER TABLE public.audit_logs OWNER TO bloodhound;
 
 --
 -- Name: audit_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -327,6 +334,7 @@ CREATE SEQUENCE public.audit_logs_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.audit_logs_id_seq OWNER TO bloodhound;
 
 --
 -- Name: audit_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -352,6 +360,7 @@ CREATE TABLE public.auth_secrets (
 );
 
 
+ALTER TABLE public.auth_secrets OWNER TO bloodhound;
 
 --
 -- Name: auth_secrets_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -366,6 +375,7 @@ CREATE SEQUENCE public.auth_secrets_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.auth_secrets_id_seq OWNER TO bloodhound;
 
 --
 -- Name: auth_secrets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -391,6 +401,7 @@ CREATE TABLE public.auth_tokens (
 );
 
 
+ALTER TABLE public.auth_tokens OWNER TO bloodhound;
 
 --
 -- Name: azure_data_quality_aggregations; Type: TABLE; Schema: public; Owner: bloodhound
@@ -423,6 +434,7 @@ CREATE TABLE public.azure_data_quality_aggregations (
 );
 
 
+ALTER TABLE public.azure_data_quality_aggregations OWNER TO bloodhound;
 
 --
 -- Name: azure_data_quality_aggregations_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -437,6 +449,7 @@ CREATE SEQUENCE public.azure_data_quality_aggregations_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.azure_data_quality_aggregations_id_seq OWNER TO bloodhound;
 
 --
 -- Name: azure_data_quality_aggregations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -476,6 +489,7 @@ CREATE TABLE public.azure_data_quality_stats (
 );
 
 
+ALTER TABLE public.azure_data_quality_stats OWNER TO bloodhound;
 
 --
 -- Name: azure_data_quality_stats_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -490,22 +504,13 @@ CREATE SEQUENCE public.azure_data_quality_stats_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.azure_data_quality_stats_id_seq OWNER TO bloodhound;
 
 --
 -- Name: azure_data_quality_stats_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
 --
 
 ALTER SEQUENCE public.azure_data_quality_stats_id_seq OWNED BY public.azure_data_quality_stats.id;
-
-
---
--- Name: database_switch; Type: TABLE; Schema: public; Owner: bloodhound
---
-
-CREATE TABLE public.database_switch (
-    driver text NOT NULL
-);
-
 
 
 --
@@ -521,6 +526,7 @@ CREATE TABLE public.datapipe_status (
 );
 
 
+ALTER TABLE public.datapipe_status OWNER TO bloodhound;
 
 --
 -- Name: domain_collection_results; Type: TABLE; Schema: public; Owner: bloodhound
@@ -544,6 +550,7 @@ CREATE TABLE public.domain_collection_results (
 );
 
 
+ALTER TABLE public.domain_collection_results OWNER TO bloodhound;
 
 --
 -- Name: domain_collection_results_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -557,6 +564,7 @@ CREATE SEQUENCE public.domain_collection_results_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.domain_collection_results_id_seq OWNER TO bloodhound;
 
 --
 -- Name: domain_collection_results_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -581,6 +589,7 @@ CREATE TABLE public.feature_flags (
 );
 
 
+ALTER TABLE public.feature_flags OWNER TO bloodhound;
 
 --
 -- Name: feature_flags_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -595,6 +604,7 @@ CREATE SEQUENCE public.feature_flags_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.feature_flags_id_seq OWNER TO bloodhound;
 
 --
 -- Name: feature_flags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -623,6 +633,7 @@ CREATE TABLE public.file_upload_jobs (
 );
 
 
+ALTER TABLE public.file_upload_jobs OWNER TO bloodhound;
 
 --
 -- Name: file_upload_jobs_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -636,6 +647,7 @@ CREATE SEQUENCE public.file_upload_jobs_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.file_upload_jobs_id_seq OWNER TO bloodhound;
 
 --
 -- Name: file_upload_jobs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -659,6 +671,7 @@ CREATE TABLE public.ingest_tasks (
 );
 
 
+ALTER TABLE public.ingest_tasks OWNER TO bloodhound;
 
 --
 -- Name: ingest_tasks_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -672,6 +685,7 @@ CREATE SEQUENCE public.ingest_tasks_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.ingest_tasks_id_seq OWNER TO bloodhound;
 
 --
 -- Name: ingest_tasks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -691,41 +705,7 @@ CREATE TABLE public.installations (
 );
 
 
-
---
--- Name: migrations; Type: TABLE; Schema: public; Owner: bloodhound
---
-
-CREATE TABLE public.migrations (
-    id integer NOT NULL,
-    updated_at timestamp with time zone,
-    major integer,
-    minor integer,
-    patch integer
-);
-
-
-
---
--- Name: migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
---
-
-CREATE SEQUENCE public.migrations_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-
---
--- Name: migrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
---
-
-ALTER SEQUENCE public.migrations_id_seq OWNED BY public.migrations.id;
-
+ALTER TABLE public.installations OWNER TO bloodhound;
 
 --
 -- Name: parameters; Type: TABLE; Schema: public; Owner: bloodhound
@@ -742,6 +722,7 @@ CREATE TABLE public.parameters (
 );
 
 
+ALTER TABLE public.parameters OWNER TO bloodhound;
 
 --
 -- Name: parameters_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -756,6 +737,7 @@ CREATE SEQUENCE public.parameters_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.parameters_id_seq OWNER TO bloodhound;
 
 --
 -- Name: parameters_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -777,6 +759,7 @@ CREATE TABLE public.permissions (
 );
 
 
+ALTER TABLE public.permissions OWNER TO bloodhound;
 
 --
 -- Name: permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -791,6 +774,7 @@ CREATE SEQUENCE public.permissions_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.permissions_id_seq OWNER TO bloodhound;
 
 --
 -- Name: permissions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -812,6 +796,7 @@ CREATE TABLE public.roles (
 );
 
 
+ALTER TABLE public.roles OWNER TO bloodhound;
 
 --
 -- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -826,6 +811,7 @@ CREATE SEQUENCE public.roles_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.roles_id_seq OWNER TO bloodhound;
 
 --
 -- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -844,6 +830,7 @@ CREATE TABLE public.roles_permissions (
 );
 
 
+ALTER TABLE public.roles_permissions OWNER TO bloodhound;
 
 --
 -- Name: saml_providers; Type: TABLE; Schema: public; Owner: bloodhound
@@ -862,6 +849,7 @@ CREATE TABLE public.saml_providers (
 );
 
 
+ALTER TABLE public.saml_providers OWNER TO bloodhound;
 
 --
 -- Name: saml_providers_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -876,6 +864,7 @@ CREATE SEQUENCE public.saml_providers_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.saml_providers_id_seq OWNER TO bloodhound;
 
 --
 -- Name: saml_providers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -899,6 +888,7 @@ CREATE TABLE public.saved_queries (
 );
 
 
+ALTER TABLE public.saved_queries OWNER TO bloodhound;
 
 --
 -- Name: saved_queries_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -912,6 +902,7 @@ CREATE SEQUENCE public.saved_queries_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.saved_queries_id_seq OWNER TO bloodhound;
 
 --
 -- Name: saved_queries_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -934,6 +925,7 @@ CREATE TABLE public.saved_queries_permissions (
 );
 
 
+ALTER TABLE public.saved_queries_permissions OWNER TO bloodhound;
 
 --
 -- Name: saved_queries_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -947,6 +939,7 @@ CREATE SEQUENCE public.saved_queries_permissions_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.saved_queries_permissions_id_seq OWNER TO bloodhound;
 
 --
 -- Name: saved_queries_permissions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -967,6 +960,7 @@ CREATE SEQUENCE public.saved_queries_permissions_query_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.saved_queries_permissions_query_id_seq OWNER TO bloodhound;
 
 --
 -- Name: saved_queries_permissions_query_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -991,6 +985,7 @@ CREATE TABLE public.user_sessions (
 );
 
 
+ALTER TABLE public.user_sessions OWNER TO bloodhound;
 
 --
 -- Name: user_sessions_id_seq; Type: SEQUENCE; Schema: public; Owner: bloodhound
@@ -1004,6 +999,7 @@ CREATE SEQUENCE public.user_sessions_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.user_sessions_id_seq OWNER TO bloodhound;
 
 --
 -- Name: user_sessions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: bloodhound
@@ -1031,6 +1027,7 @@ CREATE TABLE public.users (
 );
 
 
+ALTER TABLE public.users OWNER TO bloodhound;
 
 --
 -- Name: users_roles; Type: TABLE; Schema: public; Owner: bloodhound
@@ -1042,6 +1039,7 @@ CREATE TABLE public.users_roles (
 );
 
 
+ALTER TABLE public.users_roles OWNER TO bloodhound;
 
 --
 -- Name: ad_data_quality_aggregations id; Type: DEFAULT; Schema: public; Owner: bloodhound
@@ -1142,13 +1140,6 @@ ALTER TABLE ONLY public.ingest_tasks ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
--- Name: migrations id; Type: DEFAULT; Schema: public; Owner: bloodhound
---
-
-ALTER TABLE ONLY public.migrations ALTER COLUMN id SET DEFAULT nextval('public.migrations_id_seq'::regclass);
-
-
---
 -- Name: parameters id; Type: DEFAULT; Schema: public; Owner: bloodhound
 --
 
@@ -1232,8 +1223,6 @@ ALTER TABLE ONLY public.user_sessions ALTER COLUMN id SET DEFAULT nextval('publi
 -- Data for Name: asset_group_collections; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-INSERT INTO public.asset_group_collections VALUES (1, 1, '2025-03-21 15:44:17.351144+00', '2025-03-21 15:44:17.351144+00');
-INSERT INTO public.asset_group_collections VALUES (2, 2, '2025-03-21 15:44:17.356203+00', '2025-03-21 15:44:17.356203+00');
 
 
 --
@@ -1246,8 +1235,8 @@ INSERT INTO public.asset_group_collections VALUES (2, 2, '2025-03-21 15:44:17.35
 -- Data for Name: asset_groups; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-INSERT INTO public.asset_groups VALUES ('Admin Tier Zero', 'admin_tier_0', true, 1, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.asset_groups VALUES ('Owned', 'owned', true, 2, '2025-03-21 15:44:05.051393+00', '2025-03-21 15:44:05.051393+00');
+INSERT INTO public.asset_groups VALUES ('Admin Tier Zero', 'admin_tier_0', true, 1, '2025-03-21 12:56:17.065847-05', '2025-03-21 12:56:17.065847-05');
+INSERT INTO public.asset_groups VALUES ('Owned', 'owned', true, 2, '2025-03-21 12:58:42.752739-05', '2025-03-21 12:58:42.752739-05');
 
 
 --
@@ -1260,7 +1249,6 @@ INSERT INTO public.asset_groups VALUES ('Owned', 'owned', true, 2, '2025-03-21 1
 -- Data for Name: auth_secrets; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-INSERT INTO public.auth_secrets VALUES ('27426d61-2956-4db6-b2ee-6495906193ca', '$argon2id$v=19$m=1048576,t=1,p=8$5MZolTSmFAmm8zrf5IOrcA==$kxcHlz2OJJH46gHy7mFIuQ==', 'argon2', '2025-06-19 15:44:05.338694+00', '', false, 1, '2025-03-21 15:44:05.342087+00', '2025-03-21 15:44:05.342087+00');
 
 
 --
@@ -1282,16 +1270,10 @@ INSERT INTO public.auth_secrets VALUES ('27426d61-2956-4db6-b2ee-6495906193ca', 
 
 
 --
--- Data for Name: database_switch; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
 -- Data for Name: datapipe_status; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-INSERT INTO public.datapipe_status VALUES (true, 'idle', '2025-03-21 15:44:36.538369+00', '2025-03-21 15:44:17.37934+00');
+INSERT INTO public.datapipe_status VALUES (true, 'idle', '2025-03-21 12:58:42.971311-05', NULL);
 
 
 --
@@ -1304,19 +1286,19 @@ INSERT INTO public.datapipe_status VALUES (true, 'idle', '2025-03-21 15:44:36.53
 -- Data for Name: feature_flags; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-INSERT INTO public.feature_flags VALUES (1, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00', 'butterfly_analysis', 'Enhanced Asset Inbound-Outbound Exposure Analysis', 'Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.', false, false);
-INSERT INTO public.feature_flags VALUES (2, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00', 'enable_saml_sso', 'SAML Single Sign-On Support', 'Enables SSO authentication flows and administration panels to third party SAML identity providers.', true, false);
-INSERT INTO public.feature_flags VALUES (3, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00', 'scope_collection_by_ou', 'Enable SharpHound OU Scoped Collections', 'Enables scoping SharpHound collections to specific lists of OUs.', true, false);
-INSERT INTO public.feature_flags VALUES (4, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00', 'azure_support', 'Enable Azure Support', 'Enables Azure support.', true, false);
-INSERT INTO public.feature_flags VALUES (6, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00', 'entity_panel_cache', 'Enable application level caching', 'Enables the use of application level caching for entity panel queries', true, false);
-INSERT INTO public.feature_flags VALUES (7, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00', 'adcs', 'Enable collection and processing of Active Directory Certificate Services Data', 'Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.', false, false);
-INSERT INTO public.feature_flags VALUES (9, '2025-03-21 15:44:05.119852+00', '2025-03-21 15:44:05.119852+00', 'pg_migration_dual_ingest', 'PostgreSQL Migration Dual Ingest', 'Enables dual ingest pathing for both Neo4j and PostgreSQL.', false, false);
-INSERT INTO public.feature_flags VALUES (10, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00', 'clear_graph_data', 'Clear Graph Data', 'Enables the ability to delete all nodes and edges from the graph database.', true, false);
-INSERT INTO public.feature_flags VALUES (11, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00', 'risk_exposure_new_calculation', 'Use new tier zero risk exposure calculation', 'Enables the use of new tier zero risk exposure metatree metrics.', false, false);
-INSERT INTO public.feature_flags VALUES (12, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00', 'fedramp_eula', 'FedRAMP EULA', 'Enables showing the FedRAMP EULA on every login. (Enterprise only)', false, false);
-INSERT INTO public.feature_flags VALUES (13, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00', 'auto_tag_t0_parent_objects', 'Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero', 'Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.', true, true);
-INSERT INTO public.feature_flags VALUES (14, '2025-03-21 15:44:05.128157+00', '2025-03-21 15:44:05.128157+00', 'oidc_support', 'OIDC Support', 'Enables OpenID Connect authentication support for SSO Authentication.', false, false);
-INSERT INTO public.feature_flags VALUES (8, '2025-03-21 15:44:05.116063+00', '2025-03-21 15:44:05.116063+00', 'dark_mode', 'Dark Mode', 'Allows users to enable or disable dark mode via a toggle in the settings menu', true, false);
+INSERT INTO public.feature_flags VALUES (1, '2025-03-21 12:56:17.075059-05', '2025-03-21 12:56:17.075059-05', 'butterfly_analysis', 'Enhanced Asset Inbound-Outbound Exposure Analysis', 'Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.', false, false);
+INSERT INTO public.feature_flags VALUES (2, '2025-03-21 12:56:17.075474-05', '2025-03-21 12:56:17.075474-05', 'enable_saml_sso', 'SAML Single Sign-On Support', 'Enables SSO authentication flows and administration panels to third party SAML identity providers.', true, false);
+INSERT INTO public.feature_flags VALUES (3, '2025-03-21 12:56:17.07564-05', '2025-03-21 12:56:17.07564-05', 'scope_collection_by_ou', 'Enable SharpHound OU Scoped Collections', 'Enables scoping SharpHound collections to specific lists of OUs.', true, false);
+INSERT INTO public.feature_flags VALUES (4, '2025-03-21 12:56:17.075794-05', '2025-03-21 12:56:17.075794-05', 'azure_support', 'Enable Azure Support', 'Enables Azure support.', true, false);
+INSERT INTO public.feature_flags VALUES (5, '2025-03-21 12:56:17.075951-05', '2025-03-21 12:56:17.075951-05', 'reconciliation', 'Reconciliation', 'Enables Reconciliation', true, false);
+INSERT INTO public.feature_flags VALUES (6, '2025-03-21 12:56:17.076129-05', '2025-03-21 12:56:17.076129-05', 'entity_panel_cache', 'Enable application level caching', 'Enables the use of application level caching for entity panel queries', true, false);
+INSERT INTO public.feature_flags VALUES (7, '2025-03-21 12:56:17.076293-05', '2025-03-21 12:56:17.076293-05', 'adcs', 'Enable collection and processing of Active Directory Certificate Services Data', 'Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.', false, false);
+INSERT INTO public.feature_flags VALUES (8, '2025-03-21 12:58:42.987985-05', '2025-03-21 12:58:42.987985-05', 'dark_mode', 'Dark Mode', 'Allows users to enable or disable dark mode via a toggle in the settings menu', false, true);
+INSERT INTO public.feature_flags VALUES (9, '2025-03-21 12:58:43.022829-05', '2025-03-21 12:58:43.022829-05', 'pg_migration_dual_ingest', 'PostgreSQL Migration Dual Ingest', 'Enables dual ingest pathing for both Neo4j and PostgreSQL.', false, false);
+INSERT INTO public.feature_flags VALUES (10, '2025-03-21 12:58:43.038933-05', '2025-03-21 12:58:43.038933-05', 'clear_graph_data', 'Clear Graph Data', 'Enables the ability to delete all nodes and edges from the graph database.', true, false);
+INSERT INTO public.feature_flags VALUES (11, '2025-03-21 12:58:43.039466-05', '2025-03-21 12:58:43.039466-05', 'risk_exposure_new_calculation', 'Use new tier zero risk exposure calculation', 'Enables the use of new tier zero risk exposure metatree metrics.', false, false);
+INSERT INTO public.feature_flags VALUES (12, '2025-03-21 12:58:43.039655-05', '2025-03-21 12:58:43.039655-05', 'fedramp_eula', 'FedRAMP EULA', 'Enables showing the FedRAMP EULA on every login. (Enterprise only)', false, false);
+INSERT INTO public.feature_flags VALUES (13, '2025-03-21 12:58:43.039915-05', '2025-03-21 12:58:43.039915-05', 'auto_tag_t0_parent_objects', 'Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero', 'Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.', true, true);
 
 
 --
@@ -1335,77 +1317,50 @@ INSERT INTO public.feature_flags VALUES (8, '2025-03-21 15:44:05.116063+00', '20
 -- Data for Name: installations; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-INSERT INTO public.installations VALUES ('1f80b2e9-a9bb-4c48-aac1-5cc1db073aff', '2025-03-21 15:44:05.339566+00', '2025-03-21 15:44:05.339566+00');
-
-
---
--- Data for Name: migrations; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-INSERT INTO public.migrations VALUES (1, '2025-03-21 15:44:05.047072+00', 0, 0, 0);
-INSERT INTO public.migrations VALUES (2, '2025-03-21 15:44:05.051744+00', 5, 1, 1);
-INSERT INTO public.migrations VALUES (3, '2025-03-21 15:44:05.056277+00', 5, 3, 0);
-INSERT INTO public.migrations VALUES (4, '2025-03-21 15:44:05.07519+00', 5, 3, 1);
-INSERT INTO public.migrations VALUES (5, '2025-03-21 15:44:05.077872+00', 5, 4, 0);
-INSERT INTO public.migrations VALUES (6, '2025-03-21 15:44:05.079079+00', 5, 5, 0);
-INSERT INTO public.migrations VALUES (7, '2025-03-21 15:44:05.085324+00', 5, 6, 0);
-INSERT INTO public.migrations VALUES (8, '2025-03-21 15:44:05.085967+00', 5, 8, 0);
-INSERT INTO public.migrations VALUES (9, '2025-03-21 15:44:05.087173+00', 5, 8, 1);
-INSERT INTO public.migrations VALUES (10, '2025-03-21 15:44:05.107744+00', 5, 8, 2);
-INSERT INTO public.migrations VALUES (11, '2025-03-21 15:44:05.111186+00', 5, 11, 0);
-INSERT INTO public.migrations VALUES (12, '2025-03-21 15:44:05.115712+00', 5, 12, 0);
-INSERT INTO public.migrations VALUES (13, '2025-03-21 15:44:05.116256+00', 5, 13, 0);
-INSERT INTO public.migrations VALUES (14, '2025-03-21 15:44:05.119365+00', 5, 13, 1);
-INSERT INTO public.migrations VALUES (15, '2025-03-21 15:44:05.119997+00', 5, 14, 0);
-INSERT INTO public.migrations VALUES (16, '2025-03-21 15:44:05.127448+00', 5, 15, 0);
-INSERT INTO public.migrations VALUES (17, '2025-03-21 15:44:05.129176+00', 6, 0, 0);
 
 
 --
 -- Data for Name: parameters; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-INSERT INTO public.parameters VALUES ('auth.password_expiration_window', 'Local Auth Password Expiry Window', 'This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601.', '{"duration": "P90D"}', 1, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.parameters VALUES ('neo4j.configuration', 'Neo4j Configuration Parameters', 'This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J.', '{"batch_write_size": 20000, "write_flush_size": 100000}', 2, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.parameters VALUES ('analysis.citrix_rdp_support', 'Citrix RDP Support', 'This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a ''Direct Access Users'' local group will assume that Citrix is installed and CanRDP edges will require membership of both ''Direct Access Users'' and ''Remote Desktop Users'' local groups on the computer.', '{"enabled": false}', 3, '2025-03-21 15:44:05.128157+00', '2025-03-21 15:44:05.128157+00');
-INSERT INTO public.parameters VALUES ('prune.ttl', 'Prune Retention TTL Configuration Parameters', 'This configuration parameter sets the retention TTLs during analysis pruning.', '{"base_ttl": "P7D", "has_session_edge_ttl": "P3D"}', 4, '2025-03-21 15:44:05.128157+00', '2025-03-21 15:44:05.128157+00');
-INSERT INTO public.parameters VALUES ('analysis.reconciliation', 'Reconciliation', 'This configuration parameter enables / disables reconciliation during analysis.', '{"enabled": true}', 5, '2025-03-21 15:44:05.128157+00', '2025-03-21 15:44:05.128157+00');
+INSERT INTO public.parameters VALUES ('auth.password_expiration_window', 'Local Auth Password Expiry Window', 'This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601.', '{"duration": "P90D"}', 1, '2025-03-21 12:56:17.07645-05', '2025-03-21 12:56:17.07645-05');
+INSERT INTO public.parameters VALUES ('neo4j.configuration', 'Neo4j Configuration Parameters', 'This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J.', '{"batch_write_size": 20000, "write_flush_size": 100000}', 2, '2025-03-21 12:56:17.077247-05', '2025-03-21 12:56:17.077247-05');
 
 
 --
 -- Data for Name: permissions; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-INSERT INTO public.permissions VALUES ('app', 'ReadAppConfig', 1, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('app', 'WriteAppConfig', 2, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('risks', 'GenerateReport', 3, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('risks', 'ManageRisks', 4, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('auth', 'CreateToken', 5, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('auth', 'ManageAppConfig', 6, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('auth', 'ManageProviders', 7, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('auth', 'ManageSelf', 8, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('auth', 'ManageUsers', 9, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('clients', 'Manage', 10, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('clients', 'Tasking', 11, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('collection', 'ManageJobs', 12, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('graphdb', 'Read', 13, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('graphdb', 'Write', 14, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.permissions VALUES ('saved_queries', 'Read', 15, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00');
-INSERT INTO public.permissions VALUES ('saved_queries', 'Write', 16, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00');
-INSERT INTO public.permissions VALUES ('clients', 'Read', 17, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00');
-INSERT INTO public.permissions VALUES ('db', 'Wipe', 18, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00');
-INSERT INTO public.permissions VALUES ('graphdb', 'Mutate', 19, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00');
+INSERT INTO public.permissions VALUES ('app', 'ReadAppConfig', 1, '2025-03-21 12:56:17.066242-05', '2025-03-21 12:56:17.066242-05');
+INSERT INTO public.permissions VALUES ('app', 'WriteAppConfig', 2, '2025-03-21 12:56:17.066532-05', '2025-03-21 12:56:17.066532-05');
+INSERT INTO public.permissions VALUES ('risks', 'GenerateReport', 3, '2025-03-21 12:56:17.066707-05', '2025-03-21 12:56:17.066707-05');
+INSERT INTO public.permissions VALUES ('risks', 'ManageRisks', 4, '2025-03-21 12:56:17.066878-05', '2025-03-21 12:56:17.066878-05');
+INSERT INTO public.permissions VALUES ('auth', 'CreateToken', 5, '2025-03-21 12:56:17.067068-05', '2025-03-21 12:56:17.067068-05');
+INSERT INTO public.permissions VALUES ('auth', 'ManageAppConfig', 6, '2025-03-21 12:56:17.067239-05', '2025-03-21 12:56:17.067239-05');
+INSERT INTO public.permissions VALUES ('auth', 'ManageProviders', 7, '2025-03-21 12:56:17.067393-05', '2025-03-21 12:56:17.067393-05');
+INSERT INTO public.permissions VALUES ('auth', 'ManageSelf', 8, '2025-03-21 12:56:17.067537-05', '2025-03-21 12:56:17.067537-05');
+INSERT INTO public.permissions VALUES ('auth', 'ManageUsers', 9, '2025-03-21 12:56:17.067704-05', '2025-03-21 12:56:17.067704-05');
+INSERT INTO public.permissions VALUES ('clients', 'Manage', 10, '2025-03-21 12:56:17.067872-05', '2025-03-21 12:56:17.067872-05');
+INSERT INTO public.permissions VALUES ('clients', 'Tasking', 11, '2025-03-21 12:56:17.068033-05', '2025-03-21 12:56:17.068033-05');
+INSERT INTO public.permissions VALUES ('collection', 'ManageJobs', 12, '2025-03-21 12:56:17.068194-05', '2025-03-21 12:56:17.068194-05');
+INSERT INTO public.permissions VALUES ('graphdb', 'Read', 13, '2025-03-21 12:56:17.068354-05', '2025-03-21 12:56:17.068354-05');
+INSERT INTO public.permissions VALUES ('graphdb', 'Write', 14, '2025-03-21 12:56:17.068512-05', '2025-03-21 12:56:17.068512-05');
+INSERT INTO public.permissions VALUES ('saved_queries', 'Read', 15, '2025-03-21 12:58:43.040108-05', '2025-03-21 12:58:43.040108-05');
+INSERT INTO public.permissions VALUES ('saved_queries', 'Write', 16, '2025-03-21 12:58:43.040475-05', '2025-03-21 12:58:43.040475-05');
+INSERT INTO public.permissions VALUES ('clients', 'Read', 17, '2025-03-21 12:58:43.040655-05', '2025-03-21 12:58:43.040655-05');
+INSERT INTO public.permissions VALUES ('db', 'Wipe', 18, '2025-03-21 12:58:43.04082-05', '2025-03-21 12:58:43.04082-05');
+INSERT INTO public.permissions VALUES ('graphdb', 'Mutate', 19, '2025-03-21 12:58:43.041001-05', '2025-03-21 12:58:43.041001-05');
 
 
 --
 -- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-INSERT INTO public.roles VALUES ('Administrator', 'Can manage users, clients, and application configuration', 1, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.roles VALUES ('User', 'Can read data, modify asset group memberships', 2, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.roles VALUES ('Read-Only', 'Used for integrations', 3, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.roles VALUES ('Upload-Only', 'Used for data collection clients, can post data but cannot read data', 4, '2025-03-21 15:44:04.91441+00', '2025-03-21 15:44:04.91441+00');
-INSERT INTO public.roles VALUES ('Power User', 'Can upload data, manage clients, and perform any action a User can', 5, '2025-03-21 15:44:05.120275+00', '2025-03-21 15:44:05.120275+00');
+INSERT INTO public.roles VALUES ('Administrator', 'Can manage users, clients, and application configuration', 1, '2025-03-21 12:56:17.0687-05', '2025-03-21 12:56:17.0687-05');
+INSERT INTO public.roles VALUES ('User', 'Can read data, modify asset group memberships', 2, '2025-03-21 12:56:17.069018-05', '2025-03-21 12:56:17.069018-05');
+INSERT INTO public.roles VALUES ('Read-Only', 'Used for integrations', 3, '2025-03-21 12:56:17.06919-05', '2025-03-21 12:56:17.06919-05');
+INSERT INTO public.roles VALUES ('Upload-Only', 'Used for data collection clients, can post data but cannot read data', 4, '2025-03-21 12:56:17.069362-05', '2025-03-21 12:56:17.069362-05');
+INSERT INTO public.roles VALUES ('Power User', 'Can upload data, manage clients, and perform any action a User can', 5, '2025-03-21 12:58:43.041242-05', '2025-03-21 12:58:43.041242-05');
 
 
 --
@@ -1461,7 +1416,6 @@ INSERT INTO public.roles_permissions VALUES (5, 13);
 INSERT INTO public.roles_permissions VALUES (5, 15);
 INSERT INTO public.roles_permissions VALUES (5, 16);
 INSERT INTO public.roles_permissions VALUES (5, 19);
-INSERT INTO public.roles_permissions VALUES (3, 15);
 
 
 --
@@ -1492,14 +1446,12 @@ INSERT INTO public.roles_permissions VALUES (3, 15);
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-INSERT INTO public.users VALUES (NULL, 'BloodHound', 'Dev', 'spam@example.com', 'admin', '0001-01-01 00:00:00+00', false, false, '27426d61-2956-4db6-b2ee-6495906193ca', '2025-03-21 15:44:05.340337+00', '2025-03-21 15:44:05.340337+00');
 
 
 --
 -- Data for Name: users_roles; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
-INSERT INTO public.users_roles VALUES ('27426d61-2956-4db6-b2ee-6495906193ca', 1);
 
 
 --
@@ -1527,7 +1479,7 @@ SELECT pg_catalog.setval('public.asset_group_collection_entries_id_seq', 1, fals
 -- Name: asset_group_collections_id_seq; Type: SEQUENCE SET; Schema: public; Owner: bloodhound
 --
 
-SELECT pg_catalog.setval('public.asset_group_collections_id_seq', 2, true);
+SELECT pg_catalog.setval('public.asset_group_collections_id_seq', 1, false);
 
 
 --
@@ -1555,7 +1507,7 @@ SELECT pg_catalog.setval('public.audit_logs_id_seq', 1, false);
 -- Name: auth_secrets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: bloodhound
 --
 
-SELECT pg_catalog.setval('public.auth_secrets_id_seq', 1, true);
+SELECT pg_catalog.setval('public.auth_secrets_id_seq', 1, false);
 
 
 --
@@ -1583,7 +1535,7 @@ SELECT pg_catalog.setval('public.domain_collection_results_id_seq', 1, false);
 -- Name: feature_flags_id_seq; Type: SEQUENCE SET; Schema: public; Owner: bloodhound
 --
 
-SELECT pg_catalog.setval('public.feature_flags_id_seq', 14, true);
+SELECT pg_catalog.setval('public.feature_flags_id_seq', 13, true);
 
 
 --
@@ -1601,17 +1553,10 @@ SELECT pg_catalog.setval('public.ingest_tasks_id_seq', 1, false);
 
 
 --
--- Name: migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: bloodhound
---
-
-SELECT pg_catalog.setval('public.migrations_id_seq', 17, true);
-
-
---
 -- Name: parameters_id_seq; Type: SEQUENCE SET; Schema: public; Owner: bloodhound
 --
 
-SELECT pg_catalog.setval('public.parameters_id_seq', 5, true);
+SELECT pg_catalog.setval('public.parameters_id_seq', 2, true);
 
 
 --
@@ -1784,14 +1729,6 @@ ALTER TABLE ONLY public.azure_data_quality_stats
 
 
 --
--- Name: database_switch database_switch_pkey; Type: CONSTRAINT; Schema: public; Owner: bloodhound
---
-
-ALTER TABLE ONLY public.database_switch
-    ADD CONSTRAINT database_switch_pkey PRIMARY KEY (driver);
-
-
---
 -- Name: datapipe_status datapipe_status_pkey; Type: CONSTRAINT; Schema: public; Owner: bloodhound
 --
 
@@ -1845,14 +1782,6 @@ ALTER TABLE ONLY public.ingest_tasks
 
 ALTER TABLE ONLY public.installations
     ADD CONSTRAINT installations_pkey PRIMARY KEY (id);
-
-
---
--- Name: migrations migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: bloodhound
---
-
-ALTER TABLE ONLY public.migrations
-    ADD CONSTRAINT migrations_pkey PRIMARY KEY (id);
 
 
 --
