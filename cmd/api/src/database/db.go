@@ -163,6 +163,11 @@ type Database interface {
 
 	// Datapipe Status
 	DatapipeStatusData
+
+	// Asset Group Tags
+	AssetGroupHistoryData
+	AssetGroupTagData
+	AssetGroupTagSelectorData
 }
 
 type BloodhoundDB struct {
