@@ -1875,10 +1875,11 @@ func TestManagementResource_DeleteUser_BadUserID(t *testing.T) {
 }
 
 func TestManagementResource_DeleteUser_UserNotFound(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
+	var (
+		mockCtrl = gomock.NewController(t)
+		endpoint = "/api/v2/bloodhound-users"
+	)
 	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/bloodhound-users"
 
 	userID, err := uuid.NewV4()
 	require.Nil(t, err)
@@ -1898,6 +1899,82 @@ func TestManagementResource_DeleteUser_UserNotFound(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	require.Equal(t, rr.Code, http.StatusNotFound)
+}
+
+func TestManagementResource_DeleteUser_UserBhCtxNotFound(t *testing.T) {
+	var (
+		mockCtrl = gomock.NewController(t)
+		endpoint = "/api/v2/bloodhound-users"
+	)
+
+	defer mockCtrl.Finish()
+
+	userID, err := uuid.NewV4()
+	require.NoError(t, err)
+
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetUser(gomock.Any(), userID).Return(model.User{
+		Unique: model.Unique{
+			ID: userID,
+		},
+	}, nil)
+
+	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+
+	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
+	require.Nil(t, err)
+
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID.String()})
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteUser)
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, http.StatusBadRequest, rr.Code)
+	require.Contains(t, rr.Body.String(), "No associated user found")
+}
+
+func TestManagementResource_DeleteUser_UserCannotSelfDelete(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		adminRole = model.Role{
+			Serial: model.Serial{
+				ID: 1,
+			},
+		}
+	)
+	endpoint := "/api/v2/bloodhound-users"
+
+	defer mockCtrl.Finish()
+
+	userID, err := uuid.NewV4()
+	require.NoError(t, err)
+
+	adminUser := model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword"), Unique: model.Unique{ID: userID}, Roles: model.Roles{adminRole}}
+
+	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetUser(gomock.Any(), userID).Return(model.User{
+		Unique: model.Unique{
+			ID: userID,
+		},
+	}, nil)
+
+	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx.AuthCtx.Owner = adminUser
+
+	req, err := http.NewRequestWithContext(bhCtx.ConstructGoContext(), "DELETE", endpoint, nil)
+	require.Nil(t, err)
+
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID.String()})
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(resources.DeleteUser)
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, http.StatusBadRequest, rr.Code)
+	require.Contains(t, rr.Body.String(), "User cannot delete themselves")
 }
 
 func TestManagementResource_DeleteUser_GetUserError(t *testing.T) {
