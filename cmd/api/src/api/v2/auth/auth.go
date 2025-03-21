@@ -525,7 +525,7 @@ func (s ManagementResource) DeleteUser(response http.ResponseWriter, request *ht
 		api.HandleDatabaseError(request, response, err)
 	} else if currentUser, found := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !found {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found with request", request), response)
-	} else if userID.String() == currentUser.ID.String() {
+	} else if userID == currentUser.ID {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "User cannot delete themselves", request), response)
 	} else if err := s.db.DeleteUser(request.Context(), user); err != nil {
 		api.HandleDatabaseError(request, response, err)
