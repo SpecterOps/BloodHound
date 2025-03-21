@@ -38,6 +38,7 @@ type AssetGroupTagData interface {
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
 type AssetGroupTagSelectorData interface {
 	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
+	GetAssetGroupTagSelectorBySelectorId(ctx context.Context, assetGroupTagSelectorId int) (model.AssetGroupTagSelector, error)
 }
 
 func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
@@ -80,6 +81,37 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGro
 				return err
 			}
 		}
+		return nil
+	}); err != nil {
+		return model.AssetGroupTagSelector{}, err
+	}
+
+	return selector, nil
+}
+
+func (s *BloodhoundDB) GetAssetGroupTagSelectorBySelectorId(ctx context.Context, assetGroupTagSelectorId int) (model.AssetGroupTagSelector, error) {
+	var (
+		selector = model.AssetGroupTagSelector{
+			ID: assetGroupTagSelectorId,
+		}
+
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionGetAssetGroupTagSelector,
+			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		if result := tx.Raw(fmt.Sprintf(`
+			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify 
+			FROM %s WHERE id = ?`,
+			selector.TableName()),
+			assetGroupTagSelectorId).Scan(&selector); result.Error != nil {
+			return CheckError(result)
+		} else if result := tx.Raw(fmt.Sprintf("SELECT selector_id, type, value FROM %s WHERE selector_id = ?", (model.SelectorSeed{}).TableName()), selector.ID).Find(&selector.Seeds); result.Error != nil {
+			return CheckError(result)
+		}
+		//TODO: do we need to CreateAssetGroupHistoryRecord() here or is that only for writes to the DB?
 		return nil
 	}); err != nil {
 		return model.AssetGroupTagSelector{}, err

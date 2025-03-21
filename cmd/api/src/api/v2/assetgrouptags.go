@@ -34,7 +34,8 @@ import (
 )
 
 const (
-	ErrInvalidAssetGroupTagId = "invalid asset group tag id specified in url"
+	ErrInvalidAssetGroupTagId         = "invalid asset group tag id specified in url"
+	ErrInvalidAssetGroupTagSelectorId = "invalid asset group tag selector id specified in url"
 )
 
 // Checks that the selector seeds are valid.
@@ -83,5 +84,40 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
+	}
+}
+
+func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
+	var (
+		selUpdateReq  model.AssetGroupTagSelector
+		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
+	)
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Update")()
+
+	if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
+	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selectorId, err := strconv.Atoi(rawSelectorID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagSelectorId, request), response)
+	} else if err := api.ReadJSONRequestPayloadLimited(&selUpdateReq, request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if errs := validation.Validate(selUpdateReq); len(errs) > 0 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
+	} else if _, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	} else if err := validateSelectorSeeds(s.GraphQuery, selUpdateReq.Seeds); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagSelectorId, request), response)
+	} else {
+		// PATCH requests may not contain every field, only conditionally update if fields exist
+		if selUpdateReq.Name != "" {
+			selector.Name = selUpdateReq.Name
+			fmt.Printf("Got to the PATCH updating the Name field: %s\n", selector.Name)
+		}
+
 	}
 }

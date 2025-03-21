@@ -67,6 +67,25 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, history, 1)
 	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, history[0].Action)
+
+	// test the read by ID function
+	readBackSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)
+	require.NoError(t, err)
+	require.Equal(t, 1, readBackSelector.AssetGroupTagId)
+	require.False(t, readBackSelector.CreatedAt.IsZero())
+	require.Equal(t, testActor, readBackSelector.CreatedBy)
+	require.False(t, readBackSelector.UpdatedAt.IsZero())
+	require.Equal(t, testActor, readBackSelector.UpdatedBy)
+	require.Empty(t, readBackSelector.DisabledAt)
+	require.Empty(t, readBackSelector.DisabledBy)
+	require.Equal(t, testName, readBackSelector.Name)
+	require.Equal(t, testDescription, readBackSelector.Description)
+	require.Equal(t, autoCertify, readBackSelector.AutoCertify)
+	require.Equal(t, isDefault, readBackSelector.IsDefault)
+	for idx, seed := range testSeeds {
+		require.Equal(t, seed.Type, readBackSelector.Seeds[idx].Type)
+		require.Equal(t, seed.Value, readBackSelector.Seeds[idx].Value)
+	}
 }
 
 func TestDatabase_CreateAssetGroupTag(t *testing.T) {
