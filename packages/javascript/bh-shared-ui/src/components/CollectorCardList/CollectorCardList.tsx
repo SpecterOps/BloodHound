@@ -77,7 +77,7 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors, noLab
                     timestamp={latestStable.timestamp}
                     label={noLabels ? undefined : 'latest'}
                     isPrerelease={latestStable.isPrerelease}
-                    downloadArtifacts={latestStable.downloadArtifacts.map(artifact => {return {fileName: `${COLLECTOR_SHORT_LABEL[latestStable.collectorType]} ${latestStable.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
+                    downloadArtifacts={latestStable.downloadArtifacts.map(artifact => {return {displayName: `${COLLECTOR_SHORT_LABEL[latestStable.collectorType]} ${latestStable.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
                 />
                 {latestPrerelease && (
                     <CollectorCard
@@ -87,7 +87,7 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors, noLab
                         timestamp={latestPrerelease.timestamp}
                         label={noLabels ? undefined : latestPrerelease.label}
                         isPrerelease={latestPrerelease.isPrerelease}
-                        downloadArtifacts={latestPrerelease.downloadArtifacts.map(artifact => {return {fileName: `${COLLECTOR_SHORT_LABEL[latestPrerelease.collectorType]} ${latestPrerelease.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
+                        downloadArtifacts={latestPrerelease.downloadArtifacts.map(artifact => {return {displayName: `${COLLECTOR_SHORT_LABEL[latestPrerelease.collectorType]} ${latestPrerelease.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
                     />
                 )}
             </Box>
@@ -120,8 +120,7 @@ const OlderVersionsList: React.FC<CollectorCardListProps> = ({ collectors, noLab
                                 timestamp={collector.timestamp}
                                 label={noLabels ? undefined : collector.label}
                                 isPrerelease={collector.isPrerelease}
-                                downloadArtifacts={collector.downloadArtifacts.map(artifact => {return {fileName: `${COLLECTOR_SHORT_LABEL[collector.collectorType]} ${collector.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
-                                needsUnderlineOffset
+                                downloadArtifacts={collector.downloadArtifacts.map(artifact => {return {displayName: `${COLLECTOR_SHORT_LABEL[collector.collectorType]} ${collector.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
                             />
                         ))}
                     </Box>

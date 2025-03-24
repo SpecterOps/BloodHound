@@ -29,7 +29,7 @@ export const COLLECTOR_TYPE_LABEL: { [key in CollectorType]: string } = {
 };
 
 interface CollectorDownloadFile {
-    fileName: string;
+    displayName: string;
     os: string;
     arch: string;
     onClickDownload: () => void;
@@ -53,7 +53,6 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
     timestamp = undefined,
     label = undefined,
     isPrerelease = false,
-    needsUnderlineOffset = false,
     ...rest
 }) => {
     const date = timestamp ? new Date(timestamp) : null;
@@ -71,31 +70,33 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
                 </Box>
             </CardHeader>
             <CardContent>
-                <ul>
-                    {downloadArtifacts.map((collector) => (
-                        <li key={collector.fileName}>
-                            <Box display='flex' flexDirection='row'>
-                                <Link
-                                    component='button'
-                                    variant='body1'
-                                    onClick={collector.onClickDownload}
-                                    title={`Download ${COLLECTOR_TYPE_LABEL[collectorType]} ${version} ${collector.os} ${collector.arch}`.trim()}
-                                    textOverflow='ellipsis'
-                                    noWrap>
-                                    {collector.fileName}
-                                </Link>
-                                <DashedFlexConnector offset={needsUnderlineOffset} />
-                                <Link
-                                    component='button'
-                                    variant='body1'
-                                    onClick={collector.onClickDownloadChecksum}
-                                    title={`Download ${COLLECTOR_TYPE_LABEL[collectorType]} ${version} ${collector.os} ${collector.arch} Checksum`.trim()}>
-                                    (checksum)
-                                </Link>
-                            </Box>
-                        </li>
-                    ))}
-                </ul>
+                <Typography variant='body1'>
+                    <ul>
+                        {downloadArtifacts.map((collector) => (
+                            <li key={collector.displayName}>
+                                <Box display='flex' flexDirection='row'>
+                                    <Link
+                                        component='button'
+                                        variant='body1'
+                                        onClick={collector.onClickDownload}
+                                        title={`Download ${COLLECTOR_TYPE_LABEL[collectorType]} ${version} ${collector.os} ${collector.arch}`.trim()}
+                                        textOverflow='ellipsis'
+                                        noWrap>
+                                        {collector.displayName}
+                                    </Link>
+                                    <DashedFlexConnector />
+                                    <Link
+                                        component='button'
+                                        variant='body1'
+                                        onClick={collector.onClickDownloadChecksum}
+                                        title={`Download ${COLLECTOR_TYPE_LABEL[collectorType]} ${version} ${collector.os} ${collector.arch} Checksum`.trim()}>
+                                        (checksum)
+                                    </Link>
+                                </Box>
+                            </li>
+                        ))}
+                    </ul>
+                </Typography>
             </CardContent>
         </Card>
     );
@@ -120,7 +121,7 @@ const CollectorLabel: React.FC<CollectorLabelProps> = ({ label, isPrerelease = f
 // Sometimes you just need a dashed line connecting two underlined text elements together
 // Sometimes you need that dashed line to be slightly offset
 const DashedFlexConnector: React.FC<{ offset?: boolean }> = ({ offset }) => {
-    return <div className={cn("flex-1 min-w-0 decoration-dashed decoration-neutral-light-5 underline whitespace-nowrap text-clip overflow-hidden pointer-events-none select-none aria-hidden", { 'underline-offset-4': offset })}>{"\u00A0".repeat(500)}</div>;
+    return <div className={cn("flex-1 min-w-0 decoration-dashed decoration-neutral-light-5 underline whitespace-nowrap text-clip overflow-hidden pointer-events-none select-none aria-hidden")}>{"\u00A0".repeat(500)}</div>;
 }
 
 export default CollectorCard;
