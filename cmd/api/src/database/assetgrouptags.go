@@ -38,7 +38,7 @@ type AssetGroupTagData interface {
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
 type AssetGroupTagSelectorData interface {
 	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
-	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupLabelID int, sqlFilter model.SQLFilter) ([]model.AssetGroupTagSelector, error)
+	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupLabelID int) ([]model.AssetGroupTagSelector, error)
 }
 
 func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
@@ -143,23 +143,14 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 	return tag, nil
 }
 
-func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, sqlFilter model.SQLFilter) ([]model.AssetGroupTagSelector, error) {
+func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int) ([]model.AssetGroupTagSelector, error) {
 	var selectors []model.AssetGroupTagSelector
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE asset_group_tag_id = ?", model.AssetGroupTagSelector{}.TableName()), assetGroupTagId).Find(&selectors); result.Error != nil {
 		return []model.AssetGroupTagSelector{}, CheckError(result)
 	} else {
 		for index, selector := range selectors {
-			if sqlFilter.SQLString != "" {
-				result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, type, value FROM %s WHERE selector_id = ? AND type = ?", model.SelectorSeed{}.TableName()), selector.ID, sqlFilter.Params).Scan(&selectors[index].Seeds)
-				if result.Error != nil {
-					return []model.AssetGroupTagSelector{}, CheckError(result)
-				} else {
-					result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, type, value FROM %s WHERE selector_id = ?", model.SelectorSeed{}.TableName()), selector.ID).Scan(&selectors[index].Seeds)
-					if result.Error != nil {
-						return []model.AssetGroupTagSelector{}, CheckError(result)
-
-					}
-				}
+			if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, type, value FROM %s WHERE selector_id = ?", model.SelectorSeed{}.TableName()), selector.ID).Scan(&selectors[index].Seeds); result.Error != nil {
+				return []model.AssetGroupTagSelector{}, CheckError(result)
 			}
 		}
 	}

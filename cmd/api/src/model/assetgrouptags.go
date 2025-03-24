@@ -131,6 +131,8 @@ func (s AssetGroupTagSelector) AuditData() AuditData {
 
 func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
+		// type is not on AssetGroupTagSelector but nested in SelectorSeed
+		// this is needed to get an AssetGroupTagSelector by the specific type
 		"type":        {Equals, NotEquals},
 		"disabled_at": {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"created_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
