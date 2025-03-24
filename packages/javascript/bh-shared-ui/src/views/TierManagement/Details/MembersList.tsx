@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
+import { SelectorNode } from 'js-client-library';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
@@ -113,6 +114,16 @@ interface MembersListProps {
     itemCount: number;
 }
 
+/**
+ * @description This component is used to render the Objects/Members list for a given Tier, Label, or Selector. It is specifically built with both a fixed render window and a scroll loader as it is expected that the number of entities that this list may display would be large enough that trying to load all of these DOM nodes at once would cause the page to be sluggish and result in a poor user experience.
+ * @param props
+ * @param {selectedTier} props.selectedTier The currently selected Tier/Label. This is used to fill in the id for the path parameter of the endpoint that is used to fetch the list of members for the given selection
+ * @param {selectedSelector} props.selectedSelector The currently selected Selector. This is used to fill in the id for the path parameter of the endpoint that is used to fetch the list of members for the given selection. Unlike a selectedTier, this param can be null if there is no Selector selected.
+ * @param {selected} props.selected The currently selected Object/Member. This selection can be null.
+ * @param {onClick} props.onClick The click handler for when a particular member is selected. This is primarily used for setting the selected entity in the parent component.
+ * @param {itemCount} props.itemCount The total item count for the list that is to be rendered. This informs the `InfiniteLoader` component as to when the list will end since the data is being fetched in pages as opposed to all at once.
+ * @returns The MembersList component for rendering in the Tier Management page.
+ */
 export const MembersList: React.FC<MembersListProps> = ({
     selectedTier,
     selectedSelector,
@@ -122,9 +133,9 @@ export const MembersList: React.FC<MembersListProps> = ({
 }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>();
     const [isFetching, setIsFetching] = useState(false);
-    const [items, setItems] = useState<any>({});
-    const infiniteLoaderRef = useRef<any>(null);
-    const listRef = useRef<any>(null);
+    const [items, setItems] = useState<Record<number, SelectorNode>>({});
+    const infiniteLoaderRef = useRef<InfiniteLoader | null>(null);
+    const listRef = useRef<FixedSizeList | null>(null);
     const previousSelector = usePreviousValue<number | null>(selectedSelector);
     const previousTier = usePreviousValue<number>(selectedTier);
 
@@ -161,11 +172,17 @@ export const MembersList: React.FC<MembersListProps> = ({
         [items, isFetching, selectedSelector, selectedTier]
     );
 
+    //  Because the endpoint that needs to be used to fetch the list of members is dynamic based on whether
+    // a selector is selected or not, this useEffect is used so that the cache of the `InfiniteLoader`
+    // component is reset which triggers calling the appropriate endpoint when a selected tier or selected
+    // selector changes as well as scrolling back to the top of the fixed size list because the members
+    // will be different. Without this useEffect, the list of objects/members does not clear when new data
+    // is fetched.
     useEffect(() => {
         if (previousSelector !== selectedSelector || previousTier !== selectedTier) {
             if (listRef?.current?.scrollTo) listRef.current.scrollTo(0);
-            if (infiniteLoaderRef?.current?.resetLoadMoreItemsCache)
-                infiniteLoaderRef?.current?.resetLoadMoreItemsCache(true);
+            if (infiniteLoaderRef?.current?.resetloadMoreItemsCache)
+                infiniteLoaderRef?.current?.resetloadMoreItemsCache(true);
             loadMoreItems(0, 128);
         }
     }, [selectedSelector, selectedTier, loadMoreItems, previousSelector, previousTier]);

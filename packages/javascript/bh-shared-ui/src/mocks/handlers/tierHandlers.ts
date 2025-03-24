@@ -18,6 +18,23 @@ import { DefaultBodyType, MockedRequest, rest, RestHandler } from 'msw';
 import * as tierMocks from '../factories/tierManagement';
 
 const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
+    rest.get('/api/v2/features', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        id: 17,
+                        key: 'tier_management_engine',
+                        name: 'Tier Management Engine',
+                        description: 'Updates the managed assets selector engine and the asset management page.',
+                        enabled: true,
+                        user_updatable: true,
+                    },
+                ],
+            })
+        );
+    }),
+
     // GET Labels
     rest.get('/api/v2/asset-group-labels', async (_req, res, ctx) => {
         return res(ctx.json({ data: { asset_group_labels: tierMocks.createAssetGroupLabels() } }));

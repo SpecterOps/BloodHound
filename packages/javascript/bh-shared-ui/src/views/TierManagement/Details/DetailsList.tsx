@@ -30,29 +30,27 @@ type DetailsListItem = {
 };
 
 type DetailsListProps = {
-    title: string;
+    title: 'Selectors' | 'Tiers' | 'Labels';
     listQuery: UseQueryResult<DetailsListItem[], unknown>;
     selected: number | null;
     onSelect: (id: number) => void;
-    sortable?: boolean | undefined;
 };
 
 /**
  * @description This component is meant to display the lists for either Tiers, Labels, or Selectors but not the Members list since that is a paginated list that loads more data as a user scrolls.
  * @param {object} props
- * @param {title} props.title
- * @param {UseQueryResult} props.listQuery
- * @param {selected} props.selected
- * @param {(id:number) => void} props.onSelect
- * @param {boolean | undefined} props.sortable
- * @returns
+ * @param {title} props.title Limited to 'Selectors' | 'Tiers' | 'Labels' as that is what this component is built for
+ * @param {UseQueryResult} props.listQuery The endpoint call result wrapper from react query that allows us to hook into different states that the fetched data could be in
+ * @param {selected} props.selected The id of the particular entity that is selected for the list. It is used for selected item rendering
+ * @param {(id:number) => void} props.onSelectd The click handler that should be called when an item from this list is selected. This is primarily being used to set the selected id state in the parent Details component
+ * @returns The component that dsiplays a list of entities for the new tier management page
  */
-export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect, sortable }) => {
+export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>();
 
     return (
         <div data-testid={`tier-management_details_${title.toLowerCase()}-list`} className='h-full overflow-y-hidden'>
-            {sortable ? (
+            {title !== 'Tiers' ? (
                 <SortableHeader
                     title={title}
                     onSort={() => {

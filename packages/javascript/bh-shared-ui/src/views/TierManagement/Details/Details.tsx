@@ -205,7 +205,6 @@ const Details: FC = () => {
 
                                 setSelectedObject(null);
                             }}
-                            sortable
                         />
                     </div>
                     <div className='min-h-96 grow-0 basis-1/3'>
