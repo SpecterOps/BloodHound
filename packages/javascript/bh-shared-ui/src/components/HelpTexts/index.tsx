@@ -108,6 +108,7 @@ import NTAuthStoreFor from './NTAuthStoreFor/NTAuthStoreFor';
 import OIDGroupLink from './OIDGroupLink/OIDGroupLink';
 import Owns from './Owns/Owns';
 import OwnsLimitedRights from './OwnsLimitedRights/OwnsLimitedRights';
+import OwnsRaw from './OwnsRaw/OwnsRaw';
 import PublishedTo from './PublishedTo/PublishedTo';
 import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
 import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
@@ -123,6 +124,7 @@ import WriteDacl from './WriteDacl/WriteDacl';
 import WriteGPLink from './WriteGPLink/WriteGPLink';
 import WriteOwner from './WriteOwner/WriteOwner';
 import WriteOwnerLimitedRights from './WriteOwnerLimitedRights/WriteOwnerLimitedRights';
+import WriteOwnerRaw from './WriteOwnerRaw/WriteOwnerRaw';
 import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
 import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
 import WriteSPN from './WriteSPN/WriteSPN';
@@ -148,9 +150,11 @@ const EdgeInfoComponents = {
     GenericWrite: GenericWrite,
     Owns: Owns,
     OwnsLimitedRights: OwnsLimitedRights,
+    OwnsRaw: OwnsRaw,
     WriteDacl: WriteDacl,
     WriteOwner: WriteOwner,
     WriteOwnerLimitedRights: WriteOwnerLimitedRights,
+    WriteOwnerRaw: WriteOwnerRaw,
     CanRDP: CanRDP,
     ExecuteDCOM: ExecuteDCOM,
     AllowedToDelegate: AllowedToDelegate,
