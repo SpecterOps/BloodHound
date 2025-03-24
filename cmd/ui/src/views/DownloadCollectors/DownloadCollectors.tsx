@@ -110,7 +110,7 @@ const DownloadCollectors = () => {
                     ) : (
                         <CollectorCardList
                                     noLabels
-                                    collectorType='sharphound' as const
+                                    collectorType='sharphound'
                                     collectors={sharpHoundCollectorsQuery.data?.data.versions.map((collector) => ({
                                         version: collector.version,
                                         downloadArtifacts: [
@@ -123,7 +123,7 @@ const DownloadCollectors = () => {
                                                     downloadCollectorChecksum('sharphound', collector.version),
                                             },
                                         ],
-                                    }))}
+                                    })) ?? []}
                                 />
                     )}
                 </Box>
@@ -147,7 +147,7 @@ const DownloadCollectors = () => {
                     ) : (
                         <CollectorCardList
                                     noLabels
-                                    collectorType='azurehound' as const
+                                    collectorType='azurehound'
                                     collectors={azureHoundCollectorsQuery.data?.data.versions.map((collector) => ({
                                         version: collector.version,
                                         downloadArtifacts: [
@@ -160,7 +160,7 @@ const DownloadCollectors = () => {
                                                     downloadCollectorChecksum('azurehound', collector.version),
                                             },
                                         ],
-                                    }))}
+                                    })) ?? []}
                                 />
                     )}
                 </Box>

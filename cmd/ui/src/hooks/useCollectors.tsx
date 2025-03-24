@@ -25,8 +25,8 @@ export const collectorKeys = {
     detail: (userId: number) => [...collectorKeys.all, userId] as const,
 };
 
-export const getCollectorsByType = (type: CommunityCollectorType, options?: RequestOptions): GetCollectorsResponse =>
-    apiClient.getCollectors(type, options).then((res: { data: GetCollectorsResponse }) => res.data);
+export const getCollectorsByType = async (type: CommunityCollectorType, options?: RequestOptions): Promise<GetCollectorsResponse> =>
+    apiClient.getCollectors(type, options).then((res) => res.data);
 
 export const useGetCollectorsByType = (type: CommunityCollectorType): UseQueryResult<GetCollectorsResponse> =>
     useQuery<GetCollectorsResponse>(collectorKeys.listByType(type), ({ signal }) => getCollectorsByType(type, { signal }));

@@ -265,7 +265,7 @@ export interface LoginResponse {
 }
 
 export type CollectorType = 'sharphound_enterprise' | 'sharphound' | 'azurehound';
-export type CommunityCollectorType = Exclude<'sharphound_enterprise', CollectorType>;
+export type CommunityCollectorType = Exclude<CollectorType, 'sharphound_enterprise'>;
 
 export interface GetCollectorsResponse {
     data: {

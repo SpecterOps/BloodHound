@@ -19,7 +19,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 import { CollectorType } from 'js-client-library';
 import { useState } from 'react';
 import { CaretDown, CaretUp } from '../AppIcon/Icons';
-import CollectorCard, { COLLECTOR_TYPE_LABEL, LabelType } from '../CollectorCard';
+import CollectorCard, { COLLECTOR_TYPE_LABEL } from '../CollectorCard';
 
 const COLLECTOR_SHORT_LABEL: { [key in CollectorType]: string } = {
     sharphound_enterprise: 'SHE',
@@ -38,7 +38,7 @@ interface CollectorCardProps {
     version: string;
     downloadArtifacts: CollectorDownloadFile[];
     timestamp?: number;
-    label?: LabelType;
+    label?: string;
     isPrerelease?: boolean;
 }
 
@@ -51,7 +51,7 @@ interface CollectorCardListProps {
 const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectorType, collectors, noLabels = false }) => {
     const theme = useTheme();
 
-    if (collectors?.length === 0) {
+    if (collectors.length === 0) {
         return (
             <p>
                 The download manifest cannot be retrieved for {COLLECTOR_TYPE_LABEL[collectorType]}. Please reload the
