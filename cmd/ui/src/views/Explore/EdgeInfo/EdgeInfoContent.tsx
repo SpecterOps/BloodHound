@@ -18,11 +18,13 @@ import { Box, Divider, Typography, useTheme } from '@mui/material';
 import {
     EdgeCompositionRelationships,
     EdgeInfoComponents,
+    EdgeInfoProps,
     EdgeInfoState,
     EdgeSections,
     SelectedEdge,
     apiClient,
     edgeSectionToggle,
+    searchbarActions,
     transformToFlatGraphResponse,
     useExploreParams,
     useFeatureFlag,
@@ -133,6 +135,18 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                             }
                         };
 
+                        const handleRelayTargetsItemClick: EdgeInfoProps['onNodeClick'] = (node) => {
+                            dispatch(
+                                searchbarActions.sourceNodeSelected({
+                                    objectid: node.objectId,
+                                    type: node.kind,
+                                    name: node.name,
+                                })
+                            );
+
+                            dispatch(searchbarActions.tabChanged('primary'));
+                        };
+
                         return (
                             <Fragment key={index}>
                                 <Box padding={1}>
@@ -152,6 +166,9 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                         targetType={targetNode.type}
                                         targetId={targetNode.objectId}
                                         haslaps={!!targetNodeProperties?.haslaps}
+                                        onNodeClick={
+                                            section[0] === 'relaytargets' ? handleRelayTargetsItemClick : undefined
+                                        }
                                     />
                                 </EdgeInfoCollapsibleSection>
                             </Fragment>

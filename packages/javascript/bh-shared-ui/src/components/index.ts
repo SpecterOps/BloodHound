@@ -65,6 +65,7 @@ export { default as DocumentationLinks } from './DocumentationLinks';
 export * from './DropdownSelector';
 export { default as DropdownSelector } from './DropdownSelector';
 
+export * from './HelpTexts/index';
 export { default as EdgeInfoComponents } from './HelpTexts/index';
 
 export * from './Enable2FADialog';
