@@ -39,6 +39,7 @@ type AssetGroupTagData interface {
 type AssetGroupTagSelectorData interface {
 	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
 	GetAssetGroupTagSelectorBySelectorId(ctx context.Context, assetGroupTagSelectorId int) (model.AssetGroupTagSelector, error)
+	UpdateAssetGroupTagSelector(ctx context.Context, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
 }
 
 func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
@@ -112,6 +113,40 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorBySelectorId(ctx context.Context,
 			return CheckError(result)
 		}
 		//TODO: do we need to CreateAssetGroupHistoryRecord() here or is that only for writes to the DB?
+		return nil
+	}); err != nil {
+		return model.AssetGroupTagSelector{}, err
+	}
+
+	return selector, nil
+}
+
+func (s *BloodhoundDB) UpdateAssetGroupTagSelector(ctx context.Context, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionCreateAssetGroupTagSelector,
+			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		if result := tx.Raw(fmt.Sprintf(`
+			UPDATE %s SET updated_at = NOW(), updated_by = ?, name = ?, description = ?, disabled_at = ?, disabled_by = ?, auto_certify = ?
+			WHERE id = ?`,
+			selector.TableName()),
+			selector.UpdatedBy, selector.Name, selector.Description, selector.DisabledAt, selector.DisabledBy, selector.AutoCertify); result.Error != nil {
+			return CheckError(result)
+		} else {
+			for _, seed := range selector.Seeds { // TODO: will there ever be multiple seeds on a single selector_id? Then how do we do this loop?
+				if result := tx.Exec(fmt.Sprintf("UPDATE %s SET type = ?, value = ? WHERE selector_id = ?", seed.TableName()), seed.Type, seed.Value, selector.ID); result.Error != nil {
+					return CheckError(result)
+				}
+			}
+			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, selector.UpdatedBy, selector.Name, model.AssetGroupHistoryActionUpdateSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {
+				return err
+			}
+		}
 		return nil
 	}); err != nil {
 		return model.AssetGroupTagSelector{}, err

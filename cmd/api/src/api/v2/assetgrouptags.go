@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/utils/validation"
@@ -100,12 +101,11 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if selectorId, err := strconv.Atoi(rawSelectorID); err != nil {
+		fmt.Println(mux.Vars(request))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagSelectorId, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&selUpdateReq, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if errs := validation.Validate(selUpdateReq); len(errs) > 0 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
-	} else if _, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+	} else if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if err := validateSelectorSeeds(s.GraphQuery, selUpdateReq.Seeds); err != nil {
@@ -113,11 +113,37 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagSelectorId, request), response)
 	} else {
-		// PATCH requests may not contain every field, only conditionally update if fields exist
+		// PATCH requests may not contain every field, only update if fields exist
 		if selUpdateReq.Name != "" {
 			selector.Name = selUpdateReq.Name
 			fmt.Printf("Got to the PATCH updating the Name field: %s\n", selector.Name)
 		}
 
+		if selUpdateReq.Description != "" {
+			selector.Description = selUpdateReq.Description
+		}
+
+		if selUpdateReq.DisabledAt.Valid {
+			if selUpdateReq.DisabledAt.IsZero() || selector.AllowDisable {
+				selector.DisabledAt = selUpdateReq.DisabledAt
+				if selUpdateReq.DisabledAt.IsZero() {
+					selector.DisabledBy = null.StringFrom(actor.ID.String())
+				} else {
+					selector.DisabledBy = null.String{}
+				}
+			}
+			//TODO: return a 400 error here
+		}
+
+		// TODO: how can we tell if the boolean values were really null or not, do we need to make this field a null.Bool?
+		//if selUpdateReq.AutoCertify != nil {
+		selector.AutoCertify = selUpdateReq.AutoCertify
+		//}
+
+		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), selector); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteBasicResponse(request.Context(), selector, http.StatusOK, response)
+		}
 	}
 }
