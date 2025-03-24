@@ -116,36 +116,38 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 				}
 			}
 		}
-	}
 
-	if rawAssetGroupTagID, hasAssetGroupTagID := mux.Vars(request)[api.URIPathVariableAssetGroupTagID]; !hasAssetGroupTagID {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrNoAssetGroupTagId, request), response)
-	} else if assetGroupTagID, err := strconv.Atoi(rawAssetGroupTagID); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupTagId, request), response)
-	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if selectors, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), assetGroupTagID); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if len(rawSelectorTypeString) != 0 {
-		for _, selType := range rawSelectorTypeString {
-			if selectorTypeInt, err := strconv.Atoi(selType); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupTagId, request), response)
-			} else if selectorTypeInt != 0 {
-				var typeSelectors []model.AssetGroupTagSelector
-				for _, selector := range selectors {
-					for _, seed := range selector.Seeds {
-						if seed.Type == model.SelectorTypeObjectId {
-							typeSelectors = append(typeSelectors, selector)
-						} else {
-							typeSelectors = append(typeSelectors, selector)
+		if rawAssetGroupTagID, hasAssetGroupTagID := mux.Vars(request)[api.URIPathVariableAssetGroupTagID]; !hasAssetGroupTagID {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrNoAssetGroupTagId, request), response)
+		} else if assetGroupTagID, err := strconv.Atoi(rawAssetGroupTagID); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupTagId, request), response)
+		} else if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if selectors, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), assetGroupTagID, sqlFilter); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if len(rawSelectorTypeString) != 0 {
+			for _, selType := range rawSelectorTypeString {
+				if selectorTypeInt, err := strconv.Atoi(selType); err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupTagId, request), response)
+				} else if selectorTypeInt != 0 {
+					var typeSelectors []model.AssetGroupTagSelector
+					for _, selector := range selectors {
+						for _, seed := range selector.Seeds {
+							if seed.Type == model.SelectorTypeObjectId {
+								typeSelectors = append(typeSelectors, selector)
+							} else {
+								typeSelectors = append(typeSelectors, selector)
+							}
 						}
 					}
+					api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: typeSelectors}, http.StatusOK, response)
 				}
-				api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: typeSelectors}, http.StatusOK, response)
 			}
-		}
 
-	} else {
-		api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: selectors}, http.StatusOK, response)
+		} else {
+			api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: selectors}, http.StatusOK, response)
+		}
 	}
 }

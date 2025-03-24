@@ -1005,6 +1005,21 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupTag(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTag), arg0, arg1)
 }
 
+// GetAssetGroupTagSelectorsByTagId mocks base method.
+func (m *MockDatabase) GetAssetGroupTagSelectorsByTagId(arg0 context.Context, arg1 int, arg2 model.SQLFilter) ([]model.AssetGroupTagSelector, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAssetGroupTagSelectorsByTagId", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]model.AssetGroupTagSelector)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAssetGroupTagSelectorsByTagId indicates an expected call of GetAssetGroupTagSelectorsByTagId.
+func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectorsByTagId(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTagSelectorsByTagId", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTagSelectorsByTagId), arg0, arg1, arg2)
+}
+
 // GetAuthSecret mocks base method.
 func (m *MockDatabase) GetAuthSecret(arg0 context.Context, arg1 int32) (model.AuthSecret, error) {
 	m.ctrl.T.Helper()
