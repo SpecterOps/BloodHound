@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { VirtualizedNodeListItem } from '../VirtualizedNodeList';
 import ADCSESC1 from './ADCSESC1/ADCSESC1';
 import ADCSESC10a from './ADCSESC10a/ADCSESC10a';
 import ADCSESC10b from './ADCSESC10b/ADCSESC10b';
@@ -138,6 +139,7 @@ export type EdgeInfoProps = {
     targetDBId?: number;
     targetName?: string;
     targetType?: string;
+    onNodeClick?: (selectedNode: VirtualizedNodeListItem) => void;
 };
 
 const EdgeInfoComponents = {
