@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List, ListItem, ListItemText, Paper, TextField, useTheme } from '@mui/material';
+import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants, useTheme } from '@mui/material';
 import { useCombobox } from 'downshift';
 import { SearchResult, getEmptyResultsText, getKeywordAndTypeValues, useSearch } from '../../hooks';
 import { SearchValue } from '../../store';
@@ -28,7 +28,16 @@ const ExploreSearchCombobox: React.FC<{
     handleNodeEdited: (edit: string) => any;
     handleNodeSelected: (selection: SearchValue) => any;
     disabled?: boolean;
-}> = ({ labelText, inputValue, selectedItem, handleNodeEdited, handleNodeSelected, disabled = false }) => {
+    variant?: TextFieldVariants;
+}> = ({
+    labelText,
+    inputValue,
+    selectedItem,
+    handleNodeEdited,
+    handleNodeSelected,
+    disabled = false,
+    variant = 'outlined',
+}) => {
     const theme = useTheme();
 
     const { keyword, type } = getKeywordAndTypeValues(inputValue);
@@ -62,7 +71,7 @@ const ExploreSearchCombobox: React.FC<{
         <div {...getComboboxProps()} style={{ position: 'relative' }}>
             <TextField
                 placeholder={labelText}
-                variant='outlined'
+                variant={variant}
                 size='small'
                 fullWidth
                 disabled={disabled}
