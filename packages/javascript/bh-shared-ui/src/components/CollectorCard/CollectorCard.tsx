@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, RiskBadge } from '@bloodhoundenterprise/doodleui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bloodhoundenterprise/doodleui';
 import { Box, Link, Typography } from '@mui/material';
-import React from 'react';
 import { CollectorType } from 'js-client-library';
+import React from 'react';
 import { cn } from '../../utils';
 
 export type LabelType = 'latest' | 'prerelease';
@@ -63,13 +63,15 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
                     <CardTitle>{`${version}`.trim().toUpperCase()}</CardTitle>
                     {isPrerelease && <Typography variant='caption'>(pre-release)</Typography>}
                     {label && <CollectorLabel label={label} isPrerelease={isPrerelease} />}
-                    {date && <CardDescription>
-                        {`${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`}
-                    </CardDescription>}
+                    {date && (
+                        <CardDescription>
+                            {`${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`}
+                        </CardDescription>
+                    )}
                 </Box>
             </CardHeader>
             <CardContent>
-                <Typography variant='body1'>
+                <Typography variant='body1' component='div'>
                     <ul>
                         {downloadArtifacts.map((collector) => (
                             <li key={collector.displayName}>
@@ -109,18 +111,27 @@ interface CollectorLabelProps {
 const CollectorLabel: React.FC<CollectorLabelProps> = ({ label, isPrerelease = false }) => {
     // RiskBadge isn't set up out the gate to accomodate dark mode
     // so we improvise
-    const color = isPrerelease ? 'rgba(243, 96, 54, 0.25)' : 'rgba(51, 49, 143, 0.15)';
-    const darkColor = isPrerelease ? 'dark:bg-[#02C577]' : 'dark:bg-[#33318F]';
-
     return (
-        <RiskBadge type='labeled' label={label} outlined={false} color={color} title={label} className={darkColor} />
+        <div
+            className={cn('w-auto rounded-full px-6 py-2 border-none text-center', {
+                'bg-[#F3603640] dark:bg-[#02C577]': isPrerelease,
+                'bg-[#33318F26] dark:bg-[#33318F]': !isPrerelease,
+            })}>
+            {label}
+        </div>
     );
 };
 
 // Sometimes you just need a dashed line connecting two underlined text elements together
-// Sometimes you need that dashed line to be slightly offset
-const DashedFlexConnector: React.FC<{ offset?: boolean }> = ({ offset }) => {
-    return <div className={cn("flex-1 min-w-0 decoration-dashed decoration-neutral-light-5 underline whitespace-nowrap text-clip overflow-hidden pointer-events-none select-none aria-hidden")}>{"\u00A0".repeat(500)}</div>;
-}
+const DashedFlexConnector: React.FC = () => {
+    return (
+        <div
+            className={cn(
+                'flex-1 min-w-0 decoration-dashed decoration-neutral-light-5 underline whitespace-nowrap text-clip overflow-hidden pointer-events-none select-none aria-hidden'
+            )}>
+            {'\u00A0'.repeat(500)}
+        </div>
+    );
+};
 
 export default CollectorCard;

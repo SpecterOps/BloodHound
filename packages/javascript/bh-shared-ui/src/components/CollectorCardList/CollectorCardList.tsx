@@ -16,10 +16,10 @@
 
 import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from '@bloodhoundenterprise/doodleui';
 import { Box, Typography, useTheme } from '@mui/material';
+import { CollectorType } from 'js-client-library';
 import { useState } from 'react';
 import { CaretDown, CaretUp } from '../AppIcon/Icons';
 import CollectorCard, { COLLECTOR_TYPE_LABEL, LabelType } from '../CollectorCard';
-import { CollectorType } from 'js-client-library';
 
 const COLLECTOR_SHORT_LABEL: { [key in CollectorType]: string } = {
     sharphound_enterprise: 'SHE',
@@ -35,7 +35,6 @@ interface CollectorDownloadFile {
 }
 
 interface CollectorCardProps {
-    collectorType: CollectorType;
     version: string;
     downloadArtifacts: CollectorDownloadFile[];
     timestamp?: number;
@@ -44,11 +43,12 @@ interface CollectorCardProps {
 }
 
 interface CollectorCardListProps {
+    collectorType: CollectorType;
     collectors: CollectorCardProps[];
     noLabels?: boolean;
 }
 
-const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors, noLabels = false }) => {
+const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectorType, collectors, noLabels = false }) => {
     const theme = useTheme();
 
     // Few enough collectors that this isn't worth memoizing
@@ -57,46 +57,58 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors, noLab
     const sortedCollectors = collectors.toSorted((a, b) =>
         b.version.toLowerCase().localeCompare(a.version.toLowerCase())
     );
-    const latestStable = sortedCollectors.filter((c) => !c.isPrerelease)[0];
-    const latestPrerelease = sortedCollectors.filter(
+    const latestStable = sortedCollectors.find((c) => !c.isPrerelease);
+    const latestPrerelease = sortedCollectors.find(
         // Is prerelease and version is greater than latest stable
-        (c) => c.isPrerelease && c.version.toLowerCase().localeCompare(latestStable.version.toLowerCase()) > 0
-    )[0];
+        (c) => c.isPrerelease && c.version.toLowerCase().localeCompare(latestStable?.version.toLowerCase() ?? '') > 0
+    );
     const olderVersions = sortedCollectors.filter(
         (c) => !c.isPrerelease && c !== latestStable && c !== latestPrerelease
     );
 
     return (
         <Box display='flex' flexDirection='column' gap={theme.spacing(2)}>
-            <Typography variant='h6'>{COLLECTOR_TYPE_LABEL[latestStable.collectorType]}</Typography>
+            <Typography variant='h6'>{COLLECTOR_TYPE_LABEL[collectorType]}</Typography>
             <Box display='flex' flexDirection='row' gap={theme.spacing(2)}>
-                <CollectorCard
-                    className='flex-1 min-w-0 bg-neutral-light-3 dark:bg-neutral-dark-5'
-                    collectorType={latestStable.collectorType}
-                    version={latestStable.version}
-                    timestamp={latestStable.timestamp}
-                    label={noLabels ? undefined : 'latest'}
-                    isPrerelease={latestStable.isPrerelease}
-                    downloadArtifacts={latestStable.downloadArtifacts.map(artifact => {return {displayName: `${COLLECTOR_SHORT_LABEL[latestStable.collectorType]} ${latestStable.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
-                />
+                {latestStable && (
+                    <CollectorCard
+                        className='flex-1 min-w-0 bg-neutral-light-3 dark:bg-neutral-dark-5'
+                        collectorType={collectorType}
+                        version={latestStable.version}
+                        timestamp={latestStable.timestamp}
+                        label={noLabels ? undefined : 'latest'}
+                        isPrerelease={latestStable.isPrerelease}
+                        downloadArtifacts={latestStable.downloadArtifacts.map((artifact) => {
+                            return {
+                                displayName: `${COLLECTOR_SHORT_LABEL[collectorType]} ${latestStable.version} ${artifact.os} ${artifact.arch}`,
+                                ...artifact,
+                            };
+                        })}
+                    />
+                )}
                 {latestPrerelease && (
                     <CollectorCard
                         className='flex-1 min-w-0'
-                        collectorType={latestPrerelease.collectorType}
+                        collectorType={collectorType}
                         version={latestPrerelease.version}
                         timestamp={latestPrerelease.timestamp}
                         label={noLabels ? undefined : latestPrerelease.label}
                         isPrerelease={latestPrerelease.isPrerelease}
-                        downloadArtifacts={latestPrerelease.downloadArtifacts.map(artifact => {return {displayName: `${COLLECTOR_SHORT_LABEL[latestPrerelease.collectorType]} ${latestPrerelease.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
+                        downloadArtifacts={latestPrerelease.downloadArtifacts.map((artifact) => {
+                            return {
+                                displayName: `${COLLECTOR_SHORT_LABEL[collectorType]} ${latestPrerelease.version} ${artifact.os} ${artifact.arch}`,
+                                ...artifact,
+                            };
+                        })}
                     />
                 )}
             </Box>
-            {olderVersions.length > 0 && <OlderVersionsList collectors={olderVersions} noLabels />}
+            {olderVersions.length > 0 && <OlderVersionsList collectorType={collectorType} collectors={olderVersions} noLabels />}
         </Box>
     );
 };
 
-const OlderVersionsList: React.FC<CollectorCardListProps> = ({ collectors, noLabels = false }) => {
+const OlderVersionsList: React.FC<CollectorCardListProps> = ({ collectorType, collectors, noLabels = false }) => {
     const theme = useTheme();
     const [expanded, setExpanded] = useState(false);
 
@@ -109,18 +121,23 @@ const OlderVersionsList: React.FC<CollectorCardListProps> = ({ collectors, noLab
                         Older Versions
                     </Box>
                 </AccordionHeader>
-                <AccordionContent className="p-0">
+                <AccordionContent className='p-0'>
                     <Box display='flex' flexDirection='column' gap={theme.spacing(2)}>
                         {collectors.map((collector) => (
                             <CollectorCard
                                 key={collector.version}
                                 className='flex-1 min-w-0'
-                                collectorType={collector.collectorType}
+                                collectorType={collectorType}
                                 version={collector.version}
                                 timestamp={collector.timestamp}
                                 label={noLabels ? undefined : collector.label}
                                 isPrerelease={collector.isPrerelease}
-                                downloadArtifacts={collector.downloadArtifacts.map(artifact => {return {displayName: `${COLLECTOR_SHORT_LABEL[collector.collectorType]} ${collector.version} ${artifact.os} ${artifact.arch}`, ...artifact}})}
+                                downloadArtifacts={collector.downloadArtifacts.map((artifact) => {
+                                    return {
+                                        displayName: `${COLLECTOR_SHORT_LABEL[collectorType]} ${collector.version} ${artifact.os} ${artifact.arch}`,
+                                        ...artifact,
+                                    };
+                                })}
                             />
                         ))}
                     </Box>

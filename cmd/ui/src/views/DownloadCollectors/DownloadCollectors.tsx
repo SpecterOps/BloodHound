@@ -110,8 +110,8 @@ const DownloadCollectors = () => {
                     ) : (
                         <CollectorCardList
                                     noLabels
-                                    collectors={sharpHoundCollectorsQuery.data!.data.versions.map((collector) => ({
-                                        collectorType: 'sharphound' as const,
+                                    collectorType='sharphound' as const
+                                    collectors={sharpHoundCollectorsQuery.data?.data.versions.map((collector) => ({
                                         version: collector.version,
                                         downloadArtifacts: [
                                             {
@@ -147,17 +147,17 @@ const DownloadCollectors = () => {
                     ) : (
                         <CollectorCardList
                                     noLabels
-                                    collectors={sharpHoundCollectorsQuery.data!.data.versions.map((collector) => ({
-                                        collectorType: 'sharphound' as const,
+                                    collectorType='azurehound' as const
+                                    collectors={azureHoundCollectorsQuery.data?.data.versions.map((collector) => ({
                                         version: collector.version,
                                         downloadArtifacts: [
                                             {
                                                 os: 'windows',
                                                 arch: 'x86',
                                                 onClickDownload: () =>
-                                                    downloadCollector('sharphound', collector.version),
+                                                    downloadCollector('azurehound', collector.version),
                                                 onClickDownloadChecksum: () =>
-                                                    downloadCollectorChecksum('sharphound', collector.version),
+                                                    downloadCollectorChecksum('azurehound', collector.version),
                                             },
                                         ],
                                     }))}
