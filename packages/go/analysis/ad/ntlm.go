@@ -36,21 +36,28 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 )
 
+type NTLMCache struct {
+	AuthenticatedUsersCache map[string]graph.ID
+	ProtectedUsersCache     map[string]cardinality.Duplex[uint64]
+	LdapCache               map[string]LDAPSigningCache
+	ComputerCache           map[string]cardinality.Duplex[uint64]
+}
+
 // PostNTLM is the initial function used to execute our NTLM analysis
 func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, adcsCache ADCSCache, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
+	// NTLM must be enabled through the feature flag
+	if !ntlmEnabled {
+		return &analysis.AtomicPostProcessingStats{}, nil
+	}
+
 	var (
 		adcsComputerCache       = make(map[string]cardinality.Duplex[uint64])
 		operation               = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
 		authenticatedUsersCache = make(map[string]graph.ID)
 		// compositionChannel      = make(chan analysis.CompositionInfo)
 		protectedUsersCache = make(map[string]cardinality.Duplex[uint64])
+		ntlmCache           = NTLMCache{}
 	)
-
-	// NTLM must be enabled through the feature flag
-	if !ntlmEnabled {
-		operation.Done()
-		return &operation.Stats, nil
-	}
 
 	// This is a POC on how to pipe composition info up through the operations
 	// go func() {
@@ -86,25 +93,22 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 		} else if ldapSigningCache, err := FetchLDAPSigningCache(ctx, db); err != nil {
 			return err
 		} else {
-			authenticatedUsersCache = innerAuthenticatedUsersCache
-			protectedUsersCache = innerProtectedUsersCache
+			ntlmCache.AuthenticatedUsersCache = innerAuthenticatedUsersCache
+			ntlmCache.LdapCache = ldapSigningCache
+			ntlmCache.ProtectedUsersCache = innerProtectedUsersCache
 
 			// Fetch all nodes where the type is Computer
 			return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 				for computer := range cursor.Chan() {
 					innerComputer := computer
 
-					domain, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
-
-					if err != nil {
+					if domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 						continue
-					} else if authenticatedUserGroupID, ok := authenticatedUsersCache[domain]; !ok {
+					} else if authenticatedUserGroupID, ok := authenticatedUsersCache[domainSid]; !ok {
 						continue
-					} else if protectedUsersForDomain, ok := protectedUsersCache[domain]; !ok {
+					} else if protectedUsersForDomain, ok := protectedUsersCache[domainSid]; !ok {
 						continue
-					} else if ldapSigningForDomain, ok := ldapSigningCache[domain]; !ok {
-						continue
-					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
+					} else if ldapSigningForDomain, ok := ldapSigningCache[domainSid]; !ok {
 						continue
 					} else if restrictOutboundNtlm, err := innerComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
 						slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", innerComputer.ID))
@@ -117,21 +121,25 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 							continue
 						}
 
-						if !restrictOutboundNtlm {
-							if _, ok := adcsComputerCache[domain]; !ok {
-								adcsComputerCache[domain] = cardinality.NewBitmap64()
-							}
-							adcsComputerCache[domain].Add(innerComputer.ID.Uint64())
+						if (protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel) || restrictOutboundNtlm {
+							continue
+						}
 
-							if err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-								return PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserGroupID, ldapSigningCache)
-							}); err != nil {
-								slog.WarnContext(ctx, fmt.Sprintf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToLDAP, err))
-								continue
-							}
+						if _, ok := adcsComputerCache[domainSid]; !ok {
+							adcsComputerCache[domainSid] = cardinality.NewBitmap64()
+						}
+						adcsComputerCache[domainSid].Add(innerComputer.ID.Uint64())
+
+						if err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+							return PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserGroupID, ldapSigningCache)
+						}); err != nil {
+							slog.WarnContext(ctx, fmt.Sprintf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToLDAP, err))
+							continue
 						}
 					}
 				}
+
+				ntlmCache.ComputerCache = adcsComputerCache
 
 				return cursor.Error()
 			})
@@ -462,6 +470,32 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 			//	NodeIDs:       nil,
 			// }
 		} else {
+			if firstDegreeComputers := firstDegreeAdmins.ContainingNodeKinds(ad.Computer); len(firstDegreeComputers) > 0 {
+				for _, fdComputer := range firstDegreeComputers {
+					if restricted, err := fdComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
+						if !errors.Is(err, graph.ErrPropertyNotFound) {
+							slog.Error(fmt.Sprintf("Error getting %s from computer %d", ad.RestrictOutboundNTLM.String(), computer.ID))
+						} else {
+							continue
+						}
+					} else if !restricted {
+						// compositionID := compositionCounter.Get()
+						outC <- analysis.CreatePostRelationshipJob{
+							FromID: authenticatedUserID,
+							ToID:   computer.ID,
+							Kind:   ad.CoerceAndRelayNTLMToSMB,
+							// RelProperties: map[string]any{common.CompositionID.String(): compositionID},
+						}
+						// This is an example of how you would use the composition counter
+						// compositionC <- analysis.CompositionInfo{
+						//	CompositionID: compositionID,
+						//	EdgeIDs:       nil,
+						//	NodeIDs:       nil,
+						// }
+					}
+				}
+			}
+
 			allAdminGroups := cardinality.NewBitmap64()
 			for group := range firstDegreeAdmins.ContainingNodeKinds(ad.Group) {
 				allAdminGroups.Or(expandedGroups.Cardinality(group.Uint64()))
