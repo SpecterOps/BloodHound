@@ -24,7 +24,6 @@ import {
     TableCell,
     TableRow,
 } from '@bloodhoundenterprise/doodleui';
-import { Box } from '@mui/material';
 import { FC, useCallback, useState } from 'react';
 import { SearchValue } from '../../store';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
@@ -45,36 +44,41 @@ const AssetGroupSelectorObjectSelect: FC<{
     );
 
     return (
-        <Box maxWidth='sm'>
+        <div className='max-w-2xl'>
             <Card className='mt-5'>
                 <CardHeader>
                     <CardTitle className='text-md'>Object Selector </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Box maxWidth='30%'>
+                    <div className='w-[12rem]'>
                         <ExploreSearchCombobox
                             labelText='Input Field'
                             inputValue={searchTerm}
                             selectedItem={null}
                             handleNodeEdited={setSearchTerm}
                             handleNodeSelected={handleSelectedNode}
+                            variant='standard'
                         />
-                    </Box>
+                    </div>
                     <Table className='mt-5'>
-                        <TableBody>
+                        <TableBody className='last:border-b-[1px] border-neutral-light-5 dark:border-netural-dark-5'>
                             {selectedNodes.map((node) => (
-                                <TableRow key={node.objectid} className='border-t-1'>
-                                    <TableCell>
+                                <TableRow
+                                    key={node.objectid}
+                                    className='border-y-[1px] border-neutral-light-5 dark:border-netural-dark-5 p-0'>
+                                    <TableCell className='text-center p-0 h-12'>
                                         <NodeIcon nodeType={node.type || ''} />
                                     </TableCell>
-                                    <TableCell>{node.name || node.objectid}</TableCell>
+                                    <TableCell className='p-0 h-12'>{node.name || node.objectid}</TableCell>
+                                    {/* TODO add member count  */}
+                                    {/* <TableCell className='p-0 h-12'>777 members</TableCell> */}
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </CardContent>
             </Card>
-        </Box>
+        </div>
     );
 };
 
