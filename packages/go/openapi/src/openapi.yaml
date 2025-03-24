@@ -322,6 +322,8 @@ paths:
     $ref: './paths/asset-isolation.asset-groups.id.members.counts.yaml'
 
   # graph
+  /api/v2/graphs/kinds:
+    $ref: './paths/graph.kinds.yaml'
   /api/v2/pathfinding:
     $ref: './paths/graph.pathfinding.yaml'
   /api/v2/graph-search:

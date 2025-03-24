@@ -153,3 +153,27 @@ func (s *driver) Run(ctx context.Context, query string, parameters map[string]an
 		return result.Error()
 	})
 }
+
+func (s *driver) FetchKinds(ctx context.Context) (graph.Kinds, error) {
+	var kinds graph.Kinds
+
+	if err := s.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if result := tx.Raw("CALL db.labels()", nil); result.Error() != nil {
+			return result.Error()
+		} else {
+			for result.Next() {
+				var kind string
+				if err := result.Scan(&kind); err != nil {
+					return err
+				} else {
+					kinds = append(kinds, graph.StringKind(kind))
+				}
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return kinds, nil
+}
