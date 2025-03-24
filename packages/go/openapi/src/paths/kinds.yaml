@@ -21,7 +21,7 @@ get:
   summary: Get kinds
   description: Gets kinds
   tags:
-    - Graph 
+    - Graph
     - Community
     - Enterprise
   responses:

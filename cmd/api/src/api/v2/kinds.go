@@ -40,5 +40,4 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 
 		api.WriteBasicResponse(request.Context(), ListKindsResponse{Kinds: kinds}, http.StatusOK, response)
 	}
-	return
 }
