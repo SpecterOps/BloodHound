@@ -51,7 +51,6 @@ export default {
         'react-window-infinite-loader',
         'react-window',
         'react',
-        'react-redux',
         'react/jsx-runtime',
         'luxon',
         'downshift',
