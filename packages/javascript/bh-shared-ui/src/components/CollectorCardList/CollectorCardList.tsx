@@ -19,7 +19,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 import { useState } from 'react';
 import { CaretDown, CaretUp } from '../AppIcon/Icons';
 import CollectorCard, { COLLECTOR_TYPE_LABEL, LabelType } from '../CollectorCard';
-import { CollectorType } from 'js-client-library/src/types';
+import { CollectorType } from 'js-client-library';
 
 const COLLECTOR_SHORT_LABEL: { [key in CollectorType]: string } = {
     sharphound_enterprise: 'SHE',

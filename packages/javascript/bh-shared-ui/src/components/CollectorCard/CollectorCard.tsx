@@ -17,7 +17,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, RiskBadge } from '@bloodhoundenterprise/doodleui';
 import { Box, Link, Typography } from '@mui/material';
 import React from 'react';
-import { CollectorType } from 'js-client-library/src/types';
+import { CollectorType } from 'js-client-library';
 import { cn } from '../../utils';
 
 export type LabelType = 'latest' | 'prerelease';
