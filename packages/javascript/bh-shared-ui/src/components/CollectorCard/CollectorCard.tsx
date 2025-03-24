@@ -43,7 +43,6 @@ interface CollectorCardProps extends React.HTMLAttributes<HTMLDivElement> {
     timestamp?: number;
     label?: LabelType;
     isPrerelease?: boolean;
-    needsUnderlineOffset?: boolean;
 }
 
 const CollectorCard: React.FC<CollectorCardProps> = ({
