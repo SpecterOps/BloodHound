@@ -109,7 +109,7 @@ const OlderVersionsList: React.FC<CollectorCardListProps> = ({ collectors, noLab
                         Older Versions
                     </Box>
                 </AccordionHeader>
-                <AccordionContent>
+                <AccordionContent className="p-0">
                     <Box display='flex' flexDirection='column' gap={theme.spacing(2)}>
                         {collectors.map((collector) => (
                             <CollectorCard

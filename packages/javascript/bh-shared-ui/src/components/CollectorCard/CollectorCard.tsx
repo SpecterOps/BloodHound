@@ -23,9 +23,9 @@ import { cn } from '../../utils';
 export type LabelType = 'latest' | 'prerelease';
 
 export const COLLECTOR_TYPE_LABEL: { [key in CollectorType]: string } = {
-    sharphound_enterprise: 'Sharphound Enterprise',
-    sharphound: 'Sharphound Community',
-    azurehound: 'Azurehound',
+    sharphound_enterprise: 'SharpHound Enterprise',
+    sharphound: 'SharpHound Community',
+    azurehound: 'AzureHound',
 };
 
 interface CollectorDownloadFile {
@@ -120,7 +120,7 @@ const CollectorLabel: React.FC<CollectorLabelProps> = ({ label, isPrerelease = f
 // Sometimes you just need a dashed line connecting two underlined text elements together
 // Sometimes you need that dashed line to be slightly offset
 const DashedFlexConnector: React.FC<{ offset?: boolean }> = ({ offset }) => {
-    return <div className={cn("flex-1 min-w-0 decoration-dashed decoration-neutral-light-5 underline whitespace-nowrap text-clip overflow-hidden pointer-events-none select-none aria-hidden:", { 'underline-offset-4': offset })}>{"\u00A0".repeat(500)}</div>;
+    return <div className={cn("flex-1 min-w-0 decoration-dashed decoration-neutral-light-5 underline whitespace-nowrap text-clip overflow-hidden pointer-events-none select-none aria-hidden", { 'underline-offset-4': offset })}>{"\u00A0".repeat(500)}</div>;
 }
 
 export default CollectorCard;

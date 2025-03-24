@@ -20,7 +20,7 @@ import fileDownload from 'js-file-download';
 import { useDispatch } from 'react-redux';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { useGetCollectorsByType } from 'src/hooks/useCollectors';
-import { CollectorType } from 'js-client-library/src/types';
+import { CollectorType } from 'js-client-library';
 
 const DownloadCollectors = () => {
     /* Hooks */
