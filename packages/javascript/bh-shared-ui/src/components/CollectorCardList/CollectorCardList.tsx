@@ -63,7 +63,7 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectorType, co
     // Few enough collectors that this isn't worth memoizing
     // And the only stateful changes that should cause rerender
     // are collectors and theme
-    const sortedCollectors = collectors.toSorted((a, b) =>
+    const sortedCollectors = collectors.slice().sort((a, b) =>
         b.version.toLowerCase().localeCompare(a.version.toLowerCase())
     );
     const latestStable = sortedCollectors.find((c) => !c.isPrerelease);
