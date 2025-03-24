@@ -4374,7 +4374,7 @@
         }
       }
     },
-    "/api/v2/kinds": {
+    "/api/v2/graphs/kinds": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"

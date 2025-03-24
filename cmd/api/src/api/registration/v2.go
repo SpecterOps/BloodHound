@@ -158,8 +158,6 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		// DEPRECATED: this has been changed to a PUT endpoint above, and must be removed for API V3
 		routerInst.POST(fmt.Sprintf("/api/v2/asset-groups/{%s}/selectors", api.URIPathVariableAssetGroupID), resources.UpdateAssetGroupSelectors).RequirePermissions(permissions.GraphDBWrite),
 
-		routerInst.GET("/api/v2/kinds", resources.ListKinds).RequirePermissions(permissions.GraphDBRead),
-
 		// Asset group management API
 		routerInst.POST(fmt.Sprintf("/api/v2/asset-group-tags/{%s}/selectors", api.URIPathVariableAssetGroupTagID), resources.CreateAssetGroupTagSelector).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBWrite),
 
@@ -167,6 +165,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET("/api/v2/completeness", resources.GetDatabaseCompleteness).RequirePermissions(permissions.GraphDBRead),
 
 		routerInst.GET("/api/v2/pathfinding", resources.GetPathfindingResult).Queries("start_node", "{start_node}", "end_node", "{end_node}").RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/graphs/kinds", resources.ListKinds).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/graphs/shortest-path", resources.GetShortestPath).Queries(params.StartNode.String(), params.StartNode.RouteMatcher(), params.EndNode.String(), params.EndNode.RouteMatcher()).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/graphs/edge-composition", resources.GetEdgeComposition).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/graphs/relay-targets", resources.GetEdgeRelayTargets).RequirePermissions(permissions.GraphDBRead),
