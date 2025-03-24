@@ -51,6 +51,15 @@ interface CollectorCardListProps {
 const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectorType, collectors, noLabels = false }) => {
     const theme = useTheme();
 
+    if (collectors?.length === 0) {
+        return (
+            <p>
+                The download manifest cannot be retrieved for {COLLECTOR_TYPE_LABEL[collectorType]}. Please reload the
+                page and try again. If the problem continues please contact support.
+            </p>
+        );
+    }
+
     // Few enough collectors that this isn't worth memoizing
     // And the only stateful changes that should cause rerender
     // are collectors and theme
@@ -103,7 +112,9 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectorType, co
                     />
                 )}
             </Box>
-            {olderVersions.length > 0 && <OlderVersionsList collectorType={collectorType} collectors={olderVersions} noLabels />}
+            {olderVersions.length > 0 && (
+                <OlderVersionsList collectorType={collectorType} collectors={olderVersions} noLabels />
+            )}
         </Box>
     );
 };
