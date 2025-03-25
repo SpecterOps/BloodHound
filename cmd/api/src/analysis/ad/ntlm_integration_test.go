@@ -50,7 +50,9 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCS")
-		expansions, _, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
+		expansions, _, _, _, err := fetchNTLMPrereqs(db)
+		require.NoError(t, err)
+		ntlmCache, err := ad2.BuildNTLMCache(context.Background(), db, expansions)
 		require.NoError(t, err)
 
 		cache := ad2.NewADCSCache()
@@ -61,14 +63,7 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 		err = cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
 		require.NoError(t, err)
 
-		for _, domain := range domains {
-			innerDomain := domain
-			computerCache, err := fetchComputerCache(db, innerDomain)
-			require.NoError(t, err)
-
-			err = ad2.PostCoerceAndRelayNTLMToADCS(cache, operation, expansions, authenticatedUsers, computerCache)
-			require.NoError(t, err)
-		}
+		err = ad2.PostCoerceAndRelayNTLMToADCS(cache, operation, ntlmCache)
 
 		operation.Done()
 
@@ -101,7 +96,9 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Composition Test - CoerceAndRelayNTLMToADCS")
-		expansions, _, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
+		expansions, _, _, _, err := fetchNTLMPrereqs(db)
+		require.NoError(t, err)
+		ntlmCache, err := ad2.BuildNTLMCache(context.Background(), db, expansions)
 		require.NoError(t, err)
 
 		cache := ad2.NewADCSCache()
@@ -112,14 +109,8 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 		err = cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
 		require.NoError(t, err)
 
-		for _, domain := range domains {
-			innerDomain := domain
-			computerCache, err := fetchComputerCache(db, innerDomain)
-			require.NoError(t, err)
-
-			err = ad2.PostCoerceAndRelayNTLMToADCS(cache, operation, expansions, authenticatedUsers, computerCache)
-			require.NoError(t, err)
-		}
+		err = ad2.PostCoerceAndRelayNTLMToADCS(cache, operation, ntlmCache)
+		require.NoError(t, err)
 
 		operation.Done()
 
@@ -166,29 +157,21 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 
 			groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
-
-			ldapSigningCache, err := ad2.FetchLDAPSigningCache(testContext.Context(), db)
+			ntlmCache, err := ad2.BuildNTLMCache(context.Background(), db, groupExpansions)
 			require.NoError(t, err)
-
-			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, groupExpansions)
-			require.NoError(t, err)
-
-			compositionCounter := analysis.NewCompositionCounter()
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 				for _, computer := range computers {
 					innerComputer := computer
 					domainSid, _ := innerComputer.Properties.Get(ad.DomainSID.String()).String()
 
+					if !ntlmCache.AllUnprotectedComputersCache.Contains(innerComputer.ID.Uint64()) {
+						continue
+					}
+
 					if authenticatedUserID, ok := authenticatedUsers[domainSid]; !ok {
 						t.Fatalf("authenticated user not found for %s", domainSid)
-					} else if protectedUsersForDomain, ok := protectedUsersCache[domainSid]; !ok {
-						continue
-					} else if ldapSigningForDomain, ok := ldapSigningCache[domainSid]; !ok {
-						continue
-					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
-						continue
-					} else if err = ad2.PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID, &compositionCounter); err != nil {
+					} else if err = ad2.PostCoerceAndRelayNTLMToSMB(tx, outC, ntlmCache, innerComputer, authenticatedUserID); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToSMB.String(), err)
 					}
 				}
@@ -233,41 +216,30 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 		}, func(harness integration.HarnessDetails, db graph.Database) {
 			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM - CoerceAndRelayNTLMToSMB - Relay To Self")
 
-			groupExpansions, computers, domains, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
+			require.NoError(t, err)
+			ntlmCache, err := ad2.BuildNTLMCache(context.Background(), db, groupExpansions)
 			require.NoError(t, err)
 
-			ldapSigningCache, err := ad2.FetchLDAPSigningCache(testContext.Context(), db)
-			require.NoError(t, err)
+			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				for _, computer := range computers {
+					innerComputer := computer
 
-			protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, groupExpansions)
-			require.NoError(t, err)
-
-			compositionCounter := analysis.NewCompositionCounter()
-
-			for _, domain := range domains {
-				innerDomain := domain
-
-				err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-					for _, computer := range computers {
-						innerComputer := computer
-						domainSid, _ := innerDomain.Properties.Get(ad.DomainSID.String()).String()
-
-						if authenticatedUserID, ok := authenticatedUsers[domainSid]; !ok {
-							t.Fatalf("authenticated user not found for %s", domainSid)
-						} else if protectedUsersForDomain, ok := protectedUsersCache[domainSid]; !ok {
-							continue
-						} else if ldapSigningForDomain, ok := ldapSigningCache[domainSid]; !ok {
-							continue
-						} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
-							continue
-						} else if err = ad2.PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID, &compositionCounter); err != nil {
-							t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToSMB.String(), err)
-						}
+					if !ntlmCache.AllUnprotectedComputersCache.Contains(innerComputer.ID.Uint64()) {
+						continue
 					}
-					return nil
-				})
-				require.NoError(t, err)
-			}
+
+					domainSid, _ := innerComputer.Properties.Get(ad.DomainSID.String()).String()
+
+					if authenticatedUserID, ok := authenticatedUsers[domainSid]; !ok {
+						t.Fatalf("authenticated user not found for %s", domainSid)
+					} else if err = ad2.PostCoerceAndRelayNTLMToSMB(tx, outC, ntlmCache, innerComputer, authenticatedUserID); err != nil {
+						t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToSMB.String(), err)
+					}
+				}
+				return nil
+			})
+			require.NoError(t, err)
 
 			err = operation.Done()
 			require.NoError(t, err)
@@ -298,14 +270,8 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 
 		groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
-
-		ldapSigningCache, err := ad2.FetchLDAPSigningCache(testContext.Context(), db)
+		ntlmCache, err := ad2.BuildNTLMCache(context.Background(), db, groupExpansions)
 		require.NoError(t, err)
-
-		protectedUsersCache, err := ad2.FetchProtectedUsersMappedToDomains(testContext.Context(), db, groupExpansions)
-		require.NoError(t, err)
-
-		compositionCounter := analysis.NewCompositionCounter()
 
 		err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 			for _, computer := range computers {
@@ -314,13 +280,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 
 				if authenticatedUserID, ok := authenticatedUsers[domainSid]; !ok {
 					t.Fatalf("authenticated user not found for %s", domainSid)
-				} else if protectedUsersForDomain, ok := protectedUsersCache[domainSid]; !ok {
-					continue
-				} else if ldapSigningForDomain, ok := ldapSigningCache[domainSid]; !ok {
-					continue
-				} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
-					continue
-				} else if err = ad2.PostCoerceAndRelayNTLMToSMB(tx, outC, groupExpansions, innerComputer, authenticatedUserID, &compositionCounter); err != nil {
+				} else if err = ad2.PostCoerceAndRelayNTLMToSMB(tx, outC, ntlmCache, innerComputer, authenticatedUserID); err != nil {
 					t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToSMB.String(), err)
 				}
 			}
@@ -425,7 +385,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 						continue
 					} else if ldapSigningForDomain, ok := ldapSigningCache[domainSid]; !ok {
 						continue
-					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
+					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsVulnerableFunctionalLevel {
 						continue
 					} else if restrictNtlm, _ := innerComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); restrictNtlm {
 						continue
@@ -503,7 +463,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 						continue
 					} else if ldapSigningForDomain, ok := ldapSigningCache[domainSid]; !ok {
 						continue
-					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
+					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsVulnerableFunctionalLevel {
 						continue
 					} else if err = ad2.PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserID, ldapSigningCache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToLDAPS.String(), err)
@@ -577,7 +537,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 						continue
 					} else if ldapSigningForDomain, ok := ldapSigningCache[domainSid]; !ok {
 						continue
-					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
+					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsVulnerableFunctionalLevel {
 						continue
 					} else if err = ad2.PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserID, ldapSigningCache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToLDAPS.String(), err)
@@ -631,7 +591,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 						continue
 					} else if ldapSigningForDomain, ok := ldapSigningCache[domainSid]; !ok {
 						continue
-					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsValidFunctionalLevel {
+					} else if protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsVulnerableFunctionalLevel {
 						continue
 					} else if err = ad2.PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserID, ldapSigningCache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToLDAP.String(), err)
