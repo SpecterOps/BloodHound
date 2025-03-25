@@ -1,3 +1,18 @@
+-- Copyright 2023 Specter Ops, Inc.
+--
+-- Licensed under the Apache License, Version 2.0
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+--     http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+--
+-- SPDX-License-Identifier: Apache-2.0
 
 CREATE TABLE ad_data_quality_aggregations (
     domains bigint,
@@ -504,49 +519,27 @@ CREATE TABLE users_roles (
     role_id integer NOT NULL
 );
 ALTER TABLE ONLY ad_data_quality_aggregations ALTER COLUMN id SET DEFAULT nextval('ad_data_quality_aggregations_id_seq'::regclass);
-
 ALTER TABLE ONLY ad_data_quality_stats ALTER COLUMN id SET DEFAULT nextval('ad_data_quality_stats_id_seq'::regclass);
-
 ALTER TABLE ONLY asset_group_collection_entries ALTER COLUMN id SET DEFAULT nextval('asset_group_collection_entries_id_seq'::regclass);
-
 ALTER TABLE ONLY asset_group_collections ALTER COLUMN id SET DEFAULT nextval('asset_group_collections_id_seq'::regclass);
-
 ALTER TABLE ONLY asset_group_selectors ALTER COLUMN id SET DEFAULT nextval('asset_group_selectors_id_seq'::regclass);
-
 ALTER TABLE ONLY asset_groups ALTER COLUMN id SET DEFAULT nextval('asset_groups_id_seq'::regclass);
-
 ALTER TABLE ONLY audit_logs ALTER COLUMN id SET DEFAULT nextval('audit_logs_id_seq'::regclass);
-
 ALTER TABLE ONLY auth_secrets ALTER COLUMN id SET DEFAULT nextval('auth_secrets_id_seq'::regclass);
-
 ALTER TABLE ONLY azure_data_quality_aggregations ALTER COLUMN id SET DEFAULT nextval('azure_data_quality_aggregations_id_seq'::regclass);
-
 ALTER TABLE ONLY azure_data_quality_stats ALTER COLUMN id SET DEFAULT nextval('azure_data_quality_stats_id_seq'::regclass);
-
 ALTER TABLE ONLY domain_collection_results ALTER COLUMN id SET DEFAULT nextval('domain_collection_results_id_seq'::regclass);
-
 ALTER TABLE ONLY feature_flags ALTER COLUMN id SET DEFAULT nextval('feature_flags_id_seq'::regclass);
-
 ALTER TABLE ONLY file_upload_jobs ALTER COLUMN id SET DEFAULT nextval('file_upload_jobs_id_seq'::regclass);
-
 ALTER TABLE ONLY ingest_tasks ALTER COLUMN id SET DEFAULT nextval('ingest_tasks_id_seq'::regclass);
-
 ALTER TABLE ONLY parameters ALTER COLUMN id SET DEFAULT nextval('parameters_id_seq'::regclass);
-
 ALTER TABLE ONLY permissions ALTER COLUMN id SET DEFAULT nextval('permissions_id_seq'::regclass);
-
 ALTER TABLE ONLY roles ALTER COLUMN id SET DEFAULT nextval('roles_id_seq'::regclass);
-
 ALTER TABLE ONLY saml_providers ALTER COLUMN id SET DEFAULT nextval('saml_providers_id_seq'::regclass);
-
 ALTER TABLE ONLY saved_queries ALTER COLUMN id SET DEFAULT nextval('saved_queries_id_seq'::regclass);
-
 ALTER TABLE ONLY saved_queries_permissions ALTER COLUMN id SET DEFAULT nextval('saved_queries_permissions_id_seq'::regclass);
-
 ALTER TABLE ONLY saved_queries_permissions ALTER COLUMN query_id SET DEFAULT nextval('saved_queries_permissions_query_id_seq'::regclass);
-
 ALTER TABLE ONLY user_sessions ALTER COLUMN id SET DEFAULT nextval('user_sessions_id_seq'::regclass);
-
 INSERT INTO datapipe_status VALUES (true, 'idle', '2025-03-21 12:58:42.971311-05', NULL);
 
 INSERT INTO feature_flags VALUES (1, '2025-03-21 12:56:17.075059-05', '2025-03-21 12:56:17.075059-05', 'butterfly_analysis', 'Enhanced Asset Inbound-Outbound Exposure Analysis', 'Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.', false, false);
@@ -643,47 +636,26 @@ INSERT INTO roles_permissions VALUES (5, 16);
 INSERT INTO roles_permissions VALUES (5, 19);
 
 SELECT pg_catalog.setval('ad_data_quality_aggregations_id_seq', 1, false);
-
 SELECT pg_catalog.setval('ad_data_quality_stats_id_seq', 1, false);
-
 SELECT pg_catalog.setval('asset_group_collection_entries_id_seq', 1, false);
-
 SELECT pg_catalog.setval('asset_group_collections_id_seq', 1, false);
-
 SELECT pg_catalog.setval('asset_group_selectors_id_seq', 1, false);
-
 SELECT pg_catalog.setval('asset_groups_id_seq', 2, true);
-
 SELECT pg_catalog.setval('audit_logs_id_seq', 1, false);
-
 SELECT pg_catalog.setval('auth_secrets_id_seq', 1, false);
-
 SELECT pg_catalog.setval('azure_data_quality_aggregations_id_seq', 1, false);
-
 SELECT pg_catalog.setval('azure_data_quality_stats_id_seq', 1, false);
-
 SELECT pg_catalog.setval('domain_collection_results_id_seq', 1, false);
-
 SELECT pg_catalog.setval('feature_flags_id_seq', 13, true);
-
 SELECT pg_catalog.setval('file_upload_jobs_id_seq', 1, false);
-
 SELECT pg_catalog.setval('ingest_tasks_id_seq', 1, false);
-
 SELECT pg_catalog.setval('parameters_id_seq', 2, true);
-
 SELECT pg_catalog.setval('permissions_id_seq', 19, true);
-
 SELECT pg_catalog.setval('roles_id_seq', 5, true);
-
 SELECT pg_catalog.setval('saml_providers_id_seq', 1, false);
-
 SELECT pg_catalog.setval('saved_queries_id_seq', 1, false);
-
 SELECT pg_catalog.setval('saved_queries_permissions_id_seq', 1, false);
-
 SELECT pg_catalog.setval('saved_queries_permissions_query_id_seq', 1, false);
-
 SELECT pg_catalog.setval('user_sessions_id_seq', 1, false);
 
 ALTER TABLE ONLY ad_data_quality_aggregations
