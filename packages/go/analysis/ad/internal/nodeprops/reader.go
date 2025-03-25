@@ -9,16 +9,12 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 )
 
-func errorReadDomainSIDandNameAsString(message string) error {
-	return fmt.Errorf("failed to read domain SID and name: %s", message)
-}
-
 func ReadDomainIDandNameAsString(nodeToRead *graph.Node) (string, string, error) {
 	var domainSIDStr, domainNameStr string
 	var err error
 
 	returnFunc := func(errMsg string) (string, string, error) {
-		return domainSIDStr, domainNameStr, errorReadDomainSIDandNameAsString(errMsg)
+		return domainSIDStr, domainNameStr, fmt.Errorf("failed to read domain SID and name: %s", errMsg)
 	}
 
 	if nodeToRead == nil {
