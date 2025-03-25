@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -36,6 +37,35 @@ import (
 const (
 	ErrInvalidAssetGroupTagId = "invalid asset group tag id specified in url"
 )
+
+func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
+	const (
+		pnameTagType       = "type"
+		pnameIncludeCounts = "includeCounts"
+	)
+	var (
+		pvalsTagType       = []string{"tag", "tier"}
+		pvalsIncludeCounts = []string{"false", "true"}
+	)
+
+	var params = request.URL.Query()
+	// set defaults. This works since .Get() only retrives the first value
+	params.Add(pnameTagType, pvalsTagType[0])
+	params.Add(pnameIncludeCounts, pvalsIncludeCounts[0])
+
+	if paramTagType := params.Get(pnameTagType); !slices.Contains(pvalsTagType, paramTagType) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for tag type", request), response)
+	} else if paramIncludeCounts := params.Get(pnameIncludeCounts); !slices.Contains(pvalsIncludeCounts, paramIncludeCounts) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
+	} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), paramTagType); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		resp := map[string]any{"asset_group_tags": tags}
+		if paramIncludeCounts == "true" {
+		}
+		api.WriteBasicResponse(request.Context(), resp, http.StatusOK, response)
+	}
+}
 
 // Checks that the selector seeds are valid.
 func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) error {
