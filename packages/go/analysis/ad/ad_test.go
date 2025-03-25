@@ -16,10 +16,7 @@ import (
 
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 
-	"github.com/rs/xid"
 	"github.com/stretchr/testify/require"
-
-	faker "github.com/go-faker/faker/v4"
 )
 
 type linkWellKnownGroupsTestCase struct {
@@ -295,9 +292,9 @@ func generateCollectedDomain() *graph.Node {
 		},
 		Properties: graph.AsProperties(graph.PropertyMap{
 			common.Collected: true,
-			common.Name:      faker.DomainName(),
-			ad.DomainSID:     xid.New().String(),
-			ad.DomainFQDN:    faker.DomainName(),
+			common.Name:      "domain-test.com",
+			ad.DomainSID:     "S-1-5-21-1004336348-1177238915-682003330-512",
+			ad.DomainFQDN:    "domain-test.com",
 		}),
 	}
 }
