@@ -16,11 +16,11 @@
 
 import { Alert, Box, Paper, Skeleton, Typography, useTheme } from '@mui/material';
 import { CollectorCardList, DocumentationLinks, PageWithTitle, apiClient } from 'bh-shared-ui';
+import { CommunityCollectorType } from 'js-client-library';
 import fileDownload from 'js-file-download';
 import { useDispatch } from 'react-redux';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { useGetCollectorsByType } from 'src/hooks/useCollectors';
-import { CommunityCollectorType } from 'js-client-library';
 
 const DownloadCollectors = () => {
     /* Hooks */
@@ -42,7 +42,9 @@ const DownloadCollectors = () => {
             .catch((err) => {
                 console.error(err);
                 dispatch(
-                    addSnackbar('This file could not be downloaded. Please try again.', 'downloadCollectorFailure')
+                    addSnackbar('This file could not be downloaded. Please try again.', 'downloadCollectorFailure', {
+                        autoHideDuration: null,
+                    })
                 );
             });
     };
@@ -61,7 +63,8 @@ const DownloadCollectors = () => {
                 dispatch(
                     addSnackbar(
                         'This file could not be downloaded. Please try again.',
-                        'downloadCollectorChecksumFailure'
+                        'downloadCollectorChecksumFailure',
+                        { autoHideDuration: null }
                     )
                 );
             });
@@ -91,6 +94,7 @@ const DownloadCollectors = () => {
                     </Alert>
                 )}
                 <Box>
+                    <Typography variant='h2'>SharpHound</Typography>
                     {sharpHoundCollectorsQuery.isLoading ? (
                         <Paper>
                             <Box p={2}>
@@ -109,25 +113,22 @@ const DownloadCollectors = () => {
                         </Typography>
                     ) : (
                         <CollectorCardList
-                                    noLabels
-                                    collectorType='sharphound'
-                                    collectors={sharpHoundCollectorsQuery.data?.data.versions.map((collector) => ({
-                                        version: collector.version,
-                                        downloadArtifacts: [
-                                            {
-                                                os: 'windows',
-                                                arch: 'x86',
-                                                onClickDownload: () =>
-                                                    downloadCollector('sharphound', collector.version),
-                                                onClickDownloadChecksum: () =>
-                                                    downloadCollectorChecksum('sharphound', collector.version),
-                                            },
-                                        ],
-                                    })) ?? []}
-                                />
+                            collectors={sharpHoundCollectorsQuery
+                                .data!.data.versions.map((collector) => ({
+                                    collectorType: 'sharphound' as const,
+                                    version: collector.version,
+                                    checksum: collector.sha256sum,
+                                    isLatest: collector.version === sharpHoundCollectorsQuery.data!.data.latest,
+                                    isDeprecated: collector.deprecated,
+                                    onClickDownload: downloadCollector,
+                                    onClickDownloadChecksum: downloadCollectorChecksum,
+                                }))
+                                .sort((a, b) => b.version.localeCompare(a.version))}
+                        />
                     )}
                 </Box>
                 <Box>
+                    <Typography variant='h2'>AzureHound</Typography>
                     {azureHoundCollectorsQuery.isLoading ? (
                         <Paper>
                             <Box p={2}>
@@ -146,22 +147,18 @@ const DownloadCollectors = () => {
                         </Typography>
                     ) : (
                         <CollectorCardList
-                                    noLabels
-                                    collectorType='azurehound'
-                                    collectors={azureHoundCollectorsQuery.data?.data.versions.map((collector) => ({
-                                        version: collector.version,
-                                        downloadArtifacts: [
-                                            {
-                                                os: 'windows',
-                                                arch: 'x86',
-                                                onClickDownload: () =>
-                                                    downloadCollector('azurehound', collector.version),
-                                                onClickDownloadChecksum: () =>
-                                                    downloadCollectorChecksum('azurehound', collector.version),
-                                            },
-                                        ],
-                                    })) ?? []}
-                                />
+                            collectors={azureHoundCollectorsQuery
+                                .data!.data.versions.map((collector) => ({
+                                    collectorType: 'azurehound' as const,
+                                    version: collector.version,
+                                    checksum: collector.sha256sum,
+                                    isLatest: collector.version === azureHoundCollectorsQuery.data!.data.latest,
+                                    isDeprecated: collector.deprecated,
+                                    onClickDownload: downloadCollector,
+                                    onClickDownloadChecksum: downloadCollectorChecksum,
+                                }))
+                                .sort((a, b) => b.version.localeCompare(a.version))}
+                        />
                     )}
                 </Box>
             </Box>

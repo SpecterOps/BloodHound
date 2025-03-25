@@ -14,134 +14,41 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from '@bloodhoundenterprise/doodleui';
-import { Box, Typography, useTheme } from '@mui/material';
-import { CollectorType } from 'js-client-library';
-import { useState } from 'react';
-import { CaretDown, CaretUp } from '../AppIcon/Icons';
-import CollectorCard, { COLLECTOR_TYPE_LABEL, CollectorCardProps, CollectorDownloadFile } from '../CollectorCard';
-
-const COLLECTOR_SHORT_LABEL: { [key in CollectorType]: string } = {
-    sharphound_enterprise: 'SHE',
-    sharphound: 'SH',
-    azurehound: 'AH',
-};
+import { Box, useTheme } from '@mui/material';
+import CollectorCard from '../CollectorCard';
+import { CommunityCollectorType } from 'js-client-library';
 
 interface CollectorCardListProps {
-    collectorType: CollectorType;
-    collectors: (Omit<CollectorCardProps, 'collectorType' | 'downloadArtifacts'> & {
-        downloadArtifacts: Omit<CollectorDownloadFile, 'displayName'>[];
-    })[];
-    noLabels?: boolean;
+    collectors: {
+        collectorType: CommunityCollectorType;
+        version: string;
+        checksum: string;
+        isLatest: boolean;
+        isDeprecated: boolean;
+        onClickDownload: (collectorType: CommunityCollectorType, version: string) => void;
+        onClickDownloadChecksum: (collectorType: CommunityCollectorType, version: string) => void;
+    }[];
 }
 
-const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectorType, collectors, noLabels = false }) => {
+const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectors }) => {
     const theme = useTheme();
 
-    if (collectors.length === 0) {
-        return (
-            <p>
-                The download manifest cannot be retrieved for {COLLECTOR_TYPE_LABEL[collectorType]}. Please reload the
-                page and try again. If the problem continues please contact support.
-            </p>
-        );
-    }
-
-    // Few enough collectors that this isn't worth memoizing
-    // And the only stateful changes that should cause rerender
-    // are collectors and theme
-    const sortedCollectors = collectors
-        .slice()
-        .sort((a, b) => b.version.toLowerCase().localeCompare(a.version.toLowerCase()));
-    const latestStable = sortedCollectors.find((c) => !c.isPrerelease);
-    const latestPrerelease = sortedCollectors.find(
-        // Is prerelease and version is greater than latest stable
-        (c) => c.isPrerelease && c.version.toLowerCase().localeCompare(latestStable?.version.toLowerCase() ?? '') > 0
-    );
-    const olderVersions = sortedCollectors.filter(
-        (c) => !c.isPrerelease && c !== latestStable && c !== latestPrerelease
-    );
-
     return (
-        <Box display='flex' flexDirection='column' gap={theme.spacing(2)}>
-            <Typography variant='h6'>{COLLECTOR_TYPE_LABEL[collectorType]}</Typography>
-            <Box display='flex' flexDirection='row' gap={theme.spacing(2)}>
-                {latestStable && (
+        <Box display='grid' rowGap={theme.spacing(2)}>
+            {collectors.map((collector, index) => (
+                <Box key={index}>
                     <CollectorCard
-                        className='flex-1 min-w-0 bg-neutral-light-3 dark:bg-neutral-dark-5'
-                        collectorType={collectorType}
-                        version={latestStable.version}
-                        timestamp={latestStable.timestamp}
-                        label={noLabels ? undefined : 'latest'}
-                        isPrerelease={latestStable.isPrerelease}
-                        downloadArtifacts={latestStable.downloadArtifacts.map((artifact) => {
-                            return {
-                                ...artifact,
-                                displayName: `${COLLECTOR_SHORT_LABEL[collectorType]} ${latestStable.version} ${artifact.os} ${artifact.arch}`,
-                            };
-                        })}
+                        collectorType={collector.collectorType}
+                        version={collector.version}
+                        checksum={collector.checksum}
+                        isLatest={collector.isLatest}
+                        isDeprecated={collector.isDeprecated}
+                        onClickDownload={collector.onClickDownload}
+                        onClickDownloadChecksum={collector.onClickDownloadChecksum}
                     />
-                )}
-                {latestPrerelease && (
-                    <CollectorCard
-                        className='flex-1 min-w-0'
-                        collectorType={collectorType}
-                        version={latestPrerelease.version}
-                        timestamp={latestPrerelease.timestamp}
-                        label={noLabels ? undefined : latestPrerelease.label}
-                        isPrerelease={latestPrerelease.isPrerelease}
-                        downloadArtifacts={latestPrerelease.downloadArtifacts.map((artifact) => {
-                            return {
-                                ...artifact,
-                                displayName: `${COLLECTOR_SHORT_LABEL[collectorType]} ${latestPrerelease.version} ${artifact.os} ${artifact.arch}`,
-                            };
-                        })}
-                    />
-                )}
-            </Box>
-            {olderVersions.length > 0 && (
-                <OlderVersionsList collectorType={collectorType} collectors={olderVersions} noLabels />
-            )}
+                </Box>
+            ))}
         </Box>
-    );
-};
-
-const OlderVersionsList: React.FC<CollectorCardListProps> = ({ collectorType, collectors, noLabels = false }) => {
-    const theme = useTheme();
-    const [expanded, setExpanded] = useState(false);
-
-    return (
-        <Accordion type='single' onValueChange={() => setExpanded((x) => !x)} collapsible>
-            <AccordionItem value='older-versions' className='bg-neutral-light-0 dark:bg-neutral-dark-1'>
-                <AccordionHeader>
-                    <Box display='flex' flexDirection='row' gap={1}>
-                        {expanded ? <CaretUp /> : <CaretDown />}
-                        Older Versions
-                    </Box>
-                </AccordionHeader>
-                <AccordionContent className='p-0'>
-                    <Box display='flex' flexDirection='column' gap={theme.spacing(2)}>
-                        {collectors.map((collector) => (
-                            <CollectorCard
-                                key={collector.version}
-                                className='flex-1 min-w-0'
-                                collectorType={collectorType}
-                                version={collector.version}
-                                timestamp={collector.timestamp}
-                                label={noLabels ? undefined : collector.label}
-                                isPrerelease={collector.isPrerelease}
-                                downloadArtifacts={collector.downloadArtifacts.map((artifact) => {
-                                    return {
-                                        ...artifact,
-                                        displayName: `${COLLECTOR_SHORT_LABEL[collectorType]} ${collector.version} ${artifact.os} ${artifact.arch}`,
-                                    };
-                                })}
-                            />
-                        ))}
-                    </Box>
-                </AccordionContent>
-            </AccordionItem>
-        </Accordion>
     );
 };
 
