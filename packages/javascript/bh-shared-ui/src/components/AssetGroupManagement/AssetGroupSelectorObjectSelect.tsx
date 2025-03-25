@@ -60,18 +60,18 @@ const AssetGroupSelectorObjectSelect: FC<{
                             variant='standard'
                         />
                     </div>
-                    <Table className='mt-5'>
+                    <Table className='mt-5 w-full table-fixed'>
                         <TableBody className='last:border-b-[1px] border-neutral-light-5 dark:border-netural-dark-5'>
                             {selectedNodes.map((node) => (
                                 <TableRow
                                     key={node.objectid}
-                                    className='border-y-[1px] border-neutral-light-5 dark:border-netural-dark-5 p-0'>
-                                    <TableCell className='text-center p-0 h-12'>
+                                    className='border-y-[1px] border-neutral-light-5 dark:border-netural-dark-5 p-0 *:p-0 *:h-12'>
+                                    <TableCell className='text-center w-[84px]'>
                                         <NodeIcon nodeType={node.type || ''} />
                                     </TableCell>
-                                    <TableCell className='p-0 h-12'>{node.name || node.objectid}</TableCell>
+                                    <TableCell className='mr-4 truncate'>{node.name || node.objectid}</TableCell>
                                     {/* TODO add member count  */}
-                                    {/* <TableCell className='p-0 h-12'>777 members</TableCell> */}
+                                    {/* <TableCell className='text-center px-2 w-[116px]'>777 Members</TableCell> */}
                                 </TableRow>
                             ))}
                         </TableBody>
