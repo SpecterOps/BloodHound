@@ -24,7 +24,6 @@ import {
     DialogTitle,
     Input,
 } from '@bloodhoundenterprise/doodleui';
-import { FormHelperText } from '@mui/material';
 import React, { useCallback, useState } from 'react';
 
 const ConfirmationDialog: React.FC<{
@@ -35,7 +34,7 @@ const ConfirmationDialog: React.FC<{
     challengeTxt?: string;
     isLoading?: boolean;
     error?: string;
-}> = ({ open, title, text, onClose, isLoading, error, challengeTxt }) => {
+}> = ({ open, title, text, onClose, isLoading, error, challengeTxt = '' }) => {
     const [challengeTxtReply, setChallengeTxtReply] = useState<string>('');
 
     const handleClose = useCallback(
@@ -49,7 +48,7 @@ const ConfirmationDialog: React.FC<{
     );
 
     return (
-        <Dialog open={open}>
+        <Dialog open={open} data-testid='confirmation-dialog'>
             <DialogPortal>
                 <DialogContent>
                     <DialogTitle className='text-lg'>{title}</DialogTitle>
@@ -69,11 +68,7 @@ const ConfirmationDialog: React.FC<{
                         </>
                     )}
                     <DialogActions>
-                        {error && (
-                            <FormHelperText error className='content-center'>
-                                {error}
-                            </FormHelperText>
-                        )}
+                        {error && <p className='content-center text-[color:#d32f2f] text-xs mt-[3px]'>{error}</p>}
                         <Button
                             variant='tertiary'
                             onClick={handleClose(false)}
@@ -83,10 +78,7 @@ const ConfirmationDialog: React.FC<{
                         </Button>
                         <Button
                             onClick={handleClose(true)}
-                            disabled={
-                                isLoading ||
-                                (!!challengeTxt && challengeTxt.toLowerCase() !== challengeTxtReply.toLowerCase())
-                            }
+                            disabled={isLoading || challengeTxt.toLowerCase() !== challengeTxtReply.toLowerCase()}
                             data-testid='confirmation-dialog_button-yes'>
                             Confirm
                         </Button>

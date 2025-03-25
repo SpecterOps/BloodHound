@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
 import React from 'react';
 import ConfirmationDialog from './ConfirmationDialog';
 
@@ -33,10 +32,8 @@ const DeleteConfirmationDialog: React.FC<{
             text={
                 <>
                     Continuing onwards will delete {itemName} and all associated configurations and findings.
-                    <Typography className='font-bold' component={'span'}>
-                        <br />
-                        Warning: This change is irreversible.
-                    </Typography>
+                    <br />
+                    <span className='font-bold'>Warning: This change is irreversible.</span>
                 </>
             }
             challengeTxt={`Delete this ${itemType}`}
