@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/analysis/ad/internal/nodeprops"
 	"github.com/specterops/bloodhound/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/bhlog/measure"
@@ -233,10 +234,8 @@ func LinkWellKnownGroups(ctx context.Context, db graph.Database) error {
 
 		for _, domain := range domains {
 			// get the domain ID and domain name
-			if domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain sid for domain %d: %v", domain.ID, err))
-			} else if domainName, err := domain.Properties.Get(common.Name.String()).String(); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain name for domain %d: %v", domain.ID, err))
+			if domainSid, domainName, err := nodeprops.ReadDomainIDandNameAsString(domain); err != nil {
+				slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain sid or name for domain %d: %v", domain.ID, err))
 			} else {
 				var (
 					domainId                = domain.ID
