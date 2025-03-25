@@ -540,6 +540,120 @@ ALTER TABLE ONLY saved_queries ALTER COLUMN id SET DEFAULT nextval('saved_querie
 ALTER TABLE ONLY saved_queries_permissions ALTER COLUMN id SET DEFAULT nextval('saved_queries_permissions_id_seq'::regclass);
 ALTER TABLE ONLY saved_queries_permissions ALTER COLUMN query_id SET DEFAULT nextval('saved_queries_permissions_query_id_seq'::regclass);
 ALTER TABLE ONLY user_sessions ALTER COLUMN id SET DEFAULT nextval('user_sessions_id_seq'::regclass);
+SELECT pg_catalog.setval('ad_data_quality_aggregations_id_seq', 1, false);
+SELECT pg_catalog.setval('ad_data_quality_stats_id_seq', 1, false);
+SELECT pg_catalog.setval('asset_group_collection_entries_id_seq', 1, false);
+SELECT pg_catalog.setval('asset_group_collections_id_seq', 1, false);
+SELECT pg_catalog.setval('asset_group_selectors_id_seq', 1, false);
+SELECT pg_catalog.setval('asset_groups_id_seq', 2, true);
+SELECT pg_catalog.setval('audit_logs_id_seq', 1, false);
+SELECT pg_catalog.setval('auth_secrets_id_seq', 1, false);
+SELECT pg_catalog.setval('azure_data_quality_aggregations_id_seq', 1, false);
+SELECT pg_catalog.setval('azure_data_quality_stats_id_seq', 1, false);
+SELECT pg_catalog.setval('domain_collection_results_id_seq', 1, false);
+SELECT pg_catalog.setval('feature_flags_id_seq', 13, true);
+SELECT pg_catalog.setval('file_upload_jobs_id_seq', 1, false);
+SELECT pg_catalog.setval('ingest_tasks_id_seq', 1, false);
+SELECT pg_catalog.setval('parameters_id_seq', 2, true);
+SELECT pg_catalog.setval('permissions_id_seq', 19, true);
+SELECT pg_catalog.setval('roles_id_seq', 5, true);
+SELECT pg_catalog.setval('saml_providers_id_seq', 1, false);
+SELECT pg_catalog.setval('saved_queries_id_seq', 1, false);
+SELECT pg_catalog.setval('saved_queries_permissions_id_seq', 1, false);
+SELECT pg_catalog.setval('saved_queries_permissions_query_id_seq', 1, false);
+SELECT pg_catalog.setval('user_sessions_id_seq', 1, false);
+
+ALTER TABLE ONLY ad_data_quality_aggregations ADD CONSTRAINT ad_data_quality_aggregations_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY ad_data_quality_stats ADD CONSTRAINT ad_data_quality_stats_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY analysis_request_switch ADD CONSTRAINT analysis_request_switch_pkey PRIMARY KEY (singleton);
+ALTER TABLE ONLY asset_group_collection_entries ADD CONSTRAINT asset_group_collection_entries_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY asset_group_collections ADD CONSTRAINT asset_group_collections_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY asset_group_selectors Add CONSTRAINT asset_group_selectors_name_assetgroupid_key UNIQUE (name, asset_group_id);
+ALTER TABLE ONLY asset_group_selectors Add CONSTRAINT asset_group_selectors_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY asset_groups Add CONSTRAINT asset_groups_name_key UNIQUE (name);
+ALTER TABLE ONLY asset_groups Add CONSTRAINT asset_groups_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY asset_groups Add CONSTRAINT asset_groups_tag_key UNIQUE (tag);
+ALTER TABLE ONLY audit_logs Add CONSTRAINT audit_logs_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY auth_secrets Add CONSTRAINT auth_secrets_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY auth_tokens Add CONSTRAINT auth_tokens_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY azure_data_quality_aggregations ADD CONSTRAINT azure_data_quality_aggregations_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY azure_data_quality_stats Add CONSTRAINT azure_data_quality_stats_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY datapipe_status Add CONSTRAINT datapipe_status_pkey PRIMARY KEY (singleton);
+ALTER TABLE ONLY domain_collection_results Add CONSTRAINT domain_collection_results_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY feature_flags Add CONSTRAINT feature_flags_key_key UNIQUE (key);
+ALTER TABLE ONLY feature_flags Add CONSTRAINT feature_flags_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY file_upload_jobs Add CONSTRAINT file_upload_jobs_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY ingest_tasks Add CONSTRAINT ingest_tasks_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY installations Add CONSTRAINT installations_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY parameters Add CONSTRAINT parameters_key_key UNIQUE (key);
+ALTER TABLE ONLY parameters Add CONSTRAINT parameters_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY permissions Add CONSTRAINT permissions_authority_name_key UNIQUE (authority, name);
+ALTER TABLE ONLY permissions Add CONSTRAINT permissions_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY roles Add CONSTRAINT roles_name_key UNIQUE (name);
+ALTER TABLE ONLY roles_permissions Add CONSTRAINT roles_permissions_pkey PRIMARY KEY (role_id, permission_id);
+ALTER TABLE ONLY roles Add CONSTRAINT roles_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY saml_providers Add CONSTRAINT saml_providers_name_key UNIQUE (name);
+ALTER TABLE ONLY saml_providers Add CONSTRAINT saml_providers_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY saved_queries_permissions Add CONSTRAINT saved_queries_permissions_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY saved_queries_permissions Add CONSTRAINT saved_queries_permissions_shared_to_user_id_query_id_key UNIQUE (shared_to_user_id, query_id);
+ALTER TABLE ONLY saved_queries Add CONSTRAINT saved_queries_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY user_sessions Add CONSTRAINT user_sessions_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY users Add CONSTRAINT users_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY users Add CONSTRAINT users_principal_name_key UNIQUE (principal_name);
+ALTER TABLE ONLY users_roles Add CONSTRAINT users_roles_pkey PRIMARY KEY (user_id, role_id);
+
+CREATE INDEX idx_ad_asset_groups_created_at ON asset_groups USING btree (created_at);
+CREATE INDEX idx_ad_asset_groups_updated_at ON asset_groups USING btree (updated_at);
+CREATE INDEX idx_ad_data_quality_aggregations_created_at ON ad_data_quality_aggregations USING btree (created_at);
+CREATE INDEX idx_ad_data_quality_aggregations_run_id ON ad_data_quality_aggregations USING btree (run_id);
+CREATE INDEX idx_ad_data_quality_aggregations_updated_at ON ad_data_quality_aggregations USING btree (updated_at);
+CREATE INDEX idx_ad_data_quality_stats_run_id ON ad_data_quality_stats USING btree (run_id);
+CREATE INDEX idx_asset_group_collection_entries_asset_group_collection_id ON asset_group_collection_entries USING btree (asset_group_collection_id);
+CREATE INDEX idx_asset_group_collection_entries_created_at ON asset_group_collection_entries USING btree (created_at);
+CREATE INDEX idx_asset_group_collection_entries_updated_at ON asset_group_collection_entries USING btree (updated_at);
+CREATE INDEX idx_asset_group_collections_asset_group_id ON asset_group_collections USING btree (asset_group_id);
+CREATE INDEX idx_asset_group_collections_created_at ON asset_group_collections USING btree (created_at);
+CREATE INDEX idx_asset_group_collections_updated_at ON asset_group_collections USING btree (updated_at);
+CREATE INDEX idx_audit_logs_action ON audit_logs USING btree (action);
+CREATE INDEX idx_audit_logs_actor_email ON audit_logs USING btree (actor_email);
+CREATE INDEX idx_audit_logs_actor_id ON audit_logs USING btree (actor_id);
+CREATE INDEX idx_audit_logs_created_at ON audit_logs USING btree (created_at);
+CREATE INDEX idx_audit_logs_source_ip_address ON audit_logs USING btree (source_ip_address);
+CREATE INDEX idx_audit_logs_status ON audit_logs USING btree (status);
+CREATE INDEX idx_azure_data_quality_aggregations_created_at ON azure_data_quality_aggregations USING btree (created_at);
+CREATE INDEX idx_azure_data_quality_aggregations_run_id ON azure_data_quality_aggregations USING btree (run_id);
+CREATE INDEX idx_azure_data_quality_stats_created_at ON azure_data_quality_stats USING btree (created_at);
+CREATE INDEX idx_azure_data_quality_stats_run_id ON azure_data_quality_stats USING btree (run_id);
+CREATE INDEX idx_azure_data_quality_stats_updated_at ON azure_data_quality_stats USING btree (updated_at);
+CREATE INDEX idx_file_upload_jobs_created_at ON file_upload_jobs USING btree (created_at);
+CREATE INDEX idx_file_upload_jobs_end_time ON file_upload_jobs USING btree (end_time);
+CREATE INDEX idx_file_upload_jobs_start_time ON file_upload_jobs USING btree (start_time);
+CREATE INDEX idx_file_upload_jobs_status ON file_upload_jobs USING btree (status);
+CREATE INDEX idx_file_upload_jobs_updated_at ON file_upload_jobs USING btree (updated_at);
+CREATE INDEX idx_ingest_tasks_task_id ON ingest_tasks USING btree (task_id);
+CREATE INDEX idx_saml_providers_name ON saml_providers USING btree (name);
+CREATE UNIQUE INDEX idx_saved_queries_composite_index ON saved_queries USING btree (user_id, name);
+CREATE INDEX idx_saved_queries_description ON saved_queries USING gin (description gin_trgm_ops);
+CREATE INDEX idx_saved_queries_name ON saved_queries USING gin (name gin_trgm_ops);
+CREATE INDEX idx_users_eula_accepted ON users USING btree (eula_accepted);
+CREATE INDEX idx_users_principal_name ON users USING btree (principal_name);
+
+ALTER TABLE ONLY asset_group_collection_entries Add CONSTRAINT fk_asset_group_collections_entries FOREIGN KEY (asset_group_collection_id) REFERENCES asset_group_collections(id) ON DELETE CASCADE;
+ALTER TABLE ONLY asset_group_collections Add CONSTRAINT fk_asset_groups_collections FOREIGN KEY (asset_group_id) REFERENCES asset_groups(id) ON DELETE CASCADE;
+ALTER TABLE ONLY asset_group_selectors Add CONSTRAINT fk_asset_groups_selectors FOREIGN KEY (asset_group_id) REFERENCES asset_groups(id) ON DELETE CASCADE;
+ALTER TABLE ONLY file_upload_jobs Add CONSTRAINT fk_file_upload_jobs_user FOREIGN KEY (user_id) REFERENCES users(id);
+ALTER TABLE ONLY roles_permissions Add CONSTRAINT fk_roles_permissions_permission FOREIGN KEY (permission_id) REFERENCES permissions(id);
+ALTER TABLE ONLY roles_permissions Add CONSTRAINT fk_roles_permissions_role FOREIGN KEY (role_id) REFERENCES roles(id);
+ALTER TABLE ONLY user_sessions Add CONSTRAINT fk_user_sessions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY auth_secrets Add CONSTRAINT fk_users_auth_secret FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY auth_tokens Add CONSTRAINT fk_users_auth_tokens FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY users_roles Add CONSTRAINT fk_users_roles_role FOREIGN KEY (role_id) REFERENCES roles(id);
+ALTER TABLE ONLY users_roles Add CONSTRAINT fk_users_roles_user FOREIGN KEY (user_id) REFERENCES users(id);
+ALTER TABLE ONLY users Add CONSTRAINT fk_users_saml_provider FOREIGN KEY (saml_provider_id) REFERENCES saml_providers(id);
+ALTER TABLE ONLY saved_queries_permissions Add CONSTRAINT saved_queries_permissions_query_id_fkey FOREIGN KEY (query_id) REFERENCES saved_queries(id) ON DELETE CASCADE;
+ALTER TABLE ONLY saved_queries_permissions Add CONSTRAINT saved_queries_permissions_shared_to_user_id_fkey FOREIGN KEY (shared_to_user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+
 INSERT INTO datapipe_status VALUES (true, 'idle', '2025-03-21 12:58:42.971311-05', NULL);
 
 INSERT INTO feature_flags VALUES (1, '2025-03-21 12:56:17.075059-05', '2025-03-21 12:56:17.075059-05', 'butterfly_analysis', 'Enhanced Asset Inbound-Outbound Exposure Analysis', 'Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.', false, false);
@@ -634,252 +748,3 @@ INSERT INTO roles_permissions VALUES (5, 13);
 INSERT INTO roles_permissions VALUES (5, 15);
 INSERT INTO roles_permissions VALUES (5, 16);
 INSERT INTO roles_permissions VALUES (5, 19);
-
-SELECT pg_catalog.setval('ad_data_quality_aggregations_id_seq', 1, false);
-SELECT pg_catalog.setval('ad_data_quality_stats_id_seq', 1, false);
-SELECT pg_catalog.setval('asset_group_collection_entries_id_seq', 1, false);
-SELECT pg_catalog.setval('asset_group_collections_id_seq', 1, false);
-SELECT pg_catalog.setval('asset_group_selectors_id_seq', 1, false);
-SELECT pg_catalog.setval('asset_groups_id_seq', 2, true);
-SELECT pg_catalog.setval('audit_logs_id_seq', 1, false);
-SELECT pg_catalog.setval('auth_secrets_id_seq', 1, false);
-SELECT pg_catalog.setval('azure_data_quality_aggregations_id_seq', 1, false);
-SELECT pg_catalog.setval('azure_data_quality_stats_id_seq', 1, false);
-SELECT pg_catalog.setval('domain_collection_results_id_seq', 1, false);
-SELECT pg_catalog.setval('feature_flags_id_seq', 13, true);
-SELECT pg_catalog.setval('file_upload_jobs_id_seq', 1, false);
-SELECT pg_catalog.setval('ingest_tasks_id_seq', 1, false);
-SELECT pg_catalog.setval('parameters_id_seq', 2, true);
-SELECT pg_catalog.setval('permissions_id_seq', 19, true);
-SELECT pg_catalog.setval('roles_id_seq', 5, true);
-SELECT pg_catalog.setval('saml_providers_id_seq', 1, false);
-SELECT pg_catalog.setval('saved_queries_id_seq', 1, false);
-SELECT pg_catalog.setval('saved_queries_permissions_id_seq', 1, false);
-SELECT pg_catalog.setval('saved_queries_permissions_query_id_seq', 1, false);
-SELECT pg_catalog.setval('user_sessions_id_seq', 1, false);
-
-ALTER TABLE ONLY ad_data_quality_aggregations
-    ADD CONSTRAINT ad_data_quality_aggregations_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY ad_data_quality_stats
-    ADD CONSTRAINT ad_data_quality_stats_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY analysis_request_switch
-    ADD CONSTRAINT analysis_request_switch_pkey PRIMARY KEY (singleton);
-
-ALTER TABLE ONLY asset_group_collection_entries
-    ADD CONSTRAINT asset_group_collection_entries_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY asset_group_collections
-    ADD CONSTRAINT asset_group_collections_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY asset_group_selectors
-    ADD CONSTRAINT asset_group_selectors_name_assetgroupid_key UNIQUE (name, asset_group_id);
-
-ALTER TABLE ONLY asset_group_selectors
-    ADD CONSTRAINT asset_group_selectors_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY asset_groups
-    ADD CONSTRAINT asset_groups_name_key UNIQUE (name);
-
-ALTER TABLE ONLY asset_groups
-    ADD CONSTRAINT asset_groups_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY asset_groups
-    ADD CONSTRAINT asset_groups_tag_key UNIQUE (tag);
-
-ALTER TABLE ONLY audit_logs
-    ADD CONSTRAINT audit_logs_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY auth_secrets
-    ADD CONSTRAINT auth_secrets_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY auth_tokens
-    ADD CONSTRAINT auth_tokens_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY azure_data_quality_aggregations
-    ADD CONSTRAINT azure_data_quality_aggregations_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY azure_data_quality_stats
-    ADD CONSTRAINT azure_data_quality_stats_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY datapipe_status
-    ADD CONSTRAINT datapipe_status_pkey PRIMARY KEY (singleton);
-
-ALTER TABLE ONLY domain_collection_results
-    ADD CONSTRAINT domain_collection_results_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY feature_flags
-    ADD CONSTRAINT feature_flags_key_key UNIQUE (key);
-
-ALTER TABLE ONLY feature_flags
-    ADD CONSTRAINT feature_flags_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY file_upload_jobs
-    ADD CONSTRAINT file_upload_jobs_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY ingest_tasks
-    ADD CONSTRAINT ingest_tasks_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY installations
-    ADD CONSTRAINT installations_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY parameters
-    ADD CONSTRAINT parameters_key_key UNIQUE (key);
-
-ALTER TABLE ONLY parameters
-    ADD CONSTRAINT parameters_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY permissions
-    ADD CONSTRAINT permissions_authority_name_key UNIQUE (authority, name);
-
-ALTER TABLE ONLY permissions
-    ADD CONSTRAINT permissions_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY roles
-    ADD CONSTRAINT roles_name_key UNIQUE (name);
-
-ALTER TABLE ONLY roles_permissions
-    ADD CONSTRAINT roles_permissions_pkey PRIMARY KEY (role_id, permission_id);
-
-ALTER TABLE ONLY roles
-    ADD CONSTRAINT roles_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY saml_providers
-    ADD CONSTRAINT saml_providers_name_key UNIQUE (name);
-
-ALTER TABLE ONLY saml_providers
-    ADD CONSTRAINT saml_providers_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY saved_queries_permissions
-    ADD CONSTRAINT saved_queries_permissions_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY saved_queries_permissions
-    ADD CONSTRAINT saved_queries_permissions_shared_to_user_id_query_id_key UNIQUE (shared_to_user_id, query_id);
-
-ALTER TABLE ONLY saved_queries
-    ADD CONSTRAINT saved_queries_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY user_sessions
-    ADD CONSTRAINT user_sessions_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT users_principal_name_key UNIQUE (principal_name);
-
-ALTER TABLE ONLY users_roles
-    ADD CONSTRAINT users_roles_pkey PRIMARY KEY (user_id, role_id);
-
-CREATE INDEX idx_ad_asset_groups_created_at ON asset_groups USING btree (created_at);
-
-CREATE INDEX idx_ad_asset_groups_updated_at ON asset_groups USING btree (updated_at);
-
-CREATE INDEX idx_ad_data_quality_aggregations_created_at ON ad_data_quality_aggregations USING btree (created_at);
-
-CREATE INDEX idx_ad_data_quality_aggregations_run_id ON ad_data_quality_aggregations USING btree (run_id);
-
-CREATE INDEX idx_ad_data_quality_aggregations_updated_at ON ad_data_quality_aggregations USING btree (updated_at);
-
-CREATE INDEX idx_ad_data_quality_stats_run_id ON ad_data_quality_stats USING btree (run_id);
-
-CREATE INDEX idx_asset_group_collection_entries_asset_group_collection_id ON asset_group_collection_entries USING btree (asset_group_collection_id);
-
-CREATE INDEX idx_asset_group_collection_entries_created_at ON asset_group_collection_entries USING btree (created_at);
-
-CREATE INDEX idx_asset_group_collection_entries_updated_at ON asset_group_collection_entries USING btree (updated_at);
-
-CREATE INDEX idx_asset_group_collections_asset_group_id ON asset_group_collections USING btree (asset_group_id);
-
-CREATE INDEX idx_asset_group_collections_created_at ON asset_group_collections USING btree (created_at);
-
-CREATE INDEX idx_asset_group_collections_updated_at ON asset_group_collections USING btree (updated_at);
-
-CREATE INDEX idx_audit_logs_action ON audit_logs USING btree (action);
-
-CREATE INDEX idx_audit_logs_actor_email ON audit_logs USING btree (actor_email);
-
-CREATE INDEX idx_audit_logs_actor_id ON audit_logs USING btree (actor_id);
-
-CREATE INDEX idx_audit_logs_created_at ON audit_logs USING btree (created_at);
-
-CREATE INDEX idx_audit_logs_source_ip_address ON audit_logs USING btree (source_ip_address);
-
-CREATE INDEX idx_audit_logs_status ON audit_logs USING btree (status);
-
-CREATE INDEX idx_azure_data_quality_aggregations_created_at ON azure_data_quality_aggregations USING btree (created_at);
-
-CREATE INDEX idx_azure_data_quality_aggregations_run_id ON azure_data_quality_aggregations USING btree (run_id);
-
-CREATE INDEX idx_azure_data_quality_stats_created_at ON azure_data_quality_stats USING btree (created_at);
-
-CREATE INDEX idx_azure_data_quality_stats_run_id ON azure_data_quality_stats USING btree (run_id);
-
-CREATE INDEX idx_azure_data_quality_stats_updated_at ON azure_data_quality_stats USING btree (updated_at);
-
-CREATE INDEX idx_file_upload_jobs_created_at ON file_upload_jobs USING btree (created_at);
-
-CREATE INDEX idx_file_upload_jobs_end_time ON file_upload_jobs USING btree (end_time);
-
-CREATE INDEX idx_file_upload_jobs_start_time ON file_upload_jobs USING btree (start_time);
-
-CREATE INDEX idx_file_upload_jobs_status ON file_upload_jobs USING btree (status);
-
-CREATE INDEX idx_file_upload_jobs_updated_at ON file_upload_jobs USING btree (updated_at);
-
-CREATE INDEX idx_ingest_tasks_task_id ON ingest_tasks USING btree (task_id);
-
-CREATE INDEX idx_saml_providers_name ON saml_providers USING btree (name);
-
-CREATE UNIQUE INDEX idx_saved_queries_composite_index ON saved_queries USING btree (user_id, name);
-
-CREATE INDEX idx_saved_queries_description ON saved_queries USING gin (description gin_trgm_ops);
-
-CREATE INDEX idx_saved_queries_name ON saved_queries USING gin (name gin_trgm_ops);
-
-CREATE INDEX idx_users_eula_accepted ON users USING btree (eula_accepted);
-
-CREATE INDEX idx_users_principal_name ON users USING btree (principal_name);
-
-ALTER TABLE ONLY asset_group_collection_entries
-    ADD CONSTRAINT fk_asset_group_collections_entries FOREIGN KEY (asset_group_collection_id) REFERENCES asset_group_collections(id) ON DELETE CASCADE;
-
-ALTER TABLE ONLY asset_group_collections
-    ADD CONSTRAINT fk_asset_groups_collections FOREIGN KEY (asset_group_id) REFERENCES asset_groups(id) ON DELETE CASCADE;
-
-ALTER TABLE ONLY asset_group_selectors
-    ADD CONSTRAINT fk_asset_groups_selectors FOREIGN KEY (asset_group_id) REFERENCES asset_groups(id) ON DELETE CASCADE;
-
-ALTER TABLE ONLY file_upload_jobs
-    ADD CONSTRAINT fk_file_upload_jobs_user FOREIGN KEY (user_id) REFERENCES users(id);
-
-ALTER TABLE ONLY roles_permissions
-    ADD CONSTRAINT fk_roles_permissions_permission FOREIGN KEY (permission_id) REFERENCES permissions(id);
-
-ALTER TABLE ONLY roles_permissions
-    ADD CONSTRAINT fk_roles_permissions_role FOREIGN KEY (role_id) REFERENCES roles(id);
-
-ALTER TABLE ONLY user_sessions
-    ADD CONSTRAINT fk_user_sessions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-
-ALTER TABLE ONLY auth_secrets
-    ADD CONSTRAINT fk_users_auth_secret FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-
-ALTER TABLE ONLY auth_tokens
-    ADD CONSTRAINT fk_users_auth_tokens FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-
-ALTER TABLE ONLY users_roles
-    ADD CONSTRAINT fk_users_roles_role FOREIGN KEY (role_id) REFERENCES roles(id);
-
-ALTER TABLE ONLY users_roles
-    ADD CONSTRAINT fk_users_roles_user FOREIGN KEY (user_id) REFERENCES users(id);
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT fk_users_saml_provider FOREIGN KEY (saml_provider_id) REFERENCES saml_providers(id);
-
-ALTER TABLE ONLY saved_queries_permissions
-    ADD CONSTRAINT saved_queries_permissions_query_id_fkey FOREIGN KEY (query_id) REFERENCES saved_queries(id) ON DELETE CASCADE;
-
-ALTER TABLE ONLY saved_queries_permissions
-    ADD CONSTRAINT saved_queries_permissions_shared_to_user_id_fkey FOREIGN KEY (shared_to_user_id) REFERENCES users(id) ON DELETE CASCADE;
