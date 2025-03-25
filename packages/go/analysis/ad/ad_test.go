@@ -175,7 +175,7 @@ func fetchNode(
 	t *testing.T,
 	ctx context.Context,
 	graphDB graph.Database,
-	queryCriterias ...*cypher.Comparison,
+	cypherComparisons ...*cypher.Comparison,
 ) (
 	*graph.Node,
 	error,
@@ -185,11 +185,11 @@ func fetchNode(
 	var fetchedNode *graph.Node
 	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		filteredNode, err := tx.Nodes().Filterf(func() graph.Criteria {
-			criterias := make([]graph.Criteria, len(queryCriterias))
-			for i := range queryCriterias {
-				criterias[i] = queryCriterias[i]
+			graphCriterias := make([]graph.Criteria, len(cypherComparisons))
+			for i := range cypherComparisons {
+				graphCriterias[i] = cypherComparisons[i]
 			}
-			return query.And(criterias...)
+			return query.And(graphCriterias...)
 		}).First()
 		if err != nil {
 			return err
