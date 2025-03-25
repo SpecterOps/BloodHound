@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"slices"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -44,24 +43,29 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 		pnameIncludeCounts = "includeCounts"
 	)
 	var (
-		pvalsTagType       = []string{"tag", "tier"}
-		pvalsIncludeCounts = []string{"false", "true"}
+		pvalsTagType = map[string]model.AssetGroupTagType{
+			"tag":  model.AssetGroupTagTypeLabel,
+			"tier": model.AssetGroupTagTypeTier,
+			"":     model.AssetGroupTagTypeLabel, // default
+		}
+		pvalsIncludeCounts = map[string]bool{
+			"false": false,
+			"true":  true,
+			"":      false, // default
+		}
 	)
 
 	var params = request.URL.Query()
-	// set defaults. This works since .Get() only retrives the first value
-	params.Add(pnameTagType, pvalsTagType[0])
-	params.Add(pnameIncludeCounts, pvalsIncludeCounts[0])
 
-	if paramTagType := params.Get(pnameTagType); !slices.Contains(pvalsTagType, paramTagType) {
+	if paramTagType, ok := pvalsTagType[params.Get(pnameTagType)]; !ok {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for tag type", request), response)
-	} else if paramIncludeCounts := params.Get(pnameIncludeCounts); !slices.Contains(pvalsIncludeCounts, paramIncludeCounts) {
+	} else if paramIncludeCounts, ok := pvalsIncludeCounts[params.Get(pnameIncludeCounts)]; !ok {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
 	} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), paramTagType); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		resp := map[string]any{"asset_group_tags": tags}
-		if paramIncludeCounts == "true" {
+		if paramIncludeCounts {
 		}
 		api.WriteBasicResponse(request.Context(), resp, http.StatusOK, response)
 	}

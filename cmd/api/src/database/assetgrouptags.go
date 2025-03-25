@@ -33,6 +33,7 @@ const (
 type AssetGroupTagData interface {
 	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error)
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
+	GetAssetGroupTags(ctx context.Context, tagType model.AssetGroupTagType) (model.AssetGroupTags, error)
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -95,6 +96,25 @@ func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int
 	} else {
 		return tag, nil
 	}
+}
+
+func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, tagType model.AssetGroupTagType) (model.AssetGroupTags, error) {
+	var tags model.AssetGroupTags
+	if tagType == model.AssetGroupTagTypeTier {
+		if result := s.db.WithContext(ctx).Raw(
+			fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE type = ? AND deleted_at IS NULL", model.AssetGroupTag{}.TableName()),
+			model.AssetGroupTagTypeTier,
+		).Find(&tags); result.Error != nil {
+			return model.AssetGroupTags{}, CheckError(result)
+		}
+	} else {
+		if result := s.db.WithContext(ctx).Raw(
+			fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE deleted_at IS NULL", model.AssetGroupTag{}.TableName()),
+		).Find(&tags); result.Error != nil {
+			return model.AssetGroupTags{}, CheckError(result)
+		}
+	}
+	return tags, nil
 }
 
 func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error) {

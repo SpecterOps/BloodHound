@@ -59,6 +59,8 @@ type AssetGroupTag struct {
 	RequireCertify null.Bool         `json:"require_certify"`
 }
 
+type AssetGroupTags []AssetGroupTag
+
 func (AssetGroupTag) TableName() string {
 	return "asset_group_tags"
 }
