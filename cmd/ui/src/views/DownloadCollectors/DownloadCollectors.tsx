@@ -33,13 +33,13 @@ const DownloadCollectors = () => {
     const downloadCollector = (collectorType: CommunityCollectorType, version: string) => {
         apiClient
             .downloadCollector(collectorType, version)
-            .then((res: any) => {
+            .then((res) => {
                 const filename =
                     res.headers['content-disposition']?.match(/^.*filename="(.*)"$/)?.[1] ||
                     `${collectorType}-${version}.zip`;
                 fileDownload(res.data, filename);
             })
-            .catch((err: any) => {
+            .catch((err) => {
                 console.error(err);
                 dispatch(
                     addSnackbar('This file could not be downloaded. Please try again.', 'downloadCollectorFailure')
@@ -50,13 +50,13 @@ const DownloadCollectors = () => {
     const downloadCollectorChecksum = (collectorType: CommunityCollectorType, version: string) => {
         apiClient
             .downloadCollectorChecksum(collectorType, version)
-            .then((res: any) => {
+            .then((res) => {
                 const filename =
                     res.headers['content-disposition']?.match(/^.*filename="(.*)"$/)?.[1] ||
                     `${collectorType}-${version}.zip.sha256`;
                 fileDownload(res.data, filename);
             })
-            .catch((err: any) => {
+            .catch((err) => {
                 console.error(err);
                 dispatch(
                     addSnackbar(
