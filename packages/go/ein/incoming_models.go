@@ -296,8 +296,12 @@ type SMBSigningAPIResult struct {
 	DnsComputerName string
 }
 
-type RegistryDataAPIResult struct {
+type NTLMRegistryDataAPIResult struct {
 	APIResult
+	Result NTLMRegistryInfo
+}
+
+type NTLMRegistryInfo struct {
 	RestrictSendingNtlmTraffic uint
 }
 
@@ -320,7 +324,7 @@ type Computer struct {
 	UnconstrainedDelegation bool
 	SmbInfo                 SMBSigningAPIResult
 	IsWebClientRunning      BoolAPIResult
-	NTLMRegistryData        RegistryDataAPIResult
+	NTLMRegistryData        NTLMRegistryDataAPIResult
 }
 
 type OU struct {
