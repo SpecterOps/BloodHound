@@ -26,7 +26,7 @@ export const COLLECTOR_TYPE_LABEL: { [key in CollectorType]: string } = {
     azurehound: 'AzureHound',
 };
 
-interface CollectorDownloadFile {
+export interface CollectorDownloadFile {
     displayName: string;
     os: string;
     arch: string;
@@ -34,7 +34,7 @@ interface CollectorDownloadFile {
     onClickDownloadChecksum: () => void;
 }
 
-interface CollectorCardProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface CollectorCardProps extends React.HTMLAttributes<HTMLDivElement> {
     collectorType: CollectorType;
     version: string;
     downloadArtifacts: CollectorDownloadFile[];

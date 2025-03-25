@@ -19,7 +19,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 import { CollectorType } from 'js-client-library';
 import { useState } from 'react';
 import { CaretDown, CaretUp } from '../AppIcon/Icons';
-import CollectorCard, { COLLECTOR_TYPE_LABEL } from '../CollectorCard';
+import CollectorCard, { COLLECTOR_TYPE_LABEL, CollectorCardProps, CollectorDownloadFile } from '../CollectorCard';
 
 const COLLECTOR_SHORT_LABEL: { [key in CollectorType]: string } = {
     sharphound_enterprise: 'SHE',
@@ -27,24 +27,11 @@ const COLLECTOR_SHORT_LABEL: { [key in CollectorType]: string } = {
     azurehound: 'AH',
 };
 
-interface CollectorDownloadFile {
-    os: string;
-    arch: string;
-    onClickDownload: () => void;
-    onClickDownloadChecksum: () => void;
-}
-
-interface CollectorCardProps {
-    version: string;
-    downloadArtifacts: CollectorDownloadFile[];
-    timestamp?: number;
-    label?: string;
-    isPrerelease?: boolean;
-}
-
 interface CollectorCardListProps {
     collectorType: CollectorType;
-    collectors: CollectorCardProps[];
+    collectors: (Omit<CollectorCardProps, 'collectorType' | 'downloadArtifacts'> & {
+        downloadArtifacts: Omit<CollectorDownloadFile, 'displayName'>[];
+    })[];
     noLabels?: boolean;
 }
 
@@ -63,9 +50,9 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectorType, co
     // Few enough collectors that this isn't worth memoizing
     // And the only stateful changes that should cause rerender
     // are collectors and theme
-    const sortedCollectors = collectors.slice().sort((a, b) =>
-        b.version.toLowerCase().localeCompare(a.version.toLowerCase())
-    );
+    const sortedCollectors = collectors
+        .slice()
+        .sort((a, b) => b.version.toLowerCase().localeCompare(a.version.toLowerCase()));
     const latestStable = sortedCollectors.find((c) => !c.isPrerelease);
     const latestPrerelease = sortedCollectors.find(
         // Is prerelease and version is greater than latest stable
@@ -89,8 +76,8 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectorType, co
                         isPrerelease={latestStable.isPrerelease}
                         downloadArtifacts={latestStable.downloadArtifacts.map((artifact) => {
                             return {
-                                displayName: `${COLLECTOR_SHORT_LABEL[collectorType]} ${latestStable.version} ${artifact.os} ${artifact.arch}`,
                                 ...artifact,
+                                displayName: `${COLLECTOR_SHORT_LABEL[collectorType]} ${latestStable.version} ${artifact.os} ${artifact.arch}`,
                             };
                         })}
                     />
@@ -105,8 +92,8 @@ const CollectorCardList: React.FC<CollectorCardListProps> = ({ collectorType, co
                         isPrerelease={latestPrerelease.isPrerelease}
                         downloadArtifacts={latestPrerelease.downloadArtifacts.map((artifact) => {
                             return {
-                                displayName: `${COLLECTOR_SHORT_LABEL[collectorType]} ${latestPrerelease.version} ${artifact.os} ${artifact.arch}`,
                                 ...artifact,
+                                displayName: `${COLLECTOR_SHORT_LABEL[collectorType]} ${latestPrerelease.version} ${artifact.os} ${artifact.arch}`,
                             };
                         })}
                     />
@@ -145,8 +132,8 @@ const OlderVersionsList: React.FC<CollectorCardListProps> = ({ collectorType, co
                                 isPrerelease={collector.isPrerelease}
                                 downloadArtifacts={collector.downloadArtifacts.map((artifact) => {
                                     return {
-                                        displayName: `${COLLECTOR_SHORT_LABEL[collectorType]} ${collector.version} ${artifact.os} ${artifact.arch}`,
                                         ...artifact,
+                                        displayName: `${COLLECTOR_SHORT_LABEL[collectorType]} ${collector.version} ${artifact.os} ${artifact.arch}`,
                                     };
                                 })}
                             />
