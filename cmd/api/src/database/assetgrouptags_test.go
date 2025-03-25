@@ -123,3 +123,40 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 	})
 
 }
+
+func TestDatabase_GetAssetGroupTag(t *testing.T) {
+	var (
+		dbInst          = integration.SetupDB(t)
+		testCtx         = context.Background()
+		tagType         = model.AssetGroupTagTypeTier
+		testActor       = "some_test_actor"
+		testName        = "some test tag name 1"
+		testDescription = "some test tag description"
+		position        = null.Int32{}
+		requireCertify  = null.Bool{}
+	)
+
+	t.Run("successfully gets tag", func(t *testing.T) {
+		createdTag, err := dbInst.CreateAssetGroupTag(testCtx, tagType, testActor, testName, testDescription, position, requireCertify)
+		require.NoError(t, err)
+
+		tag, err := dbInst.GetAssetGroupTag(testCtx, createdTag.ID)
+		require.NoError(t, err)
+		require.Equal(t, tagType, tag.Type)
+		require.False(t, tag.CreatedAt.IsZero())
+		require.Equal(t, testActor, tag.CreatedBy)
+		require.False(t, tag.UpdatedAt.IsZero())
+		require.Equal(t, testActor, tag.UpdatedBy)
+		require.Empty(t, tag.DeletedAt)
+		require.Empty(t, tag.DeletedBy)
+		require.Equal(t, testName, tag.Name)
+		require.Equal(t, testDescription, tag.Description)
+		require.Equal(t, null.Int32{}, tag.Position)
+		require.Equal(t, null.Bool{}, tag.RequireCertify)
+	})
+
+	t.Run("tag doesn't exist error", func(t *testing.T) {
+		_, err := dbInst.GetAssetGroupTag(testCtx, 1234)
+		require.Error(t, err)
+	})
+}

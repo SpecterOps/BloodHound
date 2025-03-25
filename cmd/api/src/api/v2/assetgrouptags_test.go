@@ -17,18 +17,29 @@
 package v2_test
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 
+	uuid2 "github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/database"
 	mocks_db "github.com/specterops/bloodhound/src/database/mocks"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/src/queries/mocks"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -285,4 +296,107 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				},
 			},
 		})
+}
+
+func TestDatabase_GetAssetGroupTag(t *testing.T) {
+	var (
+		mockCtrl    = gomock.NewController(t)
+		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
+		mockGraphDb = mocks_graph.NewMockGraph(mockCtrl)
+		resources   = v2.Resources{
+			DB:         mockDB,
+			GraphQuery: mockGraphDb,
+		}
+	)
+
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	endpoint := "/api/v2/asset-group-tags/%s"
+	assetGroupTagId := "5"
+
+	t.Run("successfully got asset group tag", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), int(5)).Return(model.AssetGroupTag{
+			ID:             5,
+			Name:           "test tag 5",
+			Description:    "some description",
+			RequireCertify: null.BoolFrom(true),
+		}, nil)
+
+		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", fmt.Sprintf(endpoint, assetGroupTagId), nil)
+		require.Nil(t, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
+
+		response := httptest.NewRecorder()
+		handler := http.HandlerFunc(resources.GetAssetGroupTag)
+
+		handler.ServeHTTP(response, req)
+		require.Equal(t, http.StatusOK, response.Code)
+
+		bodyBytes, err := io.ReadAll(response.Body)
+		require.Nil(t, err)
+
+		var temp struct {
+			Data struct {
+				Tag model.AssetGroupTag `json:"tag"`
+			} `json:"data"`
+		}
+		err = json.Unmarshal(bodyBytes, &temp)
+		require.Nil(t, err)
+
+		parsedTime, err := time.Parse(time.RFC3339, "0001-01-01T00:00:00Z")
+		require.Nil(t, err)
+
+		require.Equal(t, model.AssetGroupTag{
+			ID:             5,
+			Type:           0,
+			KindId:         0,
+			Name:           "test tag 5",
+			Description:    "some description",
+			CreatedAt:      parsedTime,
+			CreatedBy:      "",
+			UpdatedAt:      parsedTime,
+			UpdatedBy:      "",
+			DeletedAt:      null.Time{},
+			DeletedBy:      null.String{},
+			Position:       null.Int32{},
+			RequireCertify: null.BoolFrom(true),
+		}, temp.Data.Tag)
+	})
+
+	t.Run("asset group tag doesn't exist error", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).Return(model.AssetGroupTag{}, database.ErrNotFound)
+
+		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", fmt.Sprintf(endpoint, assetGroupTagId), nil)
+		require.Nil(t, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
+
+		response := httptest.NewRecorder()
+		handler := http.HandlerFunc(resources.GetAssetGroupTag)
+
+		handler.ServeHTTP(response, req)
+		require.Equal(t, http.StatusNotFound, response.Code)
+	})
+
+	t.Run("id malformed error", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", fmt.Sprintf(endpoint, assetGroupTagId), nil)
+		require.Nil(t, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/asset-group-tags/{5}", resources.GetAssetGroupTag).Methods("GET")
+
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsIDMalformed)
+	})
 }
