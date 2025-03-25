@@ -145,7 +145,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 
 func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int) ([]model.AssetGroupTagSelector, error) {
 	var selectors []model.AssetGroupTagSelector
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE asset_group_tag_id = ?", model.AssetGroupTagSelector{}.TableName()), assetGroupTagId).Find(&selectors); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE asset_group_tag_id = ?", model.AssetGroupTagSelector{}.TableName()), assetGroupTagId).Find(&selectors); result.Error != nil {
 		return []model.AssetGroupTagSelector{}, CheckError(result)
 	} else {
 		for index, selector := range selectors {
