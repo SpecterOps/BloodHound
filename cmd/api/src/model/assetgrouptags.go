@@ -39,6 +39,7 @@ const (
 type AssetGroupTagType int
 
 const (
+	AssetGroupTagTypeAll   AssetGroupTagType = 0
 	AssetGroupTagTypeTier  AssetGroupTagType = 1
 	AssetGroupTagTypeLabel AssetGroupTagType = 2
 )

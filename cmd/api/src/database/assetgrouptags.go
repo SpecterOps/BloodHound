@@ -100,16 +100,16 @@ func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int
 
 func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, tagType model.AssetGroupTagType) (model.AssetGroupTags, error) {
 	var tags model.AssetGroupTags
-	if tagType == model.AssetGroupTagTypeTier {
+	if tagType == model.AssetGroupTagTypeAll {
 		if result := s.db.WithContext(ctx).Raw(
-			fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE type = ? AND deleted_at IS NULL", model.AssetGroupTag{}.TableName()),
-			model.AssetGroupTagTypeTier,
+			fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE deleted_at IS NULL", model.AssetGroupTag{}.TableName()),
 		).Find(&tags); result.Error != nil {
 			return model.AssetGroupTags{}, CheckError(result)
 		}
 	} else {
 		if result := s.db.WithContext(ctx).Raw(
-			fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE deleted_at IS NULL", model.AssetGroupTag{}.TableName()),
+			fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE type = ? AND deleted_at IS NULL", model.AssetGroupTag{}.TableName()),
+			model.AssetGroupTagTypeTier,
 		).Find(&tags); result.Error != nil {
 			return model.AssetGroupTags{}, CheckError(result)
 		}
@@ -134,6 +134,10 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
+
+	if tagType == model.AssetGroupTagTypeAll {
+		return model.AssetGroupTag{}, fmt.Errorf("'AssetGroupTagTypeAll' is not valid for create")
+	}
 
 	if tagType != model.AssetGroupTagTypeTier && (position.Valid || requireCertify.Valid) {
 		return model.AssetGroupTag{}, fmt.Errorf("position and require_certify are limited to tiers only")
