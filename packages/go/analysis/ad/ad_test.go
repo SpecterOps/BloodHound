@@ -69,15 +69,23 @@ func TestLinkWellKnownGroups(t *testing.T) {
 				// NOTE: Testing the scenario requires created the wellknown groups ahead of time asserting their
 				// execution when asserting the scenario prior to asserting the expected outcome for
 				// LinkWellKnownGroups
-				createdCollectedDomainNode := createCollectedDomainNode(t, ctx, graphDB)
+				createdCollectedDomainNode := createNode(
+					t,
+					ctx,
+					graphDB,
+					generateCollectedDomain(),
+				)
 				for _, wellKnownGroup := range wellKnownGroups {
-					createdWellKnownGroup := createWellKnownGroup(
+					createdWellKnownGroup := createNode(
 						t,
 						ctx,
 						graphDB,
-						createdCollectedDomainNode,
-						wellKnownGroup.sidSuffix,
-						wellKnownGroup.nodeNamePrefix,
+						generateWellKnownGroup(
+							t,
+							createdCollectedDomainNode,
+							wellKnownGroup.sidSuffix,
+							wellKnownGroup.nodeNamePrefix,
+						),
 					)
 					createdWellKnownGroups[wellKnownGroup.nodeNamePrefix] = createdWellKnownGroup
 					assertNodeExists(
