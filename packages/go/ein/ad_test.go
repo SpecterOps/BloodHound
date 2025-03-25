@@ -141,11 +141,13 @@ func TestConvertComputerToNode(t *testing.T) {
 				"isdc": true,
 			},
 		},
-		NTLMRegistryData: ein.RegistryDataAPIResult{
+		NTLMRegistryData: ein.NTLMRegistryDataAPIResult{
 			APIResult: ein.APIResult{
 				Collected: true,
 			},
-			RestrictSendingNtlmTraffic: 1,
+			Result: ein.NTLMRegistryInfo{
+				RestrictSendingNtlmTraffic: 1,
+			},
 		},
 		IsWebClientRunning: ein.BoolAPIResult{
 			APIResult: ein.APIResult{

@@ -80,7 +80,7 @@ func ConvertComputerToNode(item Computer) IngestibleNode {
 				1: Audit All
 				2: Deny All
 		*/
-		if item.NTLMRegistryData.RestrictSendingNtlmTraffic == 0 {
+		if item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic == 0 {
 			itemProps[ad.RestrictOutboundNTLM.String()] = false
 		} else {
 			itemProps[ad.RestrictOutboundNTLM.String()] = true
