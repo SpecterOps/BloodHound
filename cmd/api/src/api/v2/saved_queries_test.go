@@ -21,11 +21,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/specterops/bloodhound/src/utils"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+
+	"github.com/specterops/bloodhound/src/utils"
 
 	uuid2 "github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
