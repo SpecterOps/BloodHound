@@ -5,28 +5,6 @@
 -- Dumped from database version 14.17 (Homebrew)
 -- Dumped by pg_dump version 14.17 (Homebrew)
 
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
---
--- Name: pg_trgm; Type: EXTENSION; Schema: -; Owner: -
---
-
-CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
-
-
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
-
 --
 -- Name: ad_data_quality_aggregations; Type: TABLE; Schema: public; Owner: bloodhound
 --
@@ -1196,90 +1174,10 @@ ALTER TABLE ONLY public.user_sessions ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
--- Data for Name: ad_data_quality_aggregations; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: ad_data_quality_stats; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: analysis_request_switch; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: asset_group_collection_entries; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: asset_group_collections; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: asset_group_selectors; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: asset_groups; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-INSERT INTO public.asset_groups VALUES ('Admin Tier Zero', 'admin_tier_0', true, 1, '2025-03-21 12:56:17.065847-05', '2025-03-21 12:56:17.065847-05');
-INSERT INTO public.asset_groups VALUES ('Owned', 'owned', true, 2, '2025-03-21 12:58:42.752739-05', '2025-03-21 12:58:42.752739-05');
-
-
---
--- Data for Name: audit_logs; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: auth_secrets; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: auth_tokens; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: azure_data_quality_aggregations; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: azure_data_quality_stats; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
 -- Data for Name: datapipe_status; Type: TABLE DATA; Schema: public; Owner: bloodhound
 --
 
 INSERT INTO public.datapipe_status VALUES (true, 'idle', '2025-03-21 12:58:42.971311-05', NULL);
-
-
---
--- Data for Name: domain_collection_results; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
 
 
 --
@@ -1299,24 +1197,6 @@ INSERT INTO public.feature_flags VALUES (10, '2025-03-21 12:58:43.038933-05', '2
 INSERT INTO public.feature_flags VALUES (11, '2025-03-21 12:58:43.039466-05', '2025-03-21 12:58:43.039466-05', 'risk_exposure_new_calculation', 'Use new tier zero risk exposure calculation', 'Enables the use of new tier zero risk exposure metatree metrics.', false, false);
 INSERT INTO public.feature_flags VALUES (12, '2025-03-21 12:58:43.039655-05', '2025-03-21 12:58:43.039655-05', 'fedramp_eula', 'FedRAMP EULA', 'Enables showing the FedRAMP EULA on every login. (Enterprise only)', false, false);
 INSERT INTO public.feature_flags VALUES (13, '2025-03-21 12:58:43.039915-05', '2025-03-21 12:58:43.039915-05', 'auto_tag_t0_parent_objects', 'Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero', 'Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.', true, true);
-
-
---
--- Data for Name: file_upload_jobs; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: ingest_tasks; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: installations; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
 
 
 --
@@ -1416,42 +1296,6 @@ INSERT INTO public.roles_permissions VALUES (5, 13);
 INSERT INTO public.roles_permissions VALUES (5, 15);
 INSERT INTO public.roles_permissions VALUES (5, 16);
 INSERT INTO public.roles_permissions VALUES (5, 19);
-
-
---
--- Data for Name: saml_providers; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: saved_queries; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: saved_queries_permissions; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: user_sessions; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
-
-
---
--- Data for Name: users_roles; Type: TABLE DATA; Schema: public; Owner: bloodhound
---
-
 
 
 --
