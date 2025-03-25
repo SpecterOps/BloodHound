@@ -13,6 +13,7 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE ad_data_quality_aggregations (
     domains bigint,
