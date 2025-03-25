@@ -19,42 +19,43 @@ The Service Desk group has permission to force change the password of Bob withou
 
 These are the traversable AD edge types in BloodHound:
 
-|     |     |     |
-| --- | --- | --- |
-| ADCSESC1 | AllowedToAct | HasSession |
-| ADCSESC10a | AllowedToDelegate | MemberOf |
-| ADCSESC10b | CanPSRemote | Owns |
-| ADCSESC13 | CanRDP | ReadGMSAPassword |
-| ADCSESC3 | CoerceToTGT | ReadLAPSPassword |
-| ADCSESC4 | Contains | SQLAdmin |
-| ADCSESC6a | DCFor | SyncedToEntraUser |
-| ADCSESC6b | DCSync | SyncLAPSPassword |
-| ADCSESC9a | DumpSMSAPassword | TrustedBy |
-| ADCSESC9b | ExecuteDCOM | WriteAccountRestrictions |
-| AddAllowedToAct | ForceChangePassword | WriteDacl |
-| AddKeyCredentialLink | GPLink | WriteGPLink |
-| AddMember | GenericAll | WriteOwner |
-| AddSelf | GenericWrite | WriteSPN |
-| AdminTo | GoldenCert |     |
-| AllExtendedRights | HasSIDHistory |     |
+|                      |                           |                          |
+|----------------------|---------------------------|--------------------------|
+| ADCSESC1             | AllowedToDelegate         | GoldenCert               |
+| ADCSESC10a           | CanPSRemote               | HasSIDHistory            |
+| ADCSESC10b           | CanRDP                    | HasSession               |
+| ADCSESC13            | CoerceAndRelayNTLMToADCS  | MemberOf                 |
+| ADCSESC3             | CoerceAndRelayNTLMToLDAP  | Owns                     |
+| ADCSESC4             | CoerceAndRelayNTLMToLDAPS | OwnsLimitedRights        |
+| ADCSESC6a            | CoerceAndRelayNTLMToSMB   | ReadGMSAPassword         |
+| ADCSESC6b            | CoerceToTGT               | ReadLAPSPassword         |
+| ADCSESC9a            | Contains                  | SQLAdmin                 |
+| ADCSESC9b            | DCFor                     | SyncedToEntraUser        |
+| AddAllowedToAct      | DCSync                    | SyncLAPSPassword         |
+| AddKeyCredentialLink | DumpSMSAPassword          | WriteAccountRestrictions |
+| AddMember            | ExecuteDCOM               | WriteDacl                |
+| AddSelf              | ForceChangePassword       | WriteGPLink              |
+| AdminTo              | GPLink                    | WriteOwner               |
+| AllExtendedRights    | GenericAll                | WriteOwnerLimitedRights  |
+| AllowedToAct         | GenericWrite              | WriteSPN                 |
 
 These are the traversable Azure edge types in BloodHound:
 
-|     |     |     |
-| --- | --- | --- |
-| AZAKSContributor | AZGetSecrets | AZOwner |
-| AZAddMembers | AZGlobalAdmin | AZOwns |
-| AZAddOwner | AZHasRole | AZPrivilegedAuthAdmin |
-| AZAddSecret | AZKeyVaultContributor | AZPrivilegedRoleAdmin |
-| AZAppAdmin | AZLogicAppContributor | AZResetPassword |
-| AZAutomationContributor | AZMGAddMember | AZRunsAs |
-| AZAvereContributor | AZMGAddOwner | AZUserAccessAdministrator |
-| AZCloudAppAdmin | AZMGAddSecret | AZVMAdminLogin |
-| AZContains | AZMGGrantAppRoles | AZVMContributor |
-| AZContributor | AZMGGrantRole | AZWebsiteContributor |
-| AZExecuteCommand | AZManagedIdentity | SyncedToADUser |
-| AZGetCertificates | AZMemberOf |     |
-| AZGetKeys | AZNodeResourceGroup |     |
+|                         |                       |                           |
+|-------------------------|-----------------------|---------------------------|
+| AZAKSContributor        | AZGetSecrets          | AZOwner                   |
+| AZAddMembers            | AZGlobalAdmin         | AZOwns                    |
+| AZAddOwner              | AZHasRole             | AZPrivilegedAuthAdmin     |
+| AZAddSecret             | AZKeyVaultContributor | AZPrivilegedRoleAdmin     |
+| AZAppAdmin              | AZLogicAppContributor | AZResetPassword           |
+| AZAutomationContributor | AZMGAddMember         | AZRunsAs                  |
+| AZAvereContributor      | AZMGAddOwner          | AZUserAccessAdministrator |
+| AZCloudAppAdmin         | AZMGAddSecret         | AZVMAdminLogin            |
+| AZContains              | AZMGGrantAppRoles     | AZVMContributor           |
+| AZContributor           | AZMGGrantRole         | AZWebsiteContributor      |
+| AZExecuteCommand        | AZManagedIdentity     | SyncedToADUser            |
+| AZGetCertificates       | AZMemberOf            |                           |
+| AZGetKeys               | AZNodeResourceGroup   |                           |
 
 ## Non-Traversable Edges
 
@@ -75,22 +76,22 @@ But you will not see any GetChanges or GetChangesAll edge. However, you can use 
 
 These are the non-traversable AD edge types in BloodHound:
 
-|     |     |     |
-| --- | --- | --- |
-| DelegatedEnrollmentAgent | HostsCAService | PublishedTo |
-| Enroll | IssuedSignedBy | RemoteInteractiveLogonPrivilege |
-| EnrollOnBehalfOf | LocalToComputer | RootCAFor |
-| EnterpriseCAFor | ManageCA | TrustedForNTAuth |
-| ExtendedByPolicy | ManageCertificates | WritePKIEnrollmentFlag |
-| GetChanges | MemberOfLocalGroup | WritePKINameFlag |
-| GetChangesAll | NTAuthStoreFor |     |
-| GetChangesInFilteredSet | OIDGroupLink |     |
+|                          |                    |                                 |
+|--------------------------|--------------------|---------------------------------|
+| DelegatedEnrollmentAgent | HostsCAService     | OwnsRaw                         |
+| Enroll                   | IssuedSignedBy     | PublishedTo                     |
+| EnrollOnBehalfOf         | LocalToComputer    | RemoteInteractiveLogonPrivilege |
+| EnterpriseCAFor          | ManageCA           | RootCAFor                       |
+| ExtendedByPolicy         | ManageCertificates | TrustedForNTAuth                |
+| GetChanges               | MemberOfLocalGroup | WriteOwnerRaw                   |
+| GetChangesAll            | NTAuthStoreFor     | WritePKIEnrollmentFlag          |
+| GetChangesInFilteredSet  | OIDGroupLink       | WritePKINameFlag                |
 
 These are the non-traversable Azure edge types in BloodHound:
 
-|     |     |
-| --- | --- |
-| AZMGAppRoleAssignment\_ReadWrite\_All | AZMGGroup\_ReadWrite\_All |
-| AZMGApplication\_ReadWrite\_All | AZMGRoleManagement\_ReadWrite\_Directory |
-| AZMGDirectory\_ReadWrite\_All | AZMGServicePrincipalEndpoint\_ReadWrite\_All |
-| AZMGGroupMember\_ReadWrite\_All |     |
+|                                       |                                              |
+|---------------------------------------|----------------------------------------------|
+| AZMGAppRoleAssignment\_ReadWrite\_All | AZMGGroup\_ReadWrite\_All                    |
+| AZMGApplication\_ReadWrite\_All       | AZMGRoleManagement\_ReadWrite\_Directory     |
+| AZMGDirectory\_ReadWrite\_All         | AZMGServicePrincipalEndpoint\_ReadWrite\_All |
+| AZMGGroupMember\_ReadWrite\_All       |                                              |
