@@ -16,9 +16,12 @@
 
 import { useAvailableEnvironments } from 'bh-shared-ui';
 import { Environment } from 'js-client-library';
+import { orderBy } from 'lodash';
 import { UseQueryOptions } from 'react-query';
 
 export interface UseInitialEnvironmentParams {
+    /** orderBy alphabetical in CE, we will use impactValue for BHE */
+    orderBy?: 'impactValue' | 'name';
     handleInitialEnvironment?: (env: Environment | null) => void;
     queryOptions?: Omit<
         UseQueryOptions<Environment[], unknown, Environment | undefined, string[]>,
@@ -27,8 +30,8 @@ export interface UseInitialEnvironmentParams {
 }
 
 // Future Dev: when we implement deep linking support for selected domain in BHE, move this to shared-ui and rip out the reducer logic (including stateUpdater)
-export const useInitialEnvironment = (params?: UseInitialEnvironmentParams) => {
-    const { handleInitialEnvironment, queryOptions = {} } = params ?? {};
+export const useInitialEnvironment = (options: UseInitialEnvironmentParams) => {
+    const { orderBy: _orderBy = 'impactValue', handleInitialEnvironment, queryOptions = {} } = options ?? {};
     const { queryKey = [], ...restOfQueryOptions } = queryOptions;
 
     return useAvailableEnvironments({
@@ -37,11 +40,14 @@ export const useInitialEnvironment = (params?: UseInitialEnvironmentParams) => {
         select: (availableEnvironments) => {
             if (!availableEnvironments?.length) return;
 
-            const collectedEnvironments = availableEnvironments
-                ?.filter((environment: Environment) => environment.collected) // omit uncollected environments
-                .sort((a: Environment, b: Environment) => b.impactValue - a.impactValue); // sort by impactValue descending
+            const collectedEnvironments = availableEnvironments?.filter(
+                (environment: Environment) => environment.collected
+            );
 
-            const initialEnvironment = collectedEnvironments[0];
+            const direction = (_orderBy ?? 'impactValue') === 'name' ? 'asc' : 'desc';
+            const sorted: Environment[] = orderBy(collectedEnvironments, [_orderBy], [direction]);
+
+            const initialEnvironment = sorted[0];
 
             if (handleInitialEnvironment) {
                 handleInitialEnvironment(initialEnvironment);
@@ -49,6 +55,7 @@ export const useInitialEnvironment = (params?: UseInitialEnvironmentParams) => {
 
             return initialEnvironment;
         },
+        refetchOnWindowFocus: false,
         ...restOfQueryOptions,
     });
 };

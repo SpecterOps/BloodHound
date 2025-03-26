@@ -62,14 +62,18 @@ afterAll(() => server.close());
 describe('useInitialEnvironment', async () => {
     it('calls handleInitialEnvironment with the highest impactValue as the initial environment', async () => {
         const mockHandleInitialEnv = vi.fn();
-        renderHook(() => useInitialEnvironment({ handleInitialEnvironment: mockHandleInitialEnv }));
+        renderHook(() => useInitialEnvironment({ orderBy: 'name', handleInitialEnvironment: mockHandleInitialEnv }));
 
         await waitFor(() => expect(mockHandleInitialEnv).toBeCalledWith(fakeEnvironmentA));
     });
     it('disables useAvailableEnvironment and does not attempt calling handleInitialEnvironment if queryOptions.enabled', async () => {
         const mockHandleInitialEnv = vi.fn();
         renderHook(() =>
-            useInitialEnvironment({ handleInitialEnvironment: mockHandleInitialEnv, queryOptions: { enabled: false } })
+            useInitialEnvironment({
+                orderBy: 'name',
+                handleInitialEnvironment: mockHandleInitialEnv,
+                queryOptions: { enabled: false },
+            })
         );
 
         expect(useAvailableEnvironmentsSpy).toBeCalledWith(expect.objectContaining({ enabled: false }));

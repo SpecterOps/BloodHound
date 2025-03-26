@@ -866,6 +866,27 @@ IsDC: types.#StringEnum & {
 	representation: "isdc"
 }
 
+HTTPEnrollmentEndpoints: types.#StringEnum & {
+	symbol: "HTTPEnrollmentEndpoints"
+	schema: "ad"
+	name:"HTTP Enrollment Endpoints"
+	representation: "httpenrollmentendpoints"
+}
+
+HTTPSEnrollmentEndpoints: types.#StringEnum & {
+	symbol: "HTTPSEnrollmentEndpoints"
+	schema: "ad"
+	name:"HTTPS Enrollment Endpoints"
+	representation: "httpsenrollmentendpoints"
+}
+
+HasVulnerableEndpoint: types.#StringEnum & {
+	symbol: "HasVulnerableEndpoint"
+	schema: "ad"
+	name:"Has Vulnerable Endpoint"
+	representation: "hasvulnerableendpoint"
+}
+
 
 Properties: [
 	AdminCount,
@@ -983,7 +1004,10 @@ Properties: [
 	LDAPAvailable,
 	LDAPSAvailable,
 	LDAPSEPA,
-	IsDC
+	IsDC,
+	HTTPEnrollmentEndpoints,
+	HTTPSEnrollmentEndpoints,
+	HasVulnerableEndpoint
 ]
 
 // Kinds

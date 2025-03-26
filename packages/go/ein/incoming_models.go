@@ -173,10 +173,23 @@ type RootCA struct {
 
 type EnterpriseCA struct {
 	IngestBase
-	CARegistryData       CARegistryData
-	EnabledCertTemplates []TypedPrincipal
-	HostingComputer      string
-	DomainSID            string
+	CARegistryData          CARegistryData
+	EnabledCertTemplates    []TypedPrincipal
+	HostingComputer         string
+	DomainSID               string
+	HttpEnrollmentEndpoints []CAEnrollmentAPIResult
+}
+
+type CAEnrollmentAPIResult struct {
+	APIResult
+	Result CAEnrollmentEndpoint
+}
+
+type CAEnrollmentEndpoint struct {
+	Url                    string
+	ADCSWebEnrollmentHTTP  bool
+	ADCSWebEnrollmentHTTPS bool
+	ADCSWebEnrollmentEPA   bool
 }
 
 type NTAuthStore struct {
@@ -277,6 +290,10 @@ type BoolAPIResult struct {
 
 type SMBSigningAPIResult struct {
 	APIResult
+	Result SMBSigningResult
+}
+
+type SMBSigningResult struct {
 	SigningEnabled  bool
 	OSVersion       string
 	OSBuild         string

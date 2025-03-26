@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './api';
-export * from './colors';
-export * from './compatibility';
-export * from './content';
-export * from './copyToClipboard';
-export * from './datetime';
-export * from './entityInfoDisplay';
-export * from './exportGraphData';
-export * from './icons';
-export * from './parseItemId';
-export * from './passwd';
-export * from './permissions';
-export * from './searchParams';
-export * from './theme';
-export * from './user';
+package translate
+
+import (
+	"testing"
+
+	"github.com/specterops/bloodhound/cypher/models/pgsql"
+	"github.com/specterops/bloodhound/cypher/models/pgsql/pgd"
+	"github.com/stretchr/testify/require"
+)
+
+func TestMeasureSelectivity(t *testing.T) {
+	selectivity, err := MeasureSelectivity(false, pgd.Equals(
+		pgsql.Identifier("123"),
+		pgsql.Identifier("456"),
+	))
+
+	require.Nil(t, err)
+	require.Equal(t, 30, selectivity)
+}

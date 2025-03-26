@@ -102,7 +102,7 @@ const LinuxAbuse: FC = () => {
             <Link
                 target='blank'
                 rel='noopener'
-                href='https://support.bloodhoundenterprise.io/hc/en-us/articles/17312347318043-GenericAll'>
+                href='https://bloodhound.specterops.io/resources/edges/generic-all'>
                 GenericAll edge documentation
             </Link>
             )

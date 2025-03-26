@@ -96,6 +96,7 @@ const SigmaChart = forwardRef(function SigmaChart(
                     edgeLabelSize: 12,
                     labelSize: 12,
                     labelFont: 'Roboto',
+                    labelColor: { color: theme.palette.color.primary },
                     labelRenderer: drawLabel,
                     maxCameraRatio: MAX_CAMERA_RATIO,
                     minCameraRatio: MIN_CAMERA_RATIO,

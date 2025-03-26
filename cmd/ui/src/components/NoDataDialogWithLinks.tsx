@@ -32,7 +32,7 @@ const gettingStartedLinkProps = {
     className: linkStyles,
     target: '_blank',
     rel: 'noreferrer',
-    href: 'https://support.bloodhoundenterprise.io/hc/en-us/sections/17274904083483-BloodHound-CE-Collection',
+    href: 'https://bloodhound.specterops.io/collect-data/ce-collection/overview',
 };
 
 const sampleCollectionLinkProps = {

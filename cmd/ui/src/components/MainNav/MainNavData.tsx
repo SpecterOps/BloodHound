@@ -99,7 +99,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
     };
 
     const handleGoToSupport = () => {
-        window.open('https://support.bloodhoundenterprise.io/hc', '_blank');
+        window.open('https://bloodhound.specterops.io', '_blank');
     };
 
     return [

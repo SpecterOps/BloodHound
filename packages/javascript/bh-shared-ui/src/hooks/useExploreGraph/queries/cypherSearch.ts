@@ -22,6 +22,7 @@ import {
     ExploreGraphQueryError,
     ExploreGraphQueryKey,
     ExploreGraphQueryOptions,
+    sharedGraphQueryOptions,
     transformToFlatGraphResponse,
 } from './utils';
 
@@ -35,10 +36,10 @@ export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>
     const decoded = decodeCypherQuery(cypherSearch);
 
     return {
+        ...sharedGraphQueryOptions,
         queryKey: [ExploreGraphQueryKey, searchType, cypherSearch],
         queryFn: ({ signal }) =>
             apiClient.cypherSearch(decoded, { signal }).then((res) => transformToFlatGraphResponse(res.data)),
-        retry: false,
         enabled: !!(searchType && cypherSearch),
     };
 };

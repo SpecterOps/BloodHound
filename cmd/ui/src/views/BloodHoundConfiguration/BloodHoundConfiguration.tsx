@@ -24,7 +24,7 @@ const BloodHoundConfiguration = () => {
             pageDescription={
                 <Typography variant='body2' paragraph>
                     Modify the configuration of your BloodHound tenant. See our{' '}
-                    <Link href='https://support.bloodhoundenterprise.io/hc/en-us/articles/28947871870363'>
+                    <Link href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/configuration'>
                         documentation
                     </Link>{' '}
                     for more details on each option.

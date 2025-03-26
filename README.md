@@ -81,7 +81,7 @@ https://github.com/SpecterOps/BloodHound/assets/12970156/ea9dc042-1866-4ccb-9839
 - [Wiki](https://github.com/SpecterOps/BloodHound/wiki)
 - [Contributors](./CONTRIBUTORS.md)
 - [Docker Compose Example](./examples/docker-compose/README.md)
-- [BloodHound Docs](https://support.bloodhoundenterprise.io/)
+- [BloodHound Docs](https://bloodhound.specterops.io/)
 - [Developer Quick Start Guide](https://github.com/SpecterOps/BloodHound/wiki/Development)
 - [Contributing Guide](https://github.com/SpecterOps/BloodHound/wiki/Contributing)
 

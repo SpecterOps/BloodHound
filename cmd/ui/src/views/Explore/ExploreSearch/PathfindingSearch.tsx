@@ -31,6 +31,7 @@ type PathfindingSearchState = {
     handleDestinationNodeEdited: (edit: string) => void;
     handleSourceNodeSelected: (selected: SearchValue) => void;
     handleDestinationNodeSelected: (selected: SearchValue) => void;
+    handleSwapPathfindingInputs: () => void;
 };
 
 const PathfindingSearch = ({ pathfindingSearchState }: { pathfindingSearchState: PathfindingSearchState }) => {
@@ -43,14 +44,8 @@ const PathfindingSearch = ({ pathfindingSearchState }: { pathfindingSearchState:
         handleDestinationNodeEdited,
         handleSourceNodeSelected,
         handleDestinationNodeSelected,
+        handleSwapPathfindingInputs,
     } = pathfindingSearchState;
-
-    const handleSwapPathfindingInputs = () => {
-        if (sourceSelectedItem && destinationSelectedItem) {
-            handleSourceNodeSelected(destinationSelectedItem);
-            handleDestinationNodeSelected(sourceSelectedItem);
-        }
-    };
 
     return (
         <Box display={'flex'} alignItems={'center'} gap={1}>

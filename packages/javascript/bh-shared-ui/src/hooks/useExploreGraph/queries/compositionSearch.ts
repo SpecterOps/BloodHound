@@ -22,6 +22,7 @@ import {
     ExploreGraphQueryError,
     ExploreGraphQueryKey,
     ExploreGraphQueryOptions,
+    sharedGraphQueryOptions,
     transformToFlatGraphResponse,
 } from './utils';
 
@@ -49,6 +50,7 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
         };
 
     return {
+        ...sharedGraphQueryOptions,
         queryKey: [ExploreGraphQueryKey, searchType, relationshipQueryItemId],
         queryFn: ({ signal }) =>
             apiClient.getEdgeComposition(Number(sourceId), Number(targetId), edgeType, { signal }).then((res) => {
