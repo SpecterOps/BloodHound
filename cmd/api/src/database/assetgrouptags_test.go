@@ -145,16 +145,19 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 	selector.AutoCertify = updateAutoCert
 	selector.Seeds = updateSeeds
 
-	// test the update function
-	readBackSelector, err := dbInst.UpdateAssetGroupTagSelector(testCtx, selector)
+	// call the update function
+	_, err = dbInst.UpdateAssetGroupTagSelector(testCtx, selector)
 	require.NoError(t, err)
-	require.Equal(t, selector.AssetGroupTagId, readBackSelector.AssetGroupTagId)
-	require.False(t, readBackSelector.CreatedAt.IsZero())
-	require.Equal(t, testActor, readBackSelector.CreatedBy)
-	require.False(t, readBackSelector.UpdatedAt.IsZero())
-	require.Equal(t, updateActor, readBackSelector.UpdatedBy)
-	require.Equal(t, disabledTime, readBackSelector.DisabledAt)
-	require.Equal(t, null.StringFrom(updateActor), readBackSelector.DisabledBy)
+
+	readBackSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)
+	require.NoError(t, err)
+	require.Equal(t, selector.AssetGroupTagId, readBackSelector.AssetGroupTagId)      // should be unchanged
+	require.False(t, readBackSelector.CreatedAt.IsZero())                             // should be unchanged
+	require.Equal(t, testActor, readBackSelector.CreatedBy)                           // should be unchanged
+	require.False(t, readBackSelector.UpdatedAt.IsZero())                             // should be updated
+	require.Equal(t, updateActor, readBackSelector.UpdatedBy)                         // should be updated
+	require.Equal(t, disabledTime.Time.UTC(), readBackSelector.DisabledAt.Time.UTC()) // should be updated
+	require.Equal(t, null.StringFrom(updateActor), readBackSelector.DisabledBy)       // should be updated
 	require.Equal(t, updateName, readBackSelector.Name)
 	require.Equal(t, updateDescription, readBackSelector.Description)
 	require.Equal(t, updateAutoCert, readBackSelector.AutoCertify)

@@ -132,13 +132,20 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 					selector.DisabledBy = null.String{}
 				}
 			}
-			//TODO: return a 400 error here
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "this selector cannot be disabled", request), response)
 		}
 
 		// TODO: how can we tell if the boolean values were really null or not, do we need to make this field a null.Bool?
 		//if selUpdateReq.AutoCertify != nil {
 		selector.AutoCertify = selUpdateReq.AutoCertify
 		//}
+
+		if len(selUpdateReq.Seeds) > 0 {
+			selector.Seeds = selUpdateReq.Seeds
+		} else {
+			// the DB update function will skip updating a nil Seeds slice
+			selector.Seeds = nil
+		}
 
 		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), selector); err != nil {
 			api.HandleDatabaseError(request, response, err)

@@ -124,23 +124,31 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorBySelectorId(ctx context.Context,
 func (s *BloodhoundDB) UpdateAssetGroupTagSelector(ctx context.Context, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: model.AuditLogActionCreateAssetGroupTagSelector,
+			Action: model.AuditLogActionUpdateAssetGroupTagSelector,
 			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
-		if result := tx.Raw(fmt.Sprintf(`
+		if result := tx.Exec(fmt.Sprintf(`
 			UPDATE %s SET updated_at = NOW(), updated_by = ?, name = ?, description = ?, disabled_at = ?, disabled_by = ?, auto_certify = ?
 			WHERE id = ?`,
 			selector.TableName()),
-			selector.UpdatedBy, selector.Name, selector.Description, selector.DisabledAt, selector.DisabledBy, selector.AutoCertify); result.Error != nil {
+			selector.UpdatedBy, selector.Name, selector.Description, selector.DisabledAt, selector.DisabledBy, selector.AutoCertify, selector.ID); result.Error != nil {
 			return CheckError(result)
 		} else {
-			for _, seed := range selector.Seeds { // TODO: will there ever be multiple seeds on a single selector_id? Then how do we do this loop?
-				if result := tx.Exec(fmt.Sprintf("UPDATE %s SET type = ?, value = ? WHERE selector_id = ?", seed.TableName()), seed.Type, seed.Value, selector.ID); result.Error != nil {
+			if selector.Seeds != nil {
+				// delete old seeds and re-insert the new ones
+				if result := tx.Exec(fmt.Sprintf("DELETE FROM %s WHERE selector_id = ?", model.SelectorSeed{}.TableName()), selector.ID); result.Error != nil {
 					return CheckError(result)
+				}
+				for _, seed := range selector.Seeds {
+					if result := tx.Exec(fmt.Sprintf("INSERT INTO %s (selector_id, type, value) VALUES (?, ?, ?)", seed.TableName()), selector.ID, seed.Type, seed.Value); result.Error != nil {
+						return CheckError(result)
+					} else {
+						selector.Seeds = append(selector.Seeds, model.SelectorSeed{Type: seed.Type, Value: seed.Value})
+					}
 				}
 			}
 			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, selector.UpdatedBy, selector.Name, model.AssetGroupHistoryActionUpdateSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {

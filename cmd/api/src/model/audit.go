@@ -84,6 +84,7 @@ const (
 
 	AuditLogActionCreateAssetGroupTag         AuditLogAction = "CreateAssetGroupTag"
 	AuditLogActionCreateAssetGroupTagSelector AuditLogAction = "CreateAssetGroupTagSelector"
+	AuditLogActionUpdateAssetGroupTagSelector AuditLogAction = "UpdateAssetGroupTagSelector"
 	AuditLogActionGetAssetGroupTagSelector    AuditLogAction = "GetAssetGroupTagSelector"
 )
 
