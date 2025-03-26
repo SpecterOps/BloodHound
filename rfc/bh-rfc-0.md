@@ -70,6 +70,10 @@ The beginning of each RFC must begin with the following YAML frontmatter data:
 - **status** - The proposal's current status (see [section 5](#5-rfc-status)). 
 - **created** - The date the proposal entered its DRAFT formatted using [RFC-3339 full-date notation](https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6).
 
+Optionally, the YAML frontmatter data may include the following when appropriate:
+
+- **audiences** - The intended audiences for the proposal, formatted as a multi-line string using the [literal block scalar style](https://yaml.org/spec/1.2.2/#literal-style). (See [Section 7.5.1](#751-recommendations))
+
 #### 7.1.1 Example
 
 ``` markdown
@@ -141,6 +145,11 @@ The recommended subsections are optional and not limited to:
     - outline drawbacks to the proposal
     - describe alternative solutions
     - describe any trade-offs
+- **Quality**
+    - describe the potential impact to stability, performance, and user experience
+    - describe mitigations that prevent deviations from quality standards
+- **Audience**
+    - when applicable to specific audiences, describe who the target audiences are for the proposal
 - **Implementation Plan**
     - describe a plan for how to introduce the proposed changes
 
