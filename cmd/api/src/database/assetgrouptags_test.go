@@ -38,7 +38,7 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 		testDescription = "test description"
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = false
+		autoCertify     = null.BoolFrom(false)
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
@@ -79,7 +79,7 @@ func TestDatabase_GetAssetGroupTagSelectorBySelectorId(t *testing.T) {
 		testDescription = "test description"
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = false
+		autoCertify     = null.BoolFrom(false)
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
@@ -121,8 +121,8 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 		updateDescription = "updated description"
 		isDefault         = false
 		allowDisable      = true
-		autoCertify       = false
-		updateAutoCert    = true
+		autoCertify       = null.BoolFrom(false)
+		updateAutoCert    = null.BoolFrom(true)
 		disabledTime      = null.TimeFrom(time.Date(2025, time.March, 25, 12, 0, 0, 0, time.UTC))
 		testSeeds         = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},

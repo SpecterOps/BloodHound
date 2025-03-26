@@ -116,7 +116,6 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		// PATCH requests may not contain every field, only update if fields exist
 		if selUpdateReq.Name != "" {
 			selector.Name = selUpdateReq.Name
-			fmt.Printf("Got to the PATCH updating the Name field: %s\n", selector.Name)
 		}
 
 		if selUpdateReq.Description != "" {
@@ -126,19 +125,20 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		if selUpdateReq.DisabledAt.Valid {
 			if selUpdateReq.DisabledAt.IsZero() || selector.AllowDisable {
 				selector.DisabledAt = selUpdateReq.DisabledAt
-				if selUpdateReq.DisabledAt.IsZero() {
+				// setting DisabledAt to a valid time disables the selector
+				if !selUpdateReq.DisabledAt.IsZero() {
 					selector.DisabledBy = null.StringFrom(actor.ID.String())
 				} else {
 					selector.DisabledBy = null.String{}
 				}
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "this selector cannot be disabled", request), response)
 			}
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "this selector cannot be disabled", request), response)
 		}
 
-		// TODO: how can we tell if the boolean values were really null or not, do we need to make this field a null.Bool?
-		//if selUpdateReq.AutoCertify != nil {
-		selector.AutoCertify = selUpdateReq.AutoCertify
-		//}
+		if selUpdateReq.AutoCertify.Valid {
+			selector.AutoCertify = selUpdateReq.AutoCertify
+		}
 
 		if len(selUpdateReq.Seeds) > 0 {
 			selector.Seeds = selUpdateReq.Seeds

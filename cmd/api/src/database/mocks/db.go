@@ -200,7 +200,7 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupTag(arg0, arg1, arg2, arg3, 
 }
 
 // CreateAssetGroupTagSelector mocks base method.
-func (m *MockDatabase) CreateAssetGroupTagSelector(arg0 context.Context, arg1 int, arg2, arg3, arg4 string, arg5, arg6, arg7 bool, arg8 []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
+func (m *MockDatabase) CreateAssetGroupTagSelector(arg0 context.Context, arg1 int, arg2, arg3, arg4 string, arg5, arg6 bool, arg7 null.Bool, arg8 []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAssetGroupTagSelector", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
 	ret0, _ := ret[0].(model.AssetGroupTagSelector)

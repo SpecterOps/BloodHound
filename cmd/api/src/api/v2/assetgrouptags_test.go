@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/database"
 	mocks_db "github.com/specterops/bloodhound/src/database/mocks"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/src/queries/mocks"
@@ -77,7 +78,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
 						},
 						IsDefault:   false,
-						AutoCertify: false,
+						AutoCertify: null.BoolFrom(false),
 					})
 				},
 				Setup: func() {
@@ -98,7 +99,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 						Name:        "TestSelector",
 						Description: "Test selector description",
 						IsDefault:   false,
-						AutoCertify: false,
+						AutoCertify: null.BoolFrom(false),
 					})
 				},
 				Setup: func() {
@@ -121,7 +122,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
 						},
 						IsDefault:   false,
-						AutoCertify: false,
+						AutoCertify: null.BoolFrom(false),
 					})
 				},
 				Test: func(output apitest.Output) {
@@ -141,7 +142,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
 						},
 						IsDefault:   false,
-						AutoCertify: false,
+						AutoCertify: null.BoolFrom(false),
 					})
 				},
 				Test: func(output apitest.Output) {
@@ -161,7 +162,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
 						},
 						IsDefault:   false,
-						AutoCertify: false,
+						AutoCertify: null.BoolFrom(false),
 					})
 				},
 				Setup: func() {
@@ -185,7 +186,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 							{Type: model.SelectorTypeCypher, Value: "this should be a string of cypher"},
 						},
 						IsDefault:   false,
-						AutoCertify: false,
+						AutoCertify: null.BoolFrom(false),
 					})
 				},
 				Setup: func() {
@@ -215,7 +216,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 							{Type: model.SelectorTypeCypher, Value: "cypher that's too complex"},
 						},
 						IsDefault:   false,
-						AutoCertify: false,
+						AutoCertify: null.BoolFrom(false),
 					})
 				},
 				Setup: func() {
@@ -242,7 +243,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 							{Type: 0, Value: ""},
 						},
 						IsDefault:   false,
-						AutoCertify: false,
+						AutoCertify: null.BoolFrom(false),
 					})
 				},
 				Setup: func() {
@@ -265,7 +266,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 							{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
 						},
 						IsDefault:   false,
-						AutoCertify: false,
+						AutoCertify: null.BoolFrom(false),
 					})
 				},
 				Setup: func() {
