@@ -56,10 +56,10 @@ describe('Details', async () => {
         const editButton = screen.getByRole('button', { name: /Edit/ });
 
         const selectors = await screen.findByTestId('tier-management_details_selectors-list');
-        const selectorsListItems = within(selectors).getAllByRole('listitem');
+        const selectorsListItems = await within(selectors).findAllByRole('listitem');
 
         const objects = await screen.findByTestId('tier-management_details_members-list');
-        const objectsListItems = within(objects).getAllByRole('listitem');
+        const objectsListItems = await within(objects).findAllByRole('listitem');
 
         expect(await screen.findByTestId('tier-management_details_tiers-list')).toBeInTheDocument();
 
@@ -91,7 +91,7 @@ describe('Details', async () => {
         const selectorsListItems = within(selectors).getAllByRole('listitem');
 
         // After selecting an object, the edit action is not viable and thus the button is disabled
-        await act(async () => {
+        act(() => {
             user.click(object5);
         });
         waitFor(() => {
@@ -121,7 +121,7 @@ describe('Details', async () => {
         const objectsListItems = within(objects).getAllByRole('listitem');
         // Selecting a selector will enable the Edit button from a disabled state
         await act(async () => {
-            user.click(selector7);
+            await user.click(selector7);
         });
         waitFor(() => {
             expect(editButton).toBeEnabled();
@@ -149,13 +149,13 @@ describe('Details', async () => {
         const selector7 = await screen.findByText('tier-0-selector-7');
 
         const selectors = await screen.findByTestId('tier-management_details_selectors-list');
-        const selectorsListItems = within(selectors).getAllByRole('listitem');
+        let selectorsListItems = within(selectors).getAllByRole('listitem');
 
         const objects = await screen.findByTestId('tier-management_details_members-list');
-        const objectsListItems = within(objects).getAllByRole('listitem');
+        let objectsListItems = within(objects).getAllByRole('listitem');
 
         await act(async () => {
-            user.click(selector7);
+            await user.click(selector7);
         });
         // The selector now displays as selected
         expect(
@@ -165,24 +165,28 @@ describe('Details', async () => {
         const object7 = await screen.findByText('tier-0-selector-7-object-7');
 
         await act(async () => {
-            user.click(object7);
+            await user.click(object7);
         });
-        // The selector now displays as selected
+        // The object now displays as selected
         expect(
             await screen.findByTestId('tier-management_details_members-list_active-members-item-7')
         ).toBeInTheDocument();
 
         await act(async () => {
-            user.click(screen.getByText('Tier-1'));
+            await user.click(screen.getByText('Tier-2'));
         });
 
         // The Tier Zero tier is selected by default
-        expect(await screen.findByTestId('tier-management_details_tiers-list_active-tiers-item-2')).toBeInTheDocument();
+        expect(await screen.findByTestId('tier-management_details_tiers-list_active-tiers-item-3')).toBeInTheDocument();
 
+        // This list rerenders with different list items so we have to grab those again
+        selectorsListItems = await within(selectors).findAllByRole('listitem');
         selectorsListItems.forEach((li) => {
             expect(li.childNodes).toHaveLength(1);
         });
 
+        // This list rerenders with different list items so we have to grab those again
+        objectsListItems = await within(objects).findAllByRole('listitem');
         objectsListItems.forEach((li) => {
             expect(li.childNodes).toHaveLength(1);
         });

@@ -89,10 +89,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                             return skeleton(title, index);
                         })
                     ) : listQuery.isError ? (
-                        <li
-                            className={cn(
-                                'border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10'
-                            )}>
+                        <li className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
                             <span className='text-base'>There was an error fetching this data</span>
                         </li>
                     ) : listQuery.isSuccess ? (

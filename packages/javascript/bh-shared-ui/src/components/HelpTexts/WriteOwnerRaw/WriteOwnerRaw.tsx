@@ -19,7 +19,7 @@ import References from './References';
 
 const WriteOwnerRaw = {
     general: General,
-    references: References
+    references: References,
 };
 
 export default WriteOwnerRaw;

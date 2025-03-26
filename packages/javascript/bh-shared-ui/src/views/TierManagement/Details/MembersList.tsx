@@ -135,7 +135,6 @@ export const MembersList: React.FC<MembersListProps> = ({
     const [isFetching, setIsFetching] = useState(false);
     const [items, setItems] = useState<Record<number, AssetGroupTagSelectorNode>>({});
     const infiniteLoaderRef = useRef<InfiniteLoader | null>(null);
-    const listRef = useRef<FixedSizeList | null>(null);
     const previousSelector = usePreviousValue<number | null>(selectedSelector);
     const previousTier = usePreviousValue<number>(selectedTier);
 
@@ -172,15 +171,13 @@ export const MembersList: React.FC<MembersListProps> = ({
         [items, isFetching, selectedSelector, selectedTier]
     );
 
-    //  Because the endpoint that needs to be used to fetch the list of members is dynamic based on whether
+    // Because the endpoint that needs to be used to fetch the list of members is dynamic based on whether
     // a selector is selected or not, this useEffect is used so that the cache of the `InfiniteLoader`
     // component is reset which triggers calling the appropriate endpoint when a selected tier or selected
-    // selector changes as well as scrolling back to the top of the fixed size list because the members
-    // will be different. Without this useEffect, the list of objects/members does not clear when new data
+    // selector changes. Without this useEffect, the list of objects/members does not clear when new data
     // is fetched.
     useEffect(() => {
         if (previousSelector !== selectedSelector || previousTier !== selectedTier) {
-            if (listRef?.current?.scrollTo) listRef.current.scrollTo(0);
             if (infiniteLoaderRef?.current?.resetloadMoreItemsCache)
                 infiniteLoaderRef?.current?.resetloadMoreItemsCache(true);
             loadMoreItems(0, 128);
@@ -216,7 +213,7 @@ export const MembersList: React.FC<MembersListProps> = ({
                 isItemLoaded={isItemLoaded}
                 itemCount={itemCount}
                 loadMoreItems={loadMoreItems}>
-                {({ onItemsRendered }) => (
+                {({ onItemsRendered, ref }) => (
                     <FixedSizeList
                         height={500}
                         itemCount={itemCount}
@@ -224,7 +221,7 @@ export const MembersList: React.FC<MembersListProps> = ({
                         itemSize={ITEM_SIZE}
                         onItemsRendered={onItemsRendered}
                         innerElementType={InnerElement}
-                        ref={listRef}
+                        ref={ref}
                         width={'100%'}>
                         {Row}
                     </FixedSizeList>
