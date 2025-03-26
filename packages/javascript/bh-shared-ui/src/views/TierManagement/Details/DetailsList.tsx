@@ -19,14 +19,13 @@ import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
 import { SortOrder } from '../../../types';
-import { EntityKinds, cn } from '../../../utils';
+import { cn } from '../../../utils';
 import { SelectedHighlight, itemSkeletons } from './utils';
 
 type DetailsListItem = {
     name: string;
     id: number;
-    count?: number;
-    kind?: EntityKinds;
+    count: number;
 };
 
 type DetailsListProps = {
@@ -42,8 +41,8 @@ type DetailsListProps = {
  * @param {title} props.title Limited to 'Selectors' | 'Tiers' | 'Labels' as that is what this component is built for
  * @param {UseQueryResult} props.listQuery The endpoint call result wrapper from react query that allows us to hook into different states that the fetched data could be in
  * @param {selected} props.selected The id of the particular entity that is selected for the list. It is used for selected item rendering
- * @param {(id:number) => void} props.onSelectd The click handler that should be called when an item from this list is selected. This is primarily being used to set the selected id state in the parent Details component
- * @returns The component that dsiplays a list of entities for the new tier management page
+ * @param {(id:number) => void} props.onSelect The click handler that should be called when an item from this list is selected. This is primarily being used to set the selected id state in the parent Details component
+ * @returns The component that displays a list of entities for the tier management page
  */
 export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>();
@@ -90,7 +89,12 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                             return skeleton(title, index);
                         })
                     ) : listQuery.isError ? (
-                        <li>There was an error fetching this data</li>
+                        <li
+                            className={cn(
+                                'border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10'
+                            )}>
+                            <span className='text-base'>There was an error fetching this data</span>
+                        </li>
                     ) : listQuery.isSuccess ? (
                         listQuery.data
                             .sort((a, b) => {
@@ -103,10 +107,10 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                         return b.name.localeCompare(a.name);
                                 }
                             })
-                            .map((listItem, index) => {
+                            .map((listItem) => {
                                 return (
                                     <li
-                                        key={index}
+                                        key={listItem.id}
                                         className={cn(
                                             'border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10',
                                             {
@@ -121,9 +125,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                                 onSelect(listItem.id);
                                             }}>
                                             <span className='text-base'>{listItem.name}</span>
-                                            {Object.hasOwn(listItem, 'count') && (
-                                                <span className='text-base'>{listItem.count!.toLocaleString()}</span>
-                                            )}
+                                            <span className='text-base'>{listItem.count.toLocaleString()}</span>
                                         </Button>
                                     </li>
                                 );

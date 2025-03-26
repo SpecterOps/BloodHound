@@ -30,20 +30,17 @@ import {
     useShowNavBar,
     useStyles,
 } from 'bh-shared-ui';
-import { MainNavDataListItem } from 'bh-shared-ui/dist/components/Navigation/types';
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useQueryClient } from 'react-query';
 import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
 import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice';
-import { ROUTES } from 'src/routes';
+import { ROUTES, TIER_MANAGEMENT_ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import Content from 'src/views/Content';
 import {
-    groupManagementNavItem,
-    tierManagementNavItem,
     useMainNavLogoData,
     useMainNavPrimaryListData,
     useMainNavSecondaryListData,
@@ -51,27 +48,14 @@ import {
 import Notifier from './components/Notifier';
 import { setDarkMode } from './ducks/global/actions';
 
-const tierFlagToggle = (primaryNavList: MainNavDataListItem[], tierFlagEnabled?: boolean) => {
-    if (tierFlagEnabled) {
-        const groupManagementIndex = primaryNavList.findIndex((listItem) => {
-            return listItem.label === groupManagementNavItem.label;
-        });
-        primaryNavList.splice(groupManagementIndex, 1, tierManagementNavItem);
-    } else {
-        const tierManagementIndex = primaryNavList.findIndex((listItem) => {
-            return listItem.label === tierManagementNavItem.label;
-        });
-        primaryNavList.splice(tierManagementIndex, 1, groupManagementNavItem);
-    }
-};
-
 export const Inner: React.FC = () => {
-    const dispatch = useAppDispatch();
-    const queryClient = useQueryClient();
     const classes = useStyles();
+    const queryClient = useQueryClient();
 
+    const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
     const featureFlagsRes = useFeatureFlags({
         retry: false,
@@ -83,15 +67,7 @@ export const Inner: React.FC = () => {
         primaryList: useMainNavPrimaryListData(),
         secondaryList: useMainNavSecondaryListData(),
     };
-    const showNavBar = useShowNavBar(ROUTES);
-
-    // initialize authentication state and BHE client request/response handlers
-    useEffect(() => {
-        if (!authState.isInitialized) {
-            dispatch(initialize());
-            initializeBHEClient();
-        }
-    }, [dispatch, authState.isInitialized]);
+    const showNavBar = useShowNavBar([...ROUTES, ...TIER_MANAGEMENT_ROUTES]);
 
     // remove dark_mode if feature flag is disabled
     useEffect(() => {
@@ -102,11 +78,15 @@ export const Inner: React.FC = () => {
         if (!darkModeFeatureFlag?.enabled) {
             dispatch(setDarkMode(false));
         }
+    }, [dispatch, queryClient, featureFlagsRes.data, darkMode]);
 
-        // Change the nav item routing for group/tier management based on flag value
-        const tierManagementFlag = featureFlagsRes.data.find((flag) => flag.key === 'tier_management_engine');
-        tierFlagToggle(mainNavData.primaryList, tierManagementFlag?.enabled);
-    }, [dispatch, queryClient, featureFlagsRes.data, mainNavData.primaryList]);
+    // initialize authentication state and BHE client request/response handlers
+    useEffect(() => {
+        if (!authState.isInitialized) {
+            dispatch(initialize());
+            initializeBHEClient();
+        }
+    }, [dispatch, authState.isInitialized]);
 
     // block rendering until authentication initialization is complete
     if (!authState.isInitialized) {
