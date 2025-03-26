@@ -38,7 +38,7 @@ import SigmaChart from 'src/components/SigmaChart';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
-import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph/useSigmaExploreGraph';
+import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
@@ -50,7 +50,7 @@ const GraphViewV2: FC = () => {
     /* Hooks */
     const theme = useTheme();
 
-    const graphState = useSigmaExploreGraph();
+    const graphQuery = useSigmaExploreGraph();
     const { data, isLoading, isError } = useAvailableEnvironments();
     const { setSelectedItem } = useExploreSelectedItem();
 
@@ -72,8 +72,8 @@ const GraphViewV2: FC = () => {
     const currentSearchAnchorElement = useRef(null);
 
     useEffect(() => {
-        let items: any = graphState.data;
-        if (!items && !graphState.isError) return;
+        let items: any = graphQuery.data;
+        if (!items && !graphQuery.isError) return;
         if (!items) items = {};
 
         // `items` may be empty, or it may contain an empty `nodes` object
@@ -87,7 +87,7 @@ const GraphViewV2: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphState.data, theme, darkMode, graphState.isError]);
+    }, [graphQuery.data, theme, darkMode, graphQuery.isError]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {
@@ -210,7 +210,7 @@ const GraphViewV2: FC = () => {
             </div>
             <GraphItemInformationPanel />
             <ContextMenuV2 contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
-            <GraphProgress loading={graphState.isLoading} />
+            <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
         </div>
     );
