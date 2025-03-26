@@ -39,12 +39,6 @@ func (s *Translator) translateNodePattern(nodePattern *cypher.NodePattern) error
 	return nil
 }
 
-func (s *Translator) translateNodePatternSegment(nodePattern *cypher.NodePattern, part *PatternPart, bindingResult BindingResult) error {
-	// Make this the node select of the pattern part
-	part.NodeSelect.Binding = bindingResult.Binding
-	return nil
-}
-
 func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern, part *PatternPart, bindingResult BindingResult) error {
 	currentQueryPart := s.query.CurrentPart()
 
@@ -86,7 +80,7 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 	if part.IsTraversal {
 		if numSteps := len(part.TraversalSteps); numSteps == 0 {
 			// This is the traversal step's left node
-			part.TraversalSteps = append(part.TraversalSteps, &PatternSegment{
+			part.TraversalSteps = append(part.TraversalSteps, &TraversalStep{
 				LeftNode:      bindingResult.Binding,
 				LeftNodeBound: bindingResult.AlreadyBound,
 			})
@@ -97,19 +91,28 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 			currentStep.RightNode = bindingResult.Binding
 			currentStep.RightNodeBound = bindingResult.AlreadyBound
 
-			// Finish setting up this traversal step
+			// Finish setting up this traversal step for the expansion
 			if currentStep.Expansion.Set {
+				// Set the right node data type to the terminal of an expansion
 				currentStep.RightNode.DataType = pgsql.ExpansionTerminalNode
+
+				// TODO: This is a little recursive and could use some refactor love
+				currentExpansion := currentStep.Expansion.Value
+
+				if err := currentExpansion.CompletePattern(currentStep); err != nil {
+					return err
+				}
 			}
 		}
 	} else {
-		return s.translateNodePatternSegment(nodePattern, part, bindingResult)
+		// Make this the node select of the pattern part
+		part.NodeSelect.Binding = bindingResult.Binding
 	}
 
 	return nil
 }
 
-func (s *Translator) buildNodePattern(part *PatternPart) error {
+func (s *Translator) buildNodePatternPart(part *PatternPart) error {
 	var (
 		partFrame  = part.NodeSelect.Frame
 		nextSelect = pgsql.Select{

@@ -27,6 +27,8 @@ export const useCypherSearch = () => {
         if (cypherSearch) {
             const decoded = decodeCypherQuery(cypherSearch);
             setCypherQuery(decoded);
+        } else {
+            setCypherQuery('');
         }
     }, [cypherSearch]);
 

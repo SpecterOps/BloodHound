@@ -24,10 +24,9 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
-func (s *Translator) buildDirectionlessTraversalPatternRoot(traversalStep *PatternSegment) (pgsql.Query, error) {
+func (s *Translator) buildDirectionlessTraversalPatternRoot(traversalStep *TraversalStep) (pgsql.Query, error) {
 	nextSelect := pgsql.Select{
 		Projection: traversalStep.Projection,
-		Where:      traversalStep.EdgeConstraints.Expression,
 	}
 
 	if previousFrame, hasPrevious := s.previousValidFrame(traversalStep.Frame); hasPrevious {
@@ -64,12 +63,17 @@ func (s *Translator) buildDirectionlessTraversalPatternRoot(traversalStep *Patte
 		}},
 	})
 
+	// Append all constraints to the where clause
+	nextSelect.Where = pgsql.OptionalAnd(traversalStep.LeftNodeConstraints, nextSelect.Where)
+	nextSelect.Where = pgsql.OptionalAnd(traversalStep.EdgeConstraints.Expression, nextSelect.Where)
+	nextSelect.Where = pgsql.OptionalAnd(traversalStep.RightNodeConstraints, nextSelect.Where)
+
 	return pgsql.Query{
 		Body: nextSelect,
 	}, nil
 }
 
-func (s *Translator) buildTraversalPatternRoot(partFrame *Frame, part *PatternPart, traversalStep *PatternSegment) (pgsql.Query, error) {
+func (s *Translator) buildTraversalPatternRoot(partFrame *Frame, traversalStep *TraversalStep) (pgsql.Query, error) {
 	if traversalStep.Direction == graph.DirectionBoth {
 		return s.buildDirectionlessTraversalPatternRoot(traversalStep)
 	}
@@ -149,7 +153,7 @@ func (s *Translator) buildTraversalPatternRoot(partFrame *Frame, part *PatternPa
 	}, nil
 }
 
-func (s *Translator) buildTraversalPatternStep(partFrame *Frame, part *PatternPart, traversalStep *PatternSegment) (pgsql.Query, error) {
+func (s *Translator) buildTraversalPatternStep(partFrame *Frame, traversalStep *TraversalStep) (pgsql.Query, error) {
 	nextSelect := pgsql.Select{
 		Projection: traversalStep.Projection,
 	}
@@ -224,7 +228,7 @@ func (s *Translator) translateTraversalPatternPart(part *PatternPart, isolatedPr
 		}
 
 		if traversalStep.Expansion.Set {
-			if err := s.translateTraversalPatternPartWithExpansion(idx == 0, traversalStep); err != nil {
+			if err := s.translateTraversalPatternPartWithExpansion(idx == 0, part.AllShortestPaths || part.ShortestPath, traversalStep); err != nil {
 				return err
 			}
 		} else {
@@ -241,7 +245,7 @@ func (s *Translator) translateTraversalPatternPart(part *PatternPart, isolatedPr
 	return nil
 }
 
-func (s *Translator) translateTraversalPatternPartWithoutExpansion(isFirstTraversalStep bool, traversalStep *PatternSegment) error {
+func (s *Translator) translateTraversalPatternPartWithoutExpansion(isFirstTraversalStep bool, traversalStep *TraversalStep) error {
 	if constraints, err := consumePatternConstraints(isFirstTraversalStep, nonRecursivePattern, traversalStep, s.treeTranslator.IdentifierConstraints); err != nil {
 		return err
 	} else {
@@ -260,7 +264,6 @@ func (s *Translator) translateTraversalPatternPartWithoutExpansion(isFirstTraver
 				}
 			}
 
-			//
 			if err := RewriteFrameBindings(s.scope, constraints.LeftNode.Expression); err != nil {
 				return err
 			} else {
@@ -304,7 +307,7 @@ func (s *Translator) translateTraversalPatternPartWithoutExpansion(isFirstTraver
 			traversalStep.RightNodeConstraints = constraints.RightNode.Expression
 		}
 
-		if rightNodeJoinCondition, err := rightNodeTraversalStepConstraint(traversalStep); err != nil {
+		if rightNodeJoinCondition, err := rightNodeTraversalStepJoinCondition(traversalStep); err != nil {
 			return err
 		} else if err := RewriteFrameBindings(s.scope, rightNodeJoinCondition); err != nil {
 			return err
@@ -322,130 +325,6 @@ func (s *Translator) translateTraversalPatternPartWithoutExpansion(isFirstTraver
 		}
 
 		traversalStep.Projection = boundProjections.Items
-	}
-
-	return nil
-}
-
-func (s *Translator) translateTraversalPatternPartWithExpansion(isFirstTraversalStep bool, traversalStep *PatternSegment) error {
-	if constraints, err := consumePatternConstraints(isFirstTraversalStep, recursivePattern, traversalStep, s.treeTranslator.IdentifierConstraints); err != nil {
-		return err
-	} else {
-		// If one side of the expansion has constraints but the other does not this may be an opportunity to reorder the traversal
-		// to start with tighter search bounds
-		constraints.OptimizePatternConstraintBalance(traversalStep)
-
-		if isFirstTraversalStep {
-			if err := RewriteFrameBindings(s.scope, constraints.LeftNode.Expression); err != nil {
-				return err
-			}
-
-			traversalStep.Expansion.Value.PrimerConstraints = pgsql.OptionalAnd(traversalStep.Expansion.Value.PrimerConstraints, constraints.LeftNode.Expression)
-
-			if leftNodeJoinCondition, err := leftNodeTraversalStepConstraint(traversalStep); err != nil {
-				return err
-			} else if err := RewriteFrameBindings(s.scope, leftNodeJoinCondition); err != nil {
-				return err
-			} else {
-				traversalStep.Expansion.Value.LeftNodeJoinCondition = leftNodeJoinCondition
-			}
-		}
-
-		if expansionNodeConstraints, err := rightNodeTraversalStepConstraint(traversalStep); err != nil {
-			return err
-		} else {
-			traversalStep.Expansion.Value.ExpansionNodeConstraints = expansionNodeConstraints
-		}
-
-		if err := RewriteFrameBindings(s.scope, constraints.Edge.Expression); err != nil {
-			return err
-		}
-
-		if isFirstTraversalStep {
-			traversalStep.Expansion.Value.PrimerConstraints = pgsql.OptionalAnd(traversalStep.Expansion.Value.PrimerConstraints, constraints.Edge.Expression)
-		}
-
-		traversalStep.Expansion.Value.ExpansionEdgeConstraints = constraints.Edge.Expression
-
-		if constraints.RightNode.Expression != nil {
-			if err := RewriteFrameBindings(s.scope, constraints.RightNode.Expression); err != nil {
-				return err
-			} else {
-				traversalStep.Expansion.Value.TerminalNodeConstraints = constraints.RightNode.Expression
-			}
-		}
-	}
-
-	// Export the path from the traversal's scope
-	traversalStep.Frame.Export(traversalStep.Expansion.Value.PathBinding.Identifier)
-
-	// Push a new frame that contains currently projected scope from the expansion recursive CTE
-	if expansionFrame, err := s.scope.PushFrame(); err != nil {
-		return err
-	} else {
-		traversalStep.Expansion.Value.Frame = expansionFrame
-		traversalStep.Expansion.Value.RecursiveConstraints = pgsql.OptionalAnd(traversalStep.Expansion.Value.ExpansionEdgeConstraints, expansionConstraints(expansionFrame.Binding.Identifier, traversalStep.Expansion.Value.MinDepth, traversalStep.Expansion.Value.MaxDepth))
-
-		// Remove the previous projections of the root and terminal node to reproject them after expansion
-		traversalStep.LeftNode.Dematerialize()
-		traversalStep.RightNode.Dematerialize()
-
-		if boundProjections, err := buildVisibleProjections(s.scope); err != nil {
-			return err
-		} else {
-			// Zip through all projected identifiers and update their last projected frame
-			for _, binding := range boundProjections.Bindings {
-				binding.MaterializedBy(expansionFrame)
-			}
-
-			traversalStep.Expansion.Value.Projection = boundProjections.Items
-		}
-
-		if err := s.scope.PopFrame(); err != nil {
-			return err
-		}
-	}
-
-	if boundProjections, err := buildVisibleProjections(s.scope); err != nil {
-		return err
-	} else {
-		// Zip through all projected identifiers and update their last projected frame
-		for _, binding := range boundProjections.Bindings {
-			binding.MaterializedBy(traversalStep.Frame)
-		}
-
-		traversalStep.Projection = boundProjections.Items
-	}
-
-	return nil
-}
-
-func (s *Translator) translateNonTraversalPatternPart(part *PatternPart) error {
-	if nextFrame, err := s.scope.PushFrame(); err != nil {
-		return err
-	} else {
-		part.NodeSelect.Frame = nextFrame
-
-		nextFrame.Export(part.NodeSelect.Binding.Identifier)
-
-		if constraint, err := s.treeTranslator.IdentifierConstraints.ConsumeSet(nextFrame.Known()); err != nil {
-			return err
-		} else if err := RewriteFrameBindings(s.scope, constraint.Expression); err != nil {
-			return err
-		} else {
-			part.NodeSelect.Constraints = constraint.Expression
-		}
-
-		if boundProjections, err := buildVisibleProjections(s.scope); err != nil {
-			return err
-		} else {
-			// Zip through all projected identifiers and update their last projected frame
-			for _, binding := range boundProjections.Bindings {
-				binding.MaterializedBy(nextFrame)
-			}
-
-			part.NodeSelect.Select.Projection = boundProjections.Items
-		}
 	}
 
 	return nil
