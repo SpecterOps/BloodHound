@@ -143,3 +143,7 @@ const isLink = (item: any): boolean => {
 const isNode = (item: any): boolean => {
     return !isLink(item);
 };
+
+export const isGraphResponse = (graphData: GraphResponse | FlatGraphResponse): graphData is GraphResponse => {
+    return !!(graphData as GraphResponse)?.data?.nodes && !!(graphData as GraphResponse)?.data?.edges;
+};

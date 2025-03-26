@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FlatGraphResponse, GraphResponse } from 'js-client-library';
 import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory } from '../../edgeTypes';
 
 export const extractEdgeTypes = (edges: EdgeCheckboxType[]): string[] => {
@@ -66,8 +65,4 @@ export const decodeCypherQuery = (base64: string) => {
     } catch (err) {
         return '';
     }
-};
-
-export const isGraphResponse = (graphData: GraphResponse | FlatGraphResponse): graphData is GraphResponse => {
-    return !!(graphData as GraphResponse)?.data?.nodes && !!(graphData as GraphResponse)?.data?.edges;
 };
