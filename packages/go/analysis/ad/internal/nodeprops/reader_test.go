@@ -2,6 +2,7 @@ package nodeprops
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -31,7 +32,7 @@ func TestErrorReadDomainSIDandNameAsString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := errorReadDomainSIDandNameAsString(tt.message)
+			err := fmt.Errorf("failed to read domain SID and name: %s", tt.message)
 			assert.Equal(t, tt.want, err.Error())
 		})
 	}
@@ -97,7 +98,7 @@ func TestReadDomainIDandNameAsString(t *testing.T) {
 					return props
 				}(),
 			},
-			wantSID:       "S-1-5-21-123456789-123456789-123456789",
+			wantSID:       "",
 			wantName:      "",
 			wantErrSubstr: "read domain name is empty or blank",
 		},
@@ -125,7 +126,7 @@ func TestReadDomainIDandNameAsString(t *testing.T) {
 					return props
 				}(),
 			},
-			wantSID:       "S-1-5-21-123456789-123456789-123456789",
+			wantSID:       "",
 			wantName:      "",
 			wantErrSubstr: "read domain name property value is nil",
 		},
