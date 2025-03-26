@@ -23,8 +23,6 @@ import {
     isWebGLEnabled,
     transformFlatGraphResponse,
     useAvailableEnvironments,
-    useExploreGraph,
-    useExploreParams,
     useExploreSelectedItem,
     useToggle,
 } from 'bh-shared-ui';
@@ -32,7 +30,7 @@ import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
@@ -40,9 +38,10 @@ import SigmaChart from 'src/components/SigmaChart';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
+import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import usePrompt from 'src/views/Explore/NavigationAlert';
-import { initGraph, normalizeGraphDataToSigma } from 'src/views/Explore/utils';
+import { initGraph } from 'src/views/Explore/utils';
 import ContextMenuV2 from './ContextMenu/ContextMenuV2';
 import ExploreSearchV2 from './ExploreSearch/ExploreSearchV2';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
@@ -51,45 +50,29 @@ const GraphViewV2: FC = () => {
     /* Hooks */
     const theme = useTheme();
 
+    const graphState = useSigmaExploreGraph();
+    const { data, isLoading, isError } = useAvailableEnvironments();
+    const { setSelectedItem } = useExploreSelectedItem();
+
     const dispatch = useAppDispatch();
 
-    const { searchType } = useExploreParams();
-    const graphState = useExploreGraph();
-    const normalizedGraphData = useMemo(
-        () => normalizeGraphDataToSigma(graphState.data, searchType),
-        [graphState.data, searchType]
-    );
-
     const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
-
     const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
-
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
-
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
-
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-
-    const { data, isLoading, isError } = useAvailableEnvironments();
-
-    const sigmaChartRef = useRef<any>(null);
-
-    const currentSearchAnchorElement = useRef(null);
-
     const [showNodeLabels, setShowNodeLabels] = useState(true);
-
     const [showEdgeLabels, setShowEdgeLabels] = useState(true);
-
     const [exportJsonData, setExportJsonData] = useState();
 
-    const { setSelectedItem } = useExploreSelectedItem();
+    const sigmaChartRef = useRef<any>(null);
+    const currentSearchAnchorElement = useRef(null);
 
     useEffect(() => {
-        let items: any = normalizedGraphData;
+        let items: any = graphState.data;
         if (!items && !graphState.isError) return;
         if (!items) items = {};
 
@@ -104,7 +87,7 @@ const GraphViewV2: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [normalizedGraphData, theme, darkMode, graphState.isError]);
+    }, [graphState.data, theme, darkMode, graphState.isError]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {
