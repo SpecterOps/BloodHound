@@ -24,6 +24,7 @@ import { SortOrder } from '../../../types';
 import { apiClient, cn } from '../../../utils';
 import { ItemSkeleton, SelectedHighlight } from './utils';
 
+// TODO: Move this out and pull from shared-ui hooks once it is brought in with in progress changes in 5231
 const usePreviousValue = <T,>(value: T): T | undefined => {
     const ref = useRef<T>();
     useEffect(() => {
@@ -189,16 +190,7 @@ export const MembersList: React.FC<MembersListProps> = ({
             <SortableHeader
                 title={'Objects'}
                 onSort={() => {
-                    if (sortOrder === undefined) {
-                        // first click
-                        setSortOrder('desc');
-                    } else if (sortOrder === 'desc') {
-                        // second click
-                        setSortOrder('asc');
-                    } else if (sortOrder === 'asc') {
-                        // third click
-                        setSortOrder(undefined);
-                    }
+                    sortOrder === 'desc' ? setSortOrder('asc') : setSortOrder('desc');
                 }}
                 sortOrder={sortOrder}
                 classes={{

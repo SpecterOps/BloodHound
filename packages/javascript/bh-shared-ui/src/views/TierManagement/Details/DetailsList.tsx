@@ -53,16 +53,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                 <SortableHeader
                     title={title}
                     onSort={() => {
-                        if (sortOrder === undefined) {
-                            // first click
-                            setSortOrder('desc');
-                        } else if (sortOrder === 'desc') {
-                            // second click
-                            setSortOrder('asc');
-                        } else if (sortOrder === 'asc') {
-                            // third click
-                            setSortOrder(undefined);
-                        }
+                        sortOrder === 'desc' ? setSortOrder('asc') : setSortOrder('desc');
                     }}
                     sortOrder={sortOrder}
                     classes={{
