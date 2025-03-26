@@ -259,40 +259,6 @@ func createNode(
 	return createdNode
 }
 
-func createCollectedDomainNode(
-	t *testing.T,
-	ctx context.Context,
-	graphDB graph.Database,
-) *graph.Node {
-	return createNode(
-		t,
-		ctx,
-		graphDB,
-		generateCollectedDomain(),
-	)
-}
-
-func createWellKnownGroup(
-	t *testing.T,
-	ctx context.Context,
-	graphDB graph.Database,
-	domainNode *graph.Node,
-	sidSuffix wellknown.SIDSuffix,
-	nodeNamePrefix wellknown.NodeNamePrefix,
-) *graph.Node {
-	return createNode(
-		t,
-		ctx,
-		graphDB,
-		generateWellKnownGroup(
-			t,
-			domainNode,
-			sidSuffix,
-			nodeNamePrefix,
-		),
-	)
-}
-
 func generateCollectedDomain() *graph.Node {
 	return &graph.Node{
 		Kinds: graph.Kinds{
