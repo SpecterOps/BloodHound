@@ -166,14 +166,14 @@ export const normalizeGraphDataToSigma = (
 ): FlatGraphResponse => {
     if (!graphData) return {};
     switch (searchType) {
+        case 'node':
+        case 'relationship': {
+            return graphData as FlatGraphResponse;
+        }
         case 'cypher':
         case 'composition':
         case 'pathfinding': {
             return transformToFlatGraphResponse(graphData as GraphResponse);
-        }
-        case 'node':
-        case 'relationship': {
-            return graphData as FlatGraphResponse;
         }
     }
     return {};

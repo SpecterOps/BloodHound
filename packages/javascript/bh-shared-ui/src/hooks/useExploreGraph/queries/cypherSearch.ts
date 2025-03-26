@@ -17,7 +17,13 @@
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
 import { decodeCypherQuery } from '../utils';
-import { ExploreGraphQuery, ExploreGraphQueryError, ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
+import {
+    ExploreGraphQuery,
+    ExploreGraphQueryError,
+    ExploreGraphQueryKey,
+    ExploreGraphQueryOptions,
+    sharedGraphQueryOptions,
+} from './utils';
 
 export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { searchType, cypherSearch } = paramOptions;
@@ -29,6 +35,7 @@ export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>
     const decoded = decodeCypherQuery(cypherSearch);
 
     return {
+        ...sharedGraphQueryOptions,
         queryKey: [ExploreGraphQueryKey, searchType, cypherSearch],
         queryFn: ({ signal }) => apiClient.cypherSearch(decoded, { signal }).then((res) => res.data),
         retry: false,

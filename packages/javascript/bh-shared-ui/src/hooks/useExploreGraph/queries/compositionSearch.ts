@@ -17,7 +17,13 @@
 import { apiClient } from '../../../utils/api';
 import { parseItemId } from '../../../utils/parseItemId';
 import { ExploreQueryParams } from '../../useExploreParams';
-import { ExploreGraphQuery, ExploreGraphQueryError, ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
+import {
+    ExploreGraphQuery,
+    ExploreGraphQueryError,
+    ExploreGraphQueryKey,
+    ExploreGraphQueryOptions,
+    sharedGraphQueryOptions,
+} from './utils';
 
 const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { relationshipQueryItemId, searchType } = paramOptions;
@@ -43,6 +49,7 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
         };
 
     return {
+        ...sharedGraphQueryOptions,
         queryKey: [ExploreGraphQueryKey, searchType, relationshipQueryItemId],
         queryFn: ({ signal }) =>
             apiClient.getEdgeComposition(Number(sourceId), Number(targetId), edgeType, { signal }).then((res) => {
