@@ -21,7 +21,12 @@ import { extractEdgeTypes, getInitialPathFilters } from '../utils';
 
 type QueryKeys = ('explore-graph-query' | string | undefined)[];
 
-export type ExploreGraphQueryOptions = UseQueryOptions<FlatGraphResponse, unknown, FlatGraphResponse, QueryKeys>;
+export type ExploreGraphQueryOptions = UseQueryOptions<
+    GraphResponse | FlatGraphResponse,
+    unknown,
+    GraphResponse | FlatGraphResponse,
+    QueryKeys
+>;
 
 export type GraphItemMutationFn = (items: any) => unknown;
 

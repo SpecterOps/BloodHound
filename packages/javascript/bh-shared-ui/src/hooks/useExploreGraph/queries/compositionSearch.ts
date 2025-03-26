@@ -17,13 +17,7 @@
 import { apiClient } from '../../../utils/api';
 import { parseItemId } from '../../../utils/parseItemId';
 import { ExploreQueryParams } from '../../useExploreParams';
-import {
-    ExploreGraphQuery,
-    ExploreGraphQueryError,
-    ExploreGraphQueryKey,
-    ExploreGraphQueryOptions,
-    transformToFlatGraphResponse,
-} from './utils';
+import { ExploreGraphQuery, ExploreGraphQueryError, ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
 
 const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { relationshipQueryItemId, searchType } = paramOptions;
@@ -57,7 +51,7 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
                     throw new Error('empty result set');
                 }
 
-                return transformToFlatGraphResponse(data);
+                return data;
             }),
         refetchOnWindowFocus: false,
     };

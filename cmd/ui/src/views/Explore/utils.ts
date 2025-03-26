@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
-import { GlyphKind } from 'bh-shared-ui';
+import { ExploreQueryParams, GlyphKind, transformToFlatGraphResponse } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
-import { GraphData, GraphEdges, GraphNodes } from 'js-client-library';
+import { FlatGraphResponse, GraphData, GraphEdges, GraphNodes, GraphResponse } from 'js-client-library';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
 import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
@@ -158,4 +158,23 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOpti
             graph.addEdgeWithKey(key, edge.source, edge.target, edgeParams);
         }
     }
+};
+
+export const normalizeGraphDataToSigma = (
+    graphData: GraphResponse | FlatGraphResponse | undefined,
+    searchType: ExploreQueryParams['searchType']
+): FlatGraphResponse => {
+    if (!graphData) return {};
+    switch (searchType) {
+        case 'cypher':
+        case 'composition':
+        case 'pathfinding': {
+            return transformToFlatGraphResponse(graphData as GraphResponse);
+        }
+        case 'node':
+        case 'relationship': {
+            return graphData as FlatGraphResponse;
+        }
+    }
+    return {};
 };

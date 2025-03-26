@@ -22,7 +22,6 @@ import {
     ExploreGraphQueryKey,
     ExploreGraphQueryOptions,
     INITIAL_FILTER_TYPES,
-    transformToFlatGraphResponse,
 } from './utils';
 
 // Only need to create our default filters once
@@ -44,7 +43,7 @@ export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
         queryFn: ({ signal }) => {
             return apiClient
                 .getShortestPathV2(primarySearch, secondarySearch, filter, { signal })
-                .then((res) => transformToFlatGraphResponse(res.data));
+                .then((res) => res.data);
         },
         retry: false,
         enabled: !!(searchType && primarySearch && secondarySearch),

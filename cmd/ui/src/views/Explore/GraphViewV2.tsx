@@ -24,6 +24,7 @@ import {
     transformFlatGraphResponse,
     useAvailableEnvironments,
     useExploreGraph,
+    useExploreParams,
     useExploreSelectedItem,
     useToggle,
 } from 'bh-shared-ui';
@@ -31,7 +32,7 @@ import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
@@ -41,7 +42,7 @@ import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import usePrompt from 'src/views/Explore/NavigationAlert';
-import { initGraph } from 'src/views/Explore/utils';
+import { initGraph, normalizeGraphDataToSigma } from 'src/views/Explore/utils';
 import ContextMenuV2 from './ContextMenu/ContextMenuV2';
 import ExploreSearchV2 from './ExploreSearch/ExploreSearchV2';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
@@ -52,7 +53,12 @@ const GraphViewV2: FC = () => {
 
     const dispatch = useAppDispatch();
 
+    const { searchType } = useExploreParams();
     const graphState = useExploreGraph();
+    const normalizedGraphData = useMemo(
+        () => normalizeGraphDataToSigma(graphState.data, searchType),
+        [graphState.data, searchType]
+    );
 
     const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
 
@@ -83,7 +89,7 @@ const GraphViewV2: FC = () => {
     const { setSelectedItem } = useExploreSelectedItem();
 
     useEffect(() => {
-        let items: any = graphState.data;
+        let items: any = normalizedGraphData;
         if (!items && !graphState.isError) return;
         if (!items) items = {};
 
@@ -98,7 +104,7 @@ const GraphViewV2: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphState.data, theme, darkMode, graphState.isError]);
+    }, [normalizedGraphData, theme, darkMode, graphState.isError]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {
