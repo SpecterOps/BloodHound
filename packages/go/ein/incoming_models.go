@@ -290,6 +290,10 @@ type BoolAPIResult struct {
 
 type SMBSigningAPIResult struct {
 	APIResult
+	Result SMBSigningResult
+}
+
+type SMBSigningResult struct {
 	SigningEnabled  bool
 	OSVersion       string
 	OSBuild         string
