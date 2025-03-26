@@ -18,7 +18,7 @@ import { isGraphResponse, transformToFlatGraphResponse, useExploreGraph } from '
 import { FlatGraphResponse, GraphResponse } from 'js-client-library';
 import { useMemo } from 'react';
 
-export const normalizeGraphDataToSigma = (
+export const normalizeGraphDataForSigma = (
     graphData: GraphResponse | FlatGraphResponse | undefined
 ): FlatGraphResponse | undefined => {
     if (!graphData) return;
@@ -32,7 +32,7 @@ export const normalizeGraphDataToSigma = (
 
 export const useSigmaExploreGraph = () => {
     const graphState = useExploreGraph();
-    const normalizedGraphData = useMemo(() => normalizeGraphDataToSigma(graphState.data), [graphState.data]);
+    const normalizedGraphData = useMemo(() => normalizeGraphDataForSigma(graphState.data), [graphState.data]);
 
     return { ...graphState, data: normalizedGraphData };
 };

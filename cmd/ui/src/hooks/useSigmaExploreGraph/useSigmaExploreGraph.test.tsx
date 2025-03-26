@@ -1,6 +1,6 @@
 import * as bhSharedUI from 'bh-shared-ui';
 import { FlatGraphResponse, GraphResponse } from 'js-client-library';
-import { normalizeGraphDataToSigma } from '.';
+import { normalizeGraphDataForSigma } from '.';
 
 const transformToFlatGraphResponseSpy = vitest.spyOn(bhSharedUI, 'transformToFlatGraphResponse');
 transformToFlatGraphResponseSpy.mockReturnValue({});
@@ -42,19 +42,19 @@ const typicalFlatGraphResponse: FlatGraphResponse = {
     },
 };
 
-describe('normalizeGraphDataToSigma', () => {
+describe('normalizeGraphDataForSigma', () => {
     it('returns undefined if graphData is undefined', () => {
-        const actual = normalizeGraphDataToSigma(undefined);
+        const actual = normalizeGraphDataForSigma(undefined);
         expect(actual).toBeUndefined();
     });
 
     it('calls transformToFlatGraphResponse when graphData matches GraphResponse interface', () => {
-        normalizeGraphDataToSigma(typicalGraphResponse);
+        normalizeGraphDataForSigma(typicalGraphResponse);
         expect(transformToFlatGraphResponseSpy).toBeCalled();
     });
 
     it('returns graphData as is if it doesnt match the GraphResponse interface', () => {
-        normalizeGraphDataToSigma(typicalFlatGraphResponse);
+        normalizeGraphDataForSigma(typicalFlatGraphResponse);
         expect(transformToFlatGraphResponseSpy).not.toBeCalled();
     });
 });
