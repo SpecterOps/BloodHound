@@ -366,7 +366,6 @@
                 "group": "Release Notes",
                 "pages": [
                   "resources/release-notes/overview",
-                  "resources/release-notes/summary",
                   "resources/release-notes/2024-12-09-v6-3-0",
                   "resources/release-notes/v7-2-0",
                   {
@@ -866,7 +865,7 @@
     "links": [
       {
         "label": "Support",
-        "href": "https://support.bloodhoundenterprise.io/hc/en-us?utm_campaign=&utm_medium=&utm_source=&utm_term=&utm_content=&Latest_Campaign="
+        "href": "https://support.bloodhoundenterprise.io/hc/en-us/requests/new?utm_campaign=&utm_medium=&utm_source=&utm_term=&utm_content=&Latest_Campaign="
       }
     ],
     "primary": {

@@ -1,19 +1,18 @@
 ---
-title: Work With the BloodHound API
+title: "Work With the BloodHound API"
 ---
 
-<img src="/assets/community-edition-pill-tag.svg"/> 
+![](/assets/enterprise-AND-community-edition-pill-tag.svg)
 
-The BloodHound product family are API-first products, meaning everything functions on the underlying API layer. All data displayed in the portal, all commands given to SharpHound or AzureHound Enterprise collectors, and all data uploaded pass through the BloodHound APIs. Customers may utilize these APIs to extend the use of the BloodHound product to function with other tools in their environment. This article will show how to access the API and include some example use cases.
+The BloodHound product family is API-first, meaning everything functions on the underlying API layer. All data displayed in the portal, all commands given to SharpHound or AzureHound Enterprise collectors, and all data uploaded pass through the BloodHound APIs. Customers may utilize these APIs to extend the use of the BloodHound product to function with other tools in their environment. This article will show how to access the API and include some example use cases.
 
 ## API Documentation
 
 API documentation is hosted utilizing Swagger behind authentication within your tenant environment. After logging in, you may access it by clicking the cog in the top right corner of your tenant and clicking **API Explorer.**
 
 <Frame>
-    <img src="/assets/image1-1.png"/>
+  ![](/assets/image1-1.png)
 </Frame>
-
 
 ## Using the API
 
@@ -40,43 +39,51 @@ Administrators can create non-personal BloodHound users solely meant for API int
 6. On the API user, click the hamburger menu and select **Generate / Revoke API Tokens**.
 
 <Frame>
-  <img src="/assets/image1-2.png" alt="Generate API Tokens"/>
+  ![Generate API Tokens](/assets/image1-2.png)
 </Frame>
 
-7. Select **Create Token**.
-8. Give the token a descriptive name and click **Save**.
-9. Save the presented API key/ID pair and click **Close**.
+1. Select **Create Token**.
+2. Give the token a descriptive name and click **Save**.
+3. Save the presented API key/ID pair and click **Close**.
    - **The API key will never be shown again. If you lose it, you must revoke the previous key and regenerate a new one.**
-10. You may now utilize this key ID pair for [calling the API](#calling-the-api)
+4. You may now utilize this key ID pair for [calling the API](#calling-the-api)
 
 ## Create a personal API Key/ID pair
 
 BloodHound users can create personal API Key/ID pairs from their "My Profile" section.
 
-1. <p>In the top-right corner click <Icon icon="gear"iconType="solid"/> <Icon icon="arrow-right"iconType="solid"/> **My Profile**.</p>
+1. In the top-right corner click <Icon icon="gear" iconType="solid" /> <Icon icon="arrow-right" iconType="solid" /> **My Profile**.
+
 <Frame>
-  <img src="/assets/image1-3.png" alt="Create Token"/>
+  ![Create Token](/assets/image1-3.png)
 </Frame>
-2. Click **API Key Management**.
+
+1. Click **API Key Management**.
+
 <Frame>
-  <img src="/assets/image1-7.png" alt="API Key Mangement"/>
+  ![API Key Mangement](/assets/image1-7.png)
 </Frame>
-3. Click **Create Token**.
+
+1. Click **Create Token**.
+
 <Frame>
-  <img src="/assets/image1-4.png" alt="Create Token"/>
+  ![Create Token](/assets/image1-4.png)
 </Frame>
-4. Give the token a descriptive name and click **Save**.
+
+1. Give the token a descriptive name and click **Save**.
+
 <Frame>
-  <img src="/assets/image1-5.png" alt="Create Token"/>
+  ![Create Token](/assets/image1-5.png)
 </Frame>
-5. Save the presented API key/ID pair and click **Close**.
+
+1. Save the presented API key/ID pair and click **Close**.
    - The API key will never be shown again. If you lose it, you must revoke the previous key and regenerate a new one.
 
 <Frame>
-  <img src="/assets/image1-6.png" alt="API Key Pair"/>
+  ![API Key Pair](/assets/image1-6.png)
 </Frame>
 
-6. You may now utilize this key/ID pair for calling the API.
+1. You may now utilize this key/ID pair for calling the API.
 
 ## Calling the API
 
@@ -89,6 +96,7 @@ For quick tests or one-time calls, the JWT used by your browser may be the simpl
 ```
 'Authorization': Bearer $JWT_TOKEN
 ```
+
 If you open the Network tab within your browser, you will see calls against the API made utilizing this structure.
 
 **Using your API Key/ID Pair**
@@ -107,6 +115,7 @@ Calls against the API would need to include the following headers in the HTTP re
 'RequestDate': $RFC3339_DATETIME
 'Signature': $BASE64ENCODED_HMAC_SIGNATURE
 ```
+
 By validating the hash signature against the request, the API can validate that the calls were made by the original requestor, within a reasonable timeframe, against the proper API endpoint, including the original content body, and that no replay or content modification has occurred.
 
 The attached Python script is a full example implementation for calling the BloodHound APIs utilizing the API key/ID pair, however, the code block specific to calling the API has been extracted below.
@@ -161,12 +170,9 @@ def_request(self, method: str, uri: str, body: Optional[bytes] = None) -> reques
         data=body,
     )
 ```
-<CardGroup>
-  <Card
-    title="apiclient.py 10KB"
-    icon="paperclip"
-    href="/assets/apiclient.py"
-    iconType="solid"
-    horizontal
-  />
+
+<CardGroup cols={2}>
+  <Card title="apiclient.py 10KB" icon="paperclip" iconType="solid" horizontal href="/assets/apiclient.py">
+    
+  </Card>
 </CardGroup>
