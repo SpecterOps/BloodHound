@@ -210,16 +210,6 @@ class BHEAPIClient {
             Object.assign({ params }, options)
         );
 
-    getAssetGroupMembersCounts = (
-        assetGroupId: number,
-        params?: Pick<types.AssetGroupMemberParams, 'environment_id' | 'environment_kind'>,
-        options?: types.RequestOptions
-    ) =>
-        this.baseClient.get<BasicResponse<{ total_count: number; counts: Record<string, number> }>>(
-            `/api/v2/asset-groups/${assetGroupId}/members/counts`,
-            Object.assign({ params }, options)
-        );
-
     listAssetGroups = (options?: types.RequestOptions) =>
         this.baseClient.get<AssetGroupResponse>('/api/v2/asset-groups', options);
 

@@ -55,11 +55,6 @@ type SelectedDetailsProps = {
     id: number;
     data?: AssetGroupTagSelectorNode | AssetLabel | AssetSelector;
     cypher?: boolean;
-    objectsCount?: any;
-    // objectsCount?:{
-    //     total_count: number;
-    //     counts: Record<string, number>;
-    // };
 };
 
 const isObject = (data: any): data is AssetGroupTagSelectorNode => {
@@ -67,11 +62,12 @@ const isObject = (data: any): data is AssetGroupTagSelectorNode => {
     return 'node_id' in objectData;
 };
 
-const SelectedDetails: FC<SelectedDetailsProps> = ({ type, cypher, data, objectsCount }) => {
+const SelectedDetails: FC<SelectedDetailsProps> = ({ type, id, cypher, data }) => {
     if (isObject(data)) {
         const selectedNode = {
-            id: data.node_id.toString(),
+            id: '3',
             type: ActiveDirectoryNodeKind.User,
+            properties: data.properties,
             name: data.name,
         };
         return (
@@ -93,7 +89,7 @@ const SelectedDetails: FC<SelectedDetailsProps> = ({ type, cypher, data, objects
             return (
                 <>
                     <DynamicDetails data={data} />
-                    <ObjectCountPanel data={objectsCount} />
+                    {/* <ObjectCountPanel data={objectsCount} /> */}
                 </>
             );
     }
@@ -101,7 +97,7 @@ const SelectedDetails: FC<SelectedDetailsProps> = ({ type, cypher, data, objects
     return (
         <>
             <DynamicDetails data={data} />
-            <ObjectCountPanel data={objectsCount} />
+            <ObjectCountPanel selectedTier={id} />
         </>
     );
 };
@@ -123,12 +119,6 @@ const Details: FC = () => {
     const selectorsQuery = useQuery(['asset-group-selectors', selectedTier], () => {
         return apiClient.getAssetGroupSelectors(selectedTier).then((res) => {
             return res.data.data['selectors'];
-        });
-    });
-
-    const objectsCount = useQuery(['asset-group-labels-count'], () => {
-        return apiClient.getAssetGroupMembersCounts(selectedTier).then((res) => {
-            return res.data.data;
         });
     });
 
@@ -267,7 +257,7 @@ const Details: FC = () => {
                     </div>
                 </div>
                 <div className='flex flex-col basis-1/3'>
-                    <SelectedDetails type={type} id={id} cypher={showCypher} data={data} objectsCount={objectsCount} />
+                    <SelectedDetails type={type} id={id} cypher={showCypher} data={data} />
                 </div>
             </div>
         </div>
