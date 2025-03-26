@@ -15,14 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps, Typography } from '@mui/material';
-import {
-    NoEntitySelectedHeader,
-    NoEntitySelectedMessage,
-    formatPanelSectionsParams,
-    useExploreParams,
-    useFeatureFlag,
-    usePaneStyles,
-} from 'bh-shared-ui';
+import { NoEntitySelectedHeader, NoEntitySelectedMessage, useFeatureFlag, usePaneStyles } from 'bh-shared-ui';
 import React, { useEffect, useState } from 'react';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import usePreviousValue from 'src/hooks/usePreviousValue';
@@ -39,26 +32,15 @@ interface EntityInfoPanelProps {
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
-    const { setExpandedSections, expandedSections } = useEntityInfoPanelContext();
-    const { expandedPanelSections } = useExploreParams();
+    const { setExpandedSections } = useEntityInfoPanelContext();
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
     const previousSelectedNode = usePreviousValue(selectedNode);
 
     useEffect(() => {
-        if (backButtonFlag?.enabled && previousSelectedNode?.id !== selectedNode?.id && expandedPanelSections) {
-            const initialExpandedSections = { ...formatPanelSectionsParams(expandedPanelSections) };
-            setExpandedSections(initialExpandedSections);
-        } else if (!backButtonFlag?.enabled && previousSelectedNode?.id !== selectedNode?.id) {
+        if (!backButtonFlag?.enabled && previousSelectedNode?.id !== selectedNode?.id) {
             setExpandedSections({});
         }
-    }, [
-        setExpandedSections,
-        expandedSections,
-        previousSelectedNode,
-        selectedNode,
-        backButtonFlag,
-        expandedPanelSections,
-    ]);
+    }, [setExpandedSections, previousSelectedNode, selectedNode, backButtonFlag]);
 
     return (
         <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>

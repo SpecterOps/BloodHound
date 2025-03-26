@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { VirtualizedNodeListItem } from '../VirtualizedNodeList';
 import ADCSESC1 from './ADCSESC1/ADCSESC1';
 import ADCSESC10a from './ADCSESC10a/ADCSESC10a';
 import ADCSESC10b from './ADCSESC10b/ADCSESC10b';
@@ -76,6 +77,7 @@ import AllowedToAct from './AllowedToAct/AllowedToAct';
 import AllowedToDelegate from './AllowedToDelegate/AllowedToDelegate';
 import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
+import CoerceAndRelayNTLMToADCS from './CoerceAndRelayNTLMToADCS/CoerceAndRelayNTLMToADCS';
 import CoerceAndRelayNTLMToLDAP from './CoerceAndRelayNTLMToLDAP/CoerceAndRelayNTLMToLDAP';
 import CoerceAndRelayNTLMToLDAPS from './CoerceAndRelayNTLMToLDAPS/CoerceAndRelayNTLMToLDAPS';
 import CoerceAndRelayNTLMToSMB from './CoerceAndRelayNTLMToSMB/CoerceAndRelayNTLMToSMB';
@@ -137,6 +139,7 @@ export type EdgeInfoProps = {
     targetDBId?: number;
     targetName?: string;
     targetType?: string;
+    onNodeClick?: (selectedNode: VirtualizedNodeListItem) => void;
 };
 
 const EdgeInfoComponents = {
@@ -254,6 +257,7 @@ const EdgeInfoComponents = {
     CoerceAndRelayNTLMToSMB: CoerceAndRelayNTLMToSMB,
     CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAPS,
+    CoerceAndRelayNTLMToADCS: CoerceAndRelayNTLMToADCS,
 };
 
 export default EdgeInfoComponents;

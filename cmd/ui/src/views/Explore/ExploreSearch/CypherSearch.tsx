@@ -207,7 +207,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
 
                     <Button asChild variant='secondary' rel='noreferrer' size={'small'}>
                         <Link
-                            href='https://support.bloodhoundenterprise.io/hc/en-us/articles/16721164740251'
+                            href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
                             target='_blank'>
                             <Box display={'flex'} alignItems={'center'}>
                                 <FontAwesomeIcon icon={faQuestion} />
