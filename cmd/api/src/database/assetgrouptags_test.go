@@ -148,10 +148,10 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	selector2, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, test2ID, test2Name, test2Description, isDefault, allowDisable, autoCertify, testSeeds)
 	require.NoError(t, err)
 
-	results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1)
+	results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{})
 	require.NoError(t, err)
 
 	expected := []model.AssetGroupTagSelector{selector, selector2}
-	require.Equal(t, results, expected)
+	require.Equal(t, expected, results)
 
 }

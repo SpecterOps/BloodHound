@@ -310,7 +310,7 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any()).
+						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return([]model.AssetGroupTagSelector{}, database.ErrNotFound).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)
@@ -337,7 +337,7 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any()).
+						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return([]model.AssetGroupTagSelector{{Name: "Test1", AssetGroupTagId: 1}}, nil).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)
@@ -356,11 +356,11 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				Name: "Success - Selector Types",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-					apitest.SetURLVar(input, api.QueryParameterAssetGroupSelectorType, "2")
+					apitest.SetURLVar(input, "type", "eq:2")
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any()).
+						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return([]model.AssetGroupTagSelector{
 							{
 								Name:            "Test1",

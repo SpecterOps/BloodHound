@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -90,37 +91,54 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 
 func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, request *http.Request) {
 	var (
-		queryParams           = request.URL.Query()
-		rawSelectorTypeString = queryParams[api.QueryParameterAssetGroupSelectorType]
-		assetTagIdStr         = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		assetTagIdStr            = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		selectorQueryFilter      = make(model.QueryParameterFilterMap)
+		selectorSeedsQueryFilter = make(model.QueryParameterFilterMap)
+		selectorSeed             = model.SelectorSeed{}
+		assetGroupTagSelector    = model.AssetGroupTagSelector{}
 	)
 
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selector")()
+	if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+		return
+	} else {
+		// The below is a workaround to split the query filters by the two tables to be used in the subsequent db calls
+		for name, filters := range queryFilters {
+			validSelectorPredicates, selectorFilterErr := api.GetValidFilterPredicatesAsStrings(assetGroupTagSelector, name)
+			validSelectorSeedPredicates, seedFilterErr := api.GetValidFilterPredicatesAsStrings(selectorSeed, name)
+			if selectorFilterErr != nil && seedFilterErr != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			}
 
-	if assetGroupTagID, err := strconv.Atoi(assetTagIdStr); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
-	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if selectors, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), assetGroupTagID); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if len(rawSelectorTypeString) != 0 {
-		for _, selType := range rawSelectorTypeString {
-			if selectorTypeInt, err := strconv.Atoi(selType); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidSelectorType, request), response)
-			} else if selectorTypeInt != 0 {
-				var typeSelectors []model.AssetGroupTagSelector
-				for _, selector := range selectors {
-					for _, seed := range selector.Seeds {
-						if seed.Type == model.SelectorType(selectorTypeInt) {
-							typeSelectors = append(typeSelectors, selector)
-						}
-					}
+			for _, filter := range filters {
+				if !slices.Contains(validSelectorPredicates, string(filter.Operator)) && !slices.Contains(validSelectorSeedPredicates, string(filter.Operator)) {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+					return
 				}
-				api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: typeSelectors}, http.StatusOK, response)
+				if slices.Contains(validSelectorPredicates, string(filter.Operator)) {
+					selectorQueryFilter.AddFilter(filter)
+				} else if slices.Contains(validSelectorSeedPredicates, string(filter.Operator)) {
+					selectorSeedsQueryFilter.AddFilter(filter)
+					selectorSeedsQueryFilter[name][len(selectorSeedsQueryFilter[name])-1].IsStringData = selectorSeed.IsString(filter.Name)
+				}
 			}
 		}
-	} else {
-		api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: selectors}, http.StatusOK, response)
-	}
 
+		defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selector")()
+
+		if assetGroupTagID, err := strconv.Atoi(assetTagIdStr); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
+		} else if selectorSqlFilter, err := selectorQueryFilter.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if selectorSeedSqlFilter, err := selectorSeedsQueryFilter.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if selectors, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), assetGroupTagID, selectorSqlFilter, selectorSeedSqlFilter); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: selectors}, http.StatusOK, response)
+		}
+	}
 }

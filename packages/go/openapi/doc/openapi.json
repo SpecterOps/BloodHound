@@ -4406,8 +4406,7 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "format": "int"
+              "type": "string"
             }
           }
         ],
