@@ -14,35 +14,29 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ExploreQueryParams, transformToFlatGraphResponse, useExploreGraph, useExploreParams } from 'bh-shared-ui';
+import { transformToFlatGraphResponse, useExploreGraph } from 'bh-shared-ui';
 import { FlatGraphResponse, GraphResponse } from 'js-client-library';
 import { useMemo } from 'react';
 
+const isGraphResponse = (graphData: GraphResponse | FlatGraphResponse): graphData is GraphResponse => {
+    return !!(graphData as GraphResponse)?.data?.nodes && !!(graphData as GraphResponse)?.data?.edges;
+};
+
 export const normalizeGraphDataToSigma = (
-    graphData: GraphResponse | FlatGraphResponse | undefined,
-    searchType: ExploreQueryParams['searchType']
-): FlatGraphResponse => {
-    if (!graphData) return {};
-    switch (searchType) {
-        case 'node':
-        case 'relationship': {
-            return graphData as FlatGraphResponse;
-        }
-        case 'cypher':
-        case 'composition':
-        case 'pathfinding': {
-            return transformToFlatGraphResponse(graphData as GraphResponse);
-        }
+    graphData: GraphResponse | FlatGraphResponse | undefined
+): FlatGraphResponse | undefined => {
+    if (!graphData) return;
+
+    if (isGraphResponse(graphData)) {
+        return transformToFlatGraphResponse(graphData);
+    } else {
+        return graphData;
     }
-    return {};
 };
 
 export const useSigmaExploreGraph = () => {
-    const { searchType } = useExploreParams();
     const graphState = useExploreGraph();
-    const normalizedGraphData = useMemo(
-        () => normalizeGraphDataToSigma(graphState.data, searchType),
-        [graphState.data, searchType]
-    );
+    const normalizedGraphData = useMemo(() => normalizeGraphDataToSigma(graphState.data), [graphState.data]);
+
     return { ...graphState, data: normalizedGraphData };
 };

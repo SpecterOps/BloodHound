@@ -73,6 +73,7 @@ const GraphViewV2: FC = () => {
 
     useEffect(() => {
         let items: any = graphQuery.data;
+
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
 
