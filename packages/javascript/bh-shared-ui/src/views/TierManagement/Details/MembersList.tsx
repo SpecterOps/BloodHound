@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { SelectorNode } from 'js-client-library';
+import { AssetGroupTagSelectorNode } from 'js-client-library';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
@@ -111,7 +111,7 @@ interface MembersListProps {
     selectedSelector: number | null;
     selected: number | null;
     onClick: (id: number) => void;
-    itemCount: number;
+    itemCount?: number;
 }
 
 /**
@@ -129,11 +129,11 @@ export const MembersList: React.FC<MembersListProps> = ({
     selectedSelector,
     selected,
     onClick,
-    itemCount,
+    itemCount = 0,
 }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>();
     const [isFetching, setIsFetching] = useState(false);
-    const [items, setItems] = useState<Record<number, SelectorNode>>({});
+    const [items, setItems] = useState<Record<number, AssetGroupTagSelectorNode>>({});
     const infiniteLoaderRef = useRef<InfiniteLoader | null>(null);
     const listRef = useRef<FixedSizeList | null>(null);
     const previousSelector = usePreviousValue<number | null>(selectedSelector);

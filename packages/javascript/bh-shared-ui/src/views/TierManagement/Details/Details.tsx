@@ -209,7 +209,7 @@ const Details: FC = () => {
                     </div>
                     <div className='min-h-96 grow-0 basis-1/3'>
                         <MembersList
-                            itemCount={objectsQuery.data || 1000}
+                            itemCount={objectsQuery.data}
                             onClick={(id) => {
                                 setSelectedObject(id);
                                 setShowCypher(false);

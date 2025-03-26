@@ -16,7 +16,6 @@
 
 import { UseQueryResult } from 'react-query';
 import { render, screen } from '../../../test-utils';
-import { EntityKinds } from '../../../utils';
 import { DetailsList } from './DetailsList';
 
 const testQuery = {
@@ -24,16 +23,16 @@ const testQuery = {
     isError: false,
     isSuccess: true,
     data: [
-        { name: 'a', id: 1 },
-        { name: 'b', id: 2 },
-        { name: 'c', id: 3 },
+        { name: 'a', id: 1, count: 1 },
+        { name: 'b', id: 2, count: 2 },
+        { name: 'c', id: 3, count: 3 },
     ],
-} as unknown as UseQueryResult<{ name: string; id: number; count?: number; kind?: EntityKinds }[], unknown>;
+} as unknown as UseQueryResult<{ name: string; id: number; count: number }[], unknown>;
 
 describe('List', async () => {
     it('shows a loading view when data is fetching', async () => {
         const testQuery = { isLoading: true, isError: false, data: [] } as unknown as UseQueryResult<
-            { name: string; id: number; count?: number; kind?: EntityKinds }[],
+            { name: string; id: number; count: number }[],
             unknown
         >;
 
@@ -44,7 +43,7 @@ describe('List', async () => {
 
     it('handles data fetching errors', async () => {
         const testQuery = { isLoading: false, isError: true, data: [] } as unknown as UseQueryResult<
-            { name: string; id: number; count?: number; kind?: EntityKinds }[],
+            { name: string; id: number; count: number }[],
             unknown
         >;
 

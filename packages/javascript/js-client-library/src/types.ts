@@ -79,53 +79,63 @@ interface Disabled {
     disabled_by: string;
 }
 
-export interface AssetLabel extends Created, Updated, Deleted {
+export type AssetGroupTagTypeValues = 1 | 2;
+
+export const AssetGroupTagTypes: Record<AssetGroupTagTypeValues, string> = {
+    1: 'tier',
+    2: 'label',
+} as const;
+
+export interface AssetGroupTag extends Created, Updated, Deleted {
     id: number;
     name: string;
     kind_id: number;
-    asset_group_tier_id: number | null;
+    type: AssetGroupTagTypeValues;
+    position: number | null;
+    requireCertify: boolean | null;
     description: string;
     count: number;
 }
 
-export type SeedTypeValues = 0 | 1;
+export type SeedTypeValues = 1 | 2;
 
 export const SeedTypes: Record<SeedTypeValues, string> = {
-    0: 'objectId',
-    1: 'cypher',
-};
+    1: 'objectId',
+    2: 'cypher',
+} as const;
 
-export interface AssetSelector extends Created, Updated, Disabled {
+export interface AssetGroupTagSelector extends Created, Updated, Disabled {
     id: number;
-    asset_group_label_id: number | null;
+    asset_group_tag_id: number | null;
     name: string;
     description: string;
     is_default: boolean;
+    allow_disable: boolean;
     auto_certify: boolean;
     count: number;
-    seeds: SelectorSeed[];
+    seeds: AssetGroupTagSelectorSeed[];
 }
 
-export interface SelectorSeed {
+export interface AssetGroupTagSelectorSeed {
     selector_id: number;
     type: SeedTypeValues;
     value: string;
 }
 
-export type CertifiedValues = -1 | 0 | 1 | 2;
+export type AssetGroupTagCertifiedValues = -1 | 0 | 1 | 2;
 
-export const Certified: Record<CertifiedValues, string> = {
+export const Certified: Record<AssetGroupTagCertifiedValues, string> = {
     '-1': 'Manually not certified (revoked)',
-    0: 'No certification (only automatically tagged if certify is enabled',
+    0: 'No certification (only automatically tagged if certify is enabled)',
     1: 'Manually certified',
     2: 'Auto certified (automatically tagged)',
 } as const;
 
-export interface SelectorNode {
+export interface AssetGroupTagSelectorNode {
     selector_id: number;
-    node_id: number;
-    certified: CertifiedValues;
-    certified_by: string | System;
+    node_id: string;
+    certified: AssetGroupTagCertifiedValues;
+    certified_by: string | System | null;
     id: number;
     name: string;
 }

@@ -16,23 +16,25 @@
 
 import { faker } from '@faker-js/faker';
 import {
-    AssetLabel,
-    AssetSelector,
-    CertifiedValues,
+    AssetGroupTag,
+    AssetGroupTagCertifiedValues,
+    AssetGroupTagSelector,
+    AssetGroupTagSelectorNode,
+    AssetGroupTagSelectorSeed,
+    AssetGroupTagTypeValues,
     SeedTypeValues,
-    SelectorNode,
-    SelectorSeed,
 } from 'js-client-library';
 
 export const createAssetGroupLabels = (count: number = 10) => {
-    const data: AssetLabel[] = [];
+    const data: AssetGroupTag[] = [];
 
     for (let i = 1; i < count; i++) {
         data.push({
             id: i,
             name: `Tier-${i - 1}`,
             kind_id: faker.datatype.number(),
-            asset_group_tier_id: i,
+            type: faker.datatype.number({ min: 1, max: 2 }) as AssetGroupTagTypeValues,
+            position: faker.datatype.number({ min: 0, max: 10 }),
             description: faker.random.words(),
             created_at: faker.date.past().toISOString(),
             created_by: faker.internet.email(),
@@ -40,6 +42,7 @@ export const createAssetGroupLabels = (count: number = 10) => {
             updated_by: faker.internet.email(),
             deleted_at: faker.date.past().toISOString(),
             deleted_by: faker.internet.email(),
+            requireCertify: faker.datatype.boolean(),
             count: faker.datatype.number(),
         });
     }
@@ -48,13 +51,14 @@ export const createAssetGroupLabels = (count: number = 10) => {
 };
 
 export const createSelectors = (count: number = 10, tierId: number = 0) => {
-    const data: AssetSelector[] = [];
+    const data: AssetGroupTagSelector[] = [];
 
     for (let i = 0; i < count; i++) {
         data.push({
             id: i,
-            asset_group_label_id: i,
+            asset_group_tag_id: i,
             name: `tier-${tierId - 1}-selector-${i}`,
+            allow_disable: faker.datatype.boolean(),
             description: faker.random.words(),
             is_default: faker.datatype.boolean(),
             auto_certify: faker.datatype.boolean(),
@@ -73,8 +77,8 @@ export const createSelectors = (count: number = 10, tierId: number = 0) => {
 };
 
 export const createSelectorSeeds = (count: number = 10, selectorId: number = 0) => {
-    const data: SelectorSeed[] = [];
-    const seedType = faker.datatype.number({ min: 0, max: 1 }) as SeedTypeValues;
+    const data: AssetGroupTagSelectorSeed[] = [];
+    const seedType = faker.datatype.number({ min: 1, max: 2 }) as SeedTypeValues;
 
     for (let i = 0; i < count; i++) {
         data.push({
@@ -94,7 +98,7 @@ export const createSelectorNodes = (
     limit: number,
     count: number
 ) => {
-    const data: SelectorNode[] = [];
+    const data: AssetGroupTagSelectorNode[] = [];
 
     for (let i = skip; i < skip + limit; i++) {
         if (i === count) break;
@@ -105,9 +109,9 @@ export const createSelectorNodes = (
 
         data.push({
             selector_id: selectorId || 0,
-            node_id: i,
+            node_id: i.toString(),
             id: i,
-            certified: faker.datatype.number({ min: -1, max: 2 }) as CertifiedValues,
+            certified: faker.datatype.number({ min: -1, max: 2 }) as AssetGroupTagCertifiedValues,
             certified_by: faker.internet.email(),
             name: name,
         });
