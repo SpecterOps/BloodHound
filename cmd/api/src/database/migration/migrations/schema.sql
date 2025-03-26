@@ -682,52 +682,45 @@ INSERT INTO roles VALUES ('Read-Only', 'Used for integrations', 3, current_times
 INSERT INTO roles VALUES ('Upload-Only', 'Used for data collection clients, can post data but cannot read data', 4, current_timestamp, current_timestamp);
 INSERT INTO roles VALUES ('Power User', 'Can upload data, manage clients, and perform any action a User can', 5, current_timestamp, current_timestamp);
 
-INSERT INTO roles_permissions VALUES (1, 1);
-INSERT INTO roles_permissions VALUES (1, 2);
-INSERT INTO roles_permissions VALUES (1, 3);
-INSERT INTO roles_permissions VALUES (1, 4);
-INSERT INTO roles_permissions VALUES (1, 5);
-INSERT INTO roles_permissions VALUES (1, 6);
-INSERT INTO roles_permissions VALUES (1, 7);
-INSERT INTO roles_permissions VALUES (1, 8);
-INSERT INTO roles_permissions VALUES (1, 9);
-INSERT INTO roles_permissions VALUES (1, 10);
-INSERT INTO roles_permissions VALUES (1, 11);
-INSERT INTO roles_permissions VALUES (1, 12);
-INSERT INTO roles_permissions VALUES (1, 13);
-INSERT INTO roles_permissions VALUES (1, 14);
-INSERT INTO roles_permissions VALUES (2, 1);
-INSERT INTO roles_permissions VALUES (2, 3);
-INSERT INTO roles_permissions VALUES (2, 5);
-INSERT INTO roles_permissions VALUES (2, 8);
-INSERT INTO roles_permissions VALUES (2, 13);
-INSERT INTO roles_permissions VALUES (3, 1);
-INSERT INTO roles_permissions VALUES (3, 3);
-INSERT INTO roles_permissions VALUES (3, 8);
-INSERT INTO roles_permissions VALUES (3, 13);
-INSERT INTO roles_permissions VALUES (4, 11);
-INSERT INTO roles_permissions VALUES (4, 14);
-INSERT INTO roles_permissions VALUES (1, 15);
-INSERT INTO roles_permissions VALUES (1, 16);
-INSERT INTO roles_permissions VALUES (1, 17);
-INSERT INTO roles_permissions VALUES (1, 18);
-INSERT INTO roles_permissions VALUES (1, 19);
-INSERT INTO roles_permissions VALUES (2, 15);
-INSERT INTO roles_permissions VALUES (2, 16);
-INSERT INTO roles_permissions VALUES (2, 17);
-INSERT INTO roles_permissions VALUES (3, 5);
-INSERT INTO roles_permissions VALUES (5, 1);
-INSERT INTO roles_permissions VALUES (5, 2);
-INSERT INTO roles_permissions VALUES (5, 3);
-INSERT INTO roles_permissions VALUES (5, 4);
-INSERT INTO roles_permissions VALUES (5, 5);
-INSERT INTO roles_permissions VALUES (5, 8);
-INSERT INTO roles_permissions VALUES (5, 10);
-INSERT INTO roles_permissions VALUES (5, 17);
-INSERT INTO roles_permissions VALUES (5, 11);
-INSERT INTO roles_permissions VALUES (5, 12);
-INSERT INTO roles_permissions VALUES (5, 14);
-INSERT INTO roles_permissions VALUES (5, 13);
-INSERT INTO roles_permissions VALUES (5, 15);
-INSERT INTO roles_permissions VALUES (5, 16);
-INSERT INTO roles_permissions VALUES (5, 19);
+INSERT INTO roles_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r, permissions p
+WHERE r.name = 'Administrator' AND p.name IN (
+    'ReadAppConfig', 'WriteAppConfig', 'GenerateReport', 'ManageRisks',
+    'CreateToken', 'ManageAppConfig', 'ManageProviders', 'ManageSelf',
+    'ManageUsers', 'Manage', 'Tasking', 'ManageJobs', 'Read', 'Write'
+);
+
+-- User
+INSERT INTO roles_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r, permissions p
+WHERE r.name = 'User' AND p.name IN (
+    'ReadAppConfig', 'GenerateReport', 'CreateToken', 'ManageSelf', 'Manage', 'Read'
+);
+
+-- Read-Only
+INSERT INTO roles_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r, permissions p
+WHERE r.name = 'Read-Only' AND p.name IN (
+    'ReadAppConfig', 'GenerateReport', 'ManageSelf', 'Read', 'CreateToken'
+);
+
+-- Upload-Only
+INSERT INTO roles_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r, permissions p
+WHERE r.name = 'Upload-Only' AND p.name IN (
+    'Tasking', 'Write'
+);
+
+-- Power User
+INSERT INTO roles_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r, permissions p
+WHERE r.name = 'Power User' AND p.name IN (
+    'ReadAppConfig', 'WriteAppConfig', 'GenerateReport', 'ManageRisks',
+    'CreateToken', 'ManageSelf', 'Manage', 'Read', 'Tasking', 'ManageJobs',
+    'Write', 'Mutate', 'Read', 'Mutate'
+);
