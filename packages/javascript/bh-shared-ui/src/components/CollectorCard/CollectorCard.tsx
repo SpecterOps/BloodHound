@@ -30,7 +30,7 @@ interface CollectorCardProps {
     isDeprecated?: boolean;
 }
 
-const COLLECTOR_TYPE: { [key in CommunityCollectorType]: string } = {
+const COLLECTOR_TYPE: Record<CommunityCollectorType, string> = {
     sharphound: 'SharpHound',
     azurehound: 'AzureHound',
 };

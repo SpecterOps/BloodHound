@@ -265,7 +265,8 @@ export interface LoginResponse {
 }
 
 export type CommunityCollectorType = 'sharphound' | 'azurehound';
-export type CollectorType = CommunityCollectorType | 'sharphound_enterprise' | 'azurehound_enterprise';
+export type EnterpriseCollectorType = 'sharphound_enterprise' | 'azurehound_enterprise';
+export type CollectorType = CommunityCollectorType | EnterpriseCollectorType;
 
 export interface GetCollectorsResponse {
     data: {
@@ -278,17 +279,19 @@ export interface GetCollectorsResponse {
     };
 }
 
-export interface GetEnterpriseCollectorsResponse {
-    data: {
-        [key in CollectorType]: Collector[];
-    }
+export interface GetCommunityCollectorsResponse {
+    data: Record<CommunityCollectorType, CollectorManifest[]>;
 }
 
-interface Collector {
+export interface GetEnterpriseCollectorsResponse {
+    data: Record<EnterpriseCollectorType, CollectorManifest[]>;
+}
+
+export interface CollectorManifest {
     version: string;
     version_meta: VersionMeta;
     release_date: string;
-    release_assets: EnterpriseCollectorAsset[];
+    release_assets: CollectorAsset[];
 }
 
 interface VersionMeta {
@@ -298,7 +301,7 @@ interface VersionMeta {
     prerelease: string;
 }
 
-interface EnterpriseCollectorAsset {
+interface CollectorAsset {
     name: string;
     download_url: string;
     checksum_download_url: string;

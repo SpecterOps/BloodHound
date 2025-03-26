@@ -808,6 +808,9 @@ class BHEAPIClient {
     getCollectors = (collectorType: types.CommunityCollectorType, options?: types.RequestOptions) =>
         this.baseClient.get<types.GetCollectorsResponse>(`/api/v2/collectors/${collectorType}`, options);
 
+    getCommunityCollectors = (options?: types.RequestOptions): Promise<AxiosResponse<types.GetCommunityCollectorsResponse>> =>
+        this.baseClient.get<types.GetCommunityCollectorsResponse>('/api/v2/kennel/manifest', options);
+
     getEnterpriseCollectors = (options?: types.RequestOptions): Promise<AxiosResponse<types.GetEnterpriseCollectorsResponse>> =>
         this.baseClient.get<types.GetEnterpriseCollectorsResponse>('/api/v2/kennel/enterprise-manifest', options);
 
@@ -837,7 +840,7 @@ class BHEAPIClient {
             )
         );
 
-    downloadEnterpriseCollectorAsset = (fileName: string, options?: types.RequestOptions) =>
+    downloadCollectorManifestAsset = (fileName: string, options?: types.RequestOptions) =>
         this.baseClient.get(
             `/api/v2/kennel/download/${fileName}`,
             Object.assign(
