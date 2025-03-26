@@ -9,6 +9,11 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 )
 
+// ReadDomainIDandNameAsString extracts the domain SID and domain name from the given node. This function is
+// intentionally placed in the internal package to avoid import cycle issues that would arise if it were implemented as
+// an unexported function within the ad package and subsequently referenced by ad_test.go as of commit '87afb00a'. Using
+// the internal package pattern here preserves proper package boundaries while still allowing ad_test.go to access the
+// functionality needed for data generation and testing.
 func ReadDomainIDandNameAsString(nodeToRead *graph.Node) (string, string, error) {
 	var domainSIDStr, domainNameStr string
 	var err error
