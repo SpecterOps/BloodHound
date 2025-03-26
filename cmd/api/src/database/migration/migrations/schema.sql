@@ -476,14 +476,6 @@ CREATE SEQUENCE saved_queries_permissions_id_seq
     CACHE 1;
 ALTER SEQUENCE saved_queries_permissions_id_seq OWNED BY saved_queries_permissions.id;
 
-CREATE SEQUENCE saved_queries_permissions_query_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-ALTER SEQUENCE saved_queries_permissions_query_id_seq OWNED BY saved_queries_permissions.query_id;
-
 CREATE TABLE user_sessions (
     user_id text,
     auth_provider_type bigint,
@@ -539,7 +531,6 @@ ALTER TABLE ONLY roles ALTER COLUMN id SET DEFAULT nextval('roles_id_seq'::regcl
 ALTER TABLE ONLY saml_providers ALTER COLUMN id SET DEFAULT nextval('saml_providers_id_seq'::regclass);
 ALTER TABLE ONLY saved_queries ALTER COLUMN id SET DEFAULT nextval('saved_queries_id_seq'::regclass);
 ALTER TABLE ONLY saved_queries_permissions ALTER COLUMN id SET DEFAULT nextval('saved_queries_permissions_id_seq'::regclass);
-ALTER TABLE ONLY saved_queries_permissions ALTER COLUMN query_id SET DEFAULT nextval('saved_queries_permissions_query_id_seq'::regclass);
 ALTER TABLE ONLY user_sessions ALTER COLUMN id SET DEFAULT nextval('user_sessions_id_seq'::regclass);
 
 ALTER TABLE ONLY ad_data_quality_aggregations ADD CONSTRAINT ad_data_quality_aggregations_pkey PRIMARY KEY (id);
@@ -746,5 +737,4 @@ SELECT pg_catalog.setval('roles_id_seq', COALESCE(MAX(id), 1), true) FROM roles;
 SELECT pg_catalog.setval('saml_providers_id_seq', COALESCE(MAX(id), 1), true) FROM saml_providers;
 SELECT pg_catalog.setval('saved_queries_id_seq', COALESCE(MAX(id), 1), true) FROM saved_queries;
 SELECT pg_catalog.setval('saved_queries_permissions_id_seq', COALESCE(MAX(id), 1), true) FROM saved_queries_permissions;
-SELECT pg_catalog.setval('saved_queries_permissions_query_id_seq', COALESCE(MAX(id), 1), true) FROM saved_queries_permissions_query;
 SELECT pg_catalog.setval('user_sessions_id_seq', COALESCE(MAX(id), 1), true) FROM user_sessions;
