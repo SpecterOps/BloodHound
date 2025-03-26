@@ -654,6 +654,7 @@ ALTER TABLE ONLY users Add CONSTRAINT fk_users_saml_provider FOREIGN KEY (saml_p
 ALTER TABLE ONLY saved_queries_permissions Add CONSTRAINT saved_queries_permissions_query_id_fkey FOREIGN KEY (query_id) REFERENCES saved_queries(id) ON DELETE CASCADE;
 ALTER TABLE ONLY saved_queries_permissions Add CONSTRAINT saved_queries_permissions_shared_to_user_id_fkey FOREIGN KEY (shared_to_user_id) REFERENCES users(id) ON DELETE CASCADE;
 
+INSERT INTO asset_groups (name, tag, system_group, created_at, updated_at) VALUES ('Admin Tier Zero', 'admin_tier_0', true, current_timestamp, current_timestamp);
 
 INSERT INTO datapipe_status VALUES (true, 'idle', '2025-03-21 12:58:42.971311-05', NULL);
 
