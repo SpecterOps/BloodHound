@@ -656,20 +656,20 @@ ALTER TABLE ONLY saved_queries_permissions Add CONSTRAINT saved_queries_permissi
 
 INSERT INTO asset_groups (name, tag, system_group, created_at, updated_at) VALUES ('Admin Tier Zero', 'admin_tier_0', true, current_timestamp, current_timestamp);
 
-INSERT INTO datapipe_status VALUES (true, 'idle', '2025-03-21 12:58:42.971311-05', NULL);
+INSERT INTO datapipe_status VALUES (true, 'idle', current_timestamp, NULL);
 
-INSERT INTO feature_flags VALUES (1, '2025-03-21 12:56:17.075059-05', '2025-03-21 12:56:17.075059-05', 'butterfly_analysis', 'Enhanced Asset Inbound-Outbound Exposure Analysis', 'Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.', false, false);
-INSERT INTO feature_flags VALUES (2, '2025-03-21 12:56:17.075474-05', '2025-03-21 12:56:17.075474-05', 'enable_saml_sso', 'SAML Single Sign-On Support', 'Enables SSO authentication flows and administration panels to third party SAML identity providers.', true, false);
-INSERT INTO feature_flags VALUES (3, '2025-03-21 12:56:17.07564-05', '2025-03-21 12:56:17.07564-05', 'scope_collection_by_ou', 'Enable SharpHound OU Scoped Collections', 'Enables scoping SharpHound collections to specific lists of OUs.', true, false);
-INSERT INTO feature_flags VALUES (4, '2025-03-21 12:56:17.075794-05', '2025-03-21 12:56:17.075794-05', 'azure_support', 'Enable Azure Support', 'Enables Azure support.', true, false);
-INSERT INTO feature_flags VALUES (6, '2025-03-21 12:56:17.076129-05', '2025-03-21 12:56:17.076129-05', 'entity_panel_cache', 'Enable application level caching', 'Enables the use of application level caching for entity panel queries', true, false);
-INSERT INTO feature_flags VALUES (7, '2025-03-21 12:56:17.076293-05', '2025-03-21 12:56:17.076293-05', 'adcs', 'Enable collection and processing of Active Directory Certificate Services Data', 'Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.', false, false);
-INSERT INTO feature_flags VALUES (8, '2025-03-21 12:58:42.987985-05', '2025-03-21 12:58:42.987985-05', 'dark_mode', 'Dark Mode', 'Allows users to enable or disable dark mode via a toggle in the settings menu', false, true);
-INSERT INTO feature_flags VALUES (9, '2025-03-21 12:58:43.022829-05', '2025-03-21 12:58:43.022829-05', 'pg_migration_dual_ingest', 'PostgreSQL Migration Dual Ingest', 'Enables dual ingest pathing for both Neo4j and PostgreSQL.', false, false);
-INSERT INTO feature_flags VALUES (10, '2025-03-21 12:58:43.038933-05', '2025-03-21 12:58:43.038933-05', 'clear_graph_data', 'Clear Graph Data', 'Enables the ability to delete all nodes and edges from the graph database.', true, false);
-INSERT INTO feature_flags VALUES (11, '2025-03-21 12:58:43.039466-05', '2025-03-21 12:58:43.039466-05', 'risk_exposure_new_calculation', 'Use new tier zero risk exposure calculation', 'Enables the use of new tier zero risk exposure metatree metrics.', false, false);
-INSERT INTO feature_flags VALUES (12, '2025-03-21 12:58:43.039655-05', '2025-03-21 12:58:43.039655-05', 'fedramp_eula', 'FedRAMP EULA', 'Enables showing the FedRAMP EULA on every login. (Enterprise only)', false, false);
-INSERT INTO feature_flags VALUES (13, '2025-03-21 12:58:43.039915-05', '2025-03-21 12:58:43.039915-05', 'auto_tag_t0_parent_objects', 'Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero', 'Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.', true, true);
+INSERT INTO feature_flags VALUES (1, current_timestamp, current_timestamp, 'butterfly_analysis', 'Enhanced Asset Inbound-Outbound Exposure Analysis', 'Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.', false, false);
+INSERT INTO feature_flags VALUES (2, current_timestamp, current_timestamp, 'enable_saml_sso', 'SAML Single Sign-On Support', 'Enables SSO authentication flows and administration panels to third party SAML identity providers.', true, false);
+INSERT INTO feature_flags VALUES (3, current_timestamp, current_timestamp, 'scope_collection_by_ou', 'Enable SharpHound OU Scoped Collections', 'Enables scoping SharpHound collections to specific lists of OUs.', true, false);
+INSERT INTO feature_flags VALUES (4, current_timestamp, current_timestamp, 'azure_support', 'Enable Azure Support', 'Enables Azure support.', true, false);
+INSERT INTO feature_flags VALUES (6, current_timestamp, current_timestamp, 'entity_panel_cache', 'Enable application level caching', 'Enables the use of application level caching for entity panel queries', true, false);
+INSERT INTO feature_flags VALUES (7, current_timestamp, current_timestamp, 'adcs', 'Enable collection and processing of Active Directory Certificate Services Data', 'Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.', false, false);
+INSERT INTO feature_flags VALUES (8, current_timestamp, current_timestamp, 'dark_mode', 'Dark Mode', 'Allows users to enable or disable dark mode via a toggle in the settings menu', false, true);
+INSERT INTO feature_flags VALUES (9, current_timestamp, current_timestamp, 'pg_migration_dual_ingest', 'PostgreSQL Migration Dual Ingest', 'Enables dual ingest pathing for both Neo4j and PostgreSQL.', false, false);
+INSERT INTO feature_flags VALUES (10, current_timestamp, current_timestamp, 'clear_graph_data', 'Clear Graph Data', 'Enables the ability to delete all nodes and edges from the graph database.', true, false);
+INSERT INTO feature_flags VALUES (11, current_timestamp, current_timestamp, 'risk_exposure_new_calculation', 'Use new tier zero risk exposure calculation', 'Enables the use of new tier zero risk exposure metatree metrics.', false, false);
+INSERT INTO feature_flags VALUES (12, current_timestamp, current_timestamp, 'fedramp_eula', 'FedRAMP EULA', 'Enables showing the FedRAMP EULA on every login. (Enterprise only)', false, false);
+INSERT INTO feature_flags VALUES (13, current_timestamp, current_timestamp, 'auto_tag_t0_parent_objects', 'Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero', 'Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.', true, true);
 INSERT INTO feature_flags VALUES (14, current_timestamp, current_timestamp, 'oidc_support', 'OIDC Support', 'Enables OpenID Connect authentication support for SSO Authentication.', false, false);
 
 INSERT INTO parameters VALUES ('auth.password_expiration_window', 'Local Auth Password Expiry Window', 'This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601.', '{"duration": "P90D"}', 1, current_timestamp, current_timestamp);
@@ -678,31 +678,31 @@ INSERT INTO parameters VALUES ('analysis.citrix_rdp_support', 'Citrix RDP Suppor
 INSERT INTO parameters VALUES ('prune.ttl', 'Prune Retention TTL Configuration Parameters','This configuration parameter sets the retention TTLs during analysis pruning.', '{"base_ttl": "P7D", "has_session_edge_ttl": "P3D" }', current_timestamp, current_timestamp);
 INSERT INTO parameters VALUES ('analysis.reconciliation', 'Reconciliation', 'This configuration parameter enables / disables reconciliation during analysis.', '{"enabled": true}', current_timestamp, current_timestamp);
 
-INSERT INTO permissions VALUES ('app', 'ReadAppConfig', 1, '2025-03-21 12:56:17.066242-05', '2025-03-21 12:56:17.066242-05');
-INSERT INTO permissions VALUES ('app', 'WriteAppConfig', 2, '2025-03-21 12:56:17.066532-05', '2025-03-21 12:56:17.066532-05');
-INSERT INTO permissions VALUES ('risks', 'GenerateReport', 3, '2025-03-21 12:56:17.066707-05', '2025-03-21 12:56:17.066707-05');
-INSERT INTO permissions VALUES ('risks', 'ManageRisks', 4, '2025-03-21 12:56:17.066878-05', '2025-03-21 12:56:17.066878-05');
-INSERT INTO permissions VALUES ('auth', 'CreateToken', 5, '2025-03-21 12:56:17.067068-05', '2025-03-21 12:56:17.067068-05');
-INSERT INTO permissions VALUES ('auth', 'ManageAppConfig', 6, '2025-03-21 12:56:17.067239-05', '2025-03-21 12:56:17.067239-05');
-INSERT INTO permissions VALUES ('auth', 'ManageProviders', 7, '2025-03-21 12:56:17.067393-05', '2025-03-21 12:56:17.067393-05');
-INSERT INTO permissions VALUES ('auth', 'ManageSelf', 8, '2025-03-21 12:56:17.067537-05', '2025-03-21 12:56:17.067537-05');
-INSERT INTO permissions VALUES ('auth', 'ManageUsers', 9, '2025-03-21 12:56:17.067704-05', '2025-03-21 12:56:17.067704-05');
-INSERT INTO permissions VALUES ('clients', 'Manage', 10, '2025-03-21 12:56:17.067872-05', '2025-03-21 12:56:17.067872-05');
-INSERT INTO permissions VALUES ('clients', 'Tasking', 11, '2025-03-21 12:56:17.068033-05', '2025-03-21 12:56:17.068033-05');
-INSERT INTO permissions VALUES ('collection', 'ManageJobs', 12, '2025-03-21 12:56:17.068194-05', '2025-03-21 12:56:17.068194-05');
-INSERT INTO permissions VALUES ('graphdb', 'Read', 13, '2025-03-21 12:56:17.068354-05', '2025-03-21 12:56:17.068354-05');
-INSERT INTO permissions VALUES ('graphdb', 'Write', 14, '2025-03-21 12:56:17.068512-05', '2025-03-21 12:56:17.068512-05');
-INSERT INTO permissions VALUES ('saved_queries', 'Read', 15, '2025-03-21 12:58:43.040108-05', '2025-03-21 12:58:43.040108-05');
-INSERT INTO permissions VALUES ('saved_queries', 'Write', 16, '2025-03-21 12:58:43.040475-05', '2025-03-21 12:58:43.040475-05');
-INSERT INTO permissions VALUES ('clients', 'Read', 17, '2025-03-21 12:58:43.040655-05', '2025-03-21 12:58:43.040655-05');
-INSERT INTO permissions VALUES ('db', 'Wipe', 18, '2025-03-21 12:58:43.04082-05', '2025-03-21 12:58:43.04082-05');
-INSERT INTO permissions VALUES ('graphdb', 'Mutate', 19, '2025-03-21 12:58:43.041001-05', '2025-03-21 12:58:43.041001-05');
+INSERT INTO permissions VALUES ('app', 'ReadAppConfig', 1, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('app', 'WriteAppConfig', 2, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('risks', 'GenerateReport', 3, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('risks', 'ManageRisks', 4, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('auth', 'CreateToken', 5, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('auth', 'ManageAppConfig', 6, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('auth', 'ManageProviders', 7, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('auth', 'ManageSelf', 8, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('auth', 'ManageUsers', 9, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('clients', 'Manage', 10, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('clients', 'Tasking', 11, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('collection', 'ManageJobs', 12, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('graphdb', 'Read', 13, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('graphdb', 'Write', 14, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('saved_queries', 'Read', 15, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('saved_queries', 'Write', 16, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('clients', 'Read', 17, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('db', 'Wipe', 18, current_timestamp, current_timestamp);
+INSERT INTO permissions VALUES ('graphdb', 'Mutate', 19, current_timestamp, current_timestamp);
 
-INSERT INTO roles VALUES ('Administrator', 'Can manage users, clients, and application configuration', 1, '2025-03-21 12:56:17.0687-05', '2025-03-21 12:56:17.0687-05');
-INSERT INTO roles VALUES ('User', 'Can read data, modify asset group memberships', 2, '2025-03-21 12:56:17.069018-05', '2025-03-21 12:56:17.069018-05');
-INSERT INTO roles VALUES ('Read-Only', 'Used for integrations', 3, '2025-03-21 12:56:17.06919-05', '2025-03-21 12:56:17.06919-05');
-INSERT INTO roles VALUES ('Upload-Only', 'Used for data collection clients, can post data but cannot read data', 4, '2025-03-21 12:56:17.069362-05', '2025-03-21 12:56:17.069362-05');
-INSERT INTO roles VALUES ('Power User', 'Can upload data, manage clients, and perform any action a User can', 5, '2025-03-21 12:58:43.041242-05', '2025-03-21 12:58:43.041242-05');
+INSERT INTO roles VALUES ('Administrator', 'Can manage users, clients, and application configuration', 1, current_timestamp, current_timestamp);
+INSERT INTO roles VALUES ('User', 'Can read data, modify asset group memberships', 2, current_timestamp, current_timestamp);
+INSERT INTO roles VALUES ('Read-Only', 'Used for integrations', 3, current_timestamp, current_timestamp);
+INSERT INTO roles VALUES ('Upload-Only', 'Used for data collection clients, can post data but cannot read data', 4, current_timestamp, current_timestamp);
+INSERT INTO roles VALUES ('Power User', 'Can upload data, manage clients, and perform any action a User can', 5, current_timestamp, current_timestamp);
 
 INSERT INTO roles_permissions VALUES (1, 1);
 INSERT INTO roles_permissions VALUES (1, 2);
