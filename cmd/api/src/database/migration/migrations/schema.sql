@@ -724,3 +724,27 @@ WHERE r.name = 'Power User' AND p.name IN (
     'CreateToken', 'ManageSelf', 'Manage', 'Read', 'Tasking', 'ManageJobs',
     'Write', 'Mutate', 'Read', 'Mutate'
 );
+
+-- Make sure the sequence values of things all line up at the end
+SELECT pg_catalog.setval('ad_data_quality_aggregations_id_seq', COALESCE(MAX(id), 1), true) FROM ad_data_quality_aggregations;
+SELECT pg_catalog.setval('ad_data_quality_stats_id_seq', COALESCE(MAX(id), 1), true) FROM ad_data_quality_stats;
+SELECT pg_catalog.setval('asset_group_collection_entries_id_seq', COALESCE(MAX(id), 1), true) FROM asset_group_collection_entries;
+SELECT pg_catalog.setval('asset_group_collections_id_seq', COALESCE(MAX(id), 1), true) FROM asset_group_collections;
+SELECT pg_catalog.setval('asset_group_selectors_id_seq', COALESCE(MAX(id), 1), true) FROM asset_group_selectors;
+SELECT pg_catalog.setval('asset_groups_id_seq', COALESCE(MAX(id), 1), true) FROM asset_groups;
+SELECT pg_catalog.setval('audit_logs_id_seq', COALESCE(MAX(id), 1), true) FROM audit_logs;
+SELECT pg_catalog.setval('auth_secrets_id_seq', COALESCE(MAX(id), 1), true) FROM auth_secrets;
+SELECT pg_catalog.setval('azure_data_quality_aggregations_id_seq', COALESCE(MAX(id), 1), true) FROM azure_data_quality_aggregations;
+SELECT pg_catalog.setval('azure_data_quality_stats_id_seq', COALESCE(MAX(id), 1), true) FROM azure_data_quality_stats;
+SELECT pg_catalog.setval('domain_collection_results_id_seq', COALESCE(MAX(id), 1), true) FROM domain_collection_results;
+SELECT pg_catalog.setval('feature_flags_id_seq', COALESCE(MAX(id), 1), true) FROM feature_flags;
+SELECT pg_catalog.setval('file_upload_jobs_id_seq', COALESCE(MAX(id), 1), true) FROM file_upload_jobs;
+SELECT pg_catalog.setval('ingest_tasks_id_seq', COALESCE(MAX(id), 1), true) FROM ingest_tasks;
+SELECT pg_catalog.setval('parameters_id_seq', COALESCE(MAX(id), 1), true) FROM parameters;
+SELECT pg_catalog.setval('permissions_id_seq', COALESCE(MAX(id), 1), true) FROM permissions;
+SELECT pg_catalog.setval('roles_id_seq', COALESCE(MAX(id), 1), true) FROM roles;
+SELECT pg_catalog.setval('saml_providers_id_seq', COALESCE(MAX(id), 1), true) FROM saml_providers;
+SELECT pg_catalog.setval('saved_queries_id_seq', COALESCE(MAX(id), 1), true) FROM saved_queries;
+SELECT pg_catalog.setval('saved_queries_permissions_id_seq', COALESCE(MAX(id), 1), true) FROM saved_queries_permissions;
+SELECT pg_catalog.setval('saved_queries_permissions_query_id_seq', COALESCE(MAX(id), 1), true) FROM saved_queries_permissions_query;
+SELECT pg_catalog.setval('user_sessions_id_seq', COALESCE(MAX(id), 1), true) FROM user_sessions;
