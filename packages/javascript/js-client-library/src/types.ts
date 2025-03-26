@@ -264,8 +264,8 @@ export interface LoginResponse {
     };
 }
 
-export type CollectorType = 'sharphound_enterprise' | 'sharphound' | 'azurehound';
-export type CommunityCollectorType = Exclude<CollectorType, 'sharphound_enterprise'>;
+export type CommunityCollectorType = 'sharphound' | 'azurehound';
+export type CollectorType = CommunityCollectorType | 'sharphound_enterprise' | 'azurehound_enterprise';
 
 export interface GetCollectorsResponse {
     data: {
@@ -280,12 +280,11 @@ export interface GetCollectorsResponse {
 
 export interface GetEnterpriseCollectorsResponse {
     data: {
-        sharphound: EnterpriseCollector[];
-        azurehound: EnterpriseCollector[];
+        [key in CollectorType]: Collector[];
     }
 }
 
-interface EnterpriseCollector {
+interface Collector {
     version: string;
     version_meta: VersionMeta;
     release_date: string;
