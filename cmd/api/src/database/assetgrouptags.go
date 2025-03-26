@@ -109,7 +109,7 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, tagType model.Asse
 	} else {
 		if result := s.db.WithContext(ctx).Raw(
 			fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE type = ? AND deleted_at IS NULL", model.AssetGroupTag{}.TableName()),
-			model.AssetGroupTagTypeTier,
+			tagType,
 		).Find(&tags); result.Error != nil {
 			return model.AssetGroupTags{}, CheckError(result)
 		}

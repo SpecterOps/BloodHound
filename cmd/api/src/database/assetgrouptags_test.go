@@ -117,9 +117,97 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
 	})
 
+	t.Run("creating tag with AssetGroupTagTypeAll fails", func(t *testing.T) {
+		_, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeAll, testActor, testName, testDescription, position, requireCertify)
+		require.Error(t, err)
+	})
+
 	t.Run("Non existant tag errors out", func(t *testing.T) {
 		_, err := dbInst.GetAssetGroupTag(testCtx, 1234)
 		require.Error(t, err)
 	})
 
+}
+
+func TestDatabase_GetAssetGroupTags(t *testing.T) {
+	var (
+		dbInst          = integration.SetupDB(t)
+		testCtx         = context.Background()
+		testActor       = "test_actor"
+		testDescription = "test tag description"
+	)
+
+	var (
+		err          error
+		tag1, tag2   model.AssetGroupTag
+		tier1, tier2 model.AssetGroupTag
+	)
+	tag1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "tag 1", testDescription, null.Int32{}, null.Bool{})
+	require.NoError(t, err)
+	tag2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "tag 2", testDescription, null.Int32{}, null.Bool{})
+	require.NoError(t, err)
+	tier1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "tier 1", testDescription, null.Int32From(1), null.BoolFrom(false))
+	require.NoError(t, err)
+	tier2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "tier 2", testDescription, null.Int32From(2), null.BoolFrom(false))
+	require.NoError(t, err)
+
+	t.Run("AssetGroupTagTypeLabel returns labels", func(t *testing.T) {
+		ids := []int{
+			tag1.ID,
+			tag2.ID,
+		}
+
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.AssetGroupTagTypeLabel)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(items), 2)
+		for _, itm := range items {
+			if itm.CreatedBy == model.AssetGroupActorSystem {
+				continue
+			}
+			require.Equal(t, itm.Type, model.AssetGroupTagTypeLabel)
+			require.Contains(t, ids, itm.ID)
+		}
+	})
+
+	t.Run("AssetGroupTagTypeTier returns tiers", func(t *testing.T) {
+		ids := []int{
+			tier1.ID,
+			tier2.ID,
+		}
+
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.AssetGroupTagTypeTier)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(items), 2)
+		for _, itm := range items {
+			if itm.CreatedBy == model.AssetGroupActorSystem {
+				continue
+			}
+			require.Equal(t, itm.Type, model.AssetGroupTagTypeTier)
+			require.Contains(t, ids, itm.ID)
+		}
+	})
+
+	t.Run("AssetGroupTagTypeAll returns everything", func(t *testing.T) {
+		ids := []int{
+			tag1.ID,
+			tag2.ID,
+			tier1.ID,
+			tier2.ID,
+		}
+		types := []model.AssetGroupTagType{
+			model.AssetGroupTagTypeLabel,
+			model.AssetGroupTagTypeTier,
+		}
+
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.AssetGroupTagTypeAll)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(items), 4)
+		for _, itm := range items {
+			if itm.CreatedBy == model.AssetGroupActorSystem {
+				continue
+			}
+			require.Contains(t, types, itm.Type)
+			require.Contains(t, ids, itm.ID)
+		}
+	})
 }
