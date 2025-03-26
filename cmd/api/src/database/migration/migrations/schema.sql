@@ -541,28 +541,6 @@ ALTER TABLE ONLY saved_queries ALTER COLUMN id SET DEFAULT nextval('saved_querie
 ALTER TABLE ONLY saved_queries_permissions ALTER COLUMN id SET DEFAULT nextval('saved_queries_permissions_id_seq'::regclass);
 ALTER TABLE ONLY saved_queries_permissions ALTER COLUMN query_id SET DEFAULT nextval('saved_queries_permissions_query_id_seq'::regclass);
 ALTER TABLE ONLY user_sessions ALTER COLUMN id SET DEFAULT nextval('user_sessions_id_seq'::regclass);
-SELECT pg_catalog.setval('ad_data_quality_aggregations_id_seq', 1, false);
-SELECT pg_catalog.setval('ad_data_quality_stats_id_seq', 1, false);
-SELECT pg_catalog.setval('asset_group_collection_entries_id_seq', 1, false);
-SELECT pg_catalog.setval('asset_group_collections_id_seq', 1, false);
-SELECT pg_catalog.setval('asset_group_selectors_id_seq', 1, false);
-SELECT pg_catalog.setval('asset_groups_id_seq', 2, true);
-SELECT pg_catalog.setval('audit_logs_id_seq', 1, false);
-SELECT pg_catalog.setval('auth_secrets_id_seq', 1, false);
-SELECT pg_catalog.setval('azure_data_quality_aggregations_id_seq', 1, false);
-SELECT pg_catalog.setval('azure_data_quality_stats_id_seq', 1, false);
-SELECT pg_catalog.setval('domain_collection_results_id_seq', 1, false);
-SELECT pg_catalog.setval('feature_flags_id_seq', 13, true);
-SELECT pg_catalog.setval('file_upload_jobs_id_seq', 1, false);
-SELECT pg_catalog.setval('ingest_tasks_id_seq', 1, false);
-SELECT pg_catalog.setval('parameters_id_seq', 2, true);
-SELECT pg_catalog.setval('permissions_id_seq', 19, true);
-SELECT pg_catalog.setval('roles_id_seq', 5, true);
-SELECT pg_catalog.setval('saml_providers_id_seq', 1, false);
-SELECT pg_catalog.setval('saved_queries_id_seq', 1, false);
-SELECT pg_catalog.setval('saved_queries_permissions_id_seq', 1, false);
-SELECT pg_catalog.setval('saved_queries_permissions_query_id_seq', 1, false);
-SELECT pg_catalog.setval('user_sessions_id_seq', 1, false);
 
 ALTER TABLE ONLY ad_data_quality_aggregations ADD CONSTRAINT ad_data_quality_aggregations_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY ad_data_quality_stats ADD CONSTRAINT ad_data_quality_stats_pkey PRIMARY KEY (id);
@@ -674,9 +652,9 @@ INSERT INTO feature_flags VALUES (14, current_timestamp, current_timestamp, 'oid
 
 INSERT INTO parameters VALUES ('auth.password_expiration_window', 'Local Auth Password Expiry Window', 'This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601.', '{"duration": "P90D"}', 1, current_timestamp, current_timestamp);
 INSERT INTO parameters VALUES ('neo4j.configuration', 'Neo4j Configuration Parameters', 'This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J.', '{"batch_write_size": 20000, "write_flush_size": 100000}', 2, current_timestamp, current_timestamp);
-INSERT INTO parameters VALUES ('analysis.citrix_rdp_support', 'Citrix RDP Support', 'This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a ''Direct Access Users'' local group will assume that Citrix is installed and CanRDP edges will require membership of both ''Direct Access Users'' and ''Remote Desktop Users'' local groups on the computer.', '{ "enabled": false }', current_timestamp, current_timestamp);
-INSERT INTO parameters VALUES ('prune.ttl', 'Prune Retention TTL Configuration Parameters','This configuration parameter sets the retention TTLs during analysis pruning.', '{"base_ttl": "P7D", "has_session_edge_ttl": "P3D" }', current_timestamp, current_timestamp);
-INSERT INTO parameters VALUES ('analysis.reconciliation', 'Reconciliation', 'This configuration parameter enables / disables reconciliation during analysis.', '{"enabled": true}', current_timestamp, current_timestamp);
+INSERT INTO parameters VALUES ('analysis.citrix_rdp_support', 'Citrix RDP Support', 'This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a ''Direct Access Users'' local group will assume that Citrix is installed and CanRDP edges will require membership of both ''Direct Access Users'' and ''Remote Desktop Users'' local groups on the computer.', '{ "enabled": false }', 3, current_timestamp, current_timestamp);
+INSERT INTO parameters VALUES ('prune.ttl', 'Prune Retention TTL Configuration Parameters','This configuration parameter sets the retention TTLs during analysis pruning.', '{"base_ttl": "P7D", "has_session_edge_ttl": "P3D" }', 4, current_timestamp, current_timestamp);
+INSERT INTO parameters VALUES ('analysis.reconciliation', 'Reconciliation', 'This configuration parameter enables / disables reconciliation during analysis.', '{"enabled": true}', 5, current_timestamp, current_timestamp);
 
 INSERT INTO permissions VALUES ('app', 'ReadAppConfig', 1, current_timestamp, current_timestamp);
 INSERT INTO permissions VALUES ('app', 'WriteAppConfig', 2, current_timestamp, current_timestamp);
