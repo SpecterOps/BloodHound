@@ -1,3 +1,19 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 // Package wellknown provides constants and utilities for working with well-known
 // Active Directory security identifiers (SIDs) and node names.
 //
@@ -18,7 +34,7 @@ import (
 type SIDSuffix interface {
 	// String returns the string representation of the SID suffix.
 	fmt.Stringer
-	
+
 	// PrependPrefix combines a SID prefix with this suffix to form a complete SID.
 	PrependPrefix(prefix string) string
 }
@@ -53,13 +69,13 @@ func NewSIDSuffix(suffix string) SIDSuffix {
 var (
 	// AuthenticatedUsersSIDSuffix represents the SID suffix for the "Authenticated Users" group.
 	AuthenticatedUsersSIDSuffix SIDSuffix = NewSIDSuffix("-S-1-5-11")
-	
+
 	// DomainComputersSIDSuffix represents the SID suffix for the "Domain Computers" group.
 	DomainComputersSIDSuffix = NewSIDSuffix("-515")
-	
+
 	// DomainUsersSIDSuffix represents the SID suffix for the "Domain Users" group.
 	DomainUsersSIDSuffix = NewSIDSuffix("-513")
-	
+
 	// EveryoneSIDSuffix represents the SID suffix for the "Everyone" group.
 	EveryoneSIDSuffix = NewSIDSuffix("-S-1-1-0")
 )
