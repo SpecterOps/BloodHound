@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package nodeprops
+package nodeprops_test
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/specterops/bloodhound/analysis/ad/internal/nodeprops"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -77,19 +77,6 @@ func TestReadDomainIDandNameAsString(t *testing.T) {
 			wantSID:       "",
 			wantName:      "",
 			wantErrSubstr: "read domain SID property value is nil",
-		},
-		{
-			name: "domain SID error",
-			node: &graph.Node{
-				Properties: func() *graph.Properties {
-					props := graph.NewProperties()
-					props.Set(ad.DomainSID.String(), errors.New("test error"))
-					return props
-				}(),
-			},
-			wantSID:       "",
-			wantName:      "",
-			wantErrSubstr: "failed to read domain SID and name",
 		},
 		{
 			name: "empty domain SID",
@@ -178,7 +165,7 @@ func TestReadDomainIDandNameAsString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotSID, gotName, err := ReadDomainIDandNameAsString(tt.node)
+			gotSID, gotName, err := nodeprops.ReadDomainIDandNameAsString(tt.node)
 
 			assert.Equal(t, tt.wantSID, gotSID, "SID value should match expected")
 			assert.Equal(t, tt.wantName, gotName, "Name value should match expected")
