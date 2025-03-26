@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /// <reference types="vitest" />
+import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig, loadEnv, searchForWorkspaceRoot } from 'vite';
-import react from '@vitejs/plugin-react';
 import glsl from 'vite-plugin-glsl';
 
 // https://vitejs.dev/config/
@@ -57,6 +57,8 @@ export default defineConfig(({ mode }) => {
                 'react-query',
                 'notistack',
                 '@bloodhoundenterprise/doodleui',
+                '@neo4j-cypher/react-codemirror',
+                '@neo4j-cypher/codemirror/css/cypher-codemirror.css',
             ],
             preserveSymlinks: true,
         },

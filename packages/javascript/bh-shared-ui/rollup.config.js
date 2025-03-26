@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import typescript from '@rollup/plugin-typescript';
 import terser from '@rollup/plugin-terser';
+import typescript from '@rollup/plugin-typescript';
 import del from 'rollup-plugin-delete';
 
 export default {
@@ -34,6 +34,8 @@ export default {
     ],
     external: [
         '@bloodhoundenterprise/doodleui',
+        '@neo4j-cypher/react-codemirror',
+        '@neo4j-cypher/codemirror/css/cypher-codemirror.css',
         '@emotion/react',
         '@emotion/styled',
         '@fortawesome/free-solid-svg-icons',

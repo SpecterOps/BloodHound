@@ -24,6 +24,8 @@
         "@fortawesome/fontawesome-svg-core": "^6.4.2",
         "@fortawesome/free-solid-svg-icons": "^6.4.2",
         "@fortawesome/react-fontawesome": "^0.2.0",
+        "@neo4j-cypher/editor-support": "^1.0.2",
+        "@neo4j-cypher/react-codemirror": "^1.0.4",
         "@reduxjs/toolkit": "^1.9.5",
         "clsx": "^2.1.1",
         "downshift": "^6.1.7",
