@@ -69,7 +69,7 @@ func ConvertComputerToNode(item Computer) IngestibleNode {
 	}
 
 	if item.SmbInfo.Collected {
-		itemProps[ad.SMBSigning.String()] = item.SmbInfo.SigningEnabled
+		itemProps[ad.SMBSigning.String()] = item.SmbInfo.Result.SigningEnabled
 	}
 
 	if item.NTLMRegistryData.Collected {
