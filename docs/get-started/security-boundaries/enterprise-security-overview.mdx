@@ -8,7 +8,7 @@ title: BloodHound Enterprise Security Overview
 
 Attack Paths are chains of abusable privileges and user behaviors that create direct and indirect connections between computers and users. They exist due to years of misconfigurations and a lack of visibility into how privileges are applied. Attack Paths cannot be patched through traditional methods because they are misconfigurations, not vulnerabilities.
 
-SpecterOps built BloodHound Enterprise following the principles of [Attack Path Management](https://bloodhoundenterprise.io/what-is-attack-path-management/) (APM). The primary goal of APM is to solve the Attack Path problem directly. APM is a fundamentally different, unique methodology designed to help organizations understand, empirically quantify the impact of, and eliminate Attack Path risks.
+SpecterOps built BloodHound Enterprise following the principles of [Attack Path Management](https://specterops.io/what-is-attack-path-management/) (APM). The primary goal of APM is to solve the Attack Path problem directly. APM is a fundamentally different, unique methodology designed to help organizations understand, empirically quantify the impact of, and eliminate Attack Path risks.
 
 ### Single-Tenant Architecture Diagram
 
@@ -24,6 +24,7 @@ Customers may request that their tenant reside within one of the supported AWS r
 * **Europe**: EU-CENTRAL-1 (Frankfurt)
 * **United Kingdom**: EU-WEST-2 (London)
 * **Australia**: AP-SOUTHEAST-2 (Sydney)
+* **Middle East**: ME-CENTRAL-1 (UAE)
 
 Additionally, BloodHound Enterprise utilizes [Pendo](https://pendo.io) to provide in-product tours and behavior monitoring. Customer data is not sent to Pendo. More information on Pendo's data privacy, security policies, and certifications is available [here](https://www.pendo.io/data-privacy-security/).
 
@@ -125,7 +126,7 @@ All passwords configured locally expire every 90 days.
 
 #### Brute Force Resistance
 
-Although BloodHound Enterprise does not lock a user out from attempted brute forcing, API calls against the BloodHound Enterprise authentication API are limited to one call per two seconds, making a successful brute force attack impossible before a password rotation occurs.
+Although BloodHound Enterprise does not lock a user out from attempted brute forcing, API calls against the BloodHound Enterprise authentication API are limited to one call per second, making a successful brute force attack impossible before a password rotation occurs.
 
 All other API endpoints are limited to 55 calls per second.
 
