@@ -17,6 +17,7 @@ describe('DynamicDetails', () => {
             name: 'Tier-8',
             updated_at: '2024-07-26T02:15:04.556Z',
             updated_by: 'Deontae34@hotmail.com',
+            position: 0,
         };
 
         render(<DynamicDetails data={testQuery} />);

@@ -96,6 +96,12 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
             })
         );
     }),
+
+    // GET object counts
+    rest.get('/api/v2/asset-group-labels/:assetGroupId/members/counts', async (req, res, ctx) => {
+        const { assetGroupId } = req.params;
+        return res(ctx.json({ counts: tierMocks.createAssetGroupMembersCount(parseInt(assetGroupId as string)) }));
+    }),
 ];
 
 export default tierHandlers;

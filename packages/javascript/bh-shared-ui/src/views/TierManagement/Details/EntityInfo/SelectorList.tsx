@@ -23,7 +23,9 @@ const SelectorList = () => {
         <EntityInfoCollapsibleSection label='Selectors' count={selectors.length}>
             {selectors.map((selector, index) => {
                 return (
-                    <div className={`flex items-center gap-2 p-2 ${index % 2 === 0 ? 'bg-[#E3E7EA]' : ''}`} key={index}>
+                    <div
+                        className={`flex items-center gap-2 p-2 ${index % 2 === 0 ? 'bg-[#E3E7EA] dark:bg-[#272727]' : ''}`}
+                        key={index}>
                         <Popover open={!!menuOpen[index]}>
                             <PopoverTrigger asChild>
                                 <button onClick={() => handleMenuClick(index)}>
@@ -34,13 +36,19 @@ const SelectorList = () => {
                                 className='w-80 px-4 py-2 flex flex-col gap-2'
                                 onInteractOutside={() => setMenuOpen({})}
                                 onEscapeKeyDown={() => setMenuOpen({})}>
-                                <div className='cursor-pointer p-2 hover:bg-[#E3E7EA]' onClick={handleViewClick}>
+                                <div
+                                    className='cursor-pointer p-2 hover:bg-[#E3E7EA] hover:dark:bg-[#272727]'
+                                    onClick={handleViewClick}>
                                     View
                                 </div>
-                                <div className='cursor-pointer p-2 hover:bg-[#E3E7EA]' onClick={handleEditClick}>
+                                <div
+                                    className='cursor-pointer p-2 hover:bg-[#E3E7EA] hover:dark:bg-[#272727]'
+                                    onClick={handleEditClick}>
                                     Edit
                                 </div>
-                                <div className='cursor-pointer p-2 hover:bg-[#E3E7EA]' onClick={handleDeleteClick}>
+                                <div
+                                    className='cursor-pointer p-2 hover:bg-[#E3E7EA] hover:dark:bg-[#272727]'
+                                    onClick={handleDeleteClick}>
                                     Delete
                                 </div>
                             </PopoverContent>

@@ -45,6 +45,7 @@ export const createAssetGroupLabels = (count: number = 10) => {
             requireCertify: faker.datatype.boolean(),
             count: faker.datatype.number(),
             require_certify: faker.datatype.boolean(),
+            position: faker.datatype.number({ min: 0, max: 10 }),
         });
     }
 
@@ -117,6 +118,20 @@ export const createSelectorNodes = (
             name: name,
         });
     }
+
+    return data;
+};
+
+export const createAssetGroupMembersCount = (selectorId: number = 0) => {
+    const data = {
+        id: selectorId,
+        total_count: faker.datatype.number(),
+        counts: {
+            User: faker.datatype.number(),
+            Computer: faker.datatype.number(),
+            Container: faker.datatype.number(),
+        },
+    };
 
     return data;
 };

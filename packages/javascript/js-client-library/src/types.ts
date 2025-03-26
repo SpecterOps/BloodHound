@@ -96,6 +96,7 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     description: string;
     count: number;
     require_certify: boolean;
+    position: number | null;
 }
 
 export type SeedTypeValues = 1 | 2;
