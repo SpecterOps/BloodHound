@@ -781,3 +781,10 @@ WHERE r.name = 'Power User' AND p.name IN (
     'CreateToken', 'ManageSelf', 'Manage', 'Read', 'Tasking', 'ManageJobs',
     'Write', 'Mutate', 'Read', 'Mutate'
 );
+
+-- Make sure the sequence values of things all line up at the end for the table we inserted
+SELECT pg_catalog.setval('asset_groups_id_seq', MAX(id), true) FROM asset_groups;
+SELECT pg_catalog.setval('feature_flags_id_seq', MAX(id), true) FROM feature_flags;
+SELECT pg_catalog.setval('parameters_id_seq', MAX(id), true) FROM parameters;
+SELECT pg_catalog.setval('permissions_id_seq', MAX(id), true) FROM permissions;
+SELECT pg_catalog.setval('roles_id_seq', MAX(id), true) FROM roles;
