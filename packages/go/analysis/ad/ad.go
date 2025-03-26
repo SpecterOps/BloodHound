@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/analysis/ad/internal/nodeprops"
+	"github.com/specterops/bloodhound/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -122,7 +124,8 @@ func FetchWellKnownTierZeroEntities(ctx context.Context, db graph.Database, doma
 func FixWellKnownNodeTypes(ctx context.Context, db graph.Database) error {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Fix well known node types")()
 
-	groupSuffixes := []string{EnterpriseKeyAdminsGroupSIDSuffix,
+	groupSuffixes := []string{
+		EnterpriseKeyAdminsGroupSIDSuffix,
 		KeyAdminsGroupSIDSuffix,
 		EnterpriseDomainControllersGroupSIDSuffix,
 		DomainAdminsGroupSIDSuffix,
@@ -190,7 +193,6 @@ func RunDomainAssociations(ctx context.Context, db graph.Database) error {
 		// TODO: Reimplement unassociated node pruning if we decide that FOSS needs unassociated node pruning
 		return nil
 	})
-
 }
 
 func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
@@ -231,39 +233,93 @@ func LinkWellKnownGroups(ctx context.Context, db graph.Database) error {
 		newProperties.Set(common.LastSeen.String(), time.Now().UTC())
 
 		for _, domain := range domains {
-			if domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain sid for domain %d: %v", domain.ID, err))
-			} else if domainName, err := domain.Properties.Get(common.Name.String()).String(); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain name for domain %d: %v", domain.ID, err))
+			// get the domain ID and domain name
+			if domainSid, domainName, err := nodeprops.ReadDomainIDandNameAsString(domain); err != nil {
+				slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain sid or name for domain %d: %v", domain.ID, err))
 			} else {
 				var (
-					domainId         = domain.ID
-					domainUsersId    = fmt.Sprintf("%s%s", domainSid, DomainUsersSuffix)
-					authUsersId      = fmt.Sprintf("%s%s", domainName, AuthenticatedUsersSuffix)
-					everyoneId       = fmt.Sprintf("%s%s", domainName, EveryoneSuffix)
-					domainComputerId = fmt.Sprintf("%s%s", domainSid, DomainComputersSuffix)
+					domainId                = domain.ID
+					domainUsersWellKnownSID = wellknown.DefineSID(
+						domainSid,
+						wellknown.DomainUsersSIDSuffix,
+					)
+					authUsersIdWellKnownSID = wellknown.DefineSID(
+						domainName,
+						wellknown.AuthenticatedUsersSIDSuffix,
+					)
+					everyoneWellKnownSID = wellknown.DefineSID(
+						domainName,
+						wellknown.EveryoneSIDSuffix,
+					)
+					domainComputerWellKnownSID = wellknown.DefineSID(
+						domainSid,
+						wellknown.DomainComputersSIDSuffix,
+					)
 				)
 
 				if err := db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-					if domainUserNode, err := getOrCreateWellKnownGroup(tx, domainUsersId, domainSid, domainName, fmt.Sprintf("DOMAIN USERS@%s", domainName)); err != nil {
+					if domainUserNode, err := getOrCreateWellKnownGroup(
+						tx,
+						domainUsersWellKnownSID,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.DomainUsersNodeNamePrefix, domainName),
+					); err != nil {
 						return fmt.Errorf("error getting domain users node for domain %d: %w", domainId, err)
-					} else if authUsersNode, err := getOrCreateWellKnownGroup(tx, authUsersId, domainSid, domainName, fmt.Sprintf("AUTHENTICATED USERS@%s", domainName)); err != nil {
+					} else if authUsersNode, err := getOrCreateWellKnownGroup(
+						tx,
+						authUsersIdWellKnownSID,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.AuthenticatedUsersNodeNamePrefix, domainName),
+					); err != nil {
 						return fmt.Errorf("error getting auth users node for domain %d: %w", domainId, err)
-					} else if everyoneNode, err := getOrCreateWellKnownGroup(tx, everyoneId, domainSid, domainName, fmt.Sprintf("EVERYONE@%s", domainName)); err != nil {
+					} else if everyoneNode, err := getOrCreateWellKnownGroup(
+						tx,
+						everyoneWellKnownSID,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.EveryoneNodeNamePrefix, domainName),
+					); err != nil {
 						return fmt.Errorf("error getting everyone for domain %d: %w", domainId, err)
-					} else if domainComputerNode, err := getOrCreateWellKnownGroup(tx, domainComputerId, domainSid, domainName, fmt.Sprintf("DOMAIN COMPUTERS@%s", domainName)); err != nil {
+					} else if domainComputerNode, err := getOrCreateWellKnownGroup(
+						tx,
+						domainComputerWellKnownSID,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.DomainComputerNodeNamePrefix, domainName),
+					); err != nil {
 						return fmt.Errorf("error getting domain computers node for domain %d: %w", domainId, err)
-					} else if err := createOrUpdateWellKnownLink(tx, domainUserNode, authUsersNode, newProperties); err != nil {
+					} else if err := createOrUpdateWellKnownLink(
+						tx,
+						domainUserNode,
+						authUsersNode,
+						newProperties,
+					); err != nil {
 						return err
-					} else if err := createOrUpdateWellKnownLink(tx, domainComputerNode, authUsersNode, newProperties); err != nil {
+					} else if err := createOrUpdateWellKnownLink(
+						tx,
+						domainComputerNode,
+						authUsersNode,
+						newProperties,
+					); err != nil {
 						return err
-					} else if err := createOrUpdateWellKnownLink(tx, authUsersNode, everyoneNode, newProperties); err != nil {
+					} else if err := createOrUpdateWellKnownLink(
+						tx,
+						authUsersNode,
+						everyoneNode,
+						newProperties,
+					); err != nil {
 						return err
 					} else {
 						return nil
 					}
 				}); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error linking well known groups for domain %d: %v", domain.ID, err))
+					slog.ErrorContext(ctx, fmt.Sprintf(
+						"Error linking well known groups for domain %d: %v",
+						domain.ID,
+						err,
+					))
 					errors.Add(fmt.Errorf("failed linking well known groups for domain %d: %w", domain.ID, err))
 				}
 			}
@@ -273,15 +329,20 @@ func LinkWellKnownGroups(ctx context.Context, db graph.Database) error {
 	}
 }
 
-func getOrCreateWellKnownGroup(tx graph.Transaction, wellKnownSid string, domainSid, domainName, nodeName string) (*graph.Node, error) {
+func getOrCreateWellKnownGroup(
+	tx graph.Transaction,
+	wellKnownSid, domainSid, domainName, nodeName string,
+) (
+	*graph.Node,
+	error,
+) {
+	// Only filter by ObjectID, not by kind
 	if wellKnownNode, err := tx.Nodes().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Equals(query.NodeProperty(common.ObjectID.String()), wellKnownSid),
-			query.Kind(query.Node(), ad.Group),
-		)
+		return query.Equals(query.NodeProperty(common.ObjectID.String()), wellKnownSid)
 	}).First(); err != nil && !graph.IsErrNotFound(err) {
 		return nil, err
 	} else if graph.IsErrNotFound(err) {
+		// Only create a new node if no node with this ObjectID exists
 		properties := graph.AsProperties(graph.PropertyMap{
 			common.Name:     nodeName,
 			common.ObjectID: wellKnownSid,
@@ -291,11 +352,25 @@ func getOrCreateWellKnownGroup(tx graph.Transaction, wellKnownSid string, domain
 		})
 		return tx.CreateNode(properties, ad.Entity, ad.Group)
 	} else {
+		// If a node with this ObjectID exists (regardless of its kind), return it
+		// Optionally, we could add the ad.Group kind if it's missing
+		if !wellKnownNode.Kinds.ContainsOneOf(ad.Group) {
+			// Add the ad.Group kind if it's missing
+			wellKnownNode.AddKinds(ad.Group)
+			if err := tx.UpdateNode(wellKnownNode); err != nil {
+				return nil, fmt.Errorf("failed to update node with Group kind: %w", err)
+			}
+		}
 		return wellKnownNode, nil
 	}
 }
 
-func createOrUpdateWellKnownLink(tx graph.Transaction, startNode *graph.Node, endNode *graph.Node, props *graph.Properties) error {
+func createOrUpdateWellKnownLink(
+	tx graph.Transaction,
+	startNode *graph.Node,
+	endNode *graph.Node,
+	props *graph.Properties,
+) error {
 	if rel, err := tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Equals(query.StartID(), startNode.ID),
@@ -305,7 +380,12 @@ func createOrUpdateWellKnownLink(tx graph.Transaction, startNode *graph.Node, en
 	}).First(); err != nil && !graph.IsErrNotFound(err) {
 		return err
 	} else if graph.IsErrNotFound(err) {
-		if _, err := tx.CreateRelationshipByIDs(startNode.ID, endNode.ID, ad.MemberOf, props); err != nil {
+		if _, err := tx.CreateRelationshipByIDs(
+			startNode.ID,
+			endNode.ID,
+			ad.MemberOf,
+			props,
+		); err != nil {
 			return err
 		} else {
 			return nil
@@ -342,7 +422,6 @@ func CalculateCrossProductNodeSets(tx graph.Transaction, groupExpansions impact.
 
 	// Get the IDs of the Auth. Users and Everyone groups
 	specialGroups, err := FetchAuthUsersAndEveryoneGroups(tx)
-
 	if err != nil {
 		slog.Error(fmt.Sprintf("Could not fetch groups: %s", err.Error()))
 	}

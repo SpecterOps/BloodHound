@@ -22,9 +22,9 @@ const General: FC<EdgeInfoProps> = () => {
     return (
         <>
             <Typography variant='body2'>
-            This edge is established from the principal that owns an object to the owned object.
-
-            This edge is processed further to determine whether implicit owner rights (e.g., WriteDacl) are blocked, which may prevent the owner from compromising the destination object.
+                This edge is established from the principal that owns an object to the owned object. This edge is
+                processed further to determine whether implicit owner rights (e.g., WriteDacl) are blocked, which may
+                prevent the owner from compromising the destination object.
             </Typography>
         </>
     );
