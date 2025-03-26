@@ -15,39 +15,36 @@ import (
 // the internal package pattern here preserves proper package boundaries while still allowing ad_test.go to access the
 // functionality needed for data generation and testing.
 func ReadDomainIDandNameAsString(nodeToRead *graph.Node) (string, string, error) {
-	var domainSIDStr, domainNameStr string
-	var err error
-
-	errMessageFunc := func(errMsg string) error {
-		return fmt.Errorf("failed to read domain SID and name: %s", errMsg)
-	}
-
 	if nodeToRead == nil {
-		return "", "", errMessageFunc("given nodeToRead is nil")
+		return "", "", fmt.Errorf("given nodeToRead is nil")
 	}
 
-	if domainSID := nodeToRead.Properties.Get(ad.DomainSID.String()); domainSID.IsNil() {
-		return "", "", errMessageFunc("read domain SID property value is nil")
-	} else {
-		if domainSIDStr, err = domainSID.String(); err != nil {
-			return "", "", errMessageFunc(err.Error())
-		} else {
-			if len(strings.TrimSpace(domainSIDStr)) == 0 {
-				return "", "", errMessageFunc("read domain SID is empty or blank")
-			}
-		}
+	domainSID := nodeToRead.Properties.Get(ad.DomainSID.String())
+	if domainSID.IsNil() {
+		return "", "", fmt.Errorf("read domain SID property value is nil")
 	}
 
-	if domainName := nodeToRead.Properties.Get(common.Name.String()); domainName.IsNil() {
-		return "", "", errMessageFunc("read domain name property value is nil")
-	} else {
-		if domainNameStr, err = domainName.String(); err != nil {
-			return "", "", errMessageFunc(err.Error())
-		} else {
-			if len(strings.TrimSpace(domainNameStr)) == 0 {
-				return "", "", errMessageFunc("read domain name is empty or blank")
-			}
-		}
+	domainSIDStr, err := domainSID.String()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to convert domainSID to string: %s", err)
+	}
+
+	if len(strings.TrimSpace(domainSIDStr)) == 0 {
+		return "", "", fmt.Errorf("read domain SID is empty or blank")
+	}
+
+	domainName := nodeToRead.Properties.Get(common.Name.String())
+	if domainName.IsNil() {
+		return "", "", fmt.Errorf("read domain name property value is nil")
+	}
+
+	domainNameStr, err := domainName.String()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to convert domain name to string: %s", err)
+	}
+
+	if len(strings.TrimSpace(domainNameStr)) == 0 {
+		return "", "", fmt.Errorf("read domain name is empty or blank")
 	}
 
 	return domainSIDStr, domainNameStr, nil
