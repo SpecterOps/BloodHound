@@ -2,13 +2,14 @@
 title: Work With the BloodHound API
 ---
 
-<img src="/assets/community-edition-pill-tag.svg"/> 
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/>
 
 The BloodHound product family are API-first products, meaning everything functions on the underlying API layer. All data displayed in the portal, all commands given to SharpHound or AzureHound Enterprise collectors, and all data uploaded pass through the BloodHound APIs. Customers may utilize these APIs to extend the use of the BloodHound product to function with other tools in their environment. This article will show how to access the API and include some example use cases.
 
 ## API Documentation
+Our API reference is available [here](/reference/).
 
-API documentation is hosted utilizing Swagger behind authentication within your tenant environment. After logging in, you may access it by clicking the cog in the top right corner of your tenant and clicking **API Explorer.**
+Additionally, API documentation is hosted utilizing Swagger behind authentication within your tenant environment. After logging in, you may access it by clicking the cog in the top right corner of your tenant and clicking **API Explorer.**
 
 <Frame>
     <img src="/assets/image1-1.png"/>
@@ -24,7 +25,7 @@ The BloodHound API accepts two forms of authentication, each with its own limita
 
 BloodHound users should understand that there are two methods of creating API key/ID pairs, each serving a different purpose:
 
-- Non-personal API key/ID pairs, for integrations like [Splunk](/integrations/integrations/splunk) or [Sentinel](https://github.com/Azure/Azure-Sentinel/tree/master/Solutions/BloodHound%20Enterprise)
+- Non-personal API key/ID pairs, for integrations like [Splunk](/integrations/integrations/splunk)
 - [Personal API key/ID pairs](#create-a-personal-api-key-id-pair), for day-to-day use like [BloodHound Operator](https://www.youtube.com/watch?v=9Og-6_qyw_A)
 
 ## Create a non-personal API key/ID pair
