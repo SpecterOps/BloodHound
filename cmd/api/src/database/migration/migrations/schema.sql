@@ -623,55 +623,121 @@ ALTER TABLE ONLY users Add CONSTRAINT fk_users_saml_provider FOREIGN KEY (saml_p
 ALTER TABLE ONLY saved_queries_permissions Add CONSTRAINT saved_queries_permissions_query_id_fkey FOREIGN KEY (query_id) REFERENCES saved_queries(id) ON DELETE CASCADE;
 ALTER TABLE ONLY saved_queries_permissions Add CONSTRAINT saved_queries_permissions_shared_to_user_id_fkey FOREIGN KEY (shared_to_user_id) REFERENCES users(id) ON DELETE CASCADE;
 
+--
+-- Application startup requires some basic data to start up. One day, we might want to explore moving this to a config file
+--
+
 INSERT INTO asset_groups (name, tag, system_group, created_at, updated_at) VALUES ('Admin Tier Zero', 'admin_tier_0', true, current_timestamp, current_timestamp);
 
 INSERT INTO datapipe_status VALUES (true, 'idle', current_timestamp, NULL);
 
-INSERT INTO feature_flags VALUES (1, current_timestamp, current_timestamp, 'butterfly_analysis', 'Enhanced Asset Inbound-Outbound Exposure Analysis', 'Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.', false, false);
-INSERT INTO feature_flags VALUES (2, current_timestamp, current_timestamp, 'enable_saml_sso', 'SAML Single Sign-On Support', 'Enables SSO authentication flows and administration panels to third party SAML identity providers.', true, false);
-INSERT INTO feature_flags VALUES (3, current_timestamp, current_timestamp, 'scope_collection_by_ou', 'Enable SharpHound OU Scoped Collections', 'Enables scoping SharpHound collections to specific lists of OUs.', true, false);
-INSERT INTO feature_flags VALUES (4, current_timestamp, current_timestamp, 'azure_support', 'Enable Azure Support', 'Enables Azure support.', true, false);
-INSERT INTO feature_flags VALUES (6, current_timestamp, current_timestamp, 'entity_panel_cache', 'Enable application level caching', 'Enables the use of application level caching for entity panel queries', true, false);
-INSERT INTO feature_flags VALUES (7, current_timestamp, current_timestamp, 'adcs', 'Enable collection and processing of Active Directory Certificate Services Data', 'Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.', false, false);
-INSERT INTO feature_flags VALUES (8, current_timestamp, current_timestamp, 'dark_mode', 'Dark Mode', 'Allows users to enable or disable dark mode via a toggle in the settings menu', false, true);
-INSERT INTO feature_flags VALUES (9, current_timestamp, current_timestamp, 'pg_migration_dual_ingest', 'PostgreSQL Migration Dual Ingest', 'Enables dual ingest pathing for both Neo4j and PostgreSQL.', false, false);
-INSERT INTO feature_flags VALUES (10, current_timestamp, current_timestamp, 'clear_graph_data', 'Clear Graph Data', 'Enables the ability to delete all nodes and edges from the graph database.', true, false);
-INSERT INTO feature_flags VALUES (11, current_timestamp, current_timestamp, 'risk_exposure_new_calculation', 'Use new tier zero risk exposure calculation', 'Enables the use of new tier zero risk exposure metatree metrics.', false, false);
-INSERT INTO feature_flags VALUES (12, current_timestamp, current_timestamp, 'fedramp_eula', 'FedRAMP EULA', 'Enables showing the FedRAMP EULA on every login. (Enterprise only)', false, false);
-INSERT INTO feature_flags VALUES (13, current_timestamp, current_timestamp, 'auto_tag_t0_parent_objects', 'Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero', 'Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.', true, true);
-INSERT INTO feature_flags VALUES (14, current_timestamp, current_timestamp, 'oidc_support', 'OIDC Support', 'Enables OpenID Connect authentication support for SSO Authentication.', false, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 
+    'butterfly_analysis', 
+    'Enhanced Asset Inbound-Outbound Exposure Analysis', 
+    'Enables more extensive analysis of attack path findings that allows BloodHound to help the user prioritize remediation of the most exposed assets.', false, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 
+    'enable_saml_sso', 
+    'SAML Single Sign-On Support', 
+    'Enables SSO authentication flows and administration panels to third party SAML identity providers.', true, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 
+    'scope_collection_by_ou', 
+    'Enable SharpHound OU Scoped Collections', 
+    'Enables scoping SharpHound collections to specific lists of OUs.', true, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 
+    'azure_support', 
+    'Enable Azure Support', 
+    'Enables Azure support.', true, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 
+    'entity_panel_cache', 
+    'Enable application level caching', 
+    'Enables the use of application level caching for entity panel queries', true, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 
+    'adcs', 
+    'Enable collection and processing of Active Directory Certificate Services Data', 
+    'Enables the ability to collect, analyze, and explore Active Directory Certificate Services data and previews new attack paths.', false, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 
+    'dark_mode', 
+    'Dark Mode', 
+    'Allows users to enable or disable dark mode via a toggle in the settings menu', false, true);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 
+    'pg_migration_dual_ingest', 
+    'PostgreSQL Migration Dual Ingest', 
+    'Enables dual ingest pathing for both Neo4j and PostgreSQL.', false, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 
+    'clear_graph_data', 
+    'Clear Graph Data', 
+    'Enables the ability to delete all nodes and edges from the graph database.', true, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 
+    'risk_exposure_new_calculation', 
+    'Use new tier zero risk exposure calculation', 
+    'Enables the use of new tier zero risk exposure metatree metrics.', false, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 
+    'fedramp_eula', 
+    'FedRAMP EULA', 
+    'Enables showing the FedRAMP EULA on every login. (Enterprise only)', false, false);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 
+    'auto_tag_t0_parent_objects', 
+    'Automatically add parent OUs and containers of Tier Zero AD objects to Tier Zero', 
+    'Parent OUs and containers of Tier Zero AD objects are automatically added to Tier Zero during analysis. Containers are only added if they have a Tier Zero child object with ACL inheritance enabled.', true, true);
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable) VALUES (current_timestamp, current_timestamp, 
+    'oidc_support', 
+    'OIDC Support', 
+    'Enables OpenID Connect authentication support for SSO Authentication.', false, false);
 
-INSERT INTO parameters VALUES ('auth.password_expiration_window', 'Local Auth Password Expiry Window', 'This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601.', '{"duration": "P90D"}', 1, current_timestamp, current_timestamp);
-INSERT INTO parameters VALUES ('neo4j.configuration', 'Neo4j Configuration Parameters', 'This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J.', '{"batch_write_size": 20000, "write_flush_size": 100000}', 2, current_timestamp, current_timestamp);
-INSERT INTO parameters VALUES ('analysis.citrix_rdp_support', 'Citrix RDP Support', 'This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a ''Direct Access Users'' local group will assume that Citrix is installed and CanRDP edges will require membership of both ''Direct Access Users'' and ''Remote Desktop Users'' local groups on the computer.', '{ "enabled": false }', 3, current_timestamp, current_timestamp);
-INSERT INTO parameters VALUES ('prune.ttl', 'Prune Retention TTL Configuration Parameters','This configuration parameter sets the retention TTLs during analysis pruning.', '{"base_ttl": "P7D", "has_session_edge_ttl": "P3D" }', 4, current_timestamp, current_timestamp);
-INSERT INTO parameters VALUES ('analysis.reconciliation', 'Reconciliation', 'This configuration parameter enables / disables reconciliation during analysis.', '{"enabled": true}', 5, current_timestamp, current_timestamp);
 
-INSERT INTO permissions VALUES ('app', 'ReadAppConfig', 1, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('app', 'WriteAppConfig', 2, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('risks', 'GenerateReport', 3, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('risks', 'ManageRisks', 4, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('auth', 'CreateToken', 5, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('auth', 'ManageAppConfig', 6, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('auth', 'ManageProviders', 7, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('auth', 'ManageSelf', 8, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('auth', 'ManageUsers', 9, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('clients', 'Manage', 10, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('clients', 'Tasking', 11, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('collection', 'ManageJobs', 12, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('graphdb', 'Read', 13, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('graphdb', 'Write', 14, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('saved_queries', 'Read', 15, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('saved_queries', 'Write', 16, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('clients', 'Read', 17, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('db', 'Wipe', 18, current_timestamp, current_timestamp);
-INSERT INTO permissions VALUES ('graphdb', 'Mutate', 19, current_timestamp, current_timestamp);
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES (
+    'auth.password_expiration_window', 
+    'Local Auth Password Expiry Window', 
+    'This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601.', 
+    '{"duration": "P90D"}',
+    current_timestamp, current_timestamp);
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES (
+    'neo4j.configuration', 
+    'Neo4j Configuration Parameters', 
+    'This configuration parameter sets the BatchWriteSize and the BatchFlushSize for Neo4J.', 
+    '{"batch_write_size": 20000, "write_flush_size": 100000}', 
+    current_timestamp, current_timestamp);
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES (
+    'analysis.citrix_rdp_support', 
+    'Citrix RDP Support', 
+    'This configuration parameter toggles Citrix support during post-processing. When enabled, computers identified with a ''Direct Access Users'' local group will assume that Citrix is installed and CanRDP edges will require membership of both ''Direct Access Users'' and ''Remote Desktop Users'' local groups on the computer.', '{ "enabled": false }',
+    current_timestamp, current_timestamp);
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES (
+    'prune.ttl', 
+    'Prune Retention TTL Configuration Parameters',
+    'This configuration parameter sets the retention TTLs during analysis pruning.', '{"base_ttl": "P7D", "has_session_edge_ttl": "P3D" }',
+    current_timestamp, current_timestamp);
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES (
+    'analysis.reconciliation', 
+    'Reconciliation', 
+    'This configuration parameter enables / disables reconciliation during analysis.', '{"enabled": true}',
+    current_timestamp, current_timestamp);
 
-INSERT INTO roles VALUES ('Administrator', 'Can manage users, clients, and application configuration', 1, current_timestamp, current_timestamp);
-INSERT INTO roles VALUES ('User', 'Can read data, modify asset group memberships', 2, current_timestamp, current_timestamp);
-INSERT INTO roles VALUES ('Read-Only', 'Used for integrations', 3, current_timestamp, current_timestamp);
-INSERT INTO roles VALUES ('Upload-Only', 'Used for data collection clients, can post data but cannot read data', 4, current_timestamp, current_timestamp);
-INSERT INTO roles VALUES ('Power User', 'Can upload data, manage clients, and perform any action a User can', 5, current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('app', 'ReadAppConfig', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('app', 'WriteAppConfig', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('risks', 'GenerateReport', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('risks', 'ManageRisks', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('auth', 'CreateToken', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('auth', 'ManageAppConfig', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('auth', 'ManageProviders', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('auth', 'ManageSelf', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('auth', 'ManageUsers', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('clients', 'Manage', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('clients', 'Tasking', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('collection', 'ManageJobs', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('graphdb', 'Read', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('graphdb', 'Write', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('saved_queries', 'Read', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('saved_queries', 'Write', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('clients', 'Read', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('db', 'Wipe', current_timestamp, current_timestamp);
+INSERT INTO permissions (authority, name, created_at, updated_at) VALUES ('graphdb', 'Mutate', current_timestamp, current_timestamp);
+
+INSERT INTO roles (name, description, created_at, updated_at) VALUES ('Administrator', 'Can manage users, clients, and application configuration', current_timestamp, current_timestamp);
+INSERT INTO roles (name, description, created_at, updated_at) VALUES ('User', 'Can read data, modify asset group memberships', current_timestamp, current_timestamp);
+INSERT INTO roles (name, description, created_at, updated_at) VALUES ('Read-Only', 'Used for integrations', current_timestamp, current_timestamp);
+INSERT INTO roles (name, description, created_at, updated_at) VALUES ('Upload-Only', 'Used for data collection clients, can post data but cannot read data', current_timestamp, current_timestamp);
+INSERT INTO roles (name, description, created_at, updated_at) VALUES ('Power User', 'Can upload data, manage clients, and perform any action a User can', current_timestamp, current_timestamp);
 
 INSERT INTO roles_permissions (role_id, permission_id)
 SELECT r.id, p.id
@@ -715,26 +781,3 @@ WHERE r.name = 'Power User' AND p.name IN (
     'CreateToken', 'ManageSelf', 'Manage', 'Read', 'Tasking', 'ManageJobs',
     'Write', 'Mutate', 'Read', 'Mutate'
 );
-
--- Make sure the sequence values of things all line up at the end
-SELECT pg_catalog.setval('ad_data_quality_aggregations_id_seq', COALESCE(MAX(id), 1), true) FROM ad_data_quality_aggregations;
-SELECT pg_catalog.setval('ad_data_quality_stats_id_seq', COALESCE(MAX(id), 1), true) FROM ad_data_quality_stats;
-SELECT pg_catalog.setval('asset_group_collection_entries_id_seq', COALESCE(MAX(id), 1), true) FROM asset_group_collection_entries;
-SELECT pg_catalog.setval('asset_group_collections_id_seq', COALESCE(MAX(id), 1), true) FROM asset_group_collections;
-SELECT pg_catalog.setval('asset_group_selectors_id_seq', COALESCE(MAX(id), 1), true) FROM asset_group_selectors;
-SELECT pg_catalog.setval('asset_groups_id_seq', COALESCE(MAX(id), 1), true) FROM asset_groups;
-SELECT pg_catalog.setval('audit_logs_id_seq', COALESCE(MAX(id), 1), true) FROM audit_logs;
-SELECT pg_catalog.setval('auth_secrets_id_seq', COALESCE(MAX(id), 1), true) FROM auth_secrets;
-SELECT pg_catalog.setval('azure_data_quality_aggregations_id_seq', COALESCE(MAX(id), 1), true) FROM azure_data_quality_aggregations;
-SELECT pg_catalog.setval('azure_data_quality_stats_id_seq', COALESCE(MAX(id), 1), true) FROM azure_data_quality_stats;
-SELECT pg_catalog.setval('domain_collection_results_id_seq', COALESCE(MAX(id), 1), true) FROM domain_collection_results;
-SELECT pg_catalog.setval('feature_flags_id_seq', COALESCE(MAX(id), 1), true) FROM feature_flags;
-SELECT pg_catalog.setval('file_upload_jobs_id_seq', COALESCE(MAX(id), 1), true) FROM file_upload_jobs;
-SELECT pg_catalog.setval('ingest_tasks_id_seq', COALESCE(MAX(id), 1), true) FROM ingest_tasks;
-SELECT pg_catalog.setval('parameters_id_seq', COALESCE(MAX(id), 1), true) FROM parameters;
-SELECT pg_catalog.setval('permissions_id_seq', COALESCE(MAX(id), 1), true) FROM permissions;
-SELECT pg_catalog.setval('roles_id_seq', COALESCE(MAX(id), 1), true) FROM roles;
-SELECT pg_catalog.setval('saml_providers_id_seq', COALESCE(MAX(id), 1), true) FROM saml_providers;
-SELECT pg_catalog.setval('saved_queries_id_seq', COALESCE(MAX(id), 1), true) FROM saved_queries;
-SELECT pg_catalog.setval('saved_queries_permissions_id_seq', COALESCE(MAX(id), 1), true) FROM saved_queries_permissions;
-SELECT pg_catalog.setval('user_sessions_id_seq', COALESCE(MAX(id), 1), true) FROM user_sessions;
