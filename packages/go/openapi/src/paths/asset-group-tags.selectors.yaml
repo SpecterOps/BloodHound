@@ -1,0 +1,93 @@
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+  - name: asset_group_tag_id
+    description: ID of the asset_group_tag to create a selector
+    in: path
+    required: true
+    schema:
+      type: integer
+      format: int32
+
+get:
+  operationId: GetAssetGroupTagSelectors
+  summary: Get Asset Group Tag selectors
+  description: Get a list of selectors for this group.
+  tags:
+    - Tiering Management
+    - Enterprise
+    - Community
+  parameters:
+  - name: type
+    description: Type of selector. Either ObjectID = 1 or Cypher = 2
+    in: query
+    required: false
+    schema:
+      type: integer
+      format: int
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './../schemas/model.asset-group-tags-selectors.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
+
+
+post:
+  operationId: CreateAssetGroupTagSelector
+  summary: Create Asset Group Tag Selector
+  description: Creates an asset group tag selector.
+  tags:
+    - Tiering Management
+    - Community
+    - Enterprise
+  requestBody:
+    description: The request body for creating an asset group tag selector
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          items:
+            $ref: './../schemas/model.asset-group-tags-selector.yaml'
+  responses:
+    201:
+      description: Created
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  type: array
+                  items:
+                    $ref: './../schemas/model.asset-group-tags-selector.yaml'
+
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

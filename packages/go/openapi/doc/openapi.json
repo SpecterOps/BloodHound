@@ -4375,26 +4375,31 @@
       }
     },
     "/api/v2/asset-group-tags/{asset_group_tag_id}/selectors": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of the asset_group_tag to create a selector",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
       "get": {
         "operationId": "GetAssetGroupTagSelectors",
         "summary": "Get Asset Group Tag selectors",
         "description": "Get a list of selectors for this group.",
         "tags": [
-          "Asset Group Management",
+          "Tiering Management",
           "Enterprise",
           "Community"
         ],
         "parameters": [
-          {
-            "name": "asset_group_tag_id",
-            "description": "ID of the asset_group_tag record to retrieve",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int"
-            }
-          },
           {
             "name": "type",
             "description": "Type of selector. Either ObjectID = 1 or Cypher = 2",
@@ -4438,34 +4443,20 @@
           "403": {
             "$ref": "#/components/responses/forbidden"
           },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
           }
         }
-      }
-    },
-    "/api/v2/asset-group-tags/{asset_group_tag_id}/selector": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        },
-        {
-          "name": "asset_group_tag_id",
-          "description": "ID of the asset_group_tag to create a selector",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      ],
+      },
       "post": {
         "operationId": "CreateAssetGroupTagSelector",
         "summary": "Create Asset Group Tag Selector",
         "description": "Creates an asset group tag selector.",
         "tags": [
-          "Asset Group Management",
+          "Tiering Management",
           "Community",
           "Enterprise"
         ],
@@ -4496,7 +4487,7 @@
                       "properties": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/components/schemas/model.asset-group-selector"
+                          "$ref": "#/components/schemas/model.asset-group-tags-selector"
                         }
                       }
                     }
@@ -4507,6 +4498,12 @@
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
           },
           "404": {
             "$ref": "#/components/responses/not-found"
@@ -15771,7 +15768,10 @@
               "is_default": {
                 "type": "boolean"
               },
-              "auto-certify": {
+              "auto_certify": {
+                "type": "boolean"
+              },
+              "allow_disable": {
                 "type": "boolean"
               },
               "seeds": {

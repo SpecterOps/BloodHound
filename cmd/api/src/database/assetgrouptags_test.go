@@ -123,3 +123,35 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 	})
 
 }
+
+func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
+	var (
+		dbInst          = integration.SetupDB(t)
+		testCtx         = context.Background()
+		testID          = "test_id"
+		testName        = "test selector name"
+		testDescription = "test description"
+		isDefault       = false
+		allowDisable    = true
+		autoCertify     = false
+		testSeeds       = []model.SelectorSeed{
+			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
+		}
+		test2ID          = "test2_id"
+		test2Name        = "test2 selector name"
+		test2Description = "test2 description"
+	)
+
+	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testID, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	require.NoError(t, err)
+	selector2, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, test2ID, test2Name, test2Description, isDefault, allowDisable, autoCertify, testSeeds)
+	require.NoError(t, err)
+
+	results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1)
+	require.NoError(t, err)
+
+	expected := []model.AssetGroupTagSelector{selector, selector2}
+	require.Equal(t, results, expected)
+
+}

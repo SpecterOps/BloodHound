@@ -36,7 +36,9 @@ allOf:
         type: string
       is_default:
         type: boolean
-      auto-certify:
+      auto_certify:
+        type: boolean
+      allow_disable:
         type: boolean
       seeds:
         type: array

@@ -278,19 +278,12 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 		NewHarness(t, resourcesInst.GetAssetGroupTagSelectors).
 		Run([]apitest.Case{
 			{
-				Name: "Bad Request - No Asset Group Tag ID",
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusBadRequest)
-					apitest.BodyContains(output, "no asset group tag id specified in url")
-				},
-			},
-			{
 				Name: "Bad Request - Invalid Asset Group Tag ID",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "foo")
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.StatusCode(output, http.StatusNotFound)
 					apitest.BodyContains(output, "invalid asset group tag id specified in url")
 				},
 			},
