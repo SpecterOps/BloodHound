@@ -48,13 +48,15 @@ export const useEnvironment = (
     environmentId?: Environment['id'] | null,
     options?: Omit<QueryOptions<Environment>, 'select'>
 ) => {
-    const { environmentId: environmentIdParam } = useEnvironmentParams();
+    const { environmentId: environmentIdParam, environmentAggregation } = useEnvironmentParams();
     const selectedEnvironment = environmentId ?? environmentIdParam;
 
-    return useAvailableEnvironments({
+    const environmentQuery = useAvailableEnvironments({
         select: selectEnvironment(selectedEnvironment!),
         refetchOnWindowFocus: false,
         enabled: !!selectedEnvironment,
         ...options,
     });
+
+    return { ...environmentQuery, environment: environmentQuery.data, environmentAggregation };
 };
