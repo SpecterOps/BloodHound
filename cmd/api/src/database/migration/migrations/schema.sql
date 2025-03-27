@@ -15,7 +15,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
-CREATE TABLE ad_data_quality_aggregations (
+CREATE TABLE IF NOT EXISTS ad_data_quality_aggregations (
     domains bigint,
     users bigint,
     groups bigint,
@@ -39,7 +39,7 @@ CREATE TABLE ad_data_quality_aggregations (
     certtemplates bigint DEFAULT 0,
     issuancepolicies bigint DEFAULT 0
 );
-CREATE SEQUENCE ad_data_quality_aggregations_id_seq
+CREATE SEQUENCE IF NOT EXISTS ad_data_quality_aggregations_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -48,7 +48,7 @@ CREATE SEQUENCE ad_data_quality_aggregations_id_seq
     CACHE 1;
 ALTER SEQUENCE ad_data_quality_aggregations_id_seq OWNED BY ad_data_quality_aggregations.id;
 
-CREATE TABLE ad_data_quality_stats (
+CREATE TABLE IF NOT EXISTS ad_data_quality_stats (
     domain_sid text,
     users bigint,
     groups bigint,
@@ -72,7 +72,7 @@ CREATE TABLE ad_data_quality_stats (
     certtemplates bigint DEFAULT 0,
     issuancepolicies bigint DEFAULT 0
 );
-CREATE SEQUENCE ad_data_quality_stats_id_seq
+CREATE SEQUENCE IF NOT EXISTS ad_data_quality_stats_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -81,14 +81,14 @@ CREATE SEQUENCE ad_data_quality_stats_id_seq
     CACHE 1;
 ALTER SEQUENCE ad_data_quality_stats_id_seq OWNED BY ad_data_quality_stats.id;
 
-CREATE TABLE analysis_request_switch (
+CREATE TABLE IF NOT EXISTS analysis_request_switch (
     singleton boolean DEFAULT true NOT NULL,
     request_type text NOT NULL,
     requested_by text NOT NULL,
     requested_at timestamp with time zone NOT NULL,
     CONSTRAINT singleton_uni CHECK (singleton)
 );
-CREATE TABLE asset_group_collection_entries (
+CREATE TABLE IF NOT EXISTS asset_group_collection_entries (
     asset_group_collection_id bigint,
     object_id text,
     node_label text,
@@ -97,7 +97,7 @@ CREATE TABLE asset_group_collection_entries (
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
-CREATE SEQUENCE asset_group_collection_entries_id_seq
+CREATE SEQUENCE IF NOT EXISTS asset_group_collection_entries_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -105,13 +105,13 @@ CREATE SEQUENCE asset_group_collection_entries_id_seq
     CACHE 1;
 ALTER SEQUENCE asset_group_collection_entries_id_seq OWNED BY asset_group_collection_entries.id;
 
-CREATE TABLE asset_group_collections (
+CREATE TABLE IF NOT EXISTS asset_group_collections (
     asset_group_id integer,
     id bigint NOT NULL,
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
-CREATE SEQUENCE asset_group_collections_id_seq
+CREATE SEQUENCE IF NOT EXISTS asset_group_collections_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -119,7 +119,7 @@ CREATE SEQUENCE asset_group_collections_id_seq
     CACHE 1;
 ALTER SEQUENCE asset_group_collections_id_seq OWNED BY asset_group_collections.id;
 
-CREATE TABLE asset_group_selectors (
+CREATE TABLE IF NOT EXISTS asset_group_selectors (
     asset_group_id integer,
     name text,
     selector text,
@@ -128,7 +128,7 @@ CREATE TABLE asset_group_selectors (
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
-CREATE SEQUENCE asset_group_selectors_id_seq
+CREATE SEQUENCE IF NOT EXISTS asset_group_selectors_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -137,7 +137,7 @@ CREATE SEQUENCE asset_group_selectors_id_seq
     CACHE 1;
 ALTER SEQUENCE asset_group_selectors_id_seq OWNED BY asset_group_selectors.id;
 
-CREATE TABLE asset_groups (
+CREATE TABLE IF NOT EXISTS asset_groups (
     name text NOT NULL,
     tag text NOT NULL,
     system_group boolean,
@@ -145,7 +145,7 @@ CREATE TABLE asset_groups (
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
-CREATE SEQUENCE asset_groups_id_seq
+CREATE SEQUENCE IF NOT EXISTS asset_groups_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -154,7 +154,7 @@ CREATE SEQUENCE asset_groups_id_seq
     CACHE 1;
 ALTER SEQUENCE asset_groups_id_seq OWNED BY asset_groups.id;
 
-CREATE TABLE audit_logs (
+CREATE TABLE IF NOT EXISTS audit_logs (
     id bigint NOT NULL,
     created_at timestamp with time zone,
     actor_id text,
@@ -168,7 +168,7 @@ CREATE TABLE audit_logs (
     commit_id text,
     CONSTRAINT status_check CHECK (((status)::text = ANY ((ARRAY['intent'::character varying, 'success'::character varying, 'failure'::character varying])::text[])))
 );
-CREATE SEQUENCE audit_logs_id_seq
+CREATE SEQUENCE IF NOT EXISTS audit_logs_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -176,7 +176,7 @@ CREATE SEQUENCE audit_logs_id_seq
     CACHE 1;
 ALTER SEQUENCE audit_logs_id_seq OWNED BY audit_logs.id;
 
-CREATE TABLE auth_secrets (
+CREATE TABLE IF NOT EXISTS auth_secrets (
     user_id text,
     digest text,
     digest_method text,
@@ -187,7 +187,7 @@ CREATE TABLE auth_secrets (
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
-CREATE SEQUENCE auth_secrets_id_seq
+CREATE SEQUENCE IF NOT EXISTS auth_secrets_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -196,7 +196,7 @@ CREATE SEQUENCE auth_secrets_id_seq
     CACHE 1;
 ALTER SEQUENCE auth_secrets_id_seq OWNED BY auth_secrets.id;
 
-CREATE TABLE auth_tokens (
+CREATE TABLE IF NOT EXISTS auth_tokens (
     user_id text,
     client_id text,
     name text,
@@ -207,7 +207,7 @@ CREATE TABLE auth_tokens (
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
-CREATE TABLE azure_data_quality_aggregations (
+CREATE TABLE IF NOT EXISTS azure_data_quality_aggregations (
     tenants bigint,
     users bigint,
     groups bigint,
@@ -232,7 +232,7 @@ CREATE TABLE azure_data_quality_aggregations (
     vm_scale_sets bigint DEFAULT 0,
     web_apps bigint DEFAULT 0
 );
-CREATE SEQUENCE azure_data_quality_aggregations_id_seq
+CREATE SEQUENCE IF NOT EXISTS azure_data_quality_aggregations_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -241,7 +241,7 @@ CREATE SEQUENCE azure_data_quality_aggregations_id_seq
     CACHE 1;
 ALTER SEQUENCE azure_data_quality_aggregations_id_seq OWNED BY azure_data_quality_aggregations.id;
 
-CREATE TABLE azure_data_quality_stats (
+CREATE TABLE IF NOT EXISTS azure_data_quality_stats (
     tenant_id text,
     users bigint,
     groups bigint,
@@ -266,7 +266,7 @@ CREATE TABLE azure_data_quality_stats (
     vm_scale_sets bigint DEFAULT 0,
     web_apps bigint DEFAULT 0
 );
-CREATE SEQUENCE azure_data_quality_stats_id_seq
+CREATE SEQUENCE IF NOT EXISTS azure_data_quality_stats_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -275,14 +275,14 @@ CREATE SEQUENCE azure_data_quality_stats_id_seq
     CACHE 1;
 ALTER SEQUENCE azure_data_quality_stats_id_seq OWNED BY azure_data_quality_stats.id;
 
-CREATE TABLE datapipe_status (
+CREATE TABLE IF NOT EXISTS datapipe_status (
     singleton boolean DEFAULT true NOT NULL,
     status text NOT NULL,
     updated_at timestamp with time zone NOT NULL,
     last_complete_analysis_at timestamp with time zone,
     CONSTRAINT singleton_uni CHECK (singleton)
 );
-CREATE TABLE domain_collection_results (
+CREATE TABLE IF NOT EXISTS domain_collection_results (
     job_id bigint,
     domain_name text,
     success boolean,
@@ -298,7 +298,7 @@ CREATE TABLE domain_collection_results (
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
-CREATE SEQUENCE domain_collection_results_id_seq
+CREATE SEQUENCE IF NOT EXISTS domain_collection_results_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -306,7 +306,7 @@ CREATE SEQUENCE domain_collection_results_id_seq
     CACHE 1;
 ALTER SEQUENCE domain_collection_results_id_seq OWNED BY domain_collection_results.id;
 
-CREATE TABLE feature_flags (
+CREATE TABLE IF NOT EXISTS feature_flags (
     id integer NOT NULL,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
@@ -316,7 +316,7 @@ CREATE TABLE feature_flags (
     enabled boolean,
     user_updatable boolean
 );
-CREATE SEQUENCE feature_flags_id_seq
+CREATE SEQUENCE IF NOT EXISTS feature_flags_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -325,7 +325,7 @@ CREATE SEQUENCE feature_flags_id_seq
     CACHE 1;
 ALTER SEQUENCE feature_flags_id_seq OWNED BY feature_flags.id;
 
-CREATE TABLE file_upload_jobs (
+CREATE TABLE IF NOT EXISTS file_upload_jobs (
     user_id text,
     user_email_address text,
     status bigint,
@@ -339,7 +339,7 @@ CREATE TABLE file_upload_jobs (
     total_files integer DEFAULT 0,
     failed_files integer DEFAULT 0
 );
-CREATE SEQUENCE file_upload_jobs_id_seq
+CREATE SEQUENCE IF NOT EXISTS file_upload_jobs_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -347,7 +347,7 @@ CREATE SEQUENCE file_upload_jobs_id_seq
     CACHE 1;
 ALTER SEQUENCE file_upload_jobs_id_seq OWNED BY file_upload_jobs.id;
 
-CREATE TABLE ingest_tasks (
+CREATE TABLE IF NOT EXISTS ingest_tasks (
     file_name text,
     request_guid text,
     task_id bigint,
@@ -356,7 +356,7 @@ CREATE TABLE ingest_tasks (
     updated_at timestamp with time zone,
     file_type integer DEFAULT 0
 );
-CREATE SEQUENCE ingest_tasks_id_seq
+CREATE SEQUENCE IF NOT EXISTS ingest_tasks_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -364,12 +364,12 @@ CREATE SEQUENCE ingest_tasks_id_seq
     CACHE 1;
 ALTER SEQUENCE ingest_tasks_id_seq OWNED BY ingest_tasks.id;
 
-CREATE TABLE installations (
+CREATE TABLE IF NOT EXISTS installations (
     id text NOT NULL,
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
-CREATE TABLE parameters (
+CREATE TABLE IF NOT EXISTS parameters (
     key text,
     name text,
     description text,
@@ -378,7 +378,7 @@ CREATE TABLE parameters (
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
-CREATE SEQUENCE parameters_id_seq
+CREATE SEQUENCE IF NOT EXISTS parameters_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -387,14 +387,14 @@ CREATE SEQUENCE parameters_id_seq
     CACHE 1;
 ALTER SEQUENCE parameters_id_seq OWNED BY parameters.id;
 
-CREATE TABLE permissions (
+CREATE TABLE IF NOT EXISTS permissions (
     authority text,
     name text,
     id integer NOT NULL,
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
-CREATE SEQUENCE permissions_id_seq
+CREATE SEQUENCE IF NOT EXISTS permissions_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -403,14 +403,14 @@ CREATE SEQUENCE permissions_id_seq
     CACHE 1;
 ALTER SEQUENCE permissions_id_seq OWNED BY permissions.id;
 
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     name text,
     description text,
     id integer NOT NULL,
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
-CREATE SEQUENCE roles_id_seq
+CREATE SEQUENCE IF NOT EXISTS roles_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -419,11 +419,11 @@ CREATE SEQUENCE roles_id_seq
     CACHE 1;
 ALTER SEQUENCE roles_id_seq OWNED BY roles.id;
 
-CREATE TABLE roles_permissions (
+CREATE TABLE IF NOT EXISTS roles_permissions (
     role_id integer NOT NULL,
     permission_id integer NOT NULL
 );
-CREATE TABLE saml_providers (
+CREATE TABLE IF NOT EXISTS saml_providers (
     name text,
     display_name text,
     issuer_uri text,
@@ -434,7 +434,7 @@ CREATE TABLE saml_providers (
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
-CREATE SEQUENCE saml_providers_id_seq
+CREATE SEQUENCE IF NOT EXISTS saml_providers_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -443,7 +443,7 @@ CREATE SEQUENCE saml_providers_id_seq
     CACHE 1;
 ALTER SEQUENCE saml_providers_id_seq OWNED BY saml_providers.id;
 
-CREATE TABLE saved_queries (
+CREATE TABLE IF NOT EXISTS saved_queries (
     user_id text,
     name text,
     query text,
@@ -452,7 +452,7 @@ CREATE TABLE saved_queries (
     updated_at timestamp with time zone,
     description text DEFAULT ''::text
 );
-CREATE SEQUENCE saved_queries_id_seq
+CREATE SEQUENCE IF NOT EXISTS saved_queries_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -460,7 +460,7 @@ CREATE SEQUENCE saved_queries_id_seq
     CACHE 1;
 ALTER SEQUENCE saved_queries_id_seq OWNED BY saved_queries.id;
 
-CREATE TABLE saved_queries_permissions (
+CREATE TABLE IF NOT EXISTS saved_queries_permissions (
     id bigint NOT NULL,
     shared_to_user_id text,
     query_id bigint NOT NULL,
@@ -468,7 +468,7 @@ CREATE TABLE saved_queries_permissions (
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
 );
-CREATE SEQUENCE saved_queries_permissions_id_seq
+CREATE SEQUENCE IF NOT EXISTS saved_queries_permissions_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -476,7 +476,7 @@ CREATE SEQUENCE saved_queries_permissions_id_seq
     CACHE 1;
 ALTER SEQUENCE saved_queries_permissions_id_seq OWNED BY saved_queries_permissions.id;
 
-CREATE TABLE user_sessions (
+CREATE TABLE IF NOT EXISTS user_sessions (
     user_id text,
     auth_provider_type bigint,
     auth_provider_id integer,
@@ -486,7 +486,7 @@ CREATE TABLE user_sessions (
     updated_at timestamp with time zone,
     flags jsonb
 );
-CREATE SEQUENCE user_sessions_id_seq
+CREATE SEQUENCE IF NOT EXISTS user_sessions_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -494,7 +494,7 @@ CREATE SEQUENCE user_sessions_id_seq
     CACHE 1;
 ALTER SEQUENCE user_sessions_id_seq OWNED BY user_sessions.id;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     saml_provider_id integer,
     first_name text,
     last_name text,
@@ -507,7 +507,7 @@ CREATE TABLE users (
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
-CREATE TABLE users_roles (
+CREATE TABLE IF NOT EXISTS users_roles (
     user_id text NOT NULL,
     role_id integer NOT NULL
 );
@@ -796,8 +796,7 @@ JOIN permissions p
         ('app', 'ReadAppConfig'),
         ('risks', 'GenerateReport'),
         ('auth', 'ManageSelf'),
-        ('auth', 'ManageSelf'),
-        ('graphdb', 'CreateToken')
+        ('auth', 'CreateToken')
     ))
     OR
     (r.name = 'Upload-Only' AND (p.authority, p.name) IN (
