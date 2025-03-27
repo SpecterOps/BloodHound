@@ -54,6 +54,7 @@ export default {
         'react-window',
         'react',
         'react/jsx-runtime',
+        'lodash',
         'luxon',
         'downshift',
         'notistack',
