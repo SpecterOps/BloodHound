@@ -1,17 +1,17 @@
 import { Card } from '@bloodhoundenterprise/doodleui';
-import { AssetLabel, AssetSelector } from 'js-client-library';
+import { AssetGroupTag, AssetGroupTagSelector } from 'js-client-library';
 import { FC } from 'react';
 
 type DynamicDetailsProps = {
-    data: AssetSelector | AssetLabel | undefined;
+    data: AssetGroupTagSelector | AssetGroupTag | undefined;
     isCypher?: boolean;
 };
 
-const isSelector = (data: any): data is AssetSelector => {
+const isSelector = (data: any): data is AssetGroupTagSelector => {
     return 'seeds' in data;
 };
 
-const isLabel = (data: any): data is AssetLabel => {
+const isLabel = (data: any): data is AssetGroupTag => {
     return 'asset_group_tier_id' in data;
 };
 
@@ -42,7 +42,7 @@ const DynamicDetails: FC<DynamicDetailsProps> = ({ data, isCypher }) => {
             </div>
             {isLabel(data) && (
                 <div className='flex flex-wrap gap-x-2'>
-                    <p className='font-bold'>Certification Enabled:</p> <p>{data.require_certify}</p>
+                    <p className='font-bold'>Certification Enabled:</p> <p>{data.requireCertify}</p>
                 </div>
             )}
             {isSelector(data) && (

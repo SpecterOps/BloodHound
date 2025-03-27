@@ -1,3 +1,4 @@
+import { AssetGroupTagTypeValues } from 'js-client-library';
 import { render, screen } from '../../../test-utils';
 import DynamicDetails from './DynamicDetails';
 
@@ -6,7 +7,7 @@ describe('DynamicDetails', () => {
         const testQuery = {
             asset_group_tier_id: 9,
             count: 9374,
-            require_certify: true,
+            requireCertify: true,
             created_at: '2024-09-08T03:38:22.791Z',
             created_by: 'Franz.Smitham@yahoo.com',
             deleted_at: '2025-02-03T18:32:36.669Z',
@@ -18,6 +19,7 @@ describe('DynamicDetails', () => {
             updated_at: '2024-07-26T02:15:04.556Z',
             updated_by: 'Deontae34@hotmail.com',
             position: 0,
+            type: 1 as AssetGroupTagTypeValues,
         };
 
         render(<DynamicDetails data={testQuery} />);
@@ -30,7 +32,8 @@ describe('DynamicDetails', () => {
 
     it('renders details for a selected selector and is of type "Cypher"', () => {
         const testQuery = {
-            asset_group_label_id: 9,
+            asset_group_tag_id: 9,
+            allow_disable: false,
             selector_id: 1,
             node_id: 1,
             certified: 1,
@@ -61,7 +64,8 @@ describe('DynamicDetails', () => {
 
     it('renders details for a selected selector and is of type "Object"', () => {
         const testQuery = {
-            asset_group_label_id: 9,
+            asset_group_tag_id: 9,
+            allow_disable: false,
             selector_id: 1,
             node_id: 1,
             certified: 1,

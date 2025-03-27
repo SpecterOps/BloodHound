@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagSelectorNode, AssetLabel, AssetSelector } from 'js-client-library';
+import { AssetGroupTag, AssetGroupTagSelector, AssetGroupTagSelectorNode } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
@@ -34,8 +34,8 @@ const innerDetail = (
     selectedSelectorId: number | null,
     selectedLabelId: number,
     selectedObjectData: AssetGroupTagSelectorNode | null,
-    labelsList: AssetLabel[],
-    selectorsList: AssetSelector[]
+    labelsList: AssetGroupTag[],
+    selectorsList: AssetGroupTagSelector[]
 ): SelectedDetailsProps => {
     if (selectedObjectId !== null && selectedObjectData !== null) {
         return { id: selectedObjectId, type: 'object', data: selectedObjectData };
@@ -53,7 +53,7 @@ const innerDetail = (
 type SelectedDetailsProps = {
     type: 'tier' | 'label' | 'selector' | 'object';
     id: number;
-    data?: AssetGroupTagSelectorNode | AssetLabel | AssetSelector;
+    data?: AssetGroupTagSelectorNode | AssetGroupTag | AssetGroupTagSelector;
     cypher?: boolean;
 };
 
@@ -67,7 +67,8 @@ const SelectedDetails: FC<SelectedDetailsProps> = ({ type, id, cypher, data }) =
         const selectedNode = {
             id: '3',
             type: ActiveDirectoryNodeKind.User,
-            properties: data.properties,
+            //properties: data.properties
+            properties: {},
             name: data.name,
         };
         return (
