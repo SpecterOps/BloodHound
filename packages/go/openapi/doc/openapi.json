@@ -15729,9 +15729,6 @@
             "$ref": "#/components/schemas/model.components.int32.id"
           },
           {
-            "$ref": "#/components/schemas/model.components.timestamps"
-          },
-          {
             "type": "object",
             "properties": {
               "asset_group_tag_id": {
@@ -15740,8 +15737,14 @@
               "created_by": {
                 "type": "string"
               },
+              "created_at": {
+                "type": "date-time"
+              },
               "updated_by": {
                 "type": "string"
+              },
+              "updated_at": {
+                "type": "date-time"
               },
               "disabled_at": {
                 "type": "string",
