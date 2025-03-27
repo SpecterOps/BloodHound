@@ -305,10 +305,10 @@ func (mr *MockDatabaseMockRecorder) CreateCompositionInfo(arg0, arg1, arg2 inter
 }
 
 // CreateFileUploadJob mocks base method.
-func (m *MockDatabase) CreateFileUploadJob(arg0 context.Context, arg1 model.FileUploadJob) (model.FileUploadJob, error) {
+func (m *MockDatabase) CreateFileUploadJob(arg0 context.Context, arg1 model.IngestJob) (model.IngestJob, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateFileUploadJob", arg0, arg1)
-	ret0, _ := ret[0].(model.FileUploadJob)
+	ret0, _ := ret[0].(model.IngestJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -780,10 +780,10 @@ func (mr *MockDatabaseMockRecorder) GetAllConfigurationParameters(arg0 interface
 }
 
 // GetAllFileUploadJobs mocks base method.
-func (m *MockDatabase) GetAllFileUploadJobs(arg0 context.Context, arg1, arg2 int, arg3 string, arg4 model.SQLFilter) ([]model.FileUploadJob, int, error) {
+func (m *MockDatabase) GetAllFileUploadJobs(arg0 context.Context, arg1, arg2 int, arg3 string, arg4 model.SQLFilter) ([]model.IngestJob, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllFileUploadJobs", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].([]model.FileUploadJob)
+	ret0, _ := ret[0].([]model.IngestJob)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -1083,10 +1083,10 @@ func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(arg0 interface{}) *gomock.
 }
 
 // GetFileUploadJob mocks base method.
-func (m *MockDatabase) GetFileUploadJob(arg0 context.Context, arg1 int64) (model.FileUploadJob, error) {
+func (m *MockDatabase) GetFileUploadJob(arg0 context.Context, arg1 int64) (model.IngestJob, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFileUploadJob", arg0, arg1)
-	ret0, _ := ret[0].(model.FileUploadJob)
+	ret0, _ := ret[0].(model.IngestJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1098,10 +1098,10 @@ func (mr *MockDatabaseMockRecorder) GetFileUploadJob(arg0, arg1 interface{}) *go
 }
 
 // GetFileUploadJobsWithStatus mocks base method.
-func (m *MockDatabase) GetFileUploadJobsWithStatus(arg0 context.Context, arg1 model.JobStatus) ([]model.FileUploadJob, error) {
+func (m *MockDatabase) GetFileUploadJobsWithStatus(arg0 context.Context, arg1 model.JobStatus) ([]model.IngestJob, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFileUploadJobsWithStatus", arg0, arg1)
-	ret0, _ := ret[0].([]model.FileUploadJob)
+	ret0, _ := ret[0].([]model.IngestJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1786,7 +1786,7 @@ func (mr *MockDatabaseMockRecorder) UpdateAuthToken(arg0, arg1 interface{}) *gom
 }
 
 // UpdateFileUploadJob mocks base method.
-func (m *MockDatabase) UpdateFileUploadJob(arg0 context.Context, arg1 model.FileUploadJob) error {
+func (m *MockDatabase) UpdateFileUploadJob(arg0 context.Context, arg1 model.IngestJob) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateFileUploadJob", arg0, arg1)
 	ret0, _ := ret[0].(error)

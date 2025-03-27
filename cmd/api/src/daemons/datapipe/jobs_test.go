@@ -36,7 +36,7 @@ func TestHasJobsWaitingForAnalysis(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("Has Jobs Waiting for Analysis", func(t *testing.T) {
-		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.FileUploadJob{{}}, nil)
+		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.IngestJob{{}}, nil)
 
 		hasJobs, err := datapipe.HasFileUploadJobsWaitingForAnalysis(context.Background(), dbMock)
 
@@ -45,7 +45,7 @@ func TestHasJobsWaitingForAnalysis(t *testing.T) {
 	})
 
 	t.Run("Has No Jobs Waiting for Analysis", func(t *testing.T) {
-		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.FileUploadJob{}, nil)
+		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.IngestJob{}, nil)
 
 		hasJobs, err := datapipe.HasFileUploadJobsWaitingForAnalysis(context.Background(), dbMock)
 
@@ -65,14 +65,14 @@ func TestFailAnalyzedFileUploadJobs(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("Fail Analyzed File Upload Jobs", func(t *testing.T) {
-		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.FileUploadJob{{
+		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.IngestJob{{
 			BigSerial: model.BigSerial{
 				ID: jobID,
 			},
 			Status: model.JobStatusAnalyzing,
 		}}, nil)
 
-		dbMock.EXPECT().UpdateFileUploadJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fileUploadJob model.FileUploadJob) error {
+		dbMock.EXPECT().UpdateFileUploadJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fileUploadJob model.IngestJob) error {
 			require.Equal(t, model.JobStatusFailed, fileUploadJob.Status)
 			return nil
 		})
@@ -92,14 +92,14 @@ func TestCompleteAnalyzedFileUploadJobs(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("Complete Analyzed File Upload Jobs", func(t *testing.T) {
-		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.FileUploadJob{{
+		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.IngestJob{{
 			BigSerial: model.BigSerial{
 				ID: jobID,
 			},
 			Status: model.JobStatusAnalyzing,
 		}}, nil)
 
-		dbMock.EXPECT().UpdateFileUploadJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fileUploadJob model.FileUploadJob) error {
+		dbMock.EXPECT().UpdateFileUploadJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fileUploadJob model.IngestJob) error {
 			require.Equal(t, model.JobStatusComplete, fileUploadJob.Status)
 			return nil
 		})
@@ -119,7 +119,7 @@ func TestProcessIngestedFileUploadJobs(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	t.Run("Transition Jobs with No Remaining Ingest Tasks", func(t *testing.T) {
-		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusIngesting).Return([]model.FileUploadJob{{
+		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusIngesting).Return([]model.IngestJob{{
 			BigSerial: model.BigSerial{
 				ID: jobID,
 			},
@@ -127,7 +127,7 @@ func TestProcessIngestedFileUploadJobs(t *testing.T) {
 		}}, nil)
 
 		dbMock.EXPECT().GetIngestTasksForJob(gomock.Any(), jobID).Return([]model.IngestTask{}, nil)
-		dbMock.EXPECT().UpdateFileUploadJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fileUploadJob model.FileUploadJob) error {
+		dbMock.EXPECT().UpdateFileUploadJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fileUploadJob model.IngestJob) error {
 			require.Equal(t, model.JobStatusAnalyzing, fileUploadJob.Status)
 			return nil
 		})
@@ -136,7 +136,7 @@ func TestProcessIngestedFileUploadJobs(t *testing.T) {
 	})
 
 	t.Run("Don't Transition Jobs with Remaining Ingest Tasks", func(t *testing.T) {
-		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusIngesting).Return([]model.FileUploadJob{{
+		dbMock.EXPECT().GetFileUploadJobsWithStatus(gomock.Any(), model.JobStatusIngesting).Return([]model.IngestJob{{
 			BigSerial: model.BigSerial{
 				ID: jobID,
 			},

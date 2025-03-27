@@ -23,7 +23,7 @@ import (
 )
 
 func TestFileUploadJobs_IsSortable(t *testing.T) {
-	fuj := FileUploadJobs{}
+	fuj := IngestJobs{}
 	require.False(t, fuj.IsSortable("user_id"))
 	require.True(t, fuj.IsSortable("status"))
 	require.True(t, fuj.IsSortable("user_email_address"))
@@ -39,7 +39,7 @@ func TestFileUploadJobs_IsSortable(t *testing.T) {
 }
 
 func TestFileUploadJobs_ValidFilters(t *testing.T) {
-	fuj := FileUploadJobs{}
+	fuj := IngestJobs{}
 	columns := fuj.ValidFilters()
 	require.Equal(t, 13, len(columns))
 }

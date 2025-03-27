@@ -40,11 +40,11 @@ const jobActivityTimeout = time.Minute * 20
 var ErrInvalidJSON = errors.New("file is not valid json")
 
 type FileUploadData interface {
-	CreateFileUploadJob(ctx context.Context, job model.FileUploadJob) (model.FileUploadJob, error)
-	UpdateFileUploadJob(ctx context.Context, job model.FileUploadJob) error
-	GetFileUploadJob(ctx context.Context, id int64) (model.FileUploadJob, error)
-	GetAllFileUploadJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
-	GetFileUploadJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.FileUploadJob, error)
+	CreateFileUploadJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error)
+	UpdateFileUploadJob(ctx context.Context, job model.IngestJob) error
+	GetFileUploadJob(ctx context.Context, id int64) (model.IngestJob, error)
+	GetAllFileUploadJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error)
+	GetFileUploadJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.IngestJob, error)
 	DeleteAllFileUploads(ctx context.Context) error
 	CancelAllFileUploads(ctx context.Context) error
 	DeleteAllIngestTasks(ctx context.Context) error
@@ -88,12 +88,12 @@ func DeleteAllIngestTasks(ctx context.Context, db FileUploadData) error {
 	return db.DeleteAllIngestTasks(ctx)
 }
 
-func GetAllFileUploadJobs(ctx context.Context, db FileUploadData, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error) {
+func GetAllFileUploadJobs(ctx context.Context, db FileUploadData, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error) {
 	return db.GetAllFileUploadJobs(ctx, skip, limit, order, filter)
 }
 
-func StartFileUploadJob(ctx context.Context, db FileUploadData, user model.User) (model.FileUploadJob, error) {
-	job := model.FileUploadJob{
+func StartFileUploadJob(ctx context.Context, db FileUploadData, user model.User) (model.IngestJob, error) {
+	job := model.IngestJob{
 		UserID:     user.ID,
 		User:       user,
 		Status:     model.JobStatusRunning,
@@ -103,7 +103,7 @@ func StartFileUploadJob(ctx context.Context, db FileUploadData, user model.User)
 	return db.CreateFileUploadJob(ctx, job)
 }
 
-func GetFileUploadJobByID(ctx context.Context, db FileUploadData, jobID int64) (model.FileUploadJob, error) {
+func GetFileUploadJobByID(ctx context.Context, db FileUploadData, jobID int64) (model.IngestJob, error) {
 	return db.GetFileUploadJob(ctx, jobID)
 }
 
@@ -157,12 +157,12 @@ func WriteAndValidateFile(fileData io.ReadCloser, tempFile *os.File, validationF
 	}
 }
 
-func TouchFileUploadJobLastIngest(ctx context.Context, db FileUploadData, fileUploadJob model.FileUploadJob) error {
+func TouchFileUploadJobLastIngest(ctx context.Context, db FileUploadData, fileUploadJob model.IngestJob) error {
 	fileUploadJob.LastIngest = time.Now().UTC()
 	return db.UpdateFileUploadJob(ctx, fileUploadJob)
 }
 
-func EndFileUploadJob(ctx context.Context, db FileUploadData, job model.FileUploadJob) error {
+func EndFileUploadJob(ctx context.Context, db FileUploadData, job model.IngestJob) error {
 	job.Status = model.JobStatusIngesting
 
 	if err := db.UpdateFileUploadJob(ctx, job); err != nil {
@@ -172,7 +172,7 @@ func EndFileUploadJob(ctx context.Context, db FileUploadData, job model.FileUplo
 	return nil
 }
 
-func UpdateFileUploadJobStatus(ctx context.Context, db FileUploadData, fileUploadJob model.FileUploadJob, status model.JobStatus, message string) error {
+func UpdateFileUploadJobStatus(ctx context.Context, db FileUploadData, fileUploadJob model.IngestJob, status model.JobStatus, message string) error {
 	fileUploadJob.Status = status
 	fileUploadJob.StatusMessage = message
 	fileUploadJob.EndTime = time.Now().UTC()

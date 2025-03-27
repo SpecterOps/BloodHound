@@ -25,7 +25,7 @@ import (
 	"github.com/specterops/bloodhound/src/database/types/null"
 )
 
-type FileUploadJob struct {
+type IngestJob struct {
 	UserID           uuid.UUID   `json:"user_id"`
 	UserEmailAddress null.String `json:"user_email_address"`
 	User             User        `json:"-"`
@@ -41,9 +41,9 @@ type FileUploadJob struct {
 	BigSerial
 }
 
-type FileUploadJobs []FileUploadJob
+type IngestJobs []IngestJob
 
-func (s FileUploadJobs) IsSortable(column string) bool {
+func (s IngestJobs) IsSortable(column string) bool {
 	switch column {
 	case "user_email_address",
 		"total_files",
@@ -63,7 +63,7 @@ func (s FileUploadJobs) IsSortable(column string) bool {
 	}
 }
 
-func (s FileUploadJobs) ValidFilters() map[string][]FilterOperator {
+func (s IngestJobs) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
 		"user_id":            {Equals, NotEquals},
 		"user_email_address": {Equals, NotEquals},
@@ -81,7 +81,7 @@ func (s FileUploadJobs) ValidFilters() map[string][]FilterOperator {
 	}
 }
 
-func (s FileUploadJobs) IsString(column string) bool {
+func (s IngestJobs) IsString(column string) bool {
 	switch column {
 	case "status_message", "user_id", "user_email_address":
 		return true
@@ -90,7 +90,7 @@ func (s FileUploadJobs) IsString(column string) bool {
 	}
 }
 
-func (s FileUploadJobs) GetFilterableColumns() []string {
+func (s IngestJobs) GetFilterableColumns() []string {
 	var columns = make([]string, 0)
 	for column := range s.ValidFilters() {
 		columns = append(columns, column)
@@ -98,7 +98,7 @@ func (s FileUploadJobs) GetFilterableColumns() []string {
 	return columns
 }
 
-func (s FileUploadJobs) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
+func (s IngestJobs) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, fmt.Errorf("the specified column cannot be filtered")
 	} else {

@@ -23,18 +23,18 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *BloodhoundDB) UpdateFileUploadJob(ctx context.Context, job model.FileUploadJob) error {
+func (s *BloodhoundDB) UpdateFileUploadJob(ctx context.Context, job model.IngestJob) error {
 	result := s.db.WithContext(ctx).Save(&job)
 	return CheckError(result)
 }
 
-func (s *BloodhoundDB) CreateFileUploadJob(ctx context.Context, job model.FileUploadJob) (model.FileUploadJob, error) {
+func (s *BloodhoundDB) CreateFileUploadJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error) {
 	result := s.db.WithContext(ctx).Create(&job)
 	return job, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetFileUploadJob(ctx context.Context, id int64) (model.FileUploadJob, error) {
-	var job model.FileUploadJob
+func (s *BloodhoundDB) GetFileUploadJob(ctx context.Context, id int64) (model.IngestJob, error) {
+	var job model.IngestJob
 	if result := s.db.Preload("User").WithContext(ctx).First(&job, id); result.Error != nil {
 		return job, CheckError(result)
 	} else {
@@ -42,8 +42,8 @@ func (s *BloodhoundDB) GetFileUploadJob(ctx context.Context, id int64) (model.Fi
 	}
 }
 
-func (s *BloodhoundDB) GetFileUploadJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.FileUploadJob, error) {
-	var jobs model.FileUploadJobs
+func (s *BloodhoundDB) GetFileUploadJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.IngestJob, error) {
+	var jobs model.IngestJobs
 	result := s.db.WithContext(ctx).Where("status = ?", status).Find(&jobs)
 
 	return jobs, CheckError(result)
@@ -51,12 +51,12 @@ func (s *BloodhoundDB) GetFileUploadJobsWithStatus(ctx context.Context, status m
 
 func (s *BloodhoundDB) CancelAllFileUploads(ctx context.Context) error {
 	runningStates := []model.JobStatus{model.JobStatusAnalyzing, model.JobStatusRunning, model.JobStatusIngesting}
-	return CheckError(s.db.Model(model.FileUploadJob{}).WithContext(ctx).Where("status in ?", runningStates).Update("status", model.JobStatusCanceled))
+	return CheckError(s.db.Model(model.IngestJob{}).WithContext(ctx).Where("status in ?", runningStates).Update("status", model.JobStatusCanceled))
 }
 
-func (s *BloodhoundDB) GetAllFileUploadJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error) {
+func (s *BloodhoundDB) GetAllFileUploadJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error) {
 	var (
-		jobs   []model.FileUploadJob
+		jobs   []model.IngestJob
 		result *gorm.DB
 		count  int64
 	)
@@ -66,9 +66,9 @@ func (s *BloodhoundDB) GetAllFileUploadJobs(ctx context.Context, skip int, limit
 	}
 
 	if filter.SQLString != "" {
-		result = s.db.Model(model.FileUploadJob{}).WithContext(ctx).Where(filter.SQLString, filter.Params...).Count(&count)
+		result = s.db.Model(model.IngestJob{}).WithContext(ctx).Where(filter.SQLString, filter.Params...).Count(&count)
 	} else {
-		result = s.db.Model(model.FileUploadJob{}).WithContext(ctx).Count(&count)
+		result = s.db.Model(model.IngestJob{}).WithContext(ctx).Count(&count)
 	}
 
 	if result.Error != nil {
@@ -93,7 +93,7 @@ func (s *BloodhoundDB) GetAllFileUploadJobs(ctx context.Context, skip int, limit
 
 func (s *BloodhoundDB) DeleteAllFileUploads(ctx context.Context) error {
 	return CheckError(
-		s.db.WithContext(ctx).Exec("DELETE FROM file_upload_jobs"),
+		s.db.WithContext(ctx).Exec("DELETE FROM ingest_jobs"),
 	)
 }
 
