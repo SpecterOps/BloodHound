@@ -175,7 +175,7 @@ func BuildNTLMCache(ctx context.Context, db graph.Database, groupExpansions impa
 				for computer := range cursor.Chan() {
 					innerComputer := computer
 
-					domain, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
+					domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
 
 					if err != nil {
 						continue
