@@ -56,9 +56,7 @@ const fileIngestLink = (
     <Link
         target='_blank'
         data-testid='file-upload-gettingstarted-link'
-        href={
-            'https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart'
-        }>
+        href={'https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart'}>
         Getting Started
     </Link>
 );
@@ -67,9 +65,7 @@ const apiUsageLink = (
     <Link
         target='_blank'
         data-testid='file-upload-gettingstarted-link'
-        href={
-            'https://bloodhound.specterops.io/integrations/bloodhound-api/working-with-api'
-        }>
+        href={'https://bloodhound.specterops.io/integrations/bloodhound-api/working-with-api'}>
         Working with the BloodHound API
     </Link>
 );
