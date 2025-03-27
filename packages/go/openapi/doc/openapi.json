@@ -4480,16 +4480,8 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "type": "array",
-                        "items": {
-                          "$ref": "#/components/schemas/model.asset-group-tags-selector"
-                        }
-                      }
-                    }
+                  "items": {
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector"
                   }
                 }
               }

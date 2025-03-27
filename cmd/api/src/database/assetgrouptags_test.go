@@ -21,6 +21,7 @@ package database_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
@@ -138,20 +139,64 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
 		}
+		testSeeds2 = []model.SelectorSeed{
+			{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
+		}
 		test2ID          = "test2_id"
 		test2Name        = "test2 selector name"
 		test2Description = "test2 description"
+		test3ID          = "test3_id"
+		test3Name        = "test3 selector name"
+		test3Description = "test3 description"
+		created_at       = time.Now()
 	)
 
 	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testID, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
 	require.NoError(t, err)
-	selector2, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, test2ID, test2Name, test2Description, isDefault, allowDisable, autoCertify, testSeeds)
+	selector2, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, test2ID, test2Name, test2Description, isDefault, allowDisable, autoCertify, testSeeds2)
+	require.NoError(t, err)
+	selector3, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, test3ID, test3Name, test3Description, isDefault, allowDisable, autoCertify, testSeeds2)
 	require.NoError(t, err)
 
-	results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{})
-	require.NoError(t, err)
+	t.Run("successfully returns an array of selectors, no filters", func(t *testing.T) {
+		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{})
+		require.NoError(t, err)
 
-	expected := []model.AssetGroupTagSelector{selector, selector2}
-	require.Equal(t, expected, results)
+		expected := []model.AssetGroupTagSelector{selector, selector2}
+		require.Equal(t, expected, results)
+	})
+
+	t.Run("successfully returns an array of seed selector filters", func(t *testing.T) {
+		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = ?", Params: []any{2}})
+		require.NoError(t, err)
+
+		expected := []model.AssetGroupTagSelector{selector2}
+		require.Equal(t, expected, results)
+	})
+
+	t.Run("successfully returns an array of selector filters and seed filters", func(t *testing.T) {
+		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{created_at}}, model.SQLFilter{SQLString: "type = ?", Params: []any{2}})
+		require.NoError(t, err)
+
+		expected := []model.AssetGroupTagSelector{selector2, selector3}
+		require.Equal(t, len(expected), len(results))
+
+		require.Equal(t, test2Name, results[0].Name)
+		require.Equal(t, test3Name, results[1].Name)
+		require.Equal(t, test2Description, results[0].Description)
+		require.Equal(t, test3Description, results[1].Description)
+		require.Equal(t, test2ID, results[0].CreatedBy)
+		require.Equal(t, test3ID, results[1].CreatedBy)
+		require.True(t, results[0].AllowDisable)
+		require.True(t, results[1].AllowDisable)
+		require.False(t, results[0].AutoCertify)
+		require.False(t, results[1].AutoCertify)
+		require.False(t, results[0].IsDefault)
+		require.False(t, results[1].IsDefault)
+		require.False(t, results[0].CreatedAt.IsZero())
+		require.False(t, results[1].CreatedAt.IsZero())
+		require.False(t, results[0].UpdatedAt.IsZero())
+		require.False(t, results[1].UpdatedAt.IsZero())
+	})
 
 }
