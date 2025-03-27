@@ -2066,22 +2066,6 @@
           "Community",
           "Enterprise"
         ],
-        "requestBody": {
-          "description": "The request body for unenrolling a user from multi-factor authentication",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "secret": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "OK",
@@ -5042,27 +5026,6 @@
           "Community",
           "Enterprise"
         ],
-        "requestBody": {
-          "description": "The request body for revoking permissions of a saved query from users",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "user_ids": {
-                    "type": "array",
-                    "description": "A list of user ids that will have their permission revoked from the given saved query",
-                    "items": {
-                      "type": "string",
-                      "format": "uuid"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "204": {
             "$ref": "#/components/responses/no-content"
