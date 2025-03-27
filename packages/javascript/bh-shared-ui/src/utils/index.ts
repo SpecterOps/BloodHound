@@ -23,6 +23,7 @@ export * from './datetime';
 export * from './entityInfoDisplay';
 export * from './exportGraphData';
 export * from './icons';
+export * from './mocks';
 export * from './panelSectionsParams';
 export * from './parseItemId';
 export * from './passwd';

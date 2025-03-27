@@ -15,12 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { apiClient, CommonSearches as prebuiltSearchList, searchbarActions } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen } from 'src/test-utils';
+import { CommonSearches as prebuiltSearchList } from '../../../commonSearches';
+import { render } from '../../../test-utils';
+import { apiClient } from '../../../utils';
 import CommonSearches from './CommonSearches';
-import { useCypherSearchSwitch } from './switches';
 
 const server = setupServer(
     rest.get('/api/v2/saved-queries', (req, res, ctx) => {
@@ -51,21 +51,14 @@ const server = setupServer(
 beforeAll(() => server.listen());
 afterEach(() => {
     server.resetHandlers();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
 });
 afterAll(() => server.close());
 
-const WrappedCommonSearches = () => {
-    const { setCypherQuery, performSearch } = useCypherSearchSwitch();
-    return <CommonSearches onSetCypherQuery={setCypherQuery} onPerformCypherSearch={performSearch} />;
-};
-
 describe('CommonSearches', () => {
-    beforeEach(() => {
-        render(<WrappedCommonSearches />);
-    });
-
     it('renders headers', () => {
+        const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
+
         const header = screen.getByText(/pre-built searches/i);
         const adTab = screen.getByRole('tab', { name: /active directory/i });
         const azTab = screen.getByRole('tab', { name: /azure/i });
@@ -80,6 +73,8 @@ describe('CommonSearches', () => {
     });
 
     it('renders search list for the currently active tab', () => {
+        const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
+
         const adSearches = prebuiltSearchList.filter(({ category }) => category === 'Active Directory');
         const subheadersForAD = adSearches.map((element) => element.subheader);
 
@@ -89,6 +84,7 @@ describe('CommonSearches', () => {
     });
 
     it('renders a different list of queries when user switches tab', async () => {
+        const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
         const user = userEvent.setup();
 
         // switch tabs to AZ
@@ -104,6 +100,7 @@ describe('CommonSearches', () => {
     });
 
     it(`fetches a user's saved queries when the 'custom searches' tab is clicked`, async () => {
+        const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
         const user = userEvent.setup();
 
         // switch tabs to user searches
@@ -115,7 +112,11 @@ describe('CommonSearches', () => {
     });
 
     it('handles a click on each list item', async () => {
-        const spy = jest.spyOn(searchbarActions, 'cypherSearch');
+        const onSetCypherQueryMock = vi.fn();
+        const onPerformCypherSearchMock = vi.fn();
+        const screen = render(
+            <CommonSearches onSetCypherQuery={onSetCypherQueryMock} onPerformCypherSearch={onPerformCypherSearchMock} />
+        );
         const user = userEvent.setup();
 
         const adSearches = prebuiltSearchList.filter(({ category }) => category === 'Active Directory');
@@ -127,12 +128,14 @@ describe('CommonSearches', () => {
 
         await user.click(listItem);
 
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy).toHaveBeenCalledWith(cypher);
+        expect(onSetCypherQueryMock).toHaveBeenCalledTimes(1);
+        expect(onPerformCypherSearchMock).toHaveBeenCalledTimes(1);
+        expect(onSetCypherQueryMock).toHaveBeenCalledWith(cypher);
     });
 
     it('deletes a query that a user has saved', async () => {
-        const spy = jest.spyOn(apiClient, 'deleteUserQuery');
+        const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
+        const spy = vi.spyOn(apiClient, 'deleteUserQuery');
         const user = userEvent.setup();
 
         // switch tabs to user searches

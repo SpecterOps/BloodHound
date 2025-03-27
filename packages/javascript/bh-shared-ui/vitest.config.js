@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { defineConfig } from 'vitest/config';
 import path from 'path';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
     resolve: {
@@ -28,6 +28,7 @@ export default defineConfig({
         environment: 'jsdom',
         setupFiles: ['./src/setupTests.tsx'],
         testTimeout: 60000, // 1 minute,
+        css: true,
         coverage: {
             provider: 'v8',
             reportsDirectory: './coverage',
