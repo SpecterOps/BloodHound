@@ -516,12 +516,17 @@ func (s ManagementResource) DeleteUser(response http.ResponseWriter, request *ht
 		user      model.User
 		pathVars  = mux.Vars(request)
 		rawUserID = pathVars[api.URIPathVariableUserID]
+		bhCtx     = ctx.FromRequest(request)
 	)
 
 	if userID, err := uuid.FromString(rawUserID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if user, err = s.db.GetUser(request.Context(), userID); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if currentUser, found := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !found {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found with request", request), response)
+	} else if userID == currentUser.ID {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "User cannot delete themselves", request), response)
 	} else if err := s.db.DeleteUser(request.Context(), user); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {

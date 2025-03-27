@@ -44,3 +44,10 @@ export type AdministrationSection = {
     items: AdministrationItem[];
     order: number;
 };
+
+export type PrimaryNavItem = {
+    label: string;
+    icon: JSX.Element;
+    route: string;
+    testId: string;
+};

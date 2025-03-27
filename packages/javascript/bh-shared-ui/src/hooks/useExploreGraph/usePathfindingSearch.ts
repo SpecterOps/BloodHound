@@ -48,6 +48,9 @@ export const usePathfindingSearch = () => {
                 setSourceSearchTerm(matchedNode.name);
                 setSourceSelectedItem(matchedNode);
             }
+        } else {
+            setSourceSearchTerm('');
+            setSourceSelectedItem(undefined);
         }
     }, [primarySearch, sourceSearchData]);
 
@@ -59,6 +62,9 @@ export const usePathfindingSearch = () => {
                 setDestinationSearchTerm(matchedNode.name);
                 setDestinationSelectedItem(matchedNode);
             }
+        } else {
+            setDestinationSearchTerm('');
+            setDestinationSelectedItem(undefined);
         }
     }, [secondarySearch, destinationSearchData]);
 
@@ -108,6 +114,16 @@ export const usePathfindingSearch = () => {
         }
     };
 
+    const handleSwapPathfindingInputs = () => {
+        if (sourceSelectedItem && destinationSelectedItem) {
+            setExploreParams({
+                searchType: 'pathfinding',
+                primarySearch: destinationSelectedItem.objectid,
+                secondarySearch: sourceSelectedItem.objectid,
+            });
+        }
+    };
+
     // Handle changes internal to the search form that should not trigger a graph query. Each param should sync independently
     const handleSourceNodeEdited = (edit: string) => {
         setSourceSelectedItem(undefined);
@@ -128,5 +144,6 @@ export const usePathfindingSearch = () => {
         handleSourceNodeSelected,
         handleDestinationNodeEdited,
         handleDestinationNodeSelected,
+        handleSwapPathfindingInputs,
     };
 };

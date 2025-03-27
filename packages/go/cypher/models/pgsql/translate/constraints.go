@@ -61,62 +61,62 @@ func leftNodeConstraint(edgeIdentifier, nodeIdentifier pgsql.Identifier, directi
 	}
 }
 
-func leftNodeTraversalStepConstraint(traversalStep *PatternSegment) (pgsql.Expression, error) {
+func leftNodeTraversalStepConstraint(traversalStep *TraversalStep) (pgsql.Expression, error) {
 	return leftNodeConstraint(
 		traversalStep.Edge.Identifier,
 		traversalStep.LeftNode.Identifier,
 		traversalStep.Direction)
 }
 
-func rightEdgeConstraint(segment *PatternSegment) (pgsql.Expression, error) {
-	switch segment.Edge.DataType {
+func rightEdgeConstraint(traversalStep *TraversalStep) (pgsql.Expression, error) {
+	switch traversalStep.Edge.DataType {
 	case pgsql.EdgeComposite:
-		switch segment.Direction {
+		switch traversalStep.Direction {
 		case graph.DirectionOutbound:
 			return &pgsql.BinaryExpression{
 				Operator: pgsql.OperatorEquals,
-				LOperand: pgsql.CompoundIdentifier{segment.LeftNode.Identifier, pgsql.ColumnID},
-				ROperand: pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnStartID},
+				LOperand: pgsql.CompoundIdentifier{traversalStep.LeftNode.Identifier, pgsql.ColumnID},
+				ROperand: pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnStartID},
 			}, nil
 
 		case graph.DirectionInbound:
 			return &pgsql.BinaryExpression{
 				Operator: pgsql.OperatorEquals,
-				LOperand: pgsql.CompoundIdentifier{segment.LeftNode.Identifier, pgsql.ColumnID},
-				ROperand: pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnEndID},
+				LOperand: pgsql.CompoundIdentifier{traversalStep.LeftNode.Identifier, pgsql.ColumnID},
+				ROperand: pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnEndID},
 			}, nil
 
 		case graph.DirectionBoth:
 			return pgsql.NewBinaryExpression(
 				pgsql.NewBinaryExpression(
-					pgsql.CompoundIdentifier{segment.LeftNode.Identifier, pgsql.ColumnID},
+					pgsql.CompoundIdentifier{traversalStep.LeftNode.Identifier, pgsql.ColumnID},
 					pgsql.OperatorEquals,
-					pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnStartID},
+					pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnStartID},
 				),
 				pgsql.OperatorOr,
 				pgsql.NewBinaryExpression(
-					pgsql.CompoundIdentifier{segment.LeftNode.Identifier, pgsql.ColumnID},
+					pgsql.CompoundIdentifier{traversalStep.LeftNode.Identifier, pgsql.ColumnID},
 					pgsql.OperatorEquals,
-					pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnEndID},
+					pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnEndID},
 				),
 			), nil
 
 		default:
-			return nil, fmt.Errorf("unsupported direction: %d", segment.Direction)
+			return nil, fmt.Errorf("unsupported direction: %d", traversalStep.Direction)
 		}
 
 	case pgsql.ExpansionEdge:
-		switch segment.Direction {
+		switch traversalStep.Direction {
 		case graph.DirectionOutbound:
 			return pgsql.NewBinaryExpression(
 				pgsql.RowColumnReference{
 					Identifier: &pgsql.ArrayIndex{
-						Expression: segment.Edge.Identifier,
+						Expression: traversalStep.Edge.Identifier,
 						Indexes: []pgsql.Expression{
 							pgsql.FunctionCall{
 								Function: pgsql.FunctionArrayLength,
 								Parameters: []pgsql.Expression{
-									segment.Edge.Identifier,
+									traversalStep.Edge.Identifier,
 									pgsql.NewLiteral(1, pgsql.Int),
 								},
 								CastType: pgsql.Int,
@@ -126,22 +126,22 @@ func rightEdgeConstraint(segment *PatternSegment) (pgsql.Expression, error) {
 					Column: pgsql.ColumnEndID,
 				},
 				pgsql.OperatorEquals,
-				pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnStartID},
+				pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnStartID},
 			), nil
 
 		case graph.DirectionInbound:
 			return &pgsql.BinaryExpression{
 				Operator: pgsql.OperatorEquals,
-				LOperand: pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnStartID},
-				ROperand: pgsql.CompoundIdentifier{segment.Edge.Identifier, pgsql.ColumnEndID},
+				LOperand: pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnStartID},
+				ROperand: pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnEndID},
 			}, nil
 
 		default:
-			return nil, fmt.Errorf("unsupported direction: %d", segment.Direction)
+			return nil, fmt.Errorf("unsupported direction: %d", traversalStep.Direction)
 		}
 
 	default:
-		return nil, fmt.Errorf("invalid root edge type: %s", segment.Edge.DataType)
+		return nil, fmt.Errorf("invalid root edge type: %s", traversalStep.Edge.DataType)
 	}
 }
 
@@ -181,7 +181,7 @@ func terminalNodeConstraint(edgeIdentifier, nodeIdentifier pgsql.Identifier, dir
 	}
 }
 
-func rightNodeTraversalStepConstraint(traversalStep *PatternSegment) (pgsql.Expression, error) {
+func rightNodeTraversalStepJoinCondition(traversalStep *TraversalStep) (pgsql.Expression, error) {
 	return terminalNodeConstraint(
 		traversalStep.Edge.Identifier,
 		traversalStep.RightNode.Identifier,
@@ -191,7 +191,7 @@ func rightNodeTraversalStepConstraint(traversalStep *PatternSegment) (pgsql.Expr
 func isSyntaxNodeSatisfied(syntaxNode pgsql.SyntaxNode) (bool, error) {
 	var (
 		satisfied = true
-		err       = walk.WalkPgSQL(syntaxNode, walk.NewSimpleVisitor[pgsql.SyntaxNode](
+		err       = walk.PgSQL(syntaxNode, walk.NewSimpleVisitor[pgsql.SyntaxNode](
 			func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
 				switch typedNode := node.(type) {
 				case pgsql.SyntaxNodeFuture:
@@ -401,6 +401,50 @@ type PatternConstraints struct {
 	RightNode *Constraint
 }
 
+// MeasureSelectivity attempts to measure how selective (i.e. how narrow) the query expression passed in is. This is
+// a simple heuristic that is best-effort for attempting to find which side of a traversal step ()-[]->() is more
+// selective.
+//
+// The boolean parameter owningIdentifierBound is intended to represent if the identifier the expression constraints
+// is part of a materialized set of nodes where the entity IDs of each are known at time of query. In this case the
+// bound component is considered to be highly-selective.
+//
+// The numbers are all magic values selected based on implementor's perception of selectivity of certain operators.
+func MeasureSelectivity(owningIdentifierBound bool, expression pgsql.Expression) (int, error) {
+	var (
+		selectivity = 0
+	)
+
+	if owningIdentifierBound {
+		selectivity += 1000
+	}
+
+	return selectivity, walk.PgSQL(expression, walk.NewSimpleVisitor[pgsql.SyntaxNode](func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+		switch typedNode := node.(type) {
+		case *pgsql.BinaryExpression:
+			switch typedNode.Operator {
+			case pgsql.OperatorOr:
+				selectivity -= 10
+
+			case pgsql.OperatorNotEquals:
+				selectivity += 1
+
+			case pgsql.OperatorAnd:
+				selectivity += 5
+
+			case pgsql.OperatorLessThan, pgsql.OperatorGreaterThan, pgsql.OperatorLessThanOrEqualTo, pgsql.OperatorGreaterThanOrEqualTo:
+				selectivity += 10
+
+			case pgsql.OperatorLike, pgsql.OperatorILike, pgsql.OperatorRegexMatch, pgsql.OperatorSimilarTo:
+				selectivity += 20
+
+			case pgsql.OperatorIn, pgsql.OperatorEquals, pgsql.OperatorIs, pgsql.OperatorPGArrayOverlap, pgsql.OperatorArrayOverlap:
+				selectivity += 30
+			}
+		}
+	}))
+}
+
 // OptimizePatternConstraintBalance considers the constraints that apply to a pattern segment's bound identifiers.
 //
 // If only the right side of the pattern segment is constrained, this could result in an imbalanced expansion where one side
@@ -408,19 +452,19 @@ type PatternConstraints struct {
 //
 // In cases that match this heuristic, it's beneficial to begin the traversal with the most tightly constrained set
 // of nodes. To accomplish this we flip the order of the traversal step.
-func (s *PatternConstraints) OptimizePatternConstraintBalance(traversalStep *PatternSegment) {
-	var (
-		// If the left node is previously bound (query knows a set of IDs) the left node is considered to sill be constrained
-		leftNodeHasConstraints  = traversalStep.LeftNodeBound || s.LeftNode.Expression != nil
-		rightNodeHasConstraints = s.RightNode.Expression != nil
-	)
-
-	// (a)-[*..]->(b:Constraint)
-	// (a)<-[*..]-(b:Constraint)
-	if !leftNodeHasConstraints && rightNodeHasConstraints {
+func (s *PatternConstraints) OptimizePatternConstraintBalance(traversalStep *TraversalStep) error {
+	if leftNodeSelectivity, err := MeasureSelectivity(traversalStep.LeftNodeBound, s.LeftNode.Expression); err != nil {
+		return err
+	} else if rightNodeSelectivity, err := MeasureSelectivity(traversalStep.RightNodeBound, s.RightNode.Expression); err != nil {
+		return err
+	} else if rightNodeSelectivity > leftNodeSelectivity {
+		// (a)-[*..]->(b:Constraint)
+		// (a)<-[*..]-(b:Constraint)
 		traversalStep.FlipNodes()
 		s.FlipNodes()
 	}
+
+	return nil
 }
 
 func (s *PatternConstraints) FlipNodes() {
@@ -434,7 +478,7 @@ const (
 	nonRecursivePattern = false
 )
 
-func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, traversalStep *PatternSegment, tracker *ConstraintTracker) (PatternConstraints, error) {
+func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, traversalStep *TraversalStep, tracker *ConstraintTracker) (PatternConstraints, error) {
 	var (
 		constraints PatternConstraints
 		err         error
@@ -442,10 +486,6 @@ func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, tr
 
 	// Even if this isn't the first traversal and the node may be already bound, this should result in an empty
 	// constraint instead of a nil value for `leftNode`
-	if constraints.LeftNode, err = tracker.ConsumeSet(pgsql.AsIdentifierSet(traversalStep.LeftNode.Identifier)); err != nil {
-		return constraints, err
-	}
-
 	if isFirstTraversalStep {
 		// If this is the first traversal step then the left node is just coming into scope
 		traversalStep.Frame.Export(traversalStep.LeftNode.Identifier)
@@ -453,6 +493,10 @@ func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, tr
 
 	// Track the identifiers visible at this frame to correctly assign the remaining constraints
 	knownBindings := traversalStep.Frame.Known()
+
+	if constraints.LeftNode, err = tracker.ConsumeSet(knownBindings); err != nil {
+		return constraints, err
+	}
 
 	if isRecursivePattern {
 		// The exclusion below is done at this step in the process since the recursive descent portion of an expansion

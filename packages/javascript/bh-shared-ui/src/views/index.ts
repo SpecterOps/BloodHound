@@ -26,4 +26,6 @@ export * from './Explore';
 
 export * from './DataQuality';
 
+export * as TierManagement from './TierManagement';
+
 export * from './Users';

@@ -17,32 +17,35 @@
 import { Alert, Box, Skeleton, Typography } from '@mui/material';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
-import { EdgeInfoProps } from '..';
-import { apiClient } from '../../../utils/api';
+import { apiClient } from '../../../utils';
 import VirtualizedNodeList, { VirtualizedNodeListItem } from '../../VirtualizedNodeList';
+import { EdgeInfoProps } from '../index';
 
-const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
-    const { data, isLoading, isError } = useQuery(['edgeComposition', sourceDBId, targetDBId, edgeName], () =>
-        apiClient.getEdgeComposition(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
+const RelayTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName, onNodeClick }) => {
+    const { data, isLoading, isError } = useQuery(['relayTargets', sourceDBId, targetDBId, edgeName], () =>
+        apiClient.getRelayTargets(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
     );
+
+    const handleNodeClick = (item: any) => {
+        const node = nodesArray[item];
+        onNodeClick?.(node);
+    };
 
     const nodesArray: VirtualizedNodeListItem[] = Object.values(data?.data.nodes || {}).map((node) => ({
         name: node.label,
         objectId: node.objectId,
         kind: node.kind,
+        onClick: handleNodeClick,
     }));
 
     return (
         <>
-            <Typography variant='body2'>
-                The relationship represents the effective outcome of the configuration and relationships between several
-                different objects. All objects involved in the creation of this relationship are listed here:
-            </Typography>
+            <Typography variant='body2'>The nodes in this list are valid relay targets for this attack</Typography>
             <Box py={1}>
                 {isLoading ? (
                     <Skeleton variant='rounded' />
                 ) : isError ? (
-                    <Alert severity='error'>Couldn't load edge composition</Alert>
+                    <Alert severity='error'>Couldn't load relay targets</Alert>
                 ) : (
                     <VirtualizedNodeList nodes={nodesArray} />
                 )}
@@ -51,4 +54,4 @@ const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) =>
     );
 };
 
-export default Composition;
+export default RelayTargets;
