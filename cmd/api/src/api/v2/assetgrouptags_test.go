@@ -291,7 +291,6 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				Name: "DB error - GetAssetGroupTag",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-					// apitest.SetURLVar(input, api.URIPathVariableAssetGroupSelectorType, "1")
 				},
 				Setup: func() {
 					mockDB.EXPECT().
