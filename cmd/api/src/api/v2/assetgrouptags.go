@@ -41,20 +41,22 @@ const (
 
 // Checks that the selector seeds are valid.
 func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) error {
-	// all seeds must be of the same type
-	seedType := seeds[0].Type
+	if len(seeds) > 0 {
+		// all seeds must be of the same type
+		seedType := seeds[0].Type
 
-	if seedType != model.SelectorTypeObjectId && seedType != model.SelectorTypeCypher {
-		return fmt.Errorf("invalid seed type %v", seedType)
-	}
-
-	for _, seed := range seeds {
-		if seed.Type != seedType {
-			return fmt.Errorf("all seeds must be of the same type")
+		if seedType != model.SelectorTypeObjectId && seedType != model.SelectorTypeCypher {
+			return fmt.Errorf("invalid seed type %v", seedType)
 		}
-		if seed.Type == model.SelectorTypeCypher {
-			if _, err := graph.PrepareCypherQuery(seed.Value, queries.QueryComplexityLimitSelector); err != nil {
-				return fmt.Errorf("cypher is invalid: %v", err)
+
+		for _, seed := range seeds {
+			if seed.Type != seedType {
+				return fmt.Errorf("all seeds must be of the same type")
+			}
+			if seed.Type == model.SelectorTypeCypher {
+				if _, err := graph.PrepareCypherQuery(seed.Value, queries.QueryComplexityLimitSelector); err != nil {
+					return fmt.Errorf("cypher is invalid: %v", err)
+				}
 			}
 		}
 	}
@@ -123,14 +125,9 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		}
 
 		if selUpdateReq.DisabledAt.Valid {
-			if selUpdateReq.DisabledAt.IsZero() || selector.AllowDisable {
+			if selector.AllowDisable {
 				selector.DisabledAt = selUpdateReq.DisabledAt
-				// setting DisabledAt to a valid time disables the selector
-				if !selUpdateReq.DisabledAt.IsZero() {
-					selector.DisabledBy = null.StringFrom(actor.ID.String())
-				} else {
-					selector.DisabledBy = null.String{}
-				}
+				selector.DisabledBy = null.StringFrom(actor.ID.String())
 			} else {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "this selector cannot be disabled", request), response)
 			}
