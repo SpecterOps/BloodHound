@@ -55,8 +55,6 @@ export default defineConfig(({ mode }) => {
                 'downshift',
                 'notistack',
                 '@bloodhoundenterprise/doodleui',
-                '@neo4j-cypher/react-codemirror',
-                '@neo4j-cypher/codemirror/css/cypher-codemirror.css',
                 'msw',
                 'react',
                 'react-error-boundary',

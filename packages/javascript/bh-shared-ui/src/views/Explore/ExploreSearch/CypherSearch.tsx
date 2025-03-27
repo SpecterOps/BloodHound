@@ -117,7 +117,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
 
                     <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
                         <CypherEditor
-                            className='flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto @media(max-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
+                            className='flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
                             value={cypherQuery}
                             onValueChanged={(val: string) => {
                                 setCypherQuery(val);
