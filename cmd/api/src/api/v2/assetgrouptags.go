@@ -137,16 +137,23 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			selector.AutoCertify = selUpdateReq.AutoCertify
 		}
 
+		// if seeds are not included, call the DB update with them set to nil
+		var seedsTemp []model.SelectorSeed
 		if len(selUpdateReq.Seeds) > 0 {
 			selector.Seeds = selUpdateReq.Seeds
 		} else {
-			// the DB update function will skip updating a nil Seeds slice
+			// the DB update function will skip updating the seeds in this case
+			seedsTemp = selector.Seeds
 			selector.Seeds = nil
 		}
 
 		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), selector); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
+			if seedsTemp != nil {
+				// seeds were unchanged, set them back to what is stored in the db for the response
+				selector.Seeds = seedsTemp
+			}
 			api.WriteBasicResponse(request.Context(), selector, http.StatusOK, response)
 		}
 	}
