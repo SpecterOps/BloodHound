@@ -162,7 +162,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{})
 		require.NoError(t, err)
 
-		expected := []model.AssetGroupTagSelector{selector, selector2}
+		expected := []model.AssetGroupTagSelector{selector, selector2, selector3}
 		require.Equal(t, expected, results)
 	})
 
@@ -170,7 +170,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = ?", Params: []any{2}})
 		require.NoError(t, err)
 
-		expected := []model.AssetGroupTagSelector{selector2}
+		expected := []model.AssetGroupTagSelector{selector2, selector3}
 		require.Equal(t, expected, results)
 	})
 
