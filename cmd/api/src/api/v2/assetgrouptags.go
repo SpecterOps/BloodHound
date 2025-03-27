@@ -103,17 +103,16 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if selectorId, err := strconv.Atoi(rawSelectorID); err != nil {
-		fmt.Println(mux.Vars(request))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagSelectorId, request), response)
-	} else if err := api.ReadJSONRequestPayloadLimited(&selUpdateReq, request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if err := json.NewDecoder(request.Body).Decode(&selUpdateReq); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if err := validateSelectorSeeds(s.GraphQuery, selUpdateReq.Seeds); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagSelectorId, request), response)
 	} else {
 		// PATCH requests may not contain every field, only update if fields exist
 		if selUpdateReq.Name != "" {
