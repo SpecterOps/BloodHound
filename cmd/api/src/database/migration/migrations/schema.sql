@@ -741,47 +741,48 @@ INSERT INTO roles (name, description, created_at, updated_at) VALUES ('Power Use
 
 INSERT INTO roles_permissions (role_id, permission_id)
 SELECT r.id, p.id
-FROM roles r, permissions p
-WHERE r.name = 'Administrator' AND p.name IN (
-    'ReadAppConfig', 'WriteAppConfig', 'GenerateReport', 'ManageRisks',
-    'CreateToken', 'ManageAppConfig', 'ManageProviders', 'ManageSelf',
-    'ManageUsers', 'Manage', 'Tasking', 'ManageJobs', 'Read', 'Write'
-);
-
--- User
-INSERT INTO roles_permissions (role_id, permission_id)
-SELECT r.id, p.id
-FROM roles r, permissions p
-WHERE r.name = 'User' AND p.name IN (
-    'ReadAppConfig', 'GenerateReport', 'CreateToken', 'ManageSelf', 'Manage', 'Read'
-);
-
--- Read-Only
-INSERT INTO roles_permissions (role_id, permission_id)
-SELECT r.id, p.id
-FROM roles r, permissions p
-WHERE r.name = 'Read-Only' AND p.name IN (
-    'ReadAppConfig', 'GenerateReport', 'ManageSelf', 'Read', 'CreateToken'
-);
-
--- Upload-Only
-INSERT INTO roles_permissions (role_id, permission_id)
-SELECT r.id, p.id
-FROM roles r, permissions p
-WHERE r.name = 'Upload-Only' AND p.name IN (
-    'Tasking', 'Write'
-);
-
--- Power User
-INSERT INTO roles_permissions (role_id, permission_id)
-SELECT r.id, p.id
-FROM roles r, permissions p
-WHERE r.name = 'Power User' AND p.name IN (
-    'ReadAppConfig', 'WriteAppConfig', 'GenerateReport', 'ManageRisks',
-    'CreateToken', 'ManageSelf', 'Manage', 'Read', 'Tasking', 'ManageJobs',
-    'Write', 'Mutate', 'Read', 'Mutate'
-);
-
+FROM roles r
+JOIN permissions p
+  ON (
+    (r.name = 'Administrator' AND (p.authority, p.name) IN (
+        ('app', 'ReadAppConfig'),
+        ('app', 'WriteAppConfig'),
+        ('risks', 'GenerateReport'),
+        ('risks', 'ManageRisks'),
+        ('auth', 'CreateToken'),
+        ('auth', 'ManageAppConfig'),
+        ('auth', 'ManageProviders'),
+        ('auth', 'ManageSelf'),
+        ('auth', 'ManageUsers'),
+        ('clients', 'Manage'),
+        ('clients', 'Tasking'),
+        ('collection', 'ManageJobs'),
+        ('graphdb', 'Read'),
+        ('graphdb', 'Write')
+    ))
+    OR
+    (r.name = 'User' AND (p.authority, p.name) IN (
+        ('app', 'ReadAppConfig'),
+        ('risks', 'GenerateReport'),
+        ('auth', 'CreateToken'),
+        ('auth', 'ManageSelf'),
+        ('clients', 'Manage'),
+        ('graphdb', 'Read')
+    ))
+    OR
+    (r.name = 'Read-Only' AND (p.authority, p.name) IN (
+        ('app', 'ReadAppConfig'),
+        ('risks', 'GenerateReport'),
+        ('auth', 'ManageSelf'),
+        ('graphdb', 'Read')
+    ))
+    OR
+    (r.name = 'Upload-Only' AND (p.authority, p.name) IN (
+        ('clients', 'Tasking'),
+        ('graphdb', 'Write')
+    ))
+  );
+  
 -- Make sure the sequence values of things all line up at the end for the table we inserted
 SELECT pg_catalog.setval('asset_groups_id_seq', MAX(id), true) FROM asset_groups;
 SELECT pg_catalog.setval('feature_flags_id_seq', MAX(id), true) FROM feature_flags;
