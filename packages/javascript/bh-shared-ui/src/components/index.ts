@@ -58,6 +58,9 @@ export { default as CreateUserDialog } from './CreateUserDialog';
 export * from './DataTable';
 export { default as DataTable } from './DataTable';
 
+export * from './DeleteConfirmationDialog';
+export { default as DeleteConfirmationDialog } from './DeleteConfirmationDialog';
+
 export * from './Disable2FADialog';
 export { default as Disable2FADialog } from './Disable2FADialog';
 
