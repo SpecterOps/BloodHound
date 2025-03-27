@@ -780,7 +780,8 @@ JOIN permissions p
         ('saved_queries', 'Read'),
         ('saved_queries', 'Write'),
         ('clients', 'Read'),
-        ('graphdb', 'Mutate')
+        ('graphdb', 'Mutate'),
+        ('db', 'Wipe')
     ))
     OR
     (r.name = 'User' AND (p.authority, p.name) IN (
@@ -789,6 +790,8 @@ JOIN permissions p
         ('auth', 'CreateToken'),
         ('auth', 'ManageSelf'),
         ('clients', 'Read'),
+        ('saved_queries', 'Write'),
+        ('saved_queries', 'Read'),
         ('graphdb', 'Read')
     ))
     OR
@@ -796,7 +799,9 @@ JOIN permissions p
         ('app', 'ReadAppConfig'),
         ('risks', 'GenerateReport'),
         ('auth', 'ManageSelf'),
-        ('auth', 'CreateToken')
+        ('auth', 'CreateToken'),
+        ('saved_queries', 'Read'),
+        ('graphdb', 'Read')
     ))
     OR
     (r.name = 'Upload-Only' AND (p.authority, p.name) IN (
