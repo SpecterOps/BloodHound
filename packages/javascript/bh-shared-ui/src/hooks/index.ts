@@ -57,3 +57,5 @@ export * from './useIsMouseDragging';
 export * from './useEnvironmentParams';
 
 export * from './useMatchingPaths';
+
+export * from './useInitialEnvironment';
