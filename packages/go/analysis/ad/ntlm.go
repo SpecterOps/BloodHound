@@ -37,12 +37,11 @@ import (
 )
 
 type NTLMCache struct {
-	AuthenticatedUsersCache      map[string]graph.ID
-	ProtectedUsersCache          map[string]cardinality.Duplex[uint64]
-	LdapCache                    map[string]LDAPSigningCache
-	UnprotectedComputerCache     map[string]cardinality.Duplex[uint64]
-	AllUnprotectedComputersCache cardinality.Duplex[uint64]
-	GroupExpansions              impact.PathAggregator
+	AuthenticatedUsersCache   map[string]graph.ID
+	ProtectedUsersCache       map[string]cardinality.Duplex[uint64]
+	LdapCache                 map[string]LDAPSigningCache
+	UnprotectedComputersCache cardinality.Duplex[uint64]
+	GroupExpansions           impact.PathAggregator
 }
 
 func (s NTLMCache) GetAuthenticatedUserGroupForDomain(domainSid string) (graph.ID, bool) {
@@ -121,7 +120,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					}
 
 					//Any computers that are restricted/protected are not valid targets for the next relays
-					if !ntlmCache.AllUnprotectedComputersCache.Contains(innerComputer.ID.Uint64()) {
+					if !ntlmCache.UnprotectedComputersCache.Contains(innerComputer.ID.Uint64()) {
 						continue
 					}
 
@@ -170,7 +169,7 @@ func BuildNTLMCache(ctx context.Context, db graph.Database, groupExpansions impa
 			ntlmCache.ProtectedUsersCache = innerProtectedUsersCache
 			ntlmCache.GroupExpansions = groupExpansions
 
-			// Fetch all nodes where the type is Computer and build out a cache of computers that are acceptable targets victims/targets
+			// Fetch all nodes where the type is Computer and build out a cache of computers that are acceptable target/victims for coercion
 			return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 				for computer := range cursor.Chan() {
 					innerComputer := computer
@@ -182,6 +181,7 @@ func BuildNTLMCache(ctx context.Context, db graph.Database, groupExpansions impa
 					} else if ldapSigningForDomain, ok := ntlmCache.GetLdapCacheForDomain(domainSid); !ok {
 						continue
 					} else if restrictOutboundNtlm, err := innerComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
+						//If we've failed to retrieve the property because it doesn't exist we'll fail closed here. We will treat it as if it is protected to prevent false positives
 						if !errors.Is(err, graph.ErrPropertyNotFound) {
 							slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", innerComputer.ID))
 						}
@@ -203,8 +203,7 @@ func BuildNTLMCache(ctx context.Context, db graph.Database, groupExpansions impa
 					}
 				}
 
-				ntlmCache.UnprotectedComputerCache = unprotectedComputerCache
-				ntlmCache.AllUnprotectedComputersCache = allUnprotectedComputerCache
+				ntlmCache.UnprotectedComputersCache = allUnprotectedComputerCache
 
 				return cursor.Error()
 			})
@@ -427,7 +426,7 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 								}
 							}
 
-							enrollersBitmap.And(ntlmCache.AllUnprotectedComputersCache)
+							enrollersBitmap.And(ntlmCache.UnprotectedComputersCache)
 							results.Or(enrollersBitmap)
 						}
 					}
@@ -500,7 +499,7 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 			}
 
 			//Get the cross between the admin group ids and all unprotected computers. This auto filters to computers only and filters out restricted outbound stuff/protected users
-			allAdminPrincipals.And(ntlmCache.AllUnprotectedComputersCache)
+			allAdminPrincipals.And(ntlmCache.UnprotectedComputersCache)
 
 			//Remove the target computer if it exists as self-relay is not possible
 			allAdminPrincipals.Remove(computer.ID.Uint64())

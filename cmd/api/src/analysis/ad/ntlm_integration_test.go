@@ -220,7 +220,7 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 				for _, computer := range computers {
 					innerComputer := computer
 
-					if !ntlmCache.AllUnprotectedComputersCache.Contains(innerComputer.ID.Uint64()) {
+					if !ntlmCache.UnprotectedComputersCache.Contains(innerComputer.ID.Uint64()) {
 						continue
 					}
 
