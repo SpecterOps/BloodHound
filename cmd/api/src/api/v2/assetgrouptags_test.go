@@ -321,7 +321,6 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 			{
 				Name: "Success",
 				Input: func(input *apitest.Input) {
-					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 					apitest.BodyStruct(input, model.AssetGroupTagSelector{
 						Name:        "TestSelector",
@@ -339,11 +338,6 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 						Return(model.AssetGroupTagSelectors{{Name: "Test1", AssetGroupTagId: 1}}, nil).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)
-
-					mockGraphDb.EXPECT().
-						PrepareCypherQuery(gomock.Any(), gomock.Any()).
-						Return(queries.PreparedQuery{}, nil).Times(1)
-
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
