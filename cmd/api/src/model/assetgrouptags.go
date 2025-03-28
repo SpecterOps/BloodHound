@@ -108,6 +108,8 @@ func (s SelectorSeed) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{"type": {Equals, NotEquals}}
 }
 
+type AssetGroupTagSelectors []AssetGroupTagSelector
+
 type AssetGroupTagSelector struct {
 	ID              int         `json:"id"`
 	AssetGroupTagId int         `json:"asset_group_tag_id"`

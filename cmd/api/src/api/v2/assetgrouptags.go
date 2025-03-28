@@ -36,7 +36,6 @@ import (
 
 const (
 	ErrInvalidAssetGroupTagId = "invalid asset group tag id specified in url"
-	ErrNoAssetGroupTagId      = "no asset group tag id specified in url"
 	ErrInvalidSelectorType    = "invalid selector type"
 )
 
@@ -104,8 +103,10 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 	} else {
 		// The below is a workaround to split the query filters by the two tables to be used in the subsequent db calls
 		for name, filters := range queryFilters {
+			// get valid selector predicates and valid selector seed predicates.
 			validSelectorPredicates, selectorFilterErr := api.GetValidFilterPredicatesAsStrings(assetGroupTagSelector, name)
 			validSelectorSeedPredicates, seedFilterErr := api.GetValidFilterPredicatesAsStrings(selectorSeed, name)
+			// return an error if both attempts fail, as either one could be used to build separate queries.
 			if selectorFilterErr != nil && seedFilterErr != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
@@ -120,6 +121,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 					selectorQueryFilter.AddFilter(filter)
 				} else if slices.Contains(validSelectorSeedPredicates, string(filter.Operator)) {
 					selectorSeedsQueryFilter.AddFilter(filter)
+					// checks if the last added query filter is a valid string to filter by
 					selectorSeedsQueryFilter[name][len(selectorSeedsQueryFilter[name])-1].IsStringData = selectorSeed.IsString(filter.Name)
 				}
 			}

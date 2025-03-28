@@ -162,7 +162,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{})
 		require.NoError(t, err)
 
-		expected := []model.AssetGroupTagSelector{selector, selector2, selector3}
+		expected := model.AssetGroupTagSelectors{selector, selector2, selector3}
 		require.Equal(t, expected, results)
 	})
 
@@ -170,7 +170,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = ?", Params: []any{2}})
 		require.NoError(t, err)
 
-		expected := []model.AssetGroupTagSelector{selector2, selector3}
+		expected := model.AssetGroupTagSelectors{selector2, selector3}
 		require.Equal(t, expected, results)
 	})
 
@@ -178,7 +178,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{created_at}}, model.SQLFilter{SQLString: "type = ?", Params: []any{2}})
 		require.NoError(t, err)
 
-		expected := []model.AssetGroupTagSelector{selector2, selector3}
+		expected := model.AssetGroupTagSelectors{selector2, selector3}
 		require.Equal(t, len(expected), len(results))
 
 		require.Equal(t, test2Name, results[0].Name)

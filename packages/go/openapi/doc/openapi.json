@@ -15708,6 +15708,19 @@
           }
         }
       },
+      "model.asset-group-tags-selectors": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "$ref": "./model.asset-group-tags-selector.yaml"
+              }
+            }
+          }
+        }
+      },
       "model.asset-group-tags-selector-seed": {
         "allOf": [
           {
@@ -15772,22 +15785,6 @@
                 "type": "array",
                 "items": {
                   "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
-                }
-              }
-            }
-          }
-        ]
-      },
-      "model.asset-group-tags-selectors": {
-        "allOf": [
-          {
-            "type": "object",
-            "properties": {
-              "entries": {
-                "type": "array",
-                "readOnly": true,
-                "items": {
-                  "$ref": "#/components/schemas/model.asset-group-tags-selector"
                 }
               }
             }

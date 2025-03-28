@@ -14,11 +14,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-allOf:
-  - type: object
-    properties:
-      entries:
-        type: array
-        readOnly: true
-        items:
+schema:
+  type: object
+  properties:
+    data:
+      type: array
+      items:
           $ref: './model.asset-group-tags-selector.yaml'

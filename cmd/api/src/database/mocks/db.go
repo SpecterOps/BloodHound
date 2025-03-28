@@ -1006,10 +1006,10 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupTag(arg0, arg1 interface{}) *go
 }
 
 // GetAssetGroupTagSelectorsByTagId mocks base method.
-func (m *MockDatabase) GetAssetGroupTagSelectorsByTagId(arg0 context.Context, arg1 int, arg2, arg3 model.SQLFilter) ([]model.AssetGroupTagSelector, error) {
+func (m *MockDatabase) GetAssetGroupTagSelectorsByTagId(arg0 context.Context, arg1 int, arg2, arg3 model.SQLFilter) (model.AssetGroupTagSelectors, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAssetGroupTagSelectorsByTagId", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].([]model.AssetGroupTagSelector)
+	ret0, _ := ret[0].(model.AssetGroupTagSelectors)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
