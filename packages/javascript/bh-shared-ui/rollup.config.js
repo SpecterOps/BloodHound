@@ -34,6 +34,8 @@ export default {
     ],
     external: [
         '@bloodhoundenterprise/doodleui',
+        '@neo4j-cypher/react-codemirror',
+        '@neo4j-cypher/codemirror/css/cypher-codemirror.css',
         '@emotion/react',
         '@emotion/styled',
         '@faker-js/faker',

@@ -14,10 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Tab, Tabs, Typography } from '@mui/material';
+import { Tab, Tabs } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { PersonalSearchList, PrebuiltSearchList, CommonSearches as prebuiltSearchList } from 'bh-shared-ui';
 import { useState } from 'react';
+import { CommonSearches as prebuiltSearchList } from '../../../commonSearches';
+import PrebuiltSearchList, { PersonalSearchList } from '../../../components/PrebuiltSearchList';
 
 const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
@@ -69,11 +70,8 @@ const CommonSearches = ({ onSetCypherQuery, onPerformCypherSearch }: CommonSearc
     };
 
     return (
-        <Box height='100%' display='flex' flexDirection='column'>
-            <Typography variant='h5' sx={{ mb: 2, mt: 2 }}>
-                Pre-built Searches
-            </Typography>
-
+        <div className='flex flex-col h-full'>
+            <h5 className='my-4 font-bold text-lg'>Pre-built Searches</h5>
             <Tabs
                 value={activeTab}
                 onChange={handleTabChange}
@@ -86,12 +84,12 @@ const CommonSearches = ({ onSetCypherQuery, onPerformCypherSearch }: CommonSearc
                 <Tab label={CUSTOM_TAB} key={CUSTOM_TAB} value={CUSTOM_TAB} className={classes.tab} />
             </Tabs>
 
-            <Box flexGrow={1} minHeight={0} overflow='auto'>
+            <div className='grow-1 min-h-0 overflow-auto'>
                 {activeTab === AD_TAB && <PrebuiltSearchList listSections={adSections} clickHandler={handleClick} />}
                 {activeTab === AZ_TAB && <PrebuiltSearchList listSections={azSections} clickHandler={handleClick} />}
                 {activeTab === CUSTOM_TAB && <PersonalSearchList clickHandler={handleClick} />}
-            </Box>
-        </Box>
+            </div>
+        </div>
     );
 };
 
