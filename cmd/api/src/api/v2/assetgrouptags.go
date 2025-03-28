@@ -140,7 +140,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 		} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else if selectors, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), assetGroupTagID, selectorSqlFilter, selectorSeedSqlFilter); err != nil && !errors.Is(err, database.ErrNotFound) {
-			api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{}, http.StatusOK, response)
+			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: selectors}, http.StatusOK, response)
 		}

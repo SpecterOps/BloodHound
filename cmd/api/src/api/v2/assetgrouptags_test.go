@@ -310,12 +310,12 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupTagSelectors{}, nil).Times(1)
+						Return(model.AssetGroupTagSelectors{}, errors.New("some error")).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusOK)
+					apitest.StatusCode(output, http.StatusInternalServerError)
 				},
 			},
 			{
