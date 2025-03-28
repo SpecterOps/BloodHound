@@ -145,8 +145,8 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 
 func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {
 	var (
-		results   = []model.AssetGroupTagSelector{}
-		selectors []model.AssetGroupTagSelector
+		results   = model.AssetGroupTagSelectors{}
+		selectors model.AssetGroupTagSelectors
 	)
 
 	selectorSqlStr := fmt.Sprintf("SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE asset_group_tag_id = ?", model.AssetGroupTagSelector{}.TableName())
@@ -160,11 +160,11 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, ass
 	}
 
 	if err := CheckError(s.db.WithContext(ctx).Raw(selectorSqlStr, append([]any{assetGroupTagId}, selectorSqlFilter.Params...)...).Find(&selectors)); err != nil {
-		return []model.AssetGroupTagSelector{}, err
+		return model.AssetGroupTagSelectors{}, err
 	} else {
 		for index, selector := range selectors {
 			if err = CheckError(s.db.WithContext(ctx).Raw(selectorSeedSqlStr, append([]any{selector.ID}, selectorSeedSqlFilter.Params...)...).Scan(&selectors[index].Seeds)); err != nil {
-				return []model.AssetGroupTagSelector{}, err
+				return model.AssetGroupTagSelectors{}, err
 			}
 			if len(selectors[index].Seeds) > 0 {
 				results = append(results, selectors[index])
