@@ -23,14 +23,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/test/integration"
-
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/test"
+	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/specterops/bloodhound/src/test/integration/utils"
 	"github.com/stretchr/testify/require"
 )

@@ -50,7 +50,7 @@ func Test_mapValue(t *testing.T) {
 	mapTestCase[uint32, uint32](t, 0, 0)
 	mapTestCase[uint64, uint64](t, 0, 0)
 
-	mapTestCase[int, int](t, 0, 0)
+	mapTestCase(t, 0, 0) // Inferred int
 	mapTestCase[int8, int8](t, 0, 0)
 	mapTestCase[int16, int16](t, 0, 0)
 	mapTestCase[int32, int32](t, 0, 0)
@@ -58,20 +58,20 @@ func Test_mapValue(t *testing.T) {
 	mapTestCase[int64, graph.ID](t, 0, 0)
 
 	mapTestCase[float32, float32](t, 1.5, 1.5)
-	mapTestCase[float64, float64](t, 1.5, 1.5)
+	mapTestCase(t, 1.5, 1.5) // Inferred float64
 
-	mapTestCase[bool, bool](t, true, true)
-	mapTestCase[string, string](t, "test", "test")
+	mapTestCase(t, true, true)
+	mapTestCase(t, "test", "test")
 
-	mapTestCase[time.Time, time.Time](t, utcNow, utcNow)
-	mapTestCase[string, time.Time](t, utcNow.Format(time.RFC3339Nano), utcNow)
-	mapTestCase[int64, time.Time](t, utcNow.Unix(), time.Unix(utcNow.Unix(), 0))
-	mapTestCase[dbtype.Time, time.Time](t, dbtype.Time(utcNow), utcNow)
-	mapTestCase[dbtype.LocalTime, time.Time](t, dbtype.LocalTime(utcNow), utcNow)
-	mapTestCase[dbtype.Date, time.Time](t, dbtype.Date(utcNow), utcNow)
-	mapTestCase[dbtype.LocalDateTime, time.Time](t, dbtype.LocalDateTime(utcNow), utcNow)
+	mapTestCase(t, utcNow, utcNow)
+	mapTestCase(t, utcNow.Format(time.RFC3339Nano), utcNow)
+	mapTestCase(t, utcNow.Unix(), time.Unix(utcNow.Unix(), 0))
+	mapTestCase(t, dbtype.Time(utcNow), utcNow)
+	mapTestCase(t, dbtype.LocalTime(utcNow), utcNow)
+	mapTestCase(t, dbtype.Date(utcNow), utcNow)
+	mapTestCase(t, dbtype.LocalDateTime(utcNow), utcNow)
 
-	mapTestCase[[]any, []string](t, anyStringSlice, stringSlice)
-	mapTestCase[[]any, []graph.Kind](t, anyStringSlice, kindSlice)
-	mapTestCase[[]any, graph.Kinds](t, anyStringSlice, kinds)
+	mapTestCase(t, anyStringSlice, stringSlice)
+	mapTestCase(t, anyStringSlice, kindSlice)
+	mapTestCase(t, anyStringSlice, kinds)
 }
