@@ -246,6 +246,29 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 					})
 				},
 				Setup: func() {
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil).Times(1)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
+				Name: "Success",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.BodyStruct(input, model.AssetGroupTagSelector{
+						Name:        "TestSelector",
+						Description: "Test selector description",
+						Seeds: []model.SelectorSeed{
+							{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
+						},
+						IsDefault:   false,
+						AutoCertify: false,
+					})
+				},
+				Setup: func() {
 					mockDB.EXPECT().
 						CreateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTagSelector{Name: "TestSelector"}, nil).Times(1)
