@@ -370,7 +370,7 @@ class BHEAPIClient {
         );
 
     getSearchResult = (query: string, searchType: string, options?: types.RequestOptions) =>
-        this.baseClient.get(
+        this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(
             '/api/v2/graph-search',
             Object.assign(
                 {
