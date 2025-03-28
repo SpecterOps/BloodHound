@@ -25,8 +25,6 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-
 	"github.com/specterops/bloodhound/analysis"
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/analysis/impact"
@@ -64,6 +62,7 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 		require.NoError(t, err)
 
 		err = ad2.PostCoerceAndRelayNTLMToADCS(cache, operation, ntlmCache)
+		require.NoError(t, err)
 
 		operation.Done()
 
@@ -165,10 +164,6 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 					innerComputer := computer
 					domainSid, _ := innerComputer.Properties.Get(ad.DomainSID.String()).String()
 
-					if !ntlmCache.AllUnprotectedComputersCache.Contains(innerComputer.ID.Uint64()) {
-						continue
-					}
-
 					if authenticatedUserID, ok := authenticatedUsers[domainSid]; !ok {
 						t.Fatalf("authenticated user not found for %s", domainSid)
 					} else if err = ad2.PostCoerceAndRelayNTLMToSMB(tx, outC, ntlmCache, innerComputer, authenticatedUserID); err != nil {
@@ -196,7 +191,7 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 						require.NoError(t, err)
 
 						if start.ID == harness.NTLMCoerceAndRelayNTLMToSMB.Group2.ID {
-							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer6.ID)
+							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer9.ID)
 						} else if start.ID == harness.NTLMCoerceAndRelayNTLMToSMB.Group1.ID {
 							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer2.ID)
 						} else {
@@ -329,29 +324,6 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 			return nil
 		})
 	})
-}
-
-func fetchComputerCache(db graph.Database, domain *graph.Node) (map[string]cardinality.Duplex[uint64], error) {
-	cache := make(map[string]cardinality.Duplex[uint64])
-	if domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		return cache, err
-	} else {
-		cache[domainSid] = cardinality.NewBitmap64()
-		return cache, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			return tx.Nodes().Filter(
-				query.And(
-					query.Kind(query.Node(), ad.Computer),
-					query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSid),
-				),
-			).FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
-				for id := range cursor.Chan() {
-					cache[domainSid].Add(id.Uint64())
-				}
-
-				return cursor.Error()
-			})
-		})
-	}
 }
 
 func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {

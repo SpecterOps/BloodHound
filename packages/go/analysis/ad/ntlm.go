@@ -175,9 +175,7 @@ func BuildNTLMCache(ctx context.Context, db graph.Database, groupExpansions impa
 				for computer := range cursor.Chan() {
 					innerComputer := computer
 
-					domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String()
-
-					if err != nil {
+					if domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 						continue
 					} else if _, ok := ntlmCache.GetAuthenticatedUserGroupForDomain(domainSid); !ok {
 						continue
@@ -491,47 +489,23 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 		// Fetch the admins with edges to the provided computer
 		if firstDegreeAdmins, err := fetchFirstDegreeNodes(tx, computer, ad.AdminTo); err != nil {
 			return err
-		} else if firstDegreeAdmins.ContainingNodeKinds(ad.Computer).Len() > 0 {
-			// compositionID := compositionCounter.Get()
-			outC <- analysis.CreatePostRelationshipJob{
-				FromID: authenticatedUserID,
-				ToID:   computer.ID,
-				Kind:   ad.CoerceAndRelayNTLMToSMB,
-				// RelProperties: map[string]any{common.CompositionID.String(): compositionID},
-			}
-			// This is an example of how you would use the composition counter
-			// compositionC <- analysis.CompositionInfo{
-			//	CompositionID: compositionID,
-			//	EdgeIDs:       nil,
-			//	NodeIDs:       nil,
-			// }
 		} else {
-			if firstDegreeComputers := firstDegreeAdmins.ContainingNodeKinds(ad.Computer); len(firstDegreeComputers) > 0 {
-				for _, fdComputer := range firstDegreeComputers {
-
-					if ntlmCache.AllUnprotectedComputersCache.Contains(fdComputer.ID.Uint64()) {
-						outC <- analysis.CreatePostRelationshipJob{
-							FromID: authenticatedUserID,
-							ToID:   computer.ID,
-							Kind:   ad.CoerceAndRelayNTLMToSMB,
-							// RelProperties: map[string]any{common.CompositionID.String(): compositionID},
-						}
-					}
+			allAdminPrincipals := cardinality.NewBitmap64()
+			for _, principal := range firstDegreeAdmins.Slice() {
+				if principal.Kinds.ContainsOneOf(ad.Group) {
+					allAdminPrincipals.Or(ntlmCache.GroupExpansions.Cardinality(principal.ID.Uint64()))
+				} else {
+					allAdminPrincipals.Add(principal.ID.Uint64())
 				}
 			}
 
-			allAdminGroups := cardinality.NewBitmap64()
-			for group := range firstDegreeAdmins.ContainingNodeKinds(ad.Group) {
-				allAdminGroups.Or(ntlmCache.GroupExpansions.Cardinality(group.Uint64()))
-			}
-
 			//Get the cross between the admin group ids and all unprotected computers. This auto filters to computers only and filters out restricted outbound stuff/protected users
-			allAdminGroups.And(ntlmCache.AllUnprotectedComputersCache)
+			allAdminPrincipals.And(ntlmCache.AllUnprotectedComputersCache)
 
 			//Remove the target computer if it exists as self-relay is not possible
-			allAdminGroups.Remove(computer.ID.Uint64())
+			allAdminPrincipals.Remove(computer.ID.Uint64())
 
-			if allAdminGroups.Cardinality() > 0 {
+			if allAdminPrincipals.Cardinality() > 0 {
 				outC <- analysis.CreatePostRelationshipJob{
 					FromID: authenticatedUserID,
 					ToID:   computer.ID,
