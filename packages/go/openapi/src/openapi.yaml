@@ -323,7 +323,7 @@ paths:
 
   # asset group management
   /api/v2/asset-group-tags/{asset_group_tag_id}:
-    $ref: './paths/asset-group-tags.id.yaml'
+    $ref: './paths/asset-isolation.asset-group-tags.id.yaml'
 
   # graph
   /api/v2/graphs/kinds:
