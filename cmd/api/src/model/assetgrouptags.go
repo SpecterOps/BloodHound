@@ -80,8 +80,9 @@ func (s AssetGroupTag) ToKind() graph.Kind {
 }
 
 type SelectorSeed struct {
-	Type  SelectorType `json:"type"`
-	Value string       `json:"value"`
+	SelectorId int          `json:"selector_id"`
+	Type       SelectorType `json:"type"`
+	Value      string       `json:"value"`
 }
 
 func (SelectorSeed) TableName() string {
@@ -92,15 +93,6 @@ func (s SelectorSeed) AuditData() AuditData {
 	return AuditData{
 		"type":  s.Type,
 		"value": s.Value,
-	}
-}
-
-func (s SelectorSeed) IsString(column string) bool {
-	switch column {
-	case "type":
-		return true
-	default:
-		return false
 	}
 }
 
@@ -143,11 +135,22 @@ func (s AssetGroupTagSelector) AuditData() AuditData {
 	}
 }
 
+func (s AssetGroupTagSelector) IsStringColumn(filter string) bool {
+	return filter == "name" || filter == "description"
+}
+
 func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
-		"disabled_at": {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"created_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"updated_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"auto_certify": {Equals, NotEquals},
+		"created_at":   {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_by":   {Equals, NotEquals},
+		"description":  {Equals, NotEquals, ApproximatelyEquals},
+		"disabled_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"disabled_by":  {Equals, NotEquals},
+		"is_default":   {Equals, NotEquals},
+		"name":         {Equals, NotEquals, ApproximatelyEquals},
+		"updated_at":   {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"updated_by":   {Equals, NotEquals},
 	}
 }
 

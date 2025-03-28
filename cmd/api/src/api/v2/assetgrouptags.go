@@ -121,10 +121,10 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 				}
 				if slices.Contains(validSelectorPredicates, string(filter.Operator)) {
 					selectorQueryFilter.AddFilter(filter)
+					selectorQueryFilter[name][len(selectorQueryFilter[name])-1].IsStringData = assetGroupTagSelector.IsStringColumn(filter.Name)
 				} else if slices.Contains(validSelectorSeedPredicates, string(filter.Operator)) {
 					selectorSeedsQueryFilter.AddFilter(filter)
-					// checks if the last added query filter is a valid string to filter by
-					selectorSeedsQueryFilter[name][len(selectorSeedsQueryFilter[name])-1].IsStringData = selectorSeed.IsString(filter.Name)
+					// There are no string columns on asset group selector seeds table
 				}
 			}
 		}
