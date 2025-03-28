@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,14 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link } from '@mui/material';
-
-export const dataCollectionMessage = (
-    <>
-        See the{' '}
-        <Link target='_blank' href={'https://bloodhound.specterops.io/collect-data/overview'}>
-            Data Collection
-        </Link>{' '}
-        page to view instructions on how to begin data collection.
-    </>
-);
+export * from './useSigmaExploreGraph';

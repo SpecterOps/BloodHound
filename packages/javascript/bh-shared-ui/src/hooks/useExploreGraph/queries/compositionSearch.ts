@@ -23,7 +23,6 @@ import {
     ExploreGraphQueryKey,
     ExploreGraphQueryOptions,
     sharedGraphQueryOptions,
-    transformToFlatGraphResponse,
 } from './utils';
 
 const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
@@ -59,7 +58,7 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
                     throw new Error('empty result set');
                 }
 
-                return transformToFlatGraphResponse(data);
+                return data;
             }),
         refetchOnWindowFocus: false,
     };
